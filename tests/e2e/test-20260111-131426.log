@@ -1,0 +1,13 @@
+[13:14:26] ========================================
+[13:14:26] WTF-P E2E Test
+[13:14:26] ========================================
+[13:14:26] Model: haiku
+[13:14:26] Project: structured-prompting
+[13:14:26] Title: Benefits of Structured Prompting for LLMs
+[13:14:26] Log: /home/akougkas/projects/wtf-p/tests/e2e/test-20260111-131426.log
+[13:14:26] ========================================
+[13:14:26] Setting up test project...
+[13:14:26] Project directory: /home/akougkas/projects/wtf-p/tests/e2e/projects/structured-prompting
+[13:14:26] 
+[13:14:26] === Phase 1: new-paper ===
+[13:14:26] [DRY RUN] Would execute: new-paper

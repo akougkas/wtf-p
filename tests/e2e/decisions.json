@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "test_name": "Benefits of Structured Prompting for LLMs",
+    "target_model": "haiku",
+    "description": "E2E test validating WTF-P pipeline produces compilable LaTeX"
+  },
+  "project": {
+    "title": "Benefits of Structured Prompting for LLMs",
+    "core_argument": "Structured prompting improves LLM output quality by providing explicit constraints and format guidance, reducing hallucinations and improving task completion rates.",
+    "key_insight": "Constraints guide generation toward more accurate and useful outputs",
+    "scope_exclusions": ["Model training methods", "Fine-tuning approaches", "Model architecture details"],
+    "venue": "arxiv-ml"
+  },
+  "workflow_decisions": {
+    "new-paper": {
+      "paper_type": "Research paper",
+      "venue": "ML/AI (arxiv-ml)",
+      "mode": "Flow",
+      "depth": "Quick",
+      "ready": "Create PROJECT.md"
+    },
+    "create-outline": {
+      "document_type": "IMRaD",
+      "sections_ok": "yes",
+      "decision_gate": "Create outline"
+    },
+    "plan-section": {
+      "literature_level": "0-skip",
+      "writing_mode": "Co-Author",
+      "confirm_breakdown": "yes"
+    },
+    "execute-section": {
+      "checkpoint_default": "approved",
+      "deviation_response": "proceed"
+    },
+    "export-latex": {
+      "template": "Article (generic)",
+      "compile": "Yes, compile"
+    }
+  }
+}
