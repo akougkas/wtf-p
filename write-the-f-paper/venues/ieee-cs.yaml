@@ -1,0 +1,100 @@
+# IEEE Computer Science Conference/Journal Template
+# Standard structure for IEEE IPDPS, SC, HPDC, TPDS, etc.
+
+name: IEEE Computer Science
+short: ieee-cs
+description: Standard IEEE CS conference structure (HPC, parallel systems, storage)
+
+structure:
+  - number: 1
+    name: Introduction
+    slug: introduction
+    word_ratio: 0.15
+    purpose: |
+      Problem statement and motivation. Clear contribution list.
+      IEEE style: more formal, less narrative.
+    subsections:
+      - Problem Statement
+      - Motivation
+      - Contributions
+      - Organization
+    citation_density: medium
+
+  - number: 2
+    name: Background and Related Work
+    slug: background
+    word_ratio: 0.15
+    purpose: |
+      IEEE often combines background with related work upfront.
+      Technical foundations + literature positioning.
+    subsections:
+      - Technical Background
+      - Related Work
+      - Positioning
+    citation_density: very_high
+
+  - number: 3
+    name: System Design
+    slug: design
+    word_ratio: 0.22
+    purpose: |
+      Architecture and design decisions.
+      IEEE emphasizes clear diagrams and formal descriptions.
+    subsections:
+      - Architecture Overview
+      - Component Design
+      - Algorithms
+      - Optimizations
+    citation_density: low
+
+  - number: 4
+    name: Implementation
+    slug: implementation
+    word_ratio: 0.10
+    purpose: |
+      Implementation specifics. IEEE values reproducibility details.
+      Hardware/software environment, parameters.
+    subsections:
+      - System Implementation
+      - Experimental Platform
+    citation_density: low
+
+  - number: 5
+    name: Evaluation
+    slug: evaluation
+    word_ratio: 0.25
+    purpose: |
+      Rigorous experimental validation.
+      IEEE expects statistical rigor and scalability analysis.
+    subsections:
+      - Experimental Setup
+      - Performance Evaluation
+      - Scalability Analysis
+      - Comparative Analysis
+    citation_density: medium
+
+  - number: 6
+    name: Conclusion
+    slug: conclusion
+    word_ratio: 0.08
+    purpose: |
+      Brief summary. Future work optional but common.
+    subsections:
+      - Summary
+      - Future Work
+    citation_density: none
+
+optional_sections:
+  - name: Acknowledgments
+    position: after_conclusion
+  - name: References
+    position: end
+
+citation_style: ieee
+page_limit_hint: "10-12 pages (double column)"
+
+notes: |
+  - IEEE often wants Related Work early (Section 2)
+  - Implementation details get their own section
+  - Scalability analysis is expected for systems papers
+  - Figures should be IEEE-compliant (grayscale-friendly)

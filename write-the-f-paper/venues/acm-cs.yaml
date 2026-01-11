@@ -1,0 +1,102 @@
+# ACM Computer Science Conference/Journal Template
+# Standard structure for ACM SIGMOD, SOSP, OSDI, EuroSys, etc.
+
+name: ACM Computer Science
+short: acm-cs
+description: Standard ACM CS conference structure (systems, databases, architecture)
+
+structure:
+  - number: 1
+    name: Introduction
+    slug: introduction
+    word_ratio: 0.15
+    purpose: |
+      Hook the reader with the problem. State contributions clearly.
+      End with paper organization paragraph.
+    subsections:
+      - Motivation and Problem Statement
+      - Contributions
+      - Paper Organization
+    citation_density: medium
+
+  - number: 2
+    name: Background and Motivation
+    slug: background
+    word_ratio: 0.12
+    purpose: |
+      Establish technical context. Define key concepts.
+      Motivate why existing solutions fall short.
+    subsections:
+      - Technical Background
+      - Motivating Example
+      - Problem Definition
+    citation_density: high
+
+  - number: 3
+    name: Approach and Methodology
+    slug: approach
+    word_ratio: 0.25
+    purpose: |
+      Core technical contribution. System design, algorithms, architecture.
+      This is the meat of the paper.
+    subsections:
+      - Overview
+      - Design/Architecture
+      - Key Techniques
+      - Implementation Details
+    citation_density: low
+
+  - number: 4
+    name: Evaluation and Experimental Results
+    slug: evaluation
+    word_ratio: 0.25
+    purpose: |
+      Prove it works. Benchmarks, comparisons, ablations.
+      Answer: Is it faster? More accurate? More scalable?
+    subsections:
+      - Experimental Setup
+      - Baseline Comparisons
+      - Performance Analysis
+      - Ablation Studies
+    citation_density: medium
+
+  - number: 5
+    name: Related Work
+    slug: related-work
+    word_ratio: 0.12
+    purpose: |
+      Position contribution in literature. Show you know the field.
+      Differentiate from similar work.
+    subsections:
+      - Category 1 (e.g., Systems approaches)
+      - Category 2 (e.g., ML-based approaches)
+      - Category 3 (e.g., Hybrid approaches)
+    citation_density: very_high
+
+  - number: 6
+    name: Conclusion and Future Work
+    slug: conclusion
+    word_ratio: 0.08
+    purpose: |
+      Summarize contributions. Acknowledge limitations.
+      Point to future directions.
+    subsections:
+      - Summary
+      - Limitations
+      - Future Directions
+    citation_density: none
+
+optional_sections:
+  - name: Acknowledgments
+    position: after_conclusion
+  - name: Appendix
+    position: end
+
+citation_style: acm
+page_limit_hint: "12-14 pages (double column)"
+
+notes: |
+  - Related Work typically comes AFTER evaluation in systems papers
+  - Contributions should be bulleted and specific
+  - Evaluation needs quantitative comparisons with baselines
+  - ACM venues expect reproducibility (artifact evaluation)

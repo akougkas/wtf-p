@@ -1,0 +1,101 @@
+# Thesis/Dissertation Chapter Template
+# Flexible structure for PhD thesis chapters
+
+name: Thesis Chapter
+short: thesis
+description: Flexible structure for dissertation chapters
+
+structure:
+  - number: 1
+    name: Introduction
+    slug: introduction
+    word_ratio: 0.10
+    purpose: |
+      Chapter overview. How it fits in thesis narrative.
+      What reader will learn. Chapter roadmap.
+    subsections:
+      - Chapter Overview
+      - Motivation
+      - Chapter Organization
+    citation_density: medium
+
+  - number: 2
+    name: Background
+    slug: background
+    word_ratio: 0.15
+    purpose: |
+      Technical foundations for this chapter.
+      Can reference thesis background chapter for basics.
+    subsections:
+      - Relevant Concepts
+      - Problem Context
+    citation_density: high
+
+  - number: 3
+    name: Approach
+    slug: approach
+    word_ratio: 0.25
+    purpose: |
+      Your contribution. Design, methodology, implementation.
+      More space than conference paper - be thorough.
+    subsections:
+      - Design Overview
+      - Technical Details
+      - Implementation
+    citation_density: low
+
+  - number: 4
+    name: Evaluation
+    slug: evaluation
+    word_ratio: 0.25
+    purpose: |
+      Experimental validation. Can include negative results.
+      Thesis allows more exploration than conference paper.
+    subsections:
+      - Experimental Setup
+      - Results
+      - Analysis
+      - Discussion
+    citation_density: medium
+
+  - number: 5
+    name: Related Work
+    slug: related-work
+    word_ratio: 0.15
+    purpose: |
+      Comprehensive literature review for this chapter's topic.
+      More thorough than conference paper version.
+    subsections:
+      - Category 1
+      - Category 2
+      - Comparison and Positioning
+    citation_density: very_high
+
+  - number: 6
+    name: Summary
+    slug: summary
+    word_ratio: 0.08
+    purpose: |
+      Chapter contributions. Connection to thesis goals.
+      Transition to next chapter.
+    subsections:
+      - Chapter Contributions
+      - Limitations
+      - Transition to Next Chapter
+    citation_density: none
+
+optional_sections:
+  - name: Chapter Abstract
+    position: before_introduction
+  - name: Appendix
+    position: end
+
+citation_style: thesis
+page_limit_hint: "30-50 pages per chapter"
+
+notes: |
+  - Thesis chapters have more space - use it for clarity, not padding
+  - Can include more background than conference paper
+  - Negative results and failed approaches valuable
+  - Each chapter should standalone but connect to thesis narrative
+  - Committee expects comprehensive related work

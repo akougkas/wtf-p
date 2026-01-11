@@ -1,0 +1,103 @@
+# arXiv ML/AI Conference Template
+# Standard structure for NeurIPS, ICML, ICLR, AAAI, etc.
+
+name: arXiv ML/AI
+short: arxiv-ml
+description: Standard ML conference structure (NeurIPS, ICML, ICLR style)
+
+structure:
+  - number: 1
+    name: Introduction
+    slug: introduction
+    word_ratio: 0.12
+    purpose: |
+      Problem setup. Why this matters. Contribution summary.
+      ML papers are dense - get to the point fast.
+    subsections:
+      - Problem and Motivation
+      - Contributions
+    citation_density: medium
+
+  - number: 2
+    name: Related Work
+    slug: related-work
+    word_ratio: 0.10
+    purpose: |
+      Position in literature. ML moves fast - cite recent work.
+      Often brief, sometimes moved to appendix.
+    subsections:
+      - Prior Approaches
+      - Concurrent Work
+    citation_density: very_high
+
+  - number: 3
+    name: Preliminaries
+    slug: preliminaries
+    word_ratio: 0.08
+    purpose: |
+      Notation, problem formulation, background concepts.
+      Keep it tight - reviewers know the basics.
+    subsections:
+      - Notation
+      - Problem Setup
+      - Background
+    citation_density: medium
+
+  - number: 4
+    name: Method
+    slug: method
+    word_ratio: 0.25
+    purpose: |
+      Your algorithm/model. Math-heavy. Clear notation.
+      Pseudocode welcome. Theoretical analysis if applicable.
+    subsections:
+      - Overview
+      - Core Algorithm
+      - Theoretical Analysis
+    citation_density: low
+
+  - number: 5
+    name: Experiments
+    slug: experiments
+    word_ratio: 0.30
+    purpose: |
+      Empirical validation. Standard benchmarks required.
+      Ablations show each component matters.
+    subsections:
+      - Setup and Baselines
+      - Main Results
+      - Ablation Studies
+      - Analysis
+    citation_density: medium
+
+  - number: 6
+    name: Conclusion
+    slug: conclusion
+    word_ratio: 0.05
+    purpose: |
+      Brief wrap-up. Limitations often required section.
+    subsections:
+      - Summary
+      - Limitations
+      - Future Work
+    citation_density: none
+
+optional_sections:
+  - name: Abstract
+    position: before_introduction
+    word_limit: 200
+  - name: Broader Impact
+    position: after_conclusion
+  - name: Appendix
+    position: end
+    notes: Proofs, additional experiments, hyperparameters
+
+citation_style: neurips
+page_limit_hint: "8-9 pages + references + appendix"
+
+notes: |
+  - ML reviewers skim - make contributions crystal clear
+  - Notation consistency is critical
+  - Standard benchmarks expected (ImageNet, GLUE, etc.)
+  - Ablations are mandatory, not optional
+  - Broader Impact/Ethics statement increasingly required

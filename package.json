@@ -1,7 +1,7 @@
 {
   "name": "wtf-p",
   "version": "1.0.0",
-  "description": "The G.O.A.T. meta-prompting system for 10x researchers who need to ship papers YESTERDAY.",
+  "description": "The G.O.A.T. meta-prompting system for 10x researchers who need to submit papers and projects and proposals YESTERDAY.",
   "bin": {
     "wtfp": "bin/install.js"
   },
@@ -21,11 +21,11 @@
     "latex",
     "bibtex"
   ],
-  "author": "GLITTERCOWBOY",
+  "author": "akougkas",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gnosis/wtfp.git"
+    "url": "git+https://github.com/akougkas/wtfp.git"
   },
   "engines": {
     "node": ">=16.7.0"

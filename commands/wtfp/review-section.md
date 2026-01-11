@@ -12,12 +12,18 @@ allowed-tools:
 ---
 
 <objective>
-User acceptance testing of written sections.
+User acceptance testing of written sections with configurable reviewer personas.
 
 Runs 3-layer verification:
 1. Citation Check (Mechanical)
 2. Argument Coherence (Logical)
 3. Rubric Check (Requirements)
+
+**Reviewer Personas** adjust critique intensity and focus:
+- Reviewer #2 (Hostile): Nitpicky, finds every flaw, assumes bad faith
+- Area Chair (Big Picture): Strategic, focuses on contribution significance
+- Camera-Ready Editor (Nitpicky): Formatting, style, polish details
+- Friendly Mentor (Constructive): Balanced, actionable suggestions
 
 Creates ISSUES.md if problems found.
 
@@ -54,24 +60,116 @@ ls .planning/sections/*/SUMMARY.md 2>/dev/null | head -5
 - Read SUMMARY.md for what was intended
 </step>
 
+<step name="select_persona">
+**Select reviewer persona:**
+
+Use AskUserQuestion:
+- header: "Reviewer"
+- question: "What type of review do you want?"
+- options:
+  - "Reviewer #2 (Hostile)" — Nitpicky, assumes worst, finds every flaw
+  - "Area Chair (Big Picture)" — Strategic focus on contribution and impact
+  - "Camera-Ready Editor" — Formatting, style, polish, consistency
+  - "Friendly Mentor" — Balanced, constructive, actionable (Recommended)
+
+**Persona behaviors:**
+
+### Reviewer #2 (Hostile)
+- Questions every claim without citation
+- Assumes methodology is flawed until proven
+- Finds ambiguity in clear statements
+- Demands more experiments/evidence
+- Tone: "The authors fail to..." / "It is unclear why..."
+- Severity bias: Escalates minor issues to major
+
+### Area Chair (Big Picture)
+- Focuses on: Is the contribution significant?
+- Asks: Would this paper advance the field?
+- Checks: Is the evaluation convincing for the claims made?
+- Less concerned with minor formatting
+- Tone: "The main contribution..." / "The significance..."
+- Severity bias: Ignores minor, focuses on blockers
+
+### Camera-Ready Editor
+- Formatting consistency (headings, spacing, fonts)
+- Figure/table placement and references
+- Citation style compliance
+- Grammar, typos, awkward phrasing
+- LaTeX/formatting warnings
+- Tone: "Line X has..." / "Figure Y should..."
+- Severity bias: Many minor issues
+
+### Friendly Mentor
+- Balanced critique with encouragement
+- Every criticism paired with suggestion
+- Prioritizes actionable feedback
+- Acknowledges what works well
+- Tone: "Consider..." / "This works well, but could be stronger if..."
+- Severity bias: Realistic assessment
+
+Store selected persona for use in all verification steps.
+
+</step>
+
 <step name="citation_check">
 **Layer 1: Citation Check (Mechanical)**
 
-Present checklist to user:
+Adjust intensity based on persona:
 
+**If Reviewer #2 (Hostile):**
+```
+## Citation Check (Hostile Mode)
+
+I'm looking for EVERY missing citation:
+
+- [ ] ALL factual claims have citations (even "obvious" ones)
+- [ ] Claims of novelty properly qualified
+- [ ] No weasel words hiding missing citations ("studies show...", "it is known...")
+- [ ] Self-citation ratio appropriate (not self-promotional)
+- [ ] Recent work cited (nothing newer doing this?)
+- [ ] Foundational work cited (did you read the classics?)
+
+**Potential issues I see:**
+[Claude actively identifies potential issues in hostile mode]
+```
+
+**If Area Chair:**
+```
+## Citation Check (Strategic)
+
+Focus on citation credibility:
+
+- [ ] Key claims backed by strong citations
+- [ ] Methodology citations are appropriate
+- [ ] Comparison baselines properly cited
+- [ ] Not over-citing tangential work
+
+**Big picture:**
+```
+
+**If Camera-Ready Editor:**
+```
+## Citation Check (Formatting)
+
+- [ ] Citation format consistent throughout ([N] vs (Author, Year))
+- [ ] All citations resolve in bibliography
+- [ ] No duplicate entries
+- [ ] Citation style matches venue requirements
+- [ ] Page numbers where required
+```
+
+**If Friendly Mentor:**
 ```
 ## Citation Check
 
-Review the section for citation issues:
+Let's make sure your citations are solid:
 
-- [ ] All factual claims have citations
-- [ ] Citations formatted correctly ([Author, Year] or footnote)
-- [ ] All cited works appear in bibliography/references
-- [ ] No [?] or placeholder citations
-- [ ] Page numbers included where required
-- [ ] Self-citations appropriate (not excessive)
+- [ ] Factual claims have citations
+- [ ] Format is consistent
+- [ ] Bibliography is complete
 
-**Issues found:**
+**What's working well:** [note positives]
+**Suggestions:**
 ```
 
 Use AskUserQuestion:
@@ -89,28 +187,74 @@ If issues found, prompt for details.
 <step name="coherence_check">
 **Layer 2: Argument Coherence (Logical)**
 
-Present checklist:
+Adjust intensity based on persona:
 
+**If Reviewer #2 (Hostile):**
+```
+## Argument Coherence (Hostile Mode)
+
+I'm stress-testing your logic:
+
+- [ ] Every claim PROVEN, not just stated
+- [ ] Assumptions explicitly stated and justified
+- [ ] Alternative explanations addressed
+- [ ] Limitations acknowledged (or I'll find them)
+- [ ] No logical leaps ("clearly" / "obviously" hiding weak reasoning)
+- [ ] Statistics interpreted correctly
+- [ ] Causation vs correlation distinguished
+
+**Logical weaknesses I see:**
+[Claude actively identifies logical gaps in hostile mode]
+
+**Questions a hostile reviewer would ask:**
+- "How do you know X causes Y?"
+- "What about alternative explanation Z?"
+- "Your sample size is only N..."
+```
+
+**If Area Chair:**
+```
+## Argument Coherence (Strategic)
+
+Does the argument support a strong contribution?
+
+- [ ] Core thesis is clear and significant
+- [ ] Evidence supports the main claims
+- [ ] Contribution is differentiated from prior work
+- [ ] Limitations don't undermine the contribution
+
+**Strategic assessment:**
+```
+
+**If Camera-Ready Editor:**
+```
+## Argument Coherence (Light Touch)
+
+Basic logical flow:
+
+- [ ] Paragraphs in logical order
+- [ ] Transitions present
+- [ ] No obvious contradictions
+```
+
+**If Friendly Mentor:**
 ```
 ## Argument Coherence
 
-Review the section's logical flow:
+Let's strengthen your argument:
 
-- [ ] Claims follow logically from evidence
-- [ ] No logical contradictions
-- [ ] Counterarguments addressed (if relevant)
-- [ ] Thesis/core argument supported
-- [ ] Paragraphs flow naturally
-- [ ] Transitions connect ideas
-- [ ] No unsupported claims
+- [ ] Claims follow from evidence
+- [ ] Logic flows naturally
+- [ ] Counter-arguments addressed
+
+**Strengths:** [what's working]
+**Opportunities:** [where to strengthen]
+```
 
 **Cross-reference with argument-map.md:**
 - [ ] Claim 1 addressed: [yes/no/partial]
 - [ ] Claim 2 addressed: [yes/no/partial]
 - [ ] ...
-
-**Issues found:**
-```
 
 Use AskUserQuestion:
 - header: "Coherence"
@@ -173,6 +317,8 @@ review_date: [date]
 ---
 
 # Review Issues: [Section Name]
+
+## Reviewer Persona: [Selected Persona]
 
 ## Citation Issues
 | ID | Issue | Severity | Location |
@@ -254,9 +400,10 @@ Total: [N] issues ([blockers] blockers, [major] major, [minor] minor)
 </process>
 
 <success_criteria>
-- [ ] All 3 verification layers executed
+- [ ] Reviewer persona selected
+- [ ] All 3 verification layers executed (intensity adjusted to persona)
 - [ ] User guided through each check
-- [ ] Issues documented in ISSUES.md
-- [ ] Severity levels assigned
+- [ ] Issues documented in ISSUES.md with persona noted
+- [ ] Severity levels assigned (persona-appropriate)
 - [ ] Clear next steps provided
 </success_criteria>

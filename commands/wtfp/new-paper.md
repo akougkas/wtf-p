@@ -24,6 +24,7 @@ Creates `.planning/` with PROJECT.md, config.json, and structure documents.
 @~/.claude/write-the-f-paper/references/questioning.md
 @~/.claude/write-the-f-paper/templates/project.md
 @~/.claude/write-the-f-paper/templates/config.json
+@~/.claude/write-the-f-paper/venues/
 
 </execution_context>
 
@@ -101,6 +102,38 @@ Use AskUserQuestion:
   - "Other" — Essay, report, or something else
 
 Store the document type for later structure decisions.
+
+</step>
+
+<step name="venue_template">
+
+**Select venue template (for research papers):**
+
+If document type is "Research paper", ask for venue template:
+
+Use AskUserQuestion:
+- header: "Venue"
+- question: "What's your target venue or field?"
+- options:
+  - "ACM CS" — Systems, databases, architecture (SIGMOD, OSDI, SOSP)
+  - "IEEE CS" — HPC, parallel systems, storage (SC, IPDPS, TPDS)
+  - "ML/AI" — NeurIPS, ICML, ICLR style
+  - "Nature/Science" — Classic IMRaD for life sciences
+  - "Other" — Custom structure
+
+**Load venue template:**
+
+Based on selection, read the corresponding venue template:
+- ACM CS → `~/.claude/write-the-f-paper/venues/acm-cs.yaml`
+- IEEE CS → `~/.claude/write-the-f-paper/venues/ieee-cs.yaml`
+- ML/AI → `~/.claude/write-the-f-paper/venues/arxiv-ml.yaml`
+- Nature/Science → `~/.claude/write-the-f-paper/venues/nature.yaml`
+- Other → Ask user to describe structure
+
+If document type is "Thesis chapter":
+- Load `~/.claude/write-the-f-paper/venues/thesis-chapter.yaml`
+
+Store the selected venue template for use in structure step.
 
 </step>
 
@@ -251,18 +284,26 @@ Create `.planning/structure/` directory.
 ```markdown
 # Document Outline
 
-## Template: [IMRaD / Grant-NSF / Custom]
+## Venue Template: [acm-cs / ieee-cs / arxiv-ml / nature / thesis / custom]
 
 ## Sections
-[Based on paper type, create appropriate section skeleton]
+[Generated from venue template - see ~/.claude/write-the-f-paper/venues/]
+
+| # | Section | Purpose | Word Ratio |
+|---|---------|---------|------------|
+[Populated from venue template structure]
 
 ## Word Budget
 | Section | Target | Current |
 |---------|--------|---------|
 | Abstract | [X] | 0 |
-| Introduction | [X] | 0 |
+| [Section 1 from template] | [X] | 0 |
+| [Section 2 from template] | [X] | 0 |
 | [...] | | |
 | Total | [X] | 0 |
+
+## Venue Notes
+[From venue template notes field - venue-specific guidance]
 ```
 
 **narrative-arc.md:**
@@ -322,6 +363,8 @@ Create `.planning/config.json`:
   "mode": "[chosen mode]",
   "depth": "[chosen depth]",
   "document_type": "[paper/grant/thesis/other]",
+  "venue_template": "[acm-cs/ieee-cs/arxiv-ml/nature/thesis/custom]",
+  "citation_style": "[from venue template]",
   "gates": {
     "confirm_project": true,
     "confirm_sections": true,

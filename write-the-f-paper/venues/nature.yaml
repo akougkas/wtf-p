@@ -1,0 +1,81 @@
+# Nature/Science IMRaD Template
+# Standard structure for life sciences, interdisciplinary research
+
+name: Nature/Science (IMRaD)
+short: nature
+description: Classic IMRaD structure for life sciences and Nature-family journals
+
+structure:
+  - number: 1
+    name: Introduction
+    slug: introduction
+    word_ratio: 0.15
+    purpose: |
+      Funnel structure: broad context → specific gap → your contribution.
+      End with clear statement of what you did and found.
+    subsections:
+      - Context
+      - Gap
+      - Approach
+    citation_density: high
+
+  - number: 2
+    name: Methods
+    slug: methods
+    word_ratio: 0.25
+    purpose: |
+      Reproducibility is paramount. Every detail needed to replicate.
+      Often moved to end or supplementary in Nature-family.
+    subsections:
+      - Experimental Design
+      - Data Collection
+      - Analysis Methods
+      - Statistical Analysis
+    citation_density: medium
+
+  - number: 3
+    name: Results
+    slug: results
+    word_ratio: 0.30
+    purpose: |
+      Present findings objectively. No interpretation yet.
+      Each figure/table gets narrative explanation.
+    subsections:
+      - Finding 1
+      - Finding 2
+      - Finding 3
+    citation_density: low
+
+  - number: 4
+    name: Discussion
+    slug: discussion
+    word_ratio: 0.25
+    purpose: |
+      Interpret results. Connect to literature. Acknowledge limitations.
+      End with implications and future directions.
+    subsections:
+      - Interpretation
+      - Comparison to Literature
+      - Limitations
+      - Implications
+    citation_density: high
+
+optional_sections:
+  - name: Abstract
+    position: before_introduction
+    word_limit: 150-250
+  - name: Acknowledgments
+    position: after_discussion
+  - name: Data Availability
+    position: end
+  - name: Supplementary Materials
+    position: end
+
+citation_style: nature
+page_limit_hint: "3000-5000 words main text"
+
+notes: |
+  - Abstract is crucial - often only part read
+  - Methods may be brief in main text, detailed in supplement
+  - Results and Discussion sometimes combined
+  - Figures are premium real estate - make them count
