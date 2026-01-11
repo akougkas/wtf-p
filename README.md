@@ -211,25 +211,51 @@ def456g text(methods): draft experimental setup
 
 ## The Toolkit
 
+### Setup & Planning
 | Command | Payload |
 | :--- | :--- |
-| `/wtfp:new-paper` | Start the grind. |
-| `/wtfp:create-outline` | Build the skeleton. |
+| `/wtfp:new-paper` | Start the grind. Picks venue template (ACM/IEEE/ML/Nature). |
+| `/wtfp:create-outline` | Build the skeleton from venue structure. |
 | `/wtfp:map-project` | Analyze the ruins of old drafts. |
+| `/wtfp:analyze-bib` | BibTeX intelligence. Cluster topics, find seminal works, map citations to sections. |
+| `/wtfp:discuss-section [N]` | Gather section context before planning. |
+
+### Writing & Execution
+| Command | Payload |
+| :--- | :--- |
 | `/wtfp:plan-section [N]` | Tactical planning. |
 | `/wtfp:write-section` | Execute the draft. |
 | `/wtfp:progress` | Stats check. |
-| `/wtfp:review-section [N]` | Simulator mode (Reviewer #2). |
-| `/wtfp:plan-revision [N]` | Fix the damage. |
-| `/wtfp:submit-milestone` | Version lock. |
 | `/wtfp:insert-section [N]` | Add missing sauce. |
 | `/wtfp:remove-section [N]` | Kill your darlings. |
-| `/wtfp:research-gap` | Find the holes. |
+| `/wtfp:research-gap` | Find the holes in literature. |
 | `/wtfp:list-assumptions` | Logic check. |
+
+### Review & Polish
+| Command | Payload |
+| :--- | :--- |
+| `/wtfp:review-section [N]` | Reviewer personas: Hostile, Area Chair, Editor, Mentor. |
+| `/wtfp:plan-revision [N]` | Fix the damage. |
+| `/wtfp:polish-prose` | De-robotize the text. Kill AI-speak. |
+| `/wtfp:check-refs` | BibTeX audit. Find missing/unused citations. |
+
+### Export & State
+| Command | Payload |
+| :--- | :--- |
+| `/wtfp:export-latex` | Generate .tex (The final boss). |
+| `/wtfp:submit-milestone` | Version lock. |
 | `/wtfp:pause-writing` | Save state. |
 | `/wtfp:resume-writing` | Load state. |
-| `/wtfp:export-latex` | Generate .tex (The final boss). |
 | `/wtfp:help` | RTFM. |
+
+### Venue Templates
+| Template | Structure |
+| :--- | :--- |
+| `acm-cs` | Intro → Background → Approach → Eval → Related → Conclusion |
+| `ieee-cs` | Intro → Background/Related → Design → Impl → Eval → Conclusion |
+| `arxiv-ml` | Intro → Related → Prelim → Method → Experiments → Conclusion |
+| `nature` | Intro → Methods → Results → Discussion (classic IMRaD) |
+| `thesis` | Flexible chapter structure for dissertations |
 
 ---
 
