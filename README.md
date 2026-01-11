@@ -207,6 +207,27 @@ def456g text(methods): draft experimental setup
 > [!NOTE]
 > **Benefits:** Version control for your thesis. If a draft is mid, `git revert`.
 
+### WCN Mode (Lite Context)
+Running on smaller models? Limited context window? Free-tier Claude?
+
+WCN (Workflow Compression Notation) cuts workflow tokens by **35-50%** with zero quality loss. Verified on Haiku and Sonnet.
+
+```bash
+# Switch to compressed workflows
+./tools/wcn/swap-workflows.sh wcn
+
+# Switch back to verbose
+./tools/wcn/swap-workflows.sh verbose
+```
+
+| Mode | create-outline | plan-section | Best For |
+| :--- | :--- | :--- | :--- |
+| Verbose | 13,029 chars | 13,655 chars | Opus, unlimited plans |
+| WCN | 6,676 chars | 8,863 chars | Haiku, Sonnet, free tiers |
+
+> [!TIP]
+> WCN uses structured notation (`[step:]`, `IF→`, `RUN:`) that smaller models parse just as well. You lose nothing but tokens.
+
 ---
 
 ## The Toolkit
