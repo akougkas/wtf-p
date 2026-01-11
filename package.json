@@ -1,0 +1,33 @@
+{
+  "name": "wtf-p",
+  "version": "1.0.0",
+  "description": "The G.O.A.T. meta-prompting system for 10x researchers who need to ship papers YESTERDAY.",
+  "bin": {
+    "wtfp": "bin/install.js"
+  },
+  "files": [
+    "bin",
+    "commands",
+    "write-the-f-paper"
+  ],
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "meta-prompting",
+    "context-engineering",
+    "academic-writing",
+    "research",
+    "latex",
+    "bibtex"
+  ],
+  "author": "GLITTERCOWBOY",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gnosis/wtfp.git"
+  },
+  "engines": {
+    "node": ">=16.7.0"
+  }
+}

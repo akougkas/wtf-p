@@ -1,0 +1,30 @@
+{
+  "mode": "interactive",
+  "depth": "standard",
+  "document_type": "paper",
+  "output_format": "markdown",
+  "gates": {
+    "confirm_project": true,
+    "confirm_sections": true,
+    "confirm_roadmap": true,
+    "confirm_outline": true,
+    "confirm_plan": true,
+    "write_next_plan": true,
+    "issues_review": true,
+    "confirm_transition": true
+  },
+  "writing": {
+    "claude_mode": "co-author",
+    "citation_style": "apa",
+    "verify_on_complete": true
+  },
+  "verification": {
+    "citation_check": true,
+    "coherence_check": true,
+    "rubric_check": true
+  },
+  "safety": {
+    "always_confirm_destructive": true,
+    "backup_before_major_edits": true
+  }
+}
