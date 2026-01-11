@@ -1,0 +1,24 @@
+{
+  "name": "@wtfp/wcn",
+  "version": "1.0.0",
+  "description": "Workflow Compression Notation - Token-efficient notation for LLM instructions",
+  "main": "converter.js",
+  "bin": {
+    "wcn": "./cli.js"
+  },
+  "scripts": {
+    "convert": "node cli.js",
+    "validate": "node validate.js",
+    "stats": "node stats.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "llm",
+    "prompt-compression",
+    "token-optimization",
+    "workflow",
+    "wtfp"
+  ],
+  "author": "Anthony Kougkas",
+  "license": "MIT"
+}
