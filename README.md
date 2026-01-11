@@ -65,6 +65,55 @@ npx wtfp --local    # Install to ./.claude/
 </details>
 
 <details>
+<summary><strong>Custom Location (For the organized)</strong></summary>
+
+```bash
+# Install to a custom Claude config directory
+npx wtfp --global --config-dir ~/projects/my-paper/.claude
+
+# Or use environment variable
+CLAUDE_CONFIG_DIR=~/research/.claude npx wtfp --global
+```
+</details>
+
+<details>
+<summary><strong>Upgrade / Reinstall (For the cautious)</strong></summary>
+
+When upgrading, WTF-P respects your existing files:
+
+```bash
+# Interactive: prompts for each conflict (overwrite/skip/backup)
+npx wtfp --global
+
+# Force overwrite everything (yolo mode)
+npx wtfp --global --force
+
+# Backup all existing files before overwriting
+npx wtfp --global --backup-all
+```
+</details>
+
+<details>
+<summary><strong>Uninstall (For the tidy)</strong></summary>
+
+```bash
+# Interactive uninstall
+npx wtf-p-uninstall --global
+
+# Preview what would be removed
+npx wtf-p-uninstall --global --dry-run
+
+# Backup before removing
+npx wtf-p-uninstall --global --backup
+
+# Also clean up backup files from prior installs
+npx wtf-p-uninstall --global --clean-backups
+```
+
+Only WTF-P files are removed. Your `CLAUDE.md`, `settings.json`, and other configs stay intact.
+</details>
+
+<details>
 <summary><strong>Dev Mode (For the builders)</strong></summary>
 
 Clone it, build it, break it:

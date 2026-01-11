@@ -21,6 +21,7 @@ function check(condition, msg) {
 
 // Package structure
 check(fs.existsSync(path.join(root, 'bin/install.js')), 'bin/install.js exists');
+check(fs.existsSync(path.join(root, 'bin/uninstall.js')), 'bin/uninstall.js exists');
 check(fs.existsSync(path.join(root, 'commands/wtfp')), 'commands/wtfp exists');
 check(fs.existsSync(path.join(root, 'write-the-f-paper')), 'write-the-f-paper exists');
 check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
@@ -29,6 +30,7 @@ check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
 const pkg = require(path.join(root, 'package.json'));
 check(pkg.name === 'wtf-p', 'package name is wtf-p');
 check(pkg.bin && pkg.bin.wtfp, 'bin.wtfp defined');
+check(pkg.bin && pkg.bin['wtf-p-uninstall'], 'bin.wtf-p-uninstall defined');
 check(pkg.files && pkg.files.includes('bin'), 'files includes bin');
 check(pkg.license === 'MIT', 'license is MIT');
 
