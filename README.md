@@ -17,7 +17,7 @@ npx wtfp
 
 > "Literally the most based addition to my stack. It just writes the f*ing paper."
 
-**Used by absolute legends at MIT, Stanford, Illinois Tech, and ETH Zürich.**
+**Used by absolute legends at Gnosis Research Center at Illinois Tech.**
 
 [The Alpha](#the-alpha-why-i-built-this) · [The Stack](#the-stack) · [The Commands](#the-toolkit) · [The Logic](#the-logic)
 
@@ -70,7 +70,7 @@ npx wtfp --local    # Install to ./.claude/
 Clone it, build it, break it:
 
 ```bash
-git clone https://github.com/gnosis/wtfp.git
+git clone https://github.com/akougkas/wtfp.git
 cd wtfp
 node bin/install.js --local
 ```
@@ -235,7 +235,7 @@ def456g text(methods): draft experimental setup
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=gnosis/wtfp&type=Date)](https://star-history.com/#gnosis/wtfp&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=akougkas/wtfp&type=Date)](https://star-history.com/#akougkas/wtfp&Date)
 
 ## License
 MIT License. Open source, open science.
