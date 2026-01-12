@@ -2,7 +2,7 @@
 
 # WRITE THE F***ING PAPER 🚀
 
-**The G.O.A.T. meta-prompting system for 10x researchers who need to ship papers YESTERDAY.**
+**The G.O.A.T. meta-prompting system for 10x researchers who need to submit papers/proposals YESTERDAY.**
 
 ```bash
 npx wtfp
@@ -37,7 +37,7 @@ I trust the system. It builds the frame so I can just come in and drop the knowl
 
 **No more "writer's block" excuses. We are shipping papers before the deadline. Period.**
 
-— *GLITTERCOWBOY (Tenured & Based)*
+— *akougkas (Nerd ^ academic+coder)*
 
 > Academic writing is usually chaotic evil. You ask AI for a lit review, it invents papers. Total beta move.
 > **WTF-P fixes that.** It's the grounding layer that makes Claude Code academic weapon grade. Describe the hypothesis, drop the .bib, and watch it cook.
@@ -328,10 +328,6 @@ WCN (Workflow Compression Notation) cuts workflow tokens by **35-50%** with zero
 | `thesis` | Flexible chapter structure for dissertations |
 
 ---
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=akougkas/wtfp&type=Date)](https://star-history.com/#akougkas/wtfp&Date)
 
 ## License
 MIT License. Open source, open science.
