@@ -1,6 +1,7 @@
 ---
 name: wtfp:help
 description: Show available WTF-P commands and usage guide
+allowed-tools: []
 ---
 
 <objective>
@@ -14,6 +15,7 @@ Output ONLY the reference content below. Do NOT add:
 - Any commentary beyond the reference
 </objective>
 
+<process>
 <reference>
 # WTF-P Command Reference
 
@@ -365,3 +367,4 @@ Guide through contributing code via Pull Request.
 - Request features: `/wtfp:request-feature`
 - GitHub: https://github.com/akougkas/wtf-p
 </reference>
+</process>

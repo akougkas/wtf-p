@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const MANIFEST = require('../lib/manifest');
 const { 
   isValidPath, 
-  getClaudeDir, 
+  getClaudeDir, // Legacy support, will refactor
   getPathLabel, 
   getBackupPath, 
   writeVersionFile, 
@@ -23,31 +24,40 @@ function processContent(srcPath, pathPrefix) {
 }
 
 /**
- * Collect files to install
+ * Collect files from a manifest component
  */
-function collectInstallFiles(srcDir, destDir, files = []) {
-  if (!fs.existsSync(srcDir)) return files;
+function collectComponentFiles(component, destBase, files = []) {
+  if (!fs.existsSync(component.src)) return files;
 
-  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+  function recurse(currentSrc, currentRel) {
+    const entries = fs.readdirSync(currentSrc, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const srcPath = path.join(currentSrc, entry.name);
+      const relPath = path.join(currentRel, entry.name);
+      const destPath = path.join(destBase, component.dest, relPath);
 
-  for (const entry of entries) {
-    const srcPath = path.join(srcDir, entry.name);
-    const destPath = path.join(destDir, entry.name);
-
-    if (entry.isDirectory()) {
-      collectInstallFiles(srcPath, destPath, files);
-    } else {
-      files.push({ src: srcPath, dest: destPath, name: entry.name });
+      if (entry.isDirectory()) {
+        recurse(srcPath, relPath);
+      } else {
+        files.push({ 
+          src: srcPath, 
+          dest: destPath, 
+          name: entry.name,
+          componentId: component.id 
+        });
+      }
     }
   }
 
+  recurse(component.src, '.');
   return files;
 }
 
 /**
  * Install files with conflict resolution
  */
-async function installWithConflictResolution(files, pathPrefix, claudeDir, options) {
+async function installWithConflictResolution(files, pathPrefix, targetDir, options) {
   const { out, hasForce, hasBackupAll, isInteractive, showExplanations } = options;
   const c = out.colors;
   const rl = createRL();
@@ -57,7 +67,7 @@ async function installWithConflictResolution(files, pathPrefix, claudeDir, optio
   const existingFiles = files.filter(f => fs.existsSync(f.dest));
 
   if (existingFiles.length > 0 && !hasForce && !hasBackupAll && isInteractive) {
-    const relPath = getPathLabel(claudeDir, true);
+    const relPath = getPathLabel(targetDir, true);
     out.log(`  ${c.yellow(`Found ${existingFiles.length} existing WTF-P file(s) in ${relPath}`)}
 `);
 
@@ -100,7 +110,6 @@ async function installWithConflictResolution(files, pathPrefix, claudeDir, optio
           choice = 'skip';
         }
       } else if (!choice) {
-        // Non-interactive with existing file and no force: skip
         choice = 'skip';
       }
 
@@ -149,61 +158,62 @@ async function install(isGlobal, isUpdate, options, pkg) {
   const { out, explicitConfigDir, hasQuiet, onlyInstall, showExplanations } = options;
   const c = out.colors;
 
-  const src = path.join(__dirname, '../..');
-  const claudeDir = getClaudeDir(explicitConfigDir, isGlobal);
-  const locationLabel = getPathLabel(claudeDir, isGlobal);
+  // Use Claude vendor by default for now (can be passed as arg later)
+  const vendorConfig = MANIFEST.claude;
+  
+  // Resolve Target Directory using the Vendor Strategy
+  // TODO: Use getVendorDir generic
+  const targetDir = getClaudeDir(explicitConfigDir, isGlobal);
+  const locationLabel = getPathLabel(targetDir, isGlobal);
 
   // Validate path
-  if (!isValidPath(claudeDir)) {
-    out.error(`Invalid path: ${claudeDir}`);
+  if (!isValidPath(targetDir)) {
+    out.error(`Invalid path: ${targetDir}`);
     process.exit(1);
   }
 
   const pathPrefix = isGlobal
-    ? (explicitConfigDir ? `${claudeDir}/` : '~/.claude/')
-    : './.claude/';
+    ? (explicitConfigDir ? `${targetDir}/` : `~/${vendorConfig.defaultDir}/`)
+    : `./${vendorConfig.defaultDir}/`;
 
   if (!hasQuiet) {
     out.log(`  Installing to ${c.cyan(locationLabel)}
 `);
   }
 
-  // Collect files
+  // Collect files based on Manifest
   const allFiles = [];
 
-  // 1. Core Workflows
-  if (onlyInstall === 'all' || onlyInstall === 'workflows') {
-    const workflowSrc = path.join(src, 'core', 'write-the-f-paper');
-    const workflowDest = path.join(claudeDir, 'write-the-f-paper');
-    collectInstallFiles(workflowSrc, workflowDest, allFiles);
-  }
-
-  // 2. Claude Commands
-  if (onlyInstall === 'all' || onlyInstall === 'commands') {
-    const commandSrc = path.join(src, 'vendors', 'claude', 'commands', 'wtfp');
-    const commandDest = path.join(claudeDir, 'commands', 'wtfp');
-    collectInstallFiles(commandSrc, commandDest, allFiles);
-  }
-
-  // 3. Claude Skills (always with commands for now)
-  if (onlyInstall === 'all' || onlyInstall === 'commands' || onlyInstall === 'skills') {
-    const skillSrc = path.join(src, 'vendors', 'claude', 'skills', 'wtfp');
-    const skillDest = path.join(claudeDir, 'skills', 'wtfp');
-    collectInstallFiles(skillSrc, skillDest, allFiles);
-  }
-
-  // 4. Claude Plugin Manifest
-  if (onlyInstall === 'all') {
-    const pluginSrc = path.join(src, 'vendors', 'claude', '.claude-plugin');
-    const pluginDest = path.join(claudeDir, '.claude-plugin');
-    collectInstallFiles(pluginSrc, pluginDest, allFiles);
-  }
+  vendorConfig.components.forEach(component => {
+    // Check --only filters
+    if (onlyInstall !== 'all') {
+      // Map 'workflows' flag to 'workflows' component ID
+      // Map 'commands' flag to 'commands' component ID
+      // Map 'skills' flag to 'skills' component ID
+      if (onlyInstall !== component.id) {
+         // Special case: 'commands' usually implies 'skills' too in legacy logic
+         if (onlyInstall === 'commands' && component.id === 'skills') {
+           // Allow
+         } else {
+           return;
+         }
+      }
+    }
+    
+    // DEBUG LOG
+    // console.log(`Collecting: ${component.id} from ${component.src}`);
+    
+    collectComponentFiles(component, targetDir, allFiles);
+  });
+  
+  // DEBUG
+  // console.log(`Total files found: ${allFiles.length}`);
 
   // Install with conflict resolution
-  const stats = await installWithConflictResolution(allFiles, pathPrefix, claudeDir, options);
+  const stats = await installWithConflictResolution(allFiles, pathPrefix, targetDir, options);
 
   // Write version tracking file
-  writeVersionFile(claudeDir, pkg.version, allFiles);
+  writeVersionFile(targetDir, pkg.version, allFiles);
 
   // Summary
   if (!hasQuiet) {

@@ -15,6 +15,7 @@ const showStatus = require('./commands/status');
 const runDoctor = require('./commands/doctor');
 const runUpdate = require('./commands/update');
 const install = require('./commands/install-logic');
+const showList = require('./commands/list');
 
 // ============ Argument Parsing ============ 
 
@@ -35,6 +36,7 @@ const hasForce = args.includes('--force') || args.includes('-f');
 const hasBackupAll = args.includes('--backup-all') || args.includes('-b');
 const hasHelp = args.includes('--help') || args.includes('-h');
 const hasVersion = args.includes('--version') || args.includes('-v');
+const hasList = args.includes('--list');
 const hasNoColor = args.includes('--no-color');
 const hasQuiet = args.includes('--quiet') || args.includes('-q');
 const hasVerbose = args.includes('--verbose');
@@ -144,6 +146,13 @@ async function main() {
 
   if (hasHelp) {
     showHelp();
+    return;
+  }
+
+  // Handle --list
+  if (hasList) {
+    if (!hasQuiet) console.log(banner);
+    showList(options);
     return;
   }
 

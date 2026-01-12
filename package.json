@@ -8,7 +8,7 @@
     "wtf-p-uninstall": "bin/uninstall.js"
   },
   "scripts": {
-    "test": "node test/sanity.js && node test/paths.js",
+    "test": "node test/sanity.js && node test/paths.js && node test/linter.js",
     "test:integration": "node test/integration.js",
     "test:all": "npm test && npm run test:integration",
     "preflight": "node scripts/preflight.js",

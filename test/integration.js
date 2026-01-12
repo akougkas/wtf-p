@@ -78,7 +78,7 @@ try {
 
   // Verify version file contents
   const versionData = JSON.parse(fs.readFileSync(path.join(claudeDir, '.wtfp-version'), 'utf8'));
-  check(versionData.version === '0.1.0', 'version file has correct version');
+  check(versionData.version === '0.3.0', 'version file has correct version');
   check(versionData.installedAt, 'version file has installedAt');
   check(Array.isArray(versionData.manifest), 'version file has manifest');
 
@@ -86,7 +86,7 @@ try {
   console.log('\n--- Status Command ---');
   const statusOutput = run(`status --no-color --config-dir "${claudeDir}"`);
   check(statusOutput.includes('Installation Status'), 'status shows header');
-  check(statusOutput.includes('0.1.0'), 'status shows version');
+  check(statusOutput.includes('0.3.0'), 'status shows version');
   check(statusOutput.includes('commands'), 'status shows commands');
   check(statusOutput.includes('workflows'), 'status shows workflows');
 
@@ -156,7 +156,7 @@ try {
   check(helpOutput.includes('update'), 'help mentions update');
 
   const versionOutput = run('--version');
-  check(versionOutput.includes('0.1.0'), 'version shows current version');
+  check(versionOutput.includes('0.3.0'), 'version shows current version');
 
   // Test 11: Path with spaces
   console.log('\n--- Path with Spaces ---');

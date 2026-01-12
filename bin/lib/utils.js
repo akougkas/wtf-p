@@ -117,6 +117,9 @@ function readInstalledVersion(claudeDir) {
  * Write version tracking file
  */
 function writeVersionFile(claudeDir, version, installedFiles) {
+  if (!fs.existsSync(claudeDir)) {
+    fs.mkdirSync(claudeDir, { recursive: true });
+  }
   const versionFile = path.join(claudeDir, VERSION_FILE);
   const data = {
     version,
