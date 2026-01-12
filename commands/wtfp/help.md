@@ -333,10 +333,35 @@ Claude adapts its role per section:
 /wtfp:respond-reviews  # Generate response doc
 ```
 
+## Contributing to WTF-P
+
+Found a bug or want a new feature? Use these commands:
+
+**`/wtfp:report-bug`**
+Report a bug via GitHub issue.
+- Guides you through describing the problem
+- Collects environment info automatically
+- Creates well-formatted issue with `gh` CLI
+
+**`/wtfp:request-feature`**
+Request a new feature via GitHub issue.
+- Helps articulate what you need and why
+- Checks for duplicate requests
+- Can lead into implementation if desired
+
+**`/wtfp:contribute`**
+Guide through contributing code via Pull Request.
+- Fork → Branch → Implement → Test → PR workflow
+- Works for new commands, bug fixes, docs
+- Follows project conventions automatically
+
 ## Getting Help
 
 - Read `.planning/PROJECT.md` for paper vision
 - Read `.planning/STATE.md` for current context
 - Check `.planning/ROADMAP.md` for section status
 - Run `/wtfp:progress` to check where you're at
+- Report bugs: `/wtfp:report-bug`
+- Request features: `/wtfp:request-feature`
+- GitHub: https://github.com/akougkas/wtf-p
 </reference>

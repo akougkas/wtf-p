@@ -3,16 +3,20 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const readline = require('readline');
 
-// Colors
-const cyan = '\x1b[36m';
-const green = '\x1b[32m';
-const yellow = '\x1b[33m';
-const red = '\x1b[31m';
-const magenta = '\x1b[35m';
-const dim = '\x1b[2m';
-const reset = '\x1b[0m';
+const {
+  expandTilde,
+  normalizePath,
+  getClaudeDir,
+  getPathLabel,
+  detectInstallation,
+  collectFiles,
+  createColors,
+  createOutput,
+  createRL,
+  prompt,
+  VERSION_FILE
+} = require('./lib/utils');
 
 // Get version from package.json
 let version = 'unknown';
@@ -23,18 +27,8 @@ try {
   // Running standalone
 }
 
-const banner = `
-${magenta}██╗    ██╗████████╗███████╗      ██████╗
-██║    ██║╚══██╔══╝██╔════╝      ██╔══██╗
-██║ █╗ ██║   ██║   █████╗  █████╗██████╔╝
-██║███╗██║   ██║   ██╔══╝  ╚════╝██╔═══╝
-╚███╔███╔╝   ██║   ██║           ██║
- ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═╝${reset}
+// ============ Argument Parsing ============
 
-  ${cyan}WTF-P Uninstaller${reset} ${dim}v${version}${reset}
-`;
-
-// Parse args
 const args = process.argv.slice(2);
 const hasGlobal = args.includes('--global') || args.includes('-g');
 const hasLocal = args.includes('--local') || args.includes('-l');
@@ -42,6 +36,9 @@ const hasForce = args.includes('--force') || args.includes('-f');
 const hasBackup = args.includes('--backup') || args.includes('-b');
 const hasDryRun = args.includes('--dry-run') || args.includes('-n');
 const hasCleanBackups = args.includes('--clean-backups');
+const hasHelp = args.includes('--help') || args.includes('-h');
+const hasNoColor = args.includes('--no-color');
+const hasQuiet = args.includes('--quiet') || args.includes('-q');
 
 // Parse --config-dir argument
 function parseConfigDirArg() {
@@ -49,7 +46,7 @@ function parseConfigDirArg() {
   if (configDirIndex !== -1) {
     const nextArg = args[configDirIndex + 1];
     if (!nextArg || nextArg.startsWith('-')) {
-      console.error(`  ${yellow}--config-dir requires a path argument${reset}`);
+      console.error('  --config-dir requires a path argument');
       process.exit(1);
     }
     return nextArg;
@@ -60,82 +57,80 @@ function parseConfigDirArg() {
   }
   return null;
 }
+
 const explicitConfigDir = parseConfigDirArg();
-const hasHelp = args.includes('--help') || args.includes('-h');
 
-console.log(banner);
+// Setup output helpers
+const isTTY = process.stdout.isTTY && process.stdin.isTTY;
+const useColors = !hasNoColor && (isTTY || process.env.FORCE_COLOR);
+const out = createOutput({ quiet: hasQuiet, useColors });
+const c = out.colors;
 
-// Show help if requested
+// ============ Banner ============
+
+const banner = `
+${c.magenta('██╗    ██╗████████╗███████╗      ██████╗')}
+${c.magenta('██║    ██║╚══██╔══╝██╔════╝      ██╔══██╗')}
+${c.magenta('██║ █╗ ██║   ██║   █████╗  █████╗██████╔╝')}
+${c.magenta('██║███╗██║   ██║   ██╔══╝  ╚════╝██╔═══╝')}
+${c.magenta('╚███╔███╔╝   ██║   ██║           ██║')}
+${c.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═╝')}
+
+  ${c.cyan('WTF-P Uninstaller')} ${c.dim(`v${version}`)}
+`;
+
+if (!hasQuiet) {
+  console.log(banner);
+}
+
+// ============ Help Text ============
+
 if (hasHelp) {
-  console.log(`  ${yellow}Usage:${reset} npx wtf-p-uninstall [options]
+  console.log(`  ${c.yellow('Usage:')} npx wtf-p-uninstall [options]
 
-  ${yellow}Options:${reset}
-    ${cyan}-g, --global${reset}              Uninstall from Claude config directory
-    ${cyan}-l, --local${reset}               Uninstall from ./.claude in current directory
-    ${cyan}-c, --config-dir <path>${reset}   Specify custom Claude config directory
-    ${cyan}-f, --force${reset}               Skip confirmation prompts
-    ${cyan}-b, --backup${reset}              Backup files before removing
-    ${cyan}-n, --dry-run${reset}             Show what would be removed without removing
-    ${cyan}--clean-backups${reset}           Also remove .backup-* files from prior installs
-    ${cyan}-h, --help${reset}                Show this help message
+  ${c.yellow('Options:')}
+    ${c.cyan('-g, --global')}              Uninstall from Claude config directory
+    ${c.cyan('-l, --local')}               Uninstall from ./.claude in current directory
+    ${c.cyan('-c, --config-dir <path>')}   Specify custom Claude config directory
+    ${c.cyan('-f, --force')}               Skip confirmation prompts
+    ${c.cyan('-b, --backup')}              Backup files before removing
+    ${c.cyan('-n, --dry-run')}             Show what would be removed without removing
+    ${c.cyan('--clean-backups')}           Also remove .backup-* files from prior installs
+    ${c.cyan('--no-color')}                Disable colored output
+    ${c.cyan('-q, --quiet')}               Suppress non-essential output
+    ${c.cyan('-h, --help')}                Show this help message
 
-  ${yellow}What gets removed:${reset}
-    ${dim}commands/wtfp/${reset}         - WTF-P slash commands
-    ${dim}write-the-f-paper/${reset}     - WTF-P skill and workflows
+  ${c.yellow('What gets removed:')}
+    ${c.dim('commands/wtfp/')}         - WTF-P slash commands
+    ${c.dim('write-the-f-paper/')}     - WTF-P skill and workflows
+    ${c.dim('.wtfp-version')}          - Version tracking file
 
-  ${yellow}What stays intact:${reset}
-    ${dim}CLAUDE.md${reset}               - Your personal instructions (never touched)
-    ${dim}commands/${reset}               - Other slash commands you may have
-    ${dim}settings.json${reset}           - Your Claude settings
-    ${dim}Other directories${reset}       - Any other config or plugins
+  ${c.yellow('What stays intact:')}
+    ${c.dim('CLAUDE.md')}               - Your personal instructions (never touched)
+    ${c.dim('commands/')}               - Other slash commands you may have
+    ${c.dim('settings.json')}           - Your Claude settings
+    ${c.dim('Other directories')}       - Any other config or plugins
 
-  ${yellow}Examples:${reset}
-    ${dim}# Interactive uninstall from ~/.claude${reset}
+  ${c.yellow('Examples:')}
+    ${c.dim('# Interactive uninstall from ~/.claude')}
     npx wtf-p-uninstall --global
 
-    ${dim}# Preview what would be removed${reset}
+    ${c.dim('# Preview what would be removed')}
     npx wtf-p-uninstall --global --dry-run
 
-    ${dim}# Backup before removing${reset}
+    ${c.dim('# Backup before removing')}
     npx wtf-p-uninstall --global --backup
 
-    ${dim}# Also clean up backup files from prior installs${reset}
+    ${c.dim('# Also clean up backup files from prior installs')}
     npx wtf-p-uninstall --global --clean-backups
 
-    ${dim}# Uninstall from custom location${reset}
+    ${c.dim('# Uninstall from custom location')}
     npx wtf-p-uninstall --global --config-dir ~/.claude-research
 `);
   process.exit(0);
 }
 
-/**
- * Expand ~ to home directory
- */
-function expandTilde(filePath) {
-  if (filePath && filePath.startsWith('~/')) {
-    return path.join(os.homedir(), filePath.slice(2));
-  }
-  return filePath;
-}
-
-/**
- * Create readline interface for prompts
- */
-function createRL() {
-  return readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-}
-
-/**
- * Prompt user with a question
- */
-function prompt(rl, question) {
-  return new Promise(resolve => {
-    rl.question(question, answer => resolve(answer.trim().toLowerCase()));
-  });
-}
+// ============ Utilities ============
 
 /**
  * Generate backup directory path with timestamp
@@ -143,24 +138,6 @@ function prompt(rl, question) {
 function getBackupDir(claudeDir) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   return path.join(claudeDir, `.wtfp-backup-${timestamp}`);
-}
-
-/**
- * Recursively collect all files in a directory
- */
-function collectFiles(dir, files = []) {
-  if (!fs.existsSync(dir)) return files;
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      collectFiles(fullPath, files);
-    } else {
-      files.push(fullPath);
-    }
-  }
-  return files;
 }
 
 /**
@@ -198,7 +175,6 @@ function findBackupFiles(dir, backups = []) {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      // Check for .wtfp-backup-* directories
       if (entry.name.startsWith('.wtfp-backup-')) {
         backups.push(fullPath);
       } else {
@@ -211,72 +187,43 @@ function findBackupFiles(dir, backups = []) {
   return backups;
 }
 
-/**
- * Detect what's installed
- */
-function detectInstallation(claudeDir) {
-  const wtfpCommands = path.join(claudeDir, 'commands', 'wtfp');
-  const wtfpSkill = path.join(claudeDir, 'write-the-f-paper');
-
-  const installed = {
-    commands: fs.existsSync(wtfpCommands) ? wtfpCommands : null,
-    skill: fs.existsSync(wtfpSkill) ? wtfpSkill : null,
-    commandFiles: [],
-    skillFiles: []
-  };
-
-  if (installed.commands) {
-    installed.commandFiles = collectFiles(installed.commands);
-  }
-  if (installed.skill) {
-    installed.skillFiles = collectFiles(installed.skill);
-  }
-
-  return installed;
-}
+// ============ Uninstall Logic ============
 
 /**
  * Uninstall from the specified directory
  */
 async function uninstall(isGlobal) {
-  const configDir = expandTilde(explicitConfigDir) || expandTilde(process.env.CLAUDE_CONFIG_DIR);
-  const defaultGlobalDir = configDir || path.join(os.homedir(), '.claude');
-  const claudeDir = isGlobal
-    ? defaultGlobalDir
-    : path.join(process.cwd(), '.claude');
+  const claudeDir = getClaudeDir(explicitConfigDir, isGlobal);
+  const locationLabel = getPathLabel(claudeDir, isGlobal);
 
-  const locationLabel = isGlobal
-    ? claudeDir.replace(os.homedir(), '~')
-    : claudeDir.replace(process.cwd(), '.');
-
-  console.log(`  Checking ${cyan}${locationLabel}${reset} for WTF-P installation...\n`);
+  out.log(`  Checking ${c.cyan(locationLabel)} for WTF-P installation...\n`);
 
   // Detect installation
   const installed = detectInstallation(claudeDir);
   const totalFiles = installed.commandFiles.length + installed.skillFiles.length;
 
-  if (!installed.commands && !installed.skill) {
-    console.log(`  ${yellow}No WTF-P installation found in ${locationLabel}${reset}\n`);
+  if (!installed.hasCommands && !installed.hasSkill) {
+    out.log(`  ${c.yellow('No WTF-P installation found in ' + locationLabel)}\n`);
 
     // Check for backups if requested
     if (hasCleanBackups) {
       const backups = findBackupFiles(claudeDir);
       if (backups.length > 0) {
-        console.log(`  Found ${backups.length} backup file(s)/folder(s) to clean:\n`);
+        out.log(`  Found ${backups.length} backup file(s)/folder(s) to clean:\n`);
         for (const b of backups.slice(0, 10)) {
-          console.log(`    ${dim}${b.replace(claudeDir, '.')}${reset}`);
+          out.log(`    ${c.dim(b.replace(claudeDir, '.'))}`);
         }
         if (backups.length > 10) {
-          console.log(`    ${dim}... and ${backups.length - 10} more${reset}`);
+          out.log(`    ${c.dim('... and ' + (backups.length - 10) + ' more')}`);
         }
-        console.log();
+        out.log('');
 
         if (!hasDryRun && !hasForce) {
           const rl = createRL();
           const answer = await prompt(rl, `  Remove these backup files? [y/N]: `);
           rl.close();
           if (answer !== 'y' && answer !== 'yes') {
-            console.log(`\n  ${yellow}Aborted.${reset}\n`);
+            out.log(`\n  ${c.yellow('Aborted.')}\n`);
             return;
           }
         }
@@ -288,48 +235,53 @@ async function uninstall(isGlobal) {
             } else {
               fs.unlinkSync(b);
             }
-            console.log(`  ${red}-${reset} ${dim}${b.replace(claudeDir, '.')}${reset}`);
+            out.log(`  ${c.red('-')} ${c.dim(b.replace(claudeDir, '.'))}`);
           }
-          console.log(`\n  ${green}Cleaned ${backups.length} backup file(s).${reset}\n`);
+          out.log(`\n  ${c.green('Cleaned ' + backups.length + ' backup file(s).')}\n`);
         } else {
-          console.log(`  ${yellow}Dry run: would remove ${backups.length} backup file(s).${reset}\n`);
+          out.log(`  ${c.yellow('Dry run: would remove ' + backups.length + ' backup file(s).')}\n`);
         }
       } else {
-        console.log(`  No backup files found.\n`);
+        out.log(`  No backup files found.\n`);
       }
     }
     return;
   }
 
   // Show what will be removed
-  console.log(`  ${yellow}Found WTF-P installation:${reset}\n`);
+  out.log(`  ${c.yellow('Found WTF-P installation:')}\n`);
 
-  if (installed.commands) {
-    console.log(`    ${cyan}commands/wtfp/${reset} (${installed.commandFiles.length} files)`);
-  }
-  if (installed.skill) {
-    console.log(`    ${cyan}write-the-f-paper/${reset} (${installed.skillFiles.length} files)`);
-  }
-  console.log();
+  const commandsDir = path.join(claudeDir, 'commands', 'wtfp');
+  const skillDir = path.join(claudeDir, 'write-the-f-paper');
 
-  // Check for backups to clean (only outside wtfp directories since those get removed anyway)
+  if (installed.hasCommands) {
+    out.log(`    ${c.cyan('commands/wtfp/')} (${installed.commandFiles.length} files)`);
+  }
+  if (installed.hasSkill) {
+    out.log(`    ${c.cyan('write-the-f-paper/')} (${installed.skillFiles.length} files)`);
+  }
+  if (installed.version) {
+    out.log(`    ${c.cyan(VERSION_FILE)} (version tracking)`);
+  }
+  out.log('');
+
+  // Check for backups to clean
   let backups = [];
   if (hasCleanBackups) {
     const allBackups = findBackupFiles(claudeDir);
-    // Filter out backups inside directories we're already removing
     backups = allBackups.filter(b => {
-      if (installed.commands && b.startsWith(installed.commands)) return false;
-      if (installed.skill && b.startsWith(installed.skill)) return false;
+      if (installed.hasCommands && b.startsWith(commandsDir)) return false;
+      if (installed.hasSkill && b.startsWith(skillDir)) return false;
       return true;
     });
     if (backups.length > 0) {
-      console.log(`    ${dim}+ ${backups.length} backup file(s) outside wtfp dirs will also be removed${reset}\n`);
+      out.log(`    ${c.dim('+ ' + backups.length + ' backup file(s) outside wtfp dirs will also be removed')}\n`);
     }
   }
 
   // Dry run stops here
   if (hasDryRun) {
-    console.log(`  ${yellow}Dry run: would remove ${totalFiles} file(s) in 2 directories.${reset}\n`);
+    out.log(`  ${c.yellow('Dry run: would remove ' + totalFiles + ' file(s) in 2 directories.')}\n`);
     return;
   }
 
@@ -340,10 +292,10 @@ async function uninstall(isGlobal) {
     rl.close();
 
     if (answer !== 'y' && answer !== 'yes') {
-      console.log(`\n  ${yellow}Aborted.${reset}\n`);
+      out.log(`\n  ${c.yellow('Aborted.')}\n`);
       return;
     }
-    console.log();
+    out.log('');
   }
 
   // Backup if requested
@@ -351,38 +303,45 @@ async function uninstall(isGlobal) {
     const backupDir = getBackupDir(claudeDir);
     fs.mkdirSync(backupDir, { recursive: true });
 
-    if (installed.commands) {
+    if (installed.hasCommands) {
       const dest = path.join(backupDir, 'commands', 'wtfp');
-      copyDir(installed.commands, dest);
+      copyDir(commandsDir, dest);
     }
-    if (installed.skill) {
+    if (installed.hasSkill) {
       const dest = path.join(backupDir, 'write-the-f-paper');
-      copyDir(installed.skill, dest);
+      copyDir(skillDir, dest);
     }
 
     const backupLabel = backupDir.replace(os.homedir(), '~').replace(process.cwd(), '.');
-    console.log(`  ${cyan}↻${reset} Backed up to ${dim}${backupLabel}${reset}\n`);
+    out.log(`  ${c.cyan('↻')} Backed up to ${c.dim(backupLabel)}\n`);
   }
 
   // Remove directories
-  if (installed.commands) {
-    removeDir(installed.commands);
-    console.log(`  ${red}-${reset} ${dim}commands/wtfp/${reset}`);
+  if (installed.hasCommands) {
+    removeDir(commandsDir);
+    out.log(`  ${c.red('-')} ${c.dim('commands/wtfp/')}`);
 
     // Clean up empty commands dir
-    const commandsDir = path.join(claudeDir, 'commands');
-    if (fs.existsSync(commandsDir)) {
-      const remaining = fs.readdirSync(commandsDir);
+    const parentCommandsDir = path.join(claudeDir, 'commands');
+    if (fs.existsSync(parentCommandsDir)) {
+      const remaining = fs.readdirSync(parentCommandsDir);
       if (remaining.length === 0) {
-        fs.rmdirSync(commandsDir);
-        console.log(`  ${red}-${reset} ${dim}commands/${reset} ${dim}(empty)${reset}`);
+        fs.rmdirSync(parentCommandsDir);
+        out.log(`  ${c.red('-')} ${c.dim('commands/')} ${c.dim('(empty)')}`);
       }
     }
   }
 
-  if (installed.skill) {
-    removeDir(installed.skill);
-    console.log(`  ${red}-${reset} ${dim}write-the-f-paper/${reset}`);
+  if (installed.hasSkill) {
+    removeDir(skillDir);
+    out.log(`  ${c.red('-')} ${c.dim('write-the-f-paper/')}`);
+  }
+
+  // Remove version file
+  const versionFile = path.join(claudeDir, VERSION_FILE);
+  if (fs.existsSync(versionFile)) {
+    fs.unlinkSync(versionFile);
+    out.log(`  ${c.red('-')} ${c.dim(VERSION_FILE)}`);
   }
 
   // Clean backups if requested
@@ -394,15 +353,15 @@ async function uninstall(isGlobal) {
         fs.unlinkSync(b);
       }
     }
-    console.log(`  ${red}-${reset} ${dim}${backups.length} backup file(s)${reset}`);
+    out.log(`  ${c.red('-')} ${c.dim(backups.length + ' backup file(s)')}`);
   }
 
-  console.log(`
-  ${green}Done!${reset} WTF-P has been uninstalled.
+  out.log(`
+  ${c.green('Done!')} WTF-P has been uninstalled.
 
-  ${dim}Your CLAUDE.md and other configs remain untouched.${reset}
+  ${c.dim('Your CLAUDE.md and other configs remain untouched.')}
 
-  To reinstall: ${cyan}npx wtf-p --global${reset}
+  To reinstall: ${c.cyan('npx wtf-p --global')}
 `);
 }
 
@@ -412,43 +371,42 @@ async function uninstall(isGlobal) {
 async function promptLocation() {
   const rl = createRL();
 
-  const configDir = expandTilde(explicitConfigDir) || expandTilde(process.env.CLAUDE_CONFIG_DIR);
-  const globalPath = configDir || path.join(os.homedir(), '.claude');
-  const globalLabel = globalPath.replace(os.homedir(), '~');
-  const localPath = path.join(process.cwd(), '.claude');
+  const globalPath = getClaudeDir(explicitConfigDir, true);
+  const globalLabel = getPathLabel(globalPath, true);
+  const localPath = getClaudeDir(null, false);
 
   // Check what's installed where
   const globalInstalled = detectInstallation(globalPath);
   const localInstalled = detectInstallation(localPath);
 
-  const hasGlobalInstall = globalInstalled.commands || globalInstalled.skill;
-  const hasLocalInstall = localInstalled.commands || localInstalled.skill;
+  const hasGlobalInstall = globalInstalled.hasCommands || globalInstalled.hasSkill;
+  const hasLocalInstall = localInstalled.hasCommands || localInstalled.hasSkill;
 
   if (!hasGlobalInstall && !hasLocalInstall) {
-    console.log(`  ${yellow}No WTF-P installation found.${reset}\n`);
-    console.log(`  Checked:`);
-    console.log(`    ${dim}${globalLabel}${reset}`);
-    console.log(`    ${dim}./.claude${reset}\n`);
+    out.log(`  ${c.yellow('No WTF-P installation found.')}\n`);
+    out.log(`  Checked:`);
+    out.log(`    ${c.dim(globalLabel)}`);
+    out.log(`    ${c.dim('./.claude')}\n`);
     rl.close();
     return;
   }
 
-  console.log(`  ${yellow}Where would you like to uninstall from?${reset}\n`);
+  out.log(`  ${c.yellow('Where would you like to uninstall from?')}\n`);
 
   if (hasGlobalInstall) {
     const count = globalInstalled.commandFiles.length + globalInstalled.skillFiles.length;
-    console.log(`  ${cyan}1${reset}) Global ${dim}(${globalLabel})${reset} - ${count} files`);
+    out.log(`  ${c.cyan('1)')} Global ${c.dim('(' + globalLabel + ')')} - ${count} files`);
   } else {
-    console.log(`  ${dim}1) Global (${globalLabel}) - not installed${reset}`);
+    out.log(`  ${c.dim('1) Global (' + globalLabel + ') - not installed')}`);
   }
 
   if (hasLocalInstall) {
     const count = localInstalled.commandFiles.length + localInstalled.skillFiles.length;
-    console.log(`  ${cyan}2${reset}) Local  ${dim}(./.claude)${reset} - ${count} files`);
+    out.log(`  ${c.cyan('2)')} Local  ${c.dim('(./.claude)')} - ${count} files`);
   } else {
-    console.log(`  ${dim}2) Local (./.claude) - not installed${reset}`);
+    out.log(`  ${c.dim('2) Local (./.claude) - not installed')}`);
   }
-  console.log();
+  out.log('');
 
   const answer = await prompt(rl, `  Choice: `);
   rl.close();
@@ -458,19 +416,23 @@ async function promptLocation() {
   } else if (answer === '2' && hasLocalInstall) {
     await uninstall(false);
   } else {
-    console.log(`\n  ${yellow}Invalid choice or no installation at that location.${reset}\n`);
+    out.log(`\n  ${c.yellow('Invalid choice or no installation at that location.')}\n`);
   }
 }
 
-// Main
+// ============ Main ============
+
 async function main() {
   if (hasGlobal && hasLocal) {
-    console.error(`  ${yellow}Cannot specify both --global and --local${reset}`);
+    out.error('Cannot specify both --global and --local');
     process.exit(1);
-  } else if (explicitConfigDir && hasLocal) {
-    console.error(`  ${yellow}Cannot use --config-dir with --local${reset}`);
+  }
+  if (explicitConfigDir && hasLocal) {
+    out.error('Cannot use --config-dir with --local');
     process.exit(1);
-  } else if (hasGlobal) {
+  }
+
+  if (hasGlobal) {
     await uninstall(true);
   } else if (hasLocal) {
     await uninstall(false);
@@ -480,6 +442,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error(`  ${red}Error:${reset} ${err.message}`);
+  out.error(err.message);
   process.exit(1);
 });

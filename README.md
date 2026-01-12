@@ -1,338 +1,319 @@
 <div align="center">
 
-# WRITE THE F***ING PAPER 
+# WTF-P
 
-**The G.O.A.T. meta-prompting system for 10x researchers who need to submit papers/proposals YESTERDAY.**
+**Context engineering for academic writing with Claude Code.**
 
 ```bash
-npx wtfp
+npx wtf-p
 ```
 
-**Runs on everything. Mac, Windows, Linux. No excuses.**
-*(You need LaTeX and BibTeX or you're NGMI)*
-
-> "Bro, if you have the data, this ships the manuscript. Zero writer's block."
-
-> "I tried Overleaf and Notion — weak sauce. This tool actually ships words."
-
-> "Literally the most based addition to my stack. It just writes the f*ing paper."
-
-**Used by absolute legends at Gnosis Research Center at Illinois Tech.**
-
-[The Alpha](#the-alpha-why-i-built-this) · [The Stack](#the-stack) · [The Commands](#the-toolkit) · [The Logic](#the-logic)
+*Write The Freaking Paper. Finally.*
 
 </div>
 
 ---
 
-## The Alpha (Why I Built This)
+## What This Does
 
-Yo, I'm leading the Gnosis Research Center at Illinois Tech. I got grants to win, labs to run, and exactly zero time to stare at a blinking cursor like an NPC. My PhD students? Same story.
+WTF-P turns Claude Code into a structured academic writing system. Instead of chatting with AI and hoping for the best, you get:
 
-Other tools? Garbage. **Jasper?** Hallucinates. **ChatGPT?** Sounds like a robot trying to pass a Turing test. They don't get structure. They don't respect the citations.
+- **Spec-driven writing** — Define your paper's vision, then execute section by section
+- **Grounded output** — BibTeX integration, citation mapping, no hallucinated references
+- **State management** — Pause, resume, track progress across sessions
+- **Venue templates** — ACM, IEEE, Nature, arXiv-ML structures built in
 
-So I cooked up **WTF-P**. We're talking high-leverage context maxxing here. Under the hood? It's parsing BibTeX, mapping arguments, and enforcing that IMRaD structure so hard. You feed it data, it spits out submission-ready drafts.
-
-I trust the system. It builds the frame so I can just come in and drop the knowledge.
-
-**No more "writer's block" excuses. We are shipping papers before the deadline. Period.**
-
-— *akougkas (Nerd ^ academic+coder)*
-
-> Academic writing is usually chaotic evil. You ask AI for a lit review, it invents papers. Total beta move.
-> **WTF-P fixes that.** It's the grounding layer that makes Claude Code academic weapon grade. Describe the hypothesis, drop the .bib, and watch it cook.
-
-### Who This Is For
-PhDs, Postdocs, and PIs who are done playing games and need to submit the damn proposal/paper/report **right now**.
+The philosophy: **context engineering beats prompt engineering**. The files you prepare matter more than what you type.
 
 ---
 
-## Let's Go
+## Quick Start
 
 ```bash
-npx wtfp
+npx wtf-p
 ```
 
-Boom. Done. Check `/wtfp:help` if you're lost.
-
-<details>
-<summary><strong>Headless / CI / HPC (For the devops wizards)</strong></summary>
+Then in Claude Code:
 
 ```bash
-npx wtfp --global   # Install to ~/.claude/
-npx wtfp --local    # Install to ./.claude/
+/wtfp:new-paper        # Define your paper
+/wtfp:create-outline   # Build the structure
+/wtfp:plan-section 1   # Plan first section
+/wtfp:write-section    # Execute the plan
 ```
-</details>
+
+Run `/wtfp:help` for the full command reference.
 
 <details>
-<summary><strong>Custom Location (For the organized)</strong></summary>
+<summary><strong>Installation Options</strong></summary>
 
 ```bash
-# Install to a custom Claude config directory
-npx wtfp --global --config-dir ~/projects/my-paper/.claude
+# Global install (recommended)
+npx wtf-p --global
 
-# Or use environment variable
-CLAUDE_CONFIG_DIR=~/research/.claude npx wtfp --global
-```
-</details>
+# Local to current project
+npx wtf-p --local
 
-<details>
-<summary><strong>Upgrade / Reinstall (For the cautious)</strong></summary>
+# Custom Claude config directory
+npx wtf-p --global --config-dir ~/research/.claude
 
-When upgrading, WTF-P respects your existing files:
+# Check installation status
+npx wtf-p status
 
-```bash
-# Interactive: prompts for each conflict (overwrite/skip/backup)
-npx wtfp --global
-
-# Force overwrite everything (yolo mode)
-npx wtfp --global --force
-
-# Backup all existing files before overwriting
-npx wtfp --global --backup-all
+# Diagnose issues
+npx wtf-p doctor
 ```
 </details>
 
 <details>
-<summary><strong>Uninstall (For the tidy)</strong></summary>
+<summary><strong>Upgrading</strong></summary>
 
 ```bash
-# Interactive uninstall
+# Update existing installation
+npx wtf-p update
+
+# Or reinstall with conflict handling
+npx wtf-p --global              # Interactive: prompts for conflicts
+npx wtf-p --global --force      # Overwrite everything
+npx wtf-p --global --backup-all # Backup before overwriting
+```
+</details>
+
+<details>
+<summary><strong>Uninstalling</strong></summary>
+
+```bash
 npx wtf-p-uninstall --global
-
-# Preview what would be removed
-npx wtf-p-uninstall --global --dry-run
-
-# Backup before removing
-npx wtf-p-uninstall --global --backup
-
-# Also clean up backup files from prior installs
-npx wtf-p-uninstall --global --clean-backups
+npx wtf-p-uninstall --global --dry-run  # Preview first
 ```
 
-Only WTF-P files are removed. Your `CLAUDE.md`, `settings.json`, and other configs stay intact.
+Only WTF-P files are removed. Your `CLAUDE.md` and other configs stay intact.
 </details>
 
-<details>
-<summary><strong>Dev Mode (For the builders)</strong></summary>
+---
 
-Clone it, build it, break it:
+## Why AI Writing Tools Fail Researchers
 
-```bash
-git clone https://github.com/akougkas/wtfp.git
-cd wtfp
-node bin/install.js --local
+Most researchers using AI for writing hit the same walls:
+
+| Problem | What Happens |
+|---------|--------------|
+| **Dump and pray** | Paste a PDF, ask for a lit review, get hallucinated citations |
+| **No verification layer** | AI sounds confident, but claims aren't grounded in your actual sources |
+| **Monolithic approach** | Try to write 10k words at once, context window fills, quality degrades |
+| **No structure** | Generic AI doesn't know IMRaD from a blog post |
+
+WTF-P solves these by treating academic writing as a **specification problem**, not a generation problem.
+
+---
+
+## The Approach: Context Engineering
+
+The insight behind WTF-P: **what you prepare matters more than what you prompt**.
+
+### 1. Specification First
+
+Before any writing, WTF-P interviews you to extract:
+- Research questions and hypotheses
+- Core argument structure
+- Evidence and data inventory
+- Target venue requirements
+
+This becomes your `PROJECT.md` — the grounding document that keeps every section aligned.
+
+### 2. Hierarchical Planning
+
+Papers aren't written in one shot. WTF-P breaks them down:
+
 ```
-</details>
-
-### Pro Move: God Mode
-WTF-P is designed for flow state. Don't let permissions slow you down.
-
-```bash
-claude --dangerously-skip-permissions
+Paper Vision → Section Outline → Section Plan → Paragraph Execution
 ```
 
-> [!TIP]
-> This is the way. Stopping to approve `cat research_notes.txt` 50 times is strictly for amateurs.
+Each level has its own document. Each document is version-controlled. You always know where you are.
+
+### 3. Isolated Execution
+
+When writing a section, WTF-P spawns a fresh context with only what's needed:
+- The paper vision
+- That section's plan
+- Relevant citations from your BibTeX
+- Prior sections for continuity
+
+No context pollution. No degradation over long documents.
+
+### 4. Human Verification
+
+AI drafts. Humans verify. Every section goes through:
+- Citation audit (are these real? are they relevant?)
+- Argument check (does this follow from the evidence?)
+- Rubric validation (does this meet venue requirements?)
+
+The system flags issues. You fix them. Iterate until solid.
 
 ---
 
 ## The Workflow
 
-### 1. The Setup
-```bash
-/wtfp:new-paper
-```
-It grills you until it gets the alpha—your research questions, methods, findings. Creates `MANUSCRIPT.md`.
+### Starting Fresh
 
-### 2. The Skeleton
 ```bash
-/wtfp:create-outline
+/wtfp:new-paper         # Deep interview about your research
+/wtfp:create-outline    # Generate section structure + word budgets
 ```
-Generates:
-- `OUTLINE.md` — The IMRaD backbone.
-- `ARGUMENT.md` — The logic flow.
-- `REFS.md` — Citations mapped to sections. **No hallucinations allowed.**
 
-### 3. The Grind
-```bash
-/wtfp:plan-section 1      # Atomic planning
-/wtfp:write-section       # Agent swarm execution
-```
-Each section runs in a fresh subagent context. 200k tokens of pure synthesis. No degradation. It reads only what it needs. Surgical precision.
+Creates `.planning/` with your paper's specification:
+- `PROJECT.md` — Vision, requirements, constraints
+- `ROADMAP.md` — Section breakdown with status
+- `STATE.md` — Writing progress and context
 
-### 4. The Finish
+### Writing Sections
+
 ```bash
-/wtfp:polish-prose        # De-robotize the text
-/wtfp:check-refs          # BibTeX audit
-/wtfp:export-latex        # LaTeX injection
+/wtfp:plan-section 1    # Create detailed plan for section 1
+/wtfp:write-section     # Execute the plan
+/wtfp:progress          # Check status, get next action
 ```
-Ship the draft to your advisor. Get roasted. Iterate. The system is modular—you never get stuck in a monolithic doc.
+
+Each section gets its own planning documents. Plans are explicit — you see exactly what Claude intends before it writes.
+
+### Review and Polish
+
+```bash
+/wtfp:review-section 1  # Three-layer verification
+/wtfp:polish-prose      # Remove AI-speak, improve flow
+/wtfp:check-refs        # BibTeX audit
+```
+
+### Export
+
+```bash
+/wtfp:export-latex      # Generate .tex with proper formatting
+```
 
 ---
 
-## Resurrecting Dead Papers
+## Reviving Stalled Projects
 
-Got a paper rotting in a drawer? We're bringing it back to life.
+Got a half-finished paper? WTF-P can work with existing material.
 
-### 1. Context Maxxing
 ```bash
-/wtfp:map-project
+/wtfp:map-project       # Index your existing files
+/wtfp:new-paper         # Initialize with awareness of prior work
 ```
-Spawns agents to raid your directory. Creates `.planning/context/`:
 
-| Document | The Vibe |
-| :--- | :--- |
-| `LIT_REVIEW.md` | Your .bib analysis. |
-| `CURRENT_DRAFT.md` | The half-baked stuff you wrote 6 months ago. |
-| `DATA_SUMMARY.md` | Your results/figures decoded. |
-| `STYLE_GUIDE.md` | Nature/IEEE specs. |
-| `GAPS.md` | Where you messed up. |
-
-### 2. Re-Init
-```bash
-/wtfp:new-paper
-```
-Same as fresh, but now it knows your history.
-
-### 3. Grind
-`/wtfp:create-outline` → `/wtfp:plan-section` → `/wtfp:write-section`
+The mapping phase analyzes:
+- Existing drafts and their state
+- Your BibTeX and how citations are used
+- Data files and figures
+- What's missing vs. what's done
 
 ---
 
-## Why It Crushes
+## Command Reference
 
-### Context Maxxing
-Claude Code is cracked if you give it the right juice. Most profs just dump a PDF and pray.
-WTF-P handles the prompt engineering:
+### Setup
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:new-paper` | Initialize paper with deep context gathering |
+| `/wtfp:create-outline` | Generate section structure |
+| `/wtfp:map-project` | Index existing project materials |
+| `/wtfp:analyze-bib` | Deep analysis of your bibliography |
 
-| File | Function |
-| :--- | :--- |
-| `MANUSCRIPT.md` | The Vision. Always active. |
-| `OUTLINE.md` | The Backbone. |
-| `FLOW.md` | The Rhetoric. |
-| `DRAFT_PLAN.md` | The Battle Plan. |
-| `CRITIQUE.md` | Reviewer #2 Simulator. |
+### Planning
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:discuss-section [N]` | Articulate vision before planning |
+| `/wtfp:plan-section [N]` | Create execution plan |
+| `/wtfp:list-assumptions [N]` | See what Claude plans to write |
+| `/wtfp:research-gap [N]` | Literature analysis for a section |
 
-### XML Prompts (The Secret Sauce)
-We use structured XML so Claude doesn't go off the rails:
+### Writing
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:write-section` | Execute a plan |
+| `/wtfp:progress` | Status + intelligent next action |
+| `/wtfp:pause-writing` | Save state for later |
+| `/wtfp:resume-writing` | Restore context and continue |
 
-```xml
-<section type="synthesis">
-  <title>3.2 Neural Architecture Search</title>
-  <inputs>
-    <file>data/results_table_3.csv</file>
-  </inputs>
-  <citations>
-    <cite>vaswani2017attention</cite>
-  </citations>
-  <instruction>
-    Describe the modified ResNet block.
-    Tone: Objective, technical, gigabrain.
-  </instruction>
-</section>
-```
-Precise. No hallucinations. Pure signal.
+### Review
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:review-section [N]` | Three-layer verification |
+| `/wtfp:plan-revision [N]` | Create fix plan from issues |
+| `/wtfp:polish-prose` | Improve readability |
+| `/wtfp:check-refs` | Citation audit |
 
-### Subagent Swarm
-Writing 10k words? Context windows get full. The AI gets dumb.
-WTF-P prevents this. Every section = Fresh Agent.
+### Export
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:export-latex` | Generate .tex output |
+| `/wtfp:submit-milestone` | Archive submission version |
 
-| Section | Context | Quality |
-| :--- | :--- | :--- |
-| Intro | Fresh | 🔥 |
-| Methods | Fresh | 🔥 |
-| Discussion | Fresh | 🔥 |
-
-No degradation. Walk away, come back to a finished Methods section.
-
-### Atomic Commits
-Every draft gets a git commit instantly:
-```text
-abc123f text(intro): complete problem statement
-def456g text(methods): draft experimental setup
-```
-
-> [!NOTE]
-> **Benefits:** Version control for your thesis. If a draft is mid, `git revert`.
-
-### WCN Mode (Lite Context)
-Running on smaller models? Limited context window? Free-tier Claude?
-
-WCN (Workflow Compression Notation) cuts workflow tokens by **35-50%** with zero quality loss. Verified on Haiku and Sonnet.
-
-```bash
-# Switch to compressed workflows
-./tools/wcn/swap-workflows.sh wcn
-
-# Switch back to verbose
-./tools/wcn/swap-workflows.sh verbose
-```
-
-| Mode | create-outline | plan-section | Best For |
-| :--- | :--- | :--- | :--- |
-| Verbose | 13,029 chars | 13,655 chars | Opus, unlimited plans |
-| WCN | 6,676 chars | 8,863 chars | Haiku, Sonnet, free tiers |
-
-> [!TIP]
-> WCN uses structured notation (`[step:]`, `IF→`, `RUN:`) that smaller models parse just as well. You lose nothing but tokens.
+### Contributing
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:report-bug` | File a GitHub issue |
+| `/wtfp:request-feature` | Request new functionality |
+| `/wtfp:contribute` | Submit a pull request |
 
 ---
 
-## The Toolkit
+## Venue Templates
 
-### Setup & Planning
-| Command | Payload |
-| :--- | :--- |
-| `/wtfp:new-paper` | Start the grind. Picks venue template (ACM/IEEE/ML/Nature). |
-| `/wtfp:create-outline` | Build the skeleton from venue structure. |
-| `/wtfp:map-project` | Analyze the ruins of old drafts. |
-| `/wtfp:analyze-bib` | BibTeX intelligence. Cluster topics, find seminal works, map citations to sections. |
-| `/wtfp:discuss-section [N]` | Gather section context before planning. |
-
-### Writing & Execution
-| Command | Payload |
-| :--- | :--- |
-| `/wtfp:plan-section [N]` | Tactical planning. |
-| `/wtfp:write-section` | Execute the draft. |
-| `/wtfp:progress` | Stats check. |
-| `/wtfp:insert-section [N]` | Add missing sauce. |
-| `/wtfp:remove-section [N]` | Kill your darlings. |
-| `/wtfp:research-gap` | Find the holes in literature. |
-| `/wtfp:list-assumptions` | Logic check. |
-
-### Review & Polish
-| Command | Payload |
-| :--- | :--- |
-| `/wtfp:review-section [N]` | Reviewer personas: Hostile, Area Chair, Editor, Mentor. |
-| `/wtfp:plan-revision [N]` | Fix the damage. |
-| `/wtfp:polish-prose` | De-robotize the text. Kill AI-speak. |
-| `/wtfp:check-refs` | BibTeX audit. Find missing/unused citations. |
-
-### Export & State
-| Command | Payload |
-| :--- | :--- |
-| `/wtfp:export-latex` | Generate .tex (The final boss). |
-| `/wtfp:submit-milestone` | Version lock. |
-| `/wtfp:pause-writing` | Save state. |
-| `/wtfp:resume-writing` | Load state. |
-| `/wtfp:help` | RTFM. |
-
-### Venue Templates
 | Template | Structure |
-| :--- | :--- |
-| `acm-cs` | Intro → Background → Approach → Eval → Related → Conclusion |
-| `ieee-cs` | Intro → Background/Related → Design → Impl → Eval → Conclusion |
-| `arxiv-ml` | Intro → Related → Prelim → Method → Experiments → Conclusion |
-| `nature` | Intro → Methods → Results → Discussion (classic IMRaD) |
-| `thesis` | Flexible chapter structure for dissertations |
+|----------|-----------|
+| `acm-cs` | Intro → Background → Approach → Evaluation → Related Work → Conclusion |
+| `ieee-cs` | Intro → Background → Design → Implementation → Evaluation → Conclusion |
+| `arxiv-ml` | Intro → Related Work → Preliminaries → Method → Experiments → Conclusion |
+| `nature` | Intro → Methods → Results → Discussion |
+| `thesis` | Flexible chapter structure |
+
+---
+
+## WCN Mode (Reduced Tokens)
+
+For smaller models or limited context windows, WTF-P includes compressed workflows:
+
+```bash
+./tools/wcn/swap-workflows.sh wcn      # Switch to compressed
+./tools/wcn/swap-workflows.sh verbose  # Switch back
+```
+
+35-50% token reduction with equivalent output quality. Verified on Claude Haiku and Sonnet.
+
+---
+
+## Origin
+
+WTF-P was built at the [Gnosis Research Center](https://www.intelli-gnosis.com/) at Illinois Tech.
+
+The problem: research teams with grants to win, papers to publish, and no time to waste on writer's block. Existing AI tools either hallucinated citations or produced generic output that required complete rewrites.
+
+The solution: treat Claude Code as a **structured writing system**, not a chatbot. Give it proper context, explicit specifications, and verification layers. Let humans focus on ideas while AI handles the mechanical synthesis.
+
+The result: papers that ship.
+
+---
+
+## Contributing
+
+Found a bug? Want a feature? WTF-P includes commands to help:
+
+```bash
+/wtfp:report-bug        # Creates a GitHub issue
+/wtfp:request-feature   # Submits a feature request
+/wtfp:contribute        # Guides you through a PR
+```
+
+Or visit [github.com/akougkas/wtf-p](https://github.com/akougkas/wtf-p).
 
 ---
 
 ## License
+
 MIT License. Open source, open science.
 
 <div align="center">
-  <br>
-  <strong>Claude Code is powerful. WTF-P makes it tenured.</strong>
+<br>
+<strong>Stop staring at the cursor. Start shipping papers.</strong>
 </div>
