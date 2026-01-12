@@ -1,6 +1,6 @@
 <div align="center">
 
-# WRITE THE F***ING PAPER 🚀
+# WRITE THE F***ING PAPER 
 
 **The G.O.A.T. meta-prompting system for 10x researchers who need to submit papers/proposals YESTERDAY.**
 
