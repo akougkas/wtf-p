@@ -1,0 +1,12 @@
+{
+  "name": "wtf-p",
+  "description": "Academic writing toolkit - Paper, Proposal, Presentation, Poster",
+  "version": "0.3.0",
+  "author": {
+    "name": "akougkas",
+    "url": "https://github.com/akougkas"
+  },
+  "homepage": "https://github.com/akougkas/wtf-p",
+  "repository": "https://github.com/akougkas/wtf-p",
+  "license": "MIT"
+}

@@ -2,13 +2,17 @@
 
 # WTF-P
 
+**Write The Freaking...**
+- **P**aper
+- **P**roposal
+- **P**resentation
+- **P**oster
+
 **Context engineering for academic writing with Claude Code.**
 
 ```bash
 npx wtf-p
 ```
-
-*Write The Freaking Paper. Finally.*
 
 </div>
 

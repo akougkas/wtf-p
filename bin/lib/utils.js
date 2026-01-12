@@ -62,17 +62,25 @@ function isValidPath(inputPath) {
 }
 
 /**
+ * Get the configuration directory for a specific vendor
+ */
+function getVendorDir(vendor, explicitConfigDir, isGlobal = true) {
+  if (!isGlobal) {
+    return path.join(process.cwd(), `.${vendor}`);
+  }
+
+  const envVar = `${vendor.toUpperCase()}_CONFIG_DIR`;
+  const configDir = normalizePath(explicitConfigDir) ||
+                   normalizePath(process.env[envVar]);
+
+  return configDir || path.join(os.homedir(), `.${vendor}`);
+}
+
+/**
  * Get the Claude config directory (respects CLAUDE_CONFIG_DIR env var)
  */
 function getClaudeDir(explicitConfigDir, isGlobal = true) {
-  if (!isGlobal) {
-    return path.join(process.cwd(), '.claude');
-  }
-
-  const configDir = normalizePath(explicitConfigDir) ||
-                   normalizePath(process.env.CLAUDE_CONFIG_DIR);
-
-  return configDir || path.join(os.homedir(), '.claude');
+  return getVendorDir('claude', explicitConfigDir, isGlobal);
 }
 
 /**
@@ -144,47 +152,56 @@ function simpleChecksum(filePath) {
 /**
  * Detect installation state
  */
-function detectInstallation(claudeDir) {
+function detectInstallation(vendorDir) {
   const result = {
     hasCommands: false,
-    hasSkill: false,
+    hasWorkflows: false,
+    hasSkills: false,
     version: null,
     partial: false,
     corrupt: false,
     commandFiles: [],
+    workflowFiles: [],
     skillFiles: []
   };
 
-  const commandsDir = path.join(claudeDir, 'commands', 'wtfp');
-  const skillDir = path.join(claudeDir, 'write-the-f-paper');
+  const commandsDir = path.join(vendorDir, 'commands', 'wtfp');
+  const workflowsDir = path.join(vendorDir, 'write-the-f-paper');
+  const skillsDir = path.join(vendorDir, 'skills', 'wtfp');
 
   result.hasCommands = fs.existsSync(commandsDir);
-  result.hasSkill = fs.existsSync(skillDir);
+  result.hasWorkflows = fs.existsSync(workflowsDir);
+  result.hasSkills = fs.existsSync(skillsDir);
 
   if (result.hasCommands) {
     result.commandFiles = collectFiles(commandsDir);
   }
-  if (result.hasSkill) {
-    result.skillFiles = collectFiles(skillDir);
+  if (result.hasWorkflows) {
+    result.workflowFiles = collectFiles(workflowsDir);
+  }
+  if (result.hasSkills) {
+    result.skillFiles = collectFiles(skillsDir);
   }
 
   // Read version info
-  const versionData = readInstalledVersion(claudeDir);
+  const versionData = readInstalledVersion(vendorDir);
   if (versionData) {
     result.version = versionData.version;
     result.corrupt = versionData.corrupt || false;
 
-    // Check for partial install (version file exists but missing dirs)
+    // Check for partial install
     if (!versionData.corrupt) {
       const expectedHasCommands = versionData.manifest?.some(f => f.path.includes('commands/wtfp'));
-      const expectedHasSkill = versionData.manifest?.some(f => f.path.includes('write-the-f-paper'));
+      const expectedHasWorkflows = versionData.manifest?.some(f => f.path.includes('write-the-f-paper'));
+      const expectedHasSkills = versionData.manifest?.some(f => f.path.includes('skills/wtfp'));
 
       if ((expectedHasCommands && !result.hasCommands) ||
-          (expectedHasSkill && !result.hasSkill)) {
+          (expectedHasWorkflows && !result.hasWorkflows) ||
+          (expectedHasSkills && !result.hasSkills)) {
         result.partial = true;
       }
     }
-  } else if (result.hasCommands || result.hasSkill) {
+  } else if (result.hasCommands || result.hasWorkflows || result.hasSkills) {
     // Files exist but no version file - legacy install
     result.version = 'legacy';
   }

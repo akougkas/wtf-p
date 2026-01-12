@@ -173,7 +173,7 @@ try {
   // Test detectInstallation
   const detection = detectInstallation(versionClaudeDir);
   check(detection.hasCommands === true, 'detects commands');
-  check(detection.hasSkill === true, 'detects skill');
+  check(detection.hasWorkflows === true, 'detects workflows');
   check(detection.version === '0.2.0', 'detects version');
   check(detection.partial === false, 'not partial');
 

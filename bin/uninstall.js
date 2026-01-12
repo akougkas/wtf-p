@@ -102,7 +102,9 @@ if (hasHelp) {
 
   ${c.yellow('What gets removed:')}
     ${c.dim('commands/wtfp/')}         - WTF-P slash commands
-    ${c.dim('write-the-f-paper/')}     - WTF-P skill and workflows
+    ${c.dim('write-the-f-paper/')}     - WTF-P workflows
+    ${c.dim('skills/wtfp/')}           - WTF-P skills
+    ${c.dim('.claude-plugin/')}        - Plugin manifest
     ${c.dim('.wtfp-version')}          - Version tracking file
 
   ${c.yellow('What stays intact:')}
@@ -200,9 +202,9 @@ async function uninstall(isGlobal) {
 
   // Detect installation
   const installed = detectInstallation(claudeDir);
-  const totalFiles = installed.commandFiles.length + installed.skillFiles.length;
+  const totalFiles = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length;
 
-  if (!installed.hasCommands && !installed.hasSkill) {
+  if (!installed.hasCommands && !installed.hasWorkflows && !installed.hasSkills) {
     out.log(`  ${c.yellow('No WTF-P installation found in ' + locationLabel)}\n`);
 
     // Check for backups if requested
@@ -252,13 +254,21 @@ async function uninstall(isGlobal) {
   out.log(`  ${c.yellow('Found WTF-P installation:')}\n`);
 
   const commandsDir = path.join(claudeDir, 'commands', 'wtfp');
-  const skillDir = path.join(claudeDir, 'write-the-f-paper');
+  const workflowsDir = path.join(claudeDir, 'write-the-f-paper');
+  const skillsDir = path.join(claudeDir, 'skills', 'wtfp');
+  const pluginDir = path.join(claudeDir, '.claude-plugin');
 
   if (installed.hasCommands) {
     out.log(`    ${c.cyan('commands/wtfp/')} (${installed.commandFiles.length} files)`);
   }
-  if (installed.hasSkill) {
-    out.log(`    ${c.cyan('write-the-f-paper/')} (${installed.skillFiles.length} files)`);
+  if (installed.hasWorkflows) {
+    out.log(`    ${c.cyan('write-the-f-paper/')} (${installed.workflowFiles.length} files)`);
+  }
+  if (installed.hasSkills) {
+    out.log(`    ${c.cyan('skills/wtfp/')} (${installed.skillFiles.length} files)`);
+  }
+  if (fs.existsSync(pluginDir)) {
+    out.log(`    ${c.cyan('.claude-plugin/')} (manifest)`);
   }
   if (installed.version) {
     out.log(`    ${c.cyan(VERSION_FILE)} (version tracking)`);
@@ -304,12 +314,16 @@ async function uninstall(isGlobal) {
     fs.mkdirSync(backupDir, { recursive: true });
 
     if (installed.hasCommands) {
-      const dest = path.join(backupDir, 'commands', 'wtfp');
-      copyDir(commandsDir, dest);
+      copyDir(commandsDir, path.join(backupDir, 'commands', 'wtfp'));
     }
-    if (installed.hasSkill) {
-      const dest = path.join(backupDir, 'write-the-f-paper');
-      copyDir(skillDir, dest);
+    if (installed.hasWorkflows) {
+      copyDir(workflowsDir, path.join(backupDir, 'write-the-f-paper'));
+    }
+    if (installed.hasSkills) {
+      copyDir(skillsDir, path.join(backupDir, 'skills', 'wtfp'));
+    }
+    if (fs.existsSync(pluginDir)) {
+      copyDir(pluginDir, path.join(backupDir, '.claude-plugin'));
     }
 
     const backupLabel = backupDir.replace(os.homedir(), '~').replace(process.cwd(), '.');
@@ -332,9 +346,29 @@ async function uninstall(isGlobal) {
     }
   }
 
-  if (installed.hasSkill) {
-    removeDir(skillDir);
+  if (installed.hasWorkflows) {
+    removeDir(workflowsDir);
     out.log(`  ${c.red('-')} ${c.dim('write-the-f-paper/')}`);
+  }
+
+  if (installed.hasSkills) {
+    removeDir(skillsDir);
+    out.log(`  ${c.red('-')} ${c.dim('skills/wtfp/')}`);
+    
+    // Clean up empty skills dir
+    const parentSkillsDir = path.join(claudeDir, 'skills');
+    if (fs.existsSync(parentSkillsDir)) {
+      const remaining = fs.readdirSync(parentSkillsDir);
+      if (remaining.length === 0) {
+        fs.rmdirSync(parentSkillsDir);
+        out.log(`  ${c.red('-')} ${c.dim('skills/')} ${c.dim('(empty)')}`);
+      }
+    }
+  }
+
+  if (fs.existsSync(pluginDir)) {
+    removeDir(pluginDir);
+    out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/')}`);
   }
 
   // Remove version file
@@ -379,8 +413,8 @@ async function promptLocation() {
   const globalInstalled = detectInstallation(globalPath);
   const localInstalled = detectInstallation(localPath);
 
-  const hasGlobalInstall = globalInstalled.hasCommands || globalInstalled.hasSkill;
-  const hasLocalInstall = localInstalled.hasCommands || localInstalled.hasSkill;
+  const hasGlobalInstall = globalInstalled.hasCommands || globalInstalled.hasWorkflows || globalInstalled.hasSkills;
+  const hasLocalInstall = localInstalled.hasCommands || localInstalled.hasWorkflows || localInstalled.hasSkills;
 
   if (!hasGlobalInstall && !hasLocalInstall) {
     out.log(`  ${c.yellow('No WTF-P installation found.')}\n`);
@@ -394,14 +428,14 @@ async function promptLocation() {
   out.log(`  ${c.yellow('Where would you like to uninstall from?')}\n`);
 
   if (hasGlobalInstall) {
-    const count = globalInstalled.commandFiles.length + globalInstalled.skillFiles.length;
+    const count = globalInstalled.commandFiles.length + globalInstalled.workflowFiles.length + globalInstalled.skillFiles.length;
     out.log(`  ${c.cyan('1)')} Global ${c.dim('(' + globalLabel + ')')} - ${count} files`);
   } else {
     out.log(`  ${c.dim('1) Global (' + globalLabel + ') - not installed')}`);
   }
 
   if (hasLocalInstall) {
-    const count = localInstalled.commandFiles.length + localInstalled.skillFiles.length;
+    const count = localInstalled.commandFiles.length + localInstalled.workflowFiles.length + localInstalled.skillFiles.length;
     out.log(`  ${c.cyan('2)')} Local  ${c.dim('(./.claude)')} - ${count} files`);
   } else {
     out.log(`  ${c.dim('2) Local (./.claude) - not installed')}`);
