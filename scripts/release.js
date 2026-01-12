@@ -163,18 +163,26 @@ Examples:
   // 3. Update version in package.json
   section('Update Version');
 
-  pkg.version = newVersion;
-  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+  if (!dryRun) {
+    pkg.version = newVersion;
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+  } else {
+    log(`${colors.dim}DRY-RUN: Would update package.json${colors.reset}`);
+  }
   log(`Updated package.json to ${newVersion}`, 'green');
 
   // Update CHANGELOG if it exists
   const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
   if (fs.existsSync(changelogPath)) {
-    const date = new Date().toISOString().split('T')[0];
-    const newEntry = `\n## [${newVersion}] - ${date}\n\n### Changes\n- `;
-    const currentContent = fs.readFileSync(changelogPath, 'utf8');
-    const updatedContent = newEntry + currentContent;
-    fs.writeFileSync(changelogPath, updatedContent);
+    if (!dryRun) {
+      const date = new Date().toISOString().split('T')[0];
+      const newEntry = `\n## [${newVersion}] - ${date}\n\n### Changes\n- `;
+      const currentContent = fs.readFileSync(changelogPath, 'utf8');
+      const updatedContent = newEntry + currentContent;
+      fs.writeFileSync(changelogPath, updatedContent);
+    } else {
+      log(`${colors.dim}DRY-RUN: Would update CHANGELOG.md${colors.reset}`);
+    }
     log(`Updated CHANGELOG.md`, 'green');
   }
 
