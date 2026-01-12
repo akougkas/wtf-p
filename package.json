@@ -8,7 +8,9 @@
     "wtf-p-uninstall": "bin/uninstall.js"
   },
   "scripts": {
-    "test": "node test/sanity.js"
+    "test": "node test/sanity.js",
+    "preflight": "node scripts/preflight.js",
+    "release": "node scripts/release.js"
   },
   "files": [
     "bin",
