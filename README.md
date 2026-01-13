@@ -213,6 +213,21 @@ The mapping phase analyzes:
 
 ---
 
+## Citation Expert (v0.4.0)
+
+WTF-P now includes a specialized sub-agent for managing your bibliography.
+
+```bash
+/agent run citation-expert "Find papers about [topic]"
+```
+
+Capabilities:
+- **Grounded Search:** Queries real academic databases (CrossRef/Semantic Scholar) via `citation-fetcher`.
+- **BibTeX Management:** Indexes and validates your `.bib` file using `bib-index` without context limits.
+- **Verification:** Automatically checks for missing or unused citations during `analyze-bib` and `check-refs`.
+
+---
+
 ## Command Reference
 
 ### Setup

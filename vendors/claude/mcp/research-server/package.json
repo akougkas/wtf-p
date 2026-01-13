@@ -1,0 +1,13 @@
+{
+  "name": "wtf-p-research-server",
+  "version": "0.4.0",
+  "description": "MCP Server for ArXiv and Semantic Scholar citation retrieval",
+  "main": "src/index.js",
+  "bin": {
+    "wtfp-research": "src/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "node-fetch": "^2.7.0"
+  }
+}

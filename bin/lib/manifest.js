@@ -27,6 +27,24 @@ const MANIFEST = {
         type: 'dir'
       },
       {
+        id: 'agents',
+        src: path.join(ROOT, 'vendors', 'claude', 'agents', 'wtfp'),
+        dest: 'agents/wtfp',
+        type: 'dir'
+      },
+      {
+        id: 'mcp',
+        src: path.join(ROOT, 'vendors', 'claude', 'mcp'),
+        dest: 'mcp',
+        type: 'dir'
+      },
+      {
+        id: 'scripts',
+        src: path.join(ROOT, 'bin', 'lib'),
+        dest: 'bin',
+        type: 'dir'
+      },
+      {
         id: 'plugin',
         src: path.join(ROOT, 'vendors', 'claude', '.claude-plugin'),
         dest: '.claude-plugin',

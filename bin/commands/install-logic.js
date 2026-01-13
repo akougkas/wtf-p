@@ -187,16 +187,12 @@ async function install(isGlobal, isUpdate, options, pkg) {
   vendorConfig.components.forEach(component => {
     // Check --only filters
     if (onlyInstall !== 'all') {
-      // Map 'workflows' flag to 'workflows' component ID
-      // Map 'commands' flag to 'commands' component ID
-      // Map 'skills' flag to 'skills' component ID
-      if (onlyInstall !== component.id) {
-         // Special case: 'commands' usually implies 'skills' too in legacy logic
-         if (onlyInstall === 'commands' && component.id === 'skills') {
-           // Allow
-         } else {
-           return;
-         }
+      const allowedIds = [onlyInstall];
+      // Legacy mapping: 'commands' includes 'skills'
+      if (onlyInstall === 'commands') allowedIds.push('skills');
+      
+      if (!allowedIds.includes(component.id)) {
+        return;
       }
     }
     

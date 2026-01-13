@@ -75,8 +75,7 @@ Based on scope, investigate:
 **Key Citations:**
 - Identify foundational papers
 - Find recent high-impact work
-- Note methodological papers
-- Track disagreements/debates
+- **Validation:** Use `node ~/.claude/bin/citation-fetcher.js "query"` to verify any suggested papers exist and get their BibTeX.
 
 **Standard Approaches:**
 - How do others structure similar sections?

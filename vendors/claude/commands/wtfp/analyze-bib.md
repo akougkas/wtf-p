@@ -43,60 +43,35 @@ BibTeX file: $ARGUMENTS (optional - auto-detects .bib files if not provided)
 find . -name "*.bib" -type f 2>/dev/null | grep -v node_modules | grep -v .git | head -10
 ```
 
-If multiple found, use AskUserQuestion:
-- header: "BibTeX"
-- question: "Which bibliography file should I analyze?"
-- options: [list found files] + "Analyze all"
-
-If none found:
-```
-No .bib file found.
-
-Either:
-1. Add your .bib file to the project
-2. Specify path: /wtfp:analyze-bib path/to/refs.bib
-```
-Exit command.
-
+If multiple found, use AskUserQuestion.
+If none found, exit with error.
 </step>
 
 <step name="parse_entries">
-**Parse all BibTeX entries:**
+**Parse BibTeX Index:**
 
-Extract from each entry:
-- Citation key
-- Type (@article, @inproceedings, @book, etc.)
-- Authors
-- Title
-- Year
-- Venue (journal/booktitle)
-- Abstract (if present)
-- Keywords (if present)
+Use the specialized indexer tool to get a structured JSON summary of the bibliography. This handles large files efficiently.
 
-Build structured inventory of all references.
+```bash
+# Index the bibliography (returns JSON)
+node ~/.claude/bin/bib-index.js index "$ARGUMENTS"
+```
+*(If $ARGUMENTS is empty, use the file found in previous step)*
 
 </step>
 
 <step name="temporal_analysis">
 **Temporal Analysis:**
 
-Categorize by publication year:
-- **Foundational** (10+ years old): Seminal works, established theory
-- **Established** (5-10 years): Mature approaches, proven methods
-- **Recent** (2-5 years): Current state of the art
-- **Cutting edge** (<2 years): Latest developments, concurrent work
+Analyze the JSON output from the previous step.
 
-```markdown
-## Temporal Distribution
+Categorize entries by the `year` field in the JSON:
+- **Foundational** (10+ years old)
+- **Established** (5-10 years)
+- **Recent** (2-5 years)
+- **Cutting edge** (<2 years)
 
-| Era | Count | Examples |
-|-----|-------|----------|
-| Foundational (pre-2015) | [N] | [key1], [key2] |
-| Established (2015-2019) | [N] | [key3], [key4] |
-| Recent (2020-2023) | [N] | [key5], [key6] |
-| Cutting edge (2024+) | [N] | [key7], [key8] |
-```
-
+Produce the "Temporal Distribution" table based on these counts.
 </step>
 
 <step name="cluster_topics">

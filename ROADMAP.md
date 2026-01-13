@@ -4,34 +4,19 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 
 ---
 
-## Current: v0.2.0
-
-**Focus:** CLI robustness and contribution system
-
-### Completed
-- [x] Subcommands: `status`, `doctor`, `update`
-- [x] CLI flags: `--beginner`, `--advanced`, `--no-color`, `--quiet`, `--verbose`
-- [x] Selective install: `--only=commands|workflows`
-- [x] Version tracking (`.wtfp-version`)
-- [x] Contribution commands: `/wtfp:report-bug`, `/wtfp:request-feature`, `/wtfp:contribute`
-- [x] Shared utilities module
-- [x] Comprehensive test suite (91 tests)
-
----
-
-## Next: v0.3.0
+## Completed: v0.3.0
 
 **Focus:** The 4 P's + Multi-Vendor Architecture + Skills System
 
 ### The 4 P's
-WTF-P expands to cover the full academic output spectrum:
+WTF-P expanded to cover the full academic output spectrum:
 - **P**aper — manuscripts, journal articles
 - **P**roposal — grants, funding applications
 - **P**resentation — conference talks, defense slides
 - **P**oster — conference posters, visual summaries
 
 ### Multi-Vendor Architecture
-Restructure repository for future support of multiple AI coding tools:
+Restructured repository for support of multiple AI coding tools:
 ```
 wtf-p/
 ├── core/                    # Vendor-agnostic content
@@ -44,41 +29,129 @@ wtf-p/
 ```
 
 ### Skills System (Claude Code)
-- [ ] `wtfp-marp` skill — Markdown+CSS → HTML/PDF via Marp CLI
-- [ ] `wtfp-echarts` skill — Data → publication-quality charts
-- [ ] Claude Code plugin manifest for marketplace
+- [x] `wtfp-marp` skill — Markdown+CSS → HTML/PDF via Marp CLI
+- [x] `wtfp-echarts` skill — Data → publication-quality charts
+- [x] Claude Code plugin manifest for marketplace
 
 ### New Commands
-- [ ] `/wtfp:create-poster` — Full poster creation workflow
-- [ ] `/wtfp:create-slides` — Presentation deck workflow
+- [x] `/wtfp:create-poster` — Full poster creation workflow
+- [x] `/wtfp:create-slides` — Presentation deck workflow
 
 ### Templates
-- [ ] Academic poster template (HTML/CSS)
-- [ ] Presentation slide template (Marp)
-- [ ] Chart examples for common academic visualizations
+- [x] Academic poster template (HTML/CSS)
+- [x] Presentation slide template (Marp)
+- [x] Chart examples for common academic visualizations
 
 ---
 
-## Planned: v0.4.0
+## Current: v0.4.0
 
-**Focus:** Performance and research tools
+**Focus:** Citation Expert v2 — Deterministic, Plug-and-Play Citation Pipeline
 
-### Question Batching
-- [ ] Batch interview questions to reduce round-trips
-- [ ] Smarter context loading (load only relevant references)
-- [ ] Parallel section planning for independent sections
+> Full spec: [`planning/CITATION-EXPERT-V2-SPEC.md`](planning/CITATION-EXPERT-V2-SPEC.md)
 
-### Citation Enhancement
-- [ ] Semantic Scholar API integration
-- [ ] Auto-fetch missing BibTeX entries
-- [ ] Citation network visualization
-- [ ] "Related work" gap analysis
+### Design Decisions (Jan 2026 Session)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Personality | Invisible assistant | Do exactly what asked, no unsolicited suggestions |
+| Risk tolerance | Zero | All outputs to suggested.bib, never touch user's .bib |
+| API strategy | Tiered (free + paid) | Semantic Scholar free, SerpAPI for seminal queries |
+| Integration | Enhanced commands | Modify existing /wtfp:* commands |
+| Autonomy | Confidence-gated (80%) | Proceed if confident, ask otherwise |
+
+### Citation Expert v2 Architecture
+
+```
+User Query → Query Understanding → Tiered Search Pipeline
+                                        ├── Semantic Scholar (free, always)
+                                        ├── SerpAPI/Scholar (paid, if seminal)
+                                        └── CrossRef (fallback)
+                                              ↓
+                                        Deduplication (DOI/ScholarID key)
+                                              ↓
+                                        Ranking (impact, velocity, recency)
+                                              ↓
+                                        suggested.bib (NEVER user's .bib)
+```
+
+### New Libraries
+- [ ] `bin/lib/semantic-scholar.js` — Free API wrapper, exponential backoff
+- [ ] `bin/lib/scholar-lookup.js` — SerpAPI wrapper (optional, paid)
+- [ ] `bin/lib/citation-ranker.js` — Impact-based ranking algorithm
+- [ ] Enhanced `bin/lib/citation-fetcher.js` — Tiered orchestration
+- [ ] Enhanced `bin/lib/bib-format.js` — Provenance fields (wtfp_*)
+
+### Enhanced Commands
+- [ ] `/wtfp:analyze-bib` — Add impact analysis (seminal, rising, outdated)
+- [ ] `/wtfp:check-refs` — Auto-suggest missing citations from tiered API
+- [ ] `/wtfp:research-gap` — Intent-aware search (seminal/recent/specific)
+
+### Provenance Tracking
+New BibTeX fields for machine-readable metadata:
+```bibtex
+wtfp_status = {official|verified|partial}
+wtfp_source = {semantic_scholar+crossref|serpapi|...}
+wtfp_citations = {85000}
+wtfp_velocity = {1200}
+wtfp_scholar_id = {TQgYirikUcIC}
+wtfp_fetched = {2026-01-13}
+```
+
+### Success Metrics
+| Metric | Target |
+|--------|--------|
+| API response time | < 2s per lookup |
+| Deduplication accuracy | 95% |
+| False positive rate | < 5% |
+| suggested.bib validity | 100% (compiles) |
 
 ---
 
-## Planned: v0.5.0+
+## Planned: v0.5.0
 
-**Focus:** Multi-vendor and collaboration
+**Focus:** Agentic Context & Memory (Deferred from v0.4.0 Session)
+
+> These features were identified during the Jan 2026 analysis of Helios-MCP,
+> cite-paper-mcp, and AWOC projects. Deferred to focus v0.4.0 on citations only.
+
+### Context Priming Engine (from AWOC)
+- [ ] `bin/lib/context-primer.js` — Section-specific context extraction
+- [ ] Load only relevant PROJECT.md sections for each task
+- [ ] Enable journal-scale papers (20-40 pages) without context overflow
+- [ ] `--full-context` flag for user-triggered complete load
+- [ ] Target: 500 tokens per section vs 5000 tokens full dump
+
+### Preference Inheritance (from Helios-MCP)
+- [ ] `~/.wtfp/base.yaml` — Global user preferences (style, citation habits)
+- [ ] `.planning/prefs.yaml` — Per-project overrides
+- [ ] Helios-style weighted merge (base + project)
+- [ ] Track: citation density, voice preference, formatting conventions
+- [ ] Git-versioned preference evolution
+
+### Checkpoint Bundles (from AWOC)
+- [ ] `/wtfp:checkpoint` — Save full paper state mid-session
+- [ ] `.planning/checkpoints/YYYY-MM-DD-HH-MM.json` format
+- [ ] Capture: section progress, citations added, key decisions, git status
+- [ ] Resume in new session with full context restoration
+- [ ] Enable multi-week paper writing without state loss
+
+### Domain Citation Memory
+- [ ] `.planning/sources/domain-memory.yaml` — Learned citation clusters
+- [ ] Cross-session: remember key papers for familiar domains
+- [ ] Auto-populate from citation patterns
+- [ ] Suggest known citations before searching APIs
+
+### Semantic Git Commits
+- [ ] Enhanced commit messages: `refs: [action] [target]`
+- [ ] Enable `git log --grep="refs:"` for citation archaeology
+- [ ] Track: analyzed, learned, fixed, audited actions
+
+---
+
+## Planned: v0.6.0+
+
+**Focus:** Multi-vendor and Visualization
 
 ### Gemini Support
 - [ ] `vendors/gemini/` adapter
@@ -89,10 +162,10 @@ wtf-p/
 - [ ] Chart accessibility analysis
 - [ ] Diagram-to-description generation
 
-### Collaboration
-- [ ] Multi-author coordination
-- [ ] Comment/suggestion tracking
-- [ ] Progress dashboards
+### Citation Network Visualization
+- [ ] Graph of citing/cited papers
+- [ ] Identify citation clusters and gaps visually
+- [ ] Export to common graph formats
 
 ---
 
@@ -139,6 +212,25 @@ Ideas from users — contributions welcome!
 4. **Graceful degradation** — Works with any model size (WCN mode)
 5. **User control** — Always ask before destructive operations
 6. **Vendor-agnostic core** — Support multiple AI coding tools
+7. **Invisible assistant** — Do exactly what asked, no unsolicited suggestions
+8. **Zero risk to user data** — All generated content to suggested.* files only
+9. **Plug-and-play** — Works alongside existing citation managers, doesn't replace
+10. **Confidence-gated autonomy** — Proceed if 80%+ confident, ask otherwise
+
+---
+
+## Anti-Features (Explicitly Excluded)
+
+These will NOT be built, even if they seem useful:
+
+| Feature | Rationale |
+|---------|-----------|
+| Real-time collaboration | Git handles merging. Too complex for CLI scope. |
+| Local ML/NLP models | Offload intelligence to LLM, keep tools dumb and fast. |
+| GUI/Web interface | CLI-only. Stay in the terminal. |
+| Autonomous publishing | Human always in loop for external actions. |
+| Persona evolution | "Invisible assistant" — no personality development. |
+| Decision logging | Git commits are the decision log. No separate files. |
 
 ---
 
@@ -146,17 +238,23 @@ Ideas from users — contributions welcome!
 
 | Version | Release | Focus |
 |---------|---------|-------|
-| v0.3.0 | Planned | 4 P's, skills, multi-vendor restructure |
+| v0.6.0 | Planned | Multi-vendor, visualization |
+| v0.5.0 | Planned | Context priming, preference inheritance, checkpoints |
+| v0.4.0 | In Progress | Citation Expert v2, tiered API, provenance tracking |
+| v0.3.0 | Published | 4 P's, skills, multi-vendor restructure |
 | v0.2.0 | Jan 2025 | CLI improvements, contribution system |
 | v0.1.0 | Jan 2025 | Initial public release |
 
 ---
 
-## How to Influence the Roadmap
+## Research Sources (v0.4.0+ Design)
 
-1. **Vote on issues** — Add 👍 to issues you want prioritized
-2. **Open discussions** — Propose new ideas
-3. **Submit PRs** — Implement features from the wishlist
-4. **Share use cases** — Tell us how you use WTF-P
+Analysis of external projects informed the agentic architecture:
 
-The roadmap is updated based on community feedback and contribution patterns.
+| Project | Key Learnings | Adopted |
+|---------|---------------|---------|
+| [Helios-MCP](https://github.com/akougkas/helios-mcp) | Git-native memory, weighted preference inheritance | Preference inheritance (v0.5.0) |
+| [cite-paper-mcp](https://github.com/akougkas/cite-paper-mcp) | Scholar ID anchoring, elicitation pattern, tiered APIs | Tiered search, provenance (v0.4.0) |
+| [AWOC](https://github.com/akougkas/awoc) | Context priming, checkpoint bundles, handoff protocol | Context priming, checkpoints (v0.5.0) |
+
+See [`agentic-integration-report.md`](agentic-integration-report.md) and [`planning/CITATION-EXPERT-V2-SPEC.md`](planning/CITATION-EXPERT-V2-SPEC.md) for full analysis.

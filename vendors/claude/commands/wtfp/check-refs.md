@@ -55,16 +55,18 @@ Create one or specify path: /wtfp:check-refs path/to/refs.bib
 </step>
 
 <step name="parse_bib">
-**Extract all BibTeX keys:**
+**Extract BibTeX Keys:**
+
+Use the deterministic indexer to get an accurate list of keys from the .bib file.
 
 ```bash
-grep -E "^@[a-zA-Z]+\{" *.bib | sed 's/.*{\([^,]*\),.*/\1/'
+node ~/.claude/bin/bib-index.js index "$ARGUMENTS"
 ```
+*(Use the file found/selected in step 1)*
 
-Build inventory:
+Build inventory from the JSON output:
 - Entry key
-- Entry type (@article, @inproceedings, etc.)
-- Required fields present/missing
+- Title
 - Year
 </step>
 
@@ -133,10 +135,10 @@ Use AskUserQuestion:
   - "Keep all" — Leave .bib unchanged
   - "Comment out" — Keep but mark as unused
 
-For missing entries, offer to:
-- Search for DOI/metadata (if WebFetch available)
-- Create skeleton entry for user to complete
-- Flag for manual resolution
+For missing entries, offer to find them:
+1. **Search:** Run `node ~/.claude/bin/citation-fetcher.js "title or author"` to find the correct BibTeX.
+2. **Create:** If found, append the new entry to the .bib file.
+3. **Flag:** If not found, flag for manual resolution.
 </step>
 
 <step name="apply_fixes">

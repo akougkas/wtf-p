@@ -88,116 +88,77 @@ Exit command.
 
 </step>
 
-<step name="type">
+<step name="initial_batch">
 
-**Ask paper type:**
+**Gather Core Context (Batched):**
 
-Use AskUserQuestion:
-- header: "Paper Type"
-- question: "What type of document are you writing?"
+Use AskUserQuestion to collect the foundational pillars in one turn.
+
+- header: "Paper Foundations"
+- question: "To initialize the project, I need to understand 4 things. Answer what you can, and I'll infer or ask about the rest:\n\n1. **Type:** (Research paper, Grant, Thesis, etc.)\n2. **Venue:** (Target conference/journal, e.g., NeurIPS, CHI, Nature)\n3. **Core Argument:** (The one main thing you are proving/proposing)\n4. **Audience:** (Who is this for?)"
 - options:
-  - "Research paper" — Journal article or conference paper
-  - "Grant proposal" — Funding application (NSF, NIH, etc.)
-  - "Thesis chapter" — Dissertation or thesis section
-  - "Other" — Essay, report, or something else
+  - "I provided the details" — Continue with what I said
+  - "Guide me step-by-step" — I prefer individual questions
 
-Store the document type for later structure decisions.
+**If "Guide me step-by-step":**
+Fall back to the sequential interview mode (ask Type, then Venue, then Argument).
+
+**If "I provided the details":**
+Parse the response to extract: `document_type`, `target_venue`, `core_argument`, `target_audience`.
 
 </step>
 
 <step name="venue_template">
 
-**Select venue template (for research papers):**
+**Select venue template (if not inferred):**
 
-If document type is "Research paper", ask for venue template:
+If `document_type` or `target_venue` is ambiguous, ask specifically for the template:
 
 Use AskUserQuestion:
-- header: "Venue"
-- question: "What's your target venue or field?"
+- header: "Venue Structure"
+- question: "Based on your input, which structure fits best?"
 - options:
-  - "ACM CS" — Systems, databases, architecture (SIGMOD, OSDI, SOSP)
-  - "IEEE CS" — HPC, parallel systems, storage (SC, IPDPS, TPDS)
+  - "ACM CS" — Systems/Databases (SIGMOD, SOSP)
+  - "IEEE CS" — HPC/Systems (SC, IPDPS)
   - "ML/AI" — NeurIPS, ICML, ICLR style
-  - "Nature/Science" — Classic IMRaD for life sciences
-  - "Other" — Custom structure
+  - "Nature/Science" — Life Sciences IMRaD
+  - "Grant" — Funding Proposal
+  - "Thesis" — Dissertation Chapter
+  - "Other" — Custom
 
 **Load venue template:**
-
-Based on selection, read the corresponding venue template:
-- ACM CS → `~/.claude/write-the-f-paper/venues/acm-cs.yaml`
-- IEEE CS → `~/.claude/write-the-f-paper/venues/ieee-cs.yaml`
-- ML/AI → `~/.claude/write-the-f-paper/venues/arxiv-ml.yaml`
-- Nature/Science → `~/.claude/write-the-f-paper/venues/nature.yaml`
-- Other → Ask user to describe structure
-
-If document type is "Thesis chapter":
-- Load `~/.claude/write-the-f-paper/venues/thesis-chapter.yaml`
-
-Store the selected venue template for use in structure step.
+(Load corresponding YAML from `~/.claude/write-the-f-paper/venues/`)
 
 </step>
 
-<step name="question">
+<step name="refine_argument">
 
-**1. Open (FREEFORM — do NOT use AskUserQuestion):**
+**Sharpen the Core:**
 
-Ask inline: "What is the core argument or contribution of your paper?"
-
-Wait for their freeform response. This gives you the context needed to ask intelligent follow-up questions.
-
-**2. Follow the thread (NOW use AskUserQuestion):**
-
-Based on their response, use AskUserQuestion with options that probe what they mentioned:
-- header: "[Topic they mentioned]"
-- question: "You mentioned [X] — how would you describe the key insight?"
-- options: 2-3 interpretations + "Something else"
-
-**3. Target venue:**
+If `core_argument` was weak or missing in the batch, drill down now.
 
 Use AskUserQuestion:
-- header: "Venue"
-- question: "What's the target venue or format?"
-- options: Common venues for their field + "Undecided" + "Let me specify"
-
-**4. Sharpen the core:**
-
-Use AskUserQuestion:
-- header: "Core"
-- question: "If reviewers remember one thing, what should it be?"
-- options: Key aspects they've mentioned + "The methodology" + "The findings" + "Something else"
-
-**5. Find boundaries:**
-
-Use AskUserQuestion:
-- header: "Scope"
-- question: "What's explicitly NOT in this paper?"
-- options: Tempting tangents + "Nothing specific" + "Let me list them"
-
-**6. Constraints:**
-
-Use AskUserQuestion:
-- header: "Constraints"
-- question: "Any hard constraints?"
+- header: "Refine Core"
+- question: "Let's sharpen the core argument. If reviewers remember ONE thing, what is it?"
 - options:
-  - "Page/word limit" — Strict length requirements
-  - "Deadline" — Submission deadline pressure
-  - "Data limitations" — Working with specific dataset
-  - "None" — Flexible constraints
-  - "Multiple constraints" — Let me explain
+  - "The Method" — A new way of doing X
+  - "The Findings" — We discovered Y
+  - "The Theory" — A new perspective on Z
+  - "The System" — We built system Q
+  - "Write my own" — (User types input)
 
-**7. Decision gate:**
+</step>
+
+<step name="constraints_batch">
+
+**Gather Constraints & Boundaries (Batched):**
 
 Use AskUserQuestion:
-- header: "Ready?"
-- question: "Ready to create PROJECT.md, or explore more?"
-- options (ALL THREE REQUIRED):
-  - "Create PROJECT.md" — Finalize and continue
-  - "Ask more questions" — I'll dig deeper
-  - "Let me add context" — You have more to share
-
-If "Ask more questions" → return to step 2.
-If "Let me add context" → receive input via their response → return to step 2.
-Loop until "Create PROJECT.md" selected.
+- header: "Scope & Limits"
+- question: "Finally, define the box we are playing in:\n\n1. **Out of Scope:** What are we explicitly NOT doing?\n2. **Hard Constraints:** Page limits, deadlines, data restrictions?"
+- options:
+  - "Provided details" — Save and continue
+  - "No constraints" — Standard length, no specific exclusions
 
 </step>
 
