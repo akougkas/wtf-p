@@ -1,6 +1,20 @@
 # Changelog
 
-## [0.1.0] - 2026-01-11
+## [0.4.0] - 2026-01-13
+
+**Theme:** Citation Expert v2 — Deterministic, Plug-and-Play Citation Pipeline
+
+### Features
+- **Tiered Search Pipeline**: Integrated Semantic Scholar (Primary), SerpAPI Google Scholar (Seminal), and CrossRef (Fallback).
+- **Impact Scoring Engine**: Automated ranking of papers by citation count, velocity (citations/month), recency, and venue prestige.
+- **Provenance Tracking**: BibTeX entries now include `wtfp_*` fields for tracking source, impact metrics, and verification status.
+- **BibTeX Optimization**: `bib-index` and `bib-format` refactored for large-scale bibliography management without context limits.
+- **Enhanced Commands**:
+  - `/wtfp:analyze-bib`: Added automated impact analysis and seminal work identification.
+  - `/wtfp:check-refs`: Added tiered API auto-suggestions for missing citations.
+  - `/wtfp:research-gap`: Added intent-aware search (`--intent=seminal|recent|specific`).
+
+### [0.1.0] - 2026-01-11
 
 Initial public release.
 

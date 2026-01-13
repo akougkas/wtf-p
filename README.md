@@ -215,16 +215,19 @@ The mapping phase analyzes:
 
 ## Citation Expert (v0.4.0)
 
-WTF-P now includes a specialized sub-agent for managing your bibliography.
+WTF-P includes a specialized tiered pipeline for bibliography management.
 
 ```bash
-/agent run citation-expert "Find papers about [topic]"
+/wtfp:analyze-bib      # Deep analysis of impact (seminal vs rising)
+/wtfp:research-gap     # Intent-aware search (seminal/recent)
+/wtfp:check-refs       # Auto-suggest missing citations
 ```
 
 Capabilities:
-- **Grounded Search:** Queries real academic databases (CrossRef/Semantic Scholar) via `citation-fetcher`.
-- **BibTeX Management:** Indexes and validates your `.bib` file using `bib-index` without context limits.
-- **Verification:** Automatically checks for missing or unused citations during `analyze-bib` and `check-refs`.
+- **Tiered Search:** Integrated Semantic Scholar, SerpAPI (Google Scholar), and CrossRef.
+- **Impact Ranking:** Automatically scores papers by citations, velocity, and venue prestige.
+- **Deduplication:** universal anchoring via DOI and Scholar Cluster IDs.
+- **Provenance:** Entries track their metadata source and verification status.
 
 ---
 
