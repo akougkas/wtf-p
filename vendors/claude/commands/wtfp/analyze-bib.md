@@ -60,10 +60,26 @@ node ~/.claude/bin/bib-index.js index "$ARGUMENTS"
 
 </step>
 
+<step name="impact_analysis">
+**Impact Analysis:**
+
+Analyze citation metrics (citations, velocity, age) to identify seminal and rising papers.
+
+```bash
+node ~/.claude/bin/analyze-impact.js "$ARGUMENTS"
+```
+
+Output sections:
+1. **Seminal Works** (>1000 citations)
+2. **Rising Stars** (High citation velocity)
+3. **Review Suggested** (Old, low impact)
+
+</step>
+
 <step name="temporal_analysis">
 **Temporal Analysis:**
 
-Analyze the JSON output from the previous step.
+Analyze the JSON output from the parse_entries step.
 
 Categorize entries by the `year` field in the JSON:
 - **Foundational** (10+ years old)
@@ -100,21 +116,16 @@ Analyze titles, abstracts, and keywords to cluster papers by theme:
 </step>
 
 <step name="identify_seminal">
-**Identify Seminal Works:**
+**Verify Seminal Works:**
 
-Flag likely seminal papers based on:
-- High citation count (if DOI available, could fetch)
-- Foundational publication year
-- Appears in prestigious venue
-- Authors are field leaders
-- Title suggests foundational contribution
+Review the "Seminal Works" list from the Impact Analysis step.
 
 ```markdown
-## Seminal Works (Must Cite)
+## Seminal Works (Verified High Impact)
 
-| Key | Title | Why Seminal |
-|-----|-------|-------------|
-| [key] | [title] | [reason: foundational method, influential framework, etc.] |
+| Key | Title | Citations | Why Seminal |
+|-----|-------|-----------|-------------|
+| [key] | [title] | [N] | [reason] |
 ```
 
 Use AskUserQuestion:
@@ -208,14 +219,17 @@ Write to `.planning/sources/REFS.md`:
 **Total entries:** [N]
 **Analysis date:** [date]
 
+## Impact Analysis
+[From impact_analysis step]
+- Seminal Works (>1000 citations)
+- Rising Stars (High Velocity)
+- Review Suggested (Low Impact/Old)
+
 ## Temporal Distribution
 [From temporal_analysis step]
 
 ## Topic Clusters
 [From cluster_topics step]
-
-## Seminal Works
-[From identify_seminal step]
 
 ## Citation Map by Section
 [From map_to_sections step]

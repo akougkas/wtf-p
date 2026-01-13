@@ -4,54 +4,19 @@ const fs = require('fs');
  * WTF-P BibTeX Formatter
  * Standardizes BibTeX entries to the project's strict template.
  * Handles missing fields and assigns provenance metadata.
- * 
- * Usage:
- *   node bib-format.js "<bibtex_entry>"
- *   node bib-format.js --file <bib_file> <key>
  */
-
-const MODE = process.argv[2];
-const INPUT = process.argv[3];
-const KEY_ARG = process.argv[4];
-
-if (!MODE) {
-  console.error('Usage: node bib-format.js <raw_string|--file> <content|filepath> [key]');
-  process.exit(1);
-}
-
-let rawEntry = '';
-
-if (MODE === '--file') {
-  if (!fs.existsSync(INPUT)) {
-    console.error(`File not found: ${INPUT}`);
-    process.exit(1);
-  }
-  const content = fs.readFileSync(INPUT, 'utf8');
-  // Simple extractor for the key
-  const regex = new RegExp(`@\\w+\\s*{\\s*${KEY_ARG}\\s*,[\\s\\S]*?\\n}`, 'm');
-  const match = content.match(regex);
-  if (match) {
-    rawEntry = match[0];
-  } else {
-    console.error(`Key ${KEY_ARG} not found in ${INPUT}`);
-    process.exit(1);
-  }
-} else {
-  rawEntry = INPUT; // Assume raw string passed
-}
 
 // --- Parsing Logic ---
 
 function parseField(text, field) {
   // Regex to find field="value" or field={value}
-  const regex = new RegExp(`${field}\\s*=\\s*[{"']([\\s\\S]*?)[}"']\\s*[,}]`, 'i');
+  const regex = new RegExp(`\\b${field}\\s*=\\s*[{"']([\\s\\S]*?)[}"']\\s*[,}]`, 'i');
   const match = text.match(regex);
   return match ? match[1].trim() : null;
 }
 
 function parseEntryType(text) {
-  const match = text.match(/@(\w+)\s*{
-/);
+  const match = text.match(/@(\w+)\s*{/);
   return match ? match[1].toLowerCase() : 'misc';
 }
 
@@ -60,102 +25,137 @@ function parseKey(text) {
   return match ? match[1].trim() : 'unknown_key';
 }
 
+function parse(rawEntry) {
+  const entryType = parseEntryType(rawEntry);
+  const key = parseKey(rawEntry);
+
+  return {
+    key,
+    entryType,
+    author: parseField(rawEntry, 'author'),
+    title: parseField(rawEntry, 'title'),
+    booktitle: parseField(rawEntry, 'booktitle') || parseField(rawEntry, 'journal'),
+    year: parseField(rawEntry, 'year'),
+    month: parseField(rawEntry, 'month'),
+    abstract: parseField(rawEntry, 'abstract'),
+    publisher: parseField(rawEntry, 'publisher'),
+    volume: parseField(rawEntry, 'volume'),
+    number: parseField(rawEntry, 'number'),
+    pages: parseField(rawEntry, 'pages'),
+    doi: parseField(rawEntry, 'doi'),
+    url: parseField(rawEntry, 'url'),
+    keywords: parseField(rawEntry, 'keywords'),
+    abbr: parseField(rawEntry, 'abbr'),
+    bibtex_show: parseField(rawEntry, 'bibtex_show'),
+    selected: parseField(rawEntry, 'selected'),
+    projects: parseField(rawEntry, 'projects')
+  };
+}
+
 // --- Formatting Logic ---
 
-const entryType = parseEntryType(rawEntry);
-const key = parseKey(rawEntry);
+function format(data, provenance = {}) {
+  // Determine Status
+  let status = provenance.wtfp_status || 'official';
+  const missingFields = [];
 
-// Extract existing values or null
-const data = {
-  author: parseField(rawEntry, 'author'),
-  title: parseField(rawEntry, 'title'),
-  booktitle: parseField(rawEntry, 'booktitle') || parseField(rawEntry, 'journal'),
-  year: parseField(rawEntry, 'year'),
-  month: parseField(rawEntry, 'month'),
-  abstract: parseField(rawEntry, 'abstract'),
-  publisher: parseField(rawEntry, 'publisher'),
-  volume: parseField(rawEntry, 'volume'),
-  number: parseField(rawEntry, 'number'),
-  pages: parseField(rawEntry, 'pages'),
-  doi: parseField(rawEntry, 'doi'),
-  url: parseField(rawEntry, 'url'),
-  keywords: parseField(rawEntry, 'keywords'),
-  abbr: parseField(rawEntry, 'abbr'),
-  // Preserve custom fields if they exist
-  bibtex_show: parseField(rawEntry, 'bibtex_show'),
-  selected: parseField(rawEntry, 'selected'),
-  projects: parseField(rawEntry, 'projects')
-};
+  if (!data.doi) {
+    status = 'incomplete';
+    missingFields.push('doi');
+  }
+  if (!data.author || data.author === '{MISSING_AUTHOR}') {
+    status = 'incomplete';
+    missingFields.push('author');
+  }
+  if (!data.booktitle || data.booktitle === '{MISSING_VENUE}') {
+     missingFields.push('venue');
+  }
+  if (!data.abstract) {
+    if (status !== 'incomplete') status = 'partial'; 
+    missingFields.push('abstract');
+  }
 
-// --- Provenance & Defaults ---
+  // Use provided provenance or defaults
+  const wtfp_source = provenance.wtfp_source || '';
+  const wtfp_citations = provenance.wtfp_citations || '';
+  const wtfp_velocity = provenance.wtfp_velocity || '';
+  const wtfp_s2_id = provenance.wtfp_s2_id || '';
+  const wtfp_scholar_id = provenance.wtfp_scholar_id || '';
+  const wtfp_fetched = provenance.wtfp_fetched || new Date().toISOString().split('T')[0];
 
-let status = 'official';
-const missingFields = [];
-
-if (!data.doi) {
-  status = 'incomplete';
-  missingFields.push('doi');
-}
-if (!data.abstract) {
-  if (status !== 'incomplete') status = 'partial'; // Abstract is nice-to-have
-}
-
-// Default values for the Template
-const formatted = {
-  abbr: data.abbr || "",
-  entry_type: entryType === 'inproceedings' ? 'conference' : (entryType === 'article' ? 'journal' : entryType),
-  author: data.author || "{MISSING_AUTHOR}",
-  abstract: data.abstract || "",
-  booktitle: data.booktitle || "{MISSING_VENUE}",
-  title: data.title || "{MISSING_TITLE}",
-  year: data.year || "{????}",
-  month: data.month || "",
-  publisher: data.publisher || "",
-  volume: data.volume || "",
-  number: data.number || "",
-  pages: data.pages || "",
-  keywords: data.keywords || "",
-  doi: data.doi || "",
-  url: data.url || (data.doi ? `https://doi.org/${data.doi}` : ""),
-  html: data.html || (data.doi ? `https://doi.org/${data.doi}` : ""),
-  pdf: "paper.pdf", // Placeholder
-  google_scholar_id: "",
-  additional_info: "",
-  bibtex_show: data.bibtex_show || "true",
-  selected: data.selected || "false",
-  projects: data.projects || "",
+  const entryType = data.entryType === 'inproceedings' ? 'conference' : (data.entryType === 'article' ? 'journal' : data.entryType || 'misc');
   
-  // Custom tracking fields
-  wtfp_status: status,
-  wtfp_missing: missingFields.length > 0 ? missingFields.join(',') : ""
-};
+  // Clean fields
+  const clean = (val, fallback = "") => val || fallback;
 
-// Reconstruct BibTeX
-const output = `@${entryType}{${key},
-  abbr="${formatted.abbr}",
-  entry_type="${formatted.entry_type}",
-  author="${formatted.author}",
-  abstract="${formatted.abstract}",
-  booktitle="${formatted.booktitle}",
-  title="${formatted.title}",
-  year="${formatted.year}",
-  month="${formatted.month}",
-  publisher="${formatted.publisher}",
-  volume="${formatted.volume}",
-  number="${formatted.number}",
-  pages="${formatted.pages}",
-  keywords="${formatted.keywords}",
-  doi="${formatted.doi}",
-  url="${formatted.url}",
-  html="${formatted.html}",
-  pdf="${formatted.pdf}",
-  google_scholar_id="${formatted.google_scholar_id}",
-  additional_info="${formatted.additional_info}",
-  bibtex_show="${formatted.bibtex_show}",
-  selected="${formatted.selected}",
-  projects="${formatted.projects}",
-  wtfp_status="${formatted.wtfp_status}",
-  wtfp_missing="${formatted.wtfp_missing}"
+  return `@${entryType}{${data.key || 'unknown'},
+  abbr="${clean(data.abbr)}",
+  entry_type="${entryType}",
+  author="${clean(data.author, "{MISSING_AUTHOR}")}",
+  abstract="${clean(data.abstract)}",
+  booktitle="${clean(data.booktitle, "{MISSING_VENUE}")}",
+  title="${clean(data.title, "{MISSING_TITLE}")}",
+  year="${clean(data.year, "{????}")}",
+  month="${clean(data.month)}",
+  publisher="${clean(data.publisher)}",
+  volume="${clean(data.volume)}",
+  number="${clean(data.number)}",
+  pages="${clean(data.pages)}",
+  keywords="${clean(data.keywords)}",
+  doi="${clean(data.doi)}",
+  url="${clean(data.url, data.doi ? `https://doi.org/${data.doi}` : "")}",
+  html="${clean(data.html, data.doi ? `https://doi.org/${data.doi}` : "")}",
+  pdf="${clean(data.pdf, "paper.pdf")}",
+  google_scholar_id="${clean(data.google_scholar_id)}",
+  additional_info="${clean(data.additional_info)}",
+  bibtex_show="${clean(data.bibtex_show, "true")}",
+  selected="${clean(data.selected, "false")}",
+  projects="${clean(data.projects)}",
+  wtfp_status="${status}",
+  wtfp_source="${wtfp_source}",
+  wtfp_citations="${wtfp_citations}",
+  wtfp_velocity="${wtfp_velocity}",
+  wtfp_s2_id="${wtfp_s2_id}",
+  wtfp_scholar_id="${wtfp_scholar_id}",
+  wtfp_fetched="${wtfp_fetched}",
+  wtfp_missing="${missingFields.join(',')}"
 }`;
+}
 
-console.log(output);
+// --- CLI Handling ---
+
+if (require.main === module) {
+  const MODE = process.argv[2];
+  const INPUT = process.argv[3];
+  const KEY_ARG = process.argv[4];
+
+  if (!MODE) {
+    console.error('Usage: node bib-format.js <raw_string|--file> <content|filepath> [key]');
+    process.exit(1);
+  }
+
+  let rawEntry = '';
+
+  if (MODE === '--file') {
+    if (!fs.existsSync(INPUT)) {
+      console.error(`File not found: ${INPUT}`);
+      process.exit(1);
+    }
+    const content = fs.readFileSync(INPUT, 'utf8');
+    const regex = new RegExp(`@\w+\s*{\s*${KEY_ARG}\s*,[\s\S]*?\n}`, 'm');
+    const match = content.match(regex);
+    if (match) {
+      rawEntry = match[0];
+    } else {
+      console.error(`Key ${KEY_ARG} not found in ${INPUT}`);
+      process.exit(1);
+    }
+  } else {
+    rawEntry = INPUT;
+  }
+
+  const parsed = parse(rawEntry);
+  console.log(format(parsed));
+}
+
+module.exports = { parse, format };

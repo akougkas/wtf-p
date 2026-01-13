@@ -73,9 +73,9 @@ Use AskUserQuestion:
 Based on scope, investigate:
 
 **Key Citations:**
-- Identify foundational papers
-- Find recent high-impact work
-- **Validation:** Use `node ~/.claude/bin/citation-fetcher.js "query"` to verify any suggested papers exist and get their BibTeX.
+- **Foundational:** Use `node ~/.claude/bin/citation-fetcher.js "[topic]" --intent=seminal` to find high-impact papers.
+- **Recent:** Use `node ~/.claude/bin/citation-fetcher.js "[topic]" --intent=recent --year=2023-2026` to find state-of-the-art.
+- **Validation:** Use `node ~/.claude/bin/citation-fetcher.js "query"` to verify specific papers.
 
 **Standard Approaches:**
 - How do others structure similar sections?

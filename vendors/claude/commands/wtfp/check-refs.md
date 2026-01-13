@@ -136,7 +136,7 @@ Use AskUserQuestion:
   - "Comment out" — Keep but mark as unused
 
 For missing entries, offer to find them:
-1. **Search:** Run `node ~/.claude/bin/citation-fetcher.js "title or author"` to find the correct BibTeX.
+1. **Search:** Run `node ~/.claude/bin/citation-fetcher.js "title or author"` (uses Semantic Scholar + CrossRef) to find the correct BibTeX.
 2. **Create:** If found, append the new entry to the .bib file.
 3. **Flag:** If not found, flag for manual resolution.
 </step>

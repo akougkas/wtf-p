@@ -1,39 +1,18 @@
 const fs = require('fs');
-const path = require('path');
 
 /**
  * WTF-P Bibliography Indexer
  * Indexes and retrieves BibTeX entries without loading the entire file into context.
- * 
- * Usage:
- *   node bib-index.js index <bib_file>
- *   node bib-index.js get <bib_file> <citation_key>
- *   node bib-index.js search <bib_file> <query>
  */
 
-const COMMAND = process.argv[2];
-const BIB_FILE = process.argv[3];
-const ARG = process.argv[4];
-
-if (!COMMAND || !BIB_FILE) {
-  console.error('Usage: node bib-index.js <command> <bib_file> [arg]');
-  process.exit(1);
-}
-
-if (!fs.existsSync(BIB_FILE)) {
-  console.error(`Error: Bibliography file not found: ${BIB_FILE}`);
-  process.exit(1);
-}
-
-const content = fs.readFileSync(BIB_FILE, 'utf8');
-
-// Simple BibTeX Regex: Matches @type{key, ...}
-// This is a rough parser, sufficient for standard files.
 const ENTRY_REGEX = /@(\w+)\s*\{\s*([^,]+),([^@]*)\}/g;
 
 function parseEntries(text) {
   const entries = [];
   let match;
+  // Reset regex index just in case
+  ENTRY_REGEX.lastIndex = 0;
+  
   while ((match = ENTRY_REGEX.exec(text)) !== null) {
     const fullText = match[0];
     const type = match[1];
@@ -53,41 +32,73 @@ function parseEntries(text) {
   return entries;
 }
 
-const entries = parseEntries(content);
+function index(content) {
+  const entries = parseEntries(content);
+  return JSON.stringify(entries.map(e => ({ key: e.key, title: e.title, year: e.year })), null, 2);
+}
 
-if (COMMAND === 'index') {
-  // Return a summary of keys
-  const index = entries.map(e => ({ key: e.key, title: e.title, year: e.year }));
-  console.log(JSON.stringify(index, null, 2));
-} 
-else if (COMMAND === 'get') {
-  if (!ARG) {
-    console.error('Error: Missing citation key');
-    process.exit(1);
-  }
-  const entry = entries.find(e => e.key === ARG);
-  if (entry) {
-    console.log(entry.fullText);
-  } else {
-    console.error(`Error: Entry '${ARG}' not found.`);
-    process.exit(1);
-  }
+function getEntry(content, key) {
+  const entries = parseEntries(content);
+  const entry = entries.find(e => e.key === key);
+  return entry ? entry.fullText : null;
 }
-else if (COMMAND === 'search') {
-  if (!ARG) {
-    console.error('Error: Missing search query');
-    process.exit(1);
-  }
-  const query = ARG.toLowerCase();
+
+function search(content, query) {
+  const entries = parseEntries(content);
+  const q = query.toLowerCase();
   const results = entries.filter(e => 
-    e.title.toLowerCase().includes(query) || 
-    e.key.toLowerCase().includes(query) ||
-    e.fullText.toLowerCase().includes(query)
+    e.title.toLowerCase().includes(q) || 
+    e.key.toLowerCase().includes(q) ||
+    e.fullText.toLowerCase().includes(q)
   );
-  // Return full entries for search results (up to a limit?)
-  console.log(JSON.stringify(results.map(e => ({ key: e.key, title: e.title, year: e.year })), null, 2));
+  return JSON.stringify(results.map(e => ({ key: e.key, title: e.title, year: e.year })), null, 2);
 }
-else {
-  console.error(`Unknown command: ${COMMAND}`);
-  process.exit(1);
+
+// --- CLI Handling ---
+
+if (require.main === module) {
+  const COMMAND = process.argv[2];
+  const BIB_FILE = process.argv[3];
+  const ARG = process.argv[4];
+
+  if (!COMMAND || !BIB_FILE) {
+    console.error('Usage: node bib-index.js <command> <bib_file> [arg]');
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(BIB_FILE)) {
+    console.error(`Error: Bibliography file not found: ${BIB_FILE}`);
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(BIB_FILE, 'utf8');
+
+  if (COMMAND === 'index') {
+    console.log(index(content));
+  } 
+  else if (COMMAND === 'get') {
+    if (!ARG) {
+      console.error('Error: Missing citation key');
+      process.exit(1);
+    }
+    const result = getEntry(content, ARG);
+    if (result) console.log(result);
+    else {
+      console.error(`Error: Entry '${ARG}' not found.`);
+      process.exit(1);
+    }
+  }
+  else if (COMMAND === 'search') {
+    if (!ARG) {
+      console.error('Error: Missing search query');
+      process.exit(1);
+    }
+    console.log(search(content, ARG));
+  }
+  else {
+    console.error(`Unknown command: ${COMMAND}`);
+    process.exit(1);
+  }
 }
+
+module.exports = { index, getEntry, search, parseEntries };
