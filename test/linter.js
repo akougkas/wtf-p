@@ -10,18 +10,41 @@ const COLORS = {
 };
 
 let hasErrors = false;
+let passCount = 0;
+let warnCount = 0;
+let failCount = 0;
+
+// Vendor-specific validation rules
+// Claude requires allowed-tools; Gemini and OpenCode do not (tools available by default)
+const VENDOR_RULES = {
+  claude: { requiresAllowedTools: true },
+  gemini: { requiresAllowedTools: false },
+  opencode: { requiresAllowedTools: false }
+};
 
 function error(file, msg) {
   console.log(`${COLORS.red}FAIL${COLORS.reset} ${file}: ${msg}`);
   hasErrors = true;
+  failCount++;
 }
 
 function warn(file, msg) {
   console.log(`${COLORS.yellow}WARN${COLORS.reset} ${file}: ${msg}`);
+  warnCount++;
 }
 
 function pass(file) {
   // console.log(`${COLORS.green}PASS${COLORS.reset} ${file}`);
+  passCount++;
+}
+
+/**
+ * Extract vendor name from file path
+ */
+function getVendorFromPath(filepath) {
+  const relPath = path.relative(ROOT, filepath);
+  const match = relPath.match(/^vendors\/([^/]+)\//);
+  return match ? match[1] : null;
 }
 
 /**
@@ -57,37 +80,42 @@ function parseFrontmatter(content) {
 /**
  * Validate a Command (.md) file
  */
-function validateCommand(filepath) {
+function validateCommand(filepath, vendor = null) {
   const content = fs.readFileSync(filepath, 'utf8');
   const relPath = path.relative(ROOT, filepath);
-  
+  const vendorName = vendor || getVendorFromPath(filepath) || 'claude';
+  const vendorRules = VENDOR_RULES[vendorName] || VENDOR_RULES.claude;
+
   // 1. Check Frontmatter
   const fm = parseFrontmatter(content);
   if (!fm) {
     error(relPath, 'Missing or invalid YAML frontmatter');
     return;
   }
-  
+
   const { data, bodyIndex } = fm;
   const body = content.slice(bodyIndex);
 
   // 2. Required Fields
   if (!data.name) error(relPath, "Missing 'name' in frontmatter");
   if (!data.description) error(relPath, "Missing 'description' in frontmatter");
-  
-  // 3. Check allowed-tools presence (raw check because our parser is simple)
-  if (!content.includes('allowed-tools:')) {
+
+  // 3. Check allowed-tools presence (vendor-specific)
+  // Claude requires allowed-tools; Gemini and OpenCode do not (tools available by default)
+  if (vendorRules.requiresAllowedTools && !content.includes('allowed-tools:')) {
     error(relPath, "Missing 'allowed-tools' section");
   }
 
   // 4. Structure Tags
   if (!body.includes('<objective>')) error(relPath, "Missing <objective> tag");
   if (!body.includes('<process>')) error(relPath, "Missing <process> tag");
-  
-  // 5. AskUserQuestion Safety
-  if (body.includes('AskUserQuestion') && !content.includes('AskUserQuestion')) {
-     // Checking if it's in the allowed-tools list (heuristic)
-     error(relPath, "Uses AskUserQuestion but not declared in allowed-tools");
+
+  // 5. AskUserQuestion Safety (only for Claude which has allowed-tools)
+  if (vendorRules.requiresAllowedTools) {
+    if (body.includes('AskUserQuestion') && !content.includes('AskUserQuestion')) {
+       // Checking if it's in the allowed-tools list (heuristic)
+       error(relPath, "Uses AskUserQuestion but not declared in allowed-tools");
+    }
   }
 
   pass(relPath);
@@ -120,9 +148,11 @@ function validateWorkflow(filepath) {
 /**
  * Validate an Agent (.md) file
  */
-function validateAgent(filepath) {
+function validateAgent(filepath, vendor = null) {
   const content = fs.readFileSync(filepath, 'utf8');
   const relPath = path.relative(ROOT, filepath);
+  const vendorName = vendor || getVendorFromPath(filepath) || 'claude';
+  const vendorRules = VENDOR_RULES[vendorName] || VENDOR_RULES.claude;
 
   // 1. Check Frontmatter
   const fm = parseFrontmatter(content);
@@ -138,8 +168,9 @@ function validateAgent(filepath) {
   if (!data.name) error(relPath, "Missing 'name' in frontmatter");
   if (!data.description) error(relPath, "Missing 'description' in frontmatter");
 
-  // 3. Check allowed-tools presence
-  if (!content.includes('allowed-tools:')) {
+  // 3. Check allowed-tools presence (vendor-specific)
+  // Claude requires allowed-tools; Gemini and OpenCode do not
+  if (vendorRules.requiresAllowedTools && !content.includes('allowed-tools:')) {
     error(relPath, "Missing 'allowed-tools' section");
   }
 
@@ -165,7 +196,7 @@ function main() {
       const cmdDir = path.join(vendorDir, vendor, 'commands', 'wtfp');
       if (fs.existsSync(cmdDir)) {
         fs.readdirSync(cmdDir).forEach(f => {
-          if (f.endsWith('.md')) validateCommand(path.join(cmdDir, f));
+          if (f.endsWith('.md')) validateCommand(path.join(cmdDir, f), vendor);
         });
       }
 
@@ -173,7 +204,7 @@ function main() {
       const agentDir = path.join(vendorDir, vendor, 'agents', 'wtfp');
       if (fs.existsSync(agentDir)) {
         fs.readdirSync(agentDir).forEach(f => {
-          if (f.endsWith('.md')) validateAgent(path.join(agentDir, f));
+          if (f.endsWith('.md')) validateAgent(path.join(agentDir, f), vendor);
         });
       }
     });
@@ -189,11 +220,14 @@ function main() {
     });
   }
 
+  // Summary
+  console.log(`\n=== Linter Results: ${passCount} passed, ${failCount} failed, ${warnCount} warnings ===\n`);
+
   if (hasErrors) {
-    console.log(`\n${COLORS.red}Linter FAILED${COLORS.reset}`);
+    console.log(`${COLORS.red}Linter FAILED${COLORS.reset}`);
     process.exit(1);
   } else {
-    console.log(`\n${COLORS.green}Linter Passed${COLORS.reset}`);
+    console.log(`${COLORS.green}Linter Passed${COLORS.reset}`);
   }
 }
 
