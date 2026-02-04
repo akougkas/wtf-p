@@ -9,14 +9,24 @@ Validation: X exists+complete, X+1 exists, X.Y doesn't exist, Y >= 1
 READ: ~/.claude/write-the-f-paper/templates/section-prompt.md
 READ: ~/.claude/write-the-f-paper/references/plan-format.md
 READ: ~/.claude/write-the-f-paper/references/verification-layers.md
+READ: ~/.claude/write-the-f-paper/references/orchestrator-pattern.md
+READ: ~/.claude/write-the-f-paper/references/context-fidelity.md
+READ: ~/.claude/write-the-f-paper/references/agent-model-matrix.md
 READ: .planning/ROADMAP.md
 READ: .planning/PROJECT.md
 LOAD: .planning/structure/argument-map.md, outline.md, narrative-arc.md
 </required_reading>
 
 <purpose>
-Create executable section prompt (PLAN.md). PLAN.md IS the prompt Claude executes - not a doc that gets transformed.
+Create executable section prompt (PLAN.md) via thin orchestrator pattern. Orchestrator validates, loads context, resolves model profile, spawns section-planner agent, then runs plan-checker for quality verification. PLAN.md IS the prompt Claude executes - not a doc that gets transformed.
 </purpose>
+
+<architecture>
+ORCHESTRATOR: /wtfp:plan-section (this command)
+AGENTS: section-planner (creates PLAN.md), plan-checker (validates PLAN.md)
+PATTERN: Orchestrator loads context → spawns planner → spawns checker → revise loop if needed
+WHY_SUBAGENTS: Fresh context windows for peak quality. Planner gets full project context without orchestrator overhead. Checker validates independently.
+</architecture>
 
 <planning_principles>
 Argument-first: Every paragraph serves core argument. Plan prose that advances thesis, not filler.
@@ -26,7 +36,18 @@ Reader-aware: Plan for target audience. Technical depth, assumed knowledge, expl
 
 <process>
 
-[step:load_project_state p=1]
+[step:validate_and_resolve_model p=1]
+RUN: ls .planning/ 2>/dev/null
+RUN: MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+
+MODEL_LOOKUP{agent,quality,balanced,budget}:
+  section-planner | opus | opus | sonnet
+  plan-checker | sonnet | sonnet | haiku
+
+RESOLVE: planner_model, checker_model from MODEL_PROFILE
+[/step]
+
+[step:load_project_state]
 READ: .planning/STATE.md
 PARSE: current_position, accumulated_decisions, open_questions, argument_strength
 IF missing+.planning_exists → OFFER reconstruct|continue
@@ -56,14 +77,27 @@ IF decimal → validate: X complete, X+1 exists, X.Y doesn't exist, Y >= 1
 READ: existing PLAN.md or RESEARCH.md in section dir
 [/step]
 
+[step:load_context_md]
+CRITICAL: Load CONTEXT.md early, pass to ALL agents.
+
+RUN: SECTION_DIR=$(ls -d .planning/sections/${SECTION}-* 2>/dev/null | head -1)
+RUN: CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
+
+IF CONTEXT.md exists → store for injection into planner prompt as <user_decisions>
+  HONOR: locked decisions, boundaries, vision
+  EXCLUDE: deferred ideas
+  ALLOW: discretion areas
+IF missing → SUGGEST: /wtfp:discuss-section (simpler) or proceed without
+[/step]
+
 [step:mandatory_literature_check]
 MANDATORY for sections flagged Research: Likely
 
 LIT_LEVEL{level,desc,action}:
   0-skip | internal content only, no external evidence | skip
-  1-quick | single source verify, 2-5 min | quick check, no RESEARCH.md
-  2-standard | multiple sources, positioning, 15-30 min | /wtfp:research-gap → RESEARCH.md
-  3-deep | core lit review, theoretical framework, 1+ hr | /wtfp:research-gap depth=deep → full RESEARCH.md
+  1-quick | single source verify | quick check, no RESEARCH.md
+  2-standard | multiple sources, positioning | /wtfp:research-gap → RESEARCH.md
+  3-deep | core lit review, theoretical framework | /wtfp:research-gap depth=deep → full RESEARCH.md
 
 IF roadmap=Research:Likely → Level 0 not available
 [/step]
@@ -72,112 +106,70 @@ IF roadmap=Research:Likely → Level 0 not available
 RUN: for f in .planning/sections/*/*-SUMMARY.md; do sed -n '1,/^---$/p' "$f" | head -30; done
 PARSE: section, subsection, key-claims, evidence-used, decisions
 
-BUILD context:
-- Check logical flow (what claims does this section build on?)
-- Check evidence used (what sources already cited?)
-- Check decisions (stylistic/structural constraints?)
-
 AUTO-SELECT sections matching:
 - Immediate prior section
 - Same argumentative thread
 - Mentioned in STATE.md as affecting current
 
-EXTRACT from selected:
-- Claims established
-- Evidence cited (avoid over-citation)
-- Patterns established (style, terminology)
-- Decisions
-
-ANSWER before proceeding:
-Q1: What claims from previous sections does this build on?
-Q2: What sources already cited might be relevant?
-Q3: What writing patterns to maintain?
-Q4: Does roadmap goal still make sense given context?
+EXTRACT: claims established, evidence cited, patterns, decisions
 [/step]
 
-[step:gather_section_context]
-UNDERSTAND: section_goal, word_budget, existing_drafts, dependencies_met
+[step:spawn_section_planner]
+EMIT:
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   WTF-P ► PLANNING SECTION {X}
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-RUN: cat .planning/sections/XX-name/${SECTION}-RESEARCH.md 2>/dev/null
-RUN: cat .planning/sections/XX-name/${SECTION}-CONTEXT.md 2>/dev/null
-RUN: cat .planning/sources/prior-drafts.md 2>/dev/null
+BUILD planner_prompt with inlined content:
+- <planning_context> STATE, ROADMAP, PROJECT, argument-map, outline, RESEARCH, prior summaries
+- <user_decisions> CONTEXT_CONTENT (from CONTEXT.md)
+- <output> target directory path
 
-IF RESEARCH.md → USE: sources (cite), key_findings (incorporate), gaps (address), positioning
-IF CONTEXT.md → HONOR: vision, essential content, boundaries, user specifics
-IF neither → SUGGEST: /wtfp:research-gap (lit-heavy) or /wtfp:discuss-section (simpler)
+SPAWN:
+  Task(
+    prompt="First, read ~/.claude/agents/wtfp/section-planner.md for your role and instructions.\n\n" + planner_prompt,
+    subagent_type="general-purpose",
+    model="{planner_model}",
+    description="Plan Section {X}"
+  )
+
+HANDLE returns:
+  "## PLANNING COMPLETE" → proceed to plan-checker
+  "## CHECKPOINT REACHED" → present to user, wait
+  "## PLANNING BLOCKED" → present blocker, ask user
 [/step]
 
-[step:break_into_tasks]
-Decompose section into writing tasks.
+[step:spawn_plan_checker]
+IF config.workflow.plan_check=false → SKIP to git_commit
 
-TASK_FIELDS:
-- Type: auto | checkpoint:human-verify | checkpoint:decision
-- Name: clear, action-oriented
-- Paragraphs/Subsections: which part
-- Action: draft | revise | cite | strengthen
-- Mode: co-author (Claude drafts) | scaffold (Claude outlines) | reviewer (Claude critiques)
-- Verify: how to prove done well
-- Done: acceptance criteria
+SPAWN:
+  Task(
+    prompt="First, read ~/.claude/agents/wtfp/plan-checker.md for your role and instructions.\n\n" + checker_prompt_with_PLAN_content,
+    subagent_type="general-purpose",
+    model="{checker_model}",
+    description="Check Plan {section}-01"
+  )
 
-TASKS_BY_SECTION{section → typical_tasks}:
-  abstract | draft complete, verify elements
-  intro | hook, context, gap, thesis, roadmap
-  methods | protocol, measures, analysis approach
-  results | finding narratives, supporting analyses
-  discussion | summary, interpretation, limitations, future work, conclusion
-  related_work | theme syntheses, positioning statement
-
-MODE_SELECT:
-- Procedural content (methods, data) → co-author
-- Argument-heavy (discussion, intro) → scaffold | reviewer
-- Personal voice (abstract conclusion, thesis) → scaffold + user writing
-
-CHECKPOINTS: visual/prose verify → human-verify. Voice/framing choices → decision.
+HANDLE returns:
+  "## CHECK PASSED" → proceed to git_commit
+  "## ISSUES FOUND" → enter revise loop
 [/step]
 
-[step:estimate_scope]
-RUN: cat .planning/config.json 2>/dev/null | grep depth
+[step:plan_check_revise_loop]
+IF checker returns ISSUES:
+  MAX_REVISIONS: 2
 
-DEPTH{level,plans_per,tasks_per}:
-  quick | 1-2 | 2-3
-  standard | 2-4 | 2-3
-  comprehensive | 3-6 | 2-3
+  LOOP:
+    1. Present issues to user (or auto-fix if minor)
+    2. Re-spawn section-planner with issues as feedback
+    3. Re-spawn plan-checker on revised plan
+    4. IF passed → proceed
+    5. IF max_revisions reached → present remaining issues, ask user
 
-PRINCIPLE: Derive plans from actual writing needs. Depth = how carefully to break down complex sections.
-- Comprehensive Discussion = 4 plans (interpretation, limitations, future work, conclusion)
-- Comprehensive Abstract = 1 plan (one paragraph)
-
-ALWAYS_SPLIT if: >3 tasks, multiple threads, complex lit integration
-EACH_PLAN must be: 2-3 tasks max, focused on one aspect, independently verifiable
-[/step]
-
-[step:confirm_breakdown]
-IF mode=yolo → auto-approve, proceed
-IF mode=interactive → present breakdown:
-  "Section [X] breakdown:
-   ### Tasks ({section}-01-PLAN.md)
-   1. [Task] - [brief] [type] [mode]
-   2. [Task] - [brief] [type] [mode]
-   Does this look right? (yes/adjust/start over)"
-
-IF adjust → revise
-IF start_over → return to gather_section_context
-[/step]
-
-[step:write_section_prompt]
-READ: ~/.claude/write-the-f-paper/templates/section-prompt.md
-
-SINGLE_PLAN → .planning/sections/XX-name/{section}-01-PLAN.md
-MULTI_PLAN → {section}-01-PLAN.md, {section}-02-PLAN.md, etc.
-
-EACH_PLAN includes:
-- Frontmatter (section, plan, type, mode)
-- Objective (goal, word target, output)
-- Execution context (write-section.md, summary template, verification-layers.md)
-- Context (@refs: PROJECT, ROADMAP, STATE, structure docs, RESEARCH/CONTEXT, prior summaries, sources)
-- Tasks (XML format with types/modes)
-- Verification (citation, coherence, rubric checks)
-- Success criteria, Output specification
+ISSUE_CATEGORIES:
+  auto-fix | missing citation placeholder, word budget off | planner revises
+  user-decision | structural concern, scope question | present to user
+  acceptable | style preference, minor suggestion | log and proceed
 [/step]
 
 [step:git_commit]
@@ -190,7 +182,7 @@ EMIT: "Committed: docs(${SECTION}): create section plan"
 [step:offer_next]
 EMIT:
   Section plan created: .planning/sections/XX-name/{section}-01-PLAN.md
-  [X] tasks defined.
+  [X] tasks defined. Plan check: [PASSED/SKIPPED]
 
   Next: {section}-01: [Plan Name] - [objective]
   → /wtfp:write-section .planning/sections/XX-name/{section}-01-PLAN.md
@@ -221,16 +213,17 @@ Tasks = instructions for Claude writing, not editorial board requirements.
 </anti_patterns>
 
 <success_criteria>
+- [ ] Model profile resolved, agent models determined
 - [ ] STATE.md read, project context absorbed
+- [ ] CONTEXT.md loaded early and passed to ALL agents
 - [ ] Mandatory literature check completed (Level 0-3)
 - [ ] Prior sections, sources, structure synthesized
+- [ ] Section-planner agent spawned with full context
 - [ ] PLAN file(s) exist with XML structure
-- [ ] Each plan: Objective, context, tasks, verification, success criteria, output
-- [ ] @context references included (STATE, RESEARCH if exist, relevant summaries)
+- [ ] Plan-checker agent validated plan (or skipped per config)
+- [ ] Plan-check-revise loop completed if issues found
 - [ ] Each plan: 2-3 tasks (~focused scope)
 - [ ] Each task: Type, Mode, Paragraphs (if applicable), Action, Verify, Done
-- [ ] Checkpoints properly structured
-- [ ] If RESEARCH.md exists: sources cited in plan, positioning clear
 - [ ] PLAN file(s) committed to git
 - [ ] User knows next steps
 </success_criteria>

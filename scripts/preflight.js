@@ -110,8 +110,8 @@ const secretPatterns = [
 ];
 
 const binFiles = fs.readdirSync('bin').map(f => path.join('bin', f));
-const templateFiles = fs.readdirSync(path.join('write-the-f-paper', 'templates'))
-  .map(f => path.join('write-the-f-paper', 'templates', f));
+const templateFiles = fs.readdirSync(path.join('core', 'write-the-f-paper', 'templates'))
+  .map(f => path.join('core', 'write-the-f-paper', 'templates', f));
 const filesToCheck = [...binFiles, ...templateFiles].filter(f => fs.statSync(f).isFile());
 
 let foundSecrets = false;

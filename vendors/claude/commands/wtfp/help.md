@@ -150,16 +150,38 @@ Remove a future section and renumber subsequent sections.
 
 Usage: `/wtfp:remove-section 7`
 
+### Quick Tasks
+
+**`/wtfp:quick <task>`**
+Execute a quick writing task with minimal ceremony.
+
+- Skips plan-checker and argument-verifier agents
+- Classifies task intent (fix/add/revise/cite)
+- Loads minimal context, executes directly
+- Best for: fix a paragraph, add a citation, tweak wording
+
+Usage: `/wtfp:quick "add citation for Smith2023 in methods section"`
+
 ### Review & Revision
 
 **`/wtfp:review-section [number]`**
-User acceptance testing of written sections.
+Run 3-layer verification on written sections.
 
-- Runs 3-layer verification (Citation, Coherence, Rubric)
-- Identifies issues needing revision
+- Runs Citation, Coherence, and Rubric checks
+- Configurable reviewer persona (Hostile Reviewer, Area Chair, etc.)
 - Creates ISSUES.md if problems found
 
 Usage: `/wtfp:review-section 2`
+
+**`/wtfp:polish-prose [number]`**
+De-robotize and refine prose for clarity and academic voice.
+
+- Eliminates AI-sounding patterns
+- Adjusts voice (Authoritative/Measured/Accessible/Technical)
+- Varies sentence structure, tightens word count
+- Preserves technical accuracy and citations
+
+Usage: `/wtfp:polish-prose 2`
 
 **`/wtfp:plan-revision <plan>`**
 Create fix plan from review issues.
@@ -182,7 +204,40 @@ Check writing status and intelligently route to next action.
 
 Usage: `/wtfp:progress`
 
+### Citation Management
+
+**`/wtfp:analyze-bib`**
+Analyze BibTeX file and suggest citation placement by section.
+
+- Spawns citation-expert agent for deep analysis
+- Maps references to relevant sections
+- Identifies citation gaps and coverage
+- Supports tiered search pipeline
+
+Usage: `/wtfp:analyze-bib`
+
+**`/wtfp:check-refs`**
+Audit BibTeX file for consistency and completeness.
+
+- Spawns citation-formatter agent
+- Validates formatting, checks for duplicates
+- Verifies all cited works appear in bibliography
+- Reports broken or missing references
+
+Usage: `/wtfp:check-refs`
+
 ### Session Management
+
+**`/wtfp:checkpoint <save|restore|list> [label]`**
+Save or restore paper state as a git-tagged checkpoint.
+
+- `save [label]` — Tag current state (e.g., "pre-discussion", "draft-1")
+- `restore [tag]` — Restore from a checkpoint tag
+- `list` — Show available checkpoints
+- Enables session continuity across `/clear` boundaries
+
+Usage: `/wtfp:checkpoint save draft-1`
+Usage: `/wtfp:checkpoint list`
 
 **`/wtfp:resume-writing`**
 Resume work from previous session with full context restoration.
@@ -222,6 +277,26 @@ Archive completed submission round.
 - Prepares workspace for revision round
 
 Usage: `/wtfp:submit-milestone "initial-submission"`
+
+### Presentations & Posters
+
+**`/wtfp:create-slides`**
+Create presentation slides from paper content.
+
+- Generates Marp-based markdown slides
+- Extracts key findings, figures, and arguments
+- Customizable themes and layouts
+
+Usage: `/wtfp:create-slides`
+
+**`/wtfp:create-poster`**
+Create academic poster from paper content.
+
+- Generates poster layout from paper sections
+- Includes figures, key results, and conclusions
+- Formatted for standard poster dimensions
+
+Usage: `/wtfp:create-poster`
 
 ### Issue Management
 
