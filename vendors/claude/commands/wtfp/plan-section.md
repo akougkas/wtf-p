@@ -58,6 +58,32 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 GATE_CONFIRM_PLAN=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_plan"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 ```
 
+## 1b. Git Branch Setup
+
+```bash
+BRANCH_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "none")
+```
+
+**If branching_strategy = "section":**
+
+1. Read section_branch_template from config (default: `wtfp/section-{section}-{slug}`)
+2. Replace `{section}` with zero-padded section number (e.g., `01`, `02`)
+3. Replace `{slug}` with slugified section name (lowercase, hyphens)
+4. Store current branch as base branch for later merge:
+   ```bash
+   BASE_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
+   echo "$BASE_BRANCH" > .planning/.section_base_branch
+   ```
+5. Create and checkout section branch:
+   ```bash
+   SECTION_BRANCH_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"section_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "wtfp/section-{section}-{slug}")
+   BRANCH_NAME=$(echo "$SECTION_BRANCH_TEMPLATE" | sed "s/{section}/${SECTION_NUM}/" | sed "s/{slug}/${SECTION_SLUG}/")
+   git checkout -b "$BRANCH_NAME"
+   ```
+6. Log: "Created section branch: $BRANCH_NAME"
+
+**If branching_strategy = "none" or "submission":** No branch action in plan-section.
+
 ## 2. Parse and Normalize Arguments
 
 Extract section number from $ARGUMENTS. If no section number, detect next unplanned section from roadmap.

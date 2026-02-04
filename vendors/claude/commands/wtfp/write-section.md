@@ -137,7 +137,67 @@ Spawn `wtfp-argument-verifier` with written content + PLAN goals + argument-map.
 
 **If HUMAN_NEEDED:** Present what needs human review.
 
-## 7. Present Final Status
+## 6b. Commit with commit_docs Guard
+
+Before any git commit, check commit_docs setting:
+
+```bash
+COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
+**If commit_docs = "false":**
+- Skip `git add` for any `.planning/` paths
+- Only commit paper content files (e.g., `paper/*.md`)
+- Log: "Skipping planning docs commit (commit_docs: false)"
+
+**If commit_docs = "true" (default):**
+- Include `.planning/` files in commits as normal
+
+## 7. Git Branch Merge (if section branch strategy)
+
+```bash
+BRANCH_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "none")
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
+```
+
+**If branching_strategy = "section" AND current branch matches `wtfp/section-*`:**
+
+1. Read squash_on_merge setting:
+   ```bash
+   SQUASH=$(cat .planning/config.json 2>/dev/null | grep -o '"squash_on_merge"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "false")
+   ```
+
+2. Read base branch stored during plan-section:
+   ```bash
+   BASE_BRANCH=$(cat .planning/.section_base_branch 2>/dev/null || echo "main")
+   ```
+
+3. Perform merge based on squash setting:
+
+   **If squash=true:**
+   ```bash
+   git checkout "$BASE_BRANCH"
+   git merge --squash "$CURRENT_BRANCH"
+   git commit -m "write(${SECTION}): complete ${SECTION_NAME}"
+   ```
+
+   **If squash=false:**
+   ```bash
+   git checkout "$BASE_BRANCH"
+   git merge "$CURRENT_BRANCH" --no-ff -m "merge: section ${SECTION} complete"
+   ```
+
+4. Delete section branch:
+   ```bash
+   git branch -d "$CURRENT_BRANCH"
+   rm -f .planning/.section_base_branch
+   ```
+
+5. Log: "Merged section branch: $CURRENT_BRANCH -> $BASE_BRANCH"
+
+**If branching_strategy = "none" or "submission":** No merge action.
+
+## 8. Present Final Status
 
 </process>
 

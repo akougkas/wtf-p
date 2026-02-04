@@ -101,6 +101,29 @@ Create `.planning/structure/` with:
 
 Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via AskUserQuestion.
 
+## 9b. Git & Planning Settings
+
+Ask about git tracking via AskUserQuestion:
+- header: "Git & Planning"
+- question: "Track planning documents in git?"
+- options:
+  - "Yes (default)" -- commit_docs: true, planning artifacts are version-controlled
+  - "No" -- commit_docs: false, only paper content is committed
+
+Use the answer to set `planning.commit_docs` in config.json.
+
+Ask about branching strategy via AskUserQuestion:
+- header: "Git Branching"
+- question: "Branch strategy for git history?"
+- options:
+  - "None (default)" -- all commits on current branch, git.branching_strategy: "none"
+  - "Section branches" -- one branch per section, merged on review pass, git.branching_strategy: "section"
+  - "Submission branches" -- branch per milestone/submission target, git.branching_strategy: "submission"
+
+Use the answer to set `git.branching_strategy` in config.json.
+
+## 9c. Write Config
+
 Write `.planning/config.json` with the full v0.5.0 schema: mode, depth, document_type, output_format, model_profile ("balanced"), venue_template, gates (8 gate types: confirm_outline, confirm_plan, confirm_write, confirm_review, execute_next_section, issues_review, confirm_transition, confirm_submission), writing, workflow, verification, planning (commit_docs, search_gitignored), parallelization, safety (always_confirm_destructive, always_confirm_external_services, backup_before_major_edits), git (branching_strategy, section_branch_template, submission_branch_template, squash_on_merge).
 
 ## 10. Commit

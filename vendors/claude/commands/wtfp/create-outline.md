@@ -125,12 +125,20 @@ mkdir -p .planning/sections/02-[section-slug]
 # ... for all sections listed in ROADMAP.md
 ```
 
-## 8. Commit
+## 8. Commit (with commit_docs Guard)
 
+```bash
+COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
+**If commit_docs = "true" (default):**
 ```bash
 git add .planning/ROADMAP.md .planning/STATE.md .planning/sections/ .planning/structure/
 git commit -m "docs: create document outline -- [N] sections, [X] words target"
 ```
+
+**If commit_docs = "false":**
+Skip git add and commit for planning docs. Log: "Skipping planning docs commit (commit_docs: false)"
 
 ## 9. Present Final Status
 
