@@ -7,37 +7,52 @@ allowed-tools:
   - Bash
   - Write
   - AskUserQuestion
+  - Glob
+  - Grep
 ---
 
 <objective>
 Archive a completed draft or submission round.
 
+Archives full state to `.planning/milestones/{version}/`.
 Creates MILESTONES.md entry with stats.
-Archives full details to milestones/ directory.
-Creates git tag for the version.
-Prepares workspace for revision round.
+Evolves PROJECT.md (shipped claims to Validated).
+Creates annotated git tag.
+Resets ROADMAP.md for revision round.
 </objective>
 
 <process>
 
-<step name="verify">
-**Verify paper is ready:**
+<step name="validate_environment">
+**Step 1: Validate Environment and Gather Stats**
 
 ```bash
 [ ! -f .planning/STATE.md ] && echo "ERROR: No project state found" && exit 1
+[ ! -f .planning/ROADMAP.md ] && echo "ERROR: No ROADMAP.md found" && exit 1
+[ ! -f .planning/PROJECT.md ] && echo "ERROR: No PROJECT.md found" && exit 1
 ```
 
-Check completion status:
-- Are all planned sections written?
-- Any unresolved blockers?
+Read version from argument:
+```bash
+VERSION=$ARGUMENTS  # e.g., "draft-1", "camera-ready", "revision-2"
+[ -z "$VERSION" ] && echo "ERROR: Version required. Usage: /wtfp:submit-milestone draft-1" && exit 1
+```
 
-If incomplete:
+**Gather statistics from ROADMAP.md and section summaries:**
+- Total sections (count section entries in ROADMAP)
+- Sections complete (count checked `[x]` entries)
+- Read all SUMMARY.md files in `.planning/sections/*/`:
+  - Total words (sum from each summary)
+  - Citations used
+  - Figures
+  - Tables
+
+If incomplete sections exist:
 ```
 WARNING: Not all sections are complete.
 
 Sections remaining:
 - [Section N]: [status]
-- [Section M]: [status]
 
 Continue anyway?
 ```
@@ -46,155 +61,287 @@ Use AskUserQuestion:
 - header: "Proceed?"
 - question: "Archive milestone with incomplete sections?"
 - options:
-  - "Yes, archive anyway" — Create milestone as-is
-  - "No, finish first" — Return to writing
+  - "Yes, archive anyway" -- Create milestone as-is
+  - "No, finish first" -- Return to writing
 
 </step>
 
-<step name="gather_stats">
-**Gather statistics:**
+<step name="read_git_config">
+**Step 2: Read Git Config**
 
-- Total sections: [N]
-- Sections complete: [M]
-- Total words: [X]
-- Target words: [Y]
-- Word variance: [+/- Z%]
-- Citations used: [N]
-- Figures: [N]
-- Tables: [N]
-- Issues resolved: [N]
-- Issues deferred: [N]
-
-</step>
-
-<step name="milestone_entry">
-**Create/update MILESTONES.md:**
-
-```markdown
-# Milestones
-
-## [version] - [Name/Description]
-
-**Date:** [date]
-**Status:** [Submitted / Draft / Ready for Review]
-
-### Summary
-[Brief description of what this version represents]
-
-### Stats
-- Sections: [M]/[N] complete
-- Words: [X] / [Y] target
-- Citations: [N]
-- Figures: [N]
-
-### Sections Included
-| Section | Words | Status |
-|---------|-------|--------|
-| Introduction | [X] | Complete |
-| Methods | [X] | Complete |
-| ... | | |
-
-### Key Decisions
-[Major decisions made in this version]
-
-### Known Issues
-[Issues deferred to next version]
-
-### Git Reference
-- Tag: `[version]`
-- Commit: [hash]
-
----
-
-[Previous milestones below...]
+```bash
+BRANCH_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_strategy"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "none")
+SQUASH=$(cat .planning/config.json 2>/dev/null | grep -o '"squash_on_merge"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "false")
+COMMIT_DOCS=$(cat .planning/config.json 2>/dev/null | grep -o '"commit_docs"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+SUBMISSION_TEMPLATE=$(cat .planning/config.json 2>/dev/null | grep -o '"submission_branch_template"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "wtfp/{milestone}-{slug}")
 ```
+
+Store these for use in subsequent steps.
 
 </step>
 
 <step name="archive">
-**Create milestone archive:**
+**Step 3: Archive to .planning/milestones/ (MLN-01)**
 
 ```bash
-mkdir -p .planning/milestones
+ARCHIVE_DIR=".planning/milestones/${VERSION}"
+mkdir -p "$ARCHIVE_DIR"
 ```
 
-Copy current state to archive:
-- `.planning/milestones/[version]-ROADMAP.md`
-- `.planning/milestones/[version]-STATE.md`
-- Snapshot of all SUMMARY.md files
+Archive these files:
+```bash
+# Core planning files
+cp .planning/ROADMAP.md "$ARCHIVE_DIR/${VERSION}-ROADMAP.md"
+cp .planning/STATE.md "$ARCHIVE_DIR/${VERSION}-STATE.md"
+
+# Argument map if exists
+cp .planning/structure/argument-map.md "$ARCHIVE_DIR/${VERSION}-argument-map.md" 2>/dev/null || true
+
+# All section summaries
+for summary in .planning/sections/*/*-SUMMARY.md; do
+  [ -f "$summary" ] && cp "$summary" "$ARCHIVE_DIR/"
+done
+```
+
+Verify archive created:
+```bash
+ls -la "$ARCHIVE_DIR/"
+```
 
 </step>
 
-<step name="tag">
-**Create git tag:**
+<step name="milestones_entry">
+**Step 4: Create/Update MILESTONES.md (MLN-02)**
 
+Read existing MILESTONES.md if present, otherwise create header.
+
+Prepend new entry to `.planning/MILESTONES.md`:
+
+```markdown
+# Milestones
+
+## {version} - {description}
+
+**Date:** {YYYY-MM-DD}
+**Status:** {Submitted / Draft / Ready for Review}
+
+### Stats
+- Sections: {M}/{N} complete
+- Words: {X} / {Y} target ({variance}%)
+- Citations: {N}
+- Figures: {N}
+- Tables: {N}
+
+### Sections Included
+| Section | Words | Status |
+|---------|-------|--------|
+| {name} | {X} | {status} |
+| ... | | |
+
+### Key Decisions
+{Extract from section SUMMARY.md files - concatenate "Decisions Made" sections}
+
+### Known Issues
+{Any deferred issues from section reviews - extract from SUMMARY.md "Next Steps" sections}
+
+### Git Reference
+- Tag: `{version}`
+- Commit: {hash}
+- Archive: `.planning/milestones/{version}/`
+
+---
+
+{Previous milestones below...}
+```
+
+</step>
+
+<step name="project_evolution">
+**Step 5: Update PROJECT.md (MLN-03)**
+
+Read PROJECT.md. Make these updates:
+
+**Requirements section:**
+- Identify items marked as complete/shipped in the "Active" or "In Progress" column
+- Move those items to "Validated" status
+
+**What This Is section:**
+- Append: "v{version}: {brief milestone description}"
+
+**Key Decisions section:**
+- Add entry: "{date} | Milestone {version} archived | {N} sections, {X} words"
+
+Write updated PROJECT.md.
+
+</step>
+
+<step name="git_tag">
+**Step 6: Git Operations (MLN-04)**
+
+**If BRANCH_STRATEGY = "submission":**
+
+1. Create submission branch:
 ```bash
-git add .planning/MILESTONES.md .planning/milestones/
-git commit -m "$(cat <<'EOF'
-milestone: [version] - [name]
+# Resolve template variables
+PAPER_SLUG=$(cat .planning/PROJECT.md | grep -m1 "^#" | sed 's/^# //' | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '[:alnum:]-')
+BRANCH_NAME=$(echo "$SUBMISSION_TEMPLATE" | sed "s/{milestone}/${VERSION}/g" | sed "s/{slug}/${PAPER_SLUG}/g")
 
-Words: [X]
-Sections: [M]/[N]
-Status: [status]
+git checkout -b "$BRANCH_NAME"
+```
+
+2. Commit archive and MILESTONES.md:
+```bash
+git add .planning/milestones/
+git add .planning/MILESTONES.md
+git add .planning/PROJECT.md
+
+# Respect commit_docs for planning files
+if [ "$COMMIT_DOCS" = "true" ]; then
+  git add .planning/STATE.md .planning/ROADMAP.md
+fi
+
+git commit -m "$(cat <<'EOF'
+milestone({version}): archive submission
+
+Sections: {M}/{N}
+Words: {X}
+Date: {date}
+
+Archive: .planning/milestones/{version}/
 EOF
 )"
+```
 
-git tag -a "[version]" -m "[Milestone description]"
+3. Create annotated tag:
+```bash
+git tag -a "${VERSION}" -m "$(cat <<EOF
+Milestone: ${VERSION}
+
+Sections completed:
+$(list sections from stats)
+
+Words: ${WORD_COUNT}
+Date: ${DATE}
+Archive: .planning/milestones/${VERSION}/
+EOF
+)"
+```
+
+4. Merge back to base branch:
+```bash
+BASE_BRANCH=$(git rev-parse --abbrev-ref HEAD@{1} 2>/dev/null || echo "main")
+git checkout "$BASE_BRANCH"
+
+if [ "$SQUASH" = "true" ]; then
+  git merge --squash "$BRANCH_NAME"
+  git commit -m "milestone(${VERSION}): squash merge submission branch"
+else
+  git merge --no-ff "$BRANCH_NAME" -m "milestone(${VERSION}): merge submission branch"
+fi
+
+git branch -d "$BRANCH_NAME"
+```
+
+**If BRANCH_STRATEGY != "submission":**
+
+1. Commit archive and MILESTONES.md (respect commit_docs):
+```bash
+git add .planning/milestones/
+git add .planning/MILESTONES.md
+git add .planning/PROJECT.md
+
+if [ "$COMMIT_DOCS" = "true" ]; then
+  git add .planning/STATE.md .planning/ROADMAP.md
+fi
+
+git commit -m "$(cat <<'EOF'
+milestone({version}): archive submission
+
+Sections: {M}/{N}
+Words: {X}
+Date: {date}
+
+Archive: .planning/milestones/{version}/
+EOF
+)"
+```
+
+2. Create annotated tag:
+```bash
+git tag -a "${VERSION}" -m "$(cat <<EOF
+Milestone: ${VERSION}
+
+Sections completed:
+$(list sections from stats)
+
+Words: ${WORD_COUNT}
+Date: ${DATE}
+Archive: .planning/milestones/${VERSION}/
+EOF
+)"
 ```
 
 </step>
 
-<step name="prepare_next">
-**Prepare for next round:**
+<step name="reset_roadmap">
+**Step 7: Reset ROADMAP.md (MLN-05)**
 
-Use AskUserQuestion:
-- header: "Next Steps"
-- question: "What's next after this milestone?"
-- options:
-  - "Wait for reviews" — Pause until feedback
-  - "Start revisions" — Begin revision round
-  - "Done for now" — Just archive
+After archival, prepare for revision round:
 
-If "Start revisions":
-- Reset STATE.md position to first section
-- Note that this is revision round
-- Suggest `/wtfp:progress` to start
+1. Add "Previous Milestone" note at top of ROADMAP.md:
+```markdown
+> **Previous:** {version} archived on {date}
+```
+
+2. Reset all section checkboxes (change `[x]` to `[ ]`):
+```bash
+sed -i 's/\[x\]/[ ]/g' .planning/ROADMAP.md
+```
+
+3. Keep section structure intact for revision round.
+
+4. Update STATE.md:
+- Reset position to "Revision round after {version}"
+- Note milestone archived
+- Clear any in-progress tracking
 
 </step>
 
-<step name="done">
-**Present completion:**
+<step name="completion_banner">
+**Step 8: Completion Banner**
 
 ```
-Milestone archived:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► MILESTONE ARCHIVED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Version: [version]
-- Entry: .planning/MILESTONES.md
-- Archive: .planning/milestones/[version]-*
-- Git tag: [version]
+Version: {version}
+Archive: .planning/milestones/{version}/
+Tag: {version}
 
-## Summary
-- Sections: [M]/[N] complete
-- Words: [X] / [Y]
-- Status: [status]
+Stats:
+  Sections: {M}/{N}
+  Words: {X}
+  Citations: {N}
 
----
+Git:
+  Commit: {hash}
+  Tag: {version}
 
-## ▶ Next Up
+───────────────────────────────────────────
 
-[Based on user's choice:]
+## Next Up
 
 **Wait for reviews:**
-When you receive reviewer feedback:
-`/wtfp:import-reviews` (coming soon)
+  Run `/wtfp:progress` when feedback arrives
 
 **Start revisions:**
-`/wtfp:progress` — check what needs revision
+  Run `/wtfp:progress` to see what needs revision
 
-**Done for now:**
-Your work is archived. Run `/wtfp:progress` when ready to continue.
+**Audit before next submission:**
+  Run `/wtfp:audit-milestone` to check readiness
 
----
+───────────────────────────────────────────
 ```
 
 </step>
@@ -202,10 +349,12 @@ Your work is archived. Run `/wtfp:progress` when ready to continue.
 </process>
 
 <success_criteria>
-- [ ] Completion status verified
-- [ ] Statistics gathered
-- [ ] MILESTONES.md updated
-- [ ] Archive created
-- [ ] Git tag created
-- [ ] Next steps clear
+- [ ] Archive directory created at `.planning/milestones/{version}/`
+- [ ] Archive contains: ROADMAP, argument-map, STATE, section summaries
+- [ ] MILESTONES.md entry created with version, date, stats table
+- [ ] PROJECT.md updated (shipped items to Validated, What This Is appended)
+- [ ] Git tag created with annotated message listing sections completed
+- [ ] ROADMAP.md reset for revision round (checkboxes unchecked)
+- [ ] Branching strategy respected (submission branch if configured)
+- [ ] commit_docs guard respected for planning file commits
 </success_criteria>
