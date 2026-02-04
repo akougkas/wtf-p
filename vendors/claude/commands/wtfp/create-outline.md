@@ -1,6 +1,6 @@
 ---
 name: wtfp:create-outline
-description: Create document outline, section roadmap, and state tracking
+description: Create document outline by spawning outliner agent to produce structure artifacts
 allowed-tools:
   - Read
   - Bash
@@ -21,9 +21,9 @@ allowed-tools:
 <objective>
 Create the document outline and section roadmap for an initialized paper.
 
-**Orchestrator role:** Load project context, determine document structure from venue template, create ROADMAP.md + STATE.md + section directories, commit.
+**Orchestrator role:** Validate environment, load project context, resolve model profile, spawn outliner agent to produce structure artifacts, create STATE.md, create section directories, commit, present results.
 
-Creates ROADMAP.md (section breakdown), STATE.md (writing memory), and section directories.
+**Why subagent:** Outlining requires significant reasoning about document structure, argument decomposition, and wave assignment. A fresh outliner agent gets peak quality for these creative decisions.
 </objective>
 
 <context>
@@ -32,57 +32,107 @@ No arguments. Requires `.planning/PROJECT.md` to exist.
 
 <process>
 
-## 1. Validate Environment
+## 1. Validate Environment and Resolve Model Profile
 
 ```bash
 [ ! -f .planning/PROJECT.md ] && echo "ERROR: No project. Run /wtfp:new-paper" && exit 1
 [ -f .planning/ROADMAP.md ] && echo "ERROR: Outline exists. Use /wtfp:progress" && exit 1
+ls .planning/ 2>/dev/null
 ```
 
-## 2. Load Project Context
-
-Read: PROJECT.md, config.json, structure/outline.md, structure/argument-map.md.
-
-Extract: document_type, venue_template, core_argument, word budget from outline.md.
-
-## 3. Determine Document Structure
-
-Based on document_type from config.json, apply standard structure:
-- **Research Paper (IMRaD):** Abstract → Introduction → Methods → Results → Discussion → Conclusion
-- **Grant (NSF):** Specific Aims → Background → Preliminary Data → Research Design → Timeline
-- **Thesis:** Introduction → Literature Review → Methodology → Results → Discussion → Conclusion
-
-If customization needed, ask via AskUserQuestion:
-- header: "Structure"
-- options: "Use standard structure" | "Customize sections" | "Show me options"
-
-## 4. Create ROADMAP.md
-
-Write `.planning/ROADMAP.md` using template from `~/.claude/write-the-f-paper/templates/roadmap.md`.
-
-Populate: Document title, type, target venue. For each section: goal, word target, status, dependencies. Progress table and word budget table.
-
-## 5. Create STATE.md
-
-Write `.planning/STATE.md` using template from `~/.claude/write-the-f-paper/templates/state.md`.
-
-Initialize: position (section 1 of N), word count (0), argument strength from argument-map, open questions from PROJECT.md.
-
-## 6. Create Section Directories
+**Resolve model profile:**
 
 ```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+**Model lookup table:**
+
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| outliner | opus | sonnet | sonnet |
+
+**Resolve gate flag:**
+```bash
+GATE_CONFIRM_OUTLINE=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_outline"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
+## 2. Read Context Files
+
+```bash
+PROJECT_CONTENT=$(cat .planning/PROJECT.md)
+CONFIG_CONTENT=$(cat .planning/config.json 2>/dev/null)
+EXISTING_STRUCTURE=$(cat .planning/structure/*.md 2>/dev/null)
+```
+
+## 3. Ensure Structure Directory
+
+```bash
+mkdir -p .planning/structure
 mkdir -p .planning/sections
+```
+
+## 4. Gate Check: Confirm Before Outlining
+
+**If GATE_CONFIRM_OUTLINE is "true" (default):**
+Present project summary to user via AskUserQuestion and wait for confirmation before proceeding.
+
+**If GATE_CONFIRM_OUTLINE is "false":**
+Skip confirmation and proceed directly to outlining.
+
+## 5. Spawn wtfp-outliner Agent
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► OUTLINING DOCUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Fill prompt with inlined content and spawn:
+
+```
+Task(
+  prompt="First, read ~/.claude/agents/wtfp/outliner.md for your role and instructions.\n\n" + filled_outlining_prompt,
+  subagent_type="general-purpose",
+  model="{outliner_model}",
+  description="Create Document Outline"
+)
+```
+
+Outlining prompt includes: `<project_context>` with PROJECT.md content, config.json settings, any existing structure files.
+
+## 6. Handle Outliner Return
+
+**`## OUTLINING COMPLETE`:** Proceed to STATE.md creation and directory setup.
+
+**`## CHECKPOINT REACHED`:** Present to user, get response, re-spawn outliner with decision.
+
+**`## OUTLINING BLOCKED`:** Show blocker, offer options.
+
+## 7. Post-Outliner Setup
+
+After successful outlining, the orchestrator handles:
+
+**Create STATE.md** using template from `~/.claude/write-the-f-paper/templates/state.md`:
+- Initialize position (section 1 of N), word count (0)
+- Set argument strength from outliner's argument-map
+- Set open questions from PROJECT.md
+
+**Create section directories** from ROADMAP.md sections:
+```bash
 mkdir -p .planning/sections/01-[section-slug]
 mkdir -p .planning/sections/02-[section-slug]
-# ... for all sections
+# ... for all sections listed in ROADMAP.md
 ```
 
-## 7. Commit
+## 8. Commit
 
 ```bash
-git add .planning/ROADMAP.md .planning/STATE.md .planning/sections/
-git commit -m "docs: create document outline — [N] sections, [X] words target"
+git add .planning/ROADMAP.md .planning/STATE.md .planning/sections/ .planning/structure/
+git commit -m "docs: create document outline -- [N] sections, [X] words target"
 ```
+
+## 9. Present Final Status
 
 </process>
 
@@ -94,10 +144,11 @@ git commit -m "docs: create document outline — [N] sections, [X] words target"
 
 - Roadmap: .planning/ROADMAP.md ([N] sections, [X] words)
 - State: .planning/STATE.md
+- Structure: .planning/structure/ (outline, argument-map, narrative-arc)
 - Sections: .planning/sections/ ([N] directories)
 
-| # | Section | Words |
-|---|---------|-------|
+| # | Section | Words | Wave |
+|---|---------|-------|------|
 [table from ROADMAP.md]
 
 ───────────────────────────────────────────
@@ -115,13 +166,16 @@ git commit -m "docs: create document outline — [N] sections, [X] words target"
 **Also available:**
 - `/wtfp:discuss-section 1` — gather context first
 - `/wtfp:research-gap 1` — investigate literature needs
+- `/wtfp:execute-outline` — write all sections in wave-based parallel execution
 
 </offer_next>
 
 <success_criteria>
-- [ ] ROADMAP.md has all sections with goals and word targets
+- [ ] Outliner agent spawned with full project context
+- [ ] 4 artifacts created (outline.md, argument-map.md, narrative-arc.md, ROADMAP.md)
 - [ ] STATE.md initialized with correct position
 - [ ] Section directories created
 - [ ] Word budget totals match target
 - [ ] All committed to git
+- [ ] User knows next steps
 </success_criteria>
