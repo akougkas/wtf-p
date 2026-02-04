@@ -49,7 +49,40 @@ From STATE.md: current section, plan number, status, word count.
 Calculate: total plans, completed, remaining. Total words vs target.
 Check for CONTEXT.md in current section directory.
 
+## 4b. Build Statusline
+
+Build the statusline string:
+```
+WTF-P ► {section progress} ◆ {word count} ► {model_profile}
+```
+
+**Section progress:** `{completed}/{total} sections` (count SUMMARY.md files vs total sections)
+
+**Word count:** `{current_words}/{target_words}w` (from STATE.md and PROJECT.md)
+
+**Model profile:** from config.json (quality/balanced/budget)
+
+**Update indicator:** Check for newer version quietly:
+```bash
+CURRENT=$(node -e "console.log(require('$(npm root -g)/wtf-p/package.json').version)" 2>/dev/null || echo "")
+LATEST=$(npm view wtf-p version 2>/dev/null || echo "")
+```
+
+If LATEST exists and CURRENT < LATEST, append ` ▲ update` to statusline.
+
+**Pending todos:** Count files:
+```bash
+PENDING_TODOS=$(ls -1 .planning/todos/pending/*.md 2>/dev/null | wc -l | tr -d ' ')
+```
+
 ## 5. Present Status Report
+
+**Display statusline FIRST** (before all other output):
+```
+WTF-P ► 3/6 sections ◆ 4200/8000w ► balanced ▲ update
+```
+
+Then the detailed status report:
 
 ```
 # [Paper Title]
@@ -70,6 +103,9 @@ CONTEXT: [✓ | -]
 
 ## Open Issues
 - [deferred items]
+
+## Pending Todos
+{PENDING_TODOS} pending (run /wtfp:check-todos to review)
 ```
 
 ## 6. Route to Next Action
@@ -106,6 +142,9 @@ Show the routed next action with clear command and `/clear` suggestion.
 </offer_next>
 
 <success_criteria>
+- [ ] Statusline displayed first: WTF-P ► {sections} ◆ {words} ► {profile} [▲ update]
+- [ ] Update indicator shown when newer version available
+- [ ] Pending todo count shown
 - [ ] Rich context provided (recent work, word counts, decisions)
 - [ ] Current position clear with visual progress
 - [ ] Model profile shown
