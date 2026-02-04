@@ -4,15 +4,16 @@
   "document_type": "paper",
   "output_format": "markdown",
   "model_profile": "balanced",
+  "venue_template": null,
   "gates": {
-    "confirm_project": true,
-    "confirm_sections": true,
-    "confirm_roadmap": true,
     "confirm_outline": true,
     "confirm_plan": true,
-    "write_next_plan": true,
+    "confirm_write": true,
+    "confirm_review": true,
+    "execute_next_section": true,
     "issues_review": true,
-    "confirm_transition": true
+    "confirm_transition": true,
+    "confirm_submission": true
   },
   "writing": {
     "claude_mode": "co-author",
@@ -29,13 +30,27 @@
     "coherence_check": true,
     "rubric_check": true
   },
+  "planning": {
+    "commit_docs": true,
+    "search_gitignored": false
+  },
   "parallelization": {
     "enabled": false,
+    "plan_level": true,
+    "task_level": false,
+    "skip_checkpoints": true,
     "max_concurrent_agents": 3,
-    "min_sections_for_parallel": 2
+    "min_plans_for_parallel": 2
   },
   "safety": {
     "always_confirm_destructive": true,
+    "always_confirm_external_services": true,
     "backup_before_major_edits": true
+  },
+  "git": {
+    "branching_strategy": "none",
+    "section_branch_template": "wtfp/section-{section}-{slug}",
+    "submission_branch_template": "wtfp/{milestone}-{slug}",
+    "squash_on_merge": false
   }
 }

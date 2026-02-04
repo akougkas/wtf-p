@@ -101,7 +101,7 @@ Create `.planning/structure/` with:
 
 Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via AskUserQuestion.
 
-Write `.planning/config.json` with: mode, depth, document_type, venue_template, model_profile ("balanced"), gates, writing, workflow, verification, parallelization, safety settings.
+Write `.planning/config.json` with the full v0.5.0 schema: mode, depth, document_type, output_format, model_profile ("balanced"), venue_template, gates (8 gate types: confirm_outline, confirm_plan, confirm_write, confirm_review, execute_next_section, issues_review, confirm_transition, confirm_submission), writing, workflow, verification, planning (commit_docs, search_gitignored), parallelization, safety (always_confirm_destructive, always_confirm_external_services, backup_before_major_edits), git (branching_strategy, section_branch_template, submission_branch_template, squash_on_merge).
 
 ## 10. Commit
 
@@ -140,6 +140,7 @@ git commit -m "docs: initialize [paper-title]"
 - [ ] Deep questioning completed (not rushed)
 - [ ] PROJECT.md captures paper vision with core argument
 - [ ] Structure documents created (argument-map, outline, narrative-arc)
+- [ ] config.json has gates, safety, planning, and git sections
 - [ ] config.json has workflow mode and model_profile
 - [ ] All committed to git
 </success_criteria>
