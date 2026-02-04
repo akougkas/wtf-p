@@ -71,6 +71,78 @@ async function runDoctor(options) {
     checks.push({ name: 'CLAUDE_CONFIG_DIR', status: 'info', detail: 'Not set (using default)' });
   }
 
+  // Check 6: v0.5.0 components (agents, workflows, commands)
+  if (detection.hasCommands || detection.hasWorkflows) {
+    const v050Components = {
+      agents: [
+        'coherence-checker.md',
+        'section-writer.md',
+        'section-planner.md',
+        'argument-verifier.md'
+      ],
+      workflows: [
+        'verify-work.md',
+        'execute-outline.md'
+      ],
+      commands: [
+        'verify-work.md',
+        'execute-outline.md',
+        'settings.md',
+        'add-todo.md',
+        'check-todos.md',
+        'update.md',
+        'audit-milestone.md',
+        'plan-milestone-gaps.md'
+      ]
+    };
+
+    // Note: After install, agents/workflows/commands are all under globalDir
+    // The installer copies from vendors/ and core/ into the config directory
+    const agentsDir = path.join(globalDir, 'agents', 'wtfp');
+    const workflowsDir = path.join(globalDir, 'write-the-f-paper', 'workflows');
+    const commandsDir = path.join(globalDir, 'commands', 'wtfp');
+
+    let missingAgents = [];
+    let missingWorkflows = [];
+    let missingCommands = [];
+
+    if (fs.existsSync(agentsDir)) {
+      for (const agent of v050Components.agents) {
+        if (!fs.existsSync(path.join(agentsDir, agent))) {
+          missingAgents.push(agent);
+        }
+      }
+    }
+
+    if (fs.existsSync(workflowsDir)) {
+      for (const wf of v050Components.workflows) {
+        if (!fs.existsSync(path.join(workflowsDir, wf))) {
+          missingWorkflows.push(wf);
+        }
+      }
+    }
+
+    if (fs.existsSync(commandsDir)) {
+      for (const cmd of v050Components.commands) {
+        if (!fs.existsSync(path.join(commandsDir, cmd))) {
+          missingCommands.push(cmd);
+        }
+      }
+    }
+
+    const totalMissing = missingAgents.length + missingWorkflows.length + missingCommands.length;
+    const totalChecked = v050Components.agents.length + v050Components.workflows.length + v050Components.commands.length;
+
+    if (totalMissing === 0) {
+      checks.push({ name: 'v0.5.0 components', status: 'pass', detail: `${totalChecked} files verified` });
+    } else if (totalMissing === totalChecked) {
+      checks.push({ name: 'v0.5.0 components', status: 'info', detail: 'Pre-v0.5.0 installation' });
+    } else {
+      issues.push(`Missing v0.5.0 components: ${missingAgents.concat(missingWorkflows, missingCommands).join(', ')}`);
+      checks.push({ name: 'v0.5.0 components', status: 'warn', detail: `${totalMissing} missing` });
+    }
+  }
+
   // Output results
   for (const check of checks) {
     let icon, color;

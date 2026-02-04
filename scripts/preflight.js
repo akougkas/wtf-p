@@ -76,11 +76,24 @@ try {
 }
 console.log('');
 
-// 4. Run npm test
+// 4. Run npm test and verify count
 console.log('Running npm test...');
 try {
-  execSync('npm test', { stdio: 'pipe', encoding: 'utf8' });
-  check(true, 'npm test passed');
+  const testOutput = execSync('npm test', { stdio: 'pipe', encoding: 'utf8' });
+
+  // Extract test counts from output
+  const passedMatches = testOutput.match(/(\d+)\s*passed/g) || [];
+  let totalPassed = 0;
+  for (const match of passedMatches) {
+    const num = parseInt(match.match(/\d+/)[0], 10);
+    totalPassed += num;
+  }
+
+  const MIN_TEST_COUNT = 400;
+  check(totalPassed >= MIN_TEST_COUNT, `npm test passed (${totalPassed} tests, min ${MIN_TEST_COUNT})`);
+  if (totalPassed < MIN_TEST_COUNT) {
+    console.log(`    ${colors.dim}Expected at least ${MIN_TEST_COUNT} tests, got ${totalPassed}${colors.reset}`);
+  }
 } catch (e) {
   check(false, 'npm test failed');
 }
@@ -147,6 +160,68 @@ console.log('Checking documentation...');
 check(fs.existsSync('README.md'), 'README.md exists');
 check(fs.existsSync('LICENSE'), 'LICENSE exists');
 check(fs.existsSync('CHANGELOG.md'), 'CHANGELOG.md exists');
+console.log('');
+
+// 9. Verify v0.5.0 components exist
+console.log('Checking v0.5.0 components...');
+const v050Components = [
+  // Agents (in vendors/claude)
+  'vendors/claude/agents/wtfp/coherence-checker.md',
+  'vendors/claude/agents/wtfp/section-writer.md',
+  'vendors/claude/agents/wtfp/section-planner.md',
+  'vendors/claude/agents/wtfp/argument-verifier.md',
+  // Workflows (in core/)
+  'core/write-the-f-paper/workflows/verify-work.md',
+  'core/write-the-f-paper/workflows/execute-outline.md',
+  // Commands (in vendors/claude)
+  'vendors/claude/commands/wtfp/verify-work.md',
+  'vendors/claude/commands/wtfp/execute-outline.md',
+  'vendors/claude/commands/wtfp/settings.md',
+  'vendors/claude/commands/wtfp/add-todo.md',
+  'vendors/claude/commands/wtfp/check-todos.md',
+  'vendors/claude/commands/wtfp/update.md',
+  'vendors/claude/commands/wtfp/audit-milestone.md',
+  'vendors/claude/commands/wtfp/plan-milestone-gaps.md'
+];
+
+let missingComponents = [];
+for (const component of v050Components) {
+  if (!fs.existsSync(component)) {
+    missingComponents.push(component);
+  }
+}
+
+if (missingComponents.length === 0) {
+  check(true, `All ${v050Components.length} v0.5.0 components present`);
+} else {
+  check(false, `Missing ${missingComponents.length} v0.5.0 components`);
+  for (const missing of missingComponents) {
+    console.log(`    ${colors.dim}Missing: ${missing}${colors.reset}`);
+  }
+}
+console.log('');
+
+// 10. Backward compatibility check (v0.4.0 config keys)
+console.log('Checking backward compatibility...');
+const configTemplate = path.join('core', 'write-the-f-paper', 'templates', 'config.json');
+if (fs.existsSync(configTemplate)) {
+  const config = JSON.parse(fs.readFileSync(configTemplate, 'utf8'));
+  // v0.4.0 keys that must still work
+  const v040Keys = ['mode', 'depth', 'document_type', 'output_format', 'gates'];
+  let missingKeys = [];
+  for (const key of v040Keys) {
+    if (!(key in config)) {
+      missingKeys.push(key);
+    }
+  }
+  if (missingKeys.length === 0) {
+    check(true, 'v0.4.0 config keys preserved');
+  } else {
+    check(false, `Missing v0.4.0 keys: ${missingKeys.join(', ')}`);
+  }
+} else {
+  warn('config.json template not found');
+}
 console.log('');
 
 // Summary
