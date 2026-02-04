@@ -109,6 +109,32 @@ const ORCHESTRATOR_AGENTS = {
       budget:   { primary: 'haiku' }
     },
     configGate: null
+  },
+  'verify-work': {
+    primary: null,  // conversational orchestrator, no subagent
+    quality: null,
+    models: {},
+    configGate: null
+  },
+  'execute-outline': {
+    primary: 'section-writer',
+    quality: 'coherence-checker',
+    models: {
+      quality:  { primary: 'opus',   quality: 'sonnet' },
+      balanced: { primary: 'sonnet', quality: 'sonnet' },
+      budget:   { primary: 'sonnet', quality: 'haiku' }
+    },
+    configGate: null
+  },
+  'create-outline': {
+    primary: 'outliner',
+    quality: null,
+    models: {
+      quality:  { primary: 'opus' },
+      balanced: { primary: 'sonnet' },
+      budget:   { primary: 'sonnet' }
+    },
+    configGate: null
   }
 };
 
@@ -119,7 +145,7 @@ console.log(`${COLORS.cyan}--- Agent Resolution ---${COLORS.reset}`);
 
 const allDeclaredAgents = new Set();
 for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
-  allDeclaredAgents.add(spec.primary);
+  if (spec.primary) allDeclaredAgents.add(spec.primary);
   if (spec.quality) allDeclaredAgents.add(spec.quality);
 }
 
@@ -145,11 +171,15 @@ for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
 
   const content = fs.readFileSync(cmdFile, 'utf8');
 
-  // Check primary agent reference
-  if (content.includes(spec.primary)) {
-    pass(`${cmd} references primary agent: ${spec.primary}`);
+  // Check primary agent reference (skip for conversational orchestrators with no subagent)
+  if (spec.primary) {
+    if (content.includes(spec.primary)) {
+      pass(`${cmd} references primary agent: ${spec.primary}`);
+    } else {
+      fail(`${cmd} does NOT reference primary agent: ${spec.primary}`);
+    }
   } else {
-    fail(`${cmd} does NOT reference primary agent: ${spec.primary}`);
+    pass(`${cmd} is conversational (no primary agent)`);
   }
 
   // Check quality agent reference (if applicable)
@@ -167,6 +197,12 @@ for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
 console.log(`\n${COLORS.cyan}--- Model Profile Resolution ---${COLORS.reset}`);
 
 for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
+  // Skip conversational orchestrators with no model resolution
+  if (!spec.primary && Object.keys(spec.models).length === 0) {
+    pass(`${cmd} is conversational (no model resolution needed)`);
+    continue;
+  }
+
   const cmdFile = path.join(CMD_DIR, `${cmd}.md`);
   if (!fs.existsSync(cmdFile)) continue;
 
@@ -193,6 +229,9 @@ for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
 console.log(`\n${COLORS.cyan}--- Model Table Verification ---${COLORS.reset}`);
 
 for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
+  // Skip conversational orchestrators with no model table
+  if (Object.keys(spec.models).length === 0) continue;
+
   const cmdFile = path.join(CMD_DIR, `${cmd}.md`);
   if (!fs.existsSync(cmdFile)) continue;
 
@@ -260,6 +299,12 @@ for (const cmd of contextCommands) {
 console.log(`\n${COLORS.cyan}--- Task() Spawning Pattern ---${COLORS.reset}`);
 
 for (const [cmd, spec] of Object.entries(ORCHESTRATOR_AGENTS)) {
+  // Skip conversational orchestrators that don't spawn agents
+  if (!spec.primary) {
+    pass(`${cmd} is conversational (no Task() spawning)`);
+    continue;
+  }
+
   const cmdFile = path.join(CMD_DIR, `${cmd}.md`);
   if (!fs.existsSync(cmdFile)) continue;
 
