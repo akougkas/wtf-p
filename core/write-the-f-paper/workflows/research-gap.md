@@ -188,23 +188,40 @@ Execute research systematically.
 
 **CRITICAL: Source hierarchy**
 
-1. **User's own sources first:**
+1. **Context7 MCP first (if available):**
+   - Query Context7 for relevant documentation and sources
+   - Highest quality, most relevant results
+
+2. **User's own sources second:**
    - Check .planning/sources/literature.md
    - Check .planning/sources/prior-drafts.md for cited works
    - User may have PDFs or notes to reference
 
-2. **Database search (conceptual):**
+3. **Official sources/databases third:**
    - Google Scholar for academic sources
    - Field-specific databases (PubMed, IEEE, ACL, etc.)
    - Preprint servers (arXiv, SSRN, bioRxiv)
 
-3. **WebSearch for recent/emerging work:**
+4. **WebSearch last (for recent/emerging work):**
    ```
    "[topic] research [current_year]"
    "[topic] systematic review"
    "[topic] meta-analysis"
    "[author name] [topic]" for known experts
    ```
+
+**Depth-conditional instructions:**
+
+**If depth is "standard":**
+- Target 10-20 relevant sources across categories
+- Focus on most impactful papers for each category
+- Categories are recommended but not all mandatory
+
+**If depth is "deep":**
+- Target 20-50 sources
+- Systematically map the field: research groups, venues, citation networks, methodology variants
+- Every category (foundational, recent, competing, gap, methods) is MANDATORY
+- Include intellectual lineage and funding landscape
 
 <research_protocol>
 
@@ -290,6 +307,13 @@ Create it: `.planning/sections/${SECTION}-${SLUG}/`
 **Structure:**
 
 ```markdown
+---
+depth: {quick|standard|deep}
+confidence: {HIGH|MEDIUM|LOW}
+sources_count: {N}
+researched: {YYYY-MM-DD}
+---
+
 # Literature Research: [Topic/Section]
 
 ## Research Summary
