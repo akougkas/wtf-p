@@ -86,7 +86,7 @@ if (!hasQuiet) {
 // ============ Help Text ============
 
 if (hasHelp) {
-  console.log(`  ${c.yellow('Usage:')} npx wtf-p-uninstall [options]
+  console.log(`  ${c.yellow('Usage:')} npx wtf-p uninstall [options]
 
   ${c.yellow('Options:')}
     ${c.cyan('-g, --global')}              Uninstall from Claude config directory
@@ -115,19 +115,19 @@ if (hasHelp) {
 
   ${c.yellow('Examples:')}
     ${c.dim('# Interactive uninstall from ~/.claude')}
-    npx wtf-p-uninstall --global
+    npx wtf-p uninstall --global
 
     ${c.dim('# Preview what would be removed')}
-    npx wtf-p-uninstall --global --dry-run
+    npx wtf-p uninstall --global --dry-run
 
     ${c.dim('# Backup before removing')}
-    npx wtf-p-uninstall --global --backup
+    npx wtf-p uninstall --global --backup
 
     ${c.dim('# Also clean up backup files from prior installs')}
-    npx wtf-p-uninstall --global --clean-backups
+    npx wtf-p uninstall --global --clean-backups
 
     ${c.dim('# Uninstall from custom location')}
-    npx wtf-p-uninstall --global --config-dir ~/.claude-research
+    npx wtf-p uninstall --global --config-dir ~/.claude-research
 `);
   process.exit(0);
 }

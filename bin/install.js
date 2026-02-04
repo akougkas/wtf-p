@@ -22,7 +22,7 @@ const showList = require('./commands/list');
 const args = process.argv.slice(2);
 
 // Detect subcommand
-const subcommands = ['status', 'doctor', 'update'];
+const subcommands = ['status', 'doctor', 'update', 'uninstall'];
 const subcommand = args.find(arg => !arg.startsWith('-') && subcommands.includes(arg));
 const subcommandIndex = args.indexOf(subcommand);
 if (subcommandIndex !== -1) {
@@ -104,6 +104,7 @@ function showHelp() {
     ${c.cyan('status')}                    Show current installation state
     ${c.cyan('doctor')}                    Diagnose installation issues
     ${c.cyan('update')}                    Update existing installation
+    ${c.cyan('uninstall')}                 Remove WTF-P installation
 
   ${c.yellow('Install Options:')}
     ${c.cyan('-g, --global')}              Install globally (to Claude config directory)
@@ -171,6 +172,18 @@ async function main() {
   if (subcommand === 'update') {
     if (!hasQuiet) console.log(banner);
     await runUpdate(options, pkg, install);
+    return;
+  }
+
+  if (subcommand === 'uninstall') {
+    // Delegate to uninstall script with remaining args
+    const { execFileSync } = require('child_process');
+    const uninstallArgs = process.argv.slice(2).filter(a => a !== 'uninstall');
+    try {
+      execFileSync(process.execPath, [path.join(__dirname, 'uninstall.js'), ...uninstallArgs], { stdio: 'inherit' });
+    } catch (e) {
+      process.exit(e.status || 1);
+    }
     return;
   }
 
