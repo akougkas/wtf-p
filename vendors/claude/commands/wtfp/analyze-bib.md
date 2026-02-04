@@ -93,6 +93,8 @@ Agent performs: temporal analysis, topic clustering, seminal work identification
 
 **`## ANALYSIS COMPLETE`:** Present summary, ask user to confirm seminal works via AskUserQuestion.
 
+**`## ANALYSIS BLOCKED`:** Present blocker (missing .bib, empty file, etc.), ask user how to proceed.
+
 ## 6. Commit
 
 ```bash

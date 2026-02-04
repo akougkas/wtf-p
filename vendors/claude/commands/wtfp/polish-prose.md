@@ -92,6 +92,8 @@ Polish prompt includes: `<target_content>` with section text, `<voice_preference
 
 **`## POLISH COMPLETE`:** Present before/after summary.
 
+**`## POLISH BLOCKED`:** Present blocker, ask user how to proceed.
+
 ## 6. Present Results
 
 </process>

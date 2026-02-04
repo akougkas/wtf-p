@@ -142,7 +142,7 @@ WRITE: .planning/structure/narrative-arc.md
   USE: ~/.claude/write-the-f-paper/templates/project-context/narrative-arc.md
 [/step]
 
-[step:git_commit]
+[step:git_commit_initialization]
 RUN: git add .planning/PROJECT.md .planning/ROADMAP.md .planning/STATE.md .planning/sections/ .planning/structure/
 RUN: git add .planning/config.json 2>/dev/null
 COMMIT: "docs: initialize [title] ([N] sections)"

@@ -80,6 +80,8 @@ Present findings:
 - Incomplete entries (missing required fields)
 - Valid citation count
 
+**`## AUDIT BLOCKED`:** Present blocker (no .bib found, no .tex/.md to scan), ask user to provide file paths.
+
 ## 5. Offer Fixes
 
 Ask via AskUserQuestion:
