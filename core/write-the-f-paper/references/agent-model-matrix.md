@@ -16,6 +16,8 @@ Model assignments per agent across quality/balanced/budget profiles. Resolved at
 | citation-expert | Search papers, manage BibTeX, identify gaps | sonnet | sonnet | haiku |
 | citation-formatter | BibTeX validation, formatting, deduplication | sonnet | haiku | haiku |
 | citation-retriever | Literature discovery, BibTeX generation | sonnet | haiku | haiku |
+| coherence-checker | Cross-section coherence, argument flow, terminology consistency | sonnet | sonnet | haiku |
+| outliner | Generates outline.md, argument-map.md, narrative-arc.md from PROJECT.md | opus | sonnet | sonnet |
 
 ## Resolution Pattern
 
@@ -38,6 +40,8 @@ Default: `balanced` when config missing or field absent.
 | /wtfp:research-gap | research-synthesizer | — |
 | /wtfp:analyze-bib | citation-expert | — |
 | /wtfp:check-refs | citation-formatter | — |
+| /wtfp:execute-outline | outliner | coherence-checker |
+| /wtfp:create-outline | outliner | — |
 
 ## Profile Selection Guide
 

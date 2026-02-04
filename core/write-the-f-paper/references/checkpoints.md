@@ -2,6 +2,8 @@
 Writing plans execute with Claude as partner. Checkpoints formalize interaction points where human verification or decisions are needed.
 
 **Core principle:** Claude assists with writing. Checkpoints are for verification and decisions about content direction.
+
+**Visual formatting:** See @ui-brand.md for checkpoint box rendering, status symbols, and stage banners.
 </overview>
 
 <checkpoint_types>
@@ -16,9 +18,30 @@ Writing plans execute with Claude as partner. Checkpoints formalize interaction 
 ```xml
 <task type="checkpoint:human-verify" gate="blocking">
   <what-written>[What Claude drafted]</what-written>
-  <how-to-verify>[What to check - argument, tone, accuracy]</how-to-verify>
-  <resume-signal>[How to continue - "approved" or describe issues]</resume-signal>
+  <how-to-verify>
+    [Numbered list of what to check — argument, tone, accuracy]
+  </how-to-verify>
+  <resume-signal>Type "approved" or describe issues</resume-signal>
 </task>
+```
+
+**Rendered output:**
+```
+════════════════════════════════════════
+CHECKPOINT: human-verify
+════════════════════════════════════════
+Task {X} of {Y}: {Name}
+
+What was written:
+  {description of drafted content}
+
+How to verify:
+  1. {Check item 1}
+  2. {Check item 2}
+  3. {Check item 3}
+
+Type "approved" or describe what to change.
+════════════════════════════════════════
 ```
 
 **Example:**
@@ -32,7 +55,6 @@ Writing plans execute with Claude as partner. Checkpoints formalize interaction 
 <task type="checkpoint:human-verify" gate="blocking">
   <what-written>Introduction opening paragraph (~150 words)</what-written>
   <how-to-verify>
-    Review and confirm:
     1. Captures the problem accurately
     2. Tone matches your voice
     3. Hook is compelling
@@ -60,6 +82,24 @@ Writing plans execute with Claude as partner. Checkpoints formalize interaction 
 </task>
 ```
 
+**Rendered output:**
+```
+════════════════════════════════════════
+CHECKPOINT: decision
+════════════════════════════════════════
+Task {X} of {Y}: {Name}
+
+Decision needed:
+  {What is being decided}
+
+Options:
+  [a] {Name} — {pros}; tradeoff: {cons}
+  [b] {Name} — {pros}; tradeoff: {cons}
+
+Select: a or b
+════════════════════════════════════════
+```
+
 **Example:**
 ```xml
 <task type="checkpoint:decision" gate="blocking">
@@ -81,6 +121,31 @@ Writing plans execute with Claude as partner. Checkpoints formalize interaction 
 
 **Do NOT use for:** Writing tasks Claude can draft, formatting, citation formatting.
 
+**Structure:**
+```xml
+<task type="checkpoint:human-action" gate="blocking">
+  <action>[What is needed from the human]</action>
+  <instructions>
+    [Specific description of what to provide]
+  </instructions>
+  <resume-signal>[Format of expected input]</resume-signal>
+</task>
+```
+
+**Rendered output:**
+```
+════════════════════════════════════════
+CHECKPOINT: human-action
+════════════════════════════════════════
+Task {X} of {Y}: {Name}
+
+What is needed:
+  {Description of what the author must provide}
+
+Provide: {expected format}
+════════════════════════════════════════
+```
+
 **Example:**
 ```xml
 <task type="checkpoint:human-action" gate="blocking">
@@ -95,23 +160,72 @@ Writing plans execute with Claude as partner. Checkpoints formalize interaction 
 
 </checkpoint_types>
 
+<typed_checkpoint_xml>
+
+## Typed Checkpoint XML Format
+
+All checkpoints in plan files use this XML structure. The `type` attribute determines rendering and behavior. The `gate` attribute controls blocking behavior.
+
+### Attributes
+
+| Attribute | Values | Description |
+|-----------|--------|-------------|
+| `type` | `checkpoint:human-verify`, `checkpoint:decision`, `checkpoint:human-action` | Checkpoint category |
+| `gate` | `blocking` (default), `non-blocking` | Whether execution pauses. Non-blocking checkpoints log for later review. |
+
+### human-verify XML
+
+```xml
+<task type="checkpoint:human-verify" gate="blocking">
+  <what-written>[What Claude drafted]</what-written>
+  <how-to-verify>
+    [Numbered list of what to check]
+  </how-to-verify>
+  <resume-signal>Type "approved" or describe issues</resume-signal>
+</task>
+```
+
+### decision XML
+
+```xml
+<task type="checkpoint:decision" gate="blocking">
+  <decision>[What's being decided]</decision>
+  <context>[Why this matters]</context>
+  <options>
+    <option id="{id}"><name>[Name]</name><pros>[Benefits]</pros><cons>[Tradeoffs]</cons></option>
+  </options>
+  <resume-signal>Select: {option-ids}</resume-signal>
+</task>
+```
+
+### human-action XML
+
+```xml
+<task type="checkpoint:human-action" gate="blocking">
+  <action>[What is needed]</action>
+  <instructions>[Specific details]</instructions>
+  <resume-signal>Provide: {expected format}</resume-signal>
+</task>
+```
+
+</typed_checkpoint_xml>
+
 <execution_protocol>
 
 When Claude encounters `type="checkpoint:*"`:
 
 1. **Stop immediately** - do not proceed to next task
-2. **Display checkpoint clearly:**
+2. **Display checkpoint** using the branded box format from @ui-brand.md:
 
 ```
 ════════════════════════════════════════
-CHECKPOINT: [Type]
+CHECKPOINT: {type}
 ════════════════════════════════════════
+Task {X} of {Y}: {Name}
 
-Task [X] of [Y]: [Name]
+{Checkpoint-specific content}
 
-[Checkpoint-specific content]
-
-[Resume signal instruction]
+{Resume signal instruction}
 ════════════════════════════════════════
 ```
 
@@ -211,3 +325,40 @@ Why bad: "Good" is meaningless. Specify: accuracy, completeness, tone.
 - When Claude can verify programmatically (word count, structure)
 
 </summary>
+
+<gate_integration>
+
+## Gate Integration
+
+Checkpoints respect gate settings from `.planning/config.json`. This allows authors to control how much confirmation they want during execution.
+
+### Gate Behavior
+
+| Gate Key | Affects | When `false` |
+|----------|---------|-------------|
+| `gates.confirm_write` | `checkpoint:human-verify` during writing | Auto-approved — execution continues without pausing |
+| `gates.confirm_review` | `checkpoint:human-verify` during review | Auto-approved |
+| `gates.confirm_plan` | `checkpoint:human-verify` during planning | Auto-approved |
+| `gates.confirm_outline` | `checkpoint:human-verify` during outlining | Auto-approved |
+
+### Mode Override
+
+When `mode: "yolo"`, all non-safety gates are treated as `false`. Checkpoints are auto-approved and execution proceeds without pausing.
+
+### Always-Confirm Checkpoints
+
+Some checkpoints are never skipped regardless of gate settings or mode:
+
+- **`checkpoint:decision`** — Always pauses. Decisions require human input by definition.
+- **`checkpoint:human-action`** — Always pauses. Agent cannot fabricate human input.
+- **Safety-gated checkpoints** — When `safety.always_confirm_destructive` is `true`, any checkpoint before a destructive operation (deleting content, resetting progress) always pauses.
+
+### Resolution Order
+
+1. Is this a `checkpoint:decision` or `checkpoint:human-action`? → Always pause.
+2. Is `safety.always_confirm_destructive` relevant? → Always pause.
+3. Is `mode: "yolo"`? → Auto-approve.
+4. Is the relevant gate `false`? → Auto-approve.
+5. Otherwise → Pause and wait for user.
+
+</gate_integration>

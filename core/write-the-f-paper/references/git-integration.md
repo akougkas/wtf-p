@@ -239,3 +239,83 @@ Each plan produces 3-5 commits (tasks + metadata). Clear, granular, recoverable.
 - Writing evolution is clear
 
 </commit_strategy_rationale>
+
+<branching_strategies>
+
+## Branching Strategies
+
+Controlled by `git.branching_strategy` in `.planning/config.json`. Three strategies available.
+
+### Strategy: "none" (default)
+
+**When to use:** Solo writing, simple papers, no parallel section work.
+
+**Behavior:** All commits go to the current branch. No branch creation, no merging.
+
+**Branch lifecycle:** None. Work happens wherever `git branch` points.
+
+**Merge behavior:** N/A.
+
+This is the simplest option. Good for most academic writing workflows where one person writes sequentially.
+
+### Strategy: "section"
+
+**When to use:** Papers with independent sections that benefit from parallel work, or when you want clean per-section history.
+
+**Behavior:** Each section gets its own branch created from the current branch when `plan-section` starts.
+
+**Branch name:** From `git.section_branch_template` (default: `wtfp/section-{section}-{slug}`).
+- `{section}` = section number (e.g., `01`, `02`)
+- `{slug}` = slugified section name (e.g., `introduction`, `related-work`)
+- Example: `wtfp/section-02-related-work`
+
+**Branch lifecycle:**
+1. `plan-section` creates branch: `git checkout -b wtfp/section-{section}-{slug}`
+2. All writing tasks for that section commit to the section branch
+3. `review-section` runs on the section branch
+4. After review passes, branch is merged back to the base branch
+5. Branch is deleted after successful merge
+
+**Merge behavior:**
+- If `git.squash_on_merge` is `false`: merge commit preserves per-task history
+- If `git.squash_on_merge` is `true`: squash merge collapses all section commits into one
+
+**Parallel work:** Multiple section branches can exist simultaneously. Different sections can be planned and written in parallel (when `parallelization.enabled` is `true`).
+
+### Strategy: "submission"
+
+**When to use:** Papers with clear submission deadlines (conference deadlines, journal revisions), or when you want milestone-based history.
+
+**Behavior:** Milestone branches created by `submit-milestone` for each submission target.
+
+**Branch name:** From `git.submission_branch_template` (default: `wtfp/{milestone}-{slug}`).
+- `{milestone}` = milestone name (e.g., `draft-1`, `camera-ready`, `revision-2`)
+- `{slug}` = slugified paper title (e.g., `distributed-consensus`)
+- Example: `wtfp/camera-ready-distributed-consensus`
+
+**Branch lifecycle:**
+1. `submit-milestone` creates branch from current state
+2. Final polishing and formatting commits go to the milestone branch
+3. Submission checklist verification runs on the branch
+4. Branch is tagged on completion: `wtfp/submitted/{milestone}-{date}`
+5. Branch is merged back to the base branch
+
+**Merge behavior:**
+- If `git.squash_on_merge` is `false`: merge commit preserves milestone history
+- If `git.squash_on_merge` is `true`: squash merge collapses milestone into one commit
+
+**Tags:** Each completed milestone is tagged for easy reference:
+```
+wtfp/submitted/draft-1-2024-03-15
+wtfp/submitted/camera-ready-2024-06-01
+```
+
+### Squash on Merge
+
+Controlled by `git.squash_on_merge` (default: `false`).
+
+**When `false` (default):** Per-task commit history is preserved on merge. The full writing evolution is visible in `git log`. Recommended for most workflows — granular history aids future Claude sessions and revision tracking.
+
+**When `true`:** All commits from a section/milestone branch are squashed into a single commit on merge. Produces a cleaner `git log` but loses per-task granularity. Use when the final state matters more than the writing process.
+
+</branching_strategies>
