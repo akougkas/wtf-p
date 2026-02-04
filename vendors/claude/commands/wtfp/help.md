@@ -119,6 +119,26 @@ Execute a PLAN.md file directly.
 
 Usage: `/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md`
 
+**`/wtfp:execute-outline`**
+Execute all sections via wave-based parallel execution.
+
+- Groups sections by wave (respecting dependencies)
+- Spawns parallel writers per wave
+- Runs coherence-checker after all waves complete
+- Handles checkpoints between waves
+
+Usage: `/wtfp:execute-outline`
+
+**`/wtfp:verify-work <number>`**
+Walk through section verification one test at a time.
+
+- Derives tests from PLAN.md success criteria and argument-map claims
+- Persists state in UAT.md (survives /clear)
+- Classifies issues by severity (major/minor/cosmetic)
+- Routes to plan-revision when issues found
+
+Usage: `/wtfp:verify-work 2`
+
 ### Outline Management
 
 **`/wtfp:add-section <description>`**
@@ -239,6 +259,16 @@ Save or restore paper state as a git-tagged checkpoint.
 Usage: `/wtfp:checkpoint save draft-1`
 Usage: `/wtfp:checkpoint list`
 
+**`/wtfp:settings`**
+View and edit project configuration interactively.
+
+- Displays settings organized by category
+- Interactive editing with type-appropriate options
+- Shows diff of changes before applying
+- Covers: General, Gates, Writing, Workflow, Verification, Parallelization, Safety, Git
+
+Usage: `/wtfp:settings`
+
 **`/wtfp:resume-writing`**
 Resume work from previous session with full context restoration.
 
@@ -278,6 +308,24 @@ Archive completed submission round.
 
 Usage: `/wtfp:submit-milestone "initial-submission"`
 
+**`/wtfp:audit-milestone`**
+Pre-submission audit checking sections, arguments, words, and citations.
+
+- Runs 5 audit checks (section completion, argument coverage, word targets, citations, review status)
+- Produces MILESTONE-AUDIT.md with pass/gap per criterion
+- Gaps include actionable recommendations
+
+Usage: `/wtfp:audit-milestone`
+
+**`/wtfp:plan-milestone-gaps`**
+Create targeted fix plans from audit findings.
+
+- Reads MILESTONE-AUDIT.md and creates fix plans for each gap
+- Groups related gaps affecting the same section
+- Plans follow standard plan-format.md structure
+
+Usage: `/wtfp:plan-milestone-gaps`
+
 ### Presentations & Posters
 
 **`/wtfp:create-slides`**
@@ -310,10 +358,40 @@ Review deferred issues and gaps.
 
 Usage: `/wtfp:consider-gaps`
 
+### Todo Management
+
+**`/wtfp:add-todo <description>`**
+Capture an idea or task for later without breaking flow.
+
+- Quick-capture with minimal disruption
+- Creates file in .planning/todos/pending/
+- Auto-detects current section context from STATE.md
+- Updates STATE.md pending count
+
+Usage: `/wtfp:add-todo "Check whether Smith2024 contradicts our methodology claim"`
+
+**`/wtfp:check-todos`**
+Review pending todos — act on or dismiss.
+
+- Presents each todo with act/defer/dismiss/done/skip options
+- Moves files to dismissed/ or done/ subdirectories
+- Updates STATE.md pending count after review
+
+Usage: `/wtfp:check-todos`
+
 ### Utility Commands
 
 **`/wtfp:help`**
 Show this command reference.
+
+**`/wtfp:update`**
+Check for newer WTF-P version and install update.
+
+- Compares installed version against npm registry
+- Shows changelog diff when update available
+- User can update or skip
+
+Usage: `/wtfp:update`
 
 ## Files & Structure
 
