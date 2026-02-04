@@ -70,9 +70,11 @@ Execute each task in the plan.
 
 **For each task:**
 
-1. **Read task requirements** (action, target, mode, claims, citations)
+1. **Read task type** — Check if `type="auto"` or `type="checkpoint:*"`
 
-2. **Execute based on mode:**
+2. **If `type="checkpoint:*"`** — Handle via checkpoint protocol (see `<step name="handle_checkpoints">`)
+
+3. **If `type="auto"`** — Execute based on mode:
 
    **Co-Author Mode:**
    - Write full draft prose
@@ -92,11 +94,13 @@ Execute each task in the plan.
    - After user provides text, critique using the plan's verification criteria
    - Suggest specific improvements with examples
 
-3. **Verify output** against task's `<verify>` checklist
+4. **Apply deviation rules** during execution (see `<step name="deviation_rules">`)
 
-4. **Track word count** per task
+5. **Verify output** against task's `<verify>` checklist
 
-5. **Commit after each task:**
+6. **Track word count** per task
+
+7. **Commit after each auto task:**
    ```bash
    git add paper/[section].md
    git commit -m "write(XX-YY): [task description]
@@ -105,18 +109,78 @@ Execute each task in the plan.
    ```
 </step>
 
-<step name="deviation_rules">
-Handle deviations during writing:
+<step name="handle_checkpoints">
+When current task has `type="checkpoint:*"`, resolve gate setting before presenting.
 
-| Trigger | Action | Permission |
-|---------|--------|------------|
-| Prose awkward | Auto-fix | None needed |
-| Citation format wrong | Auto-fix | None needed |
-| Missing transition | Auto-add | None needed |
-| Claim unsupported by evidence | Flag in SUMMARY, continue | None needed |
-| Argument requires structural change | STOP, return checkpoint | User decision |
-| Word count >25% over target | Note in SUMMARY | None needed |
-| Better argument found | Log to Issues, continue with plan | None needed |
+Canonical reference: `@~/.claude/write-the-f-paper/references/checkpoints.md`
+Visual format: `@~/.claude/write-the-f-paper/references/ui-brand.md`
+
+**Gate Resolution Order:**
+
+1. **checkpoint:decision** → ALWAYS pause. Decisions require human input by definition.
+2. **checkpoint:human-action** → ALWAYS pause. Agent cannot fabricate human input.
+3. **checkpoint:human-verify:**
+   a. Read `gates.confirm_write` from `.planning/config.json`
+   b. If `mode: "yolo"` → auto-approve, log `[Checkpoint auto-approved: yolo mode]`
+   c. If `confirm_write: false` → auto-approve, log `[Checkpoint auto-approved: gate disabled]`
+   d. Otherwise → pause and present to author
+
+**Presenting a checkpoint:**
+
+Display using the branded box format:
+```
+════════════════════════════════════════
+CHECKPOINT: {type}
+════════════════════════════════════════
+Task {X} of {Y}: {Name}
+
+{Type-specific content from task XML}
+
+{Resume signal}
+════════════════════════════════════════
+```
+
+Use `AskUserQuestion` to collect the author's response.
+
+**After checkpoint:**
+- Incorporate feedback into subsequent tasks
+- Log checkpoint result in SUMMARY.md under "Decisions Made"
+- If author requested changes, apply them before continuing
+</step>
+
+<step name="deviation_rules">
+Handle deviations during writing. Canonical source: `@~/.claude/write-the-f-paper/references/deviation-rules.md`
+
+**Rule 1: Auto-fix (No Confirmation)**
+Trigger: Mechanical errors that are objectively wrong.
+Scope: Prose awkwardness, citation formatting errors, typos, broken references, inconsistent heading levels.
+Action: Fix immediately. Log: `[Rule 1 - Auto-fix] Fixed {description} in {file}`
+
+**Rule 2: Auto-add (No Confirmation)**
+Trigger: Gap in prose flow that can be bridged with a small addition.
+Scope: Missing transition sentences, topic sentences, connecting phrases, paragraph breaks.
+Action: Add the missing element. Log: `[Rule 2 - Auto-add] Added {description} in {file}`
+
+**Rule 3: Ask-first (Requires Confirmation)**
+Trigger: Content would benefit from a structural or substantive change.
+Scope: Reordering paragraphs, splitting/merging sections, argument reframing, removing content, changing terminology, altering tone, adding subsections.
+Action: STOP execution. Present as `checkpoint:decision`. Wait for author confirmation.
+Log if approved: `[Rule 3 - Ask-first] {description} -- approved by author`
+Log if rejected: `[Rule 3 - Ask-first] Proposed {description} -- rejected, continued as planned`
+
+**Rule 4: Never (Agent Cannot Do)**
+Trigger: Agent is tempted to add unsupported content.
+Scope: Fabricating citations, adding unsupported claims, changing the author's thesis, inserting data not provided by author.
+Action: Do NOT do it. Flag as TODO for author.
+Log: `[Rule 4 - Gap identified] {description} -- needs author input`
+In content: `<!-- TODO: [Rule 4] {description}. Author to provide. -->`
+
+**Rule Priority:**
+1. Rule 4 always wins. If the fix would require fabricating evidence, it is Rule 4 regardless of how small it seems.
+2. Rule 3 over Rule 2. If an addition changes argument structure (not just flow), it is Rule 3.
+3. Rule 1 over Rule 2. If the issue is an error (not a gap), fix it as Rule 1.
+
+All deviations are tracked in SUMMARY.md under `## Deviations from Plan`.
 </step>
 
 <step name="anti_patterns">
@@ -136,7 +200,7 @@ If it sounds like academic throat-clearing, delete it.
 </step>
 
 <step name="summary">
-Create SUMMARY.md after all tasks complete:
+Create SUMMARY.md after all tasks complete. Follow the template at `@~/.claude/write-the-f-paper/templates/summary.md`.
 
 ```yaml
 ---
@@ -149,7 +213,31 @@ completed: [timestamp]
 ---
 ```
 
-Sections: What Was Written, Word Count, Files Created/Modified, Key Points Made, Citations Used, Decisions Made, Issues Noted, Next Steps.
+Sections: Performance, Accomplishments, Key Claims Made, Citations Added, Task Commits, Files Created/Modified, Decisions Made, Deviations from Plan, Issues Encountered, Next Section Readiness.
+
+**Populating "Deviations from Plan":**
+
+- If no deviations occurred: write "None -- plan executed exactly as written."
+- If deviations occurred, populate two subsections:
+
+  **Auto-fixed Issues** — For each Rule 1 or Rule 2 deviation:
+  ```
+  **1. [Rule N - Category] Brief description**
+  - **Found during:** Task [N] ([task name])
+  - **Issue:** [What was wrong]
+  - **Fix:** [What was done]
+  - **Text modified:** [paragraph/section affected]
+  - **Verification:** [How it was verified]
+  - **Committed in:** [hash] (part of task commit)
+  ```
+
+  **Deferred Enhancements** — For each Rule 4 gap identified:
+  ```
+  - ISS-XXX: [Brief description] (discovered in Task [N])
+  ```
+
+- End with: `**Total deviations:** [N] auto-fixed ([breakdown by rule]), [N] deferred`
+- Add: `**Impact on plan:** [Brief assessment]`
 </step>
 
 <step name="state_update">
