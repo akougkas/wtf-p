@@ -51,6 +51,15 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 | section-writer | opus | sonnet | sonnet |
 | argument-verifier | sonnet | sonnet | haiku |
 
+**Resolve gate and safety flags:**
+```bash
+# Gate: confirm_write — skip confirmation if false
+GATE_CONFIRM_WRITE=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_write"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+
+# Safety: always_confirm_destructive — force confirmation for destructive ops
+SAFETY_DESTRUCTIVE=$(cat .planning/config.json 2>/dev/null | grep -o '"always_confirm_destructive"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
 Check for existing SUMMARY.md:
 ```bash
 SUMMARY_PATH="${ARGUMENTS/PLAN.md/SUMMARY.md}"
@@ -71,7 +80,15 @@ CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
 PRIOR_CONTENT=$(cat paper/*.md 2>/dev/null | head -500)
 ```
 
-## 3. Spawn wtfp-section-writer Agent
+## 3. Gate Check: Confirm Before Writing
+
+**If GATE_CONFIRM_WRITE is "true" (default) OR SAFETY_DESTRUCTIVE is "true" and SUMMARY.md exists (re-execution is destructive):**
+Present plan summary to user via AskUserQuestion and wait for confirmation before proceeding.
+
+**If GATE_CONFIRM_WRITE is "false" AND (SAFETY_DESTRUCTIVE is "false" OR no existing SUMMARY.md):**
+Skip confirmation and proceed directly to writing.
+
+## 4. Spawn wtfp-section-writer Agent
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,7 +109,7 @@ Task(
 
 Writing prompt includes: `<plan>` with full PLAN.md content, `<project_context>` with PROJECT + STATE + argument-map, `<user_decisions>` with CONTEXT_CONTENT, `<prior_content>` with existing paper content for continuity.
 
-## 4. Handle Writer Return
+## 5. Handle Writer Return
 
 **`## WRITING COMPLETE`:** Proceed to verification check.
 
@@ -100,7 +117,7 @@ Writing prompt includes: `<plan>` with full PLAN.md content, `<project_context>`
 
 **`## WRITING BLOCKED`:** Show blocker, offer options.
 
-## 5. Goal-Backward Verification (if enabled)
+## 6. Goal-Backward Verification (if enabled)
 
 ```bash
 WORKFLOW_VERIFIER=$(cat .planning/config.json 2>/dev/null | grep -o '"verifier"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
@@ -120,7 +137,7 @@ Spawn `wtfp-argument-verifier` with written content + PLAN goals + argument-map.
 
 **If HUMAN_NEEDED:** Present what needs human review.
 
-## 6. Present Final Status
+## 7. Present Final Status
 
 </process>
 

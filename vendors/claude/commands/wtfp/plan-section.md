@@ -52,6 +52,12 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 | section-planner | opus | opus | sonnet |
 | plan-checker | sonnet | sonnet | haiku |
 
+**Resolve gate flag:**
+```bash
+# Gate: confirm_plan — skip confirmation if false
+GATE_CONFIRM_PLAN=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_plan"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
 ## 2. Parse and Normalize Arguments
 
 Extract section number from $ARGUMENTS. If no section number, detect next unplanned section from roadmap.
@@ -91,7 +97,15 @@ PRIOR_SUMMARIES=$(cat .planning/sections/*/SUMMARY.md 2>/dev/null | head -200)
 
 If RESEARCH.md missing for a literature-heavy section, suggest `/wtfp:research-gap` first.
 
-## 6. Spawn wtfp-section-planner Agent
+## 6. Gate Check: Confirm Before Planning
+
+**If GATE_CONFIRM_PLAN is "true" (default):**
+Present section context summary to user via AskUserQuestion and wait for confirmation before proceeding.
+
+**If GATE_CONFIRM_PLAN is "false":**
+Skip confirmation and proceed directly to planning.
+
+## 7. Spawn wtfp-section-planner Agent
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -112,7 +126,7 @@ Task(
 
 Planning prompt includes: `<planning_context>` with STATE, ROADMAP, PROJECT, argument-map, outline, RESEARCH, prior summaries. `<user_decisions>` with CONTEXT_CONTENT. `<output>` with target directory path.
 
-## 7. Handle Planner Return
+## 8. Handle Planner Return
 
 **`## PLANNING COMPLETE`:** Display plan count, proceed to verification check.
 
