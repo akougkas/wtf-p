@@ -147,7 +147,95 @@ Every writing task must have:
 </task>
 ```
 
+## Typed Checkpoint Tasks
+
+Checkpoints are interaction points placed between auto tasks. They pause execution for human verification, decisions, or input. See `@~/.claude/write-the-f-paper/references/checkpoints.md` for full type definitions and gate behavior.
+
+### checkpoint:human-verify
+
+Placed after completing a subsection draft. The writer pauses for the author to confirm intent was captured.
+
+```xml
+<task type="checkpoint:human-verify" gate="blocking">
+  <what-written>[What Claude drafted in the preceding auto task]</what-written>
+  <how-to-verify>
+    1. [Argument accuracy check]
+    2. [Voice consistency check]
+    3. [Factual correctness check]
+  </how-to-verify>
+  <resume-signal>Type "approved" or describe issues</resume-signal>
+</task>
+```
+
+### checkpoint:decision
+
+Placed when the argument framing has two valid paths and the author must choose.
+
+```xml
+<task type="checkpoint:decision" gate="blocking">
+  <decision>[What's being decided]</decision>
+  <context>[Why this matters for the paper]</context>
+  <options>
+    <option id="option-a"><name>[Name]</name><pros>[Benefits]</pros><cons>[Tradeoffs]</cons></option>
+    <option id="option-b"><name>[Name]</name><pros>[Benefits]</pros><cons>[Tradeoffs]</cons></option>
+  </options>
+  <resume-signal>Select: option-a or option-b</resume-signal>
+</task>
+```
+
+### checkpoint:human-action
+
+Placed when specific data or results only the author has are needed to continue writing.
+
+```xml
+<task type="checkpoint:human-action" gate="blocking">
+  <action>[What is needed from the human]</action>
+  <instructions>[Specific description -- data points, observations, domain expertise]</instructions>
+  <resume-signal>Provide: [expected format]</resume-signal>
+</task>
+```
+
 </task_format>
+
+<checkpoint_planning>
+
+## Checkpoint Placement Guidelines
+
+Canonical reference: `@~/.claude/write-the-f-paper/references/checkpoints.md`
+
+### When to Place Each Type
+
+**human-verify** — After completing a subsection draft (not every paragraph).
+- Use after voice-critical content: abstract, introduction hook, contribution statement.
+- Use after complex argument sequences where accuracy matters.
+- Example: "Verify methods section accurately describes your experimental protocol"
+
+**decision** — When argument framing has two valid paths and the choice affects subsequent content.
+- Use before dependent content where the direction determines what follows.
+- Example: "Frame contribution as 'novel framework' vs 'systematic extension'"
+
+**human-action** — When specific data or results only the author possesses are needed.
+- Use sparingly. Only when Claude literally cannot proceed without author-provided information.
+- Example: "Provide exact p-values and effect sizes from your analysis"
+
+### Frequency
+
+**Maximum 1 checkpoint per plan** (each plan has 2-4 tasks). More than 1 causes checkpoint fatigue and breaks writing flow. If a plan needs multiple checkpoints, split it into separate plans.
+
+### Gate Awareness
+
+- **human-verify** respects `gates.confirm_write` from config.json. When `mode: "yolo"` or `confirm_write: false`, these are auto-approved and execution continues without pausing.
+- **decision** and **human-action** always pause regardless of gate settings or mode. These require human input by definition.
+
+### Resolution Order (for the writer agent)
+
+1. Is this `checkpoint:decision` or `checkpoint:human-action`? → Always pause.
+2. Is `safety.always_confirm_destructive` relevant? → Always pause.
+3. Is `mode: "yolo"`? → Auto-approve `human-verify`.
+4. Is `gates.confirm_write` set to `false`? → Auto-approve `human-verify`.
+5. Otherwise → Pause and wait for author response.
+
+</checkpoint_planning>
 
 <plan_format>
 
@@ -213,7 +301,8 @@ For each task that makes claims:
 5. **Assign word budgets** — Total section target divided across tasks
 6. **Determine wave** — Check section dependencies for parallel scheduling
 7. **Write tasks** — Concrete, executable, with verification
-8. **Self-check** — Plans honor CONTEXT decisions, cover all claims, word budgets sum correctly
+8. **Place checkpoints** — At most 1 per plan, typed appropriately (see `<checkpoint_planning>`)
+9. **Self-check** — Plans honor CONTEXT decisions, cover all claims, word budgets sum correctly, checkpoint placement follows guidelines
 
 </execution_flow>
 
@@ -271,4 +360,5 @@ Files written:
 - [ ] Citation needs identified per task
 - [ ] Wave number assigned based on section dependencies
 - [ ] Tasks are specific enough for writer to execute without interpretation
+- [ ] Checkpoints placed appropriately (max 1 per plan, correct type, writing-domain content)
 </success_criteria>
