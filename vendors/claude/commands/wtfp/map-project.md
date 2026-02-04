@@ -8,172 +8,86 @@ allowed-tools:
   - Glob
   - Grep
   - Task
+  - AskUserQuestion
 ---
-
-<objective>
-Index existing source materials (literature, data, prior drafts) for a writing project.
-
-Creates `.planning/sources/` with organized references covering:
-- literature.md (bibliography index)
-- data.md (figures, tables, evidence inventory)
-- prior-drafts.md (existing material to incorporate)
-
-Use before `/wtfp:new-paper` on existing writing projects.
-</objective>
 
 <execution_context>
 @~/.claude/write-the-f-paper/workflows/map-project.md
 </execution_context>
 
+<objective>
+Index existing source materials (literature, data, prior drafts) for a writing project.
+
+**Orchestrator role:** Detect existing materials, resolve model profile, create `.planning/sources/` with organized references, commit.
+
+Use before `/wtfp:new-paper` on existing writing projects.
+</objective>
+
+<context>
+No arguments. Scans current directory for existing materials.
+</context>
+
 <process>
 
-<step name="detect">
-**Detect existing materials:**
+## 1. Validate Environment and Resolve Model Profile
 
 ```bash
-# Find bibliography files
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+## 2. Detect Existing Materials
+
+```bash
 find . -name "*.bib" -o -name "references.md" -o -name "bibliography.md" 2>/dev/null | head -20
-
-# Find existing drafts
 find . -name "*.tex" -o -name "*.md" -o -name "*.docx" 2>/dev/null | grep -v node_modules | grep -v .planning | head -20
-
-# Find data files
 find . -name "*.csv" -o -name "*.json" -o -name "*.xlsx" 2>/dev/null | head -20
-
-# Find figures
 find . -name "*.png" -o -name "*.pdf" -o -name "*.svg" -o -name "*.jpg" 2>/dev/null | head -20
 ```
 
-</step>
-
-<step name="create_structure">
-**Create sources directory:**
+## 3. Create Sources Directory
 
 ```bash
 mkdir -p .planning/sources
 ```
 
-</step>
+## 4. Index Literature
 
-<step name="literature">
-**Index literature sources:**
+If .bib files found, parse via `node ~/.claude/bin/bib-index.js index [file]`.
 
-If .bib files found:
-- Parse BibTeX entries
-- Extract: key, title, authors, year, relevance
+Write `.planning/sources/literature.md`: Core References table (key, citation, relevance, status), Background Reading, To Find list, source paths.
 
-Create `.planning/sources/literature.md`:
-
-```markdown
-# Literature Index
-
-## Core References (cite in paper)
-| Key | Citation | Relevance | Status |
-|-----|----------|-----------|--------|
-| [key] | [Author (Year)] | [why relevant] | Available |
-
-## Background Reading
-| Key | Citation | Notes |
-|-----|----------|-------|
-
-## To Find
-- [ ] [Missing citations needed]
-
-## Sources
-- [path to .bib file]
-- [other source files]
-
----
-*Indexed: [date]*
-```
-
-</step>
-
-<step name="data">
-**Index data and evidence:**
+## 5. Index Data and Evidence
 
 Scan for figures, tables, data files.
 
-Create `.planning/sources/data.md`:
+Write `.planning/sources/data.md`: Figures table (ID, file, description, status, target section), Tables, Data Files, Statistics.
 
-```markdown
-# Data & Evidence Inventory
-
-## Figures
-| ID | File | Description | Status | Target Section |
-|----|------|-------------|--------|----------------|
-| fig1 | [path] | [description] | Ready/Needs work | [section] |
-
-## Tables
-| ID | File/Location | Description | Status |
-|----|---------------|-------------|--------|
-
-## Data Files
-| File | Format | Description | Use |
-|------|--------|-------------|-----|
-
-## Statistics
-[Any statistical results to report]
-
----
-*Indexed: [date]*
-```
-
-</step>
-
-<step name="drafts">
-**Index prior drafts:**
+## 6. Index Prior Drafts
 
 Scan for existing writing.
 
-Create `.planning/sources/prior-drafts.md`:
+Write `.planning/sources/prior-drafts.md`: Existing Documents table (file, type, description, usable, target section), Key Passages, Material to Avoid.
 
-```markdown
-# Prior Drafts & Notes
+## 7. Commit
 
-## Existing Documents
-| File | Type | Description | Usable? | Target Section |
-|------|------|-------------|---------|----------------|
-| [path] | [draft/notes/outline] | [description] | [yes/partial/no] | [section] |
-
-## Key Passages to Incorporate
-[Notable excerpts worth keeping]
-
-## Material to Avoid
-[Content that shouldn't be reused]
-
----
-*Indexed: [date]*
-```
-
-</step>
-
-<step name="commit">
 ```bash
 git add .planning/sources/
-git commit -m "$(cat <<'EOF'
-docs: index source materials
-
-Literature: [N] references
-Data: [N] figures, [N] tables
-Prior drafts: [N] documents
-EOF
-)"
+git commit -m "docs: index source materials"
 ```
 
-</step>
+</process>
 
-<step name="done">
-**Present completion:**
+<offer_next>
 
-```
-Sources indexed:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► SOURCES INDEXED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Literature: .planning/sources/literature.md ([N] references)
 - Data: .planning/sources/data.md ([N] figures, [N] tables)
 - Prior Drafts: .planning/sources/prior-drafts.md ([N] documents)
 
----
+───────────────────────────────────────────
 
 ## ▶ Next Up
 
@@ -181,12 +95,9 @@ Sources indexed:
 
 `/wtfp:new-paper`
 
----
-```
+───────────────────────────────────────────
 
-</step>
-
-</process>
+</offer_next>
 
 <success_criteria>
 - [ ] All existing materials discovered

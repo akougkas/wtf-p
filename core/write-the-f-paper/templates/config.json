@@ -3,6 +3,7 @@
   "depth": "standard",
   "document_type": "paper",
   "output_format": "markdown",
+  "model_profile": "balanced",
   "gates": {
     "confirm_project": true,
     "confirm_sections": true,
@@ -18,10 +19,20 @@
     "citation_style": "apa",
     "verify_on_complete": true
   },
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true
+  },
   "verification": {
     "citation_check": true,
     "coherence_check": true,
     "rubric_check": true
+  },
+  "parallelization": {
+    "enabled": false,
+    "max_concurrent_agents": 3,
+    "min_sections_for_parallel": 2
   },
   "safety": {
     "always_confirm_destructive": true,

@@ -9,181 +9,109 @@ allowed-tools:
   - Edit
   - Glob
   - Grep
+  - Task
+  - AskUserQuestion
 ---
 
 <objective>
 Audit citations for completeness and consistency.
 
-Purpose: Ensure all in-text citations have BibTeX entries, all BibTeX entries are cited, and references are properly formatted.
-Output: Report of citation issues with fixes applied or flagged for user action.
+**Orchestrator role:** Locate bib and draft files, run deterministic indexer, resolve model profile, spawn citation-formatter agent for cross-referencing, present results, apply fixes.
+
+Ensures all in-text citations have BibTeX entries, all entries are cited, and references are properly formatted.
 </objective>
 
-<execution_context>
-@~/.claude/write-the-f-paper/references/citation-formats.md
-</execution_context>
-
 <context>
-BibTeX file: $ARGUMENTS (optional - auto-detects .bib files if not provided)
+BibTeX file: $ARGUMENTS (optional — auto-detects .bib files)
 
 **Load project state:**
 @.planning/STATE.md
-
-**Scan for:**
-- .bib files in project root and common locations
-- Draft files with citations (\cite{}, [@...], etc.)
 </context>
 
 <process>
 
-<step name="locate_files">
-1. Find BibTeX file(s):
+## 1. Validate Environment and Resolve Model Profile
+
 ```bash
 find . -name "*.bib" -type f 2>/dev/null | head -20
-```
-
-2. Find files with citations:
-```bash
 grep -rl "\\\\cite\|\\[@\|\\[.*\\]" --include="*.tex" --include="*.md" . 2>/dev/null
 ```
 
-3. If no .bib found, error:
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
 ```
-No .bib file found.
 
-Create one or specify path: /wtfp:check-refs path/to/refs.bib
-```
-</step>
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| citation-formatter | sonnet | sonnet | haiku |
 
-<step name="parse_bib">
-**Extract BibTeX Keys:**
-
-Use the deterministic indexer to get an accurate list of keys from the .bib file.
+## 2. Run Deterministic Indexer
 
 ```bash
-node ~/.claude/bin/bib-index.js index "$ARGUMENTS"
+node ~/.claude/bin/bib-index.js index "$BIB_FILE"
 ```
-*(Use the file found/selected in step 1)*
 
-Build inventory from the JSON output:
-- Entry key
-- Title
-- Year
-</step>
-
-<step name="parse_citations">
-**Extract all in-text citations:**
-
-LaTeX style: `\cite{key}`, `\citep{key}`, `\citet{key}`, `\cite{key1,key2}`
-Markdown style: `[@key]`, `[@key1; @key2]`
-
-Build list of all citation keys used in text.
-</step>
-
-<step name="cross_reference">
-**Compare citations vs BibTeX:**
-
-| Check | Status |
-|-------|--------|
-| Cited but no BibTeX entry | ❌ MISSING |
-| BibTeX entry but never cited | ⚠️ UNUSED |
-| Entry missing required fields | ⚠️ INCOMPLETE |
-| Duplicate keys | ❌ DUPLICATE |
-| Year out of range (< 1900 or > current) | ⚠️ SUSPICIOUS |
-
-**Required fields by type:**
-
-| Type | Required |
-|------|----------|
-| @article | author, title, journal, year |
-| @inproceedings | author, title, booktitle, year |
-| @book | author/editor, title, publisher, year |
-| @phdthesis | author, title, school, year |
-| @misc | author, title, year, howpublished/url |
-</step>
-
-<step name="report">
-**Present findings:**
+## 3. Spawn citation-formatter Agent
 
 ```
-## Citation Audit
-
-### ❌ Missing BibTeX Entries (cited but not in .bib)
-- `smith2023` — cited in intro.tex:45
-- `jones2022deep` — cited in methods.md:112
-
-### ⚠️ Unused References (in .bib but never cited)
-- `oldpaper1999` — consider removing or citing
-- `tangential2020` — consider removing or citing
-
-### ⚠️ Incomplete Entries (missing required fields)
-- `chen2021` — missing: journal
-- `kumar2022` — missing: booktitle
-
-### ✓ Valid Citations: [N]
-### ✓ Valid BibTeX Entries: [N]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► AUDITING CITATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
-</step>
 
-<step name="offer_fixes">
-**For fixable issues:**
+```
+Task(
+  prompt="First, read ~/.claude/agents/wtfp/citation-formatter.md for your role.\n\n" + audit_prompt,
+  subagent_type="general-purpose",
+  model="{formatter_model}",
+  description="Audit citations"
+)
+```
 
-Use AskUserQuestion:
+Audit prompt includes: `<bib_index>` with parsed entries, `<draft_files>` with paths to files containing citations, `<state>` with STATE.md.
+
+Agent performs: extract in-text citations, cross-reference vs BibTeX keys, check required fields by entry type, identify duplicates, flag suspicious years.
+
+## 4. Handle Formatter Return
+
+Present findings:
+- Missing BibTeX entries (cited but not in .bib)
+- Unused references (in .bib but never cited)
+- Incomplete entries (missing required fields)
+- Valid citation count
+
+## 5. Offer Fixes
+
+Ask via AskUserQuestion:
 - header: "Fixes"
 - question: "How should I handle unused references?"
-- options:
-  - "Remove unused" — Delete entries not cited in text
-  - "Keep all" — Leave .bib unchanged
-  - "Comment out" — Keep but mark as unused
+- options: "Remove unused" | "Keep all" | "Comment out"
 
-For missing entries, offer to find them:
-1. **Search:** Run `node ~/.claude/bin/citation-fetcher.js "title or author"` (uses Semantic Scholar + CrossRef) to find the correct BibTeX.
-2. **Create:** If found, append the new entry to the .bib file.
-3. **Flag:** If not found, flag for manual resolution.
-</step>
+For missing entries, search using `node ~/.claude/bin/citation-fetcher.js "title"`.
 
-<step name="apply_fixes">
-Apply approved fixes to .bib file.
+## 6. Apply Fixes and Commit
 
-If removing unused:
 ```bash
-# Backup first
 cp references.bib references.bib.backup
-```
-
-Apply edits.
-</step>
-
-<step name="commit">
-```bash
+# Apply approved edits
 git add *.bib
-git commit -m "$(cat <<'EOF'
-refs: audit and clean bibliography
-
-- Verified [N] citations against BibTeX
-- Removed [N] unused entries (if applicable)
-- Fixed [N] incomplete entries (if applicable)
-- [N] issues flagged for manual review
-EOF
-)"
+git commit -m "refs: audit and clean bibliography"
 ```
-</step>
 
-<step name="done">
-```
-Citation audit complete:
+</process>
+
+<offer_next>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► CITATION AUDIT COMPLETE ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Citations in text: [N]
 - BibTeX entries: [N]
 - Issues fixed: [N]
 - Issues flagged: [N]
 
----
-
-## Manual Action Required (if any)
-
-[List of issues requiring user intervention]
-
----
+───────────────────────────────────────────
 
 ## Next Up
 
@@ -191,17 +119,14 @@ Citation audit complete:
 - `/wtfp:export-latex` — Generate LaTeX
 - `/wtfp:review-section` — Get reviewer feedback
 
----
-```
-</step>
+───────────────────────────────────────────
 
-</process>
+</offer_next>
 
 <success_criteria>
-- All in-text citations have corresponding BibTeX entries
-- All BibTeX entries have required fields
-- Unused references identified (removed or flagged)
-- No duplicate keys
-- Changes committed to git
-- User knows what manual fixes remain
+- [ ] All in-text citations cross-referenced
+- [ ] Missing entries identified and searched
+- [ ] Incomplete entries flagged
+- [ ] Unused references handled per user choice
+- [ ] Changes committed to git
 </success_criteria>

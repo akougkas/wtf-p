@@ -9,265 +9,152 @@ allowed-tools:
   - Edit
   - Glob
   - Grep
-  - AskUserQuestion
   - Task
+  - AskUserQuestion
 ---
+
+<execution_context>
+@~/.claude/write-the-f-paper/workflows/execute-section.md
+@~/.claude/write-the-f-paper/references/git-integration.md
+</execution_context>
 
 <objective>
 Execute a PLAN.md file to write section content.
 
-Takes the path to a PLAN.md file and executes its tasks sequentially, writing the actual paper content.
+**Orchestrator role:** Validate plan, resolve model profile, read context files, spawn section-writer agent, optionally run argument-verifier post-write, route based on verification, present results.
 
-Creates SUMMARY.md documenting what was written and updates STATE.md with progress.
+**Why subagents:** Writing burns context fast. Fresh agent gets peak prose quality. Verification in fresh context catches what writer missed.
 </objective>
 
-<execution_context>
-@~/.claude/write-the-f-paper/workflows/execute-section.md
-@~/.claude/write-the-f-paper/templates/summary.md
-@~/.claude/write-the-f-paper/references/git-integration.md
-</execution_context>
+<context>
+Plan path: $ARGUMENTS (path to a PLAN.md file)
+</context>
 
 <process>
 
-<step name="verify">
-**Verify plan exists:**
+## 1. Validate Environment and Resolve Model Profile
 
 ```bash
 [ ! -f "$ARGUMENTS" ] && echo "ERROR: Plan not found at $ARGUMENTS" && exit 1
+ls .planning/ 2>/dev/null
 ```
 
-Check plan hasn't already been executed (SUMMARY.md exists):
+**Resolve model profile:**
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+**Model lookup table:**
+
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| section-writer | opus | sonnet | sonnet |
+| argument-verifier | sonnet | sonnet | haiku |
+
+Check for existing SUMMARY.md:
 ```bash
 SUMMARY_PATH="${ARGUMENTS/PLAN.md/SUMMARY.md}"
-[ -f "$SUMMARY_PATH" ] && echo "WARNING: This plan already has a SUMMARY.md. Re-executing will overwrite."
+[ -f "$SUMMARY_PATH" ] && echo "WARNING: SUMMARY.md exists. Re-executing will overwrite."
 ```
 
-</step>
-
-<step name="load">
-**Load plan and all context:**
-
-1. Read the PLAN.md file specified in $ARGUMENTS
-2. Parse the frontmatter (section, plan, mode, word_target)
-3. Load all @context files referenced in the plan
-4. Read PROJECT.md for core argument
-5. Read argument-map.md for relevant claims
-6. Read any prior section content for continuity
-</step>
-
-<step name="mode_setup">
-**Configure for writing mode:**
-
-Based on `mode` from plan frontmatter:
-
-**Co-Author Mode:**
-- Claude writes draft prose
-- User refines afterward
-- Output: Full draft text
-
-**Scaffold Mode:**
-- Claude creates detailed outline with key points
-- User fills in actual prose
-- Output: Structured outline for each paragraph
-
-**Reviewer Mode:**
-- Prompt user to write section
-- Claude provides feedback after each chunk
-- Output: User's text + Claude's comments
-
-</step>
-
-<step name="execute_tasks">
-**Execute each task in the plan:**
-
-For each `<task>` in `<tasks>`:
-
-1. Read the task requirements (action, target, verify)
-2. Based on mode:
-   - **Co-Author:** Write the draft content
-   - **Scaffold:** Create detailed outline
-   - **Reviewer:** Prompt user to write, then critique
-3. Verify the output meets task criteria
-4. Track word count
-5. Commit after each task (if substantive)
-
-**Per-task commit:**
-```bash
-git add paper/[section].md  # or wherever content lives
-git commit -m "$(cat <<'EOF'
-write(XX-YY): [task description]
-
-[Word count] words for [section]
-EOF
-)"
-```
-
-</step>
-
-<step name="deviation_rules">
-**Handle deviations during writing:**
-
-| Type | Action |
-|------|--------|
-| Citation needed but not in sources | Flag, continue, note in SUMMARY |
-| Argument weak | Note in SUMMARY for revision |
-| Word count significantly off | Note in SUMMARY, suggest adjustment |
-| Logical gap discovered | Note in SUMMARY, may need ISSUES.md |
-| Better structure found | Implement if minor, note if major |
-
-**Auto-fix:**
-- Minor prose improvements
-- Citation format fixes
-- Paragraph flow improvements
-
-**Log for later:**
-- Missing citations (add to sources/literature.md gap list)
-- Argument weaknesses (ISSUES.md)
-- Structure suggestions beyond plan scope
-</step>
-
-<step name="output_content">
-**Write output content:**
-
-Content goes to `paper/` directory:
-- `paper/[section-name].md` - Markdown section content
-- Or appended to `paper/paper.md` if single-file format
-
-Include proper markdown structure:
-```markdown
-## [Section Title]
-
-[Content from tasks...]
-
-### [Subsection if applicable]
-
-[More content...]
-```
-
-Track all files created/modified for SUMMARY.
-</step>
-
-<step name="summary">
-**Create SUMMARY.md:**
-
-```markdown
----
-section: XX-name
-plan: YY
-mode: [co-author/scaffold/reviewer]
-word_count: [actual]
-word_target: [target]
----
-
-# Section [XX]-[YY] Summary
-
-## What Was Written
-- [Task 1]: [what was accomplished]
-- [Task 2]: [what was accomplished]
-- [...]
-
-## Word Count
-- Target: [X] words
-- Actual: [Y] words
-- Variance: [+/- Z]%
-
-## Files Created/Modified
-- paper/[section].md: [description]
-
-## Key Points Made
-- [Argument 1]
-- [Argument 2]
-- [...]
-
-## Citations Used
-- [citation-key]: [where used]
-- [...]
-
-## Decisions Made
-| Decision | Rationale |
-|----------|-----------|
-| [choice] | [why] |
-
-## Issues Noted
-- [Any problems discovered during writing]
-- [Gaps that need addressing]
-
-## Next Steps
-- [What should happen next]
-
----
-*Written: [timestamp]*
-```
-
-</step>
-
-<step name="update_state">
-**Update STATE.md:**
-
-- Update current position
-- Add word count to progress
-- Note any decisions made
-- Log any issues discovered
-- Update argument strength assessment
-</step>
-
-<step name="final_commit">
-**Final commit:**
+## 2. Read Context Files
 
 ```bash
-git add .planning/sections/XX-name/XX-YY-SUMMARY.md .planning/STATE.md paper/
-git commit -m "$(cat <<'EOF'
-docs(XX-YY): complete [section name] writing
+PLAN_CONTENT=$(cat "$ARGUMENTS")
+STATE_CONTENT=$(cat .planning/STATE.md)
+PROJECT_CONTENT=$(cat .planning/PROJECT.md)
+ARGMAP_CONTENT=$(cat .planning/structure/argument-map.md 2>/dev/null)
 
-[Word count] words written
-Mode: [mode]
-EOF
-)"
+# Derive section dir from plan path
+SECTION_DIR=$(dirname "$ARGUMENTS")
+CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
+PRIOR_CONTENT=$(cat paper/*.md 2>/dev/null | head -500)
 ```
 
-</step>
-
-<step name="done">
-**Present completion:**
+## 3. Spawn wtfp-section-writer Agent
 
 ```
-Section written:
-
-- Content: paper/[section].md ([Y] words)
-- Summary: .planning/sections/XX-name/XX-YY-SUMMARY.md
-- Progress: [current]/[total] words ([%]%)
-
-## Written
-
-[Brief summary of what was written]
-
-## Issues Noted
-
-[Any issues discovered, or "None"]
-
----
-
-## ▶ Next Up
-
-[Based on STATE.md - next plan, next section, or review]
-
-`/wtfp:[appropriate-command]`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► WRITING SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-</step>
+Fill prompt with inlined content and spawn:
+
+```
+Task(
+  prompt="First, read ~/.claude/agents/wtfp/section-writer.md for your role and instructions.\n\n" + filled_writing_prompt,
+  subagent_type="general-purpose",
+  model="{writer_model}",
+  description="Write Section {X}"
+)
+```
+
+Writing prompt includes: `<plan>` with full PLAN.md content, `<project_context>` with PROJECT + STATE + argument-map, `<user_decisions>` with CONTEXT_CONTENT, `<prior_content>` with existing paper content for continuity.
+
+## 4. Handle Writer Return
+
+**`## WRITING COMPLETE`:** Proceed to verification check.
+
+**`## CHECKPOINT REACHED`:** Present to user, get response.
+
+**`## WRITING BLOCKED`:** Show blocker, offer options.
+
+## 5. Goal-Backward Verification (if enabled)
+
+```bash
+WORKFLOW_VERIFIER=$(cat .planning/config.json 2>/dev/null | grep -o '"verifier"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
+**If verifier is true:**
+
+```bash
+WRITTEN_CONTENT=$(cat paper/*.md 2>/dev/null)
+```
+
+Spawn `wtfp-argument-verifier` with written content + PLAN goals + argument-map.
+
+**If VERIFIED:** Proceed to done.
+
+**If GAPS_FOUND:** Present gaps to user. Options: fix now, accept, plan revision.
+
+**If HUMAN_NEEDED:** Present what needs human review.
+
+## 6. Present Final Status
 
 </process>
 
+<offer_next>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► SECTION WRITTEN ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**{Section Name}** — {W} words, mode: {mode}
+
+Verification: {Verified | Gaps found | Skipped}
+
+───────────────────────────────────────────
+
+## ▶ Next Up
+
+**Review section** — run verification
+
+`/wtfp:review-section {section}`
+
+<sub>`/clear` first → fresh context window</sub>
+
+───────────────────────────────────────────
+
+</offer_next>
+
 <success_criteria>
-- [ ] All tasks in PLAN.md executed
+- [ ] Plan validated and loaded
+- [ ] Section-writer spawned with full context
 - [ ] Content written to paper/ directory
-- [ ] Word count tracked and within tolerance
-- [ ] SUMMARY.md created with full documentation
-- [ ] STATE.md updated with progress
-- [ ] All changes committed to git
-- [ ] Next action clearly identified
+- [ ] SUMMARY.md created
+- [ ] STATE.md updated
+- [ ] Argument-verifier spawned (if workflow.verifier enabled)
+- [ ] Verification result handled
+- [ ] User knows next steps
 </success_criteria>

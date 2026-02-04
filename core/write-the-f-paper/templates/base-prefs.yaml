@@ -1,0 +1,42 @@
+# WTF-P User Preferences
+# Global defaults — install to ~/.wtfp/base.yaml
+# Per-project overrides in .planning/prefs.yaml
+#
+# Inheritance: base.yaml → .planning/prefs.yaml → config.json (runtime)
+# Values here are defaults. Override per-project as needed.
+
+# Writing style preferences
+style:
+  voice: measured          # authoritative | measured | accessible | technical
+  person: third            # first | third | passive
+  hedging: moderate        # minimal | moderate | heavy
+  formality: academic      # casual | academic | formal
+
+# Citation habits
+citations:
+  style: apa               # apa | ieee | nature | chicago | vancouver
+  inline_format: author-year  # author-year | numbered | superscript
+  self_cite_limit: 3       # max self-citations before flagging
+
+# Prose preferences
+prose:
+  sentence_length: varied  # short | varied | long
+  paragraph_length: medium # short (3-5 sentences) | medium (5-8) | long (8-12)
+  jargon_level: moderate   # minimal | moderate | heavy
+  acronym_policy: define_first  # define_first | assume_known | footnote
+
+# Workflow defaults
+workflow:
+  confirm_before_write: true
+  auto_commit: true
+  backup_on_major_edit: true
+  research_before_plan: true
+
+# Model preferences (override config.json model_profile)
+# Uncomment to set global default
+# model_profile: balanced   # quality | balanced | budget
+
+# Editor integration
+editor:
+  preferred: none          # none | vscode | vim | emacs
+  open_after_write: false

@@ -8,24 +8,25 @@ allowed-tools:
   - Write
   - Glob
   - Grep
+  - Task
   - AskUserQuestion
   - WebFetch
 ---
 
-<objective>
-Deep analysis of BibTeX bibliography to inform writing strategy.
-
-Purpose: Understand your literature landscape before writing. Cluster papers by topic, identify seminal vs recent work, and pre-populate citation suggestions per section.
-Output: REFS.md with citation strategy mapped to your paper's sections.
-</objective>
-
 <execution_context>
-@~/.claude/write-the-f-paper/references/citation-formats.md
 @~/.claude/write-the-f-paper/templates/project-context/bibliography.md
 </execution_context>
 
+<objective>
+Deep analysis of BibTeX bibliography to inform writing strategy.
+
+**Orchestrator role:** Locate bib file, run deterministic indexing/impact tools, resolve model profile, spawn citation-expert agent for analysis, present results.
+
+Output: REFS.md with citation strategy mapped to paper sections.
+</objective>
+
 <context>
-BibTeX file: $ARGUMENTS (optional - auto-detects .bib files if not provided)
+BibTeX file: $ARGUMENTS (optional — auto-detects .bib files if not provided)
 
 **Load project context:**
 @.planning/PROJECT.md
@@ -35,281 +36,100 @@ BibTeX file: $ARGUMENTS (optional - auto-detects .bib files if not provided)
 
 <process>
 
-<step name="locate_bib">
-**Find BibTeX file:**
+## 1. Validate Environment and Resolve Model Profile
 
 ```bash
-# Find .bib files
 find . -name "*.bib" -type f 2>/dev/null | grep -v node_modules | grep -v .git | head -10
 ```
 
-If multiple found, use AskUserQuestion.
-If none found, exit with error.
-</step>
-
-<step name="parse_entries">
-**Parse BibTeX Index:**
-
-Use the specialized indexer tool to get a structured JSON summary of the bibliography. This handles large files efficiently.
+If multiple found, ask via AskUserQuestion. If none found, exit with error.
 
 ```bash
-# Index the bibliography (returns JSON)
-node ~/.claude/bin/bib-index.js index "$ARGUMENTS"
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
 ```
-*(If $ARGUMENTS is empty, use the file found in previous step)*
 
-</step>
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| citation-expert | opus | sonnet | haiku |
 
-<step name="impact_analysis">
-**Impact Analysis:**
-
-Analyze citation metrics (citations, velocity, age) to identify seminal and rising papers.
+## 2. Run Deterministic Tools
 
 ```bash
-node ~/.claude/bin/analyze-impact.js "$ARGUMENTS"
+node ~/.claude/bin/bib-index.js index "$BIB_FILE"
+node ~/.claude/bin/analyze-impact.js "$BIB_FILE"
 ```
 
-Output sections:
-1. **Seminal Works** (>1000 citations)
-2. **Rising Stars** (High citation velocity)
-3. **Review Suggested** (Old, low impact)
+Capture JSON output from indexer and impact analysis results.
 
-</step>
+## 3. Read Context Files
 
-<step name="temporal_analysis">
-**Temporal Analysis:**
-
-Analyze the JSON output from the parse_entries step.
-
-Categorize entries by the `year` field in the JSON:
-- **Foundational** (10+ years old)
-- **Established** (5-10 years)
-- **Recent** (2-5 years)
-- **Cutting edge** (<2 years)
-
-Produce the "Temporal Distribution" table based on these counts.
-</step>
-
-<step name="cluster_topics">
-**Topic Clustering:**
-
-Analyze titles, abstracts, and keywords to cluster papers by theme:
-
-1. Extract key terms from titles/abstracts
-2. Group papers with overlapping terminology
-3. Label clusters with descriptive names
-
-```markdown
-## Topic Clusters
-
-### Cluster 1: [Theme Name]
-**Papers:** [key1], [key2], [key3]
-**Common themes:** [extracted keywords]
-**Use for:** [which section this supports]
-
-### Cluster 2: [Theme Name]
-**Papers:** [key4], [key5]
-**Common themes:** [extracted keywords]
-**Use for:** [which section this supports]
+```bash
+PROJECT_CONTENT=$(cat .planning/PROJECT.md)
+OUTLINE_CONTENT=$(cat .planning/structure/outline.md 2>/dev/null)
 ```
 
-</step>
+## 4. Spawn citation-expert Agent
 
-<step name="identify_seminal">
-**Verify Seminal Works:**
-
-Review the "Seminal Works" list from the Impact Analysis step.
-
-```markdown
-## Seminal Works (Verified High Impact)
-
-| Key | Title | Citations | Why Seminal |
-|-----|-------|-----------|-------------|
-| [key] | [title] | [N] | [reason] |
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► ANALYZING BIBLIOGRAPHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Use AskUserQuestion:
-- header: "Seminal"
-- question: "Which of these are definitely seminal works in your field?"
-- multiSelect: true
-- options: [top candidates] + "None of these" + "Let me add others"
-
-</step>
-
-<step name="map_to_sections">
-**Map Citations to Sections:**
-
-Based on venue template and topic clusters, suggest where each citation belongs:
-
-Read outline.md to get section structure.
-
-For each section, identify relevant citations:
-
-```markdown
-## Citation Map
-
-### Section 1: Introduction
-**Purpose:** Establish problem importance, cite motivation
-**Suggested citations:**
-- [key1] — establishes the problem exists
-- [key2] — shows prior failed attempts
-- [key3] — motivates urgency
-
-### Section 2: Background
-**Purpose:** Technical foundations
-**Suggested citations:**
-- [key4] — defines key concept X
-- [key5] — introduces method Y
-
-### Section 3: Approach
-**Purpose:** Your contribution (cite sparingly)
-**Suggested citations:**
-- [key6] — technique you build on
-
-### Section 4: Evaluation
-**Purpose:** Comparison baselines
-**Suggested citations:**
-- [key7] — baseline method 1
-- [key8] — baseline method 2
-
-### Section 5: Related Work
-**Purpose:** Position in literature (cite heavily)
-**Suggested citations:**
-- [key9], [key10] — similar approaches
-- [key11], [key12] — alternative methods
-- [key13] — concurrent work
+```
+Task(
+  prompt="First, read ~/.claude/agents/wtfp/citation-expert.md for your role.\n\n" + analysis_prompt,
+  subagent_type="general-purpose",
+  model="{expert_model}",
+  description="Analyze bibliography"
+)
 ```
 
-</step>
+Analysis prompt includes: `<bib_index>` with parsed entries, `<impact_analysis>` with metrics, `<project_context>` with PROJECT + outline, `<output>` targeting `.planning/sources/REFS.md`.
 
-<step name="identify_gaps">
-**Identify Citation Gaps:**
+Agent performs: temporal analysis, topic clustering, seminal work identification, section mapping, gap identification.
 
-Based on topic clusters and section needs, flag potential missing references:
+## 5. Handle Expert Return
 
-```markdown
-## Potential Gaps
+**`## ANALYSIS COMPLETE`:** Present summary, ask user to confirm seminal works via AskUserQuestion.
 
-| Section | Gap | Suggestion |
-|---------|-----|------------|
-| Background | No citation for [concept] | Search for foundational paper on X |
-| Related Work | Missing [approach type] | Add recent work on Y |
-| Evaluation | Only [N] baselines | Consider adding [method] |
-```
+## 6. Commit
 
-Use AskUserQuestion:
-- header: "Gaps"
-- question: "Any topics you know you need to cite but don't have in your .bib yet?"
-- options:
-  - "No gaps" — Coverage looks good
-  - "Missing some" — I'll list what I need
-  - "Not sure" — Help me identify gaps
-
-</step>
-
-<step name="write_refs">
-**Create REFS.md:**
-
-Write to `.planning/sources/REFS.md`:
-
-```markdown
-# Citation Strategy
-
-## Bibliography: [filename.bib]
-**Total entries:** [N]
-**Analysis date:** [date]
-
-## Impact Analysis
-[From impact_analysis step]
-- Seminal Works (>1000 citations)
-- Rising Stars (High Velocity)
-- Review Suggested (Low Impact/Old)
-
-## Temporal Distribution
-[From temporal_analysis step]
-
-## Topic Clusters
-[From cluster_topics step]
-
-## Citation Map by Section
-[From map_to_sections step]
-
-## Potential Gaps
-[From identify_gaps step]
-
-## Quick Reference
-
-### High-Priority Citations (use frequently)
-- [key1] — [one-liner why]
-- [key2] — [one-liner why]
-
-### Context Citations (use once for background)
-- [key3] — [one-liner why]
-
-### Comparison Citations (evaluation section)
-- [key4] — [one-liner why]
-
----
-*Generated by /wtfp:analyze-bib*
-*Review and adjust as you write*
-```
-
-</step>
-
-<step name="commit">
 ```bash
 git add .planning/sources/REFS.md
-git commit -m "$(cat <<'EOF'
-refs: analyze bibliography for citation strategy
-
-- Entries: [N] total
-- Clusters: [N] topic groups
-- Seminal works: [N] identified
-- Citation map: all sections covered
-EOF
-)"
+git commit -m "refs: analyze bibliography for citation strategy"
 ```
 
-</step>
+</process>
 
-<step name="done">
-```
-Bibliography analyzed:
+<offer_next>
 
-- Source: [filename.bib]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► BIBLIOGRAPHY ANALYZED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Entries: [N]
 - Topic clusters: [N]
 - Seminal works: [N]
 - Citation map: .planning/sources/REFS.md
 
-## Key Insights
+───────────────────────────────────────────
 
-[2-3 bullet observations about the bibliography]
+## ▶ Next Up
 
----
+`/wtfp:create-outline` — use citation map to inform section planning
 
-## Next Up
+<sub>`/clear` first → fresh context window</sub>
 
-**Create outline** — use citation map to inform section planning
+───────────────────────────────────────────
 
-`/wtfp:create-outline`
-
-Or review REFS.md and adjust before proceeding.
-
----
-```
-
-</step>
-
-</process>
+</offer_next>
 
 <success_criteria>
 - [ ] BibTeX file parsed completely
-- [ ] Temporal distribution analyzed
-- [ ] Topic clusters identified
-- [ ] Seminal works flagged (with user confirmation)
-- [ ] Citations mapped to paper sections
-- [ ] Gaps identified
-- [ ] REFS.md created in .planning/sources/
+- [ ] Impact analysis run
+- [ ] Citation-expert spawned with full context
+- [ ] REFS.md created with citation strategy
+- [ ] Seminal works confirmed with user
 - [ ] Committed to git
 </success_criteria>

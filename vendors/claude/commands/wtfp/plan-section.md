@@ -8,240 +8,175 @@ allowed-tools:
   - Write
   - Glob
   - Grep
+  - Task
   - AskUserQuestion
-  - WebFetch
-  - mcp__context7__*
 ---
+
+<execution_context>
+@~/.claude/write-the-f-paper/references/plan-format.md
+@~/.claude/write-the-f-paper/references/length-estimation.md
+</execution_context>
 
 <objective>
 Create executable writing plan with context injection and task breakdown.
 
-Purpose: Break down roadmap sections into concrete, executable PLAN.md files that Claude can execute.
-Output: One or more PLAN.md files in the section directory (.planning/sections/XX-name/{section}-{plan}-PLAN.md)
-</objective>
+**Orchestrator role:** Parse arguments, validate section, load context, resolve model profile, spawn section-planner agent, optionally verify plans with plan-checker, iterate until plans pass, present results.
 
-<execution_context>
-@~/.claude/write-the-f-paper/workflows/plan-section.md
-@~/.claude/write-the-f-paper/templates/phase-prompt.md
-@~/.claude/write-the-f-paper/references/plan-format.md
-@~/.claude/write-the-f-paper/references/length-estimation.md
-@~/.claude/write-the-f-paper/references/checkpoints.md
-</execution_context>
+**Why subagents:** Planning and verification burn context fast. Fresh agents get peak quality. User sees flow between agents in main context.
+</objective>
 
 <context>
 Section number: $ARGUMENTS (optional - auto-detects next unplanned section if not provided)
-
-**Load project state first:**
-@.planning/STATE.md
-
-**Load roadmap:**
-@.planning/ROADMAP.md
-
-**Load structure documents:**
-@.planning/structure/argument-map.md
-@.planning/structure/outline.md
-@.planning/structure/narrative-arc.md
-
-**Load section context if exists (created by /wtfp:discuss-section):**
-Check for and read `.planning/sections/XX-name/{section}-CONTEXT.md` - contains vision and decisions from section discussion.
-
-**Load sources if exists:**
-Check for `.planning/sources/` and load relevant documents based on section needs.
 </context>
 
 <process>
 
-<step name="verify">
-1. Check .planning/ directory exists (error if not - user should run /wtfp:new-paper)
-2. If section number provided via $ARGUMENTS, validate it exists in roadmap
-3. If no section number, detect next unplanned section from roadmap
-</step>
+## 1. Validate Environment and Resolve Model Profile
 
-<step name="load_context">
-**Load all relevant context:**
-
-- Read PROJECT.md for paper vision and core argument
-- Read ROADMAP.md for section goal and dependencies
-- Read argument-map.md for claims relevant to this section
-- Read outline.md for word budget and structure
-- Read any prior SUMMARY.md files for context from completed sections
-- Check for CONTEXT.md in section directory
-- Check for RESEARCH.md in section directory
-</step>
-
-<step name="writing_mode">
-**Determine writing mode for this section:**
-
-Based on section type and user preference, select mode:
-
-| Section Type | Recommended Mode |
-|--------------|------------------|
-| Abstract | Reviewer (user writes, Claude critiques) |
-| Introduction | Co-Author (Claude drafts, user refines) |
-| Methods | Co-Author (often procedural) |
-| Results | Scaffold (Claude outlines, user writes) |
-| Discussion | Reviewer (requires judgment) |
-| Conclusion | Reviewer (synthesis) |
-
-Use AskUserQuestion:
-- header: "Writing Mode"
-- question: "How should Claude help with [section name]?"
-- options:
-  - "Co-Author" — Claude drafts, you refine
-  - "Scaffold" — Claude outlines, you fill in
-  - "Reviewer" — You write, Claude critiques
-
-</step>
-
-<step name="break_into_tasks">
-**Break section into writing tasks:**
-
-Consider:
-- Word target for section
-- Logical subsections or paragraphs
-- Arguments that need to be made
-- Evidence that needs to be presented
-- Citations that need to be woven in
-
-For a typical section (500-1000 words):
-- Task 1: Opening hook + context setup
-- Task 2: Main argument development
-- Task 3: Evidence and support
-- Task 4: Transition to next section
-
-Keep tasks atomic (one paragraph cluster or argument each).
-</step>
-
-<step name="create_plan">
-**Create PLAN.md:**
-
-```markdown
----
-section: XX-name
-plan: YY
-mode: [co-author/scaffold/reviewer]
-word_target: [X]
----
-
-<objective>
-[What this plan accomplishes - 1-2 sentences]
-
-Purpose: [What the reader will understand after this section]
-Output: [Word count] words of [section type] covering [topics]
-</objective>
-
-<execution_context>
-@~/.claude/write-the-f-paper/workflows/execute-section.md
-@~/.claude/write-the-f-paper/templates/summary.md
-</execution_context>
-
-<context>
-@.planning/PROJECT.md
-@.planning/ROADMAP.md
-@.planning/structure/argument-map.md
-@.planning/sources/literature.md (if relevant)
-@.planning/sections/[prior-section]/[prior]-SUMMARY.md (if exists)
-</context>
-
-<tasks>
-
-<task type="auto" mode="[co-author/scaffold/reviewer]">
-  <name>[Task name - what's being written]</name>
-  <target>[Word count for this task]</target>
-  <action>
-    [Specific writing instructions]
-    - Key points to make: [list]
-    - Tone: [academic/persuasive/explanatory]
-    - Citations needed: [yes/no, which]
-    - Connect to: [prior/next section]
-  </action>
-  <verify>
-    - [ ] Advances core argument
-    - [ ] Word count within range
-    - [ ] Flows from previous content
-  </verify>
-  <done>
-    [X] words written covering [topic], ready for [next task/review]
-  </done>
-</task>
-
-<task type="auto" mode="[mode]">
-  [... additional tasks ...]
-</task>
-
-</tasks>
-
-<verification>
-- [ ] Total word count: [target] ± 10%
-- [ ] All key arguments from argument-map addressed
-- [ ] Citations included where claims made
-- [ ] Logical flow maintained
-- [ ] Connects to prior section (if not first)
-- [ ] Sets up next section (if not last)
-</verification>
-
-<success_criteria>
-- [ ] Section draft complete
-- [ ] Word target met
-- [ ] Core argument advanced
-- [ ] Ready for review or next section
-</success_criteria>
-
-<output>
-- Written section content (in paper/ directory or inline)
-- SUMMARY.md documenting what was written
-- Updated STATE.md with progress
-</output>
-```
-
-</step>
-
-<step name="commit">
 ```bash
-git add .planning/sections/XX-name/XX-YY-PLAN.md
-git commit -m "$(cat <<'EOF'
-plan(XX-YY): [section name] writing plan
-
-[One-liner objective]
-
-Tasks: [N], Target: [X] words, Mode: [mode]
-EOF
-)"
+ls .planning/ 2>/dev/null
 ```
-</step>
 
-<step name="done">
-**Present completion:**
+**If not found:** Error - user should run `/wtfp:new-paper` first.
+
+**Resolve model profile:**
+
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
+
+**Model lookup table:**
+
+| Agent | quality | balanced | budget |
+|-------|---------|----------|--------|
+| section-planner | opus | opus | sonnet |
+| plan-checker | sonnet | sonnet | haiku |
+
+## 2. Parse and Normalize Arguments
+
+Extract section number from $ARGUMENTS. If no section number, detect next unplanned section from roadmap.
+
+```bash
+ls .planning/sections/*/ 2>/dev/null | head -10
+```
+
+## 3. Validate Section
+
+```bash
+grep -A5 "Section" .planning/ROADMAP.md 2>/dev/null
+```
+
+Extract section number, name, description.
+
+## 4. Ensure Section Directory and Load CONTEXT.md
+
+```bash
+SECTION_DIR=$(ls -d .planning/sections/${SECTION}-* 2>/dev/null | head -1)
+CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
+```
+
+**CRITICAL:** Store CONTEXT_CONTENT now. Pass to ALL downstream agents.
+
+## 5. Read Context Files
+
+```bash
+STATE_CONTENT=$(cat .planning/STATE.md)
+ROADMAP_CONTENT=$(cat .planning/ROADMAP.md)
+PROJECT_CONTENT=$(cat .planning/PROJECT.md)
+ARGMAP_CONTENT=$(cat .planning/structure/argument-map.md 2>/dev/null)
+OUTLINE_CONTENT=$(cat .planning/structure/outline.md 2>/dev/null)
+RESEARCH_CONTENT=$(cat "${SECTION_DIR}"/*-RESEARCH.md 2>/dev/null)
+PRIOR_SUMMARIES=$(cat .planning/sections/*/SUMMARY.md 2>/dev/null | head -200)
+```
+
+If RESEARCH.md missing for a literature-heavy section, suggest `/wtfp:research-gap` first.
+
+## 6. Spawn wtfp-section-planner Agent
 
 ```
-Plan created:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► PLANNING SECTION {X}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
 
-- Plan: .planning/sections/XX-name/XX-YY-PLAN.md
-- Tasks: [N]
-- Word target: [X]
-- Mode: [co-author/scaffold/reviewer]
+Fill prompt with inlined content and spawn:
 
----
+```
+Task(
+  prompt="First, read ~/.claude/agents/wtfp/section-planner.md for your role and instructions.\n\n" + filled_planning_prompt,
+  subagent_type="general-purpose",
+  model="{planner_model}",
+  description="Plan Section {X}"
+)
+```
+
+Planning prompt includes: `<planning_context>` with STATE, ROADMAP, PROJECT, argument-map, outline, RESEARCH, prior summaries. `<user_decisions>` with CONTEXT_CONTENT. `<output>` with target directory path.
+
+## 7. Handle Planner Return
+
+**`## PLANNING COMPLETE`:** Display plan count, proceed to verification check.
+
+**`## CHECKPOINT REACHED`:** Present to user, get response.
+
+**`## PLANNING INCONCLUSIVE`:** Show what was attempted, offer options.
+
+## 8. Plan-Check-Revise Loop (if enabled)
+
+```bash
+WORKFLOW_PLAN_CHECK=$(cat .planning/config.json 2>/dev/null | grep -o '"plan_check"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
+```
+
+**If plan_check is true:**
+
+Read plans for checker:
+```bash
+PLANS_CONTENT=$(cat "${SECTION_DIR}"/*-PLAN.md 2>/dev/null)
+```
+
+Spawn `wtfp-plan-checker` with plans + ROADMAP + argument-map + CONTEXT.
+
+**If VERIFICATION PASSED:** Proceed to done.
+
+**If ISSUES FOUND and iteration < 3:** Spawn planner in revision mode with issues. Re-check. Increment iteration.
+
+**If iteration >= 3:** Present remaining issues to user with options: force proceed, provide guidance, abandon.
+
+## 9. Present Final Status
+
+</process>
+
+<offer_next>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► SECTION {X} PLANNED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Section {X}: {Name}** — {N} plan(s), {W} words target
+
+Verification: {Passed | Passed with override | Skipped}
+
+───────────────────────────────────────────
 
 ## ▶ Next Up
 
-**[Section Name]** — execute writing plan
+**Execute writing** — run the plan
 
 `/wtfp:write-section .planning/sections/XX-name/XX-YY-PLAN.md`
 
 <sub>`/clear` first → fresh context window</sub>
 
----
-```
+───────────────────────────────────────────
 
-</step>
-
-</process>
+</offer_next>
 
 <success_criteria>
-- One or more PLAN.md files created in .planning/sections/XX-name/
-- Each plan has: objective, execution_context, context, tasks, verification, success_criteria, output
-- Tasks are specific enough for Claude to execute
-- Writing mode selected appropriately for section type
-- User knows next steps (execute plan or review/adjust)
+- [ ] .planning/ directory validated
+- [ ] Section validated against roadmap
+- [ ] CONTEXT.md loaded early and passed to ALL agents
+- [ ] RESEARCH.md auto-loaded if exists
+- [ ] Section-planner spawned with full context
+- [ ] Plans created (PLANNING COMPLETE or CHECKPOINT handled)
+- [ ] Plan-checker spawned (if workflow.plan_check enabled)
+- [ ] Verification passed OR user override OR max iterations
+- [ ] User knows next steps
 </success_criteria>

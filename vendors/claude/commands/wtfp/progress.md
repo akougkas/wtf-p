@@ -4,322 +4,111 @@ description: Check writing progress, show context, and route to next action
 allowed-tools:
   - Read
   - Bash
-  - Grep
   - Glob
-  - SlashCommand
+  - Grep
+  - Task
+  - AskUserQuestion
 ---
 
 <objective>
-Check writing progress, summarize recent work and what's ahead, then intelligently route to the next action - either executing an existing plan or creating the next one.
+Check writing progress, summarize recent work, and intelligently route to the next action.
 
-Provides situational awareness before continuing writing.
+**Orchestrator role:** Load state files, calculate progress metrics, present rich status report, determine and offer the next logical command.
 </objective>
 
+<context>
+No arguments. Reads project state from .planning/.
+</context>
 
 <process>
 
-<step name="verify">
-**Verify planning structure exists:**
+## 1. Validate Environment
 
-If no `.planning/` directory:
-
-```
-No planning structure found.
-
-Run /wtfp:new-paper to start a new paper.
+```bash
+ls .planning/STATE.md .planning/ROADMAP.md .planning/PROJECT.md 2>/dev/null
 ```
 
-Exit.
+If missing `.planning/` → suggest `/wtfp:new-paper`.
+If missing STATE.md or ROADMAP.md → suggest what's needed.
 
-If missing STATE.md or ROADMAP.md: inform what's missing, suggest running `/wtfp:new-paper`.
-</step>
+## 2. Load Project Context
 
-<step name="load">
-**Load full project context:**
+Read: STATE.md, ROADMAP.md, PROJECT.md, config.json (for model_profile).
 
-- Read `.planning/STATE.md` for living memory (position, word counts, decisions)
-- Read `.planning/ROADMAP.md` for section structure and objectives
-- Read `.planning/PROJECT.md` for paper vision (Core Argument, Requirements)
-</step>
+```bash
+MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"' || echo "balanced")
+```
 
-<step name="recent">
-**Gather recent work context:**
+## 3. Gather Recent Work
 
-- Find the 2-3 most recent SUMMARY.md files
-- Extract from each: what was written, key decisions, any issues logged
-- This shows "what we've been working on"
-</step>
+Find 2-3 most recent SUMMARY.md files. Extract: what was written, key decisions, issues.
 
-<step name="position">
-**Parse current position:**
+## 4. Parse Current Position
 
-- From STATE.md: current section, plan number, status, word count
-- Calculate: total plans, completed plans, remaining plans
-- Calculate: total words written vs target word count
-- Note any gaps, concerns, or deferred issues
-- Check for CONTEXT.md: For sections without PLAN.md files, check if `{section}-CONTEXT.md` exists
-</step>
+From STATE.md: current section, plan number, status, word count.
+Calculate: total plans, completed, remaining. Total words vs target.
+Check for CONTEXT.md in current section directory.
 
-<step name="report">
-**Present rich status report:**
+## 5. Present Status Report
 
 ```
 # [Paper Title]
 
 **Progress:** [████████░░] 8/10 sections drafted
 **Words:** [current] / [target] ([percentage]%)
+**Profile:** [quality/balanced/budget]
 
 ## Recent Work
-- [Section X, Plan Y]: [what was written - 1 line]
-- [Section X, Plan Z]: [what was written - 1 line]
+- [Section X]: [1-line summary]
 
 ## Current Position
-Section [N] of [total]: [section-name]
-Plan [M] of [section-total]: [status]
-CONTEXT: [✓ if CONTEXT.md exists | - if not]
+Section [N] of [total]: [name] — [status]
+CONTEXT: [✓ | -]
 
-## Argument Strength
-- Core claim: [from STATE.md]
-- Evidence gaps: [list]
-
-## Key Decisions Made
-- [decision 1 from STATE.md]
-- [decision 2]
+## Key Decisions
+- [from STATE.md]
 
 ## Open Issues
-- [any deferred issues or gaps]
-
-## What's Next
-[Next section/plan objective from ROADMAP]
+- [deferred items]
 ```
 
-</step>
+## 6. Route to Next Action
 
-<step name="route">
-**Determine next action based on verified counts.**
-
-**Step 1: Count plans, summaries, and issues in current section**
-
-List files in the current section directory:
-
+**Count files in current section:**
 ```bash
-ls -1 .planning/sections/[current-section-dir]/*-PLAN.md 2>/dev/null | wc -l
-ls -1 .planning/sections/[current-section-dir]/*-SUMMARY.md 2>/dev/null | wc -l
-ls -1 .planning/sections/[current-section-dir]/*-ISSUES.md 2>/dev/null | wc -l
-ls -1 .planning/sections/[current-section-dir]/*-REVISION.md 2>/dev/null | wc -l
+ls -1 .planning/sections/[dir]/*-PLAN.md 2>/dev/null | wc -l
+ls -1 .planning/sections/[dir]/*-SUMMARY.md 2>/dev/null | wc -l
+ls -1 .planning/sections/[dir]/*-ISSUES.md 2>/dev/null | wc -l
 ```
 
-State: "This section has {X} plans, {Y} summaries, {Z} issues files."
+**Route A — Unexecuted plan exists** (summaries < plans):
+Find first PLAN.md without SUMMARY.md. Offer `/wtfp:write-section [path]`.
 
-**Step 1.5: Check for unaddressed review issues**
+**Route B — Section needs planning** (plans = 0):
+If CONTEXT.md exists → offer `/wtfp:plan-section {N}`.
+If not → offer `/wtfp:discuss-section {N}` or `/wtfp:plan-section {N}`.
 
-For each *-ISSUES.md file, check if matching *-REVISION.md exists.
-For each *-REVISION.md file, check if matching *-REVISION-SUMMARY.md exists.
+**Route C — Section complete, more remain** (summaries = plans, not last section):
+Offer `/wtfp:plan-section {N+1}`. Also: `/wtfp:review-section {N}`.
 
-Track:
-- `issues_without_revision`: ISSUES.md files without REVISION.md
-- `revisions_without_summary`: REVISION.md files without REVISION-SUMMARY.md
+**Route D — Draft complete** (all sections done):
+Offer `/wtfp:review-section` and `/wtfp:export-latex`.
 
-**Step 2: Route based on counts**
-
-| Condition | Meaning | Action |
-|-----------|---------|--------|
-| revisions_without_summary > 0 | Unexecuted revision plans exist | Go to **Route A** (with REVISION.md) |
-| issues_without_revision > 0 | Review issues need revision plans | Go to **Route E** |
-| summaries < plans | Unexecuted plans exist | Go to **Route A** |
-| summaries = plans AND plans > 0 | Section complete | Go to Step 3 |
-| plans = 0 | Section not yet planned | Go to **Route B** |
-
----
-
-**Route A: Unexecuted plan exists**
-
-Find the first PLAN.md without matching SUMMARY.md.
-Read its `<objective>` section.
-
-```
----
-
-## ▶ Next Up
-
-**{section}-{plan}: [Plan Name]** — [objective summary from PLAN.md]
-
-`/wtfp:write-section [full-path-to-PLAN.md]`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-```
-
----
-
-**Route B: Section needs planning**
-
-Check if `{section}-CONTEXT.md` exists in section directory.
-
-**If CONTEXT.md exists:**
-
-```
----
-
-## ▶ Next Up
-
-**Section {N}: {Name}** — {Goal from ROADMAP.md}
-<sub>✓ Context gathered, ready to plan</sub>
-
-`/wtfp:plan-section {section-number}`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-```
-
-**If CONTEXT.md does NOT exist:**
-
-```
----
-
-## ▶ Next Up
-
-**Section {N}: {Name}** — {Goal from ROADMAP.md}
-
-`/wtfp:plan-section {section}`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/wtfp:discuss-section {section}` — gather context first
-- `/wtfp:research-gap {section}` — investigate literature
-- `/wtfp:list-assumptions {section}` — see Claude's assumptions
-
----
-```
-
----
-
-**Route E: Review issues need revision plans**
-
-ISSUES.md exists without matching REVISION.md. User needs to plan revisions.
-
-```
----
-
-## ⚠ Review Issues Found
-
-**{plan}-ISSUES.md** has {N} issues without a revision plan.
-
-`/wtfp:plan-revision {plan}`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/wtfp:write-section [path]` — continue with other work first
-- `/wtfp:review-section {section}` — run more verification
-
----
-```
-
----
-
-**Step 3: Check paper status (only when section complete)**
-
-Read ROADMAP.md and identify:
-1. Current section number
-2. All section numbers in the document structure
-
-Count total sections and identify the highest section number.
-
-State: "Current section is {X}. Paper has {N} sections (highest: {Y})."
-
-**Route based on paper status:**
-
-| Condition | Meaning | Action |
-|-----------|---------|--------|
-| current section < highest section | More sections remain | Go to **Route C** |
-| current section = highest section | Paper draft complete | Go to **Route D** |
-
----
-
-**Route C: Section complete, more sections remain**
-
-Read ROADMAP.md to get the next section's name and goal.
-
-```
----
-
-## ✓ Section {Z} Complete
-
-## ▶ Next Up
-
-**Section {Z+1}: {Name}** — {Goal from ROADMAP.md}
-
-`/wtfp:plan-section {Z+1}`
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/wtfp:review-section {Z}` — verify before continuing
-- `/wtfp:discuss-section {Z+1}` — gather context first
-- `/wtfp:research-gap {Z+1}` — investigate literature
-
----
-```
-
----
-
-**Route D: Paper draft complete**
-
-```
----
-
-## 🎉 Draft Complete
-
-All {N} sections written!
-
-**Words:** [current] / [target]
-
-## ▶ Next Up
-
-**Review & Polish** — verify and prepare for submission
-
-`/wtfp:review-section` — run full verification
-`/wtfp:export-latex` — generate LaTeX output
-
-<sub>`/clear` first → fresh context window</sub>
-
----
-
-**Also available:**
-- `/wtfp:submit-milestone "draft-1"` — archive this draft
-
----
-```
-
-</step>
-
-<step name="edge_cases">
-**Handle edge cases:**
-
-- Section complete but next section not planned → offer `/wtfp:plan-section [next]`
-- All work complete → offer review and export
-- Gaps present → highlight before offering to continue
-- Handoff file exists → mention it, offer `/wtfp:resume-writing`
-</step>
+**Route E — Review issues need revision** (ISSUES.md without REVISION.md):
+Offer `/wtfp:plan-revision {plan}`.
 
 </process>
 
-<success_criteria>
+<offer_next>
 
+Show the routed next action with clear command and `/clear` suggestion.
+
+</offer_next>
+
+<success_criteria>
 - [ ] Rich context provided (recent work, word counts, decisions)
 - [ ] Current position clear with visual progress
-- [ ] What's next clearly explained
-- [ ] Smart routing: /wtfp:write-section if plan exists, /wtfp:plan-section if not
+- [ ] Model profile shown
+- [ ] Smart routing to next command
 - [ ] User confirms before any action
-- [ ] Seamless handoff to appropriate wtfp command
 </success_criteria>

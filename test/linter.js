@@ -118,6 +118,40 @@ function validateWorkflow(filepath) {
 }
 
 /**
+ * Validate an Agent (.md) file
+ */
+function validateAgent(filepath) {
+  const content = fs.readFileSync(filepath, 'utf8');
+  const relPath = path.relative(ROOT, filepath);
+
+  // 1. Check Frontmatter
+  const fm = parseFrontmatter(content);
+  if (!fm) {
+    error(relPath, 'Missing or invalid YAML frontmatter');
+    return;
+  }
+
+  const { data, bodyIndex } = fm;
+  const body = content.slice(bodyIndex);
+
+  // 2. Required Fields
+  if (!data.name) error(relPath, "Missing 'name' in frontmatter");
+  if (!data.description) error(relPath, "Missing 'description' in frontmatter");
+
+  // 3. Check allowed-tools presence
+  if (!content.includes('allowed-tools:')) {
+    error(relPath, "Missing 'allowed-tools' section");
+  }
+
+  // 4. Agent-specific: must have role definition (<role> tag or # heading)
+  if (!body.includes('<role>') && !body.match(/^#\s+/m)) {
+    error(relPath, "Missing <role> tag or heading");
+  }
+
+  pass(relPath);
+}
+
+/**
  * Main Linter
  */
 function main() {
@@ -132,6 +166,14 @@ function main() {
       if (fs.existsSync(cmdDir)) {
         fs.readdirSync(cmdDir).forEach(f => {
           if (f.endsWith('.md')) validateCommand(path.join(cmdDir, f));
+        });
+      }
+
+      // 1b. Scan Agents
+      const agentDir = path.join(vendorDir, vendor, 'agents', 'wtfp');
+      if (fs.existsSync(agentDir)) {
+        fs.readdirSync(agentDir).forEach(f => {
+          if (f.endsWith('.md')) validateAgent(path.join(agentDir, f));
         });
       }
     });

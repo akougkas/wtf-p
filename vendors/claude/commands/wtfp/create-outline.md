@@ -5,16 +5,11 @@ allowed-tools:
   - Read
   - Bash
   - Write
+  - Glob
+  - Grep
+  - Task
   - AskUserQuestion
 ---
-
-<objective>
-Create the document outline and section roadmap for an initialized paper.
-
-Creates ROADMAP.md (section breakdown), STATE.md (writing memory), and section directories.
-
-This establishes the structure before section-by-section planning begins.
-</objective>
 
 <execution_context>
 @~/.claude/write-the-f-paper/workflows/create-outline.md
@@ -23,221 +18,89 @@ This establishes the structure before section-by-section planning begins.
 @~/.claude/write-the-f-paper/references/imrad-structure.md
 </execution_context>
 
+<objective>
+Create the document outline and section roadmap for an initialized paper.
+
+**Orchestrator role:** Load project context, determine document structure from venue template, create ROADMAP.md + STATE.md + section directories, commit.
+
+Creates ROADMAP.md (section breakdown), STATE.md (writing memory), and section directories.
+</objective>
+
+<context>
+No arguments. Requires `.planning/PROJECT.md` to exist.
+</context>
+
 <process>
 
-<step name="verify">
-**Verify project exists:**
+## 1. Validate Environment
 
 ```bash
-[ ! -f .planning/PROJECT.md ] && echo "ERROR: No project found. Run /wtfp:new-paper first" && exit 1
-[ -f .planning/ROADMAP.md ] && echo "ERROR: Outline already exists. Use /wtfp:progress" && exit 1
+[ ! -f .planning/PROJECT.md ] && echo "ERROR: No project. Run /wtfp:new-paper" && exit 1
+[ -f .planning/ROADMAP.md ] && echo "ERROR: Outline exists. Use /wtfp:progress" && exit 1
 ```
 
-</step>
+## 2. Load Project Context
 
-<step name="load">
-**Load project context:**
+Read: PROJECT.md, config.json, structure/outline.md, structure/argument-map.md.
 
-- Read `.planning/PROJECT.md` for paper vision, core argument, requirements
-- Read `.planning/config.json` for document type and workflow mode
-- Read `.planning/structure/outline.md` for initial structure sketch
-- Read `.planning/structure/argument-map.md` for logical structure
-</step>
+Extract: document_type, venue_template, core_argument, word budget from outline.md.
 
-<step name="structure">
-**Determine document structure:**
+## 3. Determine Document Structure
 
-Based on document type from config.json:
+Based on document_type from config.json, apply standard structure:
+- **Research Paper (IMRaD):** Abstract → Introduction → Methods → Results → Discussion → Conclusion
+- **Grant (NSF):** Specific Aims → Background → Preliminary Data → Research Design → Timeline
+- **Thesis:** Introduction → Literature Review → Methodology → Results → Discussion → Conclusion
 
-**Research Paper (IMRaD):**
-- Abstract
-- Introduction
-- Methods (or Materials and Methods)
-- Results
-- Discussion
-- Conclusion (sometimes combined with Discussion)
-- References
-
-**Grant Proposal (NSF-style):**
-- Specific Aims
-- Background and Significance
-- Preliminary Data
-- Research Design and Methods
-- Timeline
-- Budget Justification
-
-**Grant Proposal (NIH-style):**
-- Specific Aims
-- Significance
-- Innovation
-- Approach
-- Timeline and Milestones
-
-**Thesis Chapter:**
-- Introduction
-- Literature Review
-- Methodology
-- Results/Findings
-- Discussion
-- Conclusion
-
-Use AskUserQuestion if structure needs customization:
+If customization needed, ask via AskUserQuestion:
 - header: "Structure"
-- question: "The standard structure for [type] is [list]. Any modifications?"
-- options:
-  - "Use standard structure" — Apply typical [type] structure
-  - "Customize sections" — I have specific sections in mind
-  - "Show me options" — What alternatives exist?
+- options: "Use standard structure" | "Customize sections" | "Show me options"
 
-</step>
+## 4. Create ROADMAP.md
 
-<step name="roadmap">
-**Create ROADMAP.md:**
+Write `.planning/ROADMAP.md` using template from `~/.claude/write-the-f-paper/templates/roadmap.md`.
 
-```markdown
-# Document Roadmap
+Populate: Document title, type, target venue. For each section: goal, word target, status, dependencies. Progress table and word budget table.
 
-## Document: [Paper Title]
-## Type: [Paper Type]
-## Target: [Venue if known]
+## 5. Create STATE.md
 
-## Sections
+Write `.planning/STATE.md` using template from `~/.claude/write-the-f-paper/templates/state.md`.
 
-### 1. [Section Name]
-- **Goal:** [What this section accomplishes]
-- **Word Target:** [X words]
-- **Status:** Not started
-- **Dependencies:** [Any prerequisites]
+Initialize: position (section 1 of N), word count (0), argument strength from argument-map, open questions from PROJECT.md.
 
-### 2. [Section Name]
-- **Goal:** [What this section accomplishes]
-- **Word Target:** [X words]
-- **Status:** Not started
-- **Dependencies:** [Section 1 must establish X]
-
-[... continue for all sections ...]
-
-## Progress
-
-| # | Section | Goal | Words | Status |
-|---|---------|------|-------|--------|
-| 1 | [Name] | [1-liner] | 0/[target] | - |
-| 2 | [Name] | [1-liner] | 0/[target] | - |
-| ... | | | | |
-
-## Word Budget
-
-| Section | Target | Current | % |
-|---------|--------|---------|---|
-| [Name] | [X] | 0 | 0% |
-| ... | | | |
-| **Total** | **[X]** | **0** | **0%** |
-
----
-*Last updated: [date] after outline creation*
-```
-
-</step>
-
-<step name="state">
-**Create STATE.md:**
-
-```markdown
-# Writing State
-
-## Project Reference
-- Project: .planning/PROJECT.md
-- Roadmap: .planning/ROADMAP.md
-- Config: .planning/config.json
-
-## Current Position
-- Section: 1 of [total]
-- Plan: 0 (not yet planned)
-- Status: Ready to plan first section
-
-## Progress
-- Sections: 0/[total] complete
-- Words: 0/[target] ([0]%)
-- Plans executed: 0
-
-## Argument Strength
-- Core claim: [from PROJECT.md]
-- Supporting claims: [from argument-map.md]
-- Evidence status: Not yet written
-
-## Key Decisions
-| Decision | Rationale | Section |
-|----------|-----------|---------|
-
-## Open Questions
-- [Questions from PROJECT.md that need resolution]
-
-## Deferred
-- [Nothing yet]
-
-## Session Continuity
-- Last session: [date]
-- Handoff: None
-
----
-*Living document — updated after each writing session*
-```
-
-</step>
-
-<step name="directories">
-**Create section directories:**
+## 6. Create Section Directories
 
 ```bash
 mkdir -p .planning/sections
-```
-
-For each section in ROADMAP.md, create directory:
-
-```bash
-mkdir -p .planning/sections/01-[section-name-slug]
-mkdir -p .planning/sections/02-[section-name-slug]
+mkdir -p .planning/sections/01-[section-slug]
+mkdir -p .planning/sections/02-[section-slug]
 # ... for all sections
 ```
 
-Use lowercase, hyphenated names (e.g., `01-introduction`, `02-methods`, `03-results`).
-
-</step>
-
-<step name="commit">
-**Commit outline:**
+## 7. Commit
 
 ```bash
 git add .planning/ROADMAP.md .planning/STATE.md .planning/sections/
-git commit -m "$(cat <<'EOF'
-docs: create document outline
-
-[N] sections, [X] word target
-
-Sections: [list section names]
-EOF
-)"
+git commit -m "docs: create document outline — [N] sections, [X] words target"
 ```
 
-</step>
+</process>
 
-<step name="done">
-**Present completion:**
+<offer_next>
 
-```
-Outline created:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► OUTLINE CREATED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- Roadmap: .planning/ROADMAP.md ([N] sections, [X] words target)
+- Roadmap: .planning/ROADMAP.md ([N] sections, [X] words)
 - State: .planning/STATE.md
 - Sections: .planning/sections/ ([N] directories)
-
-## Section Structure
 
 | # | Section | Words |
 |---|---------|-------|
 [table from ROADMAP.md]
 
----
+───────────────────────────────────────────
 
 ## ▶ Next Up
 
@@ -247,24 +110,13 @@ Outline created:
 
 <sub>`/clear` first → fresh context window</sub>
 
----
+───────────────────────────────────────────
 
 **Also available:**
 - `/wtfp:discuss-section 1` — gather context first
 - `/wtfp:research-gap 1` — investigate literature needs
 
----
-```
-
-</step>
-
-</process>
-
-<output>
-- `.planning/ROADMAP.md`
-- `.planning/STATE.md`
-- `.planning/sections/XX-name/` directories
-</output>
+</offer_next>
 
 <success_criteria>
 - [ ] ROADMAP.md has all sections with goals and word targets

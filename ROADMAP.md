@@ -64,12 +64,31 @@ wtf-p/
 
 ---
 
-## Current: v0.5.0
+## Completed: v0.5.0
 
-**Focus:** Agentic Context & Memory
+**Focus:** GSD-Inspired Architectural Upgrade — Thin Orchestrators, Specialized Agents, Quality Loops
 
-> These features were identified during the Jan 2026 analysis of Helios-MCP,
-> cite-paper-mcp, and AWOC projects.
+### Agent Architecture (adapted from GSD patterns)
+- [x] 7 new specialized agents: section-planner, section-writer, section-reviewer, plan-checker, research-synthesizer, prose-polisher, argument-verifier
+- [x] Thin orchestrator pattern: 5 core commands refactored to spawn agents via Task()
+- [x] Structured returns: COMPLETE / CHECKPOINT / BLOCKED for deterministic routing
+- [x] Context fidelity: All agents honor CONTEXT.md locked decisions
+
+### Quality Backbone
+- [x] Plan-Check-Revise Loop: 7-dimension pre-write validation with up to 3 iterations
+- [x] Goal-Backward Verification: Post-write argument/evidence checking
+- [x] RESEARCH.md auto-integration in plan-section orchestrator
+
+### Model Profiles & Parallelism
+- [x] quality/balanced/budget profiles with 10-agent model matrix
+- [x] Wave-based parallel section writing (wave/depends_on in PLAN.md)
+- [x] Config extensions: model_profile, workflow toggles, parallelization settings
+
+---
+
+## Current: v0.6.0
+
+**Focus:** Context Priming, Preferences & Visualization
 
 ### Context Priming Engine (from AWOC)
 - [ ] `bin/lib/context-primer.js` — Section-specific context extraction
@@ -175,9 +194,9 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
-| v0.6.0 | Planned | Multi-vendor, visualization |
-| v0.5.0 | Planned | Context priming, preference inheritance, checkpoints |
-| v0.4.0 | In Progress | Citation Expert v2, tiered API, provenance tracking |
+| v0.6.0 | Planned | Context priming, preferences, visualization |
+| v0.5.0 | Published | GSD architecture, agents, quality loops, model profiles |
+| v0.4.0 | Published | Citation Expert v2, tiered API, provenance tracking |
 | v0.3.0 | Published | 4 P's, skills, multi-vendor restructure |
 | v0.2.0 | Jan 2025 | CLI improvements, contribution system |
 | v0.1.0 | Jan 2025 | Initial public release |
