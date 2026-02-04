@@ -33,6 +33,7 @@ if (subcommandIndex !== -1) {
 const hasGlobal = args.includes('--global') || args.includes('-g');
 const hasLocal = args.includes('--local') || args.includes('-l');
 const hasGemini = args.includes('--gemini');
+const hasOpenCode = args.includes('--opencode');
 const hasAll = args.includes('--all');
 const hasForce = args.includes('--force') || args.includes('-f');
 const hasBackupAll = args.includes('--backup-all') || args.includes('-b');
@@ -112,6 +113,7 @@ function showHelp() {
     ${c.cyan('-g, --global')}              Install globally (to Claude config directory)
     ${c.cyan('-l, --local')}               Install locally (to ./.claude in current directory)
     ${c.cyan('--gemini')}                  Install for Gemini CLI
+    ${c.cyan('--opencode')}                Install for OpenCode
     ${c.cyan('--all')}                     Install for all supported runtimes
     ${c.cyan('-c, --config-dir <path>')}   Specify custom config directory
     ${c.cyan('-f, --force')}               Overwrite all existing files without prompting
@@ -198,8 +200,11 @@ async function main() {
     // Install for all supported runtimes
     await install('claude', false, options, pkg);
     await install('gemini', false, options, pkg);
+    await install('opencode', false, options, pkg);
   } else if (hasGemini) {
     await install('gemini', false, options, pkg);
+  } else if (hasOpenCode) {
+    await install('opencode', false, options, pkg);
   } else if (hasGlobal) {
     await install('claude', false, options, pkg);
   } else if (hasLocal) {
@@ -210,16 +215,20 @@ async function main() {
 `);
     out.log(`  ${out.colors.cyan('1)')} Claude Code (~/.claude) - Claude CLI/IDE integration`);
     out.log(`  ${out.colors.cyan('2)')} Gemini CLI (~/.config/gemini) - Google Gemini CLI`);
-    out.log(`  ${out.colors.cyan('3)')} All - Install for all supported runtimes
+    out.log(`  ${out.colors.cyan('3)')} OpenCode (~/.opencode) - OpenCode CLI`);
+    out.log(`  ${out.colors.cyan('4)')} All - Install for all supported runtimes
 `);
 
     const answer = await prompt(rl, `  Choice ${out.colors.dim('[1]')}: `);
     rl.close();
 
     const choice = answer || '1';
-    if (choice === '3') {
+    if (choice === '4') {
       await install('claude', false, options, pkg);
       await install('gemini', false, options, pkg);
+      await install('opencode', false, options, pkg);
+    } else if (choice === '3') {
+      await install('opencode', false, options, pkg);
     } else if (choice === '2') {
       await install('gemini', false, options, pkg);
     } else {

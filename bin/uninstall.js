@@ -17,6 +17,7 @@ const {
   prompt,
   VERSION_FILE
 } = require('./lib/utils');
+const MANIFEST = require('./lib/manifest');
 
 // Get version from package.json
 let version = 'unknown';
@@ -32,6 +33,10 @@ try {
 const args = process.argv.slice(2);
 const hasGlobal = args.includes('--global') || args.includes('-g');
 const hasLocal = args.includes('--local') || args.includes('-l');
+const hasClaude = args.includes('--claude');
+const hasGemini = args.includes('--gemini');
+const hasOpenCode = args.includes('--opencode');
+const hasAll = args.includes('--all');
 const hasForce = args.includes('--force') || args.includes('-f');
 const hasBackup = args.includes('--backup') || args.includes('-b');
 const hasDryRun = args.includes('--dry-run') || args.includes('-n');
@@ -91,7 +96,11 @@ if (hasHelp) {
   ${c.yellow('Options:')}
     ${c.cyan('-g, --global')}              Uninstall from Claude config directory
     ${c.cyan('-l, --local')}               Uninstall from ./.claude in current directory
-    ${c.cyan('-c, --config-dir <path>')}   Specify custom Claude config directory
+    ${c.cyan('--claude')}                  Uninstall from Claude Code
+    ${c.cyan('--gemini')}                  Uninstall from Gemini CLI
+    ${c.cyan('--opencode')}                Uninstall from OpenCode
+    ${c.cyan('--all')}                     Uninstall from all runtimes
+    ${c.cyan('-c, --config-dir <path>')}   Specify custom config directory
     ${c.cyan('-f, --force')}               Skip confirmation prompts
     ${c.cyan('-b, --backup')}              Backup files before removing
     ${c.cyan('-n, --dry-run')}             Show what would be removed without removing
@@ -133,6 +142,32 @@ if (hasHelp) {
 }
 
 // ============ Utilities ============
+
+/**
+ * Get vendor-specific config directory
+ */
+function getVendorDir(runtime, explicitConfigDir) {
+  // Handle 'claude-local' special case
+  if (runtime === 'claude-local') {
+    return path.join(process.cwd(), '.claude');
+  }
+
+  const vendorConfig = MANIFEST[runtime];
+  if (!vendorConfig) {
+    return null;
+  }
+
+  if (explicitConfigDir) {
+    return expandTilde(explicitConfigDir);
+  }
+
+  const envDir = process.env[vendorConfig.configDirEnv];
+  if (envDir) {
+    return expandTilde(envDir);
+  }
+
+  return path.join(os.homedir(), vendorConfig.defaultDir);
+}
 
 /**
  * Generate backup directory path with timestamp
@@ -192,16 +227,26 @@ function findBackupFiles(dir, backups = []) {
 // ============ Uninstall Logic ============
 
 /**
- * Uninstall from the specified directory
+ * Uninstall from the specified runtime
+ * @param {string} runtime - 'claude' | 'gemini' | 'opencode' | 'claude-local'
  */
-async function uninstall(isGlobal) {
-  const claudeDir = getClaudeDir(explicitConfigDir, isGlobal);
-  const locationLabel = getPathLabel(claudeDir, isGlobal);
+async function uninstall(runtime) {
+  const isLocal = runtime === 'claude-local';
+  const vendorKey = isLocal ? 'claude' : runtime;
+  const vendorConfig = MANIFEST[vendorKey];
+
+  if (!vendorConfig) {
+    out.error(`Unknown runtime: ${runtime}`);
+    return;
+  }
+
+  const targetDir = getVendorDir(runtime, explicitConfigDir);
+  const locationLabel = getPathLabel(targetDir, !isLocal);
 
   out.log(`  Checking ${c.cyan(locationLabel)} for WTF-P installation...\n`);
 
   // Detect installation
-  const installed = detectInstallation(claudeDir);
+  const installed = detectInstallation(targetDir);
   const totalFiles = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length;
 
   if (!installed.hasCommands && !installed.hasWorkflows && !installed.hasSkills) {
@@ -209,11 +254,11 @@ async function uninstall(isGlobal) {
 
     // Check for backups if requested
     if (hasCleanBackups) {
-      const backups = findBackupFiles(claudeDir);
+      const backups = findBackupFiles(targetDir);
       if (backups.length > 0) {
         out.log(`  Found ${backups.length} backup file(s)/folder(s) to clean:\n`);
         for (const b of backups.slice(0, 10)) {
-          out.log(`    ${c.dim(b.replace(claudeDir, '.'))}`);
+          out.log(`    ${c.dim(b.replace(targetDir, '.'))}`);
         }
         if (backups.length > 10) {
           out.log(`    ${c.dim('... and ' + (backups.length - 10) + ' more')}`);
@@ -237,7 +282,7 @@ async function uninstall(isGlobal) {
             } else {
               fs.unlinkSync(b);
             }
-            out.log(`  ${c.red('-')} ${c.dim(b.replace(claudeDir, '.'))}`);
+            out.log(`  ${c.red('-')} ${c.dim(b.replace(targetDir, '.'))}`);
           }
           out.log(`\n  ${c.green('Cleaned ' + backups.length + ' backup file(s).')}\n`);
         } else {
@@ -253,10 +298,10 @@ async function uninstall(isGlobal) {
   // Show what will be removed
   out.log(`  ${c.yellow('Found WTF-P installation:')}\n`);
 
-  const commandsDir = path.join(claudeDir, 'commands', 'wtfp');
-  const workflowsDir = path.join(claudeDir, 'write-the-f-paper');
-  const skillsDir = path.join(claudeDir, 'skills', 'wtfp');
-  const pluginDir = path.join(claudeDir, '.claude-plugin');
+  const commandsDir = path.join(targetDir, 'commands', 'wtfp');
+  const workflowsDir = path.join(targetDir, 'write-the-f-paper');
+  const skillsDir = path.join(targetDir, 'skills', 'wtfp');
+  const pluginDir = path.join(targetDir, '.claude-plugin');
 
   if (installed.hasCommands) {
     out.log(`    ${c.cyan('commands/wtfp/')} (${installed.commandFiles.length} files)`);
@@ -278,10 +323,10 @@ async function uninstall(isGlobal) {
   // Check for backups to clean
   let backups = [];
   if (hasCleanBackups) {
-    const allBackups = findBackupFiles(claudeDir);
+    const allBackups = findBackupFiles(targetDir);
     backups = allBackups.filter(b => {
       if (installed.hasCommands && b.startsWith(commandsDir)) return false;
-      if (installed.hasSkill && b.startsWith(skillDir)) return false;
+      if (installed.hasSkills && b.startsWith(skillsDir)) return false;
       return true;
     });
     if (backups.length > 0) {
@@ -310,7 +355,7 @@ async function uninstall(isGlobal) {
 
   // Backup if requested
   if (hasBackup) {
-    const backupDir = getBackupDir(claudeDir);
+    const backupDir = getBackupDir(targetDir);
     fs.mkdirSync(backupDir, { recursive: true });
 
     if (installed.hasCommands) {
@@ -336,7 +381,7 @@ async function uninstall(isGlobal) {
     out.log(`  ${c.red('-')} ${c.dim('commands/wtfp/')}`);
 
     // Clean up empty commands dir
-    const parentCommandsDir = path.join(claudeDir, 'commands');
+    const parentCommandsDir = path.join(targetDir, 'commands');
     if (fs.existsSync(parentCommandsDir)) {
       const remaining = fs.readdirSync(parentCommandsDir);
       if (remaining.length === 0) {
@@ -354,9 +399,9 @@ async function uninstall(isGlobal) {
   if (installed.hasSkills) {
     removeDir(skillsDir);
     out.log(`  ${c.red('-')} ${c.dim('skills/wtfp/')}`);
-    
+
     // Clean up empty skills dir
-    const parentSkillsDir = path.join(claudeDir, 'skills');
+    const parentSkillsDir = path.join(targetDir, 'skills');
     if (fs.existsSync(parentSkillsDir)) {
       const remaining = fs.readdirSync(parentSkillsDir);
       if (remaining.length === 0) {
@@ -372,7 +417,7 @@ async function uninstall(isGlobal) {
   }
 
   // Remove version file
-  const versionFile = path.join(claudeDir, VERSION_FILE);
+  const versionFile = path.join(targetDir, VERSION_FILE);
   if (fs.existsSync(versionFile)) {
     fs.unlinkSync(versionFile);
     out.log(`  ${c.red('-')} ${c.dim(VERSION_FILE)}`);
@@ -391,35 +436,48 @@ async function uninstall(isGlobal) {
   }
 
   out.log(`
-  ${c.green('Done!')} WTF-P has been uninstalled.
+  ${c.green('Done!')} WTF-P has been uninstalled from ${vendorConfig.name}.
 
-  ${c.dim('Your CLAUDE.md and other configs remain untouched.')}
+  ${c.dim('Your config files remain untouched.')}
 
-  To reinstall: ${c.cyan('npx wtf-p --global')}
+  To reinstall: ${c.cyan('npx wtf-p --' + runtime)}
 `);
 }
 
 /**
- * Prompt for uninstall location
+ * Prompt for uninstall location - shows all runtimes with installation status
  */
 async function promptLocation() {
   const rl = createRL();
 
-  const globalPath = getClaudeDir(explicitConfigDir, true);
-  const globalLabel = getPathLabel(globalPath, true);
-  const localPath = getClaudeDir(null, false);
+  // Check installations for all runtimes
+  const runtimes = Object.keys(MANIFEST);
+  const installations = {};
+  let anyInstalled = false;
 
-  // Check what's installed where
-  const globalInstalled = detectInstallation(globalPath);
+  for (const runtime of runtimes) {
+    const targetDir = getVendorDir(runtime, null);
+    const installed = detectInstallation(targetDir);
+    const hasInstall = installed.hasCommands || installed.hasWorkflows || installed.hasSkills;
+    const count = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length;
+    installations[runtime] = { installed, hasInstall, count, targetDir };
+    if (hasInstall) anyInstalled = true;
+  }
+
+  // Also check local .claude
+  const localPath = path.join(process.cwd(), '.claude');
   const localInstalled = detectInstallation(localPath);
-
-  const hasGlobalInstall = globalInstalled.hasCommands || globalInstalled.hasWorkflows || globalInstalled.hasSkills;
   const hasLocalInstall = localInstalled.hasCommands || localInstalled.hasWorkflows || localInstalled.hasSkills;
+  const localCount = localInstalled.commandFiles.length + localInstalled.workflowFiles.length + localInstalled.skillFiles.length;
+  if (hasLocalInstall) anyInstalled = true;
 
-  if (!hasGlobalInstall && !hasLocalInstall) {
+  if (!anyInstalled) {
     out.log(`  ${c.yellow('No WTF-P installation found.')}\n`);
     out.log(`  Checked:`);
-    out.log(`    ${c.dim(globalLabel)}`);
+    for (const runtime of runtimes) {
+      const label = getPathLabel(installations[runtime].targetDir, true);
+      out.log(`    ${c.dim(label)}`);
+    }
     out.log(`    ${c.dim('./.claude')}\n`);
     rl.close();
     return;
@@ -427,38 +485,71 @@ async function promptLocation() {
 
   out.log(`  ${c.yellow('Where would you like to uninstall from?')}\n`);
 
-  if (hasGlobalInstall) {
-    const count = globalInstalled.commandFiles.length + globalInstalled.workflowFiles.length + globalInstalled.skillFiles.length;
-    out.log(`  ${c.cyan('1)')} Global ${c.dim('(' + globalLabel + ')')} - ${count} files`);
-  } else {
-    out.log(`  ${c.dim('1) Global (' + globalLabel + ') - not installed')}`);
+  let optionNum = 1;
+  const options = [];
+
+  // Show runtime options
+  for (const runtime of runtimes) {
+    const { hasInstall, count, targetDir } = installations[runtime];
+    const label = getPathLabel(targetDir, true);
+    const vendorName = MANIFEST[runtime].name;
+
+    if (hasInstall) {
+      out.log(`  ${c.cyan(optionNum + ')')} ${vendorName} ${c.dim('(' + label + ')')} - ${count} files`);
+      options.push({ num: optionNum, runtime });
+    } else {
+      out.log(`  ${c.dim(optionNum + ') ' + vendorName + ' (' + label + ') - not installed')}`);
+    }
+    optionNum++;
   }
 
+  // Show local option
   if (hasLocalInstall) {
-    const count = localInstalled.commandFiles.length + localInstalled.workflowFiles.length + localInstalled.skillFiles.length;
-    out.log(`  ${c.cyan('2)')} Local  ${c.dim('(./.claude)')} - ${count} files`);
+    out.log(`  ${c.cyan(optionNum + ')')} Local ${c.dim('(./.claude)')} - ${localCount} files`);
+    options.push({ num: optionNum, runtime: 'claude-local' });
   } else {
-    out.log(`  ${c.dim('2) Local (./.claude) - not installed')}`);
+    out.log(`  ${c.dim(optionNum + ') Local (./.claude) - not installed')}`);
   }
+  optionNum++;
+
+  // Show "all" option if multiple installations
+  const installedCount = options.length;
+  if (installedCount > 1) {
+    out.log(`  ${c.cyan(optionNum + ')')} All installed runtimes`);
+    options.push({ num: optionNum, runtime: 'all-installed' });
+  }
+
   out.log('');
 
   const answer = await prompt(rl, `  Choice: `);
   rl.close();
 
-  if (answer === '1' && hasGlobalInstall) {
-    await uninstall(true);
-  } else if (answer === '2' && hasLocalInstall) {
-    await uninstall(false);
-  } else {
+  const selected = options.find(o => o.num === parseInt(answer, 10));
+
+  if (!selected) {
     out.log(`\n  ${c.yellow('Invalid choice or no installation at that location.')}\n`);
+    return;
+  }
+
+  if (selected.runtime === 'all-installed') {
+    // Uninstall from all installed runtimes
+    for (const opt of options) {
+      if (opt.runtime !== 'all-installed') {
+        await uninstall(opt.runtime);
+      }
+    }
+  } else {
+    await uninstall(selected.runtime);
   }
 }
 
 // ============ Main ============
 
 async function main() {
-  if (hasGlobal && hasLocal) {
-    out.error('Cannot specify both --global and --local');
+  // Validate conflicting flags
+  const runtimeFlags = [hasGlobal, hasLocal, hasClaude, hasGemini, hasOpenCode, hasAll].filter(Boolean).length;
+  if (runtimeFlags > 1 && !hasAll) {
+    out.error('Cannot specify multiple runtime flags (use --all to uninstall from all)');
     process.exit(1);
   }
   if (explicitConfigDir && hasLocal) {
@@ -466,11 +557,25 @@ async function main() {
     process.exit(1);
   }
 
-  if (hasGlobal) {
-    await uninstall(true);
+  // Handle --all first
+  if (hasAll) {
+    for (const runtime of Object.keys(MANIFEST)) {
+      await uninstall(runtime);
+    }
+    return;
+  }
+
+  // Handle specific runtime flags
+  if (hasClaude || hasGlobal) {
+    await uninstall('claude');
+  } else if (hasGemini) {
+    await uninstall('gemini');
+  } else if (hasOpenCode) {
+    await uninstall('opencode');
   } else if (hasLocal) {
-    await uninstall(false);
+    await uninstall('claude-local');
   } else {
+    // Interactive mode
     await promptLocation();
   }
 }

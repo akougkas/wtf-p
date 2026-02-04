@@ -70,6 +70,25 @@ const MANIFEST = {
         type: 'dir'
       }
     ]
+  },
+  opencode: {
+    name: 'OpenCode',
+    configDirEnv: 'OPENCODE_CONFIG_DIR',
+    defaultDir: '.opencode',
+    components: [
+      {
+        id: 'workflows',
+        src: path.join(ROOT, 'core', 'write-the-f-paper'),
+        dest: 'write-the-f-paper',
+        type: 'dir'
+      },
+      {
+        id: 'commands',
+        src: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'),
+        dest: 'commands/wtfp',
+        type: 'dir'
+      }
+    ]
   }
 };
 
