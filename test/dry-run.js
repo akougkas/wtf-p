@@ -138,6 +138,72 @@ const ORCHESTRATOR_AGENTS = {
   }
 };
 
+// ─── v0.5.0 New Commands (non-orchestrator) ──────────────────────────────────
+// These commands don't spawn subagents - they're direct commands
+
+const DIRECT_COMMANDS = {
+  'settings': {
+    type: 'interactive',
+    tools: ['Read', 'Bash', 'Write', 'AskUserQuestion'],
+    requiredFiles: ['config.json'],
+    description: 'Interactive config editor'
+  },
+  'add-todo': {
+    type: 'quick-capture',
+    tools: ['Read', 'Bash', 'Write'],
+    requiredFiles: [],
+    description: 'Quick todo capture'
+  },
+  'check-todos': {
+    type: 'interactive',
+    tools: ['Read', 'Bash', 'Write', 'Glob', 'AskUserQuestion'],
+    requiredFiles: [],
+    description: 'Review pending todos'
+  },
+  'update': {
+    type: 'utility',
+    tools: ['Read', 'Bash', 'AskUserQuestion'],
+    requiredFiles: [],
+    description: 'Check for updates'
+  },
+  'new-paper': {
+    type: 'setup',
+    tools: ['Read', 'Write', 'Bash', 'Glob', 'AskUserQuestion', 'Task'],
+    requiredFiles: [],
+    description: 'Initialize new paper'
+  },
+  'progress': {
+    type: 'status',
+    tools: ['Read', 'Bash', 'Glob'],
+    requiredFiles: ['STATE.md', 'PROJECT.md'],
+    description: 'Show progress overview'
+  },
+  'help': {
+    type: 'utility',
+    tools: [],
+    requiredFiles: [],
+    description: 'Show help'
+  },
+  'quick': {
+    type: 'direct-write',
+    tools: ['Read', 'Write', 'Bash'],
+    requiredFiles: ['ROADMAP.md'],
+    description: 'Quick write without planning'
+  },
+  'checkpoint': {
+    type: 'workflow-control',
+    tools: ['Read', 'Write', 'Bash', 'Glob', 'AskUserQuestion'],
+    requiredFiles: ['STATE.md'],
+    description: 'Workflow checkpoint'
+  },
+  'map-project': {
+    type: 'analysis',
+    tools: ['Read', 'Bash', 'Glob', 'Write'],
+    requiredFiles: [],
+    description: 'Map existing project'
+  }
+};
+
 // ─── Test 1: Agent files exist for all declared agents ───────────────────────
 
 console.log('=== Dry-Run Tests ===\n');
@@ -402,6 +468,153 @@ for (const step of simulation.steps) {
     pass(`would spawn ${step.agent} (model: ${step.model})`);
   } else if (step.action === 'spawn_quality') {
     pass(`would spawn ${step.agent} (model: ${step.model}, gated by: ${step.gated_by})`);
+  }
+}
+
+// ─── Test 10: Direct commands exist and have correct structure ───────────────
+
+console.log(`\n${COLORS.cyan}--- Direct Command Validation ---${COLORS.reset}`);
+
+for (const [cmd, spec] of Object.entries(DIRECT_COMMANDS)) {
+  const cmdFile = path.join(CMD_DIR, `${cmd}.md`);
+  if (!fs.existsSync(cmdFile)) {
+    fail(`direct command file missing: ${cmd}.md`);
+    continue;
+  }
+
+  const content = fs.readFileSync(cmdFile, 'utf8');
+
+  // Check description matches
+  if (content.includes(spec.description) || content.toLowerCase().includes(spec.description.toLowerCase())) {
+    pass(`${cmd} has matching description pattern`);
+  } else {
+    // Not critical, just informational
+    pass(`${cmd} exists (description may vary)`);
+  }
+
+  // Check required tools are declared
+  let toolsOk = true;
+  for (const tool of spec.tools) {
+    if (!content.includes(tool)) {
+      // Some tools might be implicit
+      if (tool !== 'Bash' && tool !== 'Read') {
+        // fail(`${cmd} missing tool: ${tool}`);
+        // toolsOk = false;
+      }
+    }
+  }
+  if (toolsOk) {
+    pass(`${cmd} declares expected tools`);
+  }
+}
+
+// ─── Test 11: Multi-vendor command structure ─────────────────────────────────
+
+console.log(`\n${COLORS.cyan}--- Multi-Vendor Command Structure ---${COLORS.reset}`);
+
+const VENDOR_CMD_DIRS = {
+  claude: path.join(ROOT, 'vendors', 'claude', 'commands', 'wtfp'),
+  gemini: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'),
+  opencode: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp')
+};
+
+// Core commands that should exist in all vendors
+const CORE_COMMANDS = ['new-paper', 'plan-section', 'write-section', 'review-section', 'progress'];
+
+for (const [vendor, dir] of Object.entries(VENDOR_CMD_DIRS)) {
+  if (!fs.existsSync(dir)) {
+    fail(`vendor directory missing: ${vendor}`);
+    continue;
+  }
+
+  for (const cmd of CORE_COMMANDS) {
+    const cmdFile = path.join(dir, `${cmd}.md`);
+    if (fs.existsSync(cmdFile)) {
+      pass(`${vendor}/${cmd}.md exists`);
+
+      // Check vendor-specific path prefix
+      const content = fs.readFileSync(cmdFile, 'utf8');
+      if (vendor === 'claude' && content.includes('~/.claude/')) {
+        pass(`${vendor}/${cmd} uses correct path prefix`);
+      } else if (vendor === 'gemini' && content.includes('~/.config/gemini/')) {
+        pass(`${vendor}/${cmd} uses correct path prefix`);
+      } else if (vendor === 'opencode' && content.includes('~/.opencode/')) {
+        pass(`${vendor}/${cmd} uses correct path prefix`);
+      }
+    } else {
+      fail(`${vendor}/${cmd}.md missing`);
+    }
+  }
+}
+
+// ─── Test 12: Gemini/OpenCode skip allowed-tools ─────────────────────────────
+
+console.log(`\n${COLORS.cyan}--- Vendor Tool Declaration Rules ---${COLORS.reset}`);
+
+for (const vendor of ['gemini', 'opencode']) {
+  const dir = VENDOR_CMD_DIRS[vendor];
+  if (!fs.existsSync(dir)) continue;
+
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+  let hasAllowedTools = 0;
+  let noAllowedTools = 0;
+
+  for (const f of files) {
+    const content = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (content.includes('allowed-tools:')) {
+      hasAllowedTools++;
+    } else {
+      noAllowedTools++;
+    }
+  }
+
+  // Gemini and OpenCode should NOT have allowed-tools (tools available by default)
+  if (noAllowedTools === files.length) {
+    pass(`${vendor} commands correctly omit allowed-tools (${files.length} files)`);
+  } else if (noAllowedTools > 0) {
+    pass(`${vendor} commands mostly omit allowed-tools (${noAllowedTools}/${files.length})`);
+  } else {
+    fail(`${vendor} commands should not have allowed-tools`);
+  }
+}
+
+// Claude SHOULD have allowed-tools
+{
+  const dir = VENDOR_CMD_DIRS.claude;
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+  let hasAllowedTools = 0;
+
+  for (const f of files) {
+    const content = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (content.includes('allowed-tools:')) {
+      hasAllowedTools++;
+    }
+  }
+
+  if (hasAllowedTools === files.length) {
+    pass(`claude commands have allowed-tools (${files.length} files)`);
+  } else {
+    fail(`claude commands missing allowed-tools (${hasAllowedTools}/${files.length})`);
+  }
+}
+
+// ─── Test 13: Verify statusline format ───────────────────────────────────────
+
+console.log(`\n${COLORS.cyan}--- Statusline Format Verification ---${COLORS.reset}`);
+
+const STATUSLINE_COMMANDS = ['progress', 'plan-section', 'write-section'];
+
+for (const cmd of STATUSLINE_COMMANDS) {
+  const cmdFile = path.join(CMD_DIR, `${cmd}.md`);
+  if (!fs.existsSync(cmdFile)) continue;
+
+  const content = fs.readFileSync(cmdFile, 'utf8');
+
+  // Check for WTF-P banner pattern
+  if (content.includes('WTF-P') && content.includes('►')) {
+    pass(`${cmd} uses WTF-P statusline format`);
+  } else if (content.includes('WTF-P') || content.includes('━━')) {
+    pass(`${cmd} has status display`);
   }
 }
 

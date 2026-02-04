@@ -9,13 +9,19 @@ const path = require('path');
 
 const root = path.join(__dirname, '..');
 let failed = false;
+let passed = 0;
+let failedCount = 0;
+
+console.log('=== Sanity Tests ===\n');
 
 function check(condition, msg) {
   if (condition) {
-    console.log(`✓ ${msg}`);
+    console.log(`\x1b[32m✓\x1b[0m ${msg}`);
+    passed++;
   } else {
-    console.log(`✗ ${msg}`);
+    console.log(`\x1b[31m✗\x1b[0m ${msg}`);
     failed = true;
+    failedCount++;
   }
 }
 
@@ -53,5 +59,16 @@ check(commands.length >= 10, `${commands.length} commands found`);
 // Workflows exist
 const workflows = fs.readdirSync(path.join(root, 'core/write-the-f-paper/workflows'));
 check(workflows.length >= 5, `${workflows.length} workflows found`);
+
+// Multi-runtime support
+check(fs.existsSync(path.join(root, 'vendors/gemini')), 'vendors/gemini exists');
+check(fs.existsSync(path.join(root, 'vendors/opencode')), 'vendors/opencode exists');
+check(fs.existsSync(path.join(root, 'bin/lib/manifest.js')), 'manifest.js exists');
+
+// Agents exist
+const agents = fs.readdirSync(path.join(root, 'vendors/claude/agents/wtfp'));
+check(agents.length >= 10, `${agents.length} agents found`);
+
+console.log(`\n=== Sanity Results: ${passed} passed, ${failedCount} failed ===\n`);
 
 process.exit(failed ? 1 : 0);
