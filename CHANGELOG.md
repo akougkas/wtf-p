@@ -2,7 +2,15 @@
 
 ## [0.5.0] - 2026-02-04
 
-**Theme:** GSD-Inspired Architectural Upgrade — Thin Orchestrators, Specialized Agents, Quality Loops
+**Theme:** GSD-Inspired Architectural Upgrade — Thin Orchestrators, Specialized Agents, Quality Loops, Multi-Runtime Support
+
+### Multi-Runtime Support
+- **Claude Code**: Full support (default) — `~/.claude/` directory.
+- **Gemini CLI**: Full support — `~/.config/gemini/` directory. No `allowed-tools` frontmatter (tools available by default).
+- **OpenCode**: Full support — `~/.opencode/` directory.
+- **Runtime-agnostic installer**: `--gemini` and `--opencode` flags for alternate runtimes.
+- **MANIFEST-based uninstaller**: Tracks installed files per runtime for clean removal.
+- **VENDOR_RULES**: Vendor-specific linting (Claude requires allowed-tools; others don't).
 
 ### Architecture
 - **Thin Orchestrator Pattern**: Refactored 5 core commands (plan-section, write-section, review-section, research-gap, polish-prose) from thick monoliths (200-410 lines) to thin orchestrators (120-180 lines) that spawn specialized agents via Task().
@@ -23,8 +31,45 @@
 - `parallelization.enabled`: Enable parallel section writing (default: false)
 - `parallelization.max_concurrent_agents`: Limit concurrent spawns (default: 3)
 
+### Secondary Command Refactors
+- **6 commands refactored** to thin orchestrators: new-paper, progress, create-outline, analyze-bib, check-refs, map-project — 1719 → 761 lines (56% reduction).
+- Added `BLOCKED` return handling to polish-prose, analyze-bib, check-refs.
+
+### New Commands (8)
+- **`/wtfp:verify-work`**: Acceptance testing with UAT.md persistence across /clear.
+- **`/wtfp:execute-outline`**: Wave-based parallel execution of all sections with coherence-checker.
+- **`/wtfp:settings`**: Interactive config editor with diff display.
+- **`/wtfp:add-todo`**: Quick-capture todos without breaking flow.
+- **`/wtfp:check-todos`**: Review pending todos (act/defer/dismiss/done).
+- **`/wtfp:update`**: Check npm registry and update WTF-P.
+- **`/wtfp:audit-milestone`**: Pre-submission audit (5 checks: sections, arguments, words, citations, reviews).
+- **`/wtfp:plan-milestone-gaps`**: Create targeted fix plans from audit findings.
+
+### New Features
+- **`bin/lib/context-primer.js`**: Section-specific context extraction for journal-scale papers without context overflow.
+- **`core/write-the-f-paper/templates/base-prefs.yaml`**: Preference inheritance — global style/citation defaults with per-project overrides.
+- **`bin/lib/checkpoint.js`**: Git-tagged checkpoint save/restore/list for mid-session paper state.
+- **`/wtfp:quick`**: Minimal-ceremony command for quick writing tasks that skip optional agents.
+- **`/wtfp:checkpoint`**: Save, restore, and list paper state checkpoints.
+
+### Workflow Documentation
+- Updated `plan-section.wcn.md` — agent spawning, model_profile, plan-check-revise loop.
+- Updated `execute-section.wcn.md` — agent spawning, model_profile, goal-backward verification.
+- Created `references/agent-model-matrix.md` — 10 agents × 3 profiles mapping.
+- Created `references/orchestrator-pattern.md` — thin orchestrator design reference.
+- Created `references/context-fidelity.md` — CONTEXT.md contract for all agents.
+
+### Fixes
+- Updated `help.md` with all 38 commands.
+- Fixed `preflight.js` template path bug.
+- Fixed `create-outline.wcn.md` step name (`git_commit` → `git_commit_initialization`).
+
 ### Testing
 - Agent file linting: validates frontmatter (name, description, allowed-tools), `<role>` tags, and structure for all 10 agents.
+- **WCN integrity suite** (63 tests): validates compressed workflows preserve all steps, handles plan-section/execute-section as intentional restructures.
+- **Dry-run suite** (92 tests): validates orchestrator wiring across 8 dimensions — agent resolution, command→agent refs, model profiles, config gates, CONTEXT.md loading, Task() spawning, structured returns.
+- **Feature tests** (114 tests): validates installer, commands, multi-runtime support.
+- **646 total tests passing** (sanity + paths + linter + wcn-integrity + dry-run + features + installer).
 
 ## [0.4.0] - 2026-01-13
 

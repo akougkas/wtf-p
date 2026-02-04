@@ -213,6 +213,23 @@ The mapping phase analyzes:
 
 ---
 
+## Multi-Runtime Support (v0.5.0)
+
+WTF-P supports multiple AI coding assistants:
+
+| Runtime | Config Directory | Status |
+|---------|-----------------|--------|
+| Claude Code | `~/.claude/` | Full support |
+| Gemini CLI | `~/.config/gemini/` | Full support |
+| OpenCode | `~/.opencode/` | Full support |
+
+Install to your preferred runtime:
+```bash
+npx wtf-p --global              # Claude (default)
+npx wtf-p --global --gemini     # Gemini CLI
+npx wtf-p --global --opencode   # OpenCode
+```
+
 ## Citation Expert (v0.4.0)
 
 WTF-P includes a specialized tiered pipeline for bibliography management.
@@ -253,6 +270,7 @@ Capabilities:
 | Command | Purpose |
 |---------|---------|
 | `/wtfp:write-section` | Execute a plan |
+| `/wtfp:execute-outline` | Write all sections (wave-parallel) |
 | `/wtfp:progress` | Status + intelligent next action |
 | `/wtfp:pause-writing` | Save state for later |
 | `/wtfp:resume-writing` | Restore context and continue |
@@ -261,6 +279,7 @@ Capabilities:
 | Command | Purpose |
 |---------|---------|
 | `/wtfp:review-section [N]` | Three-layer verification |
+| `/wtfp:verify-work [N]` | Acceptance testing with persistence |
 | `/wtfp:plan-revision [N]` | Create fix plan from issues |
 | `/wtfp:polish-prose` | Improve readability |
 | `/wtfp:check-refs` | Citation audit |
@@ -269,7 +288,17 @@ Capabilities:
 | Command | Purpose |
 |---------|---------|
 | `/wtfp:export-latex` | Generate .tex output |
+| `/wtfp:audit-milestone` | Pre-submission audit (5 checks) |
+| `/wtfp:plan-milestone-gaps` | Create fix plans from audit |
 | `/wtfp:submit-milestone` | Archive submission version |
+
+### Settings & Todos
+| Command | Purpose |
+|---------|---------|
+| `/wtfp:settings` | Interactive config editor |
+| `/wtfp:add-todo` | Quick-capture todos |
+| `/wtfp:check-todos` | Review pending todos |
+| `/wtfp:update` | Check for WTF-P updates |
 
 ### Contributing
 | Command | Purpose |
