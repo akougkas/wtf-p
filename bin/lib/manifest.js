@@ -52,8 +52,25 @@ const MANIFEST = {
       }
     ]
   },
-  // Future:
-  // gemini: { ... }
+  gemini: {
+    name: 'Gemini CLI',
+    configDirEnv: 'GEMINI_CONFIG_DIR',
+    defaultDir: '.config/gemini',
+    components: [
+      {
+        id: 'workflows',
+        src: path.join(ROOT, 'core', 'write-the-f-paper'),
+        dest: 'write-the-f-paper',
+        type: 'dir'
+      },
+      {
+        id: 'commands',
+        src: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'),
+        dest: 'commands/wtfp',
+        type: 'dir'
+      }
+    ]
+  }
 };
 
 module.exports = MANIFEST;

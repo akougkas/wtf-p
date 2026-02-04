@@ -2,15 +2,41 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const MANIFEST = require('../lib/manifest');
-const { 
-  isValidPath, 
-  getClaudeDir, // Legacy support, will refactor
-  getPathLabel, 
-  getBackupPath, 
-  writeVersionFile, 
-  createRL, 
-  prompt 
+const {
+  isValidPath,
+  expandTilde,
+  getPathLabel,
+  getBackupPath,
+  writeVersionFile,
+  createRL,
+  prompt
 } = require('../lib/utils');
+
+/**
+ * Get vendor-specific config directory
+ */
+function getVendorDir(runtime, explicitConfigDir) {
+  // Handle 'claude-local' special case
+  if (runtime === 'claude-local') {
+    return path.join(process.cwd(), '.claude');
+  }
+
+  const vendorConfig = MANIFEST[runtime];
+  if (!vendorConfig) {
+    throw new Error(`Unknown runtime: ${runtime}`);
+  }
+
+  if (explicitConfigDir) {
+    return expandTilde(explicitConfigDir);
+  }
+
+  const envDir = process.env[vendorConfig.configDirEnv];
+  if (envDir) {
+    return expandTilde(envDir);
+  }
+
+  return path.join(os.homedir(), vendorConfig.defaultDir);
+}
 
 /**
  * Process file content with path replacement
@@ -153,17 +179,27 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
 
 /**
  * Main install logic
+ * @param {string} runtime - 'claude' | 'gemini' | 'claude-local'
+ * @param {boolean} isUpdate - Whether this is an update operation
+ * @param {object} options - CLI options
+ * @param {object} pkg - Package.json contents
  */
-async function install(isGlobal, isUpdate, options, pkg) {
+async function install(runtime, isUpdate, options, pkg) {
   const { out, explicitConfigDir, hasQuiet, onlyInstall, showExplanations } = options;
   const c = out.colors;
 
-  // Use Claude vendor by default for now (can be passed as arg later)
-  const vendorConfig = MANIFEST.claude;
-  
+  // Handle 'claude-local' by mapping to 'claude' vendor config
+  const vendorKey = runtime === 'claude-local' ? 'claude' : runtime;
+  const vendorConfig = MANIFEST[vendorKey];
+
+  if (!vendorConfig) {
+    out.error(`Unknown runtime: ${runtime}`);
+    process.exit(1);
+  }
+
   // Resolve Target Directory using the Vendor Strategy
-  // TODO: Use getVendorDir generic
-  const targetDir = getClaudeDir(explicitConfigDir, isGlobal);
+  const targetDir = getVendorDir(runtime, explicitConfigDir);
+  const isGlobal = runtime !== 'claude-local';
   const locationLabel = getPathLabel(targetDir, isGlobal);
 
   // Validate path
@@ -174,7 +210,7 @@ async function install(isGlobal, isUpdate, options, pkg) {
 
   const pathPrefix = isGlobal
     ? (explicitConfigDir ? `${targetDir}/` : `~/${vendorConfig.defaultDir}/`)
-    : `./${vendorConfig.defaultDir}/`;
+    : `./.claude/`;
 
   if (!hasQuiet) {
     out.log(`  Installing to ${c.cyan(locationLabel)}
@@ -214,9 +250,9 @@ async function install(isGlobal, isUpdate, options, pkg) {
   // Summary
   if (!hasQuiet) {
     out.log(`
-  ${c.green('Done!')} Installed: ${stats.installed}, Skipped: ${stats.skipped}, Backed up: ${stats.backed}
+  ${c.green('Done!')} ${c.dim(`[${vendorConfig.name}]`)} Installed: ${stats.installed}, Skipped: ${stats.skipped}, Backed up: ${stats.backed}
 
-  Run ${c.cyan('/wtfp:help')} in Claude Code to get started.
+  Run ${c.cyan('/wtfp:help')} in ${vendorConfig.name} to get started.
 `);
 
     if (showExplanations && !isUpdate) {

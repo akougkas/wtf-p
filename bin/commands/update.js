@@ -43,8 +43,9 @@ async function runUpdate(options, pkg, installFunc) {
 
   out.log(`\n  ${c.cyan('Updating...')}\n`);
 
-  // Run install with backup
-  await installFunc(isGlobal, true);
+  // Run install with backup (convert isGlobal to runtime string)
+  const runtime = isGlobal ? 'claude' : 'claude-local';
+  await installFunc(runtime, true, options, pkg);
 }
 
 module.exports = runUpdate;

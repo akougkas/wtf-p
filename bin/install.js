@@ -32,6 +32,8 @@ if (subcommandIndex !== -1) {
 // Parse flags
 const hasGlobal = args.includes('--global') || args.includes('-g');
 const hasLocal = args.includes('--local') || args.includes('-l');
+const hasGemini = args.includes('--gemini');
+const hasAll = args.includes('--all');
 const hasForce = args.includes('--force') || args.includes('-f');
 const hasBackupAll = args.includes('--backup-all') || args.includes('-b');
 const hasHelp = args.includes('--help') || args.includes('-h');
@@ -109,7 +111,9 @@ function showHelp() {
   ${c.yellow('Install Options:')}
     ${c.cyan('-g, --global')}              Install globally (to Claude config directory)
     ${c.cyan('-l, --local')}               Install locally (to ./.claude in current directory)
-    ${c.cyan('-c, --config-dir <path>')}   Specify custom Claude config directory
+    ${c.cyan('--gemini')}                  Install for Gemini CLI
+    ${c.cyan('--all')}                     Install for all supported runtimes
+    ${c.cyan('-c, --config-dir <path>')}   Specify custom config directory
     ${c.cyan('-f, --force')}               Overwrite all existing files without prompting
     ${c.cyan('-b, --backup-all')}          Backup all existing files before overwriting
     ${c.cyan('--only=<type>')}             Install only: commands, workflows, or all
@@ -190,25 +194,39 @@ async function main() {
   // Default: Install
   if (!hasQuiet) console.log(banner);
 
-  if (hasGlobal) {
-    await install(true, false, options, pkg);
+  if (hasAll) {
+    // Install for all supported runtimes
+    await install('claude', false, options, pkg);
+    await install('gemini', false, options, pkg);
+  } else if (hasGemini) {
+    await install('gemini', false, options, pkg);
+  } else if (hasGlobal) {
+    await install('claude', false, options, pkg);
   } else if (hasLocal) {
-    await install(false, false, options, pkg);
+    await install('claude-local', false, options, pkg);
   } else if (options.isInteractive) {
     const rl = createRL();
-    out.log(`  ${out.colors.yellow('Where would you like to install?')} 
+    out.log(`  ${out.colors.yellow('Which runtime(s) would you like to install for?')}
 `);
-    out.log(`  ${out.colors.cyan('1)')} Global (~/.claude) - available in all projects`);
-    out.log(`  ${out.colors.cyan('2)')} Local  (./.claude) - this project only
+    out.log(`  ${out.colors.cyan('1)')} Claude Code (~/.claude) - Claude CLI/IDE integration`);
+    out.log(`  ${out.colors.cyan('2)')} Gemini CLI (~/.config/gemini) - Google Gemini CLI`);
+    out.log(`  ${out.colors.cyan('3)')} All - Install for all supported runtimes
 `);
-    
+
     const answer = await prompt(rl, `  Choice ${out.colors.dim('[1]')}: `);
     rl.close();
-    
+
     const choice = answer || '1';
-    await install(choice !== '2', false, options, pkg);
+    if (choice === '3') {
+      await install('claude', false, options, pkg);
+      await install('gemini', false, options, pkg);
+    } else if (choice === '2') {
+      await install('gemini', false, options, pkg);
+    } else {
+      await install('claude', false, options, pkg);
+    }
   } else {
-    await install(true, false, options, pkg);
+    await install('claude', false, options, pkg);
   }
 }
 
