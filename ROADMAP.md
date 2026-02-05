@@ -84,34 +84,42 @@ wtf-p/
 - [x] Wave-based parallel section writing (wave/depends_on in PLAN.md)
 - [x] Config extensions: model_profile, workflow toggles, parallelization settings
 
+### Secondary Command Refactors
+- [x] 6 commands refactored to thin orchestrators: new-paper, progress, create-outline, analyze-bib, check-refs, map-project (1719 → 761 lines, 56% reduction)
+- [x] `BLOCKED` return handling for polish-prose, analyze-bib, check-refs
+
+### Context Priming & Preferences (pulled forward from v0.6.0)
+- [x] `bin/lib/context-primer.js` — Section-specific context extraction
+- [x] `core/write-the-f-paper/templates/base-prefs.yaml` — Preference inheritance
+- [x] `bin/lib/checkpoint.js` — Git-tagged checkpoint save/restore/list
+- [x] `/wtfp:quick` command — Minimal-ceremony tasks
+- [x] `/wtfp:checkpoint` command — Save/restore/list paper state
+
+### Reference Documentation
+- [x] `references/agent-model-matrix.md` — 10 agents × 3 profiles
+- [x] `references/orchestrator-pattern.md` — Thin orchestrator design reference
+- [x] `references/context-fidelity.md` — CONTEXT.md contract for all agents
+- [x] Updated `help.md` with 7 missing commands, fixed `preflight.js` template path
+
+### Testing
+- [x] WCN integrity suite (63 tests) — compressed workflow step preservation
+- [x] Dry-run suite (92 tests) — orchestrator wiring across 8 dimensions
+- [x] 256 total tests passing
+
 ---
 
 ## Current: v0.6.0
 
-**Focus:** Context Priming, Preferences & Visualization
-
-### Context Priming Engine (from AWOC)
-- [ ] `bin/lib/context-primer.js` — Section-specific context extraction
-- [ ] Load only relevant PROJECT.md sections for each task
-- [ ] Enable journal-scale papers (20-40 pages) without context overflow
-
-### Preference Inheritance (from Helios-MCP)
-- [ ] `~/.wtfp/base.yaml` — Global user preferences (style, citation habits)
-- [ ] `.planning/prefs.yaml` — Per-project overrides
-
-### Checkpoint Bundles (from AWOC)
-- [ ] `/wtfp:checkpoint` — Save full paper state mid-session
-- [ ] Resume in new session with full context restoration
-
----
-
-## Planned: v0.6.0+
-
-**Focus:** Multi-vendor and Visualization
+**Focus:** Multi-vendor Support & Visualization
 
 ### Gemini Support
 - [ ] `vendors/gemini/` adapter
 - [ ] Gemini-specific command translations
+
+### Context Priming v2
+- [ ] Load only relevant PROJECT.md sections per task
+- [ ] Enable journal-scale papers (20-40 pages) without context overflow
+- [ ] Per-project preference overrides (`.planning/prefs.yaml`)
 
 ### Visual Analysis (Multimodal)
 - [ ] Figure critique with vision models
@@ -194,7 +202,7 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
-| v0.6.0 | Planned | Context priming, preferences, visualization |
+| v0.6.0 | Planned | Multi-vendor support, visualization, context priming v2 |
 | v0.5.0 | Published | GSD architecture, agents, quality loops, model profiles |
 | v0.4.0 | Published | Citation Expert v2, tiered API, provenance tracking |
 | v0.3.0 | Published | 4 P's, skills, multi-vendor restructure |
