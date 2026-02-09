@@ -62,13 +62,30 @@ RUN: cat .planning/sections/${SECTION}-*/${SECTION}-CONTEXT.md 2>/dev/null
 [/step]
 
 [step:execute_research]
+**CRITICAL: Source hierarchy**
+1. Context7 MCP first (if available) → highest quality, most relevant
+2. User's own sources → .planning/sources/literature.md, prior-drafts.md, PDFs
+3. Official sources/databases → Google Scholar, PubMed, IEEE, ACL, arXiv, SSRN
+4. WebSearch last → "[topic] research [year]", "[topic] systematic review"
+
+MODE{depth}:
+| standard | 10-20 sources, focus most impactful, categories recommended not mandatory |
+| deep | 20-50 sources, map field systematically, ALL categories MANDATORY, include lineage+funding |
+
+Per category: identify 3-5 foundational + 5-10 recent + 2-3 competing + gap evidence.
+Per source: full citation, key findings, relation to work, where to cite.
+Synthesize: group by argument, consensus vs controversy, methodological trends, gap.
+Cross-verify: legitimate academic work, citation counts, recency, confidence level.
 [/step]
 
 [step:quality_check]
 [/step]
 
 [step:write_research]
-IF section_directory_doesnt_exist → Create it: `.planning/sections/${SECTION}-${SLU...
+IF section_directory_doesnt_exist → Create it: `.planning/sections/${SECTION}-${SLUG}/`
+Output: `.planning/sections/${SECTION}-${SLUG}/${SECTION}-RESEARCH.md`
+Frontmatter: depth, confidence (HIGH/MEDIUM/LOW), sources_count, researched (YYYY-MM-DD)
+Sections: Research Summary, Key Findings (Foundational/Recent/Competing/Gap/Methods), Synthesis for Writing (Intro/Related Work/Discussion), Full Bibliography, Confidence Assessment.
 [/step]
 
 [step:update_literature_index]
