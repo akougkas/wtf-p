@@ -1,6 +1,6 @@
 ---
 name: wtfp:settings
-description: View and edit project configuration interactively
+description: View and edit project settings interactively
 allowed-tools:
   - Read
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: wtfp:polish-prose
-description: De-robotize and refine prose for clarity, flow, and academic voice
+description: Improve clarity, flow, and academic voice in written prose
 argument-hint: "[section-number or file]"
 allowed-tools:
   - Read

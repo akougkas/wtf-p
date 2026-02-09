@@ -1,6 +1,6 @@
 ---
 name: wtfp:check-refs
-description: BibTeX audit - verify citations are complete and consistent
+description: Audit BibTeX for missing, duplicate, or broken references
 argument-hint: "[bib-file]"
 allowed-tools:
   - Read

@@ -1,6 +1,6 @@
 ---
 name: wtfp:export-latex
-description: Export paper to LaTeX format
+description: Export paper to LaTeX with bibliography and formatting
 allowed-tools:
   - Read
   - Bash

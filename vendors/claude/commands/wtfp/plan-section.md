@@ -1,6 +1,6 @@
 ---
 name: wtfp:plan-section
-description: Create detailed writing plan for a section (PLAN.md)
+description: Create detailed writing plan for a section
 argument-hint: "[section]"
 allowed-tools:
   - Read

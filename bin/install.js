@@ -93,7 +93,7 @@ ${out.colors.magenta('╚███╔███╔╝   ██║   ██║    
 ${out.colors.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═╝')}
 
   ${out.colors.cyan('Write The F***ing Paper')} ${out.colors.dim(`v${pkg.version}`)}
-  Context engineering for academic writing.
+  Academic writing commands for your AI coding assistant.
 `;
 
 // ============ Help Text ============ 
@@ -104,20 +104,20 @@ function showHelp() {
   console.log(`  ${c.yellow('Usage:')} npx wtf-p [command] [options] 
 
   ${c.yellow('Commands:')}
-    ${c.cyan('status')}                    Show current installation state
-    ${c.cyan('doctor')}                    Diagnose installation issues
-    ${c.cyan('update')}                    Update existing installation
-    ${c.cyan('uninstall')}                 Remove WTF-P installation
+    ${c.cyan('status')}                    Show installation status
+    ${c.cyan('doctor')}                    Check for installation problems
+    ${c.cyan('update')}                    Update to latest version
+    ${c.cyan('uninstall')}                 Remove WTF-P
 
   ${c.yellow('Install Options:')}
-    ${c.cyan('-g, --global')}              Install globally (to Claude config directory)
-    ${c.cyan('-l, --local')}               Install locally (to ./.claude in current directory)
+    ${c.cyan('-g, --global')}              Install to your home directory (recommended)
+    ${c.cyan('-l, --local')}               Install to current project only
     ${c.cyan('--gemini')}                  Install for Gemini CLI
     ${c.cyan('--opencode')}                Install for OpenCode
-    ${c.cyan('--all')}                     Install for all supported runtimes
-    ${c.cyan('-c, --config-dir <path>')}   Specify custom config directory
-    ${c.cyan('-f, --force')}               Overwrite all existing files without prompting
-    ${c.cyan('-b, --backup-all')}          Backup all existing files before overwriting
+    ${c.cyan('--all')}                     Install for all supported tools
+    ${c.cyan('-c, --config-dir <path>')}   Install to a custom directory
+    ${c.cyan('-f, --force')}               Overwrite existing files without asking
+    ${c.cyan('-b, --backup-all')}          Backup existing files before overwriting
     ${c.cyan('--only=<type>')}             Install only: commands, workflows, or all
 
   ${c.yellow('Output Options:')}
@@ -128,18 +128,18 @@ function showHelp() {
     ${c.cyan('--verbose')}                 Show detailed progress
 
   ${c.yellow('Other:')}
-    ${c.cyan('-v, --version')}             Show version information
-    ${c.cyan('-h, --help')}                Show this help message
+    ${c.cyan('-v, --version')}             Show version
+    ${c.cyan('-h, --help')}                Show this help
 
   ${c.yellow('Examples:')}
-    ${c.dim('# Interactive install with prompts')}
+    ${c.dim('# Install with interactive prompts')}
     npx wtf-p
 
-    ${c.dim('# Quick global install')}
+    ${c.dim('# Quick global install (no prompts)')}
     npx wtf-p --global --advanced
 
-  ${c.yellow('After installation:')}
-    Run ${c.cyan('/wtfp:help')} in Claude Code to get started.
+  ${c.yellow('After installing:')}
+    Open your AI assistant and run ${c.cyan('/wtfp:help')} to see all commands.
 `);
 }
 
@@ -211,12 +211,12 @@ async function main() {
     await install('claude-local', false, options, pkg);
   } else if (options.isInteractive) {
     const rl = createRL();
-    out.log(`  ${out.colors.yellow('Which runtime(s) would you like to install for?')}
+    out.log(`  ${out.colors.yellow('Which tool do you use for AI-assisted coding?')}
 `);
-    out.log(`  ${out.colors.cyan('1)')} Claude Code (~/.claude) - Claude CLI/IDE integration`);
-    out.log(`  ${out.colors.cyan('2)')} Gemini CLI (~/.config/gemini) - Google Gemini CLI`);
-    out.log(`  ${out.colors.cyan('3)')} OpenCode (~/.opencode) - OpenCode CLI`);
-    out.log(`  ${out.colors.cyan('4)')} All - Install for all supported runtimes
+    out.log(`  ${out.colors.cyan('1)')} Claude Code ${out.colors.dim('(~/.claude)')}`);
+    out.log(`  ${out.colors.cyan('2)')} Gemini CLI ${out.colors.dim('(~/.config/gemini)')}`);
+    out.log(`  ${out.colors.cyan('3)')} OpenCode ${out.colors.dim('(~/.opencode)')}`);
+    out.log(`  ${out.colors.cyan('4)')} All of the above
 `);
 
     const answer = await prompt(rl, `  Choice ${out.colors.dim('[1]')}: `);

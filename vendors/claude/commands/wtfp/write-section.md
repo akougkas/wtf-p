@@ -1,6 +1,6 @@
 ---
 name: wtfp:write-section
-description: Execute a PLAN.md to write section content
+description: Write a section by executing its plan
 argument-hint: "[path-to-PLAN.md]"
 allowed-tools:
   - Read

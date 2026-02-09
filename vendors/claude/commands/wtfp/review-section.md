@@ -1,6 +1,6 @@
 ---
 name: wtfp:review-section
-description: Run 3-layer verification on written sections
+description: Review section for citations, coherence, and requirements
 argument-hint: "[section]"
 allowed-tools:
   - Read

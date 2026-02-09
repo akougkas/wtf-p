@@ -1,6 +1,6 @@
 ---
 name: wtfp:check-todos
-description: Review pending todos -- act on or dismiss
+description: Review pending todos and act on, defer, or dismiss each
 allowed-tools:
   - Read
   - Bash

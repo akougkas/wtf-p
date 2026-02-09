@@ -25,8 +25,8 @@ async function runUpdate(options, pkg, installFunc) {
   }
 
   if (!targetDir) {
-    out.log(`  ${c.yellow('No existing installation found.')}`);
-    out.log(`  Run ${c.cyan('npx wtf-p --global')} to install.\n`);
+    out.log(`  ${c.yellow('No WTF-P installation found.')}`);
+    out.log(`  Install with: ${c.cyan('npx wtf-p')}\n`);
     return;
   }
 

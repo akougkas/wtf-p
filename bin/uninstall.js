@@ -94,49 +94,47 @@ if (hasHelp) {
   console.log(`  ${c.yellow('Usage:')} npx wtf-p uninstall [options]
 
   ${c.yellow('Options:')}
-    ${c.cyan('-g, --global')}              Uninstall from Claude config directory
-    ${c.cyan('-l, --local')}               Uninstall from ./.claude in current directory
+    ${c.cyan('-g, --global')}              Uninstall from home directory
+    ${c.cyan('-l, --local')}               Uninstall from current project
     ${c.cyan('--claude')}                  Uninstall from Claude Code
     ${c.cyan('--gemini')}                  Uninstall from Gemini CLI
     ${c.cyan('--opencode')}                Uninstall from OpenCode
-    ${c.cyan('--all')}                     Uninstall from all runtimes
-    ${c.cyan('-c, --config-dir <path>')}   Specify custom config directory
+    ${c.cyan('--all')}                     Uninstall from all tools
+    ${c.cyan('-c, --config-dir <path>')}   Uninstall from a custom directory
     ${c.cyan('-f, --force')}               Skip confirmation prompts
     ${c.cyan('-b, --backup')}              Backup files before removing
-    ${c.cyan('-n, --dry-run')}             Show what would be removed without removing
-    ${c.cyan('--clean-backups')}           Also remove .backup-* files from prior installs
+    ${c.cyan('-n, --dry-run')}             Preview what would be removed
+    ${c.cyan('--clean-backups')}           Also remove backup files from prior installs
     ${c.cyan('--no-color')}                Disable colored output
     ${c.cyan('-q, --quiet')}               Suppress non-essential output
-    ${c.cyan('-h, --help')}                Show this help message
+    ${c.cyan('-h, --help')}                Show this help
 
   ${c.yellow('What gets removed:')}
-    ${c.dim('commands/wtfp/')}         - WTF-P slash commands
-    ${c.dim('write-the-f-paper/')}     - WTF-P workflows
-    ${c.dim('skills/wtfp/')}           - WTF-P skills
-    ${c.dim('.claude-plugin/')}        - Plugin manifest
-    ${c.dim('.wtfp-version')}          - Version tracking file
+    ${c.dim('commands/wtfp/')}         Slash commands (/wtfp:*)
+    ${c.dim('write-the-f-paper/')}     Writing system files
+    ${c.dim('agents/wtfp/')}           Agent definitions
+    ${c.dim('skills/wtfp/')}           Skill definitions
+    ${c.dim('.claude-plugin/')}        Plugin manifest
+    ${c.dim('.wtfp-version')}          Version tracking file
 
   ${c.yellow('What stays intact:')}
-    ${c.dim('CLAUDE.md')}               - Your personal instructions (never touched)
-    ${c.dim('commands/')}               - Other slash commands you may have
-    ${c.dim('settings.json')}           - Your Claude settings
-    ${c.dim('Other directories')}       - Any other config or plugins
+    ${c.dim('CLAUDE.md')}               Your personal instructions (never touched)
+    ${c.dim('commands/')}               Other slash commands you added
+    ${c.dim('settings.json')}           Your tool settings
+    ${c.dim('Everything else')}         Nothing outside WTF-P is modified
 
   ${c.yellow('Examples:')}
-    ${c.dim('# Interactive uninstall from ~/.claude')}
-    npx wtf-p uninstall --global
-
     ${c.dim('# Preview what would be removed')}
     npx wtf-p uninstall --global --dry-run
 
-    ${c.dim('# Backup before removing')}
+    ${c.dim('# Backup then remove')}
     npx wtf-p uninstall --global --backup
 
-    ${c.dim('# Also clean up backup files from prior installs')}
-    npx wtf-p uninstall --global --clean-backups
+    ${c.dim('# Remove from all tools at once')}
+    npx wtf-p uninstall --all
 
-    ${c.dim('# Uninstall from custom location')}
-    npx wtf-p uninstall --global --config-dir ~/.claude-research
+    ${c.dim('# Also clean up leftover backup files')}
+    npx wtf-p uninstall --global --clean-backups
 `);
   process.exit(0);
 }
@@ -492,11 +490,11 @@ async function uninstall(runtime) {
   }
 
   out.log(`
-  ${c.green('Done!')} WTF-P has been uninstalled from ${vendorConfig.name}.
+  ${c.green('Done!')} WTF-P has been removed from ${vendorConfig.name}.
 
-  ${c.dim('Your config files remain untouched.')}
+  ${c.dim('Your personal config files were not touched.')}
 
-  To reinstall: ${c.cyan('npx wtf-p --' + runtime)}
+  To reinstall later: ${c.cyan('npx wtf-p')}
 `);
 }
 
@@ -605,7 +603,7 @@ async function main() {
   // Validate conflicting flags
   const runtimeFlags = [hasGlobal, hasLocal, hasClaude, hasGemini, hasOpenCode, hasAll].filter(Boolean).length;
   if (runtimeFlags > 1 && !hasAll) {
-    out.error('Cannot specify multiple runtime flags (use --all to uninstall from all)');
+    out.error('Pick one tool at a time, or use --all to uninstall from everything');
     process.exit(1);
   }
   if (explicitConfigDir && hasLocal) {

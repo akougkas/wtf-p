@@ -1,6 +1,6 @@
 ---
 name: wtfp:progress
-description: Check writing progress, show context, and route to next action
+description: Show writing progress and suggest next step
 allowed-tools:
   - Read
   - Bash

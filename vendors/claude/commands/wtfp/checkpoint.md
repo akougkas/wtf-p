@@ -1,6 +1,6 @@
 ---
 name: wtfp:checkpoint
-description: Save or restore paper state checkpoint
+description: Save, restore, or list paper state snapshots
 argument-hint: "[save|restore|list] [label]"
 allowed-tools:
   - Read

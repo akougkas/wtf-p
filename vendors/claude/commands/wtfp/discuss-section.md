@@ -1,6 +1,6 @@
 ---
 name: wtfp:discuss-section
-description: Gather section context through adaptive questioning before planning
+description: Discuss your vision for a section before planning it
 argument-hint: "[section-number]"
 allowed-tools:
   - Read

@@ -1,6 +1,6 @@
 ---
 name: wtfp:update
-description: Check for newer WTF-P version and install update
+description: Check for updates and install newer version
 allowed-tools:
   - Read
   - Bash

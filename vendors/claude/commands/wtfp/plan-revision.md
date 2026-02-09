@@ -1,6 +1,6 @@
 ---
 name: wtfp:plan-revision
-description: Create fix plan from review issues
+description: Create revision plan from review issues
 argument-hint: "[plan]"
 allowed-tools:
   - Read

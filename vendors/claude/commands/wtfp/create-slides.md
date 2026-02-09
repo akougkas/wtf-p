@@ -1,6 +1,6 @@
 ---
 name: wtfp:create-slides
-description: Full workflow for creating presentation slides from project content
+description: Generate presentation slides from paper content
 allowed-tools:
   - Read
   - Write

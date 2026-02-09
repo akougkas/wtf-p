@@ -1,6 +1,6 @@
 ---
 name: wtfp:audit-milestone
-description: Pre-submission audit checking sections, arguments, words, and citations
+description: Run pre-submission checks on sections, citations, and word counts
 allowed-tools:
   - Read
   - Bash

@@ -1,6 +1,6 @@
 ---
 name: wtfp:insert-section
-description: Insert urgent section between existing sections
+description: Insert a new section between existing sections
 argument-hint: "<after> <description>"
 allowed-tools:
   - Read

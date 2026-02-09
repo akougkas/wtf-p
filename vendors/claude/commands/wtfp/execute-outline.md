@@ -1,6 +1,6 @@
 ---
 name: wtfp:execute-outline
-description: Execute all sections via wave-based parallel execution, then verify coherence
+description: Write all sections in parallel, then check coherence
 allowed-tools:
   - Read
   - Bash

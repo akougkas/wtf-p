@@ -1,6 +1,6 @@
 ---
 name: wtfp:analyze-bib
-description: Analyze BibTeX file and suggest citation placement by section
+description: Analyze bibliography and map citations to sections
 argument-hint: "[bib-file]"
 allowed-tools:
   - Read

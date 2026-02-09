@@ -1,6 +1,6 @@
 ---
 name: wtfp:quick
-description: Execute a quick writing task with minimal ceremony
+description: Run a small writing fix without full planning overhead
 argument-hint: "[task description]"
 allowed-tools:
   - Read

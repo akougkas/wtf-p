@@ -1,6 +1,6 @@
 ---
 name: wtfp:resume-writing
-description: Resume work from previous session with full context restoration
+description: Resume writing from a previous session
 allowed-tools:
   - Read
   - Bash

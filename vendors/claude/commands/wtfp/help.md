@@ -1,6 +1,6 @@
 ---
 name: wtfp:help
-description: Show available WTF-P commands and usage guide
+description: Show all WTF-P commands and how to use them
 allowed-tools: []
 ---
 

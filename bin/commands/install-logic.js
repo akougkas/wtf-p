@@ -95,15 +95,15 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
 
   if (existingFiles.length > 0 && !hasForce && !hasBackupAll && isInteractive) {
     const relPath = getPathLabel(targetDir, true);
-    out.log(`  ${c.yellow(`Found ${existingFiles.length} existing WTF-P file(s) in ${relPath}`)}
+    out.log(`  ${c.yellow(`Found ${existingFiles.length} existing file(s) in ${relPath}`)}
 `);
 
     if (showExplanations) {
       out.log(`  ${c.dim('For each file, choose:')}`);
-      out.log(`  ${c.dim('[o]verwrite - Replace with new version')}`);
-      out.log(`  ${c.dim('[s]kip      - Keep your existing file')}`);
-      out.log(`  ${c.dim('[b]ackup    - Save existing, then install new')}`);
-      out.log(`  ${c.dim('[a]ll       - Apply same choice to remaining')}\n`);
+      out.log(`  ${c.dim('[o]verwrite  Replace with new version')}`);
+      out.log(`  ${c.dim('[s]kip       Keep your existing file')}`);
+      out.log(`  ${c.dim('[b]ackup     Save existing, then install new')}`);
+      out.log(`  ${c.dim('[a]ll        Apply same choice to all remaining')}\n`);
     }
   }
 
@@ -236,14 +236,13 @@ async function install(runtime, isUpdate, options, pkg) {
       // Installing local — check if global exists
       const globalInstall = detectInstallation(globalDir);
       if (globalInstall.hasCommands) {
-        out.log(`  ${c.yellow('⚠ Warning: WTF-P is already installed globally')} ${c.dim('(' + getPathLabel(globalDir, true) + ')')}`);
-        out.log(`    Claude Code loads commands from both global and local directories.`);
-        out.log(`    Installing locally will create ${c.red('duplicate commands')}.`);
+        out.log(`  ${c.yellow('⚠ WTF-P is already installed globally')} ${c.dim('(' + getPathLabel(globalDir, true) + ')')}`);
+        out.log(`    Installing locally too will cause every command to appear twice.`);
         out.log('');
         out.log(`    ${c.cyan('Options:')}`);
-        out.log(`      • Use the global install as-is (recommended)`);
-        out.log(`      • Uninstall global first: ${c.dim('npx wtf-p uninstall --global')}`);
-        out.log(`      • Continue anyway (you'll see every /wtfp command twice)`);
+        out.log(`      • Use your global install as-is (recommended)`);
+        out.log(`      • Remove global first: ${c.dim('npx wtf-p uninstall --global')}`);
+        out.log(`      • Continue anyway (commands will be duplicated)`);
         out.log('');
 
         if (options.isInteractive && !options.hasForce) {
@@ -264,9 +263,9 @@ async function install(runtime, isUpdate, options, pkg) {
       // Installing global — check if local exists in cwd
       const localInstall = detectInstallation(localDir);
       if (localInstall.hasCommands && globalDir !== localDir) {
-        out.log(`  ${c.yellow('⚠ Note: WTF-P is also installed locally')} ${c.dim('(' + getPathLabel(localDir, false) + ')')}`);
-        out.log(`    Claude Code in this directory will see commands from both installs.`);
-        out.log(`    To avoid duplicates: ${c.dim('npx wtf-p uninstall --local')}`);
+        out.log(`  ${c.yellow('⚠ WTF-P is also installed locally')} ${c.dim('(' + getPathLabel(localDir, false) + ')')}`);
+        out.log(`    Commands may appear twice in this directory.`);
+        out.log(`    To fix: ${c.dim('npx wtf-p uninstall --local')}`);
         out.log('');
       }
     }
@@ -316,10 +315,10 @@ async function install(runtime, isUpdate, options, pkg) {
 `);
 
     if (showExplanations && !isUpdate) {
-      out.log(`  ${c.yellow('Quick Start:')}`);
-      out.log(`    ${c.cyan('/wtfp:new-paper')}      Start a new academic paper`);
-      out.log(`    ${c.cyan('/wtfp:progress')}       Check your writing status`);
-      out.log(`    ${c.cyan('/wtfp:help')}           Show all commands\n`);
+      out.log(`  ${c.yellow('Get started:')}`);
+      out.log(`    ${c.cyan('/wtfp:new-paper')}      Define your paper's vision and structure`);
+      out.log(`    ${c.cyan('/wtfp:progress')}       See where you are and what's next`);
+      out.log(`    ${c.cyan('/wtfp:help')}           Browse all available commands\n`);
     }
   }
 }

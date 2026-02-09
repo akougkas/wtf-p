@@ -1,6 +1,6 @@
 {
   "name": "wtf-p",
-  "description": "Academic writing toolkit - Paper, Proposal, Presentation, Poster",
+  "description": "Structured academic writing with /wtfp:* slash commands. Plan, write, review, and export papers, proposals, presentations, and posters with citation grounding and verification.",
   "version": "0.5.0",
   "author": {
     "name": "akougkas",

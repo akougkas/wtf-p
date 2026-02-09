@@ -1,6 +1,6 @@
 ---
 name: wtfp:research-gap
-description: Comprehensive literature/domain research for a section
+description: Research literature and domain knowledge for a section
 argument-hint: "[section] [--depth=quick|standard|deep]"
 allowed-tools:
   - Read

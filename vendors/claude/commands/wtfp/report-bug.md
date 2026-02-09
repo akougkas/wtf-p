@@ -1,6 +1,6 @@
 ---
 name: wtfp:report-bug
-description: Report a bug in WTF-P via GitHub issue
+description: Report a bug via GitHub issue
 allowed-tools:
   - Bash
   - Read

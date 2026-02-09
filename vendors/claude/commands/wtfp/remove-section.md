@@ -1,6 +1,6 @@
 ---
 name: wtfp:remove-section
-description: Remove a future section and renumber subsequent sections
+description: Remove an unwritten section and renumber the rest
 argument-hint: "[section]"
 allowed-tools:
   - Read

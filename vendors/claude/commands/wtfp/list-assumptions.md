@@ -1,6 +1,6 @@
 ---
 name: wtfp:list-assumptions
-description: See what Claude is planning to write before it starts
+description: Preview intended approach for a section before writing
 argument-hint: "[section]"
 allowed-tools:
   - Read

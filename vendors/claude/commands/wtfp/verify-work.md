@@ -1,6 +1,6 @@
 ---
 name: wtfp:verify-work
-description: Walk through section verification one test at a time
+description: Test a written section against its plan, one check at a time
 argument-hint: "[section-number]"
 allowed-tools:
   - Read

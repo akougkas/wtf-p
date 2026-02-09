@@ -1,6 +1,6 @@
 ---
 name: wtfp:add-todo
-description: Capture an idea or task for later without breaking flow
+description: Capture a quick note or task without breaking your flow
 argument-hint: "[description]"
 allowed-tools:
   - Read

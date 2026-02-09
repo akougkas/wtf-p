@@ -1,6 +1,6 @@
 ---
 name: wtfp:contribute
-description: Guide through contributing code to WTF-P via Pull Request
+description: Walk through contributing code to WTF-P via pull request
 allowed-tools:
   - Bash
   - Read

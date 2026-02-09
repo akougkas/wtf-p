@@ -1,6 +1,6 @@
 ---
 name: wtfp:map-project
-description: Map existing source materials for brownfield writing projects
+description: Index existing drafts, data, and references for a project
 allowed-tools:
   - Read
   - Bash

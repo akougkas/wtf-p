@@ -1,6 +1,6 @@
 ---
 name: wtfp:submit-milestone
-description: Archive completed submission round
+description: Archive a completed draft or submission version
 argument-hint: "[version]"
 allowed-tools:
   - Read

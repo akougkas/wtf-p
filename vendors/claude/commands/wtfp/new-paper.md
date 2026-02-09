@@ -1,6 +1,6 @@
 ---
 name: wtfp:new-paper
-description: Initialize a new paper with deep context gathering and PROJECT.md
+description: Start a new paper with guided interview and setup
 allowed-tools:
   - Read
   - Bash

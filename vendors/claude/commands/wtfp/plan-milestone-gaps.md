@@ -1,6 +1,6 @@
 ---
 name: wtfp:plan-milestone-gaps
-description: Create targeted fix plans from audit findings
+description: Create fix plans for gaps found by audit-milestone
 allowed-tools:
   - Read
   - Bash

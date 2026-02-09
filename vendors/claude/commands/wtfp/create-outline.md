@@ -1,6 +1,6 @@
 ---
 name: wtfp:create-outline
-description: Create document outline by spawning outliner agent to produce structure artifacts
+description: Build section outline, argument map, and word budgets
 allowed-tools:
   - Read
   - Bash

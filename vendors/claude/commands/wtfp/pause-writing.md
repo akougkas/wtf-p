@@ -1,6 +1,6 @@
 ---
 name: wtfp:pause-writing
-description: Create context handoff when pausing work mid-section
+description: Save current progress so you can resume later
 allowed-tools:
   - Read
   - Bash

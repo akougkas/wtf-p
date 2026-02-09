@@ -1,6 +1,6 @@
 ---
 name: wtfp:request-feature
-description: Request a new feature for WTF-P via GitHub issue
+description: Request a new feature via GitHub issue
 allowed-tools:
   - Bash
   - Read

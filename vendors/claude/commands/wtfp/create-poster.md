@@ -1,6 +1,6 @@
 ---
 name: wtfp:create-poster
-description: Full workflow for creating an academic poster from project content
+description: Generate academic poster from paper content
 allowed-tools:
   - Read
   - Write

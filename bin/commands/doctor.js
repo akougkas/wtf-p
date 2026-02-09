@@ -6,7 +6,7 @@ async function runDoctor(options) {
   const { out, explicitConfigDir } = options;
   const c = out.colors;
 
-  out.log(`  ${c.yellow('WTF-P Installation Doctor')}\n`);
+  out.log(`  ${c.yellow('WTF-P Health Check')}\n`);
 
   const issues = [];
   const checks = [];
@@ -148,11 +148,11 @@ async function runDoctor(options) {
   if (localDir !== globalDir) {
     const localDetection = detectInstallation(localDir);
     if (localDetection.hasCommands && detection.hasCommands) {
-      issues.push('WTF-P is installed both globally and locally — Claude Code will show duplicate commands');
+      issues.push('WTF-P is installed both globally and locally — commands will appear twice');
       checks.push({
         name: 'Dual installation',
         status: 'warn',
-        detail: `Both ${getPathLabel(globalDir, true)} and ./.claude have WTF-P`
+        detail: `Found in both ${getPathLabel(globalDir, true)} and ./.claude`
       });
     }
   }
@@ -177,7 +177,7 @@ async function runDoctor(options) {
       out.log(`    ${c.yellow('•')} ${issue}`);
     }
     out.log('');
-    out.log(`  ${c.dim('Run')} ${c.cyan('npx wtf-p --global --force')} ${c.dim('to reinstall')}\n`);
+    out.log(`  ${c.dim('To fix, reinstall:')} ${c.cyan('npx wtf-p --global --force')}\n`);
   } else {
     out.log(`  ${c.green('No issues found!')}\n`);
   }
