@@ -44,11 +44,11 @@ HAS_SOURCES=$([ -d sources ] || [ -d references ] || [ -d literature ] && echo "
 HAS_SOURCE_MAP=$([ -d .planning/sources ] && echo "yes")
 ```
 
-**If materials detected and no source map:** Offer `/wtfp:map-project` first via AskUserQuestion.
+**If materials detected and no source map:** Offer `/wtfp:map-project` first via the question tool.
 
 ## 3. Gather Core Context (Batched)
 
-Use AskUserQuestion -- collect foundations in one turn:
+Use the question tool -- collect foundations in one turn:
 - header: "Paper Foundations"
 - question: "1. **Type** (Research paper, Grant, Thesis)\n2. **Venue** (NeurIPS, CHI, Nature, etc.)\n3. **Core Argument** (one thing you're proving)\n4. **Audience** (who is this for?)"
 - options: "I provided the details" | "Guide me step-by-step"
@@ -57,7 +57,7 @@ If step-by-step selected, ask Type -> Venue -> Argument sequentially.
 
 ## 4. Venue Template Selection
 
-If ambiguous, ask via AskUserQuestion:
+If ambiguous, ask via the question tool:
 - header: "Venue Structure"
 - options: "ACM CS" | "IEEE CS" | "ML/AI" | "Nature/Science" | "Thesis"
 
@@ -91,11 +91,11 @@ Create `.planning/structure/` with:
 
 ## 9. Workflow Mode & Config
 
-Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via AskUserQuestion.
+Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via the question tool.
 
 ## 9b. Git & Planning Settings
 
-Ask about git tracking via AskUserQuestion:
+Ask about git tracking via the question tool:
 - header: "Git & Planning"
 - question: "Track planning documents in git?"
 - options:
@@ -104,7 +104,7 @@ Ask about git tracking via AskUserQuestion:
 
 Use the answer to set `planning.commit_docs` in config.json.
 
-Ask about branching strategy via AskUserQuestion:
+Ask about branching strategy via the question tool:
 - header: "Git Branching"
 - question: "Branch strategy for git history?"
 - options:

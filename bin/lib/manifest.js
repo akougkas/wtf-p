@@ -68,6 +68,18 @@ const MANIFEST = {
         src: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'),
         dest: 'commands/wtfp',
         type: 'dir'
+      },
+      {
+        id: 'agents',
+        src: path.join(ROOT, 'vendors', 'gemini', 'agents', 'wtfp'),
+        dest: 'agents/wtfp',
+        type: 'dir'
+      },
+      {
+        id: 'scripts',
+        src: path.join(ROOT, 'bin', 'lib'),
+        dest: 'bin',
+        type: 'dir'
       }
     ]
   },
@@ -86,6 +98,18 @@ const MANIFEST = {
         id: 'commands',
         src: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'),
         dest: 'commands/wtfp',
+        type: 'dir'
+      },
+      {
+        id: 'agents',
+        src: path.join(ROOT, 'vendors', 'opencode', 'agents', 'wtfp'),
+        dest: 'agents/wtfp',
+        type: 'dir'
+      },
+      {
+        id: 'scripts',
+        src: path.join(ROOT, 'bin', 'lib'),
+        dest: 'bin',
         type: 'dir'
       }
     ]

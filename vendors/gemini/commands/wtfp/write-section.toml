@@ -1,9 +1,6 @@
----
-name: wtfp:write-section
-description: Execute a PLAN.md to write section content
-argument-hint: "[path-to-PLAN.md]"
----
+description = "Write a section by executing its plan"
 
+prompt = '''
 <execution_context>
 @~/.config/gemini/write-the-f-paper/workflows/execute-section.md
 @~/.config/gemini/write-the-f-paper/references/git-integration.md
@@ -18,7 +15,7 @@ Execute a PLAN.md file to write section content.
 </objective>
 
 <context>
-Plan path: $ARGUMENTS (path to a PLAN.md file)
+Plan path: {{args}} (path to a PLAN.md file)
 </context>
 
 <process>
@@ -26,7 +23,7 @@ Plan path: $ARGUMENTS (path to a PLAN.md file)
 ## 1. Validate Environment and Resolve Model Profile
 
 ```bash
-[ ! -f "$ARGUMENTS" ] && echo "ERROR: Plan not found at $ARGUMENTS" && exit 1
+[ ! -f "{{args}}" ] && echo "ERROR: Plan not found at {{args}}" && exit 1
 ls .planning/ 2>/dev/null
 ```
 
@@ -44,29 +41,31 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 
 **Resolve gate and safety flags:**
 ```bash
-# Gate: confirm_write -- skip confirmation if false
+# Gate: confirm_write — skip confirmation if false
 GATE_CONFIRM_WRITE=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_write"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 
-# Safety: always_confirm_destructive -- force confirmation for destructive ops
+# Safety: always_confirm_destructive — force confirmation for destructive ops
 SAFETY_DESTRUCTIVE=$(cat .planning/config.json 2>/dev/null | grep -o '"always_confirm_destructive"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 ```
 
 Check for existing SUMMARY.md:
 ```bash
-SUMMARY_PATH="${ARGUMENTS/PLAN.md/SUMMARY.md}"
+PLAN_PATH="{{args}}"
+SUMMARY_PATH="${PLAN_PATH/PLAN.md/SUMMARY.md}"
 [ -f "$SUMMARY_PATH" ] && echo "WARNING: SUMMARY.md exists. Re-executing will overwrite."
 ```
 
 ## 2. Read Context Files
 
 ```bash
-PLAN_CONTENT=$(cat "$ARGUMENTS")
+PLAN_PATH="{{args}}"
+PLAN_CONTENT=$(cat "$PLAN_PATH")
 STATE_CONTENT=$(cat .planning/STATE.md)
 PROJECT_CONTENT=$(cat .planning/PROJECT.md)
 ARGMAP_CONTENT=$(cat .planning/structure/argument-map.md 2>/dev/null)
 
 # Derive section dir from plan path
-SECTION_DIR=$(dirname "$ARGUMENTS")
+SECTION_DIR=$(dirname "$PLAN_PATH")
 CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
 PRIOR_CONTENT=$(cat paper/*.md 2>/dev/null | head -500)
 ```
@@ -74,7 +73,7 @@ PRIOR_CONTENT=$(cat paper/*.md 2>/dev/null | head -500)
 ## 3. Gate Check: Confirm Before Writing
 
 **If GATE_CONFIRM_WRITE is "true" (default) OR SAFETY_DESTRUCTIVE is "true" and SUMMARY.md exists (re-execution is destructive):**
-Present plan summary to user via AskUserQuestion and wait for confirmation before proceeding.
+Present plan summary to user via interactive prompting and wait for confirmation before proceeding.
 
 **If GATE_CONFIRM_WRITE is "false" AND (SAFETY_DESTRUCTIVE is "false" OR no existing SUMMARY.md):**
 Skip confirmation and proceed directly to writing.
@@ -82,9 +81,9 @@ Skip confirmation and proceed directly to writing.
 ## 4. Spawn wtfp-section-writer Agent
 
 ```
----
- WTF-P > WRITING SECTION
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► WRITING SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 Fill prompt with inlined content and spawn:
@@ -194,25 +193,25 @@ CURRENT_BRANCH=$(git branch --show-current 2>/dev/null)
 
 <offer_next>
 
----
- WTF-P > SECTION WRITTEN
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► SECTION WRITTEN ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**{Section Name}** -- {W} words, mode: {mode}
+**{Section Name}** — {W} words, mode: {mode}
 
 Verification: {Verified | Gaps found | Skipped}
 
----
+───────────────────────────────────────────
 
-## > Next Up
+## ▶ Next Up
 
-**Review section** -- run verification
+**Review section** — run verification
 
 `/wtfp:review-section {section}`
 
-<sub>`/clear` first -> fresh context window</sub>
+<sub>`/clear` first → fresh context window</sub>
 
----
+───────────────────────────────────────────
 
 </offer_next>
 
@@ -226,3 +225,4 @@ Verification: {Verified | Gaps found | Skipped}
 - [ ] Verification result handled
 - [ ] User knows next steps
 </success_criteria>
+'''

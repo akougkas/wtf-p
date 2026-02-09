@@ -16,10 +16,11 @@ let failCount = 0;
 
 // Vendor-specific validation rules
 // Claude requires allowed-tools; Gemini and OpenCode do not (tools available by default)
+// Gemini uses TOML command format; Claude and OpenCode use Markdown with YAML frontmatter
 const VENDOR_RULES = {
-  claude: { requiresAllowedTools: true },
-  gemini: { requiresAllowedTools: false },
-  opencode: { requiresAllowedTools: false }
+  claude: { requiresAllowedTools: true, commandFormat: 'md' },
+  gemini: { requiresAllowedTools: false, commandFormat: 'toml' },
+  opencode: { requiresAllowedTools: false, commandFormat: 'md' }
 };
 
 function error(file, msg) {
@@ -75,6 +76,49 @@ function parseFrontmatter(content) {
   });
   
   return { data, bodyIndex: end + 4 };
+}
+
+/**
+ * Simple TOML parser for command files
+ * Extracts description and prompt fields
+ */
+function parseTomlCommand(content) {
+  const data = {};
+  
+  // Extract description = "..."
+  const descMatch = content.match(/^description\s*=\s*"([^"]*)"/m);
+  if (descMatch) data.description = descMatch[1];
+  
+  // Extract prompt (multiline string between ''' or """)
+  const promptMatch = content.match(/^prompt\s*=\s*'''([\s\S]*?)'''/m) ||
+                      content.match(/^prompt\s*=\s*"""([\s\S]*?)"""/m);
+  if (promptMatch) data.prompt = promptMatch[1];
+  
+  return data;
+}
+
+/**
+ * Validate a Gemini TOML Command file
+ */
+function validateTomlCommand(filepath, vendor = null) {
+  const content = fs.readFileSync(filepath, 'utf8');
+  const relPath = path.relative(ROOT, filepath);
+
+  // 1. Parse TOML
+  const data = parseTomlCommand(content);
+
+  // 2. Required Fields
+  if (!data.description) error(relPath, "Missing 'description' in TOML");
+  if (!data.prompt) {
+    error(relPath, "Missing 'prompt' in TOML");
+    return;
+  }
+
+  // 3. Structure Tags (in prompt body)
+  if (!data.prompt.includes('<objective>')) error(relPath, "Missing <objective> tag in prompt");
+  if (!data.prompt.includes('<process>')) error(relPath, "Missing <process> tag in prompt");
+
+  pass(relPath);
 }
 
 /**
@@ -194,9 +238,14 @@ function main() {
     const vendors = fs.readdirSync(vendorDir);
     vendors.forEach(vendor => {
       const cmdDir = path.join(vendorDir, vendor, 'commands', 'wtfp');
+      const vendorRules = VENDOR_RULES[vendor] || VENDOR_RULES.claude;
       if (fs.existsSync(cmdDir)) {
         fs.readdirSync(cmdDir).forEach(f => {
-          if (f.endsWith('.md')) validateCommand(path.join(cmdDir, f), vendor);
+          if (vendorRules.commandFormat === 'toml' && f.endsWith('.toml')) {
+            validateTomlCommand(path.join(cmdDir, f), vendor);
+          } else if (f.endsWith('.md')) {
+            validateCommand(path.join(cmdDir, f), vendor);
+          }
         });
       }
 

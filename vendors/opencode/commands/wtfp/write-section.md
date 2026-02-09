@@ -74,7 +74,7 @@ PRIOR_CONTENT=$(cat paper/*.md 2>/dev/null | head -500)
 ## 3. Gate Check: Confirm Before Writing
 
 **If GATE_CONFIRM_WRITE is "true" (default) OR SAFETY_DESTRUCTIVE is "true" and SUMMARY.md exists (re-execution is destructive):**
-Present plan summary to user via AskUserQuestion and wait for confirmation before proceeding.
+Present plan summary to user via the question tool and wait for confirmation before proceeding.
 
 **If GATE_CONFIRM_WRITE is "false" AND (SAFETY_DESTRUCTIVE is "false" OR no existing SUMMARY.md):**
 Skip confirmation and proceed directly to writing.

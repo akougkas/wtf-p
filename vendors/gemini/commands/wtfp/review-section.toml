@@ -1,9 +1,6 @@
----
-name: wtfp:review-section
-description: Run 3-layer verification on written sections
-argument-hint: "[section]"
----
+description = "Review section for citations, coherence, and requirements"
 
+prompt = '''
 <execution_context>
 @~/.config/gemini/write-the-f-paper/workflows/review-section.md
 </execution_context>
@@ -20,7 +17,7 @@ Runs 3-layer verification:
 </objective>
 
 <context>
-Section: $ARGUMENTS (section number or path)
+Section: {{args}} (section number or path)
 </context>
 
 <process>
@@ -43,14 +40,14 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 
 ## 2. Select Reviewer Persona
 
-Use AskUserQuestion:
+Use interactive prompting:
 - header: "Reviewer"
 - question: "What type of review do you want?"
 - options:
-  - "Friendly Mentor" -- Balanced, constructive, actionable (Recommended)
-  - "Reviewer #2 (Hostile)" -- Nitpicky, assumes worst, finds every flaw
-  - "Area Chair (Big Picture)" -- Strategic focus on contribution and impact
-  - "Camera-Ready Editor" -- Formatting, style, polish, consistency
+  - "Friendly Mentor" — Balanced, constructive, actionable (Recommended)
+  - "Reviewer #2 (Hostile)" — Nitpicky, assumes worst, finds every flaw
+  - "Area Chair (Big Picture)" — Strategic focus on contribution and impact
+  - "Camera-Ready Editor" — Formatting, style, polish, consistency
 
 ## 3. Read Context Files
 
@@ -68,9 +65,9 @@ CONTEXT_CONTENT=$(cat "${SECTION_DIR}"/*-CONTEXT.md 2>/dev/null)
 ## 4. Spawn wtfp-section-reviewer Agent
 
 ```
----
- WTF-P > REVIEWING SECTION
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► REVIEWING SECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ```
@@ -94,23 +91,23 @@ Review prompt includes: `<section_content>` with written text, `<review_persona>
 
 <offer_next>
 
----
- WTF-P > REVIEW COMPLETE
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► REVIEW COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [If issues found:]
-**Plan revisions** -- address identified issues
+**Plan revisions** — address identified issues
 
 `/wtfp:plan-revision XX-YY`
 
 [If no issues:]
-**Continue** -- move to next section
+**Continue** — move to next section
 
 `/wtfp:plan-section [next]`
 
-<sub>`/clear` first -> fresh context window</sub>
+<sub>`/clear` first → fresh context window</sub>
 
----
+───────────────────────────────────────────
 
 </offer_next>
 
@@ -121,3 +118,4 @@ Review prompt includes: `<section_content>` with written text, `<review_persona>
 - [ ] Issues documented in ISSUES.md
 - [ ] Clear next steps provided
 </success_criteria>
+'''

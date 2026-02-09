@@ -1,9 +1,6 @@
----
-name: wtfp:plan-section
-description: Create detailed writing plan for a section (PLAN.md)
-argument-hint: "[section]"
----
+description = "Create detailed writing plan for a section"
 
+prompt = '''
 <execution_context>
 @~/.config/gemini/write-the-f-paper/references/plan-format.md
 @~/.config/gemini/write-the-f-paper/references/length-estimation.md
@@ -18,7 +15,7 @@ Create executable writing plan with context injection and task breakdown.
 </objective>
 
 <context>
-Section number: $ARGUMENTS (optional - auto-detects next unplanned section if not provided)
+Section number: {{args}} (optional - auto-detects next unplanned section if not provided)
 </context>
 
 <process>
@@ -46,7 +43,7 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 
 **Resolve gate flag:**
 ```bash
-# Gate: confirm_plan -- skip confirmation if false
+# Gate: confirm_plan — skip confirmation if false
 GATE_CONFIRM_PLAN=$(cat .planning/config.json 2>/dev/null | grep -o '"confirm_plan"[[:space:]]*:[[:space:]]*[^,}]*' | grep -o 'true\|false' || echo "true")
 ```
 
@@ -78,7 +75,7 @@ BRANCH_STRATEGY=$(cat .planning/config.json 2>/dev/null | grep -o '"branching_st
 
 ## 2. Parse and Normalize Arguments
 
-Extract section number from $ARGUMENTS. If no section number, detect next unplanned section from roadmap.
+Extract section number from {{args}}. If no section number, detect next unplanned section from roadmap.
 
 ```bash
 ls .planning/sections/*/ 2>/dev/null | head -10
@@ -118,7 +115,7 @@ If RESEARCH.md missing for a literature-heavy section, suggest `/wtfp:research-g
 ## 6. Gate Check: Confirm Before Planning
 
 **If GATE_CONFIRM_PLAN is "true" (default):**
-Present section context summary to user via AskUserQuestion and wait for confirmation before proceeding.
+Present section context summary to user via interactive prompting and wait for confirmation before proceeding.
 
 **If GATE_CONFIRM_PLAN is "false":**
 Skip confirmation and proceed directly to planning.
@@ -126,9 +123,9 @@ Skip confirmation and proceed directly to planning.
 ## 7. Spawn wtfp-section-planner Agent
 
 ```
----
- WTF-P > PLANNING SECTION {X}
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► PLANNING SECTION {X}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 Fill prompt with inlined content and spawn:
@@ -179,25 +176,25 @@ Spawn `wtfp-plan-checker` with plans + ROADMAP + argument-map + CONTEXT.
 
 <offer_next>
 
----
- WTF-P > SECTION {X} PLANNED
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► SECTION {X} PLANNED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-**Section {X}: {Name}** -- {N} plan(s), {W} words target
+**Section {X}: {Name}** — {N} plan(s), {W} words target
 
 Verification: {Passed | Passed with override | Skipped}
 
----
+───────────────────────────────────────────
 
-## > Next Up
+## ▶ Next Up
 
-**Execute writing** -- run the plan
+**Execute writing** — run the plan
 
 `/wtfp:write-section .planning/sections/XX-name/XX-YY-PLAN.md`
 
-<sub>`/clear` first -> fresh context window</sub>
+<sub>`/clear` first → fresh context window</sub>
 
----
+───────────────────────────────────────────
 
 </offer_next>
 
@@ -212,3 +209,4 @@ Verification: {Passed | Passed with override | Skipped}
 - [ ] Verification passed OR user override OR max iterations
 - [ ] User knows next steps
 </success_criteria>
+'''

@@ -1,0 +1,35 @@
+description = "Generate presentation slides from paper content"
+
+prompt = '''
+<objective>
+Generate presentation slides based on the current project's PROJECT.md and findings.
+Uses the wtfp-marp skill to compile to PDF.
+</objective>
+
+<context>
+@~/.config/gemini/write-the-f-paper/references/principles.md
+@~/.config/gemini/write-the-f-paper/templates/slides/
+</context>
+
+<process>
+## Step 1: Content Synthesis
+- Read `.planning/PROJECT.md` and any drafted sections.
+- Identify the core narrative and supporting claims.
+
+## Step 2: User Interview
+interactive prompting to determine:
+- Presentation duration/target number of slides
+- Specific focus areas
+- Audience background
+
+## Step 3: Markdown Generation
+- Create `slides.md` using Marp format.
+- Separate slides with `---`.
+
+## Step 4: Compilation
+- Use `wtfp-marp` skill: `npx @marp-team/marp-cli slides.md -o slides.pdf`
+
+## Step 5: Review
+- Present the generated slides.pdf path to the user.
+</process>
+'''

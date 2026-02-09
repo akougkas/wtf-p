@@ -1,8 +1,6 @@
----
-name: wtfp:new-paper
-description: Initialize a new paper with deep context gathering and PROJECT.md
----
+description = "Start a new paper with guided interview and setup"
 
+prompt = '''
 <execution_context>
 @~/.config/gemini/write-the-f-paper/references/principles.md
 @~/.config/gemini/write-the-f-paper/references/questioning.md
@@ -44,20 +42,20 @@ HAS_SOURCES=$([ -d sources ] || [ -d references ] || [ -d literature ] && echo "
 HAS_SOURCE_MAP=$([ -d .planning/sources ] && echo "yes")
 ```
 
-**If materials detected and no source map:** Offer `/wtfp:map-project` first via AskUserQuestion.
+**If materials detected and no source map:** Offer `/wtfp:map-project` first via interactive prompting.
 
 ## 3. Gather Core Context (Batched)
 
-Use AskUserQuestion -- collect foundations in one turn:
+Use interactive prompting — collect foundations in one turn:
 - header: "Paper Foundations"
 - question: "1. **Type** (Research paper, Grant, Thesis)\n2. **Venue** (NeurIPS, CHI, Nature, etc.)\n3. **Core Argument** (one thing you're proving)\n4. **Audience** (who is this for?)"
 - options: "I provided the details" | "Guide me step-by-step"
 
-If step-by-step selected, ask Type -> Venue -> Argument sequentially.
+If step-by-step selected, ask Type → Venue → Argument sequentially.
 
 ## 4. Venue Template Selection
 
-If ambiguous, ask via AskUserQuestion:
+If ambiguous, ask via interactive prompting:
 - header: "Venue Structure"
 - options: "ACM CS" | "IEEE CS" | "ML/AI" | "Nature/Science" | "Thesis"
 
@@ -85,17 +83,17 @@ Populate: What This Is, Core Argument, Requirements (Must/Should/Out of Scope), 
 ## 8. Create Structure Documents
 
 Create `.planning/structure/` with:
-- **argument-map.md** -- Central thesis, supporting claims, logical flow, gaps
-- **outline.md** -- Venue template sections, word budget table
-- **narrative-arc.md** -- Problem/Journey/Resolution, reader experience
+- **argument-map.md** — Central thesis, supporting claims, logical flow, gaps
+- **outline.md** — Venue template sections, word budget table
+- **narrative-arc.md** — Problem/Journey/Resolution, reader experience
 
 ## 9. Workflow Mode & Config
 
-Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via AskUserQuestion.
+Ask mode (Interactive / Flow) and depth (Quick / Standard / Comprehensive) via interactive prompting.
 
 ## 9b. Git & Planning Settings
 
-Ask about git tracking via AskUserQuestion:
+Ask about git tracking via interactive prompting:
 - header: "Git & Planning"
 - question: "Track planning documents in git?"
 - options:
@@ -104,7 +102,7 @@ Ask about git tracking via AskUserQuestion:
 
 Use the answer to set `planning.commit_docs` in config.json.
 
-Ask about branching strategy via AskUserQuestion:
+Ask about branching strategy via interactive prompting:
 - header: "Git Branching"
 - question: "Branch strategy for git history?"
 - options:
@@ -129,25 +127,25 @@ git commit -m "docs: initialize [paper-title]"
 
 <offer_next>
 
----
- WTF-P > PAPER INITIALIZED
----
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ WTF-P ► PAPER INITIALIZED ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Project: .planning/PROJECT.md
 - Config: .planning/config.json (mode: [chosen])
 - Structure: .planning/structure/
 
----
+───────────────────────────────────────────
 
-## > Next Up
+## ▶ Next Up
 
 **Create section outline**
 
 `/wtfp:create-outline`
 
-<sub>`/clear` first -> fresh context window</sub>
+<sub>`/clear` first → fresh context window</sub>
 
----
+───────────────────────────────────────────
 
 </offer_next>
 
@@ -159,3 +157,4 @@ git commit -m "docs: initialize [paper-title]"
 - [ ] config.json has workflow mode and model_profile
 - [ ] All committed to git
 </success_criteria>
+'''

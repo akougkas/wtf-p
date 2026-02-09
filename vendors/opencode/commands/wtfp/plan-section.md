@@ -118,7 +118,7 @@ If RESEARCH.md missing for a literature-heavy section, suggest `/wtfp:research-g
 ## 6. Gate Check: Confirm Before Planning
 
 **If GATE_CONFIRM_PLAN is "true" (default):**
-Present section context summary to user via AskUserQuestion and wait for confirmation before proceeding.
+Present section context summary to user via the question tool and wait for confirmation before proceeding.
 
 **If GATE_CONFIRM_PLAN is "false":**
 Skip confirmation and proceed directly to planning.

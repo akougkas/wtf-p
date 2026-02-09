@@ -43,7 +43,7 @@ MODEL_PROFILE=$(cat .planning/config.json 2>/dev/null | grep -o '"model_profile"
 
 ## 2. Select Reviewer Persona
 
-Use AskUserQuestion:
+Use the question tool:
 - header: "Reviewer"
 - question: "What type of review do you want?"
 - options:
