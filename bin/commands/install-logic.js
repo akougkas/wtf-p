@@ -158,6 +158,18 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
       stats.backed++;
     }
 
+    // Safety: never overwrite a non-WTF-P plugin.json
+    if (file.name === 'plugin.json' && file.componentId === 'plugin' && exists) {
+      try {
+        const existing = JSON.parse(fs.readFileSync(file.dest, 'utf8'));
+        if (existing.name && existing.name !== 'wtf-p' && existing.name !== 'write-the-f-paper') {
+          out.verbose(`  ${c.yellow('!')} ${c.dim(relDest)} belongs to another plugin — skipped`);
+          stats.skipped++;
+          continue;
+        }
+      } catch { /* corrupt JSON — safe to overwrite */ }
+    }
+
     const content = processContent(file.src, pathPrefix);
     if (content !== null) {
       fs.writeFileSync(file.dest, content);

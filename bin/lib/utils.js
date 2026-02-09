@@ -160,21 +160,33 @@ function detectInstallation(vendorDir) {
     hasCommands: false,
     hasWorkflows: false,
     hasSkills: false,
+    hasAgents: false,
+    hasMcp: false,
+    hasBin: false,
     version: null,
     partial: false,
     corrupt: false,
     commandFiles: [],
     workflowFiles: [],
-    skillFiles: []
+    skillFiles: [],
+    agentFiles: [],
+    mcpFiles: [],
+    binFiles: []
   };
 
   const commandsDir = path.join(vendorDir, 'commands', 'wtfp');
   const workflowsDir = path.join(vendorDir, 'write-the-f-paper');
   const skillsDir = path.join(vendorDir, 'skills', 'wtfp');
+  const agentsDir = path.join(vendorDir, 'agents', 'wtfp');
+  const mcpDir = path.join(vendorDir, 'mcp');
+  const binDir = path.join(vendorDir, 'bin');
 
   result.hasCommands = fs.existsSync(commandsDir);
   result.hasWorkflows = fs.existsSync(workflowsDir);
   result.hasSkills = fs.existsSync(skillsDir);
+  result.hasAgents = fs.existsSync(agentsDir);
+  result.hasMcp = fs.existsSync(mcpDir);
+  result.hasBin = fs.existsSync(binDir);
 
   if (result.hasCommands) {
     result.commandFiles = collectFiles(commandsDir);
@@ -184,6 +196,15 @@ function detectInstallation(vendorDir) {
   }
   if (result.hasSkills) {
     result.skillFiles = collectFiles(skillsDir);
+  }
+  if (result.hasAgents) {
+    result.agentFiles = collectFiles(agentsDir);
+  }
+  if (result.hasMcp) {
+    result.mcpFiles = collectFiles(mcpDir);
+  }
+  if (result.hasBin) {
+    result.binFiles = collectFiles(binDir);
   }
 
   // Read version info

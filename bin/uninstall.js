@@ -247,7 +247,8 @@ async function uninstall(runtime) {
 
   // Detect installation
   const installed = detectInstallation(targetDir);
-  const totalFiles = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length;
+  const totalFiles = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length
+    + (installed.agentFiles || []).length + (installed.mcpFiles || []).length + (installed.binFiles || []).length;
 
   if (!installed.hasCommands && !installed.hasWorkflows && !installed.hasSkills) {
     out.log(`  ${c.yellow('No WTF-P installation found in ' + locationLabel)}\n`);
@@ -301,7 +302,11 @@ async function uninstall(runtime) {
   const commandsDir = path.join(targetDir, 'commands', 'wtfp');
   const workflowsDir = path.join(targetDir, 'write-the-f-paper');
   const skillsDir = path.join(targetDir, 'skills', 'wtfp');
+  const agentsDir = path.join(targetDir, 'agents', 'wtfp');
+  const mcpDir = path.join(targetDir, 'mcp');
+  const binDir = path.join(targetDir, 'bin');
   const pluginDir = path.join(targetDir, '.claude-plugin');
+  const wtfpPluginFile = path.join(pluginDir, 'plugin.json');
 
   if (installed.hasCommands) {
     out.log(`    ${c.cyan('commands/wtfp/')} (${installed.commandFiles.length} files)`);
@@ -312,8 +317,17 @@ async function uninstall(runtime) {
   if (installed.hasSkills) {
     out.log(`    ${c.cyan('skills/wtfp/')} (${installed.skillFiles.length} files)`);
   }
-  if (fs.existsSync(pluginDir)) {
-    out.log(`    ${c.cyan('.claude-plugin/')} (manifest)`);
+  if (fs.existsSync(agentsDir)) {
+    out.log(`    ${c.cyan('agents/wtfp/')} (agent definitions)`);
+  }
+  if (fs.existsSync(mcpDir)) {
+    out.log(`    ${c.cyan('mcp/')} (MCP server)`);
+  }
+  if (fs.existsSync(binDir)) {
+    out.log(`    ${c.cyan('bin/')} (scripts)`);
+  }
+  if (fs.existsSync(wtfpPluginFile)) {
+    out.log(`    ${c.cyan('.claude-plugin/plugin.json')} (WTF-P plugin manifest)`);
   }
   if (installed.version) {
     out.log(`    ${c.cyan(VERSION_FILE)} (version tracking)`);
@@ -355,40 +369,58 @@ async function uninstall(runtime) {
 
   // Backup if requested
   if (hasBackup) {
-    const backupDir = getBackupDir(targetDir);
-    fs.mkdirSync(backupDir, { recursive: true });
+    const backupDirPath = getBackupDir(targetDir);
+    fs.mkdirSync(backupDirPath, { recursive: true });
 
     if (installed.hasCommands) {
-      copyDir(commandsDir, path.join(backupDir, 'commands', 'wtfp'));
+      copyDir(commandsDir, path.join(backupDirPath, 'commands', 'wtfp'));
     }
     if (installed.hasWorkflows) {
-      copyDir(workflowsDir, path.join(backupDir, 'write-the-f-paper'));
+      copyDir(workflowsDir, path.join(backupDirPath, 'write-the-f-paper'));
     }
     if (installed.hasSkills) {
-      copyDir(skillsDir, path.join(backupDir, 'skills', 'wtfp'));
+      copyDir(skillsDir, path.join(backupDirPath, 'skills', 'wtfp'));
     }
-    if (fs.existsSync(pluginDir)) {
-      copyDir(pluginDir, path.join(backupDir, '.claude-plugin'));
+    if (fs.existsSync(agentsDir)) {
+      copyDir(agentsDir, path.join(backupDirPath, 'agents', 'wtfp'));
+    }
+    if (fs.existsSync(mcpDir)) {
+      copyDir(mcpDir, path.join(backupDirPath, 'mcp'));
+    }
+    if (fs.existsSync(binDir)) {
+      copyDir(binDir, path.join(backupDirPath, 'bin'));
+    }
+    if (fs.existsSync(wtfpPluginFile)) {
+      fs.mkdirSync(path.join(backupDirPath, '.claude-plugin'), { recursive: true });
+      fs.copyFileSync(wtfpPluginFile, path.join(backupDirPath, '.claude-plugin', 'plugin.json'));
     }
 
-    const backupLabel = backupDir.replace(os.homedir(), '~').replace(process.cwd(), '.');
+    const backupLabel = backupDirPath.replace(os.homedir(), '~').replace(process.cwd(), '.');
     out.log(`  ${c.cyan('↻')} Backed up to ${c.dim(backupLabel)}\n`);
   }
 
-  // Remove directories
-  if (installed.hasCommands) {
-    removeDir(commandsDir);
-    out.log(`  ${c.red('-')} ${c.dim('commands/wtfp/')}`);
+  // Remove directories — only WTF-P subdirectories, never parent dirs with user content
 
-    // Clean up empty commands dir
-    const parentCommandsDir = path.join(targetDir, 'commands');
-    if (fs.existsSync(parentCommandsDir)) {
-      const remaining = fs.readdirSync(parentCommandsDir);
-      if (remaining.length === 0) {
-        fs.rmdirSync(parentCommandsDir);
-        out.log(`  ${c.red('-')} ${c.dim('commands/')} ${c.dim('(empty)')}`);
-      }
+  // Helper: remove a wtfp subdir and clean up empty parent
+  function removeWtfpSubdir(subdir, parentDir, label) {
+    if (!fs.existsSync(subdir)) return;
+    removeDir(subdir);
+    out.log(`  ${c.red('-')} ${c.dim(label)}`);
+
+    // Clean up parent only if empty (no user content remains)
+    if (parentDir && fs.existsSync(parentDir)) {
+      try {
+        const remaining = fs.readdirSync(parentDir);
+        if (remaining.length === 0) {
+          fs.rmdirSync(parentDir);
+          out.log(`  ${c.red('-')} ${c.dim(path.basename(parentDir) + '/')} ${c.dim('(empty)')}`);
+        }
+      } catch { /* ignore */ }
     }
+  }
+
+  if (installed.hasCommands) {
+    removeWtfpSubdir(commandsDir, path.join(targetDir, 'commands'), 'commands/wtfp/');
   }
 
   if (installed.hasWorkflows) {
@@ -397,23 +429,47 @@ async function uninstall(runtime) {
   }
 
   if (installed.hasSkills) {
-    removeDir(skillsDir);
-    out.log(`  ${c.red('-')} ${c.dim('skills/wtfp/')}`);
-
-    // Clean up empty skills dir
-    const parentSkillsDir = path.join(targetDir, 'skills');
-    if (fs.existsSync(parentSkillsDir)) {
-      const remaining = fs.readdirSync(parentSkillsDir);
-      if (remaining.length === 0) {
-        fs.rmdirSync(parentSkillsDir);
-        out.log(`  ${c.red('-')} ${c.dim('skills/')} ${c.dim('(empty)')}`);
-      }
-    }
+    removeWtfpSubdir(skillsDir, path.join(targetDir, 'skills'), 'skills/wtfp/');
   }
 
-  if (fs.existsSync(pluginDir)) {
-    removeDir(pluginDir);
-    out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/')}`);
+  // Remove agents/wtfp/ (added in v0.5.0)
+  if (fs.existsSync(agentsDir)) {
+    removeWtfpSubdir(agentsDir, path.join(targetDir, 'agents'), 'agents/wtfp/');
+  }
+
+  // Remove mcp/ (WTF-P research server)
+  if (fs.existsSync(mcpDir)) {
+    removeDir(mcpDir);
+    out.log(`  ${c.red('-')} ${c.dim('mcp/')}`);
+  }
+
+  // Remove bin/ (WTF-P scripts installed to config dir)
+  if (fs.existsSync(binDir)) {
+    removeDir(binDir);
+    out.log(`  ${c.red('-')} ${c.dim('bin/')}`);
+  }
+
+  // Remove only WTF-P's plugin.json, not the entire .claude-plugin/ dir
+  // (user may have their own plugin configs there)
+  if (fs.existsSync(wtfpPluginFile)) {
+    try {
+      const pluginData = JSON.parse(fs.readFileSync(wtfpPluginFile, 'utf8'));
+      if (pluginData.name === 'wtf-p' || pluginData.name === 'write-the-f-paper') {
+        fs.unlinkSync(wtfpPluginFile);
+        out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/plugin.json')}`);
+
+        // Only remove .claude-plugin/ if empty after our file is gone
+        try {
+          const remaining = fs.readdirSync(pluginDir);
+          if (remaining.length === 0) {
+            fs.rmdirSync(pluginDir);
+            out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/')} ${c.dim('(empty)')}`);
+          }
+        } catch { /* ignore */ }
+      }
+    } catch {
+      // Can't parse plugin.json — leave it alone for safety
+    }
   }
 
   // Remove version file

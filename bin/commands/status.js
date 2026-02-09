@@ -57,6 +57,7 @@ async function showStatus(options, pkg) {
     if (loc.hasCommands) components.push(`commands (${loc.commandFiles.length} files)`);
     if (loc.hasWorkflows) components.push(`workflows (${loc.workflowFiles.length} files)`);
     if (loc.hasSkills) components.push(`skills (${loc.skillFiles.length} files)`);
+    if (loc.hasAgents) components.push(`agents (${loc.agentFiles.length} files)`);
     out.log(`    Installed: ${components.join(', ')}`);
 
     // Warnings
@@ -70,10 +71,15 @@ async function showStatus(options, pkg) {
     out.log('');
   }
 
-  // Check for updates
+  // Check for updates (only suggest if registry version is actually newer)
   try {
     const latest = execSync('npm view wtf-p version 2>/dev/null', { encoding: 'utf8' }).trim();
-    if (latest && latest !== pkg.version) {
+    const isNewer = (a, b) => {
+      const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
+      for (let i = 0; i < 3; i++) { if ((pa[i] || 0) > (pb[i] || 0)) return true; if ((pa[i] || 0) < (pb[i] || 0)) return false; }
+      return false;
+    };
+    if (latest && isNewer(latest, pkg.version)) {
       out.log(`  ${c.yellow('Update available:')} ${pkg.version} → ${c.green(latest)}`);
       out.log(`  Run: ${c.cyan('npx wtf-p update --global')}\n`);
     }
