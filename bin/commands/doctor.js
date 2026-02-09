@@ -143,6 +143,20 @@ async function runDoctor(options) {
     }
   }
 
+  // Check 7: Dual-installation conflict (global + local both present)
+  const localDir = path.join(process.cwd(), '.claude');
+  if (localDir !== globalDir) {
+    const localDetection = detectInstallation(localDir);
+    if (localDetection.hasCommands && detection.hasCommands) {
+      issues.push('WTF-P is installed both globally and locally — Claude Code will show duplicate commands');
+      checks.push({
+        name: 'Dual installation',
+        status: 'warn',
+        detail: `Both ${getPathLabel(globalDir, true)} and ./.claude have WTF-P`
+      });
+    }
+  }
+
   // Output results
   for (const check of checks) {
     let icon, color;

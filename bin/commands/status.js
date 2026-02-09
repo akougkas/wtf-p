@@ -71,6 +71,18 @@ async function showStatus(options, pkg) {
     out.log('');
   }
 
+  // Check for dual-install conflict (global + local both present)
+  const bothInstalled = locations.filter(l =>
+    l.hasCommands || l.hasWorkflows || l.hasSkills
+  );
+  if (bothInstalled.length > 1) {
+    out.log(`  ${c.red('⚠ Duplicate installation detected!')}`);
+    out.log(`    Claude Code loads commands from both global and local directories.`);
+    out.log(`    You will see every /wtfp command twice. To fix:`);
+    out.log(`      ${c.cyan('npx wtf-p uninstall --local')}   Remove local copy`);
+    out.log(`      ${c.cyan('npx wtf-p uninstall --global')}  Remove global copy\n`);
+  }
+
   // Check for updates (only suggest if registry version is actually newer)
   try {
     const latest = execSync('npm view wtf-p version 2>/dev/null', { encoding: 'utf8' }).trim();

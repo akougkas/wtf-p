@@ -8,6 +8,7 @@ const {
   getPathLabel,
   getBackupPath,
   writeVersionFile,
+  detectInstallation,
   createRL,
   prompt
 } = require('../lib/utils');
@@ -223,6 +224,53 @@ async function install(runtime, isUpdate, options, pkg) {
   const pathPrefix = isGlobal
     ? (explicitConfigDir ? `${targetDir}/` : `~/${vendorConfig.defaultDir}/`)
     : `./.claude/`;
+
+  // ---- Cross-installation conflict detection ----
+  // If installing locally, warn if a global install already exists (and vice versa).
+  // Claude Code loads commands from BOTH ~/.claude/ and ./.claude/, causing duplicates.
+  if (vendorKey === 'claude' && !explicitConfigDir) {
+    const globalDir = path.join(os.homedir(), '.claude');
+    const localDir = path.join(process.cwd(), '.claude');
+
+    if (runtime === 'claude-local') {
+      // Installing local — check if global exists
+      const globalInstall = detectInstallation(globalDir);
+      if (globalInstall.hasCommands) {
+        out.log(`  ${c.yellow('⚠ Warning: WTF-P is already installed globally')} ${c.dim('(' + getPathLabel(globalDir, true) + ')')}`);
+        out.log(`    Claude Code loads commands from both global and local directories.`);
+        out.log(`    Installing locally will create ${c.red('duplicate commands')}.`);
+        out.log('');
+        out.log(`    ${c.cyan('Options:')}`);
+        out.log(`      • Use the global install as-is (recommended)`);
+        out.log(`      • Uninstall global first: ${c.dim('npx wtf-p uninstall --global')}`);
+        out.log(`      • Continue anyway (you'll see every /wtfp command twice)`);
+        out.log('');
+
+        if (options.isInteractive && !options.hasForce) {
+          const rl = createRL();
+          const answer = await prompt(rl, `  Continue with local install? [y/N]: `);
+          rl.close();
+          if (answer !== 'y' && answer !== 'yes') {
+            out.log(`\n  ${c.yellow('Aborted.')} Using global install.\n`);
+            return;
+          }
+          out.log('');
+        } else if (!options.hasForce) {
+          out.log(`  ${c.yellow('Aborted.')} Use --force to install anyway.\n`);
+          return;
+        }
+      }
+    } else if (runtime === 'claude') {
+      // Installing global — check if local exists in cwd
+      const localInstall = detectInstallation(localDir);
+      if (localInstall.hasCommands && globalDir !== localDir) {
+        out.log(`  ${c.yellow('⚠ Note: WTF-P is also installed locally')} ${c.dim('(' + getPathLabel(localDir, false) + ')')}`);
+        out.log(`    Claude Code in this directory will see commands from both installs.`);
+        out.log(`    To avoid duplicates: ${c.dim('npx wtf-p uninstall --local')}`);
+        out.log('');
+      }
+    }
+  }
 
   if (!hasQuiet) {
     out.log(`  Installing to ${c.cyan(locationLabel)}
