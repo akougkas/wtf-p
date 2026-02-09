@@ -1,0 +1,13 @@
+.planning/
+.github/
+.claude/
+test/
+tests/
+docs/
+scripts/
+tools/
+assets/
+HANDOFF-TESTING.md
+ROADMAP.md
+CONTRIBUTING.md
+*.tgz
