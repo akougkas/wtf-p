@@ -241,7 +241,7 @@ For smaller models or limited context windows, WTF-P includes compressed workflo
 
 ## Origin
 
-Built at the [Gnosis Research Center](https://www.intelli-gnosis.com/) at Illinois Tech. The problem: research teams with grants to win, papers to publish, and no time for writer's block. The solution: treat your AI coding assistant as a structured writing system — proper context, explicit specs, verification layers.
+Built at the [Gnosis Research Center](https://grc.iit.edu/) at Illinois Tech. The problem: research teams with grants to win, papers to publish, and no time for writer's block. The solution: treat your AI coding assistant as a structured writing system — proper context, explicit specs, verification layers.
 
 ---
 
