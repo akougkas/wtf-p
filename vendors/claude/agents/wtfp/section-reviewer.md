@@ -1,6 +1,6 @@
 ---
 name: wtfp-section-reviewer
-description: Runs 3-layer verification with configurable reviewer personas. Spawned by /wtfp:review-section orchestrator.
+description: Runs 3-layer verification (citation, coherence, rubric) on a written section with configurable reviewer persona (Hostile, Area Chair, Editor, Mentor). Produces ISSUES.md with severity-classified findings. Returns REVIEW COMPLETE with per-layer pass/fail status.
 allowed-tools:
   - Read
   - Bash

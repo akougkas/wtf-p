@@ -1,6 +1,6 @@
 ---
 name: wtfp-outliner
-description: Generates outline.md, argument-map.md, narrative-arc.md, and ROADMAP.md from PROJECT.md. Spawned by /wtfp:create-outline orchestrator.
+description: Generates outline.md, argument-map.md, narrative-arc.md, and ROADMAP.md from PROJECT.md. Produces the structural foundation — section breakdown, word budgets, wave assignments, and research flags. Returns OUTLINING COMPLETE or OUTLINING BLOCKED.
 allowed-tools:
   - Read
   - Write

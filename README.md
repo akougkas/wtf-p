@@ -8,7 +8,9 @@
 - **P**resentation
 - **P**oster
 
-**Context engineering for academic writing with Claude Code.**
+**Stop staring at the cursor. Start shipping papers.**
+
+*Academic writing commands for Claude Code, Gemini CLI, and OpenCode.*
 
 ```bash
 npx wtf-p
@@ -43,7 +45,7 @@ Then in Claude Code:
 /wtfp:new-paper        # Define your paper
 /wtfp:create-outline   # Build the structure
 /wtfp:plan-section 1   # Plan first section
-/wtfp:write-section    # Execute the plan
+/wtfp:write-section    # Write the section
 ```
 
 Run `/wtfp:help` for the full command reference.
@@ -161,8 +163,8 @@ The system flags issues. You fix them. Iterate until solid.
 ### Starting Fresh
 
 ```bash
-/wtfp:new-paper         # Deep interview about your research
-/wtfp:create-outline    # Generate section structure + word budgets
+/wtfp:new-paper         # Guided interview about your research
+/wtfp:create-outline    # Build section structure + word budgets
 ```
 
 Creates `.planning/` with your paper's specification:
@@ -174,7 +176,7 @@ Creates `.planning/` with your paper's specification:
 
 ```bash
 /wtfp:plan-section 1    # Create detailed plan for section 1
-/wtfp:write-section     # Execute the plan
+/wtfp:write-section     # Write the section
 /wtfp:progress          # Check status, get next action
 ```
 
@@ -183,8 +185,8 @@ Each section gets its own planning documents. Plans are explicit — you see exa
 ### Review and Polish
 
 ```bash
-/wtfp:review-section 1  # Three-layer verification
-/wtfp:polish-prose      # Remove AI-speak, improve flow
+/wtfp:review-section 1  # Review for citations, coherence, requirements
+/wtfp:polish-prose      # Improve clarity and academic voice
 /wtfp:check-refs        # BibTeX audit
 ```
 
@@ -235,9 +237,9 @@ npx wtf-p --global --opencode   # OpenCode
 WTF-P includes a specialized tiered pipeline for bibliography management.
 
 ```bash
-/wtfp:analyze-bib      # Deep analysis of impact (seminal vs rising)
-/wtfp:research-gap     # Intent-aware search (seminal/recent)
-/wtfp:check-refs       # Auto-suggest missing citations
+/wtfp:analyze-bib      # Map citations to sections
+/wtfp:research-gap     # Research literature for a section
+/wtfp:check-refs       # Audit BibTeX for issues
 ```
 
 Capabilities:
@@ -253,59 +255,59 @@ Capabilities:
 ### Setup
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:new-paper` | Initialize paper with deep context gathering |
-| `/wtfp:create-outline` | Generate section structure |
-| `/wtfp:map-project` | Index existing project materials |
-| `/wtfp:analyze-bib` | Deep analysis of your bibliography |
+| `/wtfp:new-paper` | Start a new paper with guided interview and setup |
+| `/wtfp:create-outline` | Build section outline, argument map, and word budgets |
+| `/wtfp:map-project` | Index existing drafts, data, and references for a project |
+| `/wtfp:analyze-bib` | Analyze bibliography and map citations to sections |
 
 ### Planning
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:discuss-section [N]` | Articulate vision before planning |
-| `/wtfp:plan-section [N]` | Create execution plan |
-| `/wtfp:list-assumptions [N]` | See what Claude plans to write |
-| `/wtfp:research-gap [N]` | Literature analysis for a section |
+| `/wtfp:discuss-section [N]` | Discuss your vision for a section before planning it |
+| `/wtfp:plan-section [N]` | Create detailed writing plan for a section |
+| `/wtfp:list-assumptions [N]` | Preview intended approach for a section before writing |
+| `/wtfp:research-gap [N]` | Research literature and domain knowledge for a section |
 
 ### Writing
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:write-section` | Execute a plan |
-| `/wtfp:execute-outline` | Write all sections (wave-parallel) |
-| `/wtfp:progress` | Status + intelligent next action |
-| `/wtfp:pause-writing` | Save state for later |
-| `/wtfp:resume-writing` | Restore context and continue |
+| `/wtfp:write-section` | Write a section by executing its plan |
+| `/wtfp:execute-outline` | Write all sections in parallel, then check coherence |
+| `/wtfp:progress` | Show writing progress and suggest next step |
+| `/wtfp:pause-writing` | Save current progress so you can resume later |
+| `/wtfp:resume-writing` | Resume writing from a previous session |
 
 ### Review
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:review-section [N]` | Three-layer verification |
-| `/wtfp:verify-work [N]` | Acceptance testing with persistence |
-| `/wtfp:plan-revision [N]` | Create fix plan from issues |
-| `/wtfp:polish-prose` | Improve readability |
-| `/wtfp:check-refs` | Citation audit |
+| `/wtfp:review-section [N]` | Review section for citations, coherence, and requirements |
+| `/wtfp:verify-work [N]` | Test a written section against its plan, one check at a time |
+| `/wtfp:plan-revision [N]` | Create revision plan from review issues |
+| `/wtfp:polish-prose` | Improve clarity, flow, and academic voice in written prose |
+| `/wtfp:check-refs` | Audit BibTeX for missing, duplicate, or broken references |
 
 ### Export
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:export-latex` | Generate .tex output |
-| `/wtfp:audit-milestone` | Pre-submission audit (5 checks) |
-| `/wtfp:plan-milestone-gaps` | Create fix plans from audit |
-| `/wtfp:submit-milestone` | Archive submission version |
+| `/wtfp:export-latex` | Export paper to LaTeX with bibliography and formatting |
+| `/wtfp:audit-milestone` | Run pre-submission checks on sections, citations, and word counts |
+| `/wtfp:plan-milestone-gaps` | Create fix plans for gaps found by audit-milestone |
+| `/wtfp:submit-milestone` | Archive a completed draft or submission version |
 
 ### Settings & Todos
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:settings` | Interactive config editor |
-| `/wtfp:add-todo` | Quick-capture todos |
-| `/wtfp:check-todos` | Review pending todos |
-| `/wtfp:update` | Check for WTF-P updates |
+| `/wtfp:settings` | View and edit project settings interactively |
+| `/wtfp:add-todo` | Capture a quick note or task without breaking your flow |
+| `/wtfp:check-todos` | Review pending todos and act on, defer, or dismiss each |
+| `/wtfp:update` | Check for updates and install newer version |
 
 ### Contributing
 | Command | Purpose |
 |---------|---------|
-| `/wtfp:report-bug` | File a GitHub issue |
-| `/wtfp:request-feature` | Request new functionality |
-| `/wtfp:contribute` | Submit a pull request |
+| `/wtfp:report-bug` | Report a bug via GitHub issue |
+| `/wtfp:request-feature` | Request a new feature via GitHub issue |
+| `/wtfp:contribute` | Walk through contributing code to WTF-P via pull request |
 
 ---
 
@@ -366,5 +368,5 @@ MIT License. Open source, open science.
 
 <div align="center">
 <br>
-<strong>Stop staring at the cursor. Start shipping papers.</strong>
+<strong>No more excuses. Ship the paper.</strong>
 </div>

@@ -1,6 +1,6 @@
 ---
 name: wtfp-research-synthesizer
-description: Literature discovery, gap analysis, and positioning research for paper sections. Spawned by /wtfp:research-gap orchestrator.
+description: Investigates literature for a section using citation pipeline tools and web search. Produces RESEARCH.md with key citations, standard approaches, literature gaps, and writing recommendations. Returns RESEARCH COMPLETE or RESEARCH BLOCKED.
 allowed-tools:
   - Read
   - Write

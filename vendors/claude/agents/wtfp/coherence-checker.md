@@ -1,6 +1,6 @@
 ---
 name: wtfp-coherence-checker
-description: Cross-section coherence verification for narrative thread, terminology, argument coverage, cross-references, and contradiction detection. Spawned by /wtfp:execute-outline after all waves complete.
+description: Verifies cross-section consistency across terminology, argument coverage, narrative flow, cross-references, and contradictions. Returns COHERENT or GAPS FOUND with per-category issue counts.
 allowed-tools:
   - Read
   - Glob

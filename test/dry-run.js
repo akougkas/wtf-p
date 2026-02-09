@@ -521,16 +521,19 @@ const VENDOR_CMD_DIRS = {
 // Core commands that should exist in all vendors
 const CORE_COMMANDS = ['new-paper', 'plan-section', 'write-section', 'review-section', 'progress'];
 
+const VENDOR_EXT = { claude: '.md', gemini: '.toml', opencode: '.md' };
+
 for (const [vendor, dir] of Object.entries(VENDOR_CMD_DIRS)) {
   if (!fs.existsSync(dir)) {
     fail(`vendor directory missing: ${vendor}`);
     continue;
   }
 
+  const ext = VENDOR_EXT[vendor] || '.md';
   for (const cmd of CORE_COMMANDS) {
-    const cmdFile = path.join(dir, `${cmd}.md`);
+    const cmdFile = path.join(dir, `${cmd}${ext}`);
     if (fs.existsSync(cmdFile)) {
-      pass(`${vendor}/${cmd}.md exists`);
+      pass(`${vendor}/${cmd}${ext} exists`);
 
       // Check vendor-specific path prefix
       const content = fs.readFileSync(cmdFile, 'utf8');
@@ -542,7 +545,7 @@ for (const [vendor, dir] of Object.entries(VENDOR_CMD_DIRS)) {
         pass(`${vendor}/${cmd} uses correct path prefix`);
       }
     } else {
-      fail(`${vendor}/${cmd}.md missing`);
+      fail(`${vendor}/${cmd}${ext} missing`);
     }
   }
 }
@@ -555,7 +558,8 @@ for (const vendor of ['gemini', 'opencode']) {
   const dir = VENDOR_CMD_DIRS[vendor];
   if (!fs.existsSync(dir)) continue;
 
-  const files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+  const ext = VENDOR_EXT[vendor] || '.md';
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(ext));
   let hasAllowedTools = 0;
   let noAllowedTools = 0;
 

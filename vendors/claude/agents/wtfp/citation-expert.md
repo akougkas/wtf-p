@@ -1,6 +1,6 @@
 ---
 name: citation-expert
-description: Academic citation specialist. Searches papers, manages BibTeX, and identifies literature gaps.
+description: Searches academic databases (Semantic Scholar, CrossRef) for relevant papers and analyzes bibliography coverage against the paper's argument map. Produces suggested.bib with new citations. Never overwrites user's references.bib.
 allowed-tools:
   - Bash
   - Read

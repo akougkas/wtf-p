@@ -1,6 +1,6 @@
 ---
 name: wtfp-section-planner
-description: Creates executable section plans with argument decomposition, word budgets, and citation planning. Spawned by /wtfp:plan-section orchestrator.
+description: Creates executable PLAN.md files with argument decomposition, word budgets, citation mapping, and checkpoint placement. Honors locked decisions from CONTEXT.md. Returns PLANNING COMPLETE or PLANNING INCONCLUSIVE.
 allowed-tools:
   - Read
   - Write

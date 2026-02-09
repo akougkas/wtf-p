@@ -1,6 +1,6 @@
 ---
 name: wtfp-prose-polisher
-description: De-robotizes text, adjusts voice, varies sentence structure, and tightens academic prose. Spawned by /wtfp:polish-prose orchestrator.
+description: Eliminates AI-sounding patterns, varies sentence structure, and tightens academic prose while preserving citations and technical accuracy. Applies a user-selected voice profile (Authoritative, Measured, Accessible, or Technical). Returns POLISH COMPLETE with before/after word counts.
 allowed-tools:
   - Read
   - Write

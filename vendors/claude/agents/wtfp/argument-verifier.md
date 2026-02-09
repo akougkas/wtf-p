@@ -1,6 +1,6 @@
 ---
 name: wtfp-argument-verifier
-description: Goal-backward verification of written sections. Checks if section achieves its purpose, not just that tasks completed. Spawned by /wtfp:write-section orchestrator.
+description: Goal-backward verification of written sections — checks that planned claims are made and supported, not just that tasks completed. Returns VERIFIED, GAPS FOUND, or HUMAN NEEDED.
 allowed-tools:
   - Read
   - Bash

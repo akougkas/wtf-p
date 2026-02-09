@@ -1,6 +1,6 @@
 ---
 name: wtfp-section-writer
-description: Executes writing plans with atomic commits, deviation handling, and mode-specific prose generation. Spawned by /wtfp:write-section orchestrator.
+description: Executes a PLAN.md file to produce academic prose in co-author, scaffold, or reviewer mode. Produces paper section files, SUMMARY.md, and per-task git commits. Returns WRITING COMPLETE, CHECKPOINT REACHED, or WRITING BLOCKED.
 allowed-tools:
   - Read
   - Write

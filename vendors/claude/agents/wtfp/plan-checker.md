@@ -1,6 +1,6 @@
 ---
 name: wtfp-plan-checker
-description: Pre-write validation of section plans. Verifies argument coverage, citation planning, word budgets, and CONTEXT.md fidelity. Spawned by /wtfp:plan-section orchestrator.
+description: Validates section plans against 7 quality dimensions: argument coverage, citation planning, word budgets, outline compliance, CONTEXT.md fidelity, style consistency, and task completeness. Returns VERIFICATION PASSED or ISSUES FOUND with blocker/warning/info counts.
 allowed-tools:
   - Read
   - Bash

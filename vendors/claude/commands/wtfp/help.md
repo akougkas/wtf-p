@@ -19,453 +19,217 @@ Output ONLY the reference content below. Do NOT add:
 <reference>
 # WTF-P Command Reference
 
-**WTF-P** (Write The F***ing Paper) creates hierarchical writing plans optimized for solo academic writing with Claude Code.
+**WTF-P** (Write The F***ing Paper) gives you 36 commands for writing academic papers, proposals, presentations, and posters. You describe your research. WTF-P breaks it into sections you can plan, write, and review one at a time — tracking everything across sessions so you never lose context.
 
-## Quick Start
+## Happy Path
 
-1. `/wtfp:new-paper` - Initialize a new paper with vision
-2. `/wtfp:create-outline` - Create document outline and sections
-3. `/wtfp:plan-section <number>` - Create detailed plan for a section
-4. `/wtfp:write-section <path>` - Execute the writing plan
+New here? These five commands are the core loop. Run them in order:
 
-## Core Workflow
+| Step | Command | What it does |
+|------|---------|-------------|
+| 1 | `/wtfp:new-paper` | Start a new paper with guided interview and setup |
+| 2 | `/wtfp:create-outline` | Build section outline, argument map, and word budgets |
+| 3 | `/wtfp:plan-section 1` | Create detailed writing plan for a section |
+| 4 | `/wtfp:write-section` | Write a section by executing its plan |
+| 5 | `/wtfp:review-section 1` | Review section for citations, coherence, and requirements |
+
+Repeat steps 3-5 for each section. Run `/wtfp:progress` anytime to see where you are and what to do next.
+
+## All Commands
+
+### Setup
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:new-paper` | Start a new paper with guided interview and setup |
+| `/wtfp:create-outline` | Build section outline, argument map, and word budgets |
+| `/wtfp:map-project` | Index existing drafts, data, and references for a project |
 
 ```
-Initialization -> Outlining -> Planning -> Writing -> Review
+/wtfp:new-paper                  # Answer questions about your research, get PROJECT.md
+/wtfp:create-outline             # Produces ROADMAP.md, argument-map, narrative-arc
+/wtfp:map-project                # Got existing files? Index them first, then new-paper
 ```
 
-### Paper Initialization
+### Planning
 
-**`/wtfp:new-paper`**
-Initialize new paper project with deep context gathering.
+| Command | Description |
+|---------|-------------|
+| `/wtfp:discuss-section [N]` | Discuss your vision for a section before planning it |
+| `/wtfp:research-gap [N]` | Research literature and domain knowledge for a section |
+| `/wtfp:list-assumptions [N]` | Preview intended approach for a section before writing |
+| `/wtfp:plan-section [N]` | Create detailed writing plan for a section |
 
-- Creates `.planning/PROJECT.md` (paper vision and requirements)
-- Creates `.planning/config.json` (workflow mode)
-- Creates structure docs (argument-map, outline, narrative-arc)
-- Asks about paper type, target venue, core argument
-- Commits initialization files to git
+```
+/wtfp:discuss-section 2          # Talk through your vision before committing to a plan
+/wtfp:research-gap 3             # Find key citations and standard approaches
+/wtfp:list-assumptions 3         # See what Claude intends — course-correct early
+/wtfp:plan-section 1             # Creates .planning/sections/01-intro/01-01-PLAN.md
+```
 
-Usage: `/wtfp:new-paper`
+### Writing
 
-**`/wtfp:create-outline`**
-Create section roadmap and state tracking for initialized paper.
+| Command | Description |
+|---------|-------------|
+| `/wtfp:write-section <path>` | Write a section by executing its plan |
+| `/wtfp:execute-outline` | Write all sections in parallel, then check coherence |
+| `/wtfp:quick <task>` | Run a small writing fix without full planning overhead |
 
-- Creates `.planning/ROADMAP.md` (section breakdown)
-- Creates `.planning/STATE.md` (writing memory)
-- Creates `.planning/sections/` directories
-- Establishes word budget per section
+```
+/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md
+/wtfp:execute-outline            # Writes all sections by wave, checks coherence after
+/wtfp:quick "add citation for Smith2023 in methods"
+```
 
-Usage: `/wtfp:create-outline`
+### Review and Revision
 
-**`/wtfp:map-project`**
-Map existing source materials for brownfield writing projects.
+| Command | Description |
+|---------|-------------|
+| `/wtfp:review-section [N]` | Review section for citations, coherence, and requirements |
+| `/wtfp:verify-work [N]` | Test a written section against its plan, one check at a time |
+| `/wtfp:plan-revision [N]` | Create revision plan from review issues |
+| `/wtfp:polish-prose [N]` | Improve clarity, flow, and academic voice in written prose |
 
-- Indexes existing literature, data, and prior drafts
-- Creates `.planning/sources/` with organized references
-- Covers: literature.md, data.md, prior-drafts.md
-- Use before `/wtfp:new-paper` on existing writing projects
+```
+/wtfp:review-section 2           # Runs citation, coherence, and rubric checks
+/wtfp:verify-work 2              # Walk through acceptance tests one at a time
+/wtfp:plan-revision 02-01        # Turn ISSUES.md into a fix plan
+/wtfp:polish-prose 2             # Kill AI-speak, tighten prose, adjust voice
+```
 
-Usage: `/wtfp:map-project`
+### Citations
 
-### Section Planning
+| Command | Description |
+|---------|-------------|
+| `/wtfp:analyze-bib` | Analyze bibliography and map citations to sections |
+| `/wtfp:check-refs` | Audit BibTeX for missing, duplicate, or broken references |
 
-**`/wtfp:discuss-section <number>`**
-Help articulate your vision for a section before planning.
+```
+/wtfp:analyze-bib                # Deep analysis — maps each reference to sections
+/wtfp:check-refs                 # Finds missing keys, duplicates, broken entries
+```
 
-- Captures how you imagine this section working
-- Creates CONTEXT.md with your vision, essentials, and boundaries
-- Use when you have ideas about how something should read/feel
+### Progress and Sessions
 
-Usage: `/wtfp:discuss-section 2`
+| Command | Description |
+|---------|-------------|
+| `/wtfp:progress` | Show writing progress and suggest next step |
+| `/wtfp:pause-writing` | Save current progress so you can resume later |
+| `/wtfp:resume-writing` | Resume writing from a previous session |
+| `/wtfp:checkpoint <save/restore/list>` | Save, restore, or list paper state snapshots |
 
-**`/wtfp:research-gap <number>`**
-Comprehensive literature/domain research for a section.
-
-- Discovers standard approaches, key citations, gaps
-- Creates RESEARCH.md with "how experts write this" knowledge
-- Use for literature reviews, methodology justification, etc.
-
-Usage: `/wtfp:research-gap 3`
-
-**`/wtfp:list-assumptions <number>`**
-See what Claude is planning to write before it starts.
-
-- Shows Claude's intended approach for a section
-- Lets you course-correct if Claude misunderstood your vision
-- No files created - conversational output only
-
-Usage: `/wtfp:list-assumptions 3`
-
-**`/wtfp:plan-section <number>`**
-Create detailed writing plan for a specific section.
-
-- Generates `.planning/sections/XX-section-name/XX-YY-PLAN.md`
-- Breaks section into concrete writing tasks
-- Includes verification criteria and word targets
-- Multiple plans per section supported (XX-01, XX-02, etc.)
-
-Usage: `/wtfp:plan-section 1`
-Result: Creates `.planning/sections/01-introduction/01-01-PLAN.md`
-
-### Writing Execution
-
-**`/wtfp:write-section <path>`**
-Execute a PLAN.md file directly.
-
-- Writes section content following the plan
-- Creates SUMMARY.md after completion
-- Updates STATE.md with word counts and progress
-- Supports three modes: Co-Author, Scaffold, Reviewer
-
-Usage: `/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md`
-
-**`/wtfp:execute-outline`**
-Execute all sections via wave-based parallel execution.
-
-- Groups sections by wave (respecting dependencies)
-- Spawns parallel writers per wave
-- Runs coherence-checker after all waves complete
-- Handles checkpoints between waves
-
-Usage: `/wtfp:execute-outline`
-
-**`/wtfp:verify-work <number>`**
-Walk through section verification one test at a time.
-
-- Derives tests from PLAN.md success criteria and argument-map claims
-- Persists state in UAT.md (survives /clear)
-- Classifies issues by severity (major/minor/cosmetic)
-- Routes to plan-revision when issues found
-
-Usage: `/wtfp:verify-work 2`
+```
+/wtfp:progress                   # Visual progress bar + intelligent next action
+/wtfp:pause-writing              # Creates .continue-here with full context
+/wtfp:resume-writing             # Reads STATE.md, shows where you left off
+/wtfp:checkpoint save draft-1    # Git-tagged snapshot you can restore later
+/wtfp:checkpoint list            # Show all checkpoints
+```
 
 ### Outline Management
 
-**`/wtfp:add-section <description>`**
-Add new section to end of current structure.
-
-- Appends to ROADMAP.md
-- Uses next sequential number
-- Updates section directory structure
-
-Usage: `/wtfp:add-section "Add limitations subsection"`
-
-**`/wtfp:insert-section <after> <description>`**
-Insert urgent section between existing sections.
-
-- Creates intermediate section (e.g., 3.1 between 3 and 4)
-- Useful for discovered gaps that must be addressed
-- Maintains section ordering
-
-Usage: `/wtfp:insert-section 3 "Add methodology detail"`
-Result: Creates Section 3.1
-
-**`/wtfp:remove-section <number>`**
-Remove a future section and renumber subsequent sections.
-
-- Deletes section directory and all references
-- Renumbers all subsequent sections to close the gap
-- Only works on future (unwritten) sections
-- Git commit preserves historical record
-
-Usage: `/wtfp:remove-section 7`
-
-### Quick Tasks
-
-**`/wtfp:quick <task>`**
-Execute a quick writing task with minimal ceremony.
-
-- Skips plan-checker and argument-verifier agents
-- Classifies task intent (fix/add/revise/cite)
-- Loads minimal context, executes directly
-- Best for: fix a paragraph, add a citation, tweak wording
-
-Usage: `/wtfp:quick "add citation for Smith2023 in methods section"`
-
-### Review & Revision
-
-**`/wtfp:review-section [number]`**
-Run 3-layer verification on written sections.
-
-- Runs Citation, Coherence, and Rubric checks
-- Configurable reviewer persona (Hostile Reviewer, Area Chair, etc.)
-- Creates ISSUES.md if problems found
-
-Usage: `/wtfp:review-section 2`
-
-**`/wtfp:polish-prose [number]`**
-De-robotize and refine prose for clarity and academic voice.
-
-- Eliminates AI-sounding patterns
-- Adjusts voice (Authoritative/Measured/Accessible/Technical)
-- Varies sentence structure, tightens word count
-- Preserves technical accuracy and citations
-
-Usage: `/wtfp:polish-prose 2`
-
-**`/wtfp:plan-revision <plan>`**
-Create fix plan from review issues.
-
-- Reads ISSUES.md for the section
-- Creates targeted revision plan
-- Addresses specific reviewer/verification comments
-
-Usage: `/wtfp:plan-revision 02-01`
-
-### Progress Tracking
-
-**`/wtfp:progress`**
-Check writing status and intelligently route to next action.
-
-- Shows visual progress bar and word count
-- Summarizes recent work from SUMMARY files
-- Displays current position and what's next
-- Offers to execute next plan or create it if missing
-
-Usage: `/wtfp:progress`
-
-### Citation Management
-
-**`/wtfp:analyze-bib`**
-Analyze BibTeX file and suggest citation placement by section.
-
-- Spawns citation-expert agent for deep analysis
-- Maps references to relevant sections
-- Identifies citation gaps and coverage
-- Supports tiered search pipeline
-
-Usage: `/wtfp:analyze-bib`
-
-**`/wtfp:check-refs`**
-Audit BibTeX file for consistency and completeness.
-
-- Spawns citation-formatter agent
-- Validates formatting, checks for duplicates
-- Verifies all cited works appear in bibliography
-- Reports broken or missing references
-
-Usage: `/wtfp:check-refs`
-
-### Session Management
-
-**`/wtfp:checkpoint <save|restore|list> [label]`**
-Save or restore paper state as a git-tagged checkpoint.
-
-- `save [label]` — Tag current state (e.g., "pre-discussion", "draft-1")
-- `restore [tag]` — Restore from a checkpoint tag
-- `list` — Show available checkpoints
-- Enables session continuity across `/clear` boundaries
-
-Usage: `/wtfp:checkpoint save draft-1`
-Usage: `/wtfp:checkpoint list`
-
-**`/wtfp:settings`**
-View and edit project configuration interactively.
-
-- Displays settings organized by category
-- Interactive editing with type-appropriate options
-- Shows diff of changes before applying
-- Covers: General, Gates, Writing, Workflow, Verification, Parallelization, Safety, Git
-
-Usage: `/wtfp:settings`
-
-**`/wtfp:resume-writing`**
-Resume work from previous session with full context restoration.
-
-- Reads STATE.md for writing context
-- Shows current position and recent progress
-- Offers next actions based on project state
-
-Usage: `/wtfp:resume-writing`
-
-**`/wtfp:pause-writing`**
-Create context handoff when pausing work mid-section.
-
-- Creates .continue-here file with current state
-- Updates STATE.md session continuity section
-- Captures in-progress work context
-
-Usage: `/wtfp:pause-writing`
-
-### Export & Submission
-
-**`/wtfp:export-latex`**
-Export paper to LaTeX format.
-
-- Generates .tex file from markdown sections
-- Creates references.bib from literature index
-- Applies journal/conference template
-- Outputs to paper/ directory
-
-Usage: `/wtfp:export-latex`
-
-**`/wtfp:submit-milestone <version>`**
-Archive completed submission round.
-
-- Creates MILESTONES.md entry with stats
-- Archives full details to milestones/ directory
-- Prepares workspace for revision round
-
-Usage: `/wtfp:submit-milestone "initial-submission"`
-
-**`/wtfp:audit-milestone`**
-Pre-submission audit checking sections, arguments, words, and citations.
-
-- Runs 5 audit checks (section completion, argument coverage, word targets, citations, review status)
-- Produces MILESTONE-AUDIT.md with pass/gap per criterion
-- Gaps include actionable recommendations
-
-Usage: `/wtfp:audit-milestone`
-
-**`/wtfp:plan-milestone-gaps`**
-Create targeted fix plans from audit findings.
-
-- Reads MILESTONE-AUDIT.md and creates fix plans for each gap
-- Groups related gaps affecting the same section
-- Plans follow standard plan-format.md structure
-
-Usage: `/wtfp:plan-milestone-gaps`
-
-### Presentations & Posters
-
-**`/wtfp:create-slides`**
-Create presentation slides from paper content.
-
-- Generates Marp-based markdown slides
-- Extracts key findings, figures, and arguments
-- Customizable themes and layouts
-
-Usage: `/wtfp:create-slides`
-
-**`/wtfp:create-poster`**
-Create academic poster from paper content.
-
-- Generates poster layout from paper sections
-- Includes figures, key results, and conclusions
-- Formatted for standard poster dimensions
-
-Usage: `/wtfp:create-poster`
-
-### Issue Management
-
-**`/wtfp:consider-gaps`**
-Review deferred issues and gaps.
-
-- Analyzes all open issues against current draft
-- Identifies resolved issues (can close)
-- Identifies urgent gaps (should address now)
-- Identifies natural fits for upcoming sections
-
-Usage: `/wtfp:consider-gaps`
-
-### Todo Management
-
-**`/wtfp:add-todo <description>`**
-Capture an idea or task for later without breaking flow.
-
-- Quick-capture with minimal disruption
-- Creates file in .planning/todos/pending/
-- Auto-detects current section context from STATE.md
-- Updates STATE.md pending count
-
-Usage: `/wtfp:add-todo "Check whether Smith2024 contradicts our methodology claim"`
-
-**`/wtfp:check-todos`**
-Review pending todos — act on or dismiss.
-
-- Presents each todo with act/defer/dismiss/done/skip options
-- Moves files to dismissed/ or done/ subdirectories
-- Updates STATE.md pending count after review
-
-Usage: `/wtfp:check-todos`
-
-### Utility Commands
-
-**`/wtfp:help`**
-Show this command reference.
-
-**`/wtfp:update`**
-Check for newer WTF-P version and install update.
-
-- Compares installed version against npm registry
-- Shows changelog diff when update available
-- User can update or skip
-
-Usage: `/wtfp:update`
-
-## Files & Structure
+| Command | Description |
+|---------|-------------|
+| `/wtfp:insert-section <after> <desc>` | Insert a new section between existing sections |
+| `/wtfp:remove-section [N]` | Remove an unwritten section and renumber the rest |
+
+```
+/wtfp:insert-section 3 "Add methodology detail"   # Creates Section 3.1
+/wtfp:remove-section 7                             # Deletes and renumbers
+```
+
+### Export and Submission
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:export-latex` | Export paper to LaTeX with bibliography and formatting |
+| `/wtfp:audit-milestone` | Run pre-submission checks on sections, citations, and word counts |
+| `/wtfp:plan-milestone-gaps` | Create fix plans for gaps found by audit-milestone |
+| `/wtfp:submit-milestone <version>` | Archive a completed draft or submission version |
+
+```
+/wtfp:export-latex               # Generates .tex + references.bib in paper/
+/wtfp:audit-milestone            # 5-check pre-submission audit → MILESTONE-AUDIT.md
+/wtfp:plan-milestone-gaps        # Reads audit, creates fix plans for each gap
+/wtfp:submit-milestone "initial-submission"   # Archives to milestones/
+```
+
+### Presentations and Posters
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:create-slides` | Generate presentation slides from paper content |
+| `/wtfp:create-poster` | Generate academic poster from paper content |
+
+```
+/wtfp:create-slides              # Marp-based markdown slides from your paper
+/wtfp:create-poster              # Academic poster layout from key sections
+```
+
+### Todos
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:add-todo <description>` | Capture a quick note or task without breaking your flow |
+| `/wtfp:check-todos` | Review pending todos and act on, defer, or dismiss each |
+
+```
+/wtfp:add-todo "Check whether Smith2024 contradicts our methodology claim"
+/wtfp:check-todos                # Walk through each — act, defer, dismiss, or done
+```
+
+### Settings and Utilities
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:settings` | View and edit project settings interactively |
+| `/wtfp:update` | Check for updates and install newer version |
+| `/wtfp:help` | Show all WTF-P commands and how to use them |
+
+### Contributing
+
+| Command | Description |
+|---------|-------------|
+| `/wtfp:report-bug` | Report a bug via GitHub issue |
+| `/wtfp:request-feature` | Request a new feature via GitHub issue |
+| `/wtfp:contribute` | Walk through contributing code to WTF-P via pull request |
+
+## Files and Structure
+
+WTF-P creates a `.planning/` directory in your project:
 
 ```
 .planning/
-├── PROJECT.md            # Paper vision
-├── ROADMAP.md            # Section breakdown
-├── STATE.md              # Writing memory & progress
-├── ISSUES.md             # Deferred enhancements
-├── config.json           # Workflow mode & settings
-├── structure/            # Document structure
-│   ├── argument-map.md   # Claim → Evidence → Conclusion
-│   ├── outline.md        # Section skeleton
-│   └── narrative-arc.md  # Story structure
-├── sources/              # Source materials
-│   ├── literature.md     # Bibliography index
-│   ├── data.md           # Figures, tables, evidence
-│   └── prior-drafts.md   # Existing material to incorporate
-├── grant/                # Grant-specific (if applicable)
-│   ├── specific-aims.md  # Goal hierarchy
-│   ├── budget.md         # Budget structure
-│   └── reviewer-framing.md  # Why fund this
-└── sections/
-    ├── 01-introduction/
-    │   ├── 01-01-PLAN.md
-    │   └── 01-01-SUMMARY.md
-    └── 02-methods/
-        ├── 02-01-PLAN.md
-        └── 02-01-SUMMARY.md
+  PROJECT.md              Paper vision and requirements
+  ROADMAP.md              Section breakdown with status
+  STATE.md                Writing progress and session context
+  config.json             Project settings
+  structure/
+    argument-map.md       Claims mapped to evidence and sections
+    outline.md            Section structure and word budgets
+    narrative-arc.md      Story flow across sections
+  sources/
+    literature.md         Bibliography index
+    data.md               Figures, tables, evidence
+    prior-drafts.md       Existing material to incorporate
+  sections/
+    01-introduction/
+      01-01-PLAN.md       Writing plan
+      01-01-SUMMARY.md    Completion record
+    02-methods/
+      02-01-PLAN.md
+      02-01-SUMMARY.md
 
-paper/                    # Output files
-├── paper.tex             # LaTeX output
-├── paper.md              # Markdown output
-├── references.bib        # Bibliography
-└── figures/              # Figure files
+paper/                    Written output
+  paper.md                Assembled paper
+  paper.tex               LaTeX output (after export)
+  references.bib          Bibliography
+  figures/                Figure files
 ```
-
-## Writing Modes
-
-Claude adapts its role per section:
-
-**Co-Author Mode**
-- Claude drafts, you refine
-- Best for: Initial drafts, methods, boilerplate
-
-**Scaffold Mode**
-- Claude outlines, you write
-- Best for: Arguments, results interpretation
-
-**Reviewer Mode**
-- You write, Claude critiques
-- Best for: Abstract, discussion, conclusions
-
-## Verification Layers
-
-**1. Citation Check (Mechanical)**
-- All claims have citations
-- Citations formatted correctly
-- No broken references
-
-**2. Argument Coherence (Logical)**
-- Claims follow from evidence
-- No logical contradictions
-- Flow between paragraphs
-
-**3. Rubric Check (Requirements)**
-- All required sections present
-- Word/page limits met
-- Formatting requirements met
 
 ## Common Workflows
 
 **Starting a new paper:**
-
 ```
 /wtfp:new-paper
 /wtfp:create-outline
@@ -473,51 +237,28 @@ Claude adapts its role per section:
 /wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md
 ```
 
-**Resuming work after a break:**
-
+**Resuming after a break:**
 ```
-/wtfp:progress  # See where you left off and continue
+/wtfp:progress
+```
+
+**Reviving a stalled project with existing files:**
+```
+/wtfp:map-project
+/wtfp:new-paper
 ```
 
 **Handling reviewer comments:**
-
 ```
-/wtfp:import-reviews   # Import reviewer comments
-/wtfp:plan-revision    # Plan fixes
-/wtfp:write-section    # Execute revisions
-/wtfp:respond-reviews  # Generate response doc
+/wtfp:plan-revision 02-01
+/wtfp:write-section .planning/sections/02-methods/02-01-PLAN.md
 ```
-
-## Contributing to WTF-P
-
-Found a bug or want a new feature? Use these commands:
-
-**`/wtfp:report-bug`**
-Report a bug via GitHub issue.
-- Guides you through describing the problem
-- Collects environment info automatically
-- Creates well-formatted issue with `gh` CLI
-
-**`/wtfp:request-feature`**
-Request a new feature via GitHub issue.
-- Helps articulate what you need and why
-- Checks for duplicate requests
-- Can lead into implementation if desired
-
-**`/wtfp:contribute`**
-Guide through contributing code via Pull Request.
-- Fork → Branch → Implement → Test → PR workflow
-- Works for new commands, bug fixes, docs
-- Follows project conventions automatically
 
 ## Getting Help
 
-- Read `.planning/PROJECT.md` for paper vision
-- Read `.planning/STATE.md` for current context
-- Check `.planning/ROADMAP.md` for section status
-- Run `/wtfp:progress` to check where you're at
-- Report bugs: `/wtfp:report-bug`
-- Request features: `/wtfp:request-feature`
+- `/wtfp:progress` — See where you are and what to do next
+- `/wtfp:report-bug` — Report a bug
+- `/wtfp:request-feature` — Request a feature
 - GitHub: https://github.com/akougkas/wtf-p
 </reference>
 </process>

@@ -1,6 +1,6 @@
 ---
 name: citation-formatter
-description: Specialist in managing BibTeX files, checking citation consistency, and formatting references.
+description: Audits BibTeX files for missing keys, duplicate entries, and formatting errors. Cross-references in-text citations against the .bib file. Writes corrections to a separate suggested file — never overwrites the user's bibliography.
 allowed-tools:
   - Bash
   - Read
