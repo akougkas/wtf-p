@@ -1,6 +1,6 @@
 # Contributing to WTF-P
 
-WTF-P is an open-source context engineering toolkit for academic writing with Claude Code. We welcome contributions from the community!
+WTF-P is an open-source context engineering toolkit for academic writing with AI coding assistants. We welcome contributions from the community!
 
 ## Ways to Contribute
 
@@ -39,13 +39,13 @@ npm test
 ### Testing Your Changes
 
 ```bash
-# Sanity tests (structure, package.json)
+# Full test suite (sanity + paths + linter + wcn-integrity + dry-run + features + installer)
 npm test
 
-# Manual testing in Claude Code
-# 1. Install locally: node bin/install.js --local
-# 2. Open Claude Code in this directory
-# 3. Run your command: /wtfp:your-command
+# Manual testing — install to your AI assistant and try the commands:
+node bin/install.js --local            # Claude Code
+node bin/install.js --local --gemini   # Gemini CLI
+node bin/install.js --local --opencode # OpenCode
 ```
 
 ---
@@ -55,28 +55,41 @@ npm test
 ```
 wtf-p/
 ├── bin/
-│   ├── install.js      # npx wtf-p installer
-│   └── uninstall.js    # npx wtf-p-uninstall
-├── commands/wtfp/      # Slash commands (/wtfp:*)
-│   ├── help.md
-│   ├── new-paper.md
-│   └── ...
-├── write-the-f-paper/
-│   ├── workflows/      # Writing workflow files
-│   ├── templates/      # LaTeX and venue templates
-│   └── references/     # Principles and guidelines
-├── test/
-│   └── sanity.js       # Basic structure tests
-└── tests/e2e/          # End-to-end verification
+│   ├── install.js                     # npx wtf-p entry point
+│   ├── uninstall.js                   # npx wtf-p-uninstall entry point
+│   ├── commands/                      # CLI subcommands (doctor, install-logic, list, status, update)
+│   └── lib/                           # Shared libraries (manifest, checkpoint, citation, context-primer)
+├── core/write-the-f-paper/            # Vendor-agnostic content
+│   ├── references/                    # 16 reference docs (principles, formats, patterns)
+│   ├── templates/                     # 20+ templates (config, context, manuscript, venues, posters, slides)
+│   ├── venues/                        # 5 venue configs (acm-cs, ieee-cs, arxiv-ml, nature, thesis)
+│   └── workflows/                     # 14 workflows × 2 (verbose + WCN compressed)
+├── vendors/
+│   ├── claude/                        # Claude Code: 36 commands (.md), 11 agents (.md), MCP, skills, plugin
+│   │   ├── commands/wtfp/             # Slash commands
+│   │   └── agents/wtfp/              # Specialized agents
+│   ├── gemini/                        # Gemini CLI: 36 commands (.toml), 11 agents (.md)
+│   │   ├── commands/wtfp/
+│   │   └── agents/wtfp/
+│   └── opencode/                      # OpenCode: 36 commands (.md), 11 agents (.md)
+│       ├── commands/wtfp/
+│       └── agents/wtfp/
+├── test/                              # 7 test suites
+├── tests/e2e/                         # E2E test framework
+├── tools/wcn/                         # WCN compression tool
+├── scripts/                           # release.js, preflight.js
+└── docs/                              # Developer docs
 ```
 
 ---
 
 ## Adding a New Command
 
-Commands are markdown files in `commands/wtfp/` with YAML frontmatter.
+Commands live in `vendors/<runtime>/commands/wtfp/`. Each runtime has its own format.
 
-### Command Template
+### Claude Code (Markdown)
+
+File: `vendors/claude/commands/wtfp/your-command.md`
 
 ```markdown
 ---
@@ -86,7 +99,7 @@ allowed-tools:
   - Read
   - Write
   - Bash
-  - AskUserQuestion
+  - Task
 ---
 
 <objective>
@@ -109,6 +122,49 @@ Clear statement of what this command accomplishes.
 </process>
 ```
 
+### Gemini CLI (TOML)
+
+File: `vendors/gemini/commands/wtfp/your-command.toml`
+
+Gemini uses TOML frontmatter. No `allowed-tools` field — tools are available by default in Gemini.
+
+```toml
+[command]
+name = "wtfp:your-command"
+description = "Brief description of what it does"
+
+[command.content]
+text = """
+<objective>
+Clear statement of what this command accomplishes.
+</objective>
+
+<context>
+@~/.config/gemini/write-the-f-paper/references/principles.md
+</context>
+
+<process>
+## Step 1: ...
+</process>
+"""
+```
+
+### OpenCode (Markdown)
+
+File: `vendors/opencode/commands/wtfp/your-command.md`
+
+Same Markdown format as Claude, but **no `allowed-tools` frontmatter** (tools are available by default) and paths use `~/.opencode/` instead of `~/.claude/`.
+
+### Multi-Vendor Checklist
+
+When adding a new command, you must create it for **all three runtimes**:
+- [ ] `vendors/claude/commands/wtfp/your-command.md`
+- [ ] `vendors/gemini/commands/wtfp/your-command.toml`
+- [ ] `vendors/opencode/commands/wtfp/your-command.md`
+- [ ] Update `vendors/claude/commands/wtfp/help.md` with the new command
+- [ ] Add the command to `bin/lib/manifest.js` if it needs installer awareness
+- [ ] Run `npm test` to validate linting and structure
+
 ### Naming Conventions
 
 | Prefix | Purpose | Example |
@@ -123,32 +179,32 @@ Clear statement of what this command accomplishes.
 
 ### Best Practices
 
-1. **Use AskUserQuestion for ALL user interaction** - Never ask inline text questions
-2. **Batch related questions** - Use multi-select when questions are independent
-3. **Validate inputs early** - Check prerequisites before doing work
-4. **Provide clear error messages** - Tell users how to fix problems
-5. **Commit results** - Use git to checkpoint progress
+1. **Use structured interaction** — Never ask inline text questions; use the assistant's structured prompting
+2. **Batch related questions** — Group independent questions together
+3. **Validate inputs early** — Check prerequisites before doing work
+4. **Provide clear error messages** — Tell users how to fix problems
+5. **Commit results** — Use git to checkpoint progress
 
 ---
 
 ## Adding a New Workflow
 
-Workflows live in `write-the-f-paper/workflows/` and handle specific writing tasks.
+Workflows live in `core/write-the-f-paper/workflows/` and are vendor-agnostic.
 
 ### Workflow vs Command
 
 | Type | Location | Invoked By |
 |------|----------|------------|
-| Command | `commands/wtfp/*.md` | User via `/wtfp:*` |
-| Workflow | `write-the-f-paper/workflows/*.md` | Commands via `@` reference |
+| Command | `vendors/<runtime>/commands/wtfp/*.md` | User via `/wtfp:*` |
+| Workflow | `core/write-the-f-paper/workflows/*.md` | Commands via `@` reference |
 
 ### WCN (Workflow Compression Notation)
 
 For token efficiency, workflows have two versions:
-- `workflow.md` - Verbose, human-readable
-- `workflow.wcn.md` - Compressed, fewer tokens
+- `workflow.md` — Verbose, human-readable
+- `workflow.wcn.md` — Compressed, fewer tokens (35–50% savings)
 
-See `write-the-f-paper/workflows/WCN-SPEC.md` for compression syntax.
+See `core/write-the-f-paper/workflows/WCN-SPEC.md` for compression syntax.
 
 ---
 
@@ -165,12 +221,12 @@ See `write-the-f-paper/workflows/WCN-SPEC.md` for compression syntax.
    ```bash
    npm test
    node bin/install.js --local
-   # Test in Claude Code
+   # Test in your AI assistant
    ```
 
 4. **Commit with conventional commits**
    ```bash
-   git commit -m "feat(commands): add citation-check command"
+   git commit -m "feat(commands): add your-command across all runtimes"
    ```
 
 5. **Push and create PR**
@@ -196,18 +252,21 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 ### Types
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation only
-- `refactor` - Code change that neither fixes a bug nor adds a feature
-- `test` - Adding or updating tests
-- `chore` - Maintenance tasks
+- `feat` — New feature
+- `fix` — Bug fix
+- `docs` — Documentation only
+- `refactor` — Code change that neither fixes a bug nor adds a feature
+- `test` — Adding or updating tests
+- `chore` — Maintenance tasks
+- `copy` — UX copy / public-facing strings
 
 ### Scopes
-- `commands` - Slash commands
-- `workflows` - Writing workflows
-- `cli` - Installer/uninstaller
-- `templates` - LaTeX templates
+- `commands` — Slash commands
+- `workflows` — Writing workflows
+- `cli` — Installer/uninstaller
+- `templates` — LaTeX templates
+- `parity` — Multi-runtime parity
+- `safety` — Install/uninstall safety
 
 ---
 
@@ -220,10 +279,11 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 - Error messages should be helpful
 
 ### Markdown Commands
-- YAML frontmatter is required
+- YAML frontmatter required (Claude, OpenCode)
+- TOML frontmatter required (Gemini)
 - Use `<objective>`, `<context>`, `<process>` blocks
 - Keep instructions clear and unambiguous
-- Reference shared files with `@~/.claude/...`
+- Reference shared files with runtime-appropriate paths
 
 ---
 
