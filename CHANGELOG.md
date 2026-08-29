@@ -15,7 +15,7 @@ This entry describes the locally validated repository state; it does not assert 
 
 - **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets; 24 semantic actions are adapter-available and the other 12 have nested and flat fail-closed aliases
 - **Codex, GitHub Copilot CLI, and Antigravity CLI support** alongside modernized Claude Code, OpenCode, and Gemini adapters
-- **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin; five actions execute and 31 fail closed until exact capability and approval bindings exist
+- **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin; five actions are adapter-available and 31 fail closed until exact capability and approval bindings exist
 - **Canonical protocol catalog** — 36 versioned action contracts describing reads, outputs, delegation, tools, effects, and approval boundaries
 - **Seven standard Agent Skills** — focused packages for project setup, literature research, section planning, section writing, manuscript review, project management, and delivery
 - **Portable specialist contracts** — 11 host-neutral roles with strict mutation or verifier result shapes

@@ -50,7 +50,7 @@ cloud projection until that surface has an exact explicit-approval binding.
 Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The coordinated Clio integration discovers the preferred nested `/wtfp:new-paper` namespace; installation probes that capability in a credential-free disposable profile and falls back gracefully for legacy clients.
 
 Codex discovers all 36 stable method routes through seven native Agent Skills
-instead of a `/wtfp:*` command namespace. Twenty-four are executable in the
+instead of a `/wtfp:*` command namespace. Twenty-four are adapter-available in the
 current adapter; the other 12 carry deterministic `WTFP_ACTION_UNAVAILABLE`
 references instead of unsupported workflow instructions. Select the owning
 plugin skill explicitly when the route must be unambiguous (for example,
@@ -251,10 +251,12 @@ surface because Clio currently records, but does not enforce,
 the worker sandbox.
 
 The two Clio fleets are operator-invoked native primitives, not implicit
-routes behind `/wtfp:*`. Use `clio-coder fleet run wtfp-plan-section` or
-`clio-coder fleet run wtfp-draft-review` when their narrower specialist
-contracts are appropriate; the slash-command orchestrator remains responsible
-for approval and portable-state reconciliation around those worker steps.
+routes behind `/wtfp:*`. Use
+`clio-coder fleet run wtfp-plan-section --var section=<id>` or
+`clio-coder fleet run wtfp-draft-review --var section=<id>` when their narrower
+specialist contracts are appropriate; the slash-command orchestrator remains
+responsible for approval and portable-state reconciliation around those worker
+steps.
 
 ## Design principles
 

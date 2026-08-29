@@ -155,10 +155,11 @@ was observed to roll back a real nested planner output at the write-boundary
 gate.
 
 Neither fleet is hidden behind an ordinary `/wtfp:*` command. They are explicit
-expert entry points invoked with `clio-coder fleet run wtfp-plan-section` and
-`clio-coder fleet run wtfp-draft-review`; the action orchestrator must still
-perform approval, plan linkage, and portable-state reconciliation around the
-native worker steps.
+expert entry points invoked with
+`clio-coder fleet run wtfp-plan-section --var section=<id>` and
+`clio-coder fleet run wtfp-draft-review --var section=<id>`; the action
+orchestrator must still perform approval, plan linkage, and portable-state
+reconciliation around the native worker steps.
 
 Clio 0.3.8 parses and stores `compatibility.clio` but does not enforce it
 (tracked as Clio issue #242). WTF-P therefore uses its credential-free
