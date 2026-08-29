@@ -32,9 +32,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 1. Detect existing project://manifest first; stop and offer inspection or repair rather than reinitializing it.
 2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions.
 3. Preview the five v1 JSON records, validate every record and the cross-record
-   invariants, then create them atomically. In particular, the outline section
-   `targetWords` values must sum exactly to the configured project
-   `targetWords`; revise the proposed allocation before writing if they do not.
+   invariants, then create them atomically. In particular,
+   `outline.sections[*].word_target` must sum exactly to
+   `outline.target_words`; revise the proposed allocation before writing if it
+   does not.
    Do not run git init, stage, commit, branch, or merge.
 
 ## Safety and completion

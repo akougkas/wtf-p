@@ -29,7 +29,9 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 - Keep the core argument in `project://manifest` consistent with the thesis, section roles, and claim assignments in `project://structure/outline`.
 - Give every outline and section-record entry a unique stable identifier, goal, word budget, status, and dependency wave.
-- Make section word budgets add up to the manuscript target or disclose the variance.
+- Require every initialized or approved outline's `sections[*].word_target`
+  values to sum exactly to its `target_words`; revise the allocation before
+  writing when they do not.
 - Use relative project paths only. Do not embed host installation paths, client commands, model names, or tool-specific syntax.
 - Never treat a generated citation, claim, venue rule, or project statistic as verified without a source.
 

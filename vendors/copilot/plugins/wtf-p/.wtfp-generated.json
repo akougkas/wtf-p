@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot",
-  "sourceHash": "3fce6885c72a6cb48bbb8bdf2bb60c6bbebaf246c602fd6c11c80ad519937b17",
+  "sourceHash": "a0b6ee131dd150d6eea086655b7ba316a7623c77124115b38fdaa4307a556d6b",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -274,7 +274,7 @@
     },
     {
       "path": "commands/wtfp-new-paper.md",
-      "sha256": "2bf9523ee7a5b435ea6d5494325620122488960467aa574efa478e97ace45201"
+      "sha256": "80a1d201468a96064d9348ac5aa211c2852d685a20bcdc5d9f1c32a6d6159388"
     },
     {
       "path": "commands/wtfp-pause-writing.md",
@@ -586,11 +586,11 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "454fa49c6beaf53a965ed1f9fa34fa04ce584e064d3c968c41e4a00342926bc0"
+      "sha256": "7e1b86cc9e93d61c6292b11fdcd043282c2483699a5f678dba8acd1c54de73ec"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
-      "sha256": "fc93f30e96be962182735369554c319dfcf60ccaa55385d3472da9398c1b39d8"
+      "sha256": "943cc21e296295557d72fd3d923f9e072c3978d725374b67cf5be0a5cc6b076a"
     },
     {
       "path": "skills/wtfp-write-section/agents/openai.yaml",
@@ -710,7 +710,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
+      "sha256": "db61f8a7ed7f6596b3e55156d5702dd55c91a5c23ac75e35c572ae9758dd936e"
     },
     {
       "path": "workflows/pause-writing.md",

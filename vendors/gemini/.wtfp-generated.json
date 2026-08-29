@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "gemini",
-  "sourceHash": "c75476ddeb1031d1d7de20126948af15a2a144787f93d72d254a2d9c956a8c5e",
+  "sourceHash": "acde69a98a0e91905ff1894c3e7c653521af5cccae0990978993c569e8498bd1",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -230,7 +230,7 @@
     },
     {
       "path": "commands/wtfp/create-outline.toml",
-      "sha256": "c94b6f23d3b774e551e1cf665fa0fd97c2ae485234d384cf730da527f7fc07a2"
+      "sha256": "ab23d5003d6b5663da9ad75c5c28b754d3b4e793c4bfd7868d3ec4eba7225b96"
     },
     {
       "path": "commands/wtfp/create-poster.toml",
@@ -266,11 +266,11 @@
     },
     {
       "path": "commands/wtfp/map-project.toml",
-      "sha256": "62a180882bcf00d8143442f09de8140d06deafd5fc3d6e7b4c419736bbbc1613"
+      "sha256": "ef6fabe405a7ef87acbc67f26ce2d13f7394c76743800996f6c9246ad5092cd3"
     },
     {
       "path": "commands/wtfp/new-paper.toml",
-      "sha256": "fff4ac97e4a36add3e05b9d8ff70d3859440d1f5b524433c9a70a2fd28b0cb95"
+      "sha256": "da7cd8b2792897156cf2abb5c5f26dd36dd3bd684e1c17ab7e54ba1bf449f046"
     },
     {
       "path": "commands/wtfp/pause-writing.toml",
@@ -590,11 +590,11 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "454fa49c6beaf53a965ed1f9fa34fa04ce584e064d3c968c41e4a00342926bc0"
+      "sha256": "7e1b86cc9e93d61c6292b11fdcd043282c2483699a5f678dba8acd1c54de73ec"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
-      "sha256": "fc93f30e96be962182735369554c319dfcf60ccaa55385d3472da9398c1b39d8"
+      "sha256": "943cc21e296295557d72fd3d923f9e072c3978d725374b67cf5be0a5cc6b076a"
     },
     {
       "path": "skills/wtfp-write-section/agents/openai.yaml",
@@ -714,7 +714,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
+      "sha256": "db61f8a7ed7f6596b3e55156d5702dd55c91a5c23ac75e35c572ae9758dd936e"
     },
     {
       "path": "workflows/pause-writing.md",

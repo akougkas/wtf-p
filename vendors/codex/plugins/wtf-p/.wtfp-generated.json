@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "codex",
-  "sourceHash": "74c8659e77d760c86159a76d216ecba3624db0b60d32362b3c55367296eab920",
+  "sourceHash": "df7adf37d57a676975e91df52d71c62a578216fb5505bffb1f6df3debcf7fa3d",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -398,11 +398,11 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "454fa49c6beaf53a965ed1f9fa34fa04ce584e064d3c968c41e4a00342926bc0"
+      "sha256": "7e1b86cc9e93d61c6292b11fdcd043282c2483699a5f678dba8acd1c54de73ec"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
-      "sha256": "fc93f30e96be962182735369554c319dfcf60ccaa55385d3472da9398c1b39d8"
+      "sha256": "943cc21e296295557d72fd3d923f9e072c3978d725374b67cf5be0a5cc6b076a"
     },
     {
       "path": "skills/wtfp-write-section/agents/openai.yaml",
@@ -522,7 +522,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
+      "sha256": "db61f8a7ed7f6596b3e55156d5702dd55c91a5c23ac75e35c572ae9758dd936e"
     },
     {
       "path": "workflows/pause-writing.md",

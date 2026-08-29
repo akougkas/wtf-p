@@ -112,7 +112,9 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 - Keep the core argument in `project://manifest` consistent with the thesis, section roles, and claim assignments in `project://structure/outline`.
 - Give every outline and section-record entry a unique stable identifier, goal, word budget, status, and dependency wave.
-- Make section word budgets add up to the manuscript target or disclose the variance.
+- Require every initialized or approved outline's `sections[*].word_target`
+  values to sum exactly to its `target_words`; revise the allocation before
+  writing when they do not.
 - Use relative project paths only. Do not embed host installation paths, client commands, model names, or tool-specific syntax.
 - Never treat a generated citation, claim, venue rule, or project statistic as verified without a source.
 
@@ -150,6 +152,9 @@ Contract: [protocol/actions/new-paper.json](../../../actions/new-paper.json)
    - `project://state` for lifecycle, current position, progress, checkpoints, and last transition;
    - `project://decisions` for locked, deferred, and discretionary author decisions;
    - `project://structure/outline` for a clearly provisional thesis and initial section structure.
+   Require the outline's `sections[*].word_target` values to sum exactly to its
+   `target_words`; revise the proposed allocation before presenting the preview
+   when they do not.
 9. At the initialization gate, explain any existing path collision and the exact records that would be created. Do not offer repository initialization, staging, committing, branching, merging, pushing, or publishing as part of this action.
 10. Write the approved records atomically through the adapter. Validate each against its v1 schema, read it back, verify URI containment and cross-record project IDs, and remove partial newly created records if the atomic set cannot be completed safely.
 11. Report record URIs, author decisions, provisional constraints, unresolved questions, and whether `map-project` or `create-outline` is the next action.
@@ -194,7 +199,7 @@ Contract: [protocol/actions/create-outline.json](../../../actions/create-outline
 6. Assign the same wave only to sections that can be drafted independently and do not write the same manuscript artifact. Reject dependency cycles and references to missing section IDs.
 7. Create one `project://sections/{section}` record per outline entry. Link its context, research, plans, manuscript, and summary artifact URIs without claiming those authored artifacts already exist.
 8. Reconcile `project://state`: phase `outlining` or `planning`, exact totals, target words, current section URI, and a factual transition. Keep author decisions in `project://decisions`, not duplicated into state.
-9. Independently validate requirement coverage, claim ownership, evidence obligations, dependency order, wave safety, artifact-link containment, word-budget totals, and cross-record project IDs. Write the result to `project://validations/{validation}`.
+9. Independently validate requirement coverage, claim ownership, evidence obligations, dependency order, wave safety, artifact-link containment, exact equality between the sum of `sections[*].word_target` and `target_words`, and cross-record project IDs. Write the result to `project://validations/{validation}`.
 10. If validation fails, revise checkable defects and return author-owned conflicts as checkpoints. At final approval, atomically publish the outline and section/state records. Do not perform VCS operations.
 11. Report the approved outline revision, section record URIs, validation status, open evidence work, and first section eligible for discussion or planning.
 

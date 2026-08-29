@@ -455,6 +455,12 @@ record('every command-capable host exposes the same 36 stable aliases', () => {
             assert.ok(source.includes(`project/templates/${schema}.json`), `${target}:${sourcePath}: missing ${schema} template`);
           }
         }
+        assert.match(source, /outline\.sections\[\*\]\.word_target/,
+          `${target}:${sourcePath}: exact outline word-budget field is not bound`);
+        assert.match(source, /outline\.target_words/,
+          `${target}:${sourcePath}: exact outline target field is not bound`);
+        assert.doesNotMatch(source, /targetWords/,
+          `${target}:${sourcePath}: non-schema targetWords spelling leaked into the contract`);
       }
       if (actionIds[index] === 'analyze-bib') {
         assert.ok(

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "claude",
-  "sourceHash": "937a145e1c26ce505158638a9987f3e26973ba52c7e876ac3a405f7c2368b360",
+  "sourceHash": "99c2b27c95e856019604f9fe07e86020df831bad0fd490fc326a036bfb1ed086",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -278,7 +278,7 @@
     },
     {
       "path": "commands/new-paper.md",
-      "sha256": "fab5dbd21349f19770f7cfd8936afd577248b8d9fe610be320c1d88f6eef5df9"
+      "sha256": "c28eafc02f2d91be42d271f35eb84503494a396eaa0528eb122319dd95aeab92"
     },
     {
       "path": "commands/pause-writing.md",
@@ -590,11 +590,11 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "454fa49c6beaf53a965ed1f9fa34fa04ce584e064d3c968c41e4a00342926bc0"
+      "sha256": "7e1b86cc9e93d61c6292b11fdcd043282c2483699a5f678dba8acd1c54de73ec"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
-      "sha256": "fc93f30e96be962182735369554c319dfcf60ccaa55385d3472da9398c1b39d8"
+      "sha256": "943cc21e296295557d72fd3d923f9e072c3978d725374b67cf5be0a5cc6b076a"
     },
     {
       "path": "skills/wtfp-write-section/agents/openai.yaml",
@@ -714,7 +714,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
+      "sha256": "db61f8a7ed7f6596b3e55156d5702dd55c91a5c23ac75e35c572ae9758dd936e"
     },
     {
       "path": "workflows/pause-writing.md",
