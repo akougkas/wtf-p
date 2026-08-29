@@ -13,9 +13,9 @@ This entry describes the locally validated repository state; it does not assert 
 
 ### Added
 
-- **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets
+- **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets; 24 semantic actions are executable and the other 12 have nested and flat fail-closed aliases
 - **Codex, GitHub Copilot CLI, and Antigravity CLI support** alongside modernized Claude Code, OpenCode, and Gemini adapters
-- **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin
+- **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin; five actions execute and 31 fail closed until exact capability and approval bindings exist
 - **Canonical protocol catalog** — 36 versioned action contracts describing reads, outputs, delegation, tools, effects, and approval boundaries
 - **Seven standard Agent Skills** — focused packages for project setup, literature research, section planning, section writing, manuscript review, project management, and delivery
 - **Portable specialist contracts** — 11 host-neutral roles with strict mutation or verifier result shapes
@@ -30,6 +30,7 @@ This entry describes the locally validated repository state; it does not assert 
 ### Changed
 
 - Host-neutral Markdown is now the sole workflow-prose source; all 36 client command projections are generated from it
+- The adapter compiler now fails closed when a canonical capability, semantic effect, or approval gate lacks an exact target binding. Every target receives a machine-readable `wtfp.action-availability/v1` manifest; unavailable routes emit deterministic `WTFP_ACTION_UNAVAILABLE` stubs without the normal workflow, arguments, or tools. Seven local/plugin projections execute 24/36 actions; the GitHub Copilot cloud projection executes 5/36 because it has no exact explicit-approval binding.
 - Concrete vendor model names and host-specific delegation syntax were removed from canonical workflows
 - Each generated adapter is self-contained and carries the canonical protocol, skills, roles, project schemas, tools, and source inventory
 - Claude commands now use a dual plugin/marketplace envelope and expose exact `/wtfp:<action>` names without redundant namespace segments
@@ -51,7 +52,10 @@ This entry describes the locally validated repository state; it does not assert 
 - A bundle with preserved conflict files remains receipted as partial and is never newly registered with a native client
 - Added adversarial fault-injection coverage for symlink swaps, concurrent edits, malformed receipts, traversal, and overlapping target roots
 - Clio fleet write boundaries now name `.planning/` and `paper/` as directories; the previous bare names authorized literal files and caused real nested worker output to be rolled back
+- Canonical Clio fleet steps now declare only their bound roles' semantic write scopes: plan artifacts for `section-planner`, and manuscript plus execution-summary artifacts for `section-writer`; generated instructions reserve action-level approval and project-state reconciliation to the orchestrator, while Clio's native enforcement remains directory-granular
+- `map-project` no longer misdeclares optional bibliography parsing as a required `tool.execute` effect; it remains available through contained project reads and records unsupported structured formats rather than substituting a shell command
 - The obsolete, unregistered Claude research MCP prototype and its undeclared package contents are no longer shipped
+- Removed the obsolete, unowned Claude `wtfp-marp` and `wtfp-echarts` skills and the stale Marp peer dependency; the archive now excludes their legacy namespace so it cannot bypass the authenticated seven-skill inventory
 
 ### Validated
 
@@ -62,7 +66,7 @@ This entry describes the locally validated repository state; it does not assert 
 - Both generated Clio fleet contracts pass native `fleet validate` with the corrected `.planning/` and `paper/` directory boundaries and canonical `protocol/fleets/*.json` sources
 - The first retained Clio 0.3.8 `dynamo/qwen3.8-27b` lifecycle reading is deliberately reported as blocked at `new-paper`: high effort timed out safely; effort-off produced five schema-valid records but attempted one denied shell call and created a 5,600/6,000 word-budget mismatch. It binds earlier WTF-P source `6b58b298`, predates the current remediation, and is not a current-RC behavioral reading. No later lifecycle action or end-to-end fleet pass is claimed.
 - Post-remediation local readings remain non-passing: exact `new-paper` arguments at `0245818` led to an agent-discovery loop and zero records; the `b4f0543` plan fleet completed only structurally; and the `cbba38c` draft fleet verified the corrected `paper/` projection but failed the approved-plan, state-reconciliation, and word-budget invariants. Raw traces and ledgers are retained without promoting them to a baseline.
-- Exact adapter parity: 36 actions, seven skills, and 11 specialist roles wherever the host exposes those resource types
+- Exact catalog and discovery parity: all applicable adapters project 36 stable action IDs, seven skills, and 11 specialist roles. Executable action availability is target-specific: 24/36 on Clio, Claude, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini; 5/36 on the Copilot cloud projection.
 - Canonical workflow portability, standard-skill validation, project-schema conformance, reproducible generation, and legacy regression suites
 
 ## [0.5.0] - 2026-02-09

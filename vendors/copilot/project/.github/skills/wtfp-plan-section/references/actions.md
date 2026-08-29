@@ -2,6 +2,70 @@
 
 Use exactly one action procedure per invocation. Resolve sections by stable outline identity and keep all structural record changes transactional.
 
+## Target compatibility blockers
+
+This generated `copilot-cloud` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.
+
+### `discuss-section`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `discuss-section`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `insert-section`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `insert-section`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `plan-revision`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `plan-revision`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `plan-section`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `plan-section`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `remove-section`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `remove-section`
+Target: `copilot-cloud`
+Unavailable capabilities: `filesystem.delete`
+Unavailable effects: `filesystem.delete`, `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
 ## `discuss-section`
 
 Contract: [protocol/actions/discuss-section.json](../../../actions/discuss-section.json)

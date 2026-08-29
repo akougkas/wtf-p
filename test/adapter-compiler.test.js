@@ -11,6 +11,7 @@ const { spawnSync } = require('child_process');
 
 const {
   GENERATOR_VERSION,
+  TARGET_POLICIES,
   TARGET_ROOTS,
   compilePlans,
   inventoryFor
@@ -68,6 +69,31 @@ const CLIO_ROLE_SKILLS = Object.freeze({
   'section-reviewer': 'wtfp-review-manuscript',
   'section-writer': 'wtfp-write-section'
 });
+
+const BLOCKED_ACTIONS = Object.freeze([
+  'analyze-bib',
+  'audit-milestone',
+  'check-refs',
+  'contribute',
+  'create-poster',
+  'create-slides',
+  'export-latex',
+  'remove-section',
+  'report-bug',
+  'request-feature',
+  'research-gap',
+  'update'
+]);
+
+const GATED_NETWORK_ACTIONS = Object.freeze([
+  'analyze-bib',
+  'check-refs',
+  'contribute',
+  'report-bug',
+  'request-feature',
+  'research-gap',
+  'update'
+]);
 
 const failures = [];
 let passed = 0;
@@ -274,6 +300,17 @@ const aliases = readJson(path.join(ROOT, 'protocol', 'aliases.lock.json')).alias
 const actionIds = aliases.map((entry) => entry.action);
 const toolsRegistry = readJson(path.join(ROOT, 'protocol', 'tools.json')).tools;
 
+function expectedBlockedActions(target) {
+  if (target !== 'copilot-cloud') return [...BLOCKED_ACTIONS];
+  const explicitEffects = new Set(readJson(path.join(ROOT, 'protocol', 'effects.json')).effects
+    .filter((effect) => effect.consent === 'explicit')
+    .map((effect) => effect.id));
+  return actionIds.filter((actionId) => {
+    const action = readJson(path.join(ROOT, 'protocol', 'actions', `${actionId}.json`));
+    return BLOCKED_ACTIONS.includes(actionId) || action.effects.some((effect) => explicitEffects.has(effect.id));
+  });
+}
+
 record('compiler plans and target roots are exact and deterministic', () => {
   assert.deepStrictEqual(TARGET_ROOTS, EXPECTED_ROOTS);
   assert.deepStrictEqual(
@@ -291,6 +328,50 @@ record('compiler plans and target roots are exact and deterministic', () => {
     ]
   );
   assert.deepStrictEqual(planFingerprint(compilePlans()), planFingerprint(firstPlans));
+});
+
+record('target capability and approval policies are exhaustive and fail closed', () => {
+  const targets = ['antigravity', 'claude', 'clio', 'codex', 'copilot', 'copilot-cloud', 'gemini', 'opencode'];
+  assert.deepStrictEqual(sorted(Object.keys(TARGET_POLICIES)), targets);
+  const clone = () => JSON.parse(JSON.stringify(TARGET_POLICIES));
+
+  const missingTarget = clone();
+  delete missingTarget.clio;
+  assert.throws(() => compilePlans({ targetPolicies: missingTarget }), /target capability policies must map exactly/);
+
+  const unknownTarget = clone();
+  unknownTarget.future = unknownTarget.clio;
+  assert.throws(() => compilePlans({ targetPolicies: unknownTarget }), /target capability policies must map exactly/);
+
+  const missingCapability = clone();
+  delete missingCapability.codex.capabilities['filesystem.read'];
+  assert.throws(() => compilePlans({ targetPolicies: missingCapability }), /target capability policy codex must map exactly/);
+
+  const malformedBinding = clone();
+  malformedBinding.claude.capabilities['filesystem.read'] = 'Read';
+  assert.throws(() => compilePlans({ targetPolicies: malformedBinding }), /malformed exact binding for filesystem\.read/);
+
+  const malformedApproval = clone();
+  malformedApproval['copilot-cloud'].approvals.explicit = 'input-approval';
+  assert.throws(() => compilePlans({ targetPolicies: malformedApproval }), /malformed exact approval binding for explicit/);
+
+  const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-policy-registry-'));
+  try {
+    copyCompilerFixture(temporaryRoot);
+    const registryPath = path.join(temporaryRoot, 'protocol', 'effects.json');
+    const registry = readJson(registryPath);
+    registry.effects.push({
+      id: 'future.effect',
+      consent: 'explicit',
+      reversibility: 'not-applicable',
+      description: 'Unmapped test effect.'
+    });
+    fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
+    const isolatedCompiler = require(path.join(temporaryRoot, 'bin', 'lib', 'adapter-compiler.js'));
+    assert.throws(() => isolatedCompiler.compilePlans(), /effect capability bindings must map exactly/);
+  } finally {
+    fs.rmSync(temporaryRoot, { recursive: true, force: true });
+  }
 });
 
 record('generated inventories exactly authenticate every compiler-owned file', () => {
@@ -437,6 +518,27 @@ record('every command-capable host exposes the same 36 stable aliases', () => {
     for (const [index, sourcePath] of expected.entries()) {
       const source = planText(plan, sourcePath);
       assert.ok(source.includes(GENERATED_BANNER), `${target}:${sourcePath}: missing source banner`);
+      if (!['clio', 'claude', 'gemini'].includes(target)) {
+        assert.match(source, new RegExp(`^name: wtfp:${actionIds[index]}$`, 'm'));
+      }
+      if (target === 'claude') assert.doesNotMatch(source, /^name:/m, `${sourcePath}: Claude command name must be path-derived`);
+      if (BLOCKED_ACTIONS.includes(actionIds[index])) {
+        assert.match(source, /^WTFP_ACTION_UNAVAILABLE$/m, `${target}:${sourcePath}: missing blocked marker`);
+        assert.ok(source.includes(`Action: \`${actionIds[index]}\``));
+        assert.ok(source.includes(`Target: \`${target}\``));
+        assert.match(source, /^No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran\.$/m);
+        assert.match(source, /^Safe alternative:/m);
+        assert.doesNotMatch(source, /^## Invocation input$/m, `${target}:${sourcePath}: blocked action received invocation input`);
+        assert.doesNotMatch(source, /^## Bound action contract and schemas$/m, `${target}:${sourcePath}: blocked action received includes`);
+        assert.doesNotMatch(source, /(?:\$ARGUMENTS|\{\{args\}\})/, `${target}:${sourcePath}: blocked action received arguments`);
+        if (['claude', 'copilot', 'antigravity'].includes(target)) {
+          assert.match(source, /^allowed-tools: \[\]$/m, `${target}:${sourcePath}: blocked action did not explicitly deny tools`);
+          assert.doesNotMatch(source, /^allowed-tools:(?! \[\]$).+/m, `${target}:${sourcePath}: blocked action received tools`);
+        } else {
+          assert.doesNotMatch(source, /^(?:allowed-)?tools:/m, `${target}:${sourcePath}: blocked action received tools`);
+        }
+        continue;
+      }
       assert.match(source, /^## Invocation input$/m, `${target}:${sourcePath}: invocation input is not forwarded`);
       assert.match(source, /^## Bound action contract and schemas$/m, `${target}:${sourcePath}: action contract binding is missing`);
       assert.ok(source.includes(`actions/${actionIds[index]}.json`), `${target}:${sourcePath}: exact action contract is not bound`);
@@ -444,10 +546,6 @@ record('every command-capable host exposes the same 36 stable aliases', () => {
         source.includes(target === 'gemini' ? '{{args}}' : '$ARGUMENTS'),
         `${target}:${sourcePath}: native argument placeholder is missing`
       );
-      if (!['clio', 'claude', 'gemini'].includes(target)) {
-        assert.match(source, new RegExp(`^name: wtfp:${actionIds[index]}$`, 'm'));
-      }
-      if (target === 'claude') assert.doesNotMatch(source, /^name:/m, `${sourcePath}: Claude command name must be path-derived`);
       if (actionIds[index] === 'new-paper') {
         for (const schema of ['common', 'config', 'decisions', 'manifest', 'outline', 'state']) {
           assert.ok(source.includes(`project/schemas/${schema}.schema.json`), `${target}:${sourcePath}: missing ${schema} schema`);
@@ -486,6 +584,62 @@ record('all seven envelopes contain exactly the seven canonical Agent Skills', (
       `${target}: skill catalog drift`
     );
     assertSkillLinksResolve(plan);
+  }
+});
+
+record('every target publishes exact action availability and skill-route blockers', () => {
+  const projections = [
+    ...Object.keys(EXPECTED_ROOTS).map((target) => ({
+      target,
+      plan: plansById.get(target),
+      metadataPath: 'compatibility/action-availability.json',
+      skillRoot: 'skills'
+    })),
+    {
+      target: 'copilot-cloud',
+      plan: plansById.get('copilot-marketplace'),
+      metadataPath: 'project/.github/wtfp/compatibility/action-availability.json',
+      skillRoot: 'project/.github/skills'
+    }
+  ];
+  const catalog = readJson(path.join(ROOT, 'protocol', 'catalog.json'));
+
+  for (const projection of projections) {
+    const metadata = JSON.parse(planText(projection.plan, projection.metadataPath));
+    assert.strictEqual(metadata.schema, 'wtfp.action-availability/v1');
+    assert.strictEqual(metadata.target, projection.target);
+    assert.strictEqual(metadata.marker, 'WTFP_ACTION_UNAVAILABLE');
+    assert.deepStrictEqual(metadata.actions.map((action) => action.id), actionIds);
+    assert.deepStrictEqual(
+      metadata.actions.filter((action) => action.status === 'unavailable').map((action) => action.id),
+      expectedBlockedActions(projection.target),
+      `${projection.target}: blocked action set drift`
+    );
+    assert.deepStrictEqual(metadata.capabilityBindings, TARGET_POLICIES[projection.target].capabilities);
+    assert.deepStrictEqual(metadata.approvalBindings, TARGET_POLICIES[projection.target].approvals);
+    assert.deepStrictEqual(
+      sorted(Object.keys(metadata.effectCapabilityBindings)),
+      sorted(readJson(path.join(ROOT, 'protocol', 'effects.json')).effects.map((effect) => effect.id))
+    );
+    for (const action of metadata.actions) {
+      assert.ok(['available', 'unavailable'].includes(action.status));
+      assert.deepStrictEqual(action.unavailableCapabilities, sorted(action.unavailableCapabilities));
+      assert.deepStrictEqual(action.unavailableEffects, sorted(action.unavailableEffects));
+      if (action.status === 'available') {
+        assert.deepStrictEqual(action.unavailableCapabilities, []);
+        assert.deepStrictEqual(action.unavailableEffects, []);
+      }
+    }
+
+    for (const skill of catalog.skills) {
+      const blockedSkillActions = skill.actions.filter((actionId) => expectedBlockedActions(projection.target).includes(actionId));
+      const source = planText(projection.plan, `${projection.skillRoot}/${skill.id}/references/actions.md`);
+      for (const actionId of blockedSkillActions) {
+        assert.ok(source.includes(`### \`${actionId}\`\n\nWTFP_ACTION_UNAVAILABLE`),
+          `${projection.target}:${skill.id}: missing skill-route blocker for ${actionId}`);
+        assert.ok(source.includes(`Target: \`${projection.target}\``));
+      }
+    }
   }
 });
 
@@ -563,9 +717,19 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     'fleets/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
     'fleets/wtfp-plan-section.md': 'writes: [.planning/]'
   };
+  const expectedCanonicalStepWrites = {
+    'fleets/wtfp-draft-review.md': [
+      ['project://paper/{artifact}', 'project://sections/{section}/summary'],
+      []
+    ],
+    'fleets/wtfp-plan-section.md': [
+      ['project://sections/{section}/plans/{plan}'],
+      []
+    ]
+  };
   const expectedFleetInstructions = {
     'fleets/wtfp-draft-review.md': [
-      'update its declared portable Markdown summary',
+      'update only its declared portable Markdown summary',
       'independently review',
       'resolve logical `project://paper/...` artifacts under the project-root `paper/` directory',
       'never under `.planning/paper/`'
@@ -582,6 +746,11 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     assert.strictEqual(canonical.id, fleetId);
     assert(canonical.parameters.some(parameter => parameter.id === 'section' && parameter.required));
     assert(canonical.steps.every(step => /^role:\/\//u.test(step.role)));
+    assert.deepStrictEqual(
+      canonical.steps.map(step => step.writes),
+      expectedCanonicalStepWrites[sourcePath],
+      `${fleetId}: canonical fleet widened a specialist role's semantic write boundary`
+    );
     assert(canonical.steps.flatMap(step => step.writes).every(resource => /^project:\/\//u.test(resource)));
     assert.doesNotMatch(
       JSON.stringify(canonical),
@@ -597,6 +766,8 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     for (const phrase of expectedFleetInstructions[sourcePath]) {
       assert.ok(source.includes(phrase), `${sourcePath}: required native instruction is missing ${phrase}`);
     }
+    assert.match(source, /invoking action orchestrator owns/u,
+      `${sourcePath}: generated fleet does not reserve approval and state reconciliation to the orchestrator`);
     assert.doesNotMatch(source, /evidence coverage/u,
       `${sourcePath}: Clio 0.3.8 misclassifies the verifier task as a mutating test`);
     assert.doesNotMatch(
@@ -611,7 +782,7 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
   }
 });
 
-record('logical tool execution never widens to an unrestricted host shell', () => {
+record('unbound logical tools fail closed instead of widening to host execution', () => {
   const executableActionIds = actionIds.filter(id =>
     readJson(path.join(ROOT, 'protocol', 'actions', `${id}.json`))
       .requirements.capabilities.includes('tool.execute')
@@ -619,13 +790,15 @@ record('logical tool execution never widens to an unrestricted host shell', () =
   assert(executableActionIds.length > 0, 'fixture must cover logical tool execution');
   for (const actionId of executableActionIds) {
     const claude = planText(plansById.get('claude'), `commands/${actionId}.md`);
+    assert.match(claude, /^WTFP_ACTION_UNAVAILABLE$/m);
     assert.doesNotMatch(claude, /^\s*- Bash$/m, `${actionId}: logical tool widened to Claude Bash`);
     const copilot = planText(
       plansById.get('copilot-marketplace'),
       `project/.github/prompts/wtfp-${actionId}.prompt.md`
     );
     const tools = copilot.match(/^tools: (.+)$/m)?.[1] || '[]';
-    assert(!JSON.parse(tools).includes('execute'), `${actionId}: logical tool widened to Copilot execute`);
+    assert.deepStrictEqual(JSON.parse(tools), [], `${actionId}: logical tool widened to Copilot tools`);
+    assert.match(copilot, /^WTFP_ACTION_UNAVAILABLE$/m);
   }
 });
 
@@ -654,12 +827,24 @@ record('Copilot carries a committed cloud-safe repository projection', () => {
   }
   for (const sourcePath of prompts) {
     const source = planText(plan, sourcePath);
+    const actionId = path.basename(sourcePath, '.prompt.md').slice('wtfp-'.length);
+    if (expectedBlockedActions('copilot-cloud').includes(actionId)) {
+      assert.match(source, /^WTFP_ACTION_UNAVAILABLE$/m, `${sourcePath}: missing blocked marker`);
+      assert.match(source, /^tools: \[\]$/m, `${sourcePath}: blocked cloud action did not explicitly deny tools`);
+      assert.doesNotMatch(source, /\$\{input:arguments:/, `${sourcePath}: blocked cloud action received input`);
+      continue;
+    }
     assert.match(
       source,
       /\$\{input:arguments:Describe the requested WTF-P action input\}/,
       `${sourcePath}: missing Copilot input variable`
     );
     assert.match(source, /^tools: \[[^\n]+\]$/m, `${sourcePath}: missing bounded Copilot tools`);
+  }
+  for (const actionId of GATED_NETWORK_ACTIONS) {
+    const source = planText(plan, `project/.github/prompts/wtfp-${actionId}.prompt.md`);
+    assert.match(source, /^tools: \[\]$/m, `${actionId}: gated cloud network action did not deny all tools`);
+    assert.doesNotMatch(source, /^tools: .*"web"/m, `${actionId}: gated cloud network action exposed web`);
   }
 });
 

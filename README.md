@@ -33,8 +33,8 @@ npx wtf-p install gemini --advanced
 An interactive terminal can also run `npx wtf-p` and choose a target. A noninteractive bare invocation refuses to write anything; it requires an explicit target or scope.
 
 Then start a paper with the native WTF-P action exposed by your client. The
-following is the slash-command form used by Clio, Claude, Copilot, OpenCode,
-Antigravity, and Gemini:
+following is the slash-command form used by Clio, Claude, Copilot CLI,
+OpenCode, Antigravity, and Gemini:
 
 ```text
 /wtfp:new-paper
@@ -44,27 +44,45 @@ Antigravity, and Gemini:
 /wtfp:review-section 1
 ```
 
+These five lifecycle commands are deliberately unavailable in the Copilot
+cloud projection until that surface has an exact explicit-approval binding.
+
 Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The coordinated Clio integration discovers the preferred nested `/wtfp:new-paper` namespace; installation probes that capability in a credential-free disposable profile and falls back gracefully for legacy clients.
 
-Codex exposes the same academic methods as native Agent Skills instead of a
-`/wtfp:*` command namespace. Select the owning plugin skill explicitly when the
-route must be unambiguous (for example, `$wtf-p:wtfp-start-project` followed by
-the `new-paper` request and its exact arguments). Existing user-level commands
-can take precedence over extension commands in clients that support both; use
-the client's discovery listing to confirm the reported source before testing a
-new installation.
+Codex discovers all 36 stable method routes through seven native Agent Skills
+instead of a `/wtfp:*` command namespace. Twenty-four are executable in the
+current adapter; the other 12 carry deterministic `WTFP_ACTION_UNAVAILABLE`
+references instead of unsupported workflow instructions. Select the owning
+plugin skill explicitly when the route must be unambiguous (for example,
+`$wtf-p:wtfp-start-project` followed by the `new-paper` request and its exact
+arguments). Existing user-level commands can take precedence over extension
+commands in clients that support both; use the client's discovery listing to
+confirm the reported source before testing a new installation.
 
 ## First-class adapters
 
-| Target | Native envelope | Actions | Specialists | Skills | Target-specific capabilities |
+| Target | Native envelope | Semantic actions: discoverable / executable | Specialists | Skills | Target-specific capabilities |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clio Coder | Extension | 36, plus 36 flat aliases | 11 | 7 | Strict recipes, extension-bound skills, two fleets |
-| Claude Code | Claude plugin | 36 | 11 | 7 | Native command permissions and plugin validation |
-| Codex | Codex plugin | Through skills | Host-managed | 7 | `.codex-plugin` metadata and marketplace packaging |
-| GitHub Copilot CLI | Native plugin plus committed `.github` projection | 36 | 11 | 7 | CLI discovery and cloud-safe prompts, agents, skills, and instructions |
-| OpenCode | Filesystem bundle | 36 | 11 | 7 | Native commands and agents |
-| Antigravity CLI | `agy` plugin | 36 | 11 | 7 | Commands converted to native skills by `agy` |
-| Gemini CLI | Gemini extension | 36 | 11 | 7 | TOML commands and extension context |
+| Clio Coder | Extension | 36 / 24 (72 prompt aliases: 48 executable) | 11 | 7 | Strict recipes, extension-bound skills, two fleets |
+| Claude Code | Claude plugin | 36 / 24 | 11 | 7 | Native command permissions and plugin validation |
+| Codex | Codex plugin | 36 / 24 through skills | Host-managed | 7 | `.codex-plugin` metadata and marketplace packaging |
+| GitHub Copilot | Native CLI plugin plus committed cloud `.github` projection | CLI 36 / 24; cloud 36 / 5 | 11 | 7 | CLI discovery and cloud-safe prompts, agents, skills, and instructions |
+| OpenCode | Filesystem bundle | 36 / 24 | 11 | 7 | Native commands and agents |
+| Antigravity CLI | `agy` plugin | 36 / 24 | 11 | 7 | Commands converted to native skills by `agy` |
+| Gemini CLI | Gemini extension | 36 / 24 | 11 | 7 | TOML commands and extension context |
+
+Discovery counts stable action routes, including deterministic refusal stubs;
+it does not by itself establish executable support. Clio, Claude, Codex,
+Copilot CLI, OpenCode, Antigravity, and Gemini execute 24 of the 36 canonical
+actions and return `WTFP_ACTION_UNAVAILABLE` for `analyze-bib`,
+`audit-milestone`, `check-refs`, `contribute`, `create-poster`,
+`create-slides`, `export-latex`, `remove-section`, `report-bug`,
+`request-feature`, `research-gap`, and `update`, because those actions lack an
+exact target binding for at least one declared capability or effect. The
+Copilot cloud projection executes only `add-todo`, `help`, `list-assumptions`,
+`map-project`, and `pause-writing`; it refuses the other 31 because it also
+lacks an exact explicit-approval binding. Each generated target records its
+machine-readable result in `compatibility/action-availability.json`.
 
 The adapters are generated artifacts, not seven hand-maintained copies. Every generated envelope includes a cryptographic inventory and the portable protocol resources needed to understand its workflows. Copilot additionally receives a generated, commit-ready `.github` projection for cloud/repository use.
 
@@ -90,18 +108,20 @@ made 5,600 section words disagree with the 6,000-word outline target. The five
 records were individually schema-valid. See the
 [blocked evidence](evaluation/v1/evidence/clio-dynamo-lifecycle-blocked/README.md);
 the remaining lifecycle and routing roadmap items stay open. That reading
-binds the earlier WTF-P source `6b58b298`; it predates the current remediation
-for exact outline totals and direct-tool use, and is not a behavioral reading
-of the current RC source.
+binds the earlier WTF-P source `6b58b298`; it predates later remediation for
+exact outline totals and direct-tool use, and is not a behavioral reading of
+the later source revisions.
 
 Later post-remediation readings are retained separately because they bind
 different WTF-P commits. At `0245818`, exact `/wtfp:new-paper` arguments arrived
-but the model looped on agent discovery and produced no planning records. At
-`b4f0543`, the plan/check fleet completed structurally but its semantic checks
-were ungrounded. At final projection commit `cbba38c`, the draft/review fleet
-placed manuscript and summary files in the correct roots with no boundary
-violation, but drafted without the required approved plan, left portable state
-unreconciled, and failed its word target. See the
+but the model listed excluded `.git` metadata, read an absolute host Clio
+documentation path, looped on agent discovery, and produced no planning
+records. Those accesses were read-only; zero mutating and network effects were
+applied. At `b4f0543`, the plan/check fleet completed structurally but its
+semantic checks were ungrounded. The `cbba38c` manuscript-path projection
+observation placed draft/review manuscript and summary files in the correct
+roots with no boundary violation, but drafted without the required approved
+plan, left portable state unreconciled, and failed its word target. See the
 [retained RC readings](evaluation/v1/evidence/clio-dynamo-rc-readings/README.md).
 Neither the full lifecycle nor a semantic fleet pass is claimed.
 
@@ -118,7 +138,9 @@ WTF-P keeps the human in control while making the repeatable work deterministic:
 7. `/wtfp:review-section`, `/wtfp:verify-work`, and `/wtfp:polish-prose` check argument coverage, evidence, coherence, venue requirements, and prose quality.
 8. `/wtfp:audit-milestone`, `/wtfp:export-latex`, `/wtfp:create-slides`, and `/wtfp:create-poster` prepare deliverables.
 
-Run `/wtfp:help` for all 36 stable actions.
+Use the native help route—`/wtfp:help` on slash-command clients—to inspect all
+36 stable action contracts. Executable availability is target-specific and
+recorded in the generated compatibility manifest.
 
 ## What became portable
 
@@ -202,8 +224,10 @@ agents and fleets, same-extension skill binding, contained `${extensionRoot}`
 resource resolution, exact operator-argument preservation, preservation of
 nested template `state.json` resources, and extension-aware fleet preflight.
 Effective package discovery certifies 72 prompts (36 nested and 36 flat), 11
-agents, seven skills, two fleets, and zero diagnostics. WTF-P capability-probes
-that surface because Clio currently records, but does not enforce,
+agents, seven skills, two fleets, and zero diagnostics. Of those prompts, 48
+aliases represent 24 executable semantic actions and 24 aliases are the nested
+and flat forms of 12 deterministic refusal routes. WTF-P capability-probes that
+surface because Clio currently records, but does not enforce,
 `compatibility.clio`. The generated fleet contracts use directory boundaries
 (`.planning/` and `paper/`) so nested writes are authorized without broadening
 the worker sandbox.

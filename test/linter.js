@@ -41,6 +41,28 @@ function readRequired(filePath) {
   return fs.readFileSync(filePath, 'utf8');
 }
 
+function isUnavailableBody(body) {
+  return /^WTFP_ACTION_UNAVAILABLE$/m.test(body);
+}
+
+function validateUnavailableBody(body, filePath, actionId, argumentPlaceholder) {
+  const markers = body.match(/^WTFP_ACTION_UNAVAILABLE$/gm) || [];
+  check(markers.length === 1, filePath, 'unavailable route must contain exactly one refusal marker');
+  check(body.includes(`Action: \`${actionId}\``), filePath, 'unavailable route names the wrong action');
+  check(/^Target: `[^`]+`$/m.test(body), filePath, 'unavailable route target is missing');
+  check(/^Unavailable capabilities: /m.test(body), filePath, 'unavailable capability reason is missing');
+  check(/^Unavailable effects: /m.test(body), filePath, 'unavailable effect reason is missing');
+  check(
+    body.includes('No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.'),
+    filePath,
+    'unavailable route does not state its non-execution boundary',
+  );
+  check(/^Safe alternative: /m.test(body), filePath, 'unavailable route safe alternative is missing');
+  check(!/^## (?:Record contract|Procedure|Safety and completion|Invocation input)$/m.test(body), filePath, 'unavailable route contains executable workflow sections');
+  check(!body.includes(argumentPlaceholder), filePath, 'unavailable route received invocation arguments');
+  check(!/^@protocol:\/\//m.test(body), filePath, 'unavailable route received a portable include');
+}
+
 function validateMarkdownCommand(filePath, actionId, options) {
   const content = readRequired(filePath);
   if (content === null) return;
@@ -57,6 +79,11 @@ function validateMarkdownCommand(filePath, actionId, options) {
     check(parsed.fields.name === `wtfp:${actionId}`, filePath, `name must be wtfp:${actionId}`);
   }
   check(content.includes(GENERATED), filePath, 'compiler provenance banner is missing');
+  if (isUnavailableBody(parsed.body)) {
+    validateUnavailableBody(parsed.body, filePath, actionId, '$ARGUMENTS');
+    passed++;
+    return;
+  }
   check(/^## Record contract$/m.test(parsed.body), filePath, 'portable record contract is missing');
   check(/^## Procedure$/m.test(parsed.body), filePath, 'action procedure is missing');
   check(/^## Safety and completion$/m.test(parsed.body), filePath, 'safety/completion contract is missing');
@@ -72,7 +99,7 @@ function parseTomlCommand(content) {
   return { description, prompt };
 }
 
-function validateGeminiCommand(filePath) {
+function validateGeminiCommand(filePath, actionId) {
   const content = readRequired(filePath);
   if (content === null) return;
   const parsed = parseTomlCommand(content);
@@ -82,6 +109,11 @@ function validateGeminiCommand(filePath) {
     return;
   }
   check(parsed.prompt.includes(GENERATED), filePath, 'compiler provenance banner is missing');
+  if (isUnavailableBody(parsed.prompt)) {
+    validateUnavailableBody(parsed.prompt, filePath, actionId, '{{args}}');
+    passed++;
+    return;
+  }
   check(/^## Record contract$/m.test(parsed.prompt), filePath, 'portable record contract is missing');
   check(/^## Procedure$/m.test(parsed.prompt), filePath, 'action procedure is missing');
   check(/^## Safety and completion$/m.test(parsed.prompt), filePath, 'safety/completion contract is missing');
@@ -171,7 +203,7 @@ for (const commandTarget of markdownCommands) {
   }
 }
 for (const actionId of actionIds) {
-  validateGeminiCommand(path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp', `${actionId}.toml`));
+  validateGeminiCommand(path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp', `${actionId}.toml`), actionId);
 }
 
 const agentTargets = [

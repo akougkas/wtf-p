@@ -2,6 +2,70 @@
 
 Use exactly one action procedure per invocation. Resolve logical resources through the adapter and reconcile durable v1 records before trusting reported state.
 
+## Target compatibility blockers
+
+This generated `copilot-cloud` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.
+
+### `check-todos`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `check-todos`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `checkpoint`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `checkpoint`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `progress`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `progress`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `resume-writing`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `resume-writing`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `settings`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `settings`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
 ## `progress`
 
 Contract: [protocol/actions/progress.json](../../../actions/progress.json)

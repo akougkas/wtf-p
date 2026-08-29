@@ -14,11 +14,7 @@
       "role": "role://section-planner",
       "operation": "mutate",
       "writes": [
-        "project://sections/{section}/plans/{plan}",
-        "project://validations/{validation}",
-        "project://checkpoints/{checkpoint}",
-        "project://sections/{section}",
-        "project://state"
+        "project://sections/{section}/plans/{plan}"
       ],
       "dependsOn": []
     },
@@ -34,5 +30,5 @@
   ],
   "maxConcurrency": 1,
   "failurePolicy": "stop",
-  "instructionTemplate": "Create one contained, immutable plan for section {section} from the portable project state. The checker must independently review traceability, support for every required claim, author-decision fidelity, and feasibility without claiming a mutation."
+  "instructionTemplate": "Create one contained, immutable plan for section {section} from the portable project state. Write only the plan artifact; the invoking action orchestrator owns validation, approval, section, checkpoint, and state reconciliation. The checker must independently review traceability, support for every required claim, author-decision fidelity, and feasibility without claiming a mutation."
 }

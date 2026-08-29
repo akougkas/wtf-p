@@ -19,6 +19,172 @@ const TARGET_ROOTS = Object.freeze({
   gemini: path.join(ROOT, 'vendors', 'gemini')
 });
 
+const CAPABILITY_IDS = Object.freeze([
+  'agent.delegate',
+  'agent.parallel',
+  'external.issue',
+  'filesystem.delete',
+  'filesystem.read',
+  'filesystem.write',
+  'network.fetch',
+  'network.search',
+  'package.update',
+  'tool.execute',
+  'user.interaction',
+  'vcs.branch',
+  'vcs.commit'
+]);
+
+// Effects are portable semantic declarations. Each effect must have one exact
+// required capability (or be explicitly unavailable) before a target may
+// project the action. This table is deliberately closed: adding an effect to
+// protocol/effects.json without mapping it makes compilation fail.
+const EFFECT_CAPABILITY_BINDINGS = Object.freeze({
+  'agent.delegate': 'agent.delegate',
+  'agent.parallel': 'agent.parallel',
+  'artifact.archive': 'filesystem.write',
+  'external.issue': 'external.issue',
+  'filesystem.create': 'filesystem.write',
+  'filesystem.delete': 'filesystem.delete',
+  'filesystem.modify': 'filesystem.write',
+  'filesystem.read': 'filesystem.read',
+  'filesystem.write': 'filesystem.write',
+  'network.fetch': 'network.fetch',
+  'network.search': 'network.search',
+  'package.update': 'package.update',
+  'tool.execute': 'tool.execute',
+  'user.gate': 'user.interaction',
+  'vcs.branch': 'vcs.branch',
+  'vcs.commit': 'vcs.commit',
+  'vcs.merge': null
+});
+
+// A null binding is an intentional fail-closed decision, not an omitted map.
+// Binding identifiers are adapter contracts, not claims that every host uses
+// the same native tool spelling.
+const TARGET_POLICIES = Object.freeze({
+  clio: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'clio:extension-agent',
+    'agent.parallel': 'clio:fleet',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'clio:workspace-read',
+    'filesystem.write': 'clio:workspace-write',
+    'network.fetch': 'clio:network-fetch',
+    'network.search': 'clio:network-search',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'clio:conversation',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'clio:permission-policy', implicit: 'clio:permission-policy', explicit: 'clio:conversation-confirmation' }) }),
+  claude: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'claude:Task',
+    'agent.parallel': 'claude:Task',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'claude:Read-Glob-Grep',
+    'filesystem.write': 'claude:Write-Edit',
+    'network.fetch': 'claude:WebFetch',
+    'network.search': 'claude:WebSearch',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'claude:AskUserQuestion',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'claude:allowed-tools', implicit: 'claude:allowed-tools', explicit: 'claude:AskUserQuestion' }) }),
+  codex: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'codex:subagent',
+    'agent.parallel': 'codex:subagent',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'codex:workspace-read',
+    'filesystem.write': 'codex:workspace-write',
+    'network.fetch': 'codex:web-fetch',
+    'network.search': 'codex:web-search',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'codex:conversation',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'codex:sandbox-policy', implicit: 'codex:sandbox-policy', explicit: 'codex:conversation-confirmation' }) }),
+  copilot: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'copilot:Task',
+    'agent.parallel': 'copilot:Task',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'copilot:Read-Glob-Grep',
+    'filesystem.write': 'copilot:Write-Edit',
+    'network.fetch': 'copilot:WebFetch',
+    'network.search': 'copilot:WebSearch',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'copilot:AskUserQuestion',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'copilot:allowed-tools', implicit: 'copilot:allowed-tools', explicit: 'copilot:AskUserQuestion' }) }),
+  'copilot-cloud': Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'copilot-cloud:agent',
+    'agent.parallel': 'copilot-cloud:agent',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'copilot-cloud:read-search',
+    'filesystem.write': 'copilot-cloud:edit',
+    'network.fetch': 'copilot-cloud:web',
+    'network.search': 'copilot-cloud:web',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'copilot-cloud:input-approval',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'copilot-cloud:tool-policy', implicit: 'copilot-cloud:tool-policy', explicit: null }) }),
+  opencode: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'opencode:agent',
+    'agent.parallel': 'opencode:agent',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'opencode:workspace-read',
+    'filesystem.write': 'opencode:workspace-write',
+    'network.fetch': 'opencode:web-fetch',
+    'network.search': 'opencode:web-search',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'opencode:conversation',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'opencode:permission-policy', implicit: 'opencode:permission-policy', explicit: 'opencode:conversation-confirmation' }) }),
+  antigravity: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'antigravity:Task',
+    'agent.parallel': 'antigravity:Task',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'antigravity:Read-Glob-Grep',
+    'filesystem.write': 'antigravity:Write-Edit',
+    'network.fetch': 'antigravity:WebFetch',
+    'network.search': 'antigravity:WebSearch',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'antigravity:AskUserQuestion',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'antigravity:allowed-tools', implicit: 'antigravity:allowed-tools', explicit: 'antigravity:AskUserQuestion' }) }),
+  gemini: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'gemini:agent',
+    'agent.parallel': 'gemini:agent',
+    'external.issue': null,
+    'filesystem.delete': null,
+    'filesystem.read': 'gemini:workspace-read',
+    'filesystem.write': 'gemini:workspace-write',
+    'network.fetch': 'gemini:web-fetch',
+    'network.search': 'gemini:web-search',
+    'package.update': null,
+    'tool.execute': null,
+    'user.interaction': 'gemini:conversation',
+    'vcs.branch': null,
+    'vcs.commit': null
+  }), approvals: Object.freeze({ none: 'gemini:permission-policy', implicit: 'gemini:permission-policy', explicit: 'gemini:conversation-confirmation' }) })
+});
+
 const ROLE_SKILLS = Object.freeze({
   'outliner': 'wtfp-start-project',
   'section-planner': 'wtfp-plan-section',
@@ -111,6 +277,120 @@ function splitFrontmatter(source, filePath) {
 
 function yamlScalar(value) {
   return JSON.stringify(String(value));
+}
+
+function exactKeySet(actual, expected, label) {
+  if (!actual || typeof actual !== 'object' || Array.isArray(actual)) {
+    throw new Error(`${label} must be an object`);
+  }
+  const actualKeys = Object.keys(actual).sort((left, right) => left.localeCompare(right));
+  const expectedKeys = [...expected].sort((left, right) => left.localeCompare(right));
+  if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+    throw new Error(`${label} must map exactly: ${expectedKeys.join(', ')}`);
+  }
+}
+
+function validateTargetPolicies(targetPolicies, effects) {
+  const targetIds = [...Object.keys(TARGET_ROOTS), 'copilot-cloud'];
+  exactKeySet(targetPolicies, targetIds, 'target capability policies');
+  const effectIds = effects.map((effect) => effect.id);
+  exactKeySet(EFFECT_CAPABILITY_BINDINGS, effectIds, 'effect capability bindings');
+  for (const effect of effects) {
+    if (!['none', 'implicit', 'explicit'].includes(effect.consent)) {
+      throw new Error(`effect ${effect.id} has unknown consent disposition ${effect.consent}`);
+    }
+  }
+
+  for (const [effectId, capabilityId] of Object.entries(EFFECT_CAPABILITY_BINDINGS)) {
+    if (capabilityId !== null && !CAPABILITY_IDS.includes(capabilityId)) {
+      throw new Error(`effect ${effectId} has malformed capability binding ${capabilityId}`);
+    }
+  }
+
+  for (const target of targetIds) {
+    const policy = targetPolicies[target];
+    exactKeySet(policy, ['approvals', 'capabilities'], `target policy ${target}`);
+    exactKeySet(policy.capabilities, CAPABILITY_IDS, `target capability policy ${target}`);
+    exactKeySet(policy.approvals, ['explicit', 'implicit', 'none'], `target approval policy ${target}`);
+    for (const [capabilityId, binding] of Object.entries(policy.capabilities)) {
+      if (binding === null) continue;
+      if (typeof binding !== 'string' || !binding.startsWith(`${target}:`) ||
+          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9-]*$/u.test(binding)) {
+        throw new Error(`target ${target} has malformed exact binding for ${capabilityId}`);
+      }
+    }
+    for (const [consent, binding] of Object.entries(policy.approvals)) {
+      if (binding === null) continue;
+      if (typeof binding !== 'string' || !binding.startsWith(`${target}:`) ||
+          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9-]*$/u.test(binding)) {
+        throw new Error(`target ${target} has malformed exact approval binding for ${consent}`);
+      }
+    }
+  }
+}
+
+function actionAvailability(action, target, targetPolicies, effectConsents) {
+  const policy = targetPolicies[target];
+  if (!policy) throw new Error(`missing target capability policy: ${target}`);
+  if (!action.requirements || !Array.isArray(action.requirements.capabilities) || !Array.isArray(action.effects)) {
+    throw new Error(`action ${action.id} has malformed requirements or effects`);
+  }
+  const capabilityIds = [...new Set(action.requirements.capabilities)];
+  if (capabilityIds.length !== action.requirements.capabilities.length) {
+    throw new Error(`action ${action.id} repeats a required capability`);
+  }
+  const effectIds = action.effects.map((effect) => effect?.id);
+  if (effectIds.some((effectId) => typeof effectId !== 'string') || new Set(effectIds).size !== effectIds.length) {
+    throw new Error(`action ${action.id} has malformed or duplicate effects`);
+  }
+
+  for (const capabilityId of capabilityIds) {
+    if (!Object.prototype.hasOwnProperty.call(policy.capabilities, capabilityId)) {
+      throw new Error(`target ${target} has no capability binding for ${action.id}: ${capabilityId}`);
+    }
+  }
+  for (const effectId of effectIds) {
+    if (!Object.prototype.hasOwnProperty.call(EFFECT_CAPABILITY_BINDINGS, effectId)) {
+      throw new Error(`target ${target} has no effect binding for ${action.id}: ${effectId}`);
+    }
+    const requiredCapability = EFFECT_CAPABILITY_BINDINGS[effectId];
+    if (requiredCapability !== null && !capabilityIds.includes(requiredCapability)) {
+      throw new Error(`action ${action.id} effect ${effectId} is missing required capability ${requiredCapability}`);
+    }
+  }
+
+  const unavailableCapabilities = capabilityIds
+    .filter((capabilityId) => policy.capabilities[capabilityId] === null)
+    .sort((left, right) => left.localeCompare(right));
+  const unavailableEffects = effectIds
+    .filter((effectId) => {
+      const requiredCapability = EFFECT_CAPABILITY_BINDINGS[effectId];
+      const consent = effectConsents.get(effectId);
+      if (!consent) throw new Error(`effect ${effectId} has no consent disposition`);
+      return requiredCapability === null || policy.capabilities[requiredCapability] === null ||
+        policy.approvals[consent] === null;
+    })
+    .sort((left, right) => left.localeCompare(right));
+  return {
+    available: unavailableCapabilities.length === 0 && unavailableEffects.length === 0,
+    unavailableCapabilities,
+    unavailableEffects
+  };
+}
+
+function blockedActionBody(action, target, availability) {
+  const list = (values) => values.length > 0 ? values.map((value) => `\`${value}\``).join(', ') : '(none)';
+  return [
+    'WTFP_ACTION_UNAVAILABLE',
+    '',
+    `Action: \`${action.id}\``,
+    `Target: \`${target}\``,
+    `Unavailable capabilities: ${list(availability.unavailableCapabilities)}`,
+    `Unavailable effects: ${list(availability.unavailableEffects)}`,
+    '',
+    'No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.',
+    'Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.'
+  ].join('\n');
 }
 
 function actionTools(action) {
@@ -276,13 +556,20 @@ function generatedBanner(kind, id) {
   return `<!-- Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit. -->`;
 }
 
-function renderMarkdownCommand(action, workflowBody, target) {
+function renderMarkdownCommand(action, workflowBody, target, availability) {
   const lines = ['---'];
   // Claude derives the stable command name from the plugin id and flat file
   // name. Repeating either in frontmatter creates names such as
   // /wtfp:wtfp:new-paper in current Claude Code releases.
   if (target !== 'clio' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
+  if (!availability.available) {
+    if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
+      lines.push('allowed-tools: []');
+    }
+    lines.push('---', '', generatedBanner('protocol/actions', action.id), '', blockedActionBody(action, target, availability), '');
+    return lines.join('\n');
+  }
   lines.push('argument-hint: "[arguments]"');
   if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
     const tools = actionTools(action);
@@ -295,8 +582,10 @@ function renderMarkdownCommand(action, workflowBody, target) {
   return lines.join('\n');
 }
 
-function renderGeminiCommand(action, workflowBody) {
-  const body = nativeCommandBody(action, workflowBody, 'gemini');
+function renderGeminiCommand(action, workflowBody, availability) {
+  const body = availability.available
+    ? nativeCommandBody(action, workflowBody, 'gemini')
+    : blockedActionBody(action, 'gemini', availability);
   if (body.includes("'''")) throw new Error(`Gemini workflow ${action.id} contains an unsupported TOML literal delimiter`);
   return [
     `description = ${JSON.stringify(action.description)}`,
@@ -324,14 +613,26 @@ function copilotCloudTools(action) {
   return [...tools];
 }
 
-function renderCopilotCloudPrompt(action, workflowBody) {
+function renderCopilotCloudPrompt(action, workflowBody, availability) {
   const lines = [
     '---',
     `name: wtfp-${action.id}`,
     `description: ${yamlScalar(action.description)}`,
-    'agent: agent',
-    'argument-hint: "[arguments]"'
+    'agent: agent'
   ];
+  if (!availability.available) {
+    lines.push('tools: []');
+    lines.push(
+      '---',
+      '',
+      generatedBanner('protocol/actions', action.id),
+      '',
+      blockedActionBody(action, 'copilot-cloud', availability),
+      ''
+    );
+    return lines.join('\n');
+  }
+  lines.push('argument-hint: "[arguments]"');
   const tools = copilotCloudTools(action);
   if (tools.length > 0) lines.push(`tools: ${JSON.stringify(tools)}`);
   lines.push(
@@ -623,6 +924,63 @@ function addPortableBundle(plan) {
   addFile(plan, 'repository/CONTRIBUTING.md', fs.readFileSync(path.join(ROOT, 'CONTRIBUTING.md')));
 }
 
+function addActionAvailability(plan, model, target, targetPolicies, options = {}) {
+  const skillRoot = options.skillRoot || 'skills';
+  const metadataPath = options.metadataPath || 'compatibility/action-availability.json';
+  const effectConsents = new Map(model.effects.effects.map((effect) => [effect.id, effect.consent]));
+  const availabilityById = new Map(model.actions.map((action) => [
+    action.id,
+    actionAvailability(action, target, targetPolicies, effectConsents)
+  ]));
+  addFile(plan, metadataPath, stableJson({
+    schema: 'wtfp.action-availability/v1',
+    target,
+    marker: 'WTFP_ACTION_UNAVAILABLE',
+    capabilityBindings: targetPolicies[target].capabilities,
+    approvalBindings: targetPolicies[target].approvals,
+    effectCapabilityBindings: EFFECT_CAPABILITY_BINDINGS,
+    actions: model.actions.map((action) => ({
+      id: action.id,
+      status: availabilityById.get(action.id).available ? 'available' : 'unavailable',
+      unavailableCapabilities: availabilityById.get(action.id).unavailableCapabilities,
+      unavailableEffects: availabilityById.get(action.id).unavailableEffects
+    }))
+  }));
+
+  for (const skill of model.catalog.skills) {
+    const blocked = skill.actions
+      .map((actionId) => ({ action: model.actions.find((action) => action.id === actionId), availability: availabilityById.get(actionId) }))
+      .filter((entry) => entry.action && !entry.availability.available);
+    if (blocked.length === 0) continue;
+    const referencePath = path.posix.join(skillRoot, skill.id, 'references/actions.md');
+    const current = plan.files.get(referencePath);
+    if (!current) throw new Error(`target ${target} is missing skill action references: ${referencePath}`);
+    const appendix = [
+      '',
+      '## Target compatibility blockers',
+      '',
+      `This generated \`${target}\` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.`,
+      '',
+      ...blocked.flatMap(({ action, availability }) => [
+        `### \`${action.id}\``,
+        '',
+        blockedActionBody(action, target, availability),
+        ''
+      ])
+    ].join('\n');
+    const currentText = current.toString('utf8').trimEnd();
+    const firstAction = currentText.indexOf('\n## ');
+    if (firstAction === -1) throw new Error(`target ${target} has malformed skill action references: ${referencePath}`);
+    const updatedReference = [
+      currentText.slice(0, firstAction).trimEnd(),
+      appendix.trim(),
+      currentText.slice(firstAction + 1).trimEnd()
+    ].join('\n\n');
+    replaceFile(plan, referencePath, `${updatedReference}\n`);
+  }
+  return availabilityById;
+}
+
 function toolOutputPath(tool) {
   const prefix = 'wtfp://tools/';
   if (!tool.implementation.startsWith(prefix)) {
@@ -687,14 +1045,24 @@ function loadModel() {
     const role = splitFrontmatter(fs.readFileSync(path.join(PROTOCOL_ROOT, 'roles', file), 'utf8'), file);
     return { slug, ...role };
   });
-  return { catalog, actions, roles, version: readJson(path.join(ROOT, 'package.json')).version };
+  const effects = readJson(path.join(PROTOCOL_ROOT, 'effects.json'));
+  if (effects.schema !== 'wtfp.effects/v1' || !Array.isArray(effects.effects)) {
+    throw new Error('malformed canonical effect registry');
+  }
+  return { catalog, actions, roles, effects, version: readJson(path.join(ROOT, 'package.json')).version };
 }
 
-function compilePlans() {
+function compilePlans(options = {}) {
   const model = loadModel();
+  const targetPolicies = options.targetPolicies === undefined ? TARGET_POLICIES : options.targetPolicies;
+  validateTargetPolicies(targetPolicies, model.effects.effects);
   const plans = Object.entries(TARGET_ROOTS).map(([id, root]) => makePlan(id, root));
   const byId = new Map(plans.map((plan) => [plan.id, plan]));
-  for (const plan of plans) addPortableBundle(plan);
+  const availabilityByTarget = new Map();
+  for (const plan of plans) {
+    addPortableBundle(plan);
+    availabilityByTarget.set(plan.id, addActionAvailability(plan, model, plan.id, targetPolicies));
+  }
 
   const clio = byId.get('clio');
   addFile(clio, 'clio-coder-extension.yaml', clioManifest(model.version));
@@ -740,13 +1108,13 @@ function compilePlans() {
   addFile(gemini, 'GEMINI.md', '# WTF-P\n\nUse the bundled Agent Skills and portable protocol for evidence-grounded academic work.\n');
 
   for (const action of model.actions) {
-    addFile(clio, `prompts/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio'));
-    addFile(clio, `prompts/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio'));
-    addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude'));
-    addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot'));
-    addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode'));
-    addFile(antigravity, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'antigravity'));
-    addFile(gemini, `commands/wtfp/${action.id}.toml`, renderGeminiCommand(action, action.workflowBody));
+    addFile(clio, `prompts/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
+    addFile(clio, `prompts/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
+    addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
+    addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
+    addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
+    addFile(antigravity, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'antigravity', availabilityByTarget.get('antigravity').get(action.id)));
+    addFile(gemini, `commands/wtfp/${action.id}.toml`, renderGeminiCommand(action, action.workflowBody, availabilityByTarget.get('gemini').get(action.id)));
   }
 
   for (const role of model.roles) {
@@ -793,11 +1161,15 @@ function compilePlans() {
   }));
   copyTree(copilotMarketplace, PROTOCOL_ROOT, 'project/.github/wtfp');
   copyTree(copilotMarketplace, path.join(PROTOCOL_ROOT, 'skills'), 'project/.github/skills');
+  const copilotCloudAvailability = addActionAvailability(copilotMarketplace, model, 'copilot-cloud', targetPolicies, {
+    skillRoot: 'project/.github/skills',
+    metadataPath: 'project/.github/wtfp/compatibility/action-availability.json'
+  });
   for (const action of model.actions) {
     addFile(
       copilotMarketplace,
       `project/.github/prompts/wtfp-${action.id}.prompt.md`,
-      renderCopilotCloudPrompt(action, action.workflowBody)
+      renderCopilotCloudPrompt(action, action.workflowBody, copilotCloudAvailability.get(action.id))
     );
   }
   for (const role of model.roles) {
@@ -929,7 +1301,7 @@ function buildPlan(plan, checkOnly) {
 
 function compileAdapters(options = {}) {
   const checkOnly = options.check === true;
-  const plans = compilePlans();
+  const plans = compilePlans({ targetPolicies: options.targetPolicies });
   const changed = [];
   for (const plan of plans) {
     const differences = buildPlan(plan, checkOnly);
@@ -944,6 +1316,7 @@ function compileAdapters(options = {}) {
 
 module.exports = {
   GENERATOR_VERSION,
+  TARGET_POLICIES,
   TARGET_ROOTS,
   compileAdapters,
   compilePlans,

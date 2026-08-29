@@ -2,6 +2,22 @@
 
 Use exactly one action procedure per invocation. Keep evaluation evidence separate from proposed edits and from the author's acceptance decisions.
 
+## Target compatibility blockers
+
+This generated `opencode` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.
+
+### `audit-milestone`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `audit-milestone`
+Target: `opencode`
+Unavailable capabilities: `tool.execute`
+Unavailable effects: `tool.execute`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
 ## `review-section`
 
 Contract: [protocol/actions/review-section.json](../../../actions/review-section.json)

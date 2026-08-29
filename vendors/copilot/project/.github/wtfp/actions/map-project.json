@@ -12,8 +12,7 @@
   "requirements": {
     "capabilities": [
       "filesystem.read",
-      "filesystem.write",
-      "tool.execute"
+      "filesystem.write"
     ],
     "conditions": [
       "The project contains material to inventory"
@@ -40,9 +39,7 @@
     }
   ],
   "delegation": [],
-  "tools": [
-    "bibliography.index"
-  ],
+  "tools": [],
   "effects": [
     {
       "id": "filesystem.create",
@@ -55,10 +52,6 @@
     {
       "id": "filesystem.write",
       "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
-    },
-    {
-      "id": "tool.execute",
-      "scope": "wtfp://tools/bibliography/index"
     }
   ]
 }

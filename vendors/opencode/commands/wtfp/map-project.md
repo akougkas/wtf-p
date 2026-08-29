@@ -172,7 +172,7 @@ Contract: [protocol/actions/map-project.json](../../../actions/map-project.json)
    - data, analysis outputs, tables, and figures;
    - protocols, venue templates, reviews, and style guidance.
 3. Avoid dependency trees, generated builds, archives, adapter state, and duplicate copies unless the author includes them. Record unreadable or unsupported files instead of silently skipping them.
-4. Parse structured bibliography metadata with a deterministic parser when available. Never infer a missing identity field or scientific result as fact.
+4. Parse structured bibliography metadata only when the action declares an exact contained parser binding. Otherwise record that format as unavailable for structured parsing; never substitute a shell command or infer a missing identity field or scientific result as fact.
 5. Create one `project://sources/{source}` record per bibliographic or data-source identity. Use stable IDs, explicit provenance, inspection depth, verification time, and `provisional` status when identity is not fully checked.
 6. Create `project://evidence/{evidence}` only for an actual claim-level interpretation. Link it to a source record, state whether it supports, contradicts, or contextualizes the claim, include a locator and limitations, and never copy interpretation into source identity.
 7. Preserve manuscript, dataset, figure, table, and prior-draft content as authored `project://materials/{artifact}` or `project://paper/{artifact}` resources. Mapping indexes them; it does not rewrite or move them.
@@ -246,8 +246,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "requirements": {
     "capabilities": [
       "filesystem.read",
-      "filesystem.write",
-      "tool.execute"
+      "filesystem.write"
     ],
     "conditions": [
       "The project contains material to inventory"
@@ -274,9 +273,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     }
   ],
   "delegation": [],
-  "tools": [
-    "bibliography.index"
-  ],
+  "tools": [],
   "effects": [
     {
       "id": "filesystem.create",
@@ -289,10 +286,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "id": "filesystem.write",
       "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
-    },
-    {
-      "id": "tool.execute",
-      "scope": "wtfp://tools/bibliography/index"
     }
   ]
 }

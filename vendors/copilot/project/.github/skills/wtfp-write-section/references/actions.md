@@ -2,6 +2,46 @@
 
 Use exactly one action procedure per invocation. Draft only from verified project evidence and preserve an explicit record of deviations.
 
+## Target compatibility blockers
+
+This generated `copilot-cloud` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.
+
+### `execute-outline`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `execute-outline`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `quick`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `quick`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
+### `write-section`
+
+WTFP_ACTION_UNAVAILABLE
+
+Action: `write-section`
+Target: `copilot-cloud`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
+
+No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
+Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
+
 ## `write-section`
 
 Contract: [protocol/actions/write-section.json](../../../actions/write-section.json)

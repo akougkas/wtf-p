@@ -1,0 +1,314 @@
+{
+  "schema": "wtfp.action-availability/v1",
+  "target": "clio",
+  "marker": "WTFP_ACTION_UNAVAILABLE",
+  "capabilityBindings": {
+    "agent.delegate": "clio:extension-agent",
+    "agent.parallel": "clio:fleet",
+    "external.issue": null,
+    "filesystem.delete": null,
+    "filesystem.read": "clio:workspace-read",
+    "filesystem.write": "clio:workspace-write",
+    "network.fetch": "clio:network-fetch",
+    "network.search": "clio:network-search",
+    "package.update": null,
+    "tool.execute": null,
+    "user.interaction": "clio:conversation",
+    "vcs.branch": null,
+    "vcs.commit": null
+  },
+  "approvalBindings": {
+    "none": "clio:permission-policy",
+    "implicit": "clio:permission-policy",
+    "explicit": "clio:conversation-confirmation"
+  },
+  "effectCapabilityBindings": {
+    "agent.delegate": "agent.delegate",
+    "agent.parallel": "agent.parallel",
+    "artifact.archive": "filesystem.write",
+    "external.issue": "external.issue",
+    "filesystem.create": "filesystem.write",
+    "filesystem.delete": "filesystem.delete",
+    "filesystem.modify": "filesystem.write",
+    "filesystem.read": "filesystem.read",
+    "filesystem.write": "filesystem.write",
+    "network.fetch": "network.fetch",
+    "network.search": "network.search",
+    "package.update": "package.update",
+    "tool.execute": "tool.execute",
+    "user.gate": "user.interaction",
+    "vcs.branch": "vcs.branch",
+    "vcs.commit": "vcs.commit",
+    "vcs.merge": null
+  },
+  "actions": [
+    {
+      "id": "add-todo",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "analyze-bib",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "audit-milestone",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "check-refs",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "check-todos",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "checkpoint",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "contribute",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "external.issue",
+        "vcs.branch",
+        "vcs.commit"
+      ],
+      "unavailableEffects": [
+        "external.issue",
+        "vcs.branch",
+        "vcs.commit"
+      ]
+    },
+    {
+      "id": "create-outline",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "create-poster",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "create-slides",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "discuss-section",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "execute-outline",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "export-latex",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "help",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "insert-section",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "list-assumptions",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "map-project",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "new-paper",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "pause-writing",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "plan-milestone-gaps",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "plan-revision",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "plan-section",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "polish-prose",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "progress",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "quick",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "remove-section",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "filesystem.delete"
+      ],
+      "unavailableEffects": [
+        "filesystem.delete"
+      ]
+    },
+    {
+      "id": "report-bug",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "external.issue"
+      ],
+      "unavailableEffects": [
+        "external.issue"
+      ]
+    },
+    {
+      "id": "request-feature",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "external.issue"
+      ],
+      "unavailableEffects": [
+        "external.issue"
+      ]
+    },
+    {
+      "id": "research-gap",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
+    },
+    {
+      "id": "resume-writing",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "review-section",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "settings",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "submit-milestone",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "update",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "package.update"
+      ],
+      "unavailableEffects": [
+        "package.update"
+      ]
+    },
+    {
+      "id": "verify-work",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "write-section",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    }
+  ]
+}

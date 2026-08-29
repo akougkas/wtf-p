@@ -12,11 +12,20 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | --- | ---: | --- |
 | Claude Code | 2.1.251 | Strict marketplace validation; native marketplace add/install/list; 36 commands and 11 agents loaded with zero plugin errors; `/wtfp:new-paper` confirmed through TUI autocomplete |
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
-| GitHub Copilot CLI | 1.0.80 | Native marketplace install/list and Claude-compatible plugin discovery; generated, committed `.github` projection with 36 prompts, 11 agents, seven skills, instructions, and portable resources |
+| GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered, 24 executable. Cloud: 36 prompts projected, five executable. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
 | Clio Coder | 0.3.8, merged source `9b7b80cc` | Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
 | OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources |
 | Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills |
 | Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered |
+
+Native discovery counts routes that the client can locate, including
+fail-closed compatibility stubs; it is not an executable-support count. Claude,
+Clio, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini currently execute
+24/36 canonical actions. The Copilot cloud projection executes 5/36.
+Unsupported routes return `WTFP_ACTION_UNAVAILABLE` without receiving the
+normal workflow, invocation arguments, or tool policy. Exact action-level
+reasons are recorded in each generated
+`compatibility/action-availability.json`.
 
 All discovery ran with disposable `HOME`, XDG, temp, and client configuration roots. Native registrations and caches were not written to the operator's normal profiles.
 
@@ -67,18 +76,21 @@ billing provenance exists, so cost is recorded as unavailable rather than as a
 metered USD 0 claim.
 
 This reading binds WTF-P `6b58b298` and generated source `4db9d040…`. It
-predates the current canonical remediation for exact outline totals and direct
+predates later canonical remediation for exact outline totals and direct
 tool use and is therefore evidence about that earlier source.
 
 Three later local observations are retained separately under
 [`clio-dynamo-rc-readings`](../evaluation/v1/evidence/clio-dynamo-rc-readings/README.md).
 The `0245818` slash reading preserved exact arguments but produced zero records
-after an agent-discovery loop. The `b4f0543` plan fleet completed both native
-steps with semantic quality unmeasured. The final `cbba38c` draft fleet proved
-the physical `paper/` projection and both write-boundary windows, but it wrote
-without an approved plan, left JSON state unreconciled, and failed the
-595–805-word range with 304 words. These observations are current remediation
-evidence, not a passing lifecycle or fleet certification.
+after an agent-discovery loop. It also successfully listed contract-excluded
+`.git` metadata and read an absolute host Clio documentation path outside the
+authorized roots; both accesses were read-only, with zero mutating and network
+effects applied. The `b4f0543` plan fleet completed both native steps with
+semantic quality unmeasured. The `cbba38c` manuscript-path projection
+observation proved the physical `paper/` projection and both write-boundary
+windows, but it wrote without an approved plan, left JSON state unreconciled,
+and failed the 595–805-word range with 304 words. These are commit-specific
+remediation observations, not a passing lifecycle or fleet certification.
 
 ## Isolation evidence
 
