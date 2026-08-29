@@ -13,12 +13,12 @@
     {
       "id": "protocol:wtfp_commit",
       "classification": "structural-regression",
-      "reason": "candidate wtfp_commit 6b58b298cd6c41a587718d279cb0b0b21c0fbd7f differs from required 4cd4a2aca768f5d5d45737e4e841f280f42cc6ad"
+      "reason": "candidate wtfp_commit 6b58b298cd6c41a587718d279cb0b0b21c0fbd7f differs from required 77e68c4f88bad9b7af3018d1e444932a05fb9a2b"
     },
     {
       "id": "protocol:source_sha256",
       "classification": "structural-regression",
-      "reason": "candidate source_sha256 4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2 differs from required d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3"
+      "reason": "candidate source_sha256 4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2 differs from required 967ce1fb54583e33528c16881534d6f12deb7c70965a4c3c396f0503a1213c33"
     },
     {
       "id": "outcome",
