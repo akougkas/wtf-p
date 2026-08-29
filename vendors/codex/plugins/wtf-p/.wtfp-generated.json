@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "codex",
-  "sourceHash": "df7adf37d57a676975e91df52d71c62a578216fb5505bffb1f6df3debcf7fa3d",
+  "sourceHash": "920a829207d6cdfe85c96328b73f9981bcdd5539771e0f3ac505955ef2cd55b5",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -166,11 +166,11 @@
     },
     {
       "path": "fleets/wtfp-draft-review.json",
-      "sha256": "1a2dfcf32eb57062fea25952bf862a93a31a8539c906eb97978e1ee199077454"
+      "sha256": "437efb0b4c7b9478f832faba9bcf6e83b2c5cafc9f5e2147bc38ffdb754bb35d"
     },
     {
       "path": "fleets/wtfp-plan-section.json",
-      "sha256": "4876d8abd79f9484316f67aa8fcc7fec00af7836ee1e3fa7f1794b303654e4bb"
+      "sha256": "2a85f1472c13d57da921b8013b4d456bc8e6898318d5650b223de106539d0977"
     },
     {
       "path": "project/README.md",

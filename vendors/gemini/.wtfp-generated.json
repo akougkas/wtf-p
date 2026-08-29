@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "gemini",
-  "sourceHash": "acde69a98a0e91905ff1894c3e7c653521af5cccae0990978993c569e8498bd1",
+  "sourceHash": "28f5d66ca53cc6acc7c67108624e703bd366c7a13019f41ff707ed05574fddde",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -350,11 +350,11 @@
     },
     {
       "path": "fleets/wtfp-draft-review.json",
-      "sha256": "1a2dfcf32eb57062fea25952bf862a93a31a8539c906eb97978e1ee199077454"
+      "sha256": "437efb0b4c7b9478f832faba9bcf6e83b2c5cafc9f5e2147bc38ffdb754bb35d"
     },
     {
       "path": "fleets/wtfp-plan-section.json",
-      "sha256": "4876d8abd79f9484316f67aa8fcc7fec00af7836ee1e3fa7f1794b303654e4bb"
+      "sha256": "2a85f1472c13d57da921b8013b4d456bc8e6898318d5650b223de106539d0977"
     },
     {
       "path": "gemini-extension.json",

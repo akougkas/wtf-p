@@ -563,6 +563,10 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     'fleets/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
     'fleets/wtfp-plan-section.md': 'writes: [.planning/]'
   };
+  const expectedFleetInstructions = {
+    'fleets/wtfp-draft-review.md': ['update its declared portable Markdown summary', 'independently review'],
+    'fleets/wtfp-plan-section.md': ['support for every required claim', 'independently review']
+  };
   for (const sourcePath of fleetPaths) {
     const source = planText(plan, sourcePath);
     const fleetId = path.basename(sourcePath, '.md');
@@ -585,6 +589,11 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     ), `${sourcePath}: generated fleet has false provenance`);
     assert.ok(source.includes(GENERATED_BANNER), `${sourcePath}: missing source banner`);
     assert.ok(source.includes(expectedFleetWrites[sourcePath]), `${sourcePath}: directory write boundary lost its trailing slash`);
+    for (const phrase of expectedFleetInstructions[sourcePath]) {
+      assert.ok(source.includes(phrase), `${sourcePath}: required native instruction is missing ${phrase}`);
+    }
+    assert.doesNotMatch(source, /evidence coverage/u,
+      `${sourcePath}: Clio 0.3.8 misclassifies the verifier task as a mutating test`);
     assert.doesNotMatch(
       source,
       /writes: \[(?:paper, )?\.planning\]/,

@@ -36,5 +36,5 @@
   ],
   "maxConcurrency": 1,
   "failurePolicy": "stop",
-  "instructionTemplate": "Draft section {section} from its approved plan, then review the resulting prose against the plan, sources, decisions, and venue constraints."
+  "instructionTemplate": "Draft section {section} from its approved plan into its declared paper artifact and update its declared portable Markdown summary. The reviewer must independently review the resulting prose against the plan, sources, decisions, and venue constraints without claiming a mutation."
 }
