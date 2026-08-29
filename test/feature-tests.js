@@ -82,6 +82,19 @@ check(
   'obsolete Claude research MCP prototype has no deliverable files'
 );
 check(packageJson.files.includes('!vendors/claude/mcp/**'), 'npm archive excludes obsolete Claude MCP artifacts');
+const obsoleteClaudeSkillRoot = path.join(ROOT, 'vendors', 'claude', 'skills', 'wtfp');
+check(
+  !fs.existsSync(obsoleteClaudeSkillRoot) || recursiveCount('vendors/claude/skills/wtfp') === 0,
+  'obsolete unowned Claude skill namespace has no deliverable files'
+);
+check(
+  packageJson.files.includes('!vendors/claude/skills/wtfp/**'),
+  'npm archive excludes the obsolete unowned Claude skill namespace'
+);
+check(
+  !Object.hasOwn(packageJson.peerDependencies || {}, '@marp-team/marp-cli'),
+  'package has no obsolete Marp peer dependency'
+);
 
 section('Canonical protocol');
 const catalog = json('protocol/catalog.json');
@@ -121,6 +134,7 @@ for (const [host, spec] of Object.entries(surfaces)) {
 }
 check(recursiveCount('vendors/codex/plugins/wtf-p/skills', 'SKILL.md') === 7, 'Codex exposes all 7 native skills');
 check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === 7, 'Copilot exposes all 7 native skills');
+check(recursiveCount('vendors/claude/skills', 'SKILL.md') === 7, 'Claude exposes exactly the 7 inventory-owned native skills');
 check(filesAt('vendors/claude/agents/wtfp', '.md').length === 11, 'Claude exposes all 11 native agents');
 check(filesAt('vendors/antigravity/agents', '.md').length === 11, 'Antigravity exposes all 11 native agents');
 

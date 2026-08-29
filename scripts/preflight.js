@@ -136,7 +136,11 @@ if (packed.error || packed.status !== 0) {
       'vendors/gemini/gemini-extension.json'
     ];
     const absent = requiredPackedFiles.filter((relativePath) => !files.has(relativePath));
-    const forbiddenPrefixes = ['vendors/claude/mcp/', 'evaluation/'];
+    const forbiddenPrefixes = [
+      'vendors/claude/mcp/',
+      'vendors/claude/skills/wtfp/',
+      'evaluation/'
+    ];
     const forbidden = [...files].filter((relativePath) =>
       forbiddenPrefixes.some((prefix) => relativePath.startsWith(prefix))
     );
@@ -144,7 +148,7 @@ if (packed.error || packed.status !== 0) {
       pass(`archive contains ${files.size} files (${entry.size} compressed bytes, ${entry.unpackedSize} unpacked bytes)`);
     } else {
       if (absent.length > 0) fail('archive omits required runtime files', absent.join(', '));
-      if (forbidden.length > 0) fail('archive contains forbidden obsolete MCP files', forbidden.join(', '));
+      if (forbidden.length > 0) fail('archive contains forbidden or evaluator-only files', forbidden.join(', '));
     }
   } catch (error) {
     fail('npm pack returned parseable JSON', error.message);

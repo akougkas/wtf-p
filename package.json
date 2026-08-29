@@ -28,16 +28,9 @@
     "protocol",
     "scripts/build-adapters.js",
     "vendors",
-    "!vendors/claude/mcp/**"
+    "!vendors/claude/mcp/**",
+    "!vendors/claude/skills/wtfp/**"
   ],
-  "peerDependencies": {
-    "@marp-team/marp-cli": ">=3.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@marp-team/marp-cli": {
-      "optional": true
-    }
-  },
   "keywords": [
     "clio-coder",
     "claude",
