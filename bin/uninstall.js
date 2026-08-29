@@ -1,79 +1,149 @@
 #!/usr/bin/env node
 
+const crypto = require('crypto');
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
+const path = require('path');
 
+const MANIFEST = require('./lib/manifest');
 const {
-  expandTilde,
-  normalizePath,
-  getClaudeDir,
-  getPathLabel,
-  detectInstallation,
-  collectFiles,
-  createColors,
   createOutput,
   createRL,
+  detectInstallation,
+  expandTilde,
+  getPathLabel,
   prompt,
   VERSION_FILE
 } = require('./lib/utils');
-const MANIFEST = require('./lib/manifest');
+const {
+  PRODUCT,
+  assertTargetGuard,
+  atomicWriteFile,
+  createOwnedDirectory,
+  createTargetGuard,
+  getReceiptEntries,
+  isSameOrAncestor,
+  isTrustedReceipt,
+  isV2ReceiptShape,
+  materializeTargetGuard,
+  normalizeRelativePath,
+  readReceipt,
+  readOwnedRegularSnapshot,
+  removeCreatedDirectories,
+  removeEmptyParents,
+  resolveOwnedPath,
+  sha256Buffer,
+  sha256File,
+  writeReceipt
+} = require('./lib/ownership');
 
-// Get version from package.json
 let version = 'unknown';
 try {
-  const pkg = require('../package.json');
-  version = pkg.version;
+  version = require('../package.json').version;
 } catch {
-  // Running standalone
+  // The standalone uninstaller can still remove a receipt without package.json.
 }
 
-// ============ Argument Parsing ============
-
-const args = process.argv.slice(2);
-const hasGlobal = args.includes('--global') || args.includes('-g');
-const hasLocal = args.includes('--local') || args.includes('-l');
-const hasClaude = args.includes('--claude');
-const hasGemini = args.includes('--gemini');
-const hasOpenCode = args.includes('--opencode');
-const hasAll = args.includes('--all');
-const hasForce = args.includes('--force') || args.includes('-f');
-const hasBackup = args.includes('--backup') || args.includes('-b');
-const hasDryRun = args.includes('--dry-run') || args.includes('-n');
-const hasCleanBackups = args.includes('--clean-backups');
-const hasHelp = args.includes('--help') || args.includes('-h');
-const hasNoColor = args.includes('--no-color');
-const hasQuiet = args.includes('--quiet') || args.includes('-q');
-
-// Parse --config-dir argument
-function parseConfigDirArg() {
-  const configDirIndex = args.findIndex(arg => arg === '--config-dir' || arg === '-c');
-  if (configDirIndex !== -1) {
-    const nextArg = args[configDirIndex + 1];
-    if (!nextArg || nextArg.startsWith('-')) {
-      console.error('  --config-dir requires a path argument');
-      process.exit(1);
+function parseArgs(argv = []) {
+  const booleanFlags = new Set([
+    '--global', '-g', '--local', '-l', '--claude', '--gemini', '--opencode', '--all',
+    '--force', '-f', '--yes', '-y', '--backup', '-b', '--dry-run', '-n',
+    '--clean-backups', '--help', '-h', '--no-color', '--quiet', '-q'
+  ]);
+  let configArguments = 0;
+  for (let index = 0; index < argv.length; index++) {
+    const argument = argv[index];
+    if (argument === '--config-dir' || argument === '-c') {
+      configArguments++;
+      index++;
+      if (index >= argv.length || !argv[index] || argv[index].startsWith('-')) {
+        throw new Error('--config-dir requires a non-empty path argument');
+      }
+      continue;
     }
-    return nextArg;
+    if (argument.startsWith('--config-dir=') || argument.startsWith('-c=')) {
+      configArguments++;
+      if (!argument.slice(argument.indexOf('=') + 1)) {
+        throw new Error('--config-dir requires a non-empty path argument');
+      }
+      continue;
+    }
+    if (!booleanFlags.has(argument)) throw new Error(`Unknown uninstall argument: ${argument}`);
   }
-  const configDirArg = args.find(arg => arg.startsWith('--config-dir=') || arg.startsWith('-c='));
-  if (configDirArg) {
-    return configDirArg.split('=')[1];
+  if (configArguments > 1) throw new Error('--config-dir may only be provided once');
+
+  const has = (...names) => names.some(name => argv.includes(name));
+  const options = {
+    hasGlobal: has('--global', '-g'),
+    hasLocal: has('--local', '-l'),
+    hasClaude: has('--claude'),
+    hasGemini: has('--gemini'),
+    hasOpenCode: has('--opencode'),
+    hasAll: has('--all'),
+    hasForce: has('--force', '-f'),
+    hasYes: has('--yes', '-y'),
+    hasBackup: has('--backup', '-b'),
+    hasDryRun: has('--dry-run', '-n'),
+    hasCleanBackups: has('--clean-backups'),
+    hasHelp: has('--help', '-h'),
+    hasNoColor: has('--no-color'),
+    hasQuiet: has('--quiet', '-q'),
+    explicitConfigDir: null
+  };
+
+  const separateIndex = argv.findIndex(arg => arg === '--config-dir' || arg === '-c');
+  const joined = argv.find(arg => arg.startsWith('--config-dir=') || arg.startsWith('-c='));
+  if (separateIndex !== -1) {
+    const value = argv[separateIndex + 1];
+    if (!value || value.startsWith('-')) throw new Error('--config-dir requires a non-empty path argument');
+    options.explicitConfigDir = value;
+  } else if (joined) {
+    const value = joined.slice(joined.indexOf('=') + 1);
+    if (!value) throw new Error('--config-dir requires a non-empty path argument');
+    options.explicitConfigDir = value;
   }
-  return null;
+
+  if (options.hasGlobal && options.hasLocal) {
+    throw new Error('Choose either --global or --local, not both');
+  }
+  if (options.hasGlobal && (options.hasGemini || options.hasOpenCode || options.hasAll)) {
+    throw new Error('--global selects Claude and cannot be combined with another target');
+  }
+  if (options.hasLocal && (options.hasGemini || options.hasOpenCode || options.hasAll)) {
+    throw new Error('--local currently requires the Claude target');
+  }
+  if (options.hasLocal && options.explicitConfigDir) {
+    throw new Error('--config-dir cannot be combined with --local');
+  }
+
+  const selectedTargets = [options.hasClaude, options.hasGemini, options.hasOpenCode].filter(Boolean).length;
+  if (selectedTargets > 1) throw new Error('Choose one target, or use --all');
+  if (options.hasAll && selectedTargets > 0) {
+    throw new Error('--all cannot be combined with another target selector');
+  }
+  if (options.hasAll && options.explicitConfigDir) {
+    throw new Error('--all cannot share one --config-dir across incompatible clients');
+  }
+  if (options.explicitConfigDir && !options.hasGlobal && selectedTargets === 0) {
+    throw new Error('--config-dir also requires an explicit target such as --claude');
+  }
+
+  return options;
 }
 
-const explicitConfigDir = parseConfigDirArg();
+function getVendorDir(runtime, explicitConfigDir, cwd = process.cwd()) {
+  if (runtime === 'claude-local') return path.join(cwd, '.claude');
 
-// Setup output helpers
-const isTTY = process.stdout.isTTY && process.stdin.isTTY;
-const useColors = !hasNoColor && (isTTY || process.env.FORCE_COLOR);
-const out = createOutput({ quiet: hasQuiet, useColors });
-const c = out.colors;
+  const vendorConfig = MANIFEST[runtime];
+  if (!vendorConfig) throw new Error(`Unknown runtime: ${runtime}`);
+  if (explicitConfigDir) return expandTilde(explicitConfigDir);
+  if (process.env[vendorConfig.configDirEnv]) return expandTilde(process.env[vendorConfig.configDirEnv]);
+  return path.join(os.homedir(), vendorConfig.defaultDir);
+}
 
-// ============ Banner ============
-
-const banner = `
+function createBanner(out) {
+  const c = out.colors;
+  return `
 ${c.magenta('██╗    ██╗████████╗███████╗      ██████╗')}
 ${c.magenta('██║    ██║╚══██╔══╝██╔════╝      ██╔══██╗')}
 ${c.magenta('██║ █╗ ██║   ██║   █████╗  █████╗██████╔╝')}
@@ -83,558 +153,715 @@ ${c.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═
 
   ${c.cyan('WTF-P Uninstaller')} ${c.dim(`v${version}`)}
 `;
-
-if (!hasQuiet) {
-  console.log(banner);
 }
 
-// ============ Help Text ============
-
-if (hasHelp) {
+function showHelp(out) {
+  const c = out.colors;
+  console.log(createBanner(out));
   console.log(`  ${c.yellow('Usage:')} npx wtf-p uninstall [options]
 
-  ${c.yellow('Options:')}
-    ${c.cyan('-g, --global')}              Uninstall from home directory
-    ${c.cyan('-l, --local')}               Uninstall from current project
-    ${c.cyan('--claude')}                  Uninstall from Claude Code
-    ${c.cyan('--gemini')}                  Uninstall from Gemini CLI
-    ${c.cyan('--opencode')}                Uninstall from OpenCode
-    ${c.cyan('--all')}                     Uninstall from all tools
-    ${c.cyan('-c, --config-dir <path>')}   Uninstall from a custom directory
-    ${c.cyan('-f, --force')}               Skip confirmation prompts
-    ${c.cyan('-b, --backup')}              Backup files before removing
-    ${c.cyan('-n, --dry-run')}             Preview what would be removed
-    ${c.cyan('--clean-backups')}           Also remove backup files from prior installs
+  ${c.yellow('Target and scope:')}
+    ${c.cyan('-g, --global')}              Claude user installation (legacy alias)
+    ${c.cyan('-l, --local')}               Claude installation in ./.claude
+    ${c.cyan('--claude')}                  Claude Code user installation
+    ${c.cyan('--gemini')}                  Gemini CLI user installation
+    ${c.cyan('--opencode')}                OpenCode user installation
+    ${c.cyan('--all')}                     Every detected user installation
+    ${c.cyan('-c, --config-dir <path>')}   Custom root; requires an explicit target
+
+  ${c.yellow('Safety and output:')}
+    ${c.cyan('-n, --dry-run')}             Classify exact receipt paths without changing them
+    ${c.cyan('-b, --backup')}              Copy exact removal candidates to an owned backup bundle
+    ${c.cyan('--clean-backups')}           Remove unchanged backups recorded by WTF-P
+    ${c.cyan('-y, --yes')}                 Confirm removal of unchanged owned files
+    ${c.cyan('-f, --force')}               Skip confirmation and remove modified/untrusted receipt files
     ${c.cyan('--no-color')}                Disable colored output
     ${c.cyan('-q, --quiet')}               Suppress non-essential output
     ${c.cyan('-h, --help')}                Show this help
 
-  ${c.yellow('What gets removed:')}
-    ${c.dim('commands/wtfp/')}         Slash commands (/wtfp:*)
-    ${c.dim('write-the-f-paper/')}     Writing system files
-    ${c.dim('agents/wtfp/')}           Agent definitions
-    ${c.dim('skills/wtfp/')}           Skill definitions
-    ${c.dim('.claude-plugin/')}        Plugin manifest
-    ${c.dim('.wtfp-version')}          Version tracking file
-
-  ${c.yellow('What stays intact:')}
-    ${c.dim('CLAUDE.md')}               Your personal instructions (never touched)
-    ${c.dim('commands/')}               Other slash commands you added
-    ${c.dim('settings.json')}           Your tool settings
-    ${c.dim('Everything else')}         Nothing outside WTF-P is modified
-
-  ${c.yellow('Examples:')}
-    ${c.dim('# Preview what would be removed')}
-    npx wtf-p uninstall --global --dry-run
-
-    ${c.dim('# Backup then remove')}
-    npx wtf-p uninstall --global --backup
-
-    ${c.dim('# Remove from all tools at once')}
-    npx wtf-p uninstall --all
-
-    ${c.dim('# Also clean up leftover backup files')}
-    npx wtf-p uninstall --global --clean-backups
+  Uninstall removes exact regular files authorized by ${c.cyan(VERSION_FILE)}. Modified files,
+  malformed paths, symlinks, and unowned siblings are preserved by default. Even --force
+  never follows an unsafe path or recursively removes a shared directory.
 `);
-  process.exit(0);
 }
 
-// ============ Utilities ============
+function classifyReceiptEntries(targetDir, receipt, force = false, suppliedGuard = null) {
+  const targetGuard = suppliedGuard || createTargetGuard(targetDir);
+  assertTargetGuard(targetGuard);
+  const entries = getReceiptEntries(receipt, targetDir, targetGuard);
+  const trustedReceipt = isTrustedReceipt(receipt, targetDir, targetGuard);
+  const v2Shape = isV2ReceiptShape(receipt);
+  const normalizedCounts = new Map();
 
-/**
- * Get vendor-specific config directory
- */
-function getVendorDir(runtime, explicitConfigDir) {
-  // Handle 'claude-local' special case
-  if (runtime === 'claude-local') {
-    return path.join(process.cwd(), '.claude');
+  for (const entry of entries) {
+    try {
+      const normalized = normalizeRelativePath(entry.path);
+      normalizedCounts.set(normalized, (normalizedCounts.get(normalized) || 0) + 1);
+    } catch {
+      // Invalid entries are classified below.
+    }
   }
 
-  const vendorConfig = MANIFEST[runtime];
-  if (!vendorConfig) {
+  return entries.map((entry, index) => {
+    const item = {
+      index,
+      entry,
+      originalEntry: v2Shape ? receipt.files[index] : receipt.manifest[index],
+      path: entry.path,
+      absolutePath: null,
+      state: 'unsafe',
+      reason: null,
+      removable: false,
+      removed: false
+    };
+
+    try {
+      item.path = normalizeRelativePath(entry.path);
+      if (item.path === VERSION_FILE || item.path.startsWith('.wtfp-backup-')) {
+        item.reason = 'receipt control paths cannot own themselves or backup bundles';
+        return item;
+      }
+      if (normalizedCounts.get(item.path) !== 1) {
+        item.reason = 'duplicate receipt path';
+        return item;
+      }
+      item.absolutePath = resolveOwnedPath(targetDir, item.path, targetGuard);
+      const snapshot = readOwnedRegularSnapshot(targetDir, item.absolutePath, targetGuard, { allowMissing: true });
+      if (!snapshot) {
+        item.state = 'missing';
+        item.reason = 'already absent';
+        return item;
+      }
+
+      if (!trustedReceipt || !entry.trusted) {
+        item.state = 'untrusted';
+        item.reason = 'legacy receipts recorded skipped files and cannot prove ownership';
+        item.removable = force;
+        return item;
+      }
+      if (typeof entry.sha256 !== 'string' || !/^[a-f0-9]{64}$/i.test(entry.sha256)) {
+        item.reason = 'missing or malformed SHA-256 ownership hash';
+        return item;
+      }
+
+      if (snapshot.sha256 === entry.sha256.toLowerCase()) {
+        item.state = 'unchanged';
+        item.removable = true;
+      } else {
+        item.state = 'modified';
+        item.reason = 'content differs from the installed hash';
+        item.removable = force;
+      }
+    } catch (error) {
+      item.state = 'unsafe';
+      item.reason = error.message;
+    }
+
+    return item;
+  });
+}
+
+function createUninstallPlan(targetDir, receiptResult, options = {}) {
+  const targetGuard = options.targetGuard || createTargetGuard(targetDir);
+  assertTargetGuard(targetGuard);
+  const safeTarget = targetGuard.path;
+  if (receiptResult.corrupt) {
+    return {
+      targetDir: safeTarget,
+      targetGuard,
+      receipt: null,
+      receiptSha256: receiptResult.receiptSha256 || null,
+      trusted: false,
+      force: Boolean(options.hasForce),
+      corrupt: true,
+      error: receiptResult.error,
+      items: []
+    };
+  }
+
+  const receipt = receiptResult.receipt;
+  return {
+    targetDir: safeTarget,
+    targetGuard,
+    receipt,
+    receiptSha256: receiptResult.receiptSha256 || null,
+    trusted: isTrustedReceipt(receipt, safeTarget, targetGuard),
+    v2Shape: isV2ReceiptShape(receipt),
+    force: Boolean(options.hasForce),
+    corrupt: false,
+    error: null,
+    items: receipt ? classifyReceiptEntries(safeTarget, receipt, options.hasForce, targetGuard) : []
+  };
+}
+
+function summarizePlan(plan) {
+  const summary = {
+    unchanged: 0,
+    modified: 0,
+    untrusted: 0,
+    missing: 0,
+    unsafe: 0,
+    removable: 0
+  };
+  for (const item of plan.items) {
+    summary[item.state] = (summary[item.state] || 0) + 1;
+    if (item.removable) summary.removable++;
+  }
+  return summary;
+}
+
+function uniqueBackupDirectory(targetDir, targetGuard) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const nonce = crypto.randomBytes(4).toString('hex');
+  return resolveOwnedPath(targetDir, `.wtfp-backup-${stamp}-${nonce}`, targetGuard);
+}
+
+function statIdentity(stat) {
+  return `${String(stat.dev)}:${String(stat.ino)}`;
+}
+
+function assertReceiptUnchanged(plan) {
+  if (!plan.receipt || !plan.receiptSha256) {
+    throw new Error('Cannot mutate files without a hash-pinned ownership receipt');
+  }
+  assertTargetGuard(plan.targetGuard);
+  const receiptPath = resolveOwnedPath(plan.targetDir, VERSION_FILE, plan.targetGuard);
+  const snapshot = readOwnedRegularSnapshot(plan.targetDir, receiptPath, plan.targetGuard, { allowMissing: true });
+  if (!snapshot || snapshot.sha256 !== plan.receiptSha256) {
+    throw new Error('The ownership receipt changed after uninstall planning; no further files were removed');
+  }
+  assertTargetGuard(plan.targetGuard);
+  return receiptPath;
+}
+
+function readRegularSnapshot(plan, item) {
+  assertReceiptUnchanged(plan);
+  const absolutePath = resolveOwnedPath(plan.targetDir, item.path, plan.targetGuard);
+  try {
+    const snapshot = readOwnedRegularSnapshot(
+      plan.targetDir,
+      absolutePath,
+      plan.targetGuard,
+      { allowMissing: true }
+    );
+    if (!snapshot) return null;
+    assertTargetGuard(plan.targetGuard);
+    return {
+      absolutePath,
+      bytes: snapshot.bytes,
+      hash: snapshot.sha256,
+      identity: snapshot.identityKey,
+      mode: snapshot.mode
+    };
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
+
+function revalidateRemovalItem(plan, item) {
+  let snapshot;
+  try {
+    snapshot = readRegularSnapshot(plan, item);
+  } catch (error) {
+    item.state = 'unsafe';
+    item.removable = false;
+    item.reason = error.message;
     return null;
   }
 
-  if (explicitConfigDir) {
-    return expandTilde(explicitConfigDir);
+  if (!snapshot) {
+    item.state = 'missing';
+    item.removable = false;
+    item.reason = 'already absent';
+    return null;
   }
 
-  const envDir = process.env[vendorConfig.configDirEnv];
-  if (envDir) {
-    return expandTilde(envDir);
+  item.absolutePath = snapshot.absolutePath;
+  if (!plan.trusted || !item.entry.trusted) {
+    item.state = 'untrusted';
+    item.reason = 'receipt cannot prove ownership for this target';
+    item.removable = plan.force;
+    return item.removable ? snapshot : null;
   }
 
-  return path.join(os.homedir(), vendorConfig.defaultDir);
+  const expectedHash = typeof item.entry.sha256 === 'string' ? item.entry.sha256.toLowerCase() : null;
+  if (!expectedHash || !/^[a-f0-9]{64}$/.test(expectedHash)) {
+    item.state = 'unsafe';
+    item.removable = false;
+    item.reason = 'missing or malformed SHA-256 ownership hash';
+    return null;
+  }
+
+  if (snapshot.hash !== expectedHash) {
+    item.state = 'modified';
+    item.reason = 'content changed after uninstall planning';
+    item.removable = plan.force;
+    return item.removable ? snapshot : null;
+  }
+
+  item.state = 'unchanged';
+  item.reason = null;
+  item.removable = true;
+  return snapshot;
 }
 
-/**
- * Generate backup directory path with timestamp
- */
-function getBackupDir(claudeDir) {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  return path.join(claudeDir, `.wtfp-backup-${timestamp}`);
-}
+function ensureGuardedDirectory(targetGuard, directory, createdDirectories) {
+  assertTargetGuard(targetGuard);
+  const relative = path.relative(targetGuard.path, path.resolve(directory));
+  if (relative === '' || relative.startsWith(`..${path.sep}`) || relative === '..' || path.isAbsolute(relative)) {
+    if (relative === '') return;
+    throw new Error(`Backup directory escapes its owned root: ${directory}`);
+  }
 
-/**
- * Recursively remove directory
- */
-function removeDir(dir) {
-  if (!fs.existsSync(dir)) return;
-  fs.rmSync(dir, { recursive: true, force: true });
-}
-
-/**
- * Copy directory recursively
- */
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-  for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
+  let current = targetGuard.path;
+  for (const segment of relative.split(path.sep)) {
+    current = path.join(current, segment);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      createdDirectories.push(createOwnedDirectory(targetGuard, current));
+      stat = fs.lstatSync(current);
     }
+    if (stat.isSymbolicLink() || !stat.isDirectory()) {
+      throw new Error(`Backup parent is not a real directory: ${current}`);
+    }
+    assertTargetGuard(targetGuard);
   }
 }
 
-/**
- * Find backup files in a directory
- */
-function findBackupFiles(dir, backups = []) {
-  if (!fs.existsSync(dir)) return backups;
+function createBackupBundle(plan) {
+  const candidates = plan.items.filter(item => item.removable);
+  if (candidates.length === 0) return null;
 
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (entry.name.startsWith('.wtfp-backup-')) {
-        backups.push(fullPath);
-      } else {
-        findBackupFiles(fullPath, backups);
+  assertReceiptUnchanged(plan);
+  const backupDir = uniqueBackupDirectory(plan.targetDir, plan.targetGuard);
+  const backupGuard = createTargetGuard(backupDir);
+  const createdDirectories = materializeTargetGuard(backupGuard);
+  const createdFiles = [];
+  const manifest = {
+    schemaVersion: 1,
+    product: PRODUCT,
+    createdAt: new Date().toISOString(),
+    files: []
+  };
+
+  try {
+    for (const item of candidates) {
+      const snapshot = revalidateRemovalItem(plan, item);
+      if (!snapshot) continue;
+      const destination = resolveOwnedPath(backupDir, item.path, backupGuard);
+      ensureGuardedDirectory(backupGuard, path.dirname(destination), createdDirectories);
+      atomicWriteFile(destination, snapshot.bytes, {
+        mode: snapshot.mode,
+        mustNotExist: true,
+        targetGuard: backupGuard
+      });
+      createdFiles.push({ path: destination, sha256: snapshot.hash });
+      manifest.files.push({ path: item.path, sha256: snapshot.hash });
+    }
+    if (manifest.files.length === 0) {
+      const cleanupFailures = removeCreatedDirectories(createdDirectories, backupGuard);
+      if (cleanupFailures.length > 0) throw new Error('Could not remove an empty backup directory safely');
+      return null;
+    }
+    const marker = resolveOwnedPath(backupDir, '.wtfp-backup.json', backupGuard);
+    const markerBytes = Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
+    atomicWriteFile(marker, markerBytes, { mode: 0o644, mustNotExist: true, targetGuard: backupGuard });
+    createdFiles.push({ path: marker, sha256: sha256Buffer(markerBytes) });
+    return backupDir;
+  } catch (error) {
+    for (const created of createdFiles.reverse()) {
+      try {
+        assertTargetGuard(backupGuard);
+        if (sha256File(created.path) === created.sha256) fs.unlinkSync(created.path);
+      } catch {
+        // The original backup error remains primary.
       }
-    } else if (entry.name.includes('.backup-')) {
-      backups.push(fullPath);
     }
+    const cleanupFailures = removeCreatedDirectories(createdDirectories, backupGuard);
+    if (cleanupFailures.length > 0) {
+      error.message += `; cleanup also preserved ${cleanupFailures.length} changed or nonempty backup director${cleanupFailures.length === 1 ? 'y' : 'ies'}`;
+      error.cleanupFailures = cleanupFailures;
+    }
+    throw error;
   }
-  return backups;
 }
 
-// ============ Uninstall Logic ============
+function classifyRecordedBackups(plan) {
+  const { targetDir, receipt, targetGuard, force } = plan;
+  if (!isTrustedReceipt(receipt, targetDir, targetGuard) || !Array.isArray(receipt.backups)) return [];
+  return receipt.backups.map(backup => {
+    const result = { backup, path: backup.path, absolutePath: null, state: 'unsafe', removable: false };
+    try {
+      result.path = normalizeRelativePath(backup.path);
+      result.absolutePath = resolveOwnedPath(targetDir, result.path, targetGuard);
+      const snapshot = readOwnedRegularSnapshot(targetDir, result.absolutePath, targetGuard, { allowMissing: true });
+      if (!snapshot) {
+        result.state = 'missing';
+      } else if (backup.sha256 && snapshot.sha256 === backup.sha256) {
+        result.state = 'unchanged';
+        result.removable = true;
+      } else {
+        result.state = 'modified';
+        result.removable = force;
+      }
+    } catch {
+      result.state = 'unsafe';
+    }
+    return result;
+  });
+}
 
-/**
- * Uninstall from the specified runtime
- * @param {string} runtime - 'claude' | 'gemini' | 'opencode' | 'claude-local'
- */
-async function uninstall(runtime) {
+function applyRecordedBackupCleanup(plan, backupItems, dryRun) {
+  if (dryRun) return;
+  for (const item of backupItems) {
+    if (!item.removable || item.state === 'missing') continue;
+    try {
+      const snapshot = readRegularSnapshot(plan, item);
+      if (!snapshot) {
+        item.state = 'missing';
+        item.removable = false;
+        continue;
+      }
+      const expectedHash = typeof item.backup.sha256 === 'string' ? item.backup.sha256.toLowerCase() : null;
+      if (!expectedHash || snapshot.hash !== expectedHash) {
+        item.state = 'modified';
+        item.removable = plan.force;
+        if (!item.removable) continue;
+      }
+      assertReceiptUnchanged(plan);
+      resolveOwnedPath(plan.targetDir, item.path, plan.targetGuard);
+      const pathStat = fs.lstatSync(item.absolutePath);
+      if (pathStat.isSymbolicLink() || !pathStat.isFile() || statIdentity(pathStat) !== snapshot.identity) {
+        throw new Error('recorded backup path changed immediately before removal');
+      }
+      assertTargetGuard(plan.targetGuard);
+      fs.unlinkSync(item.absolutePath);
+      item.removed = true;
+      removeEmptyParents(plan.targetDir, path.dirname(item.absolutePath), plan.targetGuard);
+    } catch (error) {
+      item.state = 'unsafe';
+      item.error = error.message;
+    }
+  }
+}
+
+function applyUninstallPlan(plan) {
+  for (const item of plan.items) {
+    if (!item.removable || item.state === 'missing') continue;
+    try {
+      const snapshot = revalidateRemovalItem(plan, item);
+      if (!snapshot) continue;
+      assertReceiptUnchanged(plan);
+      resolveOwnedPath(plan.targetDir, item.path, plan.targetGuard);
+      const stat = fs.lstatSync(item.absolutePath);
+      if (stat.isSymbolicLink() || !stat.isFile() || statIdentity(stat) !== snapshot.identity) {
+        throw new Error('path changed immediately before removal');
+      }
+      assertTargetGuard(plan.targetGuard);
+      fs.unlinkSync(item.absolutePath);
+      assertTargetGuard(plan.targetGuard);
+      item.removed = true;
+      removeEmptyParents(plan.targetDir, path.dirname(item.absolutePath), plan.targetGuard);
+    } catch (error) {
+      item.state = 'unsafe';
+      item.removable = false;
+      item.reason = error.message;
+    }
+  }
+}
+
+function updateReceiptAfterUninstall(plan, backupItems = null) {
+  if (!plan.receipt) return;
+
+  const remainingItems = plan.items.filter(item => !item.removed && item.state !== 'missing');
+  const remainingBackups = Array.isArray(backupItems)
+    ? backupItems
+      .filter(item => !item.removed && item.state !== 'missing')
+      .map(item => item.backup)
+    : (Array.isArray(plan.receipt.backups) ? plan.receipt.backups : []);
+  if (!plan.trusted && !plan.force) return;
+  const receiptPath = assertReceiptUnchanged(plan);
+
+  if (remainingItems.length === 0 && remainingBackups.length === 0) {
+    if (fs.existsSync(receiptPath)) {
+      const snapshot = readOwnedRegularSnapshot(plan.targetDir, receiptPath, plan.targetGuard, { allowMissing: true });
+      const stat = snapshot ? fs.lstatSync(receiptPath) : null;
+      if (snapshot && snapshot.sha256 === plan.receiptSha256 &&
+          stat && !stat.isSymbolicLink() && stat.isFile() && statIdentity(stat) === snapshot.identityKey) {
+        assertTargetGuard(plan.targetGuard);
+        fs.unlinkSync(receiptPath);
+        assertTargetGuard(plan.targetGuard);
+      }
+    }
+    return;
+  }
+
+  if (plan.trusted) {
+    writeReceipt(plan.targetDir, {
+      ...plan.receipt,
+      status: 'partial-uninstall',
+      updatedAt: new Date().toISOString(),
+      files: remainingItems.map(item => item.originalEntry),
+      backups: remainingBackups
+    }, plan.targetGuard);
+  } else if (plan.v2Shape) {
+    const untrustedV2Receipt = {
+      ...plan.receipt,
+      status: 'partial-uninstall',
+      updatedAt: new Date().toISOString(),
+      files: remainingItems.map(item => item.originalEntry),
+      backups: remainingBackups
+    };
+    atomicWriteFile(receiptPath, JSON.stringify(untrustedV2Receipt, null, 2) + '\n', {
+      mode: 0o644,
+      targetGuard: plan.targetGuard
+    });
+  } else if (Array.isArray(plan.receipt.manifest)) {
+    const legacyReceipt = {
+      ...plan.receipt,
+      status: 'partial-uninstall',
+      updatedAt: new Date().toISOString(),
+      manifest: remainingItems.map(item => item.originalEntry)
+    };
+    atomicWriteFile(receiptPath, JSON.stringify(legacyReceipt, null, 2) + '\n', {
+      mode: 0o644,
+      targetGuard: plan.targetGuard
+    });
+  }
+}
+
+function printPlan(plan, out, options) {
+  const c = out.colors;
+  const summary = summarizePlan(plan);
+  out.log(`  ${c.yellow('Receipt ownership plan:')}`);
+  out.log(`    ${c.green(String(summary.unchanged).padStart(3))} unchanged owned file(s)`);
+  out.log(`    ${c.yellow(String(summary.modified).padStart(3))} modified file(s) ${options.hasForce ? '(forced removal)' : '(preserved)'}`);
+  out.log(`    ${c.yellow(String(summary.untrusted).padStart(3))} legacy/untrusted file(s) ${options.hasForce ? '(forced removal)' : '(preserved)'}`);
+  out.log(`    ${c.dim(String(summary.missing).padStart(3))} already missing file(s)`);
+  out.log(`    ${c.red(String(summary.unsafe).padStart(3))} unsafe or malformed path(s) (always preserved)`);
+  out.log('');
+
+  for (const item of plan.items.filter(candidate => candidate.state !== 'unchanged').slice(0, 20)) {
+    const reason = item.reason ? ` — ${item.reason}` : '';
+    out.log(`    ${c.dim(`[${item.state}]`)} ${String(item.path)}${c.dim(reason)}`);
+  }
+  if (plan.items.filter(candidate => candidate.state !== 'unchanged').length > 20) {
+    out.log(`    ${c.dim('... additional exceptional paths omitted')}`);
+  }
+  if (plan.items.some(candidate => candidate.state !== 'unchanged')) out.log('');
+
+  return summary;
+}
+
+async function uninstall(runtime, options, out) {
   const isLocal = runtime === 'claude-local';
   const vendorKey = isLocal ? 'claude' : runtime;
   const vendorConfig = MANIFEST[vendorKey];
+  if (!vendorConfig) throw new Error(`Unknown runtime: ${runtime}`);
 
-  if (!vendorConfig) {
-    out.error(`Unknown runtime: ${runtime}`);
-    return;
-  }
-
-  const targetDir = getVendorDir(runtime, explicitConfigDir);
+  const unresolvedTarget = getVendorDir(runtime, options.explicitConfigDir);
+  const targetGuard = options.targetGuard || createTargetGuard(unresolvedTarget);
+  assertTargetGuard(targetGuard);
+  const targetDir = targetGuard.path;
   const locationLabel = getPathLabel(targetDir, !isLocal);
+  const c = out.colors;
 
-  out.log(`  Checking ${c.cyan(locationLabel)} for WTF-P installation...\n`);
+  out.log(`  Checking ${c.cyan(locationLabel)} for a WTF-P ownership receipt...\n`);
+  const receiptResult = readReceipt(targetDir, targetGuard);
+  const plan = createUninstallPlan(targetDir, receiptResult, { ...options, targetGuard });
 
-  // Detect installation
-  const installed = detectInstallation(targetDir);
-  const totalFiles = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length
-    + (installed.agentFiles || []).length + (installed.mcpFiles || []).length + (installed.binFiles || []).length;
+  if (plan.corrupt) {
+    out.warn(`The ${VERSION_FILE} receipt is corrupt; no files were removed (${plan.error})`);
+    return { status: 'corrupt', plan };
+  }
 
-  if (!installed.hasCommands && !installed.hasWorkflows && !installed.hasSkills) {
-    out.log(`  ${c.yellow('No WTF-P installation found in ' + locationLabel)}\n`);
-
-    // Check for backups if requested
-    if (hasCleanBackups) {
-      const backups = findBackupFiles(targetDir);
-      if (backups.length > 0) {
-        out.log(`  Found ${backups.length} backup file(s)/folder(s) to clean:\n`);
-        for (const b of backups.slice(0, 10)) {
-          out.log(`    ${c.dim(b.replace(targetDir, '.'))}`);
-        }
-        if (backups.length > 10) {
-          out.log(`    ${c.dim('... and ' + (backups.length - 10) + ' more')}`);
-        }
-        out.log('');
-
-        if (!hasDryRun && !hasForce) {
-          const rl = createRL();
-          const answer = await prompt(rl, `  Remove these backup files? [y/N]: `);
-          rl.close();
-          if (answer !== 'y' && answer !== 'yes') {
-            out.log(`\n  ${c.yellow('Aborted.')}\n`);
-            return;
-          }
-        }
-
-        if (!hasDryRun) {
-          for (const b of backups) {
-            if (fs.statSync(b).isDirectory()) {
-              removeDir(b);
-            } else {
-              fs.unlinkSync(b);
-            }
-            out.log(`  ${c.red('-')} ${c.dim(b.replace(targetDir, '.'))}`);
-          }
-          out.log(`\n  ${c.green('Cleaned ' + backups.length + ' backup file(s).')}\n`);
-        } else {
-          out.log(`  ${c.yellow('Dry run: would remove ' + backups.length + ' backup file(s).')}\n`);
-        }
-      } else {
-        out.log(`  No backup files found.\n`);
-      }
+  if (!plan.receipt) {
+    const detected = detectInstallation(targetDir);
+    if (detected.hasAny) {
+      out.warn('WTF-P-shaped files exist, but no ownership receipt can prove who created them.');
+      out.log(`  Reinstall explicitly with ${c.cyan('--force --backup-all')} to establish a v2 receipt, then uninstall.\n`);
+    } else {
+      out.log(`  ${c.yellow('No WTF-P installation receipt found.')}\n`);
     }
-    return;
+    return { status: 'not-installed', plan };
   }
 
-  // Show what will be removed
-  out.log(`  ${c.yellow('Found WTF-P installation:')}\n`);
+  const summary = printPlan(plan, out, options);
+  const backupItems = options.hasCleanBackups && plan.trusted
+    ? classifyRecordedBackups(plan)
+    : null;
 
-  const commandsDir = path.join(targetDir, 'commands', 'wtfp');
-  const workflowsDir = path.join(targetDir, 'write-the-f-paper');
-  const skillsDir = path.join(targetDir, 'skills', 'wtfp');
-  const agentsDir = path.join(targetDir, 'agents', 'wtfp');
-  const mcpDir = path.join(targetDir, 'mcp');
-  const binDir = path.join(targetDir, 'bin');
-  const pluginDir = path.join(targetDir, '.claude-plugin');
-  const wtfpPluginFile = path.join(pluginDir, 'plugin.json');
+  if (backupItems && backupItems.length > 0) {
+    const removableBackups = backupItems.filter(item => item.removable).length;
+    const preservedBackups = backupItems.filter(item => !item.removable && item.state !== 'missing').length;
+    out.log(`  Recorded backups: ${removableBackups} removable, ${preservedBackups} preserved.\n`);
+  }
+  const removableBackupCount = backupItems ? backupItems.filter(item => item.removable).length : 0;
+  const totalRemovable = summary.removable + removableBackupCount;
 
-  if (installed.hasCommands) {
-    out.log(`    ${c.cyan('commands/wtfp/')} (${installed.commandFiles.length} files)`);
+  if (options.hasDryRun) {
+    out.log(`  ${c.yellow(`Dry run: would remove ${totalRemovable} exact file(s).`)}\n`);
+    return { status: 'dry-run', plan, summary };
   }
-  if (installed.hasWorkflows) {
-    out.log(`    ${c.cyan('write-the-f-paper/')} (${installed.workflowFiles.length} files)`);
-  }
-  if (installed.hasSkills) {
-    out.log(`    ${c.cyan('skills/wtfp/')} (${installed.skillFiles.length} files)`);
-  }
-  if (fs.existsSync(agentsDir)) {
-    out.log(`    ${c.cyan('agents/wtfp/')} (agent definitions)`);
-  }
-  if (fs.existsSync(mcpDir)) {
-    out.log(`    ${c.cyan('mcp/')} (MCP server)`);
-  }
-  if (fs.existsSync(binDir)) {
-    out.log(`    ${c.cyan('bin/')} (scripts)`);
-  }
-  if (fs.existsSync(wtfpPluginFile)) {
-    out.log(`    ${c.cyan('.claude-plugin/plugin.json')} (WTF-P plugin manifest)`);
-  }
-  if (installed.version) {
-    out.log(`    ${c.cyan(VERSION_FILE)} (version tracking)`);
-  }
-  out.log('');
 
-  // Check for backups to clean
-  let backups = [];
-  if (hasCleanBackups) {
-    const allBackups = findBackupFiles(targetDir);
-    backups = allBackups.filter(b => {
-      if (installed.hasCommands && b.startsWith(commandsDir)) return false;
-      if (installed.hasSkills && b.startsWith(skillsDir)) return false;
-      return true;
-    });
-    if (backups.length > 0) {
-      out.log(`    ${c.dim('+ ' + backups.length + ' backup file(s) outside wtfp dirs will also be removed')}\n`);
+  if (summary.removable === 0 && (!backupItems || backupItems.every(item => !item.removable))) {
+    // Missing entries can be dropped safely so repeated uninstall converges.
+    const hasTrackedBackups = Array.isArray(plan.receipt.backups) && plan.receipt.backups.length > 0;
+    const needsReceiptUpdate = (!hasTrackedBackups && plan.items.length === 0) ||
+      plan.items.some(item => item.state === 'missing') ||
+      Boolean(backupItems && backupItems.some(item => item.state === 'missing'));
+    if (needsReceiptUpdate) updateReceiptAfterUninstall(plan, backupItems);
+    out.log(`  ${c.yellow('No receipt-authorized files can be removed.')}\n`);
+    return { status: 'preserved', plan, summary };
+  }
+
+  if (!options.hasForce && !options.hasYes) {
+    if (!options.isInteractive) {
+      throw new Error('Noninteractive uninstall requires --yes for unchanged owned files, or --force for modified/untrusted receipt files. Use --dry-run to inspect safely.');
     }
-  }
-
-  // Dry run stops here
-  if (hasDryRun) {
-    out.log(`  ${c.yellow('Dry run: would remove ' + totalFiles + ' file(s) in 2 directories.')}\n`);
-    return;
-  }
-
-  // Confirm unless --force
-  if (!hasForce) {
     const rl = createRL();
-    const answer = await prompt(rl, `  Remove ${totalFiles} file(s)? [y/N]: `);
+    const answer = await prompt(rl, `  Remove ${totalRemovable} exact owned file(s)? [y/N]: `);
     rl.close();
-
     if (answer !== 'y' && answer !== 'yes') {
-      out.log(`\n  ${c.yellow('Aborted.')}\n`);
-      return;
+      out.log(`\n  ${c.yellow('Aborted.')} No files changed.\n`);
+      return { status: 'aborted', plan, summary };
     }
     out.log('');
   }
 
-  // Backup if requested
-  if (hasBackup) {
-    const backupDirPath = getBackupDir(targetDir);
-    fs.mkdirSync(backupDirPath, { recursive: true });
-
-    if (installed.hasCommands) {
-      copyDir(commandsDir, path.join(backupDirPath, 'commands', 'wtfp'));
-    }
-    if (installed.hasWorkflows) {
-      copyDir(workflowsDir, path.join(backupDirPath, 'write-the-f-paper'));
-    }
-    if (installed.hasSkills) {
-      copyDir(skillsDir, path.join(backupDirPath, 'skills', 'wtfp'));
-    }
-    if (fs.existsSync(agentsDir)) {
-      copyDir(agentsDir, path.join(backupDirPath, 'agents', 'wtfp'));
-    }
-    if (fs.existsSync(mcpDir)) {
-      copyDir(mcpDir, path.join(backupDirPath, 'mcp'));
-    }
-    if (fs.existsSync(binDir)) {
-      copyDir(binDir, path.join(backupDirPath, 'bin'));
-    }
-    if (fs.existsSync(wtfpPluginFile)) {
-      fs.mkdirSync(path.join(backupDirPath, '.claude-plugin'), { recursive: true });
-      fs.copyFileSync(wtfpPluginFile, path.join(backupDirPath, '.claude-plugin', 'plugin.json'));
-    }
-
-    const backupLabel = backupDirPath.replace(os.homedir(), '~').replace(process.cwd(), '.');
-    out.log(`  ${c.cyan('↻')} Backed up to ${c.dim(backupLabel)}\n`);
+  if (options.hasBackup) {
+    const backupDir = createBackupBundle(plan);
+    if (backupDir) out.log(`  ${c.cyan('↻')} Backed up exact candidates to ${c.dim(getPathLabel(backupDir, !isLocal))}\n`);
   }
 
-  // Remove directories — only WTF-P subdirectories, never parent dirs with user content
+  applyUninstallPlan(plan);
+  applyRecordedBackupCleanup(plan, backupItems || [], false);
+  updateReceiptAfterUninstall(plan, backupItems);
 
-  // Helper: remove a wtfp subdir and clean up empty parent
-  function removeWtfpSubdir(subdir, parentDir, label) {
-    if (!fs.existsSync(subdir)) return;
-    removeDir(subdir);
-    out.log(`  ${c.red('-')} ${c.dim(label)}`);
-
-    // Clean up parent only if empty (no user content remains)
-    if (parentDir && fs.existsSync(parentDir)) {
-      try {
-        const remaining = fs.readdirSync(parentDir);
-        if (remaining.length === 0) {
-          fs.rmdirSync(parentDir);
-          out.log(`  ${c.red('-')} ${c.dim(path.basename(parentDir) + '/')} ${c.dim('(empty)')}`);
-        }
-      } catch { /* ignore */ }
-    }
+  for (const item of plan.items.filter(candidate => candidate.removed)) {
+    out.log(`  ${c.red('-')} ${c.dim(item.path)}`);
   }
 
-  if (installed.hasCommands) {
-    removeWtfpSubdir(commandsDir, path.join(targetDir, 'commands'), 'commands/wtfp/');
+  const remaining = plan.items.filter(item => !item.removed && item.state !== 'missing');
+  if (remaining.length > 0) {
+    out.log(`\n  ${c.yellow('Partial uninstall:')} preserved ${remaining.length} modified, untrusted, or unsafe file(s).`);
+    out.log(`  Re-run with ${c.cyan('--force')} only if you intend to remove exact modified/legacy receipt files.\n`);
+    return { status: 'partial', plan, summary };
   }
 
-  if (installed.hasWorkflows) {
-    removeDir(workflowsDir);
-    out.log(`  ${c.red('-')} ${c.dim('write-the-f-paper/')}`);
-  }
-
-  if (installed.hasSkills) {
-    removeWtfpSubdir(skillsDir, path.join(targetDir, 'skills'), 'skills/wtfp/');
-  }
-
-  // Remove agents/wtfp/ (added in v0.5.0)
-  if (fs.existsSync(agentsDir)) {
-    removeWtfpSubdir(agentsDir, path.join(targetDir, 'agents'), 'agents/wtfp/');
-  }
-
-  // Remove mcp/ (WTF-P research server)
-  if (fs.existsSync(mcpDir)) {
-    removeDir(mcpDir);
-    out.log(`  ${c.red('-')} ${c.dim('mcp/')}`);
-  }
-
-  // Remove bin/ (WTF-P scripts installed to config dir)
-  if (fs.existsSync(binDir)) {
-    removeDir(binDir);
-    out.log(`  ${c.red('-')} ${c.dim('bin/')}`);
-  }
-
-  // Remove only WTF-P's plugin.json, not the entire .claude-plugin/ dir
-  // (user may have their own plugin configs there)
-  if (fs.existsSync(wtfpPluginFile)) {
-    try {
-      const pluginData = JSON.parse(fs.readFileSync(wtfpPluginFile, 'utf8'));
-      if (pluginData.name === 'wtf-p' || pluginData.name === 'write-the-f-paper') {
-        fs.unlinkSync(wtfpPluginFile);
-        out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/plugin.json')}`);
-
-        // Only remove .claude-plugin/ if empty after our file is gone
-        try {
-          const remaining = fs.readdirSync(pluginDir);
-          if (remaining.length === 0) {
-            fs.rmdirSync(pluginDir);
-            out.log(`  ${c.red('-')} ${c.dim('.claude-plugin/')} ${c.dim('(empty)')}`);
-          }
-        } catch { /* ignore */ }
-      }
-    } catch {
-      // Can't parse plugin.json — leave it alone for safety
-    }
-  }
-
-  // Remove version file
-  const versionFile = path.join(targetDir, VERSION_FILE);
-  if (fs.existsSync(versionFile)) {
-    fs.unlinkSync(versionFile);
-    out.log(`  ${c.red('-')} ${c.dim(VERSION_FILE)}`);
-  }
-
-  // Clean backups if requested
-  if (hasCleanBackups && backups.length > 0) {
-    for (const b of backups) {
-      if (fs.statSync(b).isDirectory()) {
-        removeDir(b);
-      } else {
-        fs.unlinkSync(b);
-      }
-    }
-    out.log(`  ${c.red('-')} ${c.dim(backups.length + ' backup file(s)')}`);
-  }
-
-  out.log(`
-  ${c.green('Done!')} WTF-P has been removed from ${vendorConfig.name}.
-
-  ${c.dim('Your personal config files were not touched.')}
-
-  To reinstall later: ${c.cyan('npx wtf-p')}
-`);
+  out.log(`\n  ${c.green('Done!')} Removed WTF-P-owned files from ${vendorConfig.name}.`);
+  out.log(`  ${c.dim('Unowned files and nonempty shared directories were not touched.')}\n`);
+  return { status: 'removed', plan, summary };
 }
 
-/**
- * Prompt for uninstall location - shows all runtimes with installation status
- */
-async function promptLocation() {
-  const rl = createRL();
-
-  // Check installations for all runtimes
-  const runtimes = Object.keys(MANIFEST);
-  const installations = {};
-  let anyInstalled = false;
-
-  for (const runtime of runtimes) {
-    const targetDir = getVendorDir(runtime, null);
-    const installed = detectInstallation(targetDir);
-    const hasInstall = installed.hasCommands || installed.hasWorkflows || installed.hasSkills;
-    const count = installed.commandFiles.length + installed.workflowFiles.length + installed.skillFiles.length;
-    installations[runtime] = { installed, hasInstall, count, targetDir };
-    if (hasInstall) anyInstalled = true;
+async function promptLocation(options, out) {
+  const installations = [];
+  for (const runtime of Object.keys(MANIFEST)) {
+    const targetGuard = createTargetGuard(getVendorDir(runtime, null));
+    const targetDir = targetGuard.path;
+    const receipt = readReceipt(targetDir, targetGuard);
+    if (receipt.receipt || receipt.corrupt) installations.push({ runtime, targetDir });
   }
 
-  // Also check local .claude
-  const localPath = path.join(process.cwd(), '.claude');
-  const localInstalled = detectInstallation(localPath);
-  const hasLocalInstall = localInstalled.hasCommands || localInstalled.hasWorkflows || localInstalled.hasSkills;
-  const localCount = localInstalled.commandFiles.length + localInstalled.workflowFiles.length + localInstalled.skillFiles.length;
-  if (hasLocalInstall) anyInstalled = true;
+  const localGuard = createTargetGuard(getVendorDir('claude-local', null));
+  const localTarget = localGuard.path;
+  const localReceipt = readReceipt(localTarget, localGuard);
+  if (localReceipt.receipt || localReceipt.corrupt) installations.push({ runtime: 'claude-local', targetDir: localTarget });
 
-  if (!anyInstalled) {
-    out.log(`  ${c.yellow('No WTF-P installation found.')}\n`);
-    out.log(`  Checked:`);
-    for (const runtime of runtimes) {
-      const label = getPathLabel(installations[runtime].targetDir, true);
-      out.log(`    ${c.dim(label)}`);
-    }
-    out.log(`    ${c.dim('./.claude')}\n`);
-    rl.close();
+  if (installations.length === 0) {
+    out.log('  No WTF-P ownership receipts found.\n');
     return;
   }
 
+  const c = out.colors;
   out.log(`  ${c.yellow('Where would you like to uninstall from?')}\n`);
-
-  let optionNum = 1;
-  const options = [];
-
-  // Show runtime options
-  for (const runtime of runtimes) {
-    const { hasInstall, count, targetDir } = installations[runtime];
-    const label = getPathLabel(targetDir, true);
-    const vendorName = MANIFEST[runtime].name;
-
-    if (hasInstall) {
-      out.log(`  ${c.cyan(optionNum + ')')} ${vendorName} ${c.dim('(' + label + ')')} - ${count} files`);
-      options.push({ num: optionNum, runtime });
-    } else {
-      out.log(`  ${c.dim(optionNum + ') ' + vendorName + ' (' + label + ') - not installed')}`);
-    }
-    optionNum++;
-  }
-
-  // Show local option
-  if (hasLocalInstall) {
-    out.log(`  ${c.cyan(optionNum + ')')} Local ${c.dim('(./.claude)')} - ${localCount} files`);
-    options.push({ num: optionNum, runtime: 'claude-local' });
-  } else {
-    out.log(`  ${c.dim(optionNum + ') Local (./.claude) - not installed')}`);
-  }
-  optionNum++;
-
-  // Show "all" option if multiple installations
-  const installedCount = options.length;
-  if (installedCount > 1) {
-    out.log(`  ${c.cyan(optionNum + ')')} All installed runtimes`);
-    options.push({ num: optionNum, runtime: 'all-installed' });
-  }
-
+  installations.forEach((installation, index) => {
+    const vendorKey = installation.runtime === 'claude-local' ? 'claude' : installation.runtime;
+    const label = installation.runtime === 'claude-local'
+      ? getPathLabel(installation.targetDir, false)
+      : getPathLabel(installation.targetDir, true);
+    out.log(`  ${c.cyan(`${index + 1})`)} ${MANIFEST[vendorKey].name} ${c.dim(`(${label})`)}`);
+  });
   out.log('');
 
-  const answer = await prompt(rl, `  Choice: `);
+  const rl = createRL();
+  const answer = await prompt(rl, '  Choice: ');
   rl.close();
-
-  const selected = options.find(o => o.num === parseInt(answer, 10));
-
+  const selected = installations[Number.parseInt(answer, 10) - 1];
   if (!selected) {
-    out.log(`\n  ${c.yellow('Invalid choice or no installation at that location.')}\n`);
+    out.log(`\n  ${c.yellow('Invalid choice.')}\n`);
     return;
   }
+  await uninstall(selected.runtime, options, out);
+}
 
-  if (selected.runtime === 'all-installed') {
-    // Uninstall from all installed runtimes
-    for (const opt of options) {
-      if (opt.runtime !== 'all-installed') {
-        await uninstall(opt.runtime);
+async function main(argv = process.argv.slice(2)) {
+  const options = parseArgs(argv);
+  const isInteractive = Boolean(process.stdout.isTTY && process.stdin.isTTY && !options.hasQuiet);
+  options.isInteractive = isInteractive;
+  const useColors = !options.hasNoColor && (process.stdout.isTTY || process.env.FORCE_COLOR);
+  const out = createOutput({ quiet: options.hasQuiet, useColors });
+
+  if (options.hasHelp) {
+    showHelp(out);
+    return;
+  }
+  if (!options.hasQuiet) console.log(createBanner(out));
+
+  if (options.hasAll) {
+    const targets = Object.keys(MANIFEST).map(runtime => ({
+      runtime,
+      guard: createTargetGuard(getVendorDir(runtime, null))
+    }));
+    for (let left = 0; left < targets.length; left++) {
+      for (let right = left + 1; right < targets.length; right++) {
+        const leftPath = targets[left].guard.path;
+        const rightPath = targets[right].guard.path;
+        if (isSameOrAncestor(leftPath, rightPath) || isSameOrAncestor(rightPath, leftPath)) {
+          throw new Error(`--all targets overlap (${leftPath} and ${rightPath}); configure distinct client roots before uninstalling`);
+        }
       }
     }
-  } else {
-    await uninstall(selected.runtime);
-  }
-}
-
-// ============ Main ============
-
-async function main() {
-  // Validate conflicting flags
-  const runtimeFlags = [hasGlobal, hasLocal, hasClaude, hasGemini, hasOpenCode, hasAll].filter(Boolean).length;
-  if (runtimeFlags > 1 && !hasAll) {
-    out.error('Pick one tool at a time, or use --all to uninstall from everything');
-    process.exit(1);
-  }
-  if (explicitConfigDir && hasLocal) {
-    out.error('Cannot use --config-dir with --local');
-    process.exit(1);
-  }
-
-  // Handle --all first
-  if (hasAll) {
-    for (const runtime of Object.keys(MANIFEST)) {
-      await uninstall(runtime);
+    for (const target of targets) {
+      await uninstall(target.runtime, { ...options, targetGuard: target.guard }, out);
     }
     return;
   }
+  if (options.hasLocal) return uninstall('claude-local', options, out);
+  if (options.hasGemini) return uninstall('gemini', options, out);
+  if (options.hasOpenCode) return uninstall('opencode', options, out);
+  if (options.hasClaude || options.hasGlobal) return uninstall('claude', options, out);
 
-  // Handle specific runtime flags
-  if (hasClaude || hasGlobal) {
-    await uninstall('claude');
-  } else if (hasGemini) {
-    await uninstall('gemini');
-  } else if (hasOpenCode) {
-    await uninstall('opencode');
-  } else if (hasLocal) {
-    await uninstall('claude-local');
-  } else {
-    // Interactive mode
-    await promptLocation();
+  if (!isInteractive) {
+    throw new Error('Noninteractive uninstall requires an explicit target or scope. Use --local, --global, --claude, --gemini, --opencode, or --all.');
   }
+  return promptLocation(options, out);
 }
 
-main().catch(err => {
-  out.error(err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(error => {
+    const options = (() => {
+      try { return parseArgs(process.argv.slice(2)); } catch { return {}; }
+    })();
+    const out = createOutput({ quiet: options.hasQuiet, useColors: !options.hasNoColor });
+    out.error(error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  applyUninstallPlan,
+  classifyReceiptEntries,
+  createBackupBundle,
+  createUninstallPlan,
+  getVendorDir,
+  main,
+  parseArgs,
+  summarizePlan,
+  uninstall,
+  updateReceiptAfterUninstall
+};

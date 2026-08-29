@@ -6,9 +6,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const readline = require('readline');
+const ownership = require('./ownership');
 
 // Version tracking file name
-const VERSION_FILE = '.wtfp-version';
+const VERSION_FILE = ownership.RECEIPT_FILE;
 
 // ============ Path Utilities ============
 
@@ -50,15 +51,21 @@ function normalizePath(inputPath) {
  * Validate path for safety
  */
 function isValidPath(inputPath) {
-  if (!inputPath || typeof inputPath !== 'string') return false;
+  try {
+    ownership.assertSafeTarget(inputPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  // Check for null bytes (security issue)
-  if (inputPath.includes('\0')) return false;
-
-  // Check path length (Windows ~260, but we use 1024 for safety)
-  if (inputPath.length > 1024) return false;
-
-  return true;
+function getPathValidationError(inputPath) {
+  try {
+    ownership.assertSafeTarget(inputPath);
+    return null;
+  } catch (error) {
+    return error.message;
+  }
 }
 
 /**
@@ -99,38 +106,31 @@ function getPathLabel(fullPath, isGlobal = true) {
  * Read installed WTF-P version from .wtfp-version file
  */
 function readInstalledVersion(claudeDir) {
-  const versionFile = path.join(claudeDir, VERSION_FILE);
-  if (!fs.existsSync(versionFile)) {
-    return null;
-  }
-  try {
-    const content = fs.readFileSync(versionFile, 'utf8').trim();
-    const data = JSON.parse(content);
-    return data;
-  } catch {
-    // Corrupt file or old format
-    return { version: 'unknown', corrupt: true };
-  }
+  const result = ownership.readReceipt(claudeDir);
+  if (result.corrupt) return { version: 'unknown', corrupt: true, error: result.error };
+  return result.receipt;
 }
 
 /**
  * Write version tracking file
  */
-function writeVersionFile(claudeDir, version, installedFiles) {
-  if (!fs.existsSync(claudeDir)) {
-    fs.mkdirSync(claudeDir, { recursive: true });
-  }
-  const versionFile = path.join(claudeDir, VERSION_FILE);
-  const data = {
+function writeVersionFile(claudeDir, version, installedFiles, metadata = {}) {
+  const previous = ownership.readReceipt(claudeDir, metadata.targetGuard);
+  const receipt = ownership.buildReceipt({
+    targetDir: claudeDir,
     version,
-    installedAt: new Date().toISOString(),
-    files: installedFiles.length,
-    manifest: installedFiles.map(f => ({
-      path: f.dest.replace(claudeDir, '.'),
-      checksum: simpleChecksum(f.dest)
-    }))
-  };
-  fs.writeFileSync(versionFile, JSON.stringify(data, null, 2));
+    runtime: metadata.runtime,
+    scope: metadata.scope,
+    writtenFiles: installedFiles,
+    skipped: metadata.skipped || 0,
+    selectionComplete: metadata.selectionComplete !== false,
+    previousReceipt: previous.receipt,
+    adapterVersion: metadata.adapterVersion,
+    generatorVersion: metadata.generatorVersion,
+    targetGuard: metadata.targetGuard
+  });
+  ownership.writeReceipt(claudeDir, receipt, metadata.targetGuard);
+  return receipt;
 }
 
 /**
@@ -163,6 +163,8 @@ function detectInstallation(vendorDir) {
     hasAgents: false,
     hasMcp: false,
     hasBin: false,
+    hasReceipt: false,
+    hasAny: false,
     version: null,
     partial: false,
     corrupt: false,
@@ -180,6 +182,7 @@ function detectInstallation(vendorDir) {
   const agentsDir = path.join(vendorDir, 'agents', 'wtfp');
   const mcpDir = path.join(vendorDir, 'mcp');
   const binDir = path.join(vendorDir, 'bin');
+  const receiptPath = path.join(vendorDir, VERSION_FILE);
 
   result.hasCommands = fs.existsSync(commandsDir);
   result.hasWorkflows = fs.existsSync(workflowsDir);
@@ -187,6 +190,7 @@ function detectInstallation(vendorDir) {
   result.hasAgents = fs.existsSync(agentsDir);
   result.hasMcp = fs.existsSync(mcpDir);
   result.hasBin = fs.existsSync(binDir);
+  result.hasReceipt = fs.existsSync(receiptPath);
 
   if (result.hasCommands) {
     result.commandFiles = collectFiles(commandsDir);
@@ -215,20 +219,35 @@ function detectInstallation(vendorDir) {
 
     // Check for partial install
     if (!versionData.corrupt) {
-      const expectedHasCommands = versionData.manifest?.some(f => f.path.includes('commands/wtfp'));
-      const expectedHasWorkflows = versionData.manifest?.some(f => f.path.includes('write-the-f-paper'));
-      const expectedHasSkills = versionData.manifest?.some(f => f.path.includes('skills/wtfp'));
+      const receiptEntries = ownership.getReceiptEntries(versionData, vendorDir);
+      const receiptPaths = receiptEntries
+        .map(entry => entry.path)
+        .filter(entryPath => typeof entryPath === 'string');
+      const expectsPath = prefix => receiptPaths.some(entryPath =>
+        entryPath === prefix || entryPath.startsWith(`${prefix}/`)
+      );
+      const expectedHasCommands = expectsPath('commands/wtfp');
+      const expectedHasWorkflows = expectsPath('write-the-f-paper');
+      const expectedHasSkills = expectsPath('skills/wtfp');
+      const expectedHasAgents = expectsPath('agents/wtfp');
+      const expectedHasMcp = expectsPath('mcp');
+      const expectedHasBin = expectsPath('bin');
 
-      if ((expectedHasCommands && !result.hasCommands) ||
+      result.partial = Boolean(versionData.partial) ||
+          (expectedHasCommands && !result.hasCommands) ||
           (expectedHasWorkflows && !result.hasWorkflows) ||
-          (expectedHasSkills && !result.hasSkills)) {
-        result.partial = true;
-      }
+          (expectedHasSkills && !result.hasSkills) ||
+          (expectedHasAgents && !result.hasAgents) ||
+          (expectedHasMcp && !result.hasMcp) ||
+          (expectedHasBin && !result.hasBin);
     }
-  } else if (result.hasCommands || result.hasWorkflows || result.hasSkills) {
+  } else if (result.hasCommands || result.hasWorkflows || result.hasSkills || result.hasAgents || result.hasMcp || result.hasBin) {
     // Files exist but no version file - legacy install
     result.version = 'legacy';
   }
+
+  result.hasAny = result.hasReceipt || result.hasCommands || result.hasWorkflows || result.hasSkills ||
+    result.hasAgents || result.hasMcp || result.hasBin;
 
   return result;
 }
@@ -337,6 +356,7 @@ module.exports = {
   expandTilde,
   normalizePath,
   isValidPath,
+  getPathValidationError,
   getClaudeDir,
   getPathLabel,
 

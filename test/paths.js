@@ -166,8 +166,10 @@ try {
   const readBack = readInstalledVersion(versionClaudeDir);
   check(readBack !== null, 'reads version file');
   check(readBack.version === '0.2.0', 'version matches');
-  check(readBack.files === 2, 'file count matches');
-  check(readBack.manifest.length === 2, 'manifest has entries');
+  check(readBack.schemaVersion === 2, 'uses ownership receipt schema v2');
+  check(readBack.product === 'wtf-p', 'receipt names its owner');
+  check(readBack.files.length === 2, 'receipt has two owned file entries');
+  check(readBack.files.every(file => /^[a-f0-9]{64}$/.test(file.sha256)), 'receipt entries use SHA-256');
   check(readBack.installedAt, 'has installedAt timestamp');
 
   // Test detectInstallation

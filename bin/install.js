@@ -16,6 +16,7 @@ const runDoctor = require('./commands/doctor');
 const runUpdate = require('./commands/update');
 const install = require('./commands/install-logic');
 const showList = require('./commands/list');
+const { createTargetGuard, isSameOrAncestor } = require('./lib/ownership');
 
 // ============ Argument Parsing ============ 
 
@@ -45,15 +46,22 @@ const hasQuiet = args.includes('--quiet') || args.includes('-q');
 const hasVerbose = args.includes('--verbose');
 const hasBeginner = args.includes('--beginner');
 const hasAdvanced = args.includes('--advanced');
+let configDirParseError = null;
 
 function parseConfigDirArg() {
   const configDirIndex = args.findIndex(arg => arg === '--config-dir' || arg === '-c');
   if (configDirIndex !== -1) {
     const nextArg = args[configDirIndex + 1];
     if (nextArg && !nextArg.startsWith('-')) return nextArg;
+    configDirParseError = '--config-dir requires a non-empty path argument';
+    return null;
   }
   const configDirArg = args.find(arg => arg.startsWith('--config-dir=') || arg.startsWith('-c='));
-  if (configDirArg) return configDirArg.split('=')[1];
+  if (configDirArg) {
+    const value = configDirArg.slice(configDirArg.indexOf('=') + 1);
+    if (value) return value;
+    configDirParseError = '--config-dir requires a non-empty path argument';
+  }
   return null;
 }
 
@@ -61,6 +69,54 @@ function parseOnlyArg() {
   const onlyArg = args.find(arg => arg.startsWith('--only='));
   if (onlyArg) return onlyArg.split('=')[1];
   return 'all';
+}
+
+function validateArguments() {
+  if (subcommand === 'uninstall') return;
+  const booleanFlags = new Set([
+    '--global', '-g', '--local', '-l', '--gemini', '--opencode', '--all',
+    '--force', '-f', '--backup-all', '-b', '--help', '-h', '--version', '-v',
+    '--list', '--no-color', '--quiet', '-q', '--verbose', '--beginner', '--advanced'
+  ]);
+  const validOnlyValues = new Set([
+    'all', 'commands', 'workflows', 'skills', 'agents', 'mcp', 'scripts', 'plugin'
+  ]);
+  let configCount = 0;
+  let onlyCount = 0;
+
+  for (let index = 0; index < args.length; index++) {
+    const argument = args[index];
+    if (argument === '--config-dir' || argument === '-c') {
+      configCount++;
+      index++;
+      if (index >= args.length || !args[index] || args[index].startsWith('-')) {
+        throw new Error('--config-dir requires a non-empty path argument');
+      }
+      continue;
+    }
+    if (argument.startsWith('--config-dir=') || argument.startsWith('-c=')) {
+      configCount++;
+      if (!argument.slice(argument.indexOf('=') + 1)) {
+        throw new Error('--config-dir requires a non-empty path argument');
+      }
+      continue;
+    }
+    if (argument.startsWith('--only=')) {
+      onlyCount++;
+      const value = argument.slice('--only='.length);
+      if (!validOnlyValues.has(value)) {
+        throw new Error(`Unknown --only component: ${value || '(empty)'}`);
+      }
+      continue;
+    }
+    if (argument === '--only') {
+      throw new Error('--only must use the form --only=<component>');
+    }
+    if (!booleanFlags.has(argument)) throw new Error(`Unknown command or argument: ${argument}`);
+  }
+
+  if (configCount > 1) throw new Error('--config-dir may only be provided once');
+  if (onlyCount > 1) throw new Error('--only may only be provided once');
 }
 
 const options = {
@@ -146,9 +202,52 @@ function showHelp() {
 // ============ Main ============ 
 
 async function main() {
+  validateArguments();
+  if (configDirParseError) {
+    throw new Error(configDirParseError);
+  }
+
+  if (hasGlobal && hasLocal) {
+    throw new Error('Choose either --global or --local, not both');
+  }
+  if (hasGlobal && (hasGemini || hasOpenCode || hasAll)) {
+    throw new Error('--global selects Claude and cannot be combined with another target');
+  }
+  if (hasLocal && (hasGemini || hasOpenCode || hasAll)) {
+    throw new Error('--local currently requires the Claude target');
+  }
+  if (hasGemini && hasOpenCode) {
+    throw new Error('Choose one target, or use --all');
+  }
+  if (hasAll && (hasGemini || hasOpenCode)) {
+    throw new Error('--all cannot be combined with another target selector');
+  }
+  if (hasAll && options.explicitConfigDir) {
+    throw new Error('--all cannot share one --config-dir across incompatible clients');
+  }
+
   if (hasVersion) {
     console.log(`wtf-p v${pkg.version}`);
     return;
+  }
+
+  async function installAllTargets() {
+    const targets = ['claude', 'gemini', 'opencode'].map(runtime => ({
+      runtime,
+      guard: createTargetGuard(install.getVendorDir(runtime, null))
+    }));
+    for (let left = 0; left < targets.length; left++) {
+      for (let right = left + 1; right < targets.length; right++) {
+        const leftPath = targets[left].guard.path;
+        const rightPath = targets[right].guard.path;
+        if (isSameOrAncestor(leftPath, rightPath) || isSameOrAncestor(rightPath, leftPath)) {
+          throw new Error(`All-target install roots overlap (${leftPath} and ${rightPath}); configure distinct client roots before installing`);
+        }
+      }
+    }
+    for (const target of targets) {
+      await install(target.runtime, false, { ...options, targetGuard: target.guard }, pkg);
+    }
   }
 
   if (hasHelp) {
@@ -198,9 +297,7 @@ async function main() {
 
   if (hasAll) {
     // Install for all supported runtimes
-    await install('claude', false, options, pkg);
-    await install('gemini', false, options, pkg);
-    await install('opencode', false, options, pkg);
+    await installAllTargets();
   } else if (hasGemini) {
     await install('gemini', false, options, pkg);
   } else if (hasOpenCode) {
@@ -224,9 +321,7 @@ async function main() {
 
     const choice = answer || '1';
     if (choice === '4') {
-      await install('claude', false, options, pkg);
-      await install('gemini', false, options, pkg);
-      await install('opencode', false, options, pkg);
+      await installAllTargets();
     } else if (choice === '3') {
       await install('opencode', false, options, pkg);
     } else if (choice === '2') {
@@ -235,12 +330,21 @@ async function main() {
       await install('claude', false, options, pkg);
     }
   } else {
-    await install('claude', false, options, pkg);
+    throw new Error('Noninteractive installation requires an explicit target or scope. Use --local, --global, --gemini, --opencode, or --all.');
   }
 }
 
-main().catch(err => {
-  out.error(err.message);
-  if (hasVerbose) console.error(err.stack);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(err => {
+    out.error(err.message);
+    if (hasVerbose) console.error(err.stack);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  main,
+  options,
+  showHelp,
+  validateArguments
+};

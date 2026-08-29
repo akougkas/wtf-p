@@ -7,7 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 let failed = false;
@@ -30,39 +30,46 @@ function cleanup() {
   }
 }
 
-function run(cmd, opts = {}) {
-  const fullCmd = `node ${path.join(root, 'bin', 'install.js')} ${cmd}`;
-  try {
-    return execSync(fullCmd, {
-      encoding: 'utf8',
-      env: { ...process.env, ...opts.env },
-      cwd: opts.cwd || root,
-      stdio: opts.stdio || 'pipe'
-    });
-  } catch (err) {
-    if (opts.expectFail) return err.stdout || err.message;
-    throw err;
-  }
+function run(args, opts = {}) {
+  return runScript(path.join(root, 'bin', 'install.js'), args, opts);
 }
 
-function runUninstall(cmd, opts = {}) {
-  const fullCmd = `node ${path.join(root, 'bin', 'uninstall.js')} ${cmd}`;
-  try {
-    return execSync(fullCmd, {
-      encoding: 'utf8',
-      env: { ...process.env, ...opts.env },
-      cwd: opts.cwd || root,
-      stdio: opts.stdio || 'pipe'
-    });
-  } catch (err) {
-    if (opts.expectFail) return err.stdout || err.message;
-    throw err;
+function runUninstall(args, opts = {}) {
+  return runScript(path.join(root, 'bin', 'uninstall.js'), args, opts);
+}
+
+function runScript(script, args, opts = {}) {
+  const result = spawnSync(process.execPath, [script, ...args], {
+    encoding: 'utf8',
+    env: { ...isolatedEnv, ...opts.env },
+    cwd: opts.cwd || root,
+    input: opts.input,
+    timeout: 30000
+  });
+  if (result.status !== 0 && !opts.expectFail) {
+    throw new Error(`${path.basename(script)} failed (${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
   }
+  return result.stdout || result.stderr || '';
 }
 
 // Setup test directory
-testDir = path.join(os.tmpdir(), 'wtfp-integration-' + Date.now());
+testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-integration-'));
 const claudeDir = path.join(testDir, '.claude');
+const isolatedHome = path.join(testDir, 'home');
+const isolatedEnv = {
+  ...process.env,
+  HOME: isolatedHome,
+  USERPROFILE: isolatedHome,
+  XDG_CONFIG_HOME: path.join(isolatedHome, '.config'),
+  XDG_DATA_HOME: path.join(isolatedHome, '.local', 'share'),
+  XDG_STATE_HOME: path.join(isolatedHome, '.local', 'state'),
+  XDG_CACHE_HOME: path.join(isolatedHome, '.cache'),
+  CLAUDE_CONFIG_DIR: path.join(isolatedHome, 'claude-config'),
+  GEMINI_CONFIG_DIR: path.join(isolatedHome, 'gemini-config'),
+  OPENCODE_CONFIG_DIR: path.join(isolatedHome, 'opencode-config')
+};
+delete isolatedEnv.FORCE_COLOR;
+delete isolatedEnv.NO_COLOR;
 
 console.log('\n=== WTF-P Integration Tests ===\n');
 console.log(`Test directory: ${testDir}\n`);
@@ -70,7 +77,7 @@ console.log(`Test directory: ${testDir}\n`);
 try {
   // Test 1: Fresh install to custom config dir
   console.log('--- Fresh Install ---');
-  const installOutput = run(`--global --force --no-color --config-dir "${claudeDir}"`);
+  const installOutput = run(['--global', '--force', '--no-color', '--config-dir', claudeDir]);
   check(installOutput.includes('Done!'), 'install completes successfully');
   check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands installed');
   check(fs.existsSync(path.join(claudeDir, 'write-the-f-paper')), 'workflows installed');
@@ -80,11 +87,14 @@ try {
   const versionData = JSON.parse(fs.readFileSync(path.join(claudeDir, '.wtfp-version'), 'utf8'));
   check(versionData.version === '0.5.0', 'version file has correct version');
   check(versionData.installedAt, 'version file has installedAt');
-  check(Array.isArray(versionData.manifest), 'version file has manifest');
+  check(versionData.schemaVersion === 2, 'version file uses receipt schema v2');
+  check(Array.isArray(versionData.files), 'version file has owned file entries');
+  check(versionData.files.every(file => /^[a-f0-9]{64}$/.test(file.sha256)), 'owned files use SHA-256');
+  check(versionData.partial === false, 'complete install receipt is not partial');
 
   // Test 2: Status command
   console.log('\n--- Status Command ---');
-  const statusOutput = run(`status --no-color --config-dir "${claudeDir}"`);
+  const statusOutput = run(['status', '--no-color', '--config-dir', claudeDir]);
   check(statusOutput.includes('Installation Status'), 'status shows header');
   check(statusOutput.includes('0.5.0'), 'status shows version');
   check(statusOutput.includes('commands'), 'status shows commands');
@@ -92,20 +102,20 @@ try {
 
   // Test 3: Doctor command
   console.log('\n--- Doctor Command ---');
-  const doctorOutput = run(`doctor --no-color --config-dir "${claudeDir}"`);
-  check(doctorOutput.includes('Installation Doctor'), 'doctor shows header');
+  const doctorOutput = run(['doctor', '--no-color', '--config-dir', claudeDir]);
+  check(doctorOutput.includes('WTF-P Health Check'), 'doctor shows header');
   check(doctorOutput.includes('Node.js version'), 'doctor checks node version');
   check(doctorOutput.includes('Write permissions'), 'doctor checks write permissions');
   check(doctorOutput.includes('No issues found'), 'doctor finds no issues');
 
   // Test 4: Update command (same version)
   console.log('\n--- Update Command ---');
-  const updateOutput = run(`update --no-color --config-dir "${claudeDir}"`);
+  const updateOutput = run(['update', '--no-color', '--config-dir', claudeDir]);
   check(updateOutput.includes('Already up to date'), 'update detects same version');
 
   // Test 5: List command
   console.log('\n--- List Command ---');
-  const listOutput = run('--list --no-color');
+  const listOutput = run(['--list', '--no-color']);
   check(listOutput.includes('Files to install'), 'list shows header');
   check(listOutput.includes('Commands'), 'list shows commands section');
   check(listOutput.includes('Workflows'), 'list shows workflows section');
@@ -114,21 +124,23 @@ try {
   // Test 6: Selective install (--only=commands)
   console.log('\n--- Selective Install ---');
   const onlyDir = path.join(testDir, '.claude-only');
-  const onlyOutput = run(`--global --force --no-color --only=commands --config-dir "${onlyDir}"`);
+  const onlyOutput = run(['--global', '--force', '--no-color', '--only=commands', '--config-dir', onlyDir]);
   check(onlyOutput.includes('Done!'), 'selective install completes');
   check(fs.existsSync(path.join(onlyDir, 'commands', 'wtfp')), 'commands installed');
   check(!fs.existsSync(path.join(onlyDir, 'write-the-f-paper')), 'workflows NOT installed');
+  const selectiveReceipt = JSON.parse(fs.readFileSync(path.join(onlyDir, '.wtfp-version'), 'utf8'));
+  check(selectiveReceipt.partial === true, 'selective install receipt is marked partial');
 
   // Test 7: Uninstall dry-run
   console.log('\n--- Uninstall Dry-Run ---');
-  const dryRunOutput = runUninstall(`--global --dry-run --no-color --config-dir "${claudeDir}"`);
+  const dryRunOutput = runUninstall(['--global', '--dry-run', '--no-color', '--config-dir', claudeDir]);
   check(dryRunOutput.includes('Dry run'), 'dry-run outputs dry-run message');
   check(dryRunOutput.includes('would remove'), 'dry-run shows what would be removed');
   check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'files NOT removed in dry-run');
 
   // Test 8: Uninstall with backup
   console.log('\n--- Uninstall with Backup ---');
-  const backupOutput = runUninstall(`--global --force --backup --no-color --config-dir "${claudeDir}"`);
+  const backupOutput = runUninstall(['--global', '--force', '--backup', '--no-color', '--config-dir', claudeDir]);
   check(backupOutput.includes('Done!'), 'uninstall completes');
   check(backupOutput.includes('Backed up'), 'backup was created');
   check(!fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands removed');
@@ -141,34 +153,34 @@ try {
 
   // Test 9: Reinstall after uninstall
   console.log('\n--- Reinstall After Uninstall ---');
-  const reinstallOutput = run(`--global --force --no-color --config-dir "${claudeDir}"`);
+  const reinstallOutput = run(['--global', '--force', '--no-color', '--config-dir', claudeDir]);
   check(reinstallOutput.includes('Done!'), 'reinstall completes');
   check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands reinstalled');
   check(fs.existsSync(path.join(claudeDir, 'write-the-f-paper')), 'workflows reinstalled');
 
   // Test 10: Help and Version
   console.log('\n--- Help and Version ---');
-  const helpOutput = run('--help --no-color');
+  const helpOutput = run(['--help', '--no-color']);
   check(helpOutput.includes('Usage:'), 'help shows usage');
   check(helpOutput.includes('Commands:'), 'help shows commands');
   check(helpOutput.includes('status'), 'help mentions status');
   check(helpOutput.includes('doctor'), 'help mentions doctor');
   check(helpOutput.includes('update'), 'help mentions update');
 
-  const versionOutput = run('--version');
+  const versionOutput = run(['--version']);
   check(versionOutput.includes('0.5.0'), 'version shows current version');
 
   // Test 11: Path with spaces
   console.log('\n--- Path with Spaces ---');
   const spacedDir = path.join(testDir, 'path with spaces', '.claude');
-  const spacedOutput = run(`--global --force --no-color --config-dir "${spacedDir}"`);
+  const spacedOutput = run(['--global', '--force', '--no-color', '--config-dir', spacedDir]);
   check(spacedOutput.includes('Done!'), 'install to spaced path completes');
   check(fs.existsSync(path.join(spacedDir, 'commands', 'wtfp')), 'commands installed in spaced path');
 
   // Test 12: Quiet mode
   console.log('\n--- Quiet Mode ---');
   const quietDir = path.join(testDir, '.claude-quiet');
-  const quietOutput = run(`--global --force --quiet --config-dir "${quietDir}"`);
+  const quietOutput = run(['--global', '--force', '--quiet', '--config-dir', quietDir]);
   check(!quietOutput.includes('WTF'), 'quiet mode suppresses banner');
   check(fs.existsSync(path.join(quietDir, 'commands', 'wtfp')), 'install still works in quiet mode');
 

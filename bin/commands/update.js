@@ -1,4 +1,5 @@
 const { getClaudeDir, detectInstallation, getPathLabel } = require('../lib/utils');
+const { assertSafeTarget } = require('../lib/ownership');
 
 async function runUpdate(options, pkg, installFunc) {
   const { out, explicitConfigDir, hasGlobal, hasLocal } = options;
@@ -7,8 +8,8 @@ async function runUpdate(options, pkg, installFunc) {
   out.log(`  ${c.yellow('Checking for updates...')}\n`);
 
   // Find installed location
-  const globalDir = getClaudeDir(explicitConfigDir, true);
-  const localDir = getClaudeDir(null, false);
+  const globalDir = assertSafeTarget(getClaudeDir(explicitConfigDir, true)).path;
+  const localDir = assertSafeTarget(getClaudeDir(null, false)).path;
 
   let targetDir = null;
   let isGlobal = true;
@@ -16,10 +17,10 @@ async function runUpdate(options, pkg, installFunc) {
   const globalDetection = detectInstallation(globalDir);
   const localDetection = detectInstallation(localDir);
 
-  if (hasGlobal || (!hasLocal && (globalDetection.hasCommands || globalDetection.hasWorkflows || globalDetection.hasSkills))) {
+  if (hasGlobal || (!hasLocal && globalDetection.hasAny)) {
     targetDir = globalDir;
     isGlobal = true;
-  } else if (hasLocal || (localDetection.hasCommands || localDetection.hasWorkflows || localDetection.hasSkills)) {
+  } else if (hasLocal || localDetection.hasAny) {
     targetDir = localDir;
     isGlobal = false;
   }

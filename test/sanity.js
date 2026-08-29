@@ -5,7 +5,9 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 let failed = false;
@@ -40,15 +42,60 @@ check(pkg.bin && pkg.bin['wtf-p-uninstall'], 'bin.wtf-p-uninstall defined');
 check(pkg.files && pkg.files.includes('bin'), 'files includes bin');
 check(pkg.license === 'MIT', 'license is MIT');
 
-// Install script is valid JS
+// Mutating CLI entrypoints must only be checked in disposable child processes.
+// Requiring either one in this process could modify the developer's profile if
+// an import guard regresses.
+const cliEntrypoints = ['install.js', 'uninstall.js'];
+const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-sanity-'));
+const probeHome = path.join(probeRoot, 'home');
+const probeCwd = path.join(probeRoot, 'cwd');
+const probeTmp = path.join(probeRoot, 'tmp');
+fs.mkdirSync(probeCwd, { recursive: true });
+fs.mkdirSync(probeTmp, { recursive: true });
+
+const probeEnv = {
+  ...process.env,
+  HOME: probeHome,
+  USERPROFILE: probeHome,
+  XDG_CONFIG_HOME: path.join(probeRoot, 'xdg', 'config'),
+  XDG_DATA_HOME: path.join(probeRoot, 'xdg', 'data'),
+  XDG_STATE_HOME: path.join(probeRoot, 'xdg', 'state'),
+  XDG_CACHE_HOME: path.join(probeRoot, 'xdg', 'cache'),
+  CLAUDE_CONFIG_DIR: path.join(probeRoot, 'clients', 'claude'),
+  GEMINI_CONFIG_DIR: path.join(probeRoot, 'clients', 'gemini'),
+  OPENCODE_CONFIG_DIR: path.join(probeRoot, 'clients', 'opencode'),
+  CODEX_HOME: path.join(probeRoot, 'clients', 'codex'),
+  CLIO_CODER_HOME: path.join(probeRoot, 'clients', 'clio'),
+  TMPDIR: probeTmp,
+  TEMP: probeTmp,
+  TMP: probeTmp,
+  FORCE_COLOR: '',
+  NO_COLOR: '1'
+};
+
 try {
-  require(path.join(root, 'bin/install.js'));
-} catch (e) {
-  if (e.code !== 'ERR_MODULE_NOT_FOUND') {
-    // Script runs and prompts - that's expected
+  for (const name of cliEntrypoints) {
+    const entrypoint = path.join(root, 'bin', name);
+    const syntax = spawnSync(process.execPath, ['--check', entrypoint], {
+      cwd: probeCwd,
+      encoding: 'utf8',
+      env: probeEnv,
+      timeout: 10000
+    });
+    check(syntax.status === 0 && !syntax.error, `bin/${name} is valid Node.js`);
+
+    const imported = spawnSync(process.execPath, ['-e', 'require(process.argv[1])', entrypoint], {
+      cwd: probeCwd,
+      encoding: 'utf8',
+      env: probeEnv,
+      input: '',
+      timeout: 10000
+    });
+    check(imported.status === 0 && !imported.error, `bin/${name} is import-safe`);
   }
+} finally {
+  fs.rmSync(probeRoot, { recursive: true, force: true });
 }
-check(true, 'bin/install.js is valid Node.js');
 
 // Commands exist
 const commands = fs.readdirSync(path.join(root, 'vendors/claude/commands/wtfp'));

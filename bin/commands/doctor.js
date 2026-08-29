@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getClaudeDir, normalizePath, getPathLabel, detectInstallation } = require('../lib/utils');
+const { assertSafeTarget } = require('../lib/ownership');
 
 async function runDoctor(options) {
   const { out, explicitConfigDir } = options;
@@ -22,7 +23,7 @@ async function runDoctor(options) {
   }
 
   // Check 2: Claude directory exists
-  const globalDir = getClaudeDir(explicitConfigDir, true);
+  const globalDir = assertSafeTarget(getClaudeDir(explicitConfigDir, true)).path;
   if (fs.existsSync(globalDir)) {
     checks.push({ name: 'Claude config directory', status: 'pass', detail: getPathLabel(globalDir, true) });
   } else {
@@ -30,20 +31,38 @@ async function runDoctor(options) {
   }
 
   // Check 3: Write permissions
-  const testDir = globalDir.replace(/\.claude$/, '.claude-test-' + Date.now());
+  let testRoot = globalDir;
+  while (!fs.existsSync(testRoot)) {
+    const parent = path.dirname(testRoot);
+    if (parent === testRoot) break;
+    testRoot = parent;
+  }
+  let testDir = null;
   try {
-    fs.mkdirSync(testDir, { recursive: true });
+    testDir = fs.mkdtempSync(path.join(testRoot, '.wtfp-doctor-'));
     fs.writeFileSync(path.join(testDir, 'test'), 'test');
-    fs.rmSync(testDir, { recursive: true });
+    fs.unlinkSync(path.join(testDir, 'test'));
+    fs.rmdirSync(testDir);
+    testDir = null;
     checks.push({ name: 'Write permissions', status: 'pass', detail: 'Can write to config directory' });
   } catch (err) {
     issues.push(`Cannot write to ${getPathLabel(globalDir, true)}: ${err.message}`);
     checks.push({ name: 'Write permissions', status: 'fail', detail: err.message });
+  } finally {
+    if (testDir && fs.existsSync(testDir)) {
+      try {
+        const testFile = path.join(testDir, 'test');
+        if (fs.existsSync(testFile)) fs.unlinkSync(testFile);
+        if (fs.readdirSync(testDir).length === 0) fs.rmdirSync(testDir);
+      } catch {
+        // Leave an exact diagnostic temp directory rather than broadening cleanup.
+      }
+    }
   }
 
   // Check 4: Installation state
   const detection = detectInstallation(globalDir);
-  if (detection.hasCommands || detection.hasWorkflows || detection.hasSkills) {
+  if (detection.hasAny) {
     if (detection.partial) {
       issues.push('Partial installation detected - some files are missing');
       checks.push({ name: 'Installation integrity', status: 'warn', detail: 'Partial install' });
@@ -59,7 +78,9 @@ async function runDoctor(options) {
 
   // Check 5: CLAUDE_CONFIG_DIR env var
   const configDirEnv = process.env.CLAUDE_CONFIG_DIR;
-  if (configDirEnv) {
+  if (explicitConfigDir) {
+    checks.push({ name: 'Config directory source', status: 'pass', detail: '--config-dir override' });
+  } else if (configDirEnv) {
     const expanded = normalizePath(configDirEnv);
     if (fs.existsSync(expanded)) {
       checks.push({ name: 'CLAUDE_CONFIG_DIR', status: 'pass', detail: expanded });
@@ -144,11 +165,11 @@ async function runDoctor(options) {
   }
 
   // Check 7: Dual-installation conflict (global + local both present)
-  const localDir = path.join(process.cwd(), '.claude');
+  const localDir = assertSafeTarget(getClaudeDir(null, false)).path;
   if (localDir !== globalDir) {
     const localDetection = detectInstallation(localDir);
-    if (localDetection.hasCommands && detection.hasCommands) {
-      issues.push('WTF-P is installed both globally and locally — commands will appear twice');
+    if (localDetection.hasAny && detection.hasAny) {
+      issues.push('WTF-P is installed both globally and locally — resources may appear more than once');
       checks.push({
         name: 'Dual installation',
         status: 'warn',
