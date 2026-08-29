@@ -69,16 +69,16 @@ Dry-run, preparation, and execution verification recompute these bindings:
 
 | Input | Required identity |
 |---|---|
-| Routing manifest | SHA-256 `8eaae494c56ecc4810a8b643043e11e0d142ae9e83335f769c13f64fb24f3401` |
+| Routing manifest | SHA-256 `5566f345590d80b8b00cd3d310363022c6c683b6a4b174fde98283e2b47a658d` |
 | Client-surface contract | SHA-256 `cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594` |
 | Budget matrix | SHA-256 `69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039` |
-| WTF-P canonical source | commit `77e68c4f88bad9b7af3018d1e444932a05fb9a2b`, projection SHA-256 `8246a53bc782b5715ec5e5b61fdee5c94248a469b9536e33ab3e7c1ea23f7eb1`, protocol v1, compiler v4 |
+| WTF-P canonical source | commit `c500b4a21c6befdd6bfcc7971eeef27201aff79c`, projection SHA-256 `f3528692f348911b307824a7dc7e23729306290e664d109dafc1d2d712c1e72a`, protocol v1, compiler v4 |
 | Claude Code | `2.1.251`, binary SHA-256 `fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7` |
 | Codex CLI | `0.144.1`, binary SHA-256 `a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902` |
 | Clio Coder | `0.3.8`, source commit `9b7b80ccbd3d2211d4079bc76558bb06d66a8583`, binary SHA-256 `f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162` |
 | Clio distribution tree | SHA-256 `27472f9b7253dc6608d70fbe623e4953896a9f0899ead00aa5faad1c783acae7` (213 files) |
-| Clio generated inventory | SHA-256 `7da8d2fd96f1f4fb146221d9570ab41a370c0a012d5bdd0dd0335164037e0cc8` |
-| Clio generated source | SHA-256 `967ce1fb54583e33528c16881534d6f12deb7c70965a4c3c396f0503a1213c33` |
+| Clio generated inventory | SHA-256 `bb1814cba5ca777381dade2e21817f14574651018f75fcd24e0afa6a626647e3` |
+| Clio generated source | SHA-256 `d72af22600a3997dc1649fd25aea259281203b3cfd596d6a096119bddcdb45eb` |
 
 The WTF-P commit in the routing manifest is the immutable canonical-source
 commit, not a requirement that the repository remain checked out at that exact
