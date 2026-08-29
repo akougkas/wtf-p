@@ -30,7 +30,7 @@ function check(condition, msg) {
 // Package structure
 check(fs.existsSync(path.join(root, 'bin/install.js')), 'bin/install.js exists');
 check(fs.existsSync(path.join(root, 'bin/uninstall.js')), 'bin/uninstall.js exists');
-check(fs.existsSync(path.join(root, 'vendors/claude/commands/wtfp')), 'vendors/claude/commands/wtfp exists');
+check(fs.existsSync(path.join(root, 'vendors/claude/commands')), 'vendors/claude/commands exists');
 check(fs.existsSync(path.join(root, 'core/write-the-f-paper')), 'core/write-the-f-paper exists');
 check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
 
@@ -62,10 +62,12 @@ const probeEnv = {
   XDG_STATE_HOME: path.join(probeRoot, 'xdg', 'state'),
   XDG_CACHE_HOME: path.join(probeRoot, 'xdg', 'cache'),
   CLAUDE_CONFIG_DIR: path.join(probeRoot, 'clients', 'claude'),
-  GEMINI_CONFIG_DIR: path.join(probeRoot, 'clients', 'gemini'),
+  GEMINI_CLI_HOME: path.join(probeRoot, 'clients', 'gemini'),
   OPENCODE_CONFIG_DIR: path.join(probeRoot, 'clients', 'opencode'),
   CODEX_HOME: path.join(probeRoot, 'clients', 'codex'),
-  CLIO_CODER_HOME: path.join(probeRoot, 'clients', 'clio'),
+  CLIO_CODER_CONFIG_DIR: path.join(probeRoot, 'clients', 'clio'),
+  COPILOT_HOME: path.join(probeRoot, 'clients', 'copilot'),
+  ANTIGRAVITY_HOME: path.join(probeRoot, 'clients', 'antigravity'),
   TMPDIR: probeTmp,
   TEMP: probeTmp,
   TMP: probeTmp,
@@ -98,7 +100,7 @@ try {
 }
 
 // Commands exist
-const commands = fs.readdirSync(path.join(root, 'vendors/claude/commands/wtfp'));
+const commands = fs.readdirSync(path.join(root, 'vendors/claude/commands'));
 check(commands.includes('help.md'), 'help.md command exists');
 check(commands.includes('new-paper.md'), 'new-paper.md command exists');
 check(commands.length >= 10, `${commands.length} commands found`);

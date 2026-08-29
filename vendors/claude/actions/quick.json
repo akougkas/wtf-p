@@ -1,0 +1,70 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "quick",
+  "title": "Make a quick writing change",
+  "description": "Apply a small, bounded writing fix with minimal planning overhead and state tracking.",
+  "alias": "wtfp:quick",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-write-section"
+  },
+  "workflow": "wtfp://workflows/quick",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The requested change is small and has a clear target"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://state",
+    "project://decisions",
+    "project://sections/{section}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "section-writer",
+      "mode": "optional",
+      "purpose": "Handle a bounded change that still benefits from a fresh writing context"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://section-writer when needed"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "the user-approved writing target and project state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://state, project://decisions, project://sections/{section}, project://paper/{artifact}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "ambiguous target or change intent"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "plan-milestone-gaps",
+  "title": "Plan milestone gap fixes",
+  "description": "Convert milestone audit failures into targeted, verifiable fix plans.",
+  "alias": "wtfp:plan-milestone-gaps",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-review-manuscript"
+  },
+  "workflow": "wtfp://workflows/plan-milestone-gaps",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A milestone audit contains unresolved gaps"
+    ]
+  },
+  "reads": [
+    "project://validations/{validation}",
+    "project://structure/outline",
+    "project://sections/{section}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/plans/{plan}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://validations/{validation}, project://structure/outline, project://sections/{section}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "targeted milestone fix plans"
+    },
+    {
+      "id": "user.gate",
+      "scope": "fix priorities and deferred gaps"
+    }
+  ]
+}

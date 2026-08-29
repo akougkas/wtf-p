@@ -1,0 +1,32 @@
+---
+schema: wtfp.workflow/v1
+action: map-project
+source: wtfp.protocol
+---
+
+# Map an existing project
+
+@protocol://project/README.md
+@protocol://skills/wtfp-start-project/SKILL.md
+@protocol://skills/wtfp-start-project/references/actions.md
+
+## Record contract
+
+Read: `project://manifest`, `project://state`, `project://materials/{artifact}`, `project://paper/{artifact}`.
+Produce: `project://sources/{source}` (create), `project://evidence/{evidence}` (create), `project://state` (update).
+
+Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+
+Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+
+## Procedure
+
+1. Read the current manifest and state, then scan only the authorized project boundary and do not follow escaping symlinks.
+2. Inventory manuscript, notes, bibliography, datasets, figures, tables, and prior drafts with provenance and verification depth.
+3. Create or update source and evidence records, preserving uncertain interpretations as provisional, then transition state to mapped.
+
+## Safety and completion
+
+Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. If requested, return a clearly labeled optional handoff for a separately authorized action.
+
+Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.

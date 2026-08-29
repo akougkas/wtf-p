@@ -1,0 +1,77 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "submit-milestone",
+  "title": "Archive a milestone",
+  "description": "Archive a completed draft or submission round with its reproducible project state and statistics.",
+  "alias": "wtfp:submit-milestone",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-deliver-research"
+  },
+  "workflow": "wtfp://workflows/submit-milestone",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The milestone identifier is unique",
+      "The user confirms the archive contents"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://archives/{archive}/{artifact}",
+      "mode": "archive"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "artifact.archive",
+      "scope": "selected paper milestone and portable project state"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://archives/{archive}/{artifact}, project://manifest, project://state, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project archive manifest, portable project manifest, outline, and state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://validations/{validation}, project://paper/{artifact}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "milestone identifier and archive contents"
+    }
+  ]
+}

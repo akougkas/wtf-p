@@ -1,0 +1,80 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "create-outline",
+  "title": "Create the paper outline",
+  "description": "Build the section structure, argument map, dependencies, and word budgets.",
+  "alias": "wtfp:create-outline",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-start-project"
+  },
+  "workflow": "wtfp://workflows/create-outline",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sources/{source}",
+    "project://evidence/{evidence}"
+  ],
+  "produces": [
+    {
+      "uri": "project://structure/outline",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "outliner",
+      "mode": "required",
+      "purpose": "Design a coherent section and argument structure from the project evidence"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://outliner"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://structure/outline, project://sections/{section}, project://state, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sources/{source}, project://evidence/{evidence}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://structure/outline, project://sections/{section}, project://state, project://validations/{validation}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "outline approval"
+    }
+  ]
+}

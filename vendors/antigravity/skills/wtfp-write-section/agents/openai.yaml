@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Write Section"
+  short_description: "Draft sections from evidence-backed plans"
+  default_prompt: "Use $wtfp-write-section to draft this section from its approved plan."

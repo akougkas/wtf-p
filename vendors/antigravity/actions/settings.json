@@ -1,0 +1,47 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "settings",
+  "title": "Manage project settings",
+  "description": "View and update portable project settings after presenting the exact proposed diff.",
+  "alias": "wtfp:settings",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/settings",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://config"
+  ],
+  "produces": [
+    {
+      "uri": "project://config",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.modify",
+      "scope": "project://config"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://config"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the exact settings diff"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "wtfp",
+  "owner": {
+    "name": "akougkas"
+  },
+  "metadata": {
+    "description": "WTF-P evidence-grounded academic workflow plugin.",
+    "version": "0.6.0-rc.1"
+  },
+  "plugins": [
+    {
+      "name": "wtfp",
+      "source": "./",
+      "description": "Portable academic research and writing workflows.",
+      "version": "0.6.0-rc.1",
+      "author": {
+        "name": "akougkas"
+      },
+      "homepage": "https://github.com/akougkas/wtf-p",
+      "repository": "https://github.com/akougkas/wtf-p",
+      "license": "MIT"
+    }
+  ]
+}

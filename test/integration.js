@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { spawnSync } = require('child_process');
+const pkg = require('../package.json');
 
 const root = path.join(__dirname, '..');
 let failed = false;
@@ -52,6 +53,34 @@ function runScript(script, args, opts = {}) {
   return result.stdout || result.stderr || '';
 }
 
+function claudePluginList(configDir) {
+  const result = spawnSync('claude', ['plugin', 'list', '--json'], {
+    encoding: 'utf8',
+    env: { ...isolatedEnv, CLAUDE_CONFIG_DIR: configDir },
+    cwd: root,
+    input: '',
+    timeout: 30000
+  });
+  if (result.error && result.error.code === 'ENOENT') return null;
+  if (result.status !== 0) {
+    throw new Error(`claude plugin list failed (${result.status}): ${result.stderr || result.stdout}`);
+  }
+  return JSON.parse(result.stdout);
+}
+
+function assertPortableClaudeBundle(configDir, label) {
+  const bundle = path.join(configDir, 'marketplaces', 'wtfp');
+  const commandFiles = fs.readdirSync(path.join(bundle, 'commands')).filter(file => file.endsWith('.md'));
+  const agentFiles = fs.readdirSync(path.join(bundle, 'agents', 'wtfp')).filter(file => file.endsWith('.md'));
+  const skillDirectories = fs.readdirSync(path.join(bundle, 'skills'), { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && entry.name.startsWith('wtfp-'));
+  check(commandFiles.length === 36, `${label} contains 36 canonical commands`);
+  check(agentFiles.length === 11, `${label} contains 11 portable agents`);
+  check(skillDirectories.length === 7, `${label} contains 7 portable skills`);
+  check(!fs.existsSync(path.join(configDir, 'commands')), `${label} does not activate duplicate direct commands`);
+  return bundle;
+}
+
 // Setup test directory
 testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-integration-'));
 const claudeDir = path.join(testDir, '.claude');
@@ -65,7 +94,7 @@ const isolatedEnv = {
   XDG_STATE_HOME: path.join(isolatedHome, '.local', 'state'),
   XDG_CACHE_HOME: path.join(isolatedHome, '.cache'),
   CLAUDE_CONFIG_DIR: path.join(isolatedHome, 'claude-config'),
-  GEMINI_CONFIG_DIR: path.join(isolatedHome, 'gemini-config'),
+  GEMINI_CLI_HOME: path.join(isolatedHome, 'gemini-config'),
   OPENCODE_CONFIG_DIR: path.join(isolatedHome, 'opencode-config')
 };
 delete isolatedEnv.FORCE_COLOR;
@@ -79,13 +108,20 @@ try {
   console.log('--- Fresh Install ---');
   const installOutput = run(['--global', '--force', '--no-color', '--config-dir', claudeDir]);
   check(installOutput.includes('Done!'), 'install completes successfully');
-  check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands installed');
-  check(fs.existsSync(path.join(claudeDir, 'write-the-f-paper')), 'workflows installed');
+  const claudeBundle = assertPortableClaudeBundle(claudeDir, 'native Claude bundle');
+  check(fs.existsSync(path.join(claudeBundle, 'workflows')), 'workflows installed in plugin bundle');
   check(fs.existsSync(path.join(claudeDir, '.wtfp-version')), 'version file created');
+
+  const nativePlugins = claudePluginList(claudeDir);
+  if (nativePlugins) {
+    check(nativePlugins.some(plugin => plugin.id === 'wtfp@wtfp' && plugin.enabled), 'Claude reports wtfp@wtfp installed and enabled');
+  } else {
+    check(true, 'Claude binary unavailable; native registration is covered by deterministic lifecycle tests');
+  }
 
   // Verify version file contents
   const versionData = JSON.parse(fs.readFileSync(path.join(claudeDir, '.wtfp-version'), 'utf8'));
-  check(versionData.version === '0.5.0', 'version file has correct version');
+  check(versionData.version === pkg.version, 'version file has correct version');
   check(versionData.installedAt, 'version file has installedAt');
   check(versionData.schemaVersion === 2, 'version file uses receipt schema v2');
   check(Array.isArray(versionData.files), 'version file has owned file entries');
@@ -96,7 +132,7 @@ try {
   console.log('\n--- Status Command ---');
   const statusOutput = run(['status', '--no-color', '--config-dir', claudeDir]);
   check(statusOutput.includes('Installation Status'), 'status shows header');
-  check(statusOutput.includes('0.5.0'), 'status shows version');
+  check(statusOutput.includes(pkg.version), 'status shows version');
   check(statusOutput.includes('commands'), 'status shows commands');
   check(statusOutput.includes('workflows'), 'status shows workflows');
 
@@ -126,8 +162,8 @@ try {
   const onlyDir = path.join(testDir, '.claude-only');
   const onlyOutput = run(['--global', '--force', '--no-color', '--only=commands', '--config-dir', onlyDir]);
   check(onlyOutput.includes('Done!'), 'selective install completes');
-  check(fs.existsSync(path.join(onlyDir, 'commands', 'wtfp')), 'commands installed');
-  check(!fs.existsSync(path.join(onlyDir, 'write-the-f-paper')), 'workflows NOT installed');
+  check(fs.existsSync(path.join(onlyDir, 'marketplaces', 'wtfp', 'commands')), 'commands installed');
+  check(!fs.existsSync(path.join(onlyDir, 'marketplaces', 'wtfp', 'workflows')), 'workflows NOT installed');
   const selectiveReceipt = JSON.parse(fs.readFileSync(path.join(onlyDir, '.wtfp-version'), 'utf8'));
   check(selectiveReceipt.partial === true, 'selective install receipt is marked partial');
 
@@ -136,16 +172,19 @@ try {
   const dryRunOutput = runUninstall(['--global', '--dry-run', '--no-color', '--config-dir', claudeDir]);
   check(dryRunOutput.includes('Dry run'), 'dry-run outputs dry-run message');
   check(dryRunOutput.includes('would remove'), 'dry-run shows what would be removed');
-  check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'files NOT removed in dry-run');
+  check(fs.existsSync(claudeBundle), 'files NOT removed in dry-run');
 
   // Test 8: Uninstall with backup
   console.log('\n--- Uninstall with Backup ---');
   const backupOutput = runUninstall(['--global', '--force', '--backup', '--no-color', '--config-dir', claudeDir]);
   check(backupOutput.includes('Done!'), 'uninstall completes');
   check(backupOutput.includes('Backed up'), 'backup was created');
-  check(!fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands removed');
-  check(!fs.existsSync(path.join(claudeDir, 'write-the-f-paper')), 'workflows removed');
+  check(!fs.existsSync(claudeBundle), 'native plugin source bundle removed');
   check(!fs.existsSync(path.join(claudeDir, '.wtfp-version')), 'version file removed');
+  const pluginsAfterRemoval = claudePluginList(claudeDir);
+  if (pluginsAfterRemoval) {
+    check(!pluginsAfterRemoval.some(plugin => plugin.id === 'wtfp@wtfp'), 'Claude native registration removed');
+  }
 
   // Verify backup exists
   const backupDirs = fs.readdirSync(claudeDir).filter(d => d.startsWith('.wtfp-backup-'));
@@ -155,8 +194,8 @@ try {
   console.log('\n--- Reinstall After Uninstall ---');
   const reinstallOutput = run(['--global', '--force', '--no-color', '--config-dir', claudeDir]);
   check(reinstallOutput.includes('Done!'), 'reinstall completes');
-  check(fs.existsSync(path.join(claudeDir, 'commands', 'wtfp')), 'commands reinstalled');
-  check(fs.existsSync(path.join(claudeDir, 'write-the-f-paper')), 'workflows reinstalled');
+  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'wtfp', 'commands')), 'commands reinstalled in native plugin source');
+  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'wtfp', 'workflows')), 'workflows reinstalled in native plugin source');
 
   // Test 10: Help and Version
   console.log('\n--- Help and Version ---');
@@ -168,21 +207,21 @@ try {
   check(helpOutput.includes('update'), 'help mentions update');
 
   const versionOutput = run(['--version']);
-  check(versionOutput.includes('0.5.0'), 'version shows current version');
+  check(versionOutput.includes(pkg.version), 'version shows current version');
 
   // Test 11: Path with spaces
   console.log('\n--- Path with Spaces ---');
   const spacedDir = path.join(testDir, 'path with spaces', '.claude');
   const spacedOutput = run(['--global', '--force', '--no-color', '--config-dir', spacedDir]);
   check(spacedOutput.includes('Done!'), 'install to spaced path completes');
-  check(fs.existsSync(path.join(spacedDir, 'commands', 'wtfp')), 'commands installed in spaced path');
+  check(fs.existsSync(path.join(spacedDir, 'marketplaces', 'wtfp', 'commands')), 'commands installed in spaced native source path');
 
   // Test 12: Quiet mode
   console.log('\n--- Quiet Mode ---');
   const quietDir = path.join(testDir, '.claude-quiet');
   const quietOutput = run(['--global', '--force', '--quiet', '--config-dir', quietDir]);
   check(!quietOutput.includes('WTF'), 'quiet mode suppresses banner');
-  check(fs.existsSync(path.join(quietDir, 'commands', 'wtfp')), 'install still works in quiet mode');
+  check(fs.existsSync(path.join(quietDir, 'marketplaces', 'wtfp', 'commands')), 'install still works in quiet mode');
 
   cleanup();
 

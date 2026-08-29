@@ -1,0 +1,32 @@
+{
+  "name": "wtf-p",
+  "version": "0.6.0-rc.1",
+  "description": "Evidence-grounded academic research, planning, writing, review, and delivery workflows.",
+  "author": {
+    "name": "akougkas",
+    "url": "https://github.com/akougkas"
+  },
+  "homepage": "https://github.com/akougkas/wtf-p",
+  "repository": "https://github.com/akougkas/wtf-p",
+  "license": "MIT",
+  "keywords": [
+    "academic-writing",
+    "research",
+    "citations",
+    "papers"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "WTF-P",
+    "shortDescription": "Plan and write evidence-grounded research",
+    "longDescription": "Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.",
+    "developerName": "akougkas",
+    "category": "Productivity",
+    "capabilities": [
+      "Research",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/akougkas/wtf-p",
+    "defaultPrompt": "Help me plan and execute an evidence-grounded research paper."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "wtf-p",
+  "version": "0.6.0-rc.1",
+  "description": "Portable academic research and writing workflows with stable wtfp actions.",
+  "author": {
+    "name": "akougkas",
+    "url": "https://github.com/akougkas"
+  },
+  "homepage": "https://github.com/akougkas/wtf-p",
+  "repository": "https://github.com/akougkas/wtf-p",
+  "license": "MIT"
+}

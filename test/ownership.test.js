@@ -15,6 +15,7 @@ const {
 } = require('../bin/lib/ownership');
 const { classifyReceiptEntries } = require('../bin/uninstall');
 const { collectComponentFiles } = require('../bin/commands/install-logic');
+const MANIFEST = require('../bin/lib/manifest');
 
 let passed = 0;
 let failed = 0;
@@ -99,7 +100,7 @@ const isolatedEnv = {
   XDG_STATE_HOME: path.join(fakeHome, '.local', 'state'),
   XDG_CACHE_HOME: path.join(fakeHome, '.cache'),
   CLAUDE_CONFIG_DIR: path.join(fakeHome, 'claude-config'),
-  GEMINI_CONFIG_DIR: path.join(fakeHome, 'gemini-config'),
+  GEMINI_CLI_HOME: path.join(fakeHome, 'gemini-config'),
   OPENCODE_CONFIG_DIR: path.join(fakeHome, 'opencode-config')
 };
 delete isolatedEnv.FORCE_COLOR;
@@ -207,9 +208,14 @@ try {
       assert.strictEqual(sha256File(path.join(target, ...file.path.split('/'))), file.sha256);
     }
 
-    const actual = walkFiles(target).filter(file => file !== '.wtfp-version');
-    const unowned = new Set(['commands/wtfp/help.md', '.claude-plugin/plugin.json']);
-    assert.strictEqual(receipt.files.length, actual.filter(file => !unowned.has(file)).length);
+    const planned = [];
+    for (const component of MANIFEST.claude.components) {
+      collectComponentFiles(component, target, planned);
+    }
+    assert.strictEqual(receipt.files.length, planned.length);
+    assert.ok(receipt.files.every(file => file.path.startsWith('marketplaces/wtfp/')));
+    assert.ok(!receipt.files.some(file => file.path.startsWith('plugins/cache/')));
+    assert.ok(!receipt.files.some(file => file.path === 'settings.json' || file.path === '.claude.json'));
   });
 
   test('all-skipped reinstall leaves receipt bytes unchanged', () => {
@@ -228,8 +234,8 @@ try {
 
   test('nested destination symlink aborts before any package write', () => {
     const symlinkTarget = mkdir(path.join(targets, 'symlink-target'));
-    const escapedBin = mkdir(path.join(outside, 'escaped-bin'));
-    fs.symlinkSync(escapedBin, path.join(symlinkTarget, 'bin'), 'dir');
+    const escapedMarketplace = mkdir(path.join(outside, 'escaped-marketplace'));
+    fs.symlinkSync(escapedMarketplace, path.join(symlinkTarget, 'marketplaces'), 'dir');
 
     const result = spawnNode([
       INSTALL,
@@ -241,17 +247,16 @@ try {
     ], { cwd: project, env: isolatedEnv });
     assertFailure(result, 'symlink containment install');
     assert.match(result.stderr, /symlink|symbolic link/i);
-    assert.deepStrictEqual(walkFiles(symlinkTarget), ['bin']);
-    assert.deepStrictEqual(walkFiles(escapedBin), []);
+    assert.deepStrictEqual(walkFiles(symlinkTarget), ['marketplaces']);
+    assert.deepStrictEqual(walkFiles(escapedMarketplace), []);
     assert.strictEqual(fs.readFileSync(outsideSentinel, 'utf8'), 'outside-stays-intact\n');
   });
 
   test('receipt commit failure rolls back every package file', () => {
     const rollbackTarget = mkdir(path.join(targets, 'rollback-target'));
     mkdir(path.join(rollbackTarget, '.wtfp-version'));
-    mkdir(path.join(rollbackTarget, 'commands'));
     const priorFile = write(
-      path.join(rollbackTarget, 'write-the-f-paper', 'templates', 'config.json'),
+      path.join(rollbackTarget, 'marketplaces', 'wtfp', 'core', 'templates', 'config.json'),
       '{"user":"preimage"}\n'
     );
 
@@ -264,9 +269,8 @@ try {
       '--no-color'
     ], { cwd: project, env: isolatedEnv });
     assertFailure(result, 'receipt failure install');
-    assert.deepStrictEqual(fs.readdirSync(rollbackTarget).sort(), ['.wtfp-version', 'commands', 'write-the-f-paper']);
+    assert.deepStrictEqual(fs.readdirSync(rollbackTarget).sort(), ['.wtfp-version', 'marketplaces']);
     assert.deepStrictEqual(fs.readdirSync(path.join(rollbackTarget, '.wtfp-version')), []);
-    assert.deepStrictEqual(fs.readdirSync(path.join(rollbackTarget, 'commands')), []);
     assert.strictEqual(fs.readFileSync(priorFile, 'utf8'), '{"user":"preimage"}\n');
     assert.deepStrictEqual(fs.readdirSync(path.dirname(priorFile)), ['config.json']);
   });

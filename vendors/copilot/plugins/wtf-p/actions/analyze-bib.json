@@ -1,0 +1,77 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "analyze-bib",
+  "title": "Analyze the bibliography",
+  "description": "Analyze a bibliography and map its evidence to the paper's sections and claims.",
+  "alias": "wtfp:analyze-bib",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-research-literature"
+  },
+  "workflow": "wtfp://workflows/analyze-bib",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute"
+    ],
+    "conditions": [
+      "A readable bibliography is available"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://structure/outline",
+    "project://sources/{source}",
+    "project://materials/{artifact}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sources/{source}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "citation-expert",
+      "mode": "required",
+      "purpose": "Map sources, intellectual lineages, and citation strategy to the manuscript"
+    }
+  ],
+  "tools": [
+    "bibliography.analyze-impact",
+    "bibliography.index"
+  ],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://citation-expert"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://evidence/{evidence}, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sources/{source}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://structure/outline, project://sources/{source}, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "wtfp://tools/bibliography/**"
+    }
+  ]
+}

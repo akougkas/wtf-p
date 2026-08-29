@@ -1,22 +1,30 @@
 {
   "name": "wtf-p",
-  "version": "0.5.0",
-  "description": "AI-powered academic writing commands for Claude Code, Gemini CLI, and OpenCode. Papers, proposals, presentations, and posters — structured, cited, verified.",
+  "version": "0.6.0-rc.1",
+  "description": "Portable, evidence-grounded academic workflows for Clio Coder, Claude Code, Codex, Copilot, OpenCode, Antigravity, and Gemini.",
   "bin": {
     "wtfp": "bin/install.js",
     "wtf-p": "bin/install.js",
     "wtf-p-uninstall": "bin/uninstall.js"
   },
   "scripts": {
-    "test": "node test/import-safety.test.js && node test/ownership.test.js && node test/ownership-races.test.js && node test/status-partial.test.js && node test/sanity.js && node test/paths.js && node test/linter.js && node test/wcn-integrity.js && node test/dry-run.js && node test/feature-tests.js && node test/installer.test.js",
+    "build:adapters": "node scripts/build-adapters.js",
+    "check:adapters": "node scripts/build-adapters.js --check",
+    "test:protocol": "node test/protocol-catalog.test.js && node test/canonical-workflows.test.js && node test/portable-roles.test.js && node test/project-protocol.test.js && node test/test-skills.test.js && node test/adapter-compiler.test.js",
+    "test:installer": "node test/import-safety.test.js && node test/ownership.test.js && node test/ownership-races.test.js && node test/status-partial.test.js && node test/paths.js && node test/modern-targets.test.js && node test/installer.test.js",
+    "test:compatibility": "node test/sanity.js && node test/linter.js && node test/wcn-integrity.js && node test/dry-run.js && node test/feature-tests.js",
+    "test": "npm run check:adapters && npm run test:protocol && npm run test:installer && npm run test:compatibility",
     "test:integration": "node test/integration.js",
     "test:all": "npm test && npm run test:integration",
     "preflight": "node scripts/preflight.js",
+    "prepack": "npm run check:adapters",
     "release": "node scripts/release.js"
   },
   "files": [
     "bin",
     "core",
+    "protocol",
+    "scripts/build-adapters.js",
     "vendors"
   ],
   "peerDependencies": {
@@ -28,10 +36,16 @@
     }
   },
   "keywords": [
+    "clio-coder",
     "claude",
     "claude-code",
+    "codex",
+    "github-copilot",
+    "antigravity",
     "gemini",
     "opencode",
+    "agent-skills",
+    "agent-plugins",
     "ai",
     "academic-writing",
     "research",
@@ -57,6 +71,6 @@
     "url": "git+https://github.com/akougkas/wtf-p.git"
   },
   "engines": {
-    "node": ">=16.7.0"
+    "node": ">=20.0.0"
   }
 }

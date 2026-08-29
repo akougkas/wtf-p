@@ -1,0 +1,30 @@
+---
+schema: wtfp.workflow/v1
+action: contribute
+source: wtfp.protocol
+---
+
+# Contribute to WTF-P
+
+@protocol://project/README.md
+
+## Record contract
+
+Read: `package://contributing`, `project://materials/{artifact}`.
+Produce: none.
+
+Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+
+Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+
+## Procedure
+
+1. Read the contribution guide and inspect the selected change without mutation.
+2. Present the proposed files, branch name, commit contents, remote destination, and issue or change-request body.
+3. Cross a separate user gate before each declared VCS or external effect; never initialize a repository, merge, push, or publish implicitly.
+
+## Safety and completion
+
+This action declares explicit VCS effects. Preview each exact branch or commit operation and cross a separate user gate before executing it; merging, pushing, publishing, and repository initialization remain outside scope unless separately declared and approved.
+
+Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.

@@ -8,254 +8,173 @@
 
 Also: Proposal. Presentation. Poster.
 
-```bash
-npx wtf-p
-```
-
-*Academic writing commands for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Gemini CLI](https://github.com/google-gemini/gemini-cli), and [OpenCode](https://github.com/opencode-ai/opencode).*
+Portable, evidence-grounded academic workflows for modern coding agents.
 
 </div>
 
----
+WTF-P turns an AI coding agent into a structured research and writing system. It plans before drafting, grounds claims in evidence, isolates section context, delegates bounded work to specialist agents, and verifies the result against the approved plan.
 
-## What This Does
+Version `0.6.0-rc.1` is a ground-up modernization of the agent platform. One canonical protocol now generates native resources for Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.
 
-WTF-P installs structured commands into your AI coding assistant that turn it into an academic writing system. You get spec-driven workflows, citation grounding, section isolation, and quality verification — not just "write me a paper." Every section is planned before it's written, verified after, and grounded in your actual BibTeX sources.
+## Quick start
 
----
-
-## Quick Start
+Install explicitly for the agent you use:
 
 ```bash
-npx wtf-p                  # Install commands (Claude Code by default)
+npx wtf-p install clio --advanced
+npx wtf-p install claude --advanced
+npx wtf-p install codex --advanced
+npx wtf-p install copilot --advanced
+npx wtf-p install opencode --advanced
+npx wtf-p install antigravity --advanced
+npx wtf-p install gemini --advanced
 ```
 
-Then in your AI assistant:
+An interactive terminal can also run `npx wtf-p` and choose a target. A noninteractive bare invocation refuses to write anything; it requires an explicit target or scope.
 
-```bash
-/wtfp:new-paper            # Guided interview about your research
-/wtfp:create-outline       # Build section structure + word budgets
-/wtfp:plan-section 1       # Plan first section
-/wtfp:write-section        # Write the section
+Then start a paper with the native WTF-P action exposed by your client:
+
+```text
+/wtfp:new-paper
+/wtfp:create-outline
+/wtfp:plan-section 1
+/wtfp:write-section 1
+/wtfp:review-section 1
 ```
 
-Run `/wtfp:help` for the full command list.
+Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The patched Clio integration discovers the preferred nested `/wtfp:new-paper` namespace.
 
----
+## First-class adapters
 
-## Runtime Support
+| Target | Native envelope | Actions | Specialists | Skills | Target-specific capabilities |
+| --- | --- | ---: | ---: | ---: | --- |
+| Clio Coder | Extension | 36, plus 36 flat aliases | 11 | 7 | Strict recipes, extension-bound skills, two fleets |
+| Claude Code | Claude plugin | 36 | 11 | 7 | Native command permissions and plugin validation |
+| Codex | Codex plugin | Through skills | Host-managed | 7 | `.codex-plugin` metadata and marketplace packaging |
+| GitHub Copilot CLI | Copilot/Claude-compatible plugin | 36 | 11 | 7 | CLI plugin discovery and cloud-safe resources |
+| OpenCode | Filesystem bundle | 36 | 11 | 7 | Native commands and agents |
+| Antigravity CLI | `agy` plugin | 36 | 11 | 7 | Commands converted to native skills by `agy` |
+| Gemini CLI | Gemini extension | 36 | 11 | 7 | TOML commands and extension context |
 
-| Runtime | Commands | Agents | Extras |
-|---------|----------|--------|--------|
-| **Claude Code** | 36 | 11 | Skills, MCP server, plugin manifest |
-| **Gemini CLI** | 36 | 11 | — |
-| **OpenCode** | 36 | 11 | — |
+The adapters are generated artifacts, not seven hand-maintained copies. Every generated envelope includes a cryptographic inventory and the portable protocol resources needed to understand its workflows.
 
-```bash
-npx wtf-p --global              # Claude Code (default)
-npx wtf-p --global --gemini     # Gemini CLI
-npx wtf-p --global --opencode   # OpenCode
+The release-candidate matrix was exercised with Claude Code 2.1.251, Codex CLI 0.144.1, Copilot CLI 1.0.80, OpenCode 1.18.16, Antigravity 1.1.22, Gemini CLI 0.57.0, and the coordinated Clio branch. Real isolated evaluations used Claude Sonnet 5/xhigh, Codex GPT-5.4/xhigh (GPT-5.6 was unavailable through that CLI's ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. See [compatibility evidence](docs/COMPATIBILITY.md) for exact claims and caveats.
+
+## The paper lifecycle
+
+WTF-P keeps the human in control while making the repeatable work deterministic:
+
+1. `/wtfp:new-paper` captures research questions, intended contribution, evidence, audience, venue, and constraints.
+2. `/wtfp:map-project` indexes existing drafts, sources, data, figures, and decisions.
+3. `/wtfp:create-outline` turns the argument into sections, dependencies, and word budgets.
+4. `/wtfp:research-gap` and `/wtfp:analyze-bib` build an evidence map without inventing citations.
+5. `/wtfp:plan-section` creates a traceable section plan and can send it through an independent plan checker.
+6. `/wtfp:write-section` drafts from the approved plan in bounded context.
+7. `/wtfp:review-section`, `/wtfp:verify-work`, and `/wtfp:polish-prose` check argument coverage, evidence, coherence, venue requirements, and prose quality.
+8. `/wtfp:audit-milestone`, `/wtfp:export-latex`, `/wtfp:create-slides`, and `/wtfp:create-poster` prepare deliverables.
+
+Run `/wtfp:help` for all 36 stable actions.
+
+## What became portable
+
+The canonical source lives under `protocol/` and has four parts:
+
+- A versioned `.planning` project protocol for the project manifest, configuration, state, sources, evidence, decisions, outline, sections, checkpoints, and validation results.
+- Seven standard Agent Skills for starting a project, literature research, section planning, section writing, manuscript review, project management, and research delivery.
+- Thirty-six semantic action contracts declaring inputs, reads, outputs, specialist delegation, tools, effects, and approval boundaries.
+- Eleven host-neutral specialist roles with strict mutation or verification result contracts.
+
+Concrete model names and client tool syntax do not live in canonical workflow prose. Each adapter maps semantic needs such as filesystem access, research search, user interaction, and delegation into the active client's capabilities.
+
+## Project state
+
+New workflows use a versioned `.planning/` directory. Its records are JSON-schema validated and designed to survive movement between clients:
+
+```text
+.planning/
+├── project.json
+├── config.json
+├── state.json
+├── decisions.json
+├── structure/outline.json
+├── sources/*.json
+├── evidence/*.json
+├── sections/*/section.json
+├── checkpoints/*.json
+└── validations/*.json
 ```
 
----
+The protocol records evidence separately from prose and records author decisions explicitly. That lets a reviewer trace a claim back to a source and lets a different agent resume without guessing what the author intended.
 
-## Installation
+## Installation safety
+
+The `0.6` installer is an ownership-aware transaction engine:
+
+- It rejects filesystem roots, the home directory itself, the repository root, traversal, and symlink escapes.
+- It snapshots package sources and refuses source or destination path races.
+- It publishes files atomically where possible and rolls back a failed transaction.
+- It records only files it actually wrote, with SHA-256 hashes, in a v2 receipt.
+- Reinstallation cannot claim ownership of files it skipped.
+- Uninstall removes exact unchanged owned files. It preserves modified files and unrelated siblings by default.
+- Dry runs are byte-preserving.
+
+Use a custom isolated client root when evaluating an adapter:
 
 ```bash
-# Default: install to Claude Code
-npx wtf-p
+CODEX_HOME=/tmp/wtfp-codex npx wtf-p install codex --advanced
+CLIO_CODER_CONFIG_DIR=/tmp/wtfp-clio npx wtf-p install clio --advanced
+```
 
-# Global install (recommended — persists across projects)
-npx wtf-p --global
+Inspect or remove an installation with:
 
-# Local to current project only
-npx wtf-p --local
-
-# Specify a custom config directory
-npx wtf-p --global --config-dir ~/research/.claude
-
-# Check what's installed
+```bash
 npx wtf-p status
-
-# Diagnose issues
 npx wtf-p doctor
+npx wtf-p uninstall --clio --dry-run
+npx wtf-p uninstall --clio --yes
 ```
 
-### Upgrading
+The legacy `--global`, `--local`, `--claude`, `--gemini`, and `--opencode` selectors remain compatibility aliases during the release-candidate cycle.
+
+## Developing adapters
+
+Edit canonical resources under `protocol/`, then regenerate every native projection:
 
 ```bash
-npx wtf-p update                    # Check for newer version
-npx wtf-p --global                  # Reinstall (prompts on conflicts)
-npx wtf-p --global --force          # Overwrite everything
-npx wtf-p --global --backup-all    # Backup before overwriting
+npm run build:adapters
+npm run check:adapters
+npm test
+npm run test:integration
 ```
 
-### Uninstalling
+`check:adapters` fails when committed generated resources drift from their canonical inputs. The test suite also checks action parity, skills, portable roles, `.planning` schemas, resource containment, exact installer ownership, rollback, uninstall preservation, and native envelope structure.
 
-```bash
-npx wtf-p-uninstall --global
-npx wtf-p-uninstall --global --dry-run   # Preview what would be removed
-```
+The Clio reference integration is developed alongside WTF-P in `clio-coder`. It adds recursive namespaced extension prompts, extension-owned agents and fleets, same-extension skill binding, and contained `${extensionRoot}` resource resolution.
 
-Only WTF-P files are removed. Your config files and other tools stay intact.
+## Design principles
 
----
-
-## Command Reference
-
-### Setup
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:new-paper` | Guided interview to define your paper's vision and requirements |
-| `/wtfp:create-outline` | Build section structure, argument map, and word budgets |
-| `/wtfp:map-project` | Index existing drafts, data, and references |
-| `/wtfp:analyze-bib` | Analyze bibliography and map citations to sections |
-
-### Planning
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:discuss-section [N]` | Discuss your vision for a section before planning |
-| `/wtfp:plan-section [N]` | Create detailed writing plan with quality validation |
-| `/wtfp:list-assumptions [N]` | Preview intended approach before writing |
-| `/wtfp:research-gap [N]` | Research literature for a section (tiered: Semantic Scholar, Google Scholar, CrossRef) |
-
-### Writing
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:write-section` | Execute a section plan with agent-based writing |
-| `/wtfp:execute-outline` | Write all sections in parallel, then check coherence |
-| `/wtfp:quick` | Minimal-ceremony writing for quick tasks |
-| `/wtfp:progress` | Show writing progress and suggest next step |
-| `/wtfp:pause-writing` | Save current progress for later |
-| `/wtfp:resume-writing` | Resume from a previous session |
-
-### Review
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:review-section [N]` | Review for citations, coherence, and venue requirements |
-| `/wtfp:verify-work [N]` | Acceptance-test a section against its plan |
-| `/wtfp:plan-revision [N]` | Create revision plan from review issues |
-| `/wtfp:polish-prose` | Improve clarity, flow, and academic voice |
-| `/wtfp:check-refs` | Audit BibTeX for missing, duplicate, or broken references |
-
-### Structure
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:create-poster` | Full poster creation workflow |
-| `/wtfp:create-slides` | Presentation deck workflow |
-| `/wtfp:insert-section` | Add a new section to the outline |
-| `/wtfp:remove-section` | Remove a section from the outline |
-
-### Export & Submission
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:export-latex` | Export to LaTeX with bibliography and formatting |
-| `/wtfp:audit-milestone` | Pre-submission checks on sections, citations, and word counts |
-| `/wtfp:plan-milestone-gaps` | Create fix plans for gaps found by audit |
-| `/wtfp:submit-milestone` | Archive a completed draft or submission version |
-
-### Settings & Productivity
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:settings` | View and edit project settings interactively |
-| `/wtfp:checkpoint` | Save, restore, and list paper state checkpoints |
-| `/wtfp:add-todo` | Capture a quick note or task without breaking flow |
-| `/wtfp:check-todos` | Review pending todos (act, defer, dismiss) |
-| `/wtfp:update` | Check for updates and install newer version |
-
-### Help & Contributing
-
-| Command | Purpose |
-|---------|---------|
-| `/wtfp:help` | Full command reference |
-| `/wtfp:report-bug` | Report a bug via GitHub issue |
-| `/wtfp:request-feature` | Request a new feature via GitHub issue |
-| `/wtfp:contribute` | Walk through contributing code via pull request |
-
----
-
-## Configuration
-
-WTF-P uses a `config.json` in your `.planning/` directory. Key settings:
-
-```jsonc
-{
-  "model_profile": "balanced",        // "quality" | "balanced" | "budget"
-  "workflow": {
-    "research": true,                  // Enable research phase
-    "plan_check": true,                // Pre-write plan validation
-    "verifier": true                   // Post-write verification
-  },
-  "parallelization": {
-    "enabled": false,                  // Parallel section writing
-    "max_concurrent_agents": 3
-  }
-}
-```
-
-**Model profiles** route 11 specialized agents to appropriate models:
-- **quality** — best models for all agents (slower, higher cost)
-- **balanced** — strong models for writing, lighter for validation (default)
-- **budget** — fastest models everywhere (good for iteration)
-
----
-
-## Venue Templates
-
-| Template | Structure |
-|----------|-----------|
-| `acm-cs` | Intro → Background → Approach → Evaluation → Related Work → Conclusion |
-| `ieee-cs` | Intro → Background → Design → Implementation → Evaluation → Conclusion |
-| `arxiv-ml` | Intro → Related Work → Preliminaries → Method → Experiments → Conclusion |
-| `nature` | Intro → Methods → Results → Discussion |
-| `thesis` | Flexible chapter structure |
-
----
-
-## How It Works
-
-WTF-P follows a **thin orchestrator → specialized agent → quality loop** architecture:
-
-1. **Specification first** — `/wtfp:new-paper` interviews you to extract research questions, argument structure, evidence inventory, and venue requirements into a `PROJECT.md`.
-2. **Hierarchical planning** — Papers break down: Paper Vision → Section Outline → Section Plan → Paragraph Execution. Each level has its own document.
-3. **Isolated execution** — Each section is written in a fresh context containing only the paper vision, that section's plan, relevant citations, and prior sections. No context pollution.
-4. **Quality loops** — Pre-write plan validation (7 dimensions, up to 3 revisions) and post-write goal-backward verification ensure claims match plans and evidence.
-
-### WCN Mode (Reduced Tokens)
-
-For smaller models or limited context windows, WTF-P includes compressed workflows with 35-50% token reduction:
-
-```bash
-./tools/wcn/swap-workflows.sh wcn      # Switch to compressed
-./tools/wcn/swap-workflows.sh verbose   # Switch back
-```
-
----
+- Evidence before eloquence: a fluent paragraph is not a substitute for a supported claim.
+- Specification before drafting: author intent and acceptance criteria remain explicit.
+- Portable semantics, native ergonomics: share the method while respecting each client's real plugin model.
+- Bounded delegation: specialists receive the minimum context and authority their task requires.
+- Human approval at consequential boundaries: deletion, commits, merges, package updates, and external issue creation remain explicit effects.
+- Reversible installation: WTF-P never treats an agent's whole configuration directory as its property.
 
 ## Origin
 
-Built at the [Gnosis Research Center](https://grc.iit.edu/) at Illinois Tech. The problem: research teams with grants to win, papers to publish, and no time for writer's block. The solution: treat your AI coding assistant as a structured writing system — proper context, explicit specs, verification layers.
-
----
+WTF-P was built at the [Gnosis Research Center](https://grc.iit.edu/) at Illinois Tech for research teams with papers to publish, grants to win, and no time for writer's block.
 
 ## Links
 
 - [Changelog](CHANGELOG.md)
+- [Modernization architecture](docs/agent-platform-modernization.md)
 - [Contributing](CONTRIBUTING.md)
 - [Roadmap](ROADMAP.md)
-- [License](LICENSE) (MIT)
+- [License](LICENSE)
 - [GitHub](https://github.com/akougkas/wtf-p)
 
----
-
 <div align="center">
-<br>
-<strong>No more excuses. Ship the paper.</strong>
+
+**No more excuses. Ship the paper.**
+
 </div>

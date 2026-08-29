@@ -1,17 +1,11 @@
 const fs = require('fs');
 const s2 = require('./semantic-scholar');
 const ranker = require('./citation-ranker');
-const bibIndex = require('./bib-index'); // Assuming this exists or I need to use the one in bin/lib if available
-
-// Check if bib-index exists in bin/lib or I need to implement basic parsing
-// The command says `node ~/.claude/bin/bib-index.js`. 
-// In this project structure, it is likely `bin/lib/bib-index.js`.
-
-const BIB_INDEX_PATH = './bib-index.js';
+const bibIndex = require('./bib-index');
 
 /**
  * Impact Analyzer
- * 
+ *
  * Analyzes a BibTeX file or JSON index:
  * 1. Fetches metrics for each paper (via S2)
  * 2. Categorizes them (Seminal, Rising, Outdated)
@@ -23,8 +17,7 @@ async function analyze(filePath) {
   let entries = [];
   try {
     // We'll require bib-index locally if possible
-    const indexer = require(BIB_INDEX_PATH);
-    const json = indexer.index(fs.readFileSync(filePath, 'utf8'));
+    const json = bibIndex.index(fs.readFileSync(filePath, 'utf8'));
     entries = JSON.parse(json);
   } catch (e) {
     // Fallback: simple regex parsing if bib-index lib isn't easily require-able
@@ -57,13 +50,13 @@ async function analyze(filePath) {
           const p = papers[0];
           const velocity = ranker.calculateVelocity(p.citationCount, p.year);
           const age = new Date().getFullYear() - (p.year || new Date().getFullYear());
-          
-          const enriched = { 
-            key: entry.key, 
-            title: p.title, 
-            year: p.year, 
-            citations: p.citationCount, 
-            velocity: velocity.toFixed(1) 
+
+          const enriched = {
+            key: entry.key,
+            title: p.title,
+            year: p.year,
+            citations: p.citationCount,
+            velocity: velocity.toFixed(1)
           };
 
           if (p.citationCount > 1000) {
@@ -85,11 +78,11 @@ async function analyze(filePath) {
     // Small delay between batches
     await new Promise(r => setTimeout(r, 1000));
   }
-  
+
   // Sort
   results.seminal.sort((a,b) => b.citations - a.citations);
   results.rising.sort((a,b) => b.velocity - a.velocity);
-  
+
   return results;
 }
 

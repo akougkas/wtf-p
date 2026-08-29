@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const MANIFEST = require('../lib/manifest');
-const { collectComponentFiles } = require('./install-logic'); // Need to export this or copy logic
+const { componentsForSelection } = require('./install-logic');
 
 // Re-implementing logic here to avoid circular dep if install-logic is messy
 // But better to export valid logic.
@@ -24,10 +24,11 @@ function collectComponentFilesLocal(component, files = []) {
       if (entry.isDirectory()) {
         recurse(srcPath, relPath);
       } else {
+        const topLevel = relPath.split(path.sep)[0];
         files.push({ 
           src: srcPath, 
           path: destPath, // display path
-          type: component.id
+          type: component.componentIds?.[topLevel] || component.id
         });
       }
     }
@@ -46,16 +47,7 @@ function showList(options) {
 
   const files = [];
 
-  vendorConfig.components.forEach(component => {
-    if (onlyInstall !== 'all') {
-      if (onlyInstall !== component.id) {
-         if (onlyInstall === 'commands' && component.id === 'skills') {
-           // Allow
-         } else {
-           return;
-         }
-      }
-    }
+  componentsForSelection(vendorConfig, onlyInstall).forEach(component => {
     collectComponentFilesLocal(component, files);
   });
 

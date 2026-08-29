@@ -1,0 +1,12 @@
+{
+  "schema": "wtfp.generated-adapter/v1",
+  "generatorVersion": 4,
+  "target": "copilot-marketplace",
+  "sourceHash": "dffac98cf6970fa96299daab8094a059e06dc5db7796e0e1ebbd86fe94505998",
+  "files": [
+    {
+      "path": "marketplace.json",
+      "sha256": "466b138f4604559d0c56115bbdd55118f5b2176d2355db0f29d26dc41b566b05"
+    }
+  ]
+}

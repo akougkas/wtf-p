@@ -76,7 +76,7 @@ function makeIsolatedEnv(fixture) {
     XDG_STATE_HOME: path.join(fixture, 'xdg', 'state'),
     XDG_CACHE_HOME: path.join(fixture, 'xdg', 'cache'),
     CLAUDE_CONFIG_DIR: path.join(fixture, 'clients', 'claude'),
-    GEMINI_CONFIG_DIR: path.join(fixture, 'clients', 'gemini'),
+    GEMINI_CLI_HOME: path.join(fixture, 'clients', 'gemini'),
     OPENCODE_CONFIG_DIR: path.join(fixture, 'clients', 'opencode'),
     CODEX_HOME: path.join(fixture, 'clients', 'codex'),
     CLIO_CODER_HOME: path.join(fixture, 'clients', 'clio'),

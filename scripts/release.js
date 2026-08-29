@@ -1,245 +1,137 @@
 #!/usr/bin/env node
-/**
- * WTF-P Release Script
- * Automates version bumping, tagging, and publishing
- *
- * Usage:
- *   npm run release [patch|minor|major]
- *   npm run release -- --dry-run
- */
+
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
-const colors = {
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  dim: '\x1b[2m',
-  reset: '\x1b[0m'
-};
+const ROOT = path.resolve(__dirname, '..');
+const args = new Set(process.argv.slice(2));
+const dryRun = args.has('--dry-run');
+const createTag = args.has('--tag');
+const push = args.has('--push');
 
-let dryRun = false;
+function usage() {
+  process.stdout.write(`WTF-P release finalizer
 
-function exec(cmd, silent = false) {
-  if (dryRun) {
-    console.log(`${colors.dim}DRY-RUN: ${cmd}${colors.reset}`);
-    return '';
-  }
-  return execSync(cmd, {
-    stdio: silent ? 'pipe' : 'inherit',
-    encoding: 'utf8'
-  });
-}
+Usage:
+  npm run release -- --dry-run
+  npm run release -- --tag
+  npm run release -- --tag --push
 
-function log(msg, color = 'reset') {
-  console.log(`${colors[color]}${msg}${colors.reset}`);
-}
-
-function check(condition, msg) {
-  if (condition) {
-    log(`✓ ${msg}`, 'green');
-    return true;
-  } else {
-    log(`✗ ${msg}`, 'red');
-    return false;
-  }
-}
-
-function section(title) {
-  console.log(`\n${'='.repeat(50)}`);
-  log(title, 'green');
-  console.log('='.repeat(50) + '\n');
-}
-
-function confirm(message) {
-  if (dryRun) return true;
-  const readline = require('readline');
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  return new Promise(resolve => {
-    rl.question(`${message} [y/N]: `, answer => {
-      rl.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-    });
-  });
-}
-
-async function main() {
-  const args = process.argv.slice(2);
-  dryRun = args.includes('--dry-run');
-
-  if (args.includes('--help') || args.includes('-h')) {
-    console.log(`
-Usage: npm run release [patch|minor|major] [--dry-run]
-
-Arguments:
-  patch   - Bump version x.x.x → x.x.z+1 (bug fixes)
-  minor   - Bump version x.x.x → x.y+1.0 (new features)
-  major   - Bump version x.x.x → x+1.0.0 (breaking changes)
+This script never edits versions or changelog prose and never publishes to npm.
+Prepare those reviewable changes first, regenerate adapters, and commit them.
 
 Options:
-  --dry-run  - Preview actions without executing
-  --help     - Show this help
-
-Examples:
-  npm run release patch
-  npm run release minor --dry-run
+  --dry-run  Validate and print the release commands without changing Git
+  --tag      Create the annotated v<package-version> tag
+  --push     Push HEAD to origin/main and the tag (requires --tag)
+  --help     Show this help
 `);
-    process.exit(0);
-  }
-
-  section('WTF-P Release Process');
-
-  // Parse version type
-  const versionType = args.find(a => ['patch', 'minor', 'major'].includes(a));
-
-  if (!versionType) {
-    log('Error: Version type required (patch, minor, or major)', 'red');
-    console.log('Run: npm run release --help');
-    process.exit(1);
-  }
-
-  // 1. Pre-flight checks
-  section('Pre-Flight Checks');
-
-  try {
-    // Check clean working tree
-    const status = exec('git status --porcelain', true);
-    if (status.trim()) {
-      check(false, 'Working tree is clean');
-      console.log('\nStaged or unstaged changes found:');
-      console.log(status);
-      process.exit(1);
-    } else {
-      check(true, 'Working tree is clean');
-    }
-
-    // Check on main branch
-    const branch = exec('git rev-parse --abbrev-ref HEAD', true).trim();
-    check(branch === 'main', `On main branch (${branch})`);
-
-    // Check preflight passes
-    log('Running preflight check...', 'dim');
-    try {
-      exec('npm run preflight', true);
-      check(true, 'Preflight checks passed');
-    } catch (e) {
-      check(false, 'Preflight checks failed');
-      log('Run: npm run preflight', 'yellow');
-      process.exit(1);
-    }
-
-  } catch (e) {
-    log(`Error during pre-flight: ${e.message}`, 'red');
-    process.exit(1);
-  }
-
-  // 2. Read current version
-  section('Version Bump');
-
-  const pkgPath = path.join(__dirname, '..', 'package.json');
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  const currentVersion = pkg.version;
-  log(`Current version: ${currentVersion}`, 'dim');
-
-  // Calculate new version
-  const parts = currentVersion.split('.').map(Number);
-  if (versionType === 'patch') parts[2]++;
-  if (versionType === 'minor') { parts[1]++; parts[2] = 0; }
-  if (versionType === 'major') { parts[0]++; parts[1] = 0; parts[2] = 0; }
-  const newVersion = parts.join('.');
-
-  log(`New version: ${newVersion} (${versionType})`, 'green');
-
-  if (!await confirm('Proceed with version bump?')) {
-    log('Aborted', 'yellow');
-    process.exit(0);
-  }
-
-  // 3. Update version in package.json
-  section('Update Version');
-
-  if (!dryRun) {
-    pkg.version = newVersion;
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-  } else {
-    log(`${colors.dim}DRY-RUN: Would update package.json${colors.reset}`);
-  }
-  log(`Updated package.json to ${newVersion}`, 'green');
-
-  // Update CHANGELOG if it exists
-  const changelogPath = path.join(__dirname, '..', 'CHANGELOG.md');
-  if (fs.existsSync(changelogPath)) {
-    if (!dryRun) {
-      const date = new Date().toISOString().split('T')[0];
-      const newEntry = `\n## [${newVersion}] - ${date}\n\n### Changes\n- `;
-      const currentContent = fs.readFileSync(changelogPath, 'utf8');
-      const updatedContent = newEntry + currentContent;
-      fs.writeFileSync(changelogPath, updatedContent);
-    } else {
-      log(`${colors.dim}DRY-RUN: Would update CHANGELOG.md${colors.reset}`);
-    }
-    log(`Updated CHANGELOG.md`, 'green');
-  }
-
-  // 4. Commit and tag
-  section('Git Operations');
-
-  const commitMsg = `chore(release): bump version to ${newVersion}`;
-  exec(`git add package.json CHANGELOG.md`, true);
-  exec(`git commit -m "${commitMsg}"`, true);
-  log(`Created commit: ${commitMsg}`, 'green');
-
-  const tagName = `v${newVersion}`;
-  exec(`git tag -a ${tagName} -m "Release ${tagName}"`, true);
-  log(`Created tag: ${tagName}`, 'green');
-
-  // 5. Push to remote
-  section('Push to Remote');
-
-  log(`This will push to origin/main and push tag ${tagName}`, 'yellow');
-  if (!await confirm('Push to remote?')) {
-    log('Skipping push. Manual push required:', 'yellow');
-    log(`  git push origin main && git push origin ${tagName}`, 'dim');
-    process.exit(0);
-  }
-
-  exec('git push origin main', true);
-  exec(`git push origin ${tagName}`, true);
-  log(`Pushed to origin/main and tag ${tagName}`, 'green');
-
-  // 6. Publish instructions
-  section('Release Complete');
-
-  log(`Version ${newVersion} tagged and pushed!`, 'green');
-  console.log(`
-Next steps:
-
-${colors.green}Manual publish:${colors.reset}
-  npm publish
-
-${colors.green}Automated publish (GitHub Actions):${colors.reset}
-  CI/CD will automatically publish in ~2 minutes
-  Monitor: https://github.com/akougkas/wtf-p/actions
-
-${colors.dim}To verify:${colors.reset}
-  npm view wtf-p
-  npm install -g wtf-p@${newVersion}
-`);
-
-  // 7. Clean up tarball if it exists
-  const tarball = path.join(__dirname, '..', `wtf-p-${newVersion}.tgz`);
-  if (fs.existsSync(tarball)) {
-    fs.unlinkSync(tarball);
-    log(`Cleaned up old tarball: ${tarball}`, 'dim');
-  }
 }
 
-main().catch(err => {
-  log(`Error: ${err.message}`, 'red');
+function run(command, commandArgs, options = {}) {
+  const result = spawnSync(command, commandArgs, {
+    cwd: ROOT,
+    env: process.env,
+    encoding: 'utf8',
+    input: '',
+    maxBuffer: 32 * 1024 * 1024,
+    timeout: options.timeout || 300000,
+    stdio: options.inherit ? 'inherit' : 'pipe'
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0 && !options.allowFailure) {
+    const detail = `${result.stdout || ''}${result.stderr || ''}`.trim();
+    throw new Error(`${command} ${commandArgs.join(' ')} failed${detail ? `:\n${detail}` : ''}`);
+  }
+  return result;
+}
+
+function output(command, commandArgs, options) {
+  return run(command, commandArgs, options).stdout.trim();
+}
+
+if (args.has('--help') || args.has('-h')) {
+  usage();
+  process.exit(0);
+}
+for (const argument of args) {
+  if (!['--dry-run', '--tag', '--push'].includes(argument)) {
+    process.stderr.write(`Unknown option: ${argument}\n\n`);
+    usage();
+    process.exit(2);
+  }
+}
+if (push && !createTag) {
+  process.stderr.write('--push requires --tag so an untagged release cannot be pushed.\n');
+  process.exit(2);
+}
+if (dryRun && (createTag || push)) {
+  process.stderr.write('--dry-run cannot be combined with --tag or --push.\n');
+  process.exit(2);
+}
+
+try {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  const version = packageJson.version;
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+    throw new Error(`package.json contains an invalid release version: ${version}`);
+  }
+  const tag = `v${version}`;
+  const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
+  const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!new RegExp(`^## \\[${escapedVersion}\\](?: - \\d{4}-\\d{2}-\\d{2})?$`, 'm').test(changelog)) {
+    throw new Error(`CHANGELOG.md has no release heading for ${version}`);
+  }
+
+  process.stdout.write(`Finalizing WTF-P ${version}\n`);
+  run('npm', ['run', 'preflight'], { inherit: true });
+
+  const branch = output('git', ['branch', '--show-current']);
+  const status = output('git', ['status', '--porcelain']);
+  const head = output('git', ['rev-parse', 'HEAD']);
+  const tagLookup = run('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`], { allowFailure: true });
+  const existingTagCommit = tagLookup.status === 0
+    ? output('git', ['rev-list', '-n', '1', tag])
+    : null;
+
+  process.stdout.write(`\nBranch: ${branch || '(detached)'}\nCommit: ${head}\nTag:    ${tag}\n`);
+
+  if (dryRun) {
+    if (status) process.stdout.write('\nDry-run note: the working tree is not clean yet.\n');
+    if (branch !== 'main') process.stdout.write(`Dry-run note: final release tagging must occur on main (currently ${branch || 'detached'}).\n`);
+    if (existingTagCommit) process.stdout.write(`Dry-run note: ${tag} already points to ${existingTagCommit}.\n`);
+    process.stdout.write(`\nFinal commands after merge and review:\n  npm run release -- --tag\n  npm run preflight -- --publish\n  npm publish${version.includes('-') ? ' --tag next' : ''}\n`);
+    process.exit(0);
+  }
+
+  if (!createTag) {
+    process.stdout.write('\nValidation passed. Re-run with --tag after reviewing the commit.\n');
+    process.exit(0);
+  }
+  if (status) throw new Error('release tagging requires a clean working tree');
+  if (branch !== 'main') throw new Error(`release tagging requires main; current branch is ${branch || 'detached'}`);
+  if (existingTagCommit && existingTagCommit !== head) {
+    throw new Error(`${tag} already points to ${existingTagCommit}, not HEAD ${head}`);
+  }
+  if (!existingTagCommit) {
+    run('git', ['tag', '-a', tag, '-m', `Release ${tag}`]);
+    process.stdout.write(`Created annotated tag ${tag}.\n`);
+  } else {
+    process.stdout.write(`${tag} already points to HEAD; no tag mutation needed.\n`);
+  }
+
+  if (push) {
+    run('git', ['push', 'origin', 'HEAD:main'], { inherit: true });
+    run('git', ['push', 'origin', tag], { inherit: true });
+    process.stdout.write(`Pushed main and ${tag}.\n`);
+  } else {
+    process.stdout.write(`Tag remains local. Push explicitly with:\n  npm run release -- --tag --push\n`);
+  }
+  process.stdout.write(`Before publishing:\n  npm run preflight -- --publish\n  npm publish${version.includes('-') ? ' --tag next' : ''}\n`);
+} catch (error) {
+  process.stderr.write(`Release finalization failed: ${error.message}\n`);
   process.exit(1);
-});
+}

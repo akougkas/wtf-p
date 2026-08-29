@@ -1,0 +1,83 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "review-section",
+  "title": "Review a section",
+  "description": "Review a drafted section for evidence, citations, coherence, requirements, and reader expectations.",
+  "alias": "wtfp:review-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-review-manuscript"
+  },
+  "workflow": "wtfp://workflows/review-section",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected section has both a plan and a draft"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/context",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/research",
+    "project://sections/{section}/summary",
+    "project://evidence/{evidence}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/reviews/{review}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "section-reviewer",
+      "mode": "required",
+      "purpose": "Independently assess the section against its plan, evidence, and selected review perspective"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://section-reviewer"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/reviews/{review}, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/plans/{plan}, project://sections/{section}/research, project://sections/{section}/summary, project://evidence/{evidence}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "selected section review artifact"
+    },
+    {
+      "id": "user.gate",
+      "scope": "review persona and disputed findings"
+    }
+  ]
+}

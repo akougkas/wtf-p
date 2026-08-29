@@ -1,0 +1,97 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "plan-section",
+  "title": "Plan a section",
+  "description": "Create and independently check a detailed writing plan for one section.",
+  "alias": "wtfp:plan-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/plan-section",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A target section exists in project://structure/outline and has a matching v1 section record"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/context",
+    "project://sections/{section}/research",
+    "project://sections/{section}/summary",
+    "project://sources/{source}",
+    "project://evidence/{evidence}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/plans/{plan}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "section-planner",
+      "mode": "required",
+      "purpose": "Create an executable plan grounded in project intent and evidence"
+    },
+    {
+      "role": "plan-checker",
+      "mode": "required",
+      "purpose": "Check plan completeness, traceability, and feasibility before approval"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://section-planner, role://plan-checker"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/plans/{plan}, project://validations/{validation}, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://sections/{section}/plans/{plan}, project://validations/{validation}, project://sections/{section}, project://state"
+    },
+    {
+      "id": "user.gate",
+      "scope": "plan approval and verifier exceptions"
+    }
+  ]
+}

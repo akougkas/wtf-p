@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.aliases/v1",
+  "title": "WTF-P stable compatibility aliases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "namespace", "aliases"],
+  "properties": {
+    "schema": { "const": "wtfp.aliases/v1" },
+    "namespace": { "const": "wtfp" },
+    "aliases": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "alias"],
+        "properties": {
+          "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "alias": { "type": "string", "pattern": "^wtfp:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+        }
+      }
+    }
+  }
+}

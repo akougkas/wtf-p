@@ -1,0 +1,59 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "create-poster",
+  "title": "Create a research poster",
+  "description": "Transform the paper's argument, methods, and findings into a concise academic poster.",
+  "alias": "wtfp:create-poster",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-deliver-research"
+  },
+  "workflow": "wtfp://workflows/create-poster",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A sufficiently complete paper or milestone is available",
+      "A contained host-provided poster renderer is configured when rendering is requested"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://structure/outline",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://deliverables/poster/{artifact}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://deliverables/poster/{artifact}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://structure/outline, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "poster source and generated assets"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "the configured portable poster renderer"
+    },
+    {
+      "id": "user.gate",
+      "scope": "poster format and content emphasis"
+    }
+  ]
+}

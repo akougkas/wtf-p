@@ -1,0 +1,52 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "check-todos",
+  "title": "Review todos",
+  "description": "Review pending tasks and explicitly act on, defer, complete, or dismiss each one.",
+  "alias": "wtfp:check-todos",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/check-todos",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://state",
+    "project://checkpoints/{checkpoint}"
+  ],
+  "produces": [
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.modify",
+      "scope": "project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://state, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "disposition of each pending todo"
+    }
+  ]
+}

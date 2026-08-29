@@ -346,20 +346,20 @@ if (MANIFEST) {
   }
 
   // Gemini paths
-  if (MANIFEST.gemini.defaultDir === '.config/gemini') {
-    pass('gemini defaultDir is .config/gemini');
+  if (MANIFEST.gemini.defaultDir === '.gemini') {
+    pass('gemini defaultDir is .gemini');
   } else {
-    fail(`gemini defaultDir should be .config/gemini, got ${MANIFEST.gemini.defaultDir}`);
+    fail(`gemini defaultDir should be .gemini, got ${MANIFEST.gemini.defaultDir}`);
   }
-  if (MANIFEST.gemini.configDirEnv === 'GEMINI_CONFIG_DIR') {
-    pass('gemini configDirEnv is GEMINI_CONFIG_DIR');
+  if (MANIFEST.gemini.configDirEnv === 'GEMINI_CLI_HOME') {
+    pass('gemini configDirEnv is GEMINI_CLI_HOME');
   }
 
   // OpenCode paths
-  if (MANIFEST.opencode.defaultDir === '.opencode') {
-    pass('opencode defaultDir is .opencode');
+  if (MANIFEST.opencode.defaultDir === '.config/opencode') {
+    pass('opencode defaultDir is .config/opencode');
   } else {
-    fail(`opencode defaultDir should be .opencode, got ${MANIFEST.opencode.defaultDir}`);
+    fail(`opencode defaultDir should be .config/opencode, got ${MANIFEST.opencode.defaultDir}`);
   }
   if (MANIFEST.opencode.configDirEnv === 'OPENCODE_CONFIG_DIR') {
     pass('opencode configDirEnv is OPENCODE_CONFIG_DIR');

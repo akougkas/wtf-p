@@ -109,7 +109,7 @@ async function main() {
     XDG_STATE_HOME: path.join(fakeHome, '.local', 'state'),
     XDG_CACHE_HOME: path.join(fakeHome, '.cache'),
     CLAUDE_CONFIG_DIR: path.join(fakeHome, 'claude'),
-    GEMINI_CONFIG_DIR: path.join(fakeHome, 'gemini'),
+    GEMINI_CLI_HOME: path.join(fakeHome, 'gemini'),
     OPENCODE_CONFIG_DIR: path.join(fakeHome, 'opencode')
   };
   delete isolatedEnv.FORCE_COLOR;
@@ -403,7 +403,7 @@ async function main() {
       const env = {
         ...isolatedEnv,
         CLAUDE_CONFIG_DIR: overlap,
-        GEMINI_CONFIG_DIR: overlap,
+        GEMINI_CLI_HOME: overlap,
         OPENCODE_CONFIG_DIR: overlap
       };
       const installResult = spawnNode([INSTALL, '--all', '--advanced', '--no-color'], project, env);

@@ -1,0 +1,80 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "check-refs",
+  "title": "Check references",
+  "description": "Audit citation integrity and emit a validated corrected-bibliography candidate without mutating source records or manuscript inputs.",
+  "alias": "wtfp:check-refs",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-research-literature"
+  },
+  "workflow": "wtfp://workflows/check-refs",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "network.fetch",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A bibliography and at least one manuscript source are available"
+    ]
+  },
+  "reads": [
+    "project://config",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://materials/{artifact}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://deliverables/bibliography/{artifact}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "citation-formatter",
+      "mode": "required",
+      "purpose": "Cross-reference in-text citations and validate bibliography metadata"
+    }
+  ],
+  "tools": [
+    "bibliography.format",
+    "bibliography.index",
+    "citation.fetch"
+  ],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://citation-formatter"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://deliverables/bibliography/{artifact}, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://config, project://sources/{source}, project://evidence/{evidence}, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "declared citation metadata providers"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "declared bibliography and citation tools"
+    },
+    {
+      "id": "user.gate",
+      "scope": "external metadata lookup and corrected-candidate generation"
+    }
+  ]
+}

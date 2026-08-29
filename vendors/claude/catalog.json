@@ -1,0 +1,127 @@
+{
+  "schema": "wtfp.catalog/v1",
+  "version": 1,
+  "namespace": "wtfp",
+  "counts": {
+    "actions": 36,
+    "domainActions": 31,
+    "operations": 5,
+    "skills": 7
+  },
+  "actions": [
+    { "contract": "protocol://actions/add-todo.json", "id": "add-todo" },
+    { "contract": "protocol://actions/analyze-bib.json", "id": "analyze-bib" },
+    { "contract": "protocol://actions/audit-milestone.json", "id": "audit-milestone" },
+    { "contract": "protocol://actions/check-refs.json", "id": "check-refs" },
+    { "contract": "protocol://actions/check-todos.json", "id": "check-todos" },
+    { "contract": "protocol://actions/checkpoint.json", "id": "checkpoint" },
+    { "contract": "protocol://actions/contribute.json", "id": "contribute" },
+    { "contract": "protocol://actions/create-outline.json", "id": "create-outline" },
+    { "contract": "protocol://actions/create-poster.json", "id": "create-poster" },
+    { "contract": "protocol://actions/create-slides.json", "id": "create-slides" },
+    { "contract": "protocol://actions/discuss-section.json", "id": "discuss-section" },
+    { "contract": "protocol://actions/execute-outline.json", "id": "execute-outline" },
+    { "contract": "protocol://actions/export-latex.json", "id": "export-latex" },
+    { "contract": "protocol://actions/help.json", "id": "help" },
+    { "contract": "protocol://actions/insert-section.json", "id": "insert-section" },
+    { "contract": "protocol://actions/list-assumptions.json", "id": "list-assumptions" },
+    { "contract": "protocol://actions/map-project.json", "id": "map-project" },
+    { "contract": "protocol://actions/new-paper.json", "id": "new-paper" },
+    { "contract": "protocol://actions/pause-writing.json", "id": "pause-writing" },
+    { "contract": "protocol://actions/plan-milestone-gaps.json", "id": "plan-milestone-gaps" },
+    { "contract": "protocol://actions/plan-revision.json", "id": "plan-revision" },
+    { "contract": "protocol://actions/plan-section.json", "id": "plan-section" },
+    { "contract": "protocol://actions/polish-prose.json", "id": "polish-prose" },
+    { "contract": "protocol://actions/progress.json", "id": "progress" },
+    { "contract": "protocol://actions/quick.json", "id": "quick" },
+    { "contract": "protocol://actions/remove-section.json", "id": "remove-section" },
+    { "contract": "protocol://actions/report-bug.json", "id": "report-bug" },
+    { "contract": "protocol://actions/request-feature.json", "id": "request-feature" },
+    { "contract": "protocol://actions/research-gap.json", "id": "research-gap" },
+    { "contract": "protocol://actions/resume-writing.json", "id": "resume-writing" },
+    { "contract": "protocol://actions/review-section.json", "id": "review-section" },
+    { "contract": "protocol://actions/settings.json", "id": "settings" },
+    { "contract": "protocol://actions/submit-milestone.json", "id": "submit-milestone" },
+    { "contract": "protocol://actions/update.json", "id": "update" },
+    { "contract": "protocol://actions/verify-work.json", "id": "verify-work" },
+    { "contract": "protocol://actions/write-section.json", "id": "write-section" }
+  ],
+  "operations": {
+    "actions": [
+      "contribute",
+      "help",
+      "report-bug",
+      "request-feature",
+      "update"
+    ],
+    "id": "product-operations"
+  },
+  "skills": [
+    {
+      "actions": [
+        "create-poster",
+        "create-slides",
+        "export-latex",
+        "submit-milestone"
+      ],
+      "id": "wtfp-deliver-research"
+    },
+    {
+      "actions": [
+        "add-todo",
+        "check-todos",
+        "checkpoint",
+        "pause-writing",
+        "progress",
+        "resume-writing",
+        "settings"
+      ],
+      "id": "wtfp-manage-project"
+    },
+    {
+      "actions": [
+        "discuss-section",
+        "insert-section",
+        "list-assumptions",
+        "plan-revision",
+        "plan-section",
+        "remove-section"
+      ],
+      "id": "wtfp-plan-section"
+    },
+    {
+      "actions": [
+        "analyze-bib",
+        "check-refs",
+        "research-gap"
+      ],
+      "id": "wtfp-research-literature"
+    },
+    {
+      "actions": [
+        "audit-milestone",
+        "plan-milestone-gaps",
+        "polish-prose",
+        "review-section",
+        "verify-work"
+      ],
+      "id": "wtfp-review-manuscript"
+    },
+    {
+      "actions": [
+        "create-outline",
+        "map-project",
+        "new-paper"
+      ],
+      "id": "wtfp-start-project"
+    },
+    {
+      "actions": [
+        "execute-outline",
+        "quick",
+        "write-section"
+      ],
+      "id": "wtfp-write-section"
+    }
+  ]
+}

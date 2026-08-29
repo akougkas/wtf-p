@@ -1,0 +1,44 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "progress",
+  "title": "Show project progress",
+  "description": "Summarize writing progress, surface blockers, and recommend the next compatible action.",
+  "alias": "wtfp:progress",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/progress",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://checkpoints/{checkpoint}",
+    "project://validations/{validation}"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://checkpoints/{checkpoint}, project://validations/{validation}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "selection of the recommended next action"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.action/v1",
+  "title": "WTF-P action contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "title",
+    "description",
+    "alias",
+    "surface",
+    "requirements",
+    "reads",
+    "produces",
+    "delegation",
+    "tools",
+    "effects"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.action/v1" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "alias": { "type": "string", "pattern": "^wtfp:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "surface": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "skill"],
+          "properties": {
+            "kind": { "const": "skill" },
+            "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "operation"],
+          "properties": {
+            "kind": { "const": "operations" },
+            "operation": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "workflow": { "type": "string", "pattern": "^wtfp://workflows/[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capabilities", "conditions"],
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+          "uniqueItems": true
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "reads": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(project|package|protocol)://" },
+      "uniqueItems": true
+    },
+    "produces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uri", "mode"],
+        "properties": {
+          "uri": { "type": "string", "pattern": "^(project|external|package|session)://" },
+          "mode": { "enum": ["create", "update", "delete", "archive", "display"] }
+        }
+      }
+    },
+    "delegation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "mode", "purpose"],
+        "properties": {
+          "role": {
+            "enum": [
+              "argument-verifier",
+              "citation-expert",
+              "citation-formatter",
+              "coherence-checker",
+              "outliner",
+              "plan-checker",
+              "prose-polisher",
+              "research-synthesizer",
+              "section-planner",
+              "section-reviewer",
+              "section-writer"
+            ]
+          },
+          "mode": { "enum": ["required", "optional", "parallel"] },
+          "purpose": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+      "uniqueItems": true
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "scope"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+          "scope": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

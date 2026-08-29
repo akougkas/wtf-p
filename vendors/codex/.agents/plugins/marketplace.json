@@ -1,0 +1,20 @@
+{
+  "name": "wtfp",
+  "interface": {
+    "displayName": "WTF-P"
+  },
+  "plugins": [
+    {
+      "name": "wtf-p",
+      "source": {
+        "source": "local",
+        "path": "./plugins/wtf-p"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

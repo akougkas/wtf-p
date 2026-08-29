@@ -1,0 +1,58 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "plan-revision",
+  "title": "Plan a revision",
+  "description": "Turn prioritized review findings into a bounded, testable revision plan.",
+  "alias": "wtfp:plan-revision",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/plan-revision",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Review issues exist for the selected section"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://decisions",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/summary",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/plans/{plan}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/plans/{plan}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://sections/{section}/plans/{plan}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "revision priorities"
+    }
+  ]
+}

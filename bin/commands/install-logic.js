@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const MANIFEST = require('../lib/manifest');
+const { activateNativeRegistration } = require('../lib/native-registration');
 const {
   expandTilde,
   getPathLabel,
@@ -43,8 +44,11 @@ function getVendorDir(runtime, explicitConfigDir) {
   }
 
   const envDir = process.env[vendorConfig.configDirEnv];
-  if (envDir) {
-    return expandTilde(envDir);
+  if (typeof envDir === 'string' && envDir.trim().length > 0) {
+    const resolvedEnvironmentRoot = expandTilde(envDir);
+    return vendorConfig.envSubdir
+      ? path.join(resolvedEnvironmentRoot, vendorConfig.envSubdir)
+      : resolvedEnvironmentRoot;
   }
 
   return path.join(os.homedir(), vendorConfig.defaultDir);
@@ -147,11 +151,12 @@ function collectComponentFiles(component, destBase, files = []) {
       } else if (entryStat.isDirectory()) {
         recurse(srcPath, relPath);
       } else if (entryStat.isFile()) {
+        const topLevel = relPath.split(path.sep)[0];
         files.push({ 
           src: srcPath, 
           dest: destPath, 
           name: entry.name,
-          componentId: component.id,
+          componentId: component.componentIds?.[topLevel] || component.id,
           sourceRoot,
           sourceRootPath: component.src,
           sourceRootIdentity
@@ -164,6 +169,39 @@ function collectComponentFiles(component, destBase, files = []) {
 
   recurse(component.src, '.');
   return files;
+}
+
+/**
+ * Expand a generated bundle into the exact legacy --only projection requested
+ * by the caller. A complete install consumes the bundle root once; selective
+ * installs traverse only declared top-level roots and remain partial.
+ */
+function componentsForSelection(vendorConfig, onlyInstall) {
+  if (onlyInstall === 'all') return vendorConfig.components;
+  const selected = [];
+
+  for (const component of vendorConfig.components) {
+    if (component.id === onlyInstall ||
+        (onlyInstall === 'commands' && component.id === 'skills')) {
+      selected.push(component);
+      continue;
+    }
+
+    const roots = component.selectionRoots?.[onlyInstall];
+    if (!Array.isArray(roots)) continue;
+    for (const root of roots) {
+      selected.push({
+        ...component,
+        id: component.componentIds?.[root] || onlyInstall,
+        src: path.join(component.src, root),
+        dest: path.join(component.dest, root),
+        selectionRoots: undefined,
+        componentIds: undefined
+      });
+    }
+  }
+
+  return selected;
 }
 
 /**
@@ -536,7 +574,7 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
 
 /**
  * Main install logic
- * @param {string} runtime - 'claude' | 'gemini' | 'claude-local'
+ * @param {string} runtime - A manifest target id, or the legacy 'claude-local' target
  * @param {boolean} isUpdate - Whether this is an update operation
  * @param {object} options - CLI options
  * @param {object} pkg - Package.json contents
@@ -561,8 +599,12 @@ async function install(runtime, isUpdate, options, pkg) {
   const isGlobal = runtime !== 'claude-local';
   const locationLabel = getPathLabel(targetDir, isGlobal);
 
+  const configuredByEnvironment = typeof process.env[vendorConfig.configDirEnv] === 'string' &&
+    process.env[vendorConfig.configDirEnv].trim().length > 0;
   const pathPrefix = isGlobal
-    ? (explicitConfigDir ? `${targetDir}${path.sep}` : `~/${vendorConfig.defaultDir}/`)
+    ? ((explicitConfigDir || configuredByEnvironment)
+      ? `${targetDir}${path.sep}`
+      : `~/${vendorConfig.defaultDir}/`)
     : `./.claude/`;
 
   // ---- Cross-installation conflict detection ----
@@ -619,18 +661,7 @@ async function install(runtime, isUpdate, options, pkg) {
   // Collect files based on Manifest
   const allFiles = [];
 
-  vendorConfig.components.forEach(component => {
-    // Check --only filters
-    if (onlyInstall !== 'all') {
-      const allowedIds = [onlyInstall];
-      // Legacy mapping: 'commands' includes 'skills'
-      if (onlyInstall === 'commands') allowedIds.push('skills');
-      
-      if (!allowedIds.includes(component.id)) {
-        return;
-      }
-    }
-    
+  componentsForSelection(vendorConfig, onlyInstall).forEach(component => {
     // DEBUG LOG
     // console.log(`Collecting: ${component.id} from ${component.src}`);
     
@@ -673,6 +704,21 @@ async function install(runtime, isUpdate, options, pkg) {
     stats.commit();
   }
 
+  let nativeActivation = { status: 'not-required', results: [] };
+  if (onlyInstall === 'all' && vendorConfig.native) {
+    try {
+      nativeActivation = activateNativeRegistration(vendorKey, targetDir, vendorConfig.native);
+    } catch (error) {
+      error.message = `WTF-P files are safely staged in ${targetDir}, but native ${vendorConfig.name} registration failed: ${error.message}`;
+      throw error;
+    }
+    if (nativeActivation.status === 'unavailable' && !hasQuiet) {
+      out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
+    } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
+      out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);
+    }
+  }
+
   // Summary
   if (!hasQuiet) {
     if (stats.installed === 0) {
@@ -694,10 +740,13 @@ async function install(runtime, isUpdate, options, pkg) {
       out.log(`    ${c.cyan('/wtfp:help')}           Browse all available commands\n`);
     }
   }
+
+  return { ...stats, nativeActivation, targetDir };
 }
 
 module.exports = install;
 module.exports.getVendorDir = getVendorDir;
 module.exports.processContent = processContent;
 module.exports.collectComponentFiles = collectComponentFiles;
+module.exports.componentsForSelection = componentsForSelection;
 module.exports.installWithConflictResolution = installWithConflictResolution;

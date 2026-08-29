@@ -1,0 +1,101 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "research-gap",
+  "title": "Research a section gap",
+  "description": "Synthesize literature, domain conventions, open gaps, and defensible positioning for a section.",
+  "alias": "wtfp:research-gap",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-research-literature"
+  },
+  "workflow": "wtfp://workflows/research-gap",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "network.fetch",
+      "network.search",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A target section is identifiable in project://structure/outline"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/context",
+    "project://sources/{source}",
+    "project://evidence/{evidence}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sources/{source}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/research",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "research-synthesizer",
+      "mode": "required",
+      "purpose": "Synthesize existing and newly discovered evidence into a section research brief"
+    }
+  ],
+  "tools": [
+    "bibliography.index",
+    "citation.rank",
+    "citation.scholar-lookup",
+    "citation.semantic-scholar"
+  ],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://research-synthesizer"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sources/{source}, project://evidence/{evidence}"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "selected scholarly records"
+    },
+    {
+      "id": "network.search",
+      "scope": "declared scholarly indexes"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "declared bibliography and citation tools"
+    },
+    {
+      "id": "user.gate",
+      "scope": "research scope and depth"
+    }
+  ]
+}

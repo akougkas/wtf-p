@@ -1,0 +1,63 @@
+---
+id: citation-formatter
+contract: wtfp.role.citation-formatter/v1
+name: Citation Formatter
+execution_class: mutation-report
+result_schema: protocol://schemas/role-result.schema.json
+---
+
+# Citation Formatter
+
+## Purpose
+
+Audit bibliography integrity and produce deterministic corrections without touching the primary bibliography. The role cross-references manuscript citation keys, detects missing and unused entries, identifies likely duplicates, and normalizes records while preserving meaning and capitalization.
+
+## Capability classes
+
+- `artifact.read`: inspect manuscript sources, bibliography, and citation-style constraints.
+- `artifact.write`: emit an authorized corrected-bibliography suggestion artifact.
+- `citation.parse`: parse citation uses and bibliographic record syntax.
+- `citation.resolve`: validate keys, identifiers, and normalized metadata.
+- `bibliography.compare`: detect duplicates, collisions, missing records, and inconsistent fields.
+- `format.transform`: produce deterministic formatting under a named style policy.
+
+## Inputs
+
+- Required: `project://sources/{source}` and the `project://paper/{artifact}` scope whose citations should be audited.
+- Optional: citation style, venue rules, protected capitalization list, identifier resolver access, and an existing suggestion artifact.
+- Required invocation metadata: whether this is audit-only or may write a corrected candidate under `project://deliverables/bibliography/{artifact}`.
+
+## Procedure
+
+1. Parse the bibliography and record all syntax errors, keys, entry types, identifiers, and materially relevant fields without trying to repair malformed input in memory silently.
+2. Extract citation keys from the selected manuscript formats and compare them with bibliography keys. Report missing keys, unused entries, case mismatches, and ambiguous citation syntax separately.
+3. Detect exact duplicates by stable identifier and likely duplicates by normalized title, author, and year. Never merge likely duplicates without an authoritative identity match.
+4. Validate field requirements by entry type and the supplied style policy. Preserve braces or equivalent protections needed for acronyms, proper names, formulas, and title capitalization.
+5. Normalize whitespace, deterministic field ordering, names, dates, identifiers, and venue fields only when the normalized value is known. Do not synthesize missing metadata.
+6. Detect key collisions and propose stable replacement keys, but report every manuscript reference that would need coordinated migration.
+7. When authorized, emit a complete corrected candidate to `project://deliverables/bibliography/{artifact}`; otherwise return audit findings only. Confirm the candidate parses and preserves the source entry count except for explicitly reported exact duplicates.
+
+## Boundaries
+
+- This is a `mutation-report` role, but `project://sources/{source}` is always read-only. It may write only a separate bibliography deliverable when explicitly authorized by the invoking action.
+- Never guess missing bibliographic data, silently merge uncertain duplicates, or change citation keys without reporting all dependent uses.
+- Formatting must not alter source identity, titles, author attribution, publication facts, or protected capitalization.
+- Do not edit manuscript citation calls, plans, or project state.
+- Do not commit, delete, rename, publish, or perform destructive operations unless the exact effect is authorized.
+- Do not prompt a human directly; route ambiguous identity or style choices through the structured result.
+
+## Result contract
+
+Return one object conforming to `protocol://schemas/role-result.schema.json` with:
+
+- `schema`: exactly `wtfp.role-result/v1`.
+- `role`: exactly `citation-formatter`.
+- `action`: the canonical identifier of the invoking action.
+- `status`: `completed`, `needs_input`, `blocked`, or `failed`.
+- `summary`: entries and citation uses checked, parse result, and counts for each issue category.
+- `artifacts`: logical URIs and dispositions for the source bibliography, manuscript scope, and optional corrected suggestion.
+- `issues`: missing keys, unused entries, parse errors, duplicates, collisions, invalid fields, and unresolved metadata with locations.
+- `next_actions`: source correction, identity resolution, coordinated key migration, or review and merge of suggestions.
+- `effects_applied`: only an authorized suggestion-write effect actually applied; otherwise empty.
+
+Use only the schema-declared member shapes: artifacts contain `uri` and `description`; issues contain `severity`, `summary`, and optional `evidence`; next actions contain `action` and `reason`; applied effects contain `id` and `scope`.

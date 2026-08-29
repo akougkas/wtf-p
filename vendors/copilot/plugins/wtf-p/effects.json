@@ -1,0 +1,107 @@
+{
+  "schema": "wtfp.effects/v1",
+  "effects": [
+    {
+      "consent": "implicit",
+      "description": "Delegate a bounded task to one specialist role.",
+      "id": "agent.delegate",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "implicit",
+      "description": "Run independent specialist tasks concurrently within declared limits.",
+      "id": "agent.parallel",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "implicit",
+      "description": "Copy a completed artifact and its state into a versioned archive.",
+      "id": "artifact.archive",
+      "reversibility": "reversible"
+    },
+    {
+      "consent": "explicit",
+      "description": "Create an issue in an external collaboration service.",
+      "id": "external.issue",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "implicit",
+      "description": "Create a new file or directory inside a declared project scope.",
+      "id": "filesystem.create",
+      "reversibility": "reversible"
+    },
+    {
+      "consent": "explicit",
+      "description": "Delete a declared project artifact.",
+      "id": "filesystem.delete",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "implicit",
+      "description": "Modify part of an existing file inside a declared project scope.",
+      "id": "filesystem.modify",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "none",
+      "description": "Read files inside a declared project scope.",
+      "id": "filesystem.read",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "implicit",
+      "description": "Replace the declared contents of an existing project file.",
+      "id": "filesystem.write",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "implicit",
+      "description": "Fetch content from a declared network resource.",
+      "id": "network.fetch",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "implicit",
+      "description": "Search declared external research services.",
+      "id": "network.search",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "explicit",
+      "description": "Install a newer WTF-P package or plugin release.",
+      "id": "package.update",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "implicit",
+      "description": "Execute a declared WTF-P tool with bounded inputs and outputs.",
+      "id": "tool.execute",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "explicit",
+      "description": "Pause execution until the user approves or selects a consequential path.",
+      "id": "user.gate",
+      "reversibility": "not-applicable"
+    },
+    {
+      "consent": "explicit",
+      "description": "Create a version-control branch.",
+      "id": "vcs.branch",
+      "reversibility": "reversible"
+    },
+    {
+      "consent": "explicit",
+      "description": "Record declared project changes in version control.",
+      "id": "vcs.commit",
+      "reversibility": "conditionally-reversible"
+    },
+    {
+      "consent": "explicit",
+      "description": "Merge a declared version-control branch.",
+      "id": "vcs.merge",
+      "reversibility": "conditionally-reversible"
+    }
+  ]
+}

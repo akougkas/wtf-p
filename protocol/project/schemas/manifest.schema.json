@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/manifest/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "protocol_version",
+    "id",
+    "title",
+    "document_type",
+    "core_argument",
+    "created_at",
+    "updated_at",
+    "artifacts"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.manifest/v1" },
+    "protocol_version": { "const": 1 },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "document_type": {
+      "enum": [
+        "research-article",
+        "conference-paper",
+        "review",
+        "grant-proposal",
+        "thesis",
+        "dissertation",
+        "book-chapter",
+        "other"
+      ]
+    },
+    "core_argument": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "venue": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "audience": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "word_limit": { "type": "integer", "minimum": 1 },
+        "deadline": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/date" }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["must_have", "should_have", "out_of_scope"],
+      "properties": {
+        "must_have": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "should_have": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "config", "state", "decisions", "outline"],
+      "properties": {
+        "manifest": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "config": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "state": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "decisions": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "outline": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "materials": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://materials/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "manuscripts": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://paper/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "deliverables": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://deliverables/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "archives": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://archives/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

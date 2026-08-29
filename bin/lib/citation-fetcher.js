@@ -7,12 +7,12 @@ const bibFormat = require('./bib-format');
 
 /**
  * WTF-P Citation Fetcher v0.4.0
- * 
+ *
  * Orchestrates tiered search:
  * 1. Semantic Scholar (Primary, Free)
  * 2. SerpAPI (Optional, Seminal/Paid)
  * 3. CrossRef (Fallback)
- * 
+ *
  * Usage:
  *   node citation-fetcher.js "<query>" --intent=<intent> --year=<year>
  */
@@ -50,7 +50,7 @@ async function searchCrossRef(query, limit = 5) {
         }
       });
     });
-    
+
     req.on('error', () => resolve([]));
     req.end();
   });
@@ -59,7 +59,7 @@ async function searchCrossRef(query, limit = 5) {
 function mapCrossRefToPaper(item) {
   const title = item.title ? item.title[0] : 'Untitled';
   const year = item.issued && item.issued['date-parts'] ? item.issued['date-parts'][0][0] : null;
-  
+
   return {
     source: 'crossref',
     title: title,
@@ -120,8 +120,8 @@ function deduplicatePapers(papers) {
 
   for (const paper of papers) {
     // Priority: DOI > S2ID > ScholarID > Fingerprint
-    const key = paper.doi 
-      || paper.paperId 
+    const key = paper.doi
+      || paper.paperId
       || paper.scholarClusterId
       || fingerprint(paper.title, paper.year);
 
@@ -132,21 +132,21 @@ function deduplicatePapers(papers) {
       // S2 usually has best metadata (abstracts, verified authors).
       // Scholar has best citation counts.
       // CrossRef has verified DOIs.
-      
+
       const existing = seen.get(key);
       let merged = { ...existing };
-      
+
       // If new one is S2, take its metadata but keep higher citation count
       if (paper.source === 'semantic_scholar') {
         merged = { ...paper, citationCount: Math.max(existing.citationCount, paper.citationCount) };
         if (existing.scholarClusterId) merged.scholarClusterId = existing.scholarClusterId;
-      } 
+      }
       // If new one is Scholar, just update citation count and maybe ID
       else if (paper.source === 'google_scholar') {
         merged.citationCount = Math.max(merged.citationCount, paper.citationCount);
         merged.scholarClusterId = paper.clusterId;
       }
-      
+
       seen.set(key, merged);
     }
   }
@@ -159,10 +159,10 @@ function deduplicatePapers(papers) {
 async function search(query, options = {}) {
   const limit = options.limit || 10;
   const intent = options.intent || 'balanced';
-  
+
   let papers = [];
   const errors = [];
-  
+
   const searchPromises = [];
 
   // 1. S2 Search (Always)
@@ -174,7 +174,7 @@ async function search(query, options = {}) {
         return [];
       })
   );
-  
+
   // 2. Scholar Search (Conditional)
   if ((intent === 'seminal' || options.useScholar) && scholar.isAvailable()) {
     searchPromises.push(
@@ -209,10 +209,10 @@ async function search(query, options = {}) {
   // 6. Format to BibTeX
   const formatted = ranked.slice(0, limit).map(p => {
     // Generate key
-    const firstAuthor = p.authors && p.authors.length > 0 
-      ? (p.authors[0].name ? p.authors[0].name.split(',')[0].trim().split(' ').pop().toLowerCase() : 'unknown') 
+    const firstAuthor = p.authors && p.authors.length > 0
+      ? (p.authors[0].name ? p.authors[0].name.split(',')[0].trim().split(' ').pop().toLowerCase() : 'unknown')
       : 'unknown';
-      
+
     // Handle S2 author format variants or string parsing
     let familyName = 'unknown';
     if (p.authors && p.authors.length > 0) {
@@ -225,18 +225,18 @@ async function search(query, options = {}) {
 
     const bibData = {
       key: key,
-      entryType: 'article', 
+      entryType: 'article',
       author: p.authors.map(a => a.name).join(' and '),
       title: p.title,
       year: p.year ? p.year.toString() : null,
-      venue: p.venue, 
+      venue: p.venue,
       booktitle: p.venue,
       abstract: p.abstract,
       doi: p.doi,
       url: p.openAccessPdf ? p.openAccessPdf.url : (p.doi ? `https://doi.org/${p.doi}` : null),
       google_scholar_id: p.scholarClusterId
     };
-    
+
     const provenance = {
       wtfp_status: p.doi ? 'official' : 'partial',
       wtfp_source: p.source,
@@ -269,7 +269,7 @@ async function search(query, options = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const query = args.find(a => !a.startsWith('--'));
-  
+
   if (!query) {
     console.error('Usage: node citation-fetcher.js "<query>" [--intent=seminal] [--year=2023]');
     process.exit(1);

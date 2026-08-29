@@ -1,0 +1,58 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "pause-writing",
+  "title": "Pause writing",
+  "description": "Record an exact context handoff so another session can resume without reconstructing intent.",
+  "alias": "wtfp:pause-writing",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/pause-writing",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://state",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/handoff",
+      "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://state, project://sections/{section}, project://sections/{section}/plans/{plan}, project://validations/{validation}, project://paper/{artifact}"
+    }
+  ]
+}

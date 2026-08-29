@@ -6,6 +6,7 @@ const os = require('os');
 const path = require('path');
 
 const MANIFEST = require('./lib/manifest');
+const { deactivateNativeRegistration } = require('./lib/native-registration');
 const {
   createOutput,
   createRL,
@@ -46,7 +47,8 @@ try {
 
 function parseArgs(argv = []) {
   const booleanFlags = new Set([
-    '--global', '-g', '--local', '-l', '--claude', '--gemini', '--opencode', '--all',
+    '--global', '-g', '--local', '-l', '--claude', '--clio', '--codex', '--copilot',
+    '--gemini', '--opencode', '--antigravity', '--all',
     '--force', '-f', '--yes', '-y', '--backup', '-b', '--dry-run', '-n',
     '--clean-backups', '--help', '-h', '--no-color', '--quiet', '-q'
   ]);
@@ -77,8 +79,12 @@ function parseArgs(argv = []) {
     hasGlobal: has('--global', '-g'),
     hasLocal: has('--local', '-l'),
     hasClaude: has('--claude'),
+    hasClio: has('--clio'),
+    hasCodex: has('--codex'),
+    hasCopilot: has('--copilot'),
     hasGemini: has('--gemini'),
     hasOpenCode: has('--opencode'),
+    hasAntigravity: has('--antigravity'),
     hasAll: has('--all'),
     hasForce: has('--force', '-f'),
     hasYes: has('--yes', '-y'),
@@ -106,27 +112,37 @@ function parseArgs(argv = []) {
   if (options.hasGlobal && options.hasLocal) {
     throw new Error('Choose either --global or --local, not both');
   }
-  if (options.hasGlobal && (options.hasGemini || options.hasOpenCode || options.hasAll)) {
-    throw new Error('--global selects Claude and cannot be combined with another target');
+  const selectedTargetIds = [
+    ['claude', options.hasClaude],
+    ['clio', options.hasClio],
+    ['codex', options.hasCodex],
+    ['copilot', options.hasCopilot],
+    ['gemini', options.hasGemini],
+    ['opencode', options.hasOpenCode],
+    ['antigravity', options.hasAntigravity]
+  ].filter(([, selected]) => selected).map(([runtime]) => runtime);
+  if (options.hasGlobal && (selectedTargetIds.length > 0 || options.hasAll)) {
+    throw new Error('--global is a deprecated Claude target alias and cannot be combined with another target selector');
   }
-  if (options.hasLocal && (options.hasGemini || options.hasOpenCode || options.hasAll)) {
-    throw new Error('--local currently requires the Claude target');
+  if (options.hasLocal && (selectedTargetIds.length > 0 || options.hasAll)) {
+    throw new Error('--local is a deprecated Claude project target alias and cannot be combined with another target selector');
   }
   if (options.hasLocal && options.explicitConfigDir) {
     throw new Error('--config-dir cannot be combined with --local');
   }
 
-  const selectedTargets = [options.hasClaude, options.hasGemini, options.hasOpenCode].filter(Boolean).length;
-  if (selectedTargets > 1) throw new Error('Choose one target, or use --all');
-  if (options.hasAll && selectedTargets > 0) {
+  if (selectedTargetIds.length > 1) throw new Error('Choose one target, or use --all');
+  if (options.hasAll && selectedTargetIds.length > 0) {
     throw new Error('--all cannot be combined with another target selector');
   }
   if (options.hasAll && options.explicitConfigDir) {
     throw new Error('--all cannot share one --config-dir across incompatible clients');
   }
-  if (options.explicitConfigDir && !options.hasGlobal && selectedTargets === 0) {
+  if (options.explicitConfigDir && !options.hasGlobal && selectedTargetIds.length === 0) {
     throw new Error('--config-dir also requires an explicit target such as --claude');
   }
+
+  options.selectedTarget = selectedTargetIds[0] || null;
 
   return options;
 }
@@ -137,7 +153,13 @@ function getVendorDir(runtime, explicitConfigDir, cwd = process.cwd()) {
   const vendorConfig = MANIFEST[runtime];
   if (!vendorConfig) throw new Error(`Unknown runtime: ${runtime}`);
   if (explicitConfigDir) return expandTilde(explicitConfigDir);
-  if (process.env[vendorConfig.configDirEnv]) return expandTilde(process.env[vendorConfig.configDirEnv]);
+  const envDir = process.env[vendorConfig.configDirEnv];
+  if (typeof envDir === 'string' && envDir.trim().length > 0) {
+    const resolvedEnvironmentRoot = expandTilde(envDir);
+    return vendorConfig.envSubdir
+      ? path.join(resolvedEnvironmentRoot, vendorConfig.envSubdir)
+      : resolvedEnvironmentRoot;
+  }
   return path.join(os.homedir(), vendorConfig.defaultDir);
 }
 
@@ -164,8 +186,12 @@ function showHelp(out) {
     ${c.cyan('-g, --global')}              Claude user installation (legacy alias)
     ${c.cyan('-l, --local')}               Claude installation in ./.claude
     ${c.cyan('--claude')}                  Claude Code user installation
+    ${c.cyan('--clio')}                    Clio Coder extension installation
+    ${c.cyan('--codex')}                   Codex plugin installation
+    ${c.cyan('--copilot')}                 GitHub Copilot CLI plugin installation
     ${c.cyan('--gemini')}                  Gemini CLI user installation
     ${c.cyan('--opencode')}                OpenCode user installation
+    ${c.cyan('--antigravity')}             Antigravity CLI plugin installation
     ${c.cyan('--all')}                     Every detected user installation
     ${c.cyan('-c, --config-dir <path>')}   Custom root; requires an explicit target
 
@@ -738,6 +764,26 @@ async function uninstall(runtime, options, out) {
     if (backupDir) out.log(`  ${c.cyan('↻')} Backed up exact candidates to ${c.dim(getPathLabel(backupDir, !isLocal))}\n`);
   }
 
+  const canRemoveNativeRegistration = Boolean(
+    vendorConfig.native &&
+    plan.receipt.runtime === vendorKey &&
+    plan.items.every(item => item.state === 'missing' || item.removable)
+  );
+  if (canRemoveNativeRegistration) {
+    const nativeRemoval = deactivateNativeRegistration(
+      vendorKey,
+      targetDir,
+      vendorConfig.native
+    );
+    if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
+      out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);
+    } else if (nativeRemoval.status === 'deferred' && !options.hasQuiet) {
+      out.warn('The Antigravity target is not a native <home>/.gemini/config path; only WTF-P-owned staging files will be removed.');
+    }
+  } else if (vendorConfig.native && !options.hasQuiet) {
+    out.warn('Native registration was preserved because this uninstall cannot remove every WTF-P-owned source file safely.');
+  }
+
   applyUninstallPlan(plan);
   applyRecordedBackupCleanup(plan, backupItems || [], false);
   updateReceiptAfterUninstall(plan, backupItems);
@@ -832,12 +878,11 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (options.hasLocal) return uninstall('claude-local', options, out);
-  if (options.hasGemini) return uninstall('gemini', options, out);
-  if (options.hasOpenCode) return uninstall('opencode', options, out);
-  if (options.hasClaude || options.hasGlobal) return uninstall('claude', options, out);
+  if (options.selectedTarget) return uninstall(options.selectedTarget, options, out);
+  if (options.hasGlobal) return uninstall('claude', options, out);
 
   if (!isInteractive) {
-    throw new Error('Noninteractive uninstall requires an explicit target or scope. Use --local, --global, --claude, --gemini, --opencode, or --all.');
+    throw new Error('Noninteractive uninstall requires an explicit target or scope. Use --<target>, --local, --global, or --all.');
   }
   return promptLocation(options, out);
 }

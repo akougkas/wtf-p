@@ -1,0 +1,63 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "remove-section",
+  "title": "Remove a section",
+  "description": "Remove an unwritten future section and repair numbering and dependencies.",
+  "alias": "wtfp:remove-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/remove-section",
+  "requirements": {
+    "capabilities": [
+      "filesystem.delete",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected section exists",
+      "The selected section has not been drafted"
+    ]
+  },
+  "reads": [
+    "project://structure/outline",
+    "project://state",
+    "project://sections/{section}"
+  ],
+  "produces": [
+    {
+      "uri": "project://structure/outline",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "delete"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.delete",
+      "scope": "selected unwritten section artifacts"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://structure/outline, project://state, project://sections/{section}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://structure/outline, project://state, project://sections/{section}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "section deletion and renumbering"
+    }
+  ]
+}

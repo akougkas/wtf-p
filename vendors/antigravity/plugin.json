@@ -1,0 +1,11 @@
+{
+  "name": "wtf-p",
+  "version": "0.6.0-rc.1",
+  "description": "Portable academic research and writing workflows.",
+  "author": {
+    "name": "akougkas"
+  },
+  "commands": "./commands",
+  "agents": "./agents",
+  "skills": "./skills"
+}

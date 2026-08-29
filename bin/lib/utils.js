@@ -226,12 +226,58 @@ function detectInstallation(vendorDir) {
       const expectsPath = prefix => receiptPaths.some(entryPath =>
         entryPath === prefix || entryPath.startsWith(`${prefix}/`)
       );
-      const expectedHasCommands = expectsPath('commands/wtfp');
-      const expectedHasWorkflows = expectsPath('write-the-f-paper');
-      const expectedHasSkills = expectsPath('skills/wtfp');
-      const expectedHasAgents = expectsPath('agents/wtfp');
-      const expectedHasMcp = expectsPath('mcp');
-      const expectedHasBin = expectsPath('bin');
+      const expectsAnyPath = prefixes => prefixes.some(expectsPath);
+      const componentPaths = component => receiptEntries
+        .filter(entry => entry.component === component && typeof entry.path === 'string')
+        .map(entry => path.join(vendorDir, ...entry.path.split('/')))
+        .filter(file => fs.existsSync(file));
+
+      if (!result.hasCommands) {
+        result.commandFiles = componentPaths('commands');
+        result.hasCommands = result.commandFiles.length > 0;
+      }
+      if (!result.hasWorkflows) {
+        result.workflowFiles = componentPaths('workflows');
+        result.hasWorkflows = result.workflowFiles.length > 0;
+      }
+      if (!result.hasSkills) {
+        result.skillFiles = componentPaths('skills');
+        result.hasSkills = result.skillFiles.length > 0;
+      }
+      if (!result.hasAgents) {
+        result.agentFiles = componentPaths('agents');
+        result.hasAgents = result.agentFiles.length > 0;
+      }
+      if (!result.hasMcp) {
+        result.mcpFiles = componentPaths('mcp');
+        result.hasMcp = result.mcpFiles.length > 0;
+      }
+      if (!result.hasBin) {
+        result.binFiles = componentPaths('scripts');
+        result.hasBin = result.binFiles.length > 0;
+      }
+
+      const expectedHasCommands = expectsAnyPath([
+        'commands/wtfp', 'marketplaces/wtfp/commands',
+        'extensions/wtf-p/commands', 'sources/wtf-p/commands'
+      ]);
+      const expectedHasWorkflows = expectsAnyPath([
+        'write-the-f-paper', 'workflows', 'marketplaces/wtfp/workflows',
+        'extensions/wtf-p/workflows', 'sources/wtf-p/workflows'
+      ]);
+      const expectedHasSkills = expectsAnyPath([
+        'skills/wtfp', 'skills/wtfp-start-project', 'marketplaces/wtfp/skills',
+        'extensions/wtf-p/skills', 'sources/wtf-p/skills'
+      ]);
+      const expectedHasAgents = expectsAnyPath([
+        'agents/wtfp', 'marketplaces/wtfp/agents',
+        'extensions/wtf-p/agents', 'sources/wtf-p/agents'
+      ]);
+      const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/wtfp/mcp']);
+      const expectedHasBin = expectsAnyPath([
+        'bin', 'tools', 'marketplaces/wtfp/tools',
+        'extensions/wtf-p/tools', 'sources/wtf-p/tools'
+      ]);
 
       result.partial = Boolean(versionData.partial) ||
           (expectedHasCommands && !result.hasCommands) ||

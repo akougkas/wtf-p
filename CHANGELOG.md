@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0-rc.1] - 2026-08-28
+
+Agent-platform modernization release candidate. WTF-P now has one portable academic protocol and deterministic native envelopes for seven coding-agent clients.
+
+### Added
+
+- **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets
+- **Codex, GitHub Copilot CLI, and Antigravity CLI support** alongside modernized Claude Code, OpenCode, and Gemini adapters
+- **Canonical protocol catalog** — 36 versioned action contracts describing reads, outputs, delegation, tools, effects, and approval boundaries
+- **Seven standard Agent Skills** — focused packages for project setup, literature research, section planning, section writing, manuscript review, project management, and delivery
+- **Portable specialist contracts** — 11 host-neutral roles with strict mutation or verifier result shapes
+- **Portable `.planning` v1 protocol** — ten JSON schemas and cross-record fixtures for project state, sources, evidence, decisions, outlines, sections, checkpoints, and validation results
+- **Deterministic adapter compiler** — generates nine target/marketplace envelopes with provenance banners, cryptographic inventories, stale-output detection, and owned stale-file cleanup
+- **Action-bound runtime context** — every generated command carries its exact action contract, relevant project schemas/templates, and a guarded native invocation-argument block
+- **Explicit target grammar** — `wtfp install <clio|claude|codex|copilot|opencode|antigravity|gemini>` with compatibility flags retained
+- **Seven-target isolated installer matrix** covering exact install, receipt, uninstall, sentinel preservation, environment-root resolution, and all-target overlap rejection
+
+### Changed
+
+- Host-neutral Markdown is now the sole workflow-prose source; all 36 client command projections are generated from it
+- Concrete vendor model names and host-specific delegation syntax were removed from canonical workflows
+- Each generated adapter is self-contained and carries the canonical protocol, skills, roles, project schemas, tools, and source inventory
+- Claude commands now use a dual plugin/marketplace envelope and expose exact `/wtfp:<action>` names without redundant namespace segments
+- OpenCode and Gemini commands embed static protocol resources when the host has no reliable prompt-time plugin-root variable
+- Host tool bundles contain only seven declared bibliography/citation implementations at URI-derived paths; installer internals and legacy Git-backed checkpoint code are excluded
+- The package now targets Node.js 20 or newer
+- Noninteractive installation requires an explicit target or scope
+- WCN remains as a legacy compatibility artifact but is no longer a canonical workflow source or selectable runtime mode
+
+### Security
+
+- Added import-safe CLIs, dangerous-root and symlink containment checks, source/destination race detection, and atomic file publication
+- Added v2 exact-file ownership receipts with SHA-256 hashes; skipped files can no longer become owned implicitly
+- Added transactional rollback, receipt-race detection, modified-file preservation, and non-recursive uninstall cleanup
+- Added adversarial fault-injection coverage for symlink swaps, concurrent edits, malformed receipts, traversal, and overlapping target roots
+
+### Validated
+
+- Native Claude plugin, Codex plugin, Copilot external plugin, and Antigravity plugin validators
+- Native install/list discovery for Claude 2.1.251, Codex 0.144.1, Copilot 1.0.80, Clio, OpenCode 1.18.16, Antigravity 1.1.22, and Gemini 0.57.0 under disposable profiles
+- Real isolated Claude Sonnet 5/xhigh (8/8 rubric), Codex GPT-5.4/xhigh (8/8), and Clio GPT-5.6 Terra/xhigh (7/8 before action-specific schema inlining) evaluations
+- Exact adapter parity: 36 actions, seven skills, and 11 specialist roles wherever the host exposes those resource types
+- Canonical workflow portability, standard-skill validation, project-schema conformance, reproducible generation, and legacy regression suites
+
 ## [0.5.0] - 2026-02-09
 
 Multi-runtime parity release. 36 commands and 11 specialized agents now run on Claude Code, Gemini CLI, and OpenCode. Architecture overhauled with GSD-inspired thin orchestrators, quality loops, and model profiles.
@@ -94,6 +138,7 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
+[0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/akougkas/wtf-p/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/akougkas/wtf-p/compare/v0.2.0...v0.3.0

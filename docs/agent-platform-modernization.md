@@ -1,6 +1,6 @@
 # WTF-P Agent Platform Modernization
 
-Status: accepted and in progress
+Status: implemented; release-candidate validation complete
 
 Target release: `0.6.0-rc`
 
@@ -269,15 +269,17 @@ Gate: no known high-severity ownership or data-loss defect, no false first-class
 - [x] Clio extension, skill, agent, fleet, path, and isolation primitives inspected.
 - [x] Modernization architecture approved by the repository owner.
 - [x] Dedicated implementation branch created without altering the pre-existing `.gitignore` change.
-- [ ] Phase 0 patch implemented and reviewed.
-- [ ] Canonical source model accepted through executable fixtures.
-- [ ] Clio reference adapter implemented.
-- [ ] Native target envelopes implemented.
-- [ ] Isolated real-agent matrix completed.
+- [x] Phase 0 installer hardening implemented with exact-file receipts, rollback, containment, and adversarial isolation tests.
+- [x] Canonical source model accepted through executable catalog, workflow, skill, role, and project-schema fixtures.
+- [x] Clio reference adapter implemented, including coordinated recursive prompts, extension agents/fleets, contained resources, and same-extension skill binding.
+- [x] Native target envelopes implemented and reproducibly generated for all seven clients.
+- [x] Isolated native discovery matrix completed for Claude, Codex, Copilot, Clio, OpenCode, Antigravity, and Gemini.
+- [x] Real Claude Sonnet 5/xhigh, Codex xhigh, and Clio GPT-5.6 Terra/xhigh evaluations completed with normal-profile hash verification and credential cleanup.
+- [ ] Publish `0.6.0-rc.1` after final human review; publishing remains deliberately outside the implementation run.
 
 ## Decisions intentionally deferred
 
-- The final number and naming of skills, pending command-to-domain analysis.
 - Whether the research service remains MCP-based or becomes a deterministic local tool with optional MCP exposure.
-- Whether generated target artifacts are committed directly or shipped only from release archives; the initial implementation will commit them for reviewability.
 - A `1.0.0` date. First-class support is an observed compatibility claim, not a roadmap label.
+
+Seven intent-oriented skills are now fixed for the release-candidate cycle. Generated target artifacts are committed with authenticated inventories so reviewers and CI can inspect reproducibility directly.

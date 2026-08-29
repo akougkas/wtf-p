@@ -1,0 +1,32 @@
+{
+  "schema": "wtfp.project.section/v1",
+  "id": "introduction",
+  "project_id": "portable-research-demo",
+  "outline_uri": "project://structure/outline",
+  "title": "Introduction",
+  "goal": "Establish the portability problem, the evidence-fidelity requirement, and the paper's contribution.",
+  "status": "researching",
+  "word_target": 1500,
+  "word_count": 0,
+  "wave": 1,
+  "depends_on": [],
+  "claims": [
+    {
+      "id": "claim-portable-state",
+      "statement": "Portable project state reduces coupling between academic workflows and runtime-specific interfaces.",
+      "status": "planned",
+      "evidence_required": true,
+      "evidence_uris": ["project://evidence/evidence-portability-boundaries"]
+    }
+  ],
+  "artifacts": {
+    "context": "project://sections/introduction/context",
+    "research": "project://sections/introduction/research",
+    "plans": ["project://sections/introduction/plans/initial"],
+    "reviews": [],
+    "manuscript": "project://paper/introduction"
+  },
+  "checkpoint_uris": [],
+  "validation_uris": [],
+  "updated_at": "2026-08-28T12:35:00Z"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Deliver Research"
+  short_description: "Package papers, slides, and posters"
+  default_prompt: "Use $wtfp-deliver-research to prepare this research for delivery."

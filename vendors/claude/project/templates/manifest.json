@@ -1,0 +1,30 @@
+{
+  "schema": "wtfp.project.manifest/v1",
+  "protocol_version": 1,
+  "id": "portable-research-demo",
+  "title": "Portable Research Workflow",
+  "document_type": "research-article",
+  "core_argument": "A host-neutral project protocol makes academic workflows portable without weakening evidence and decision fidelity.",
+  "target": {
+    "audience": "Researchers evaluating agent-supported academic workflows",
+    "word_limit": 6000
+  },
+  "requirements": {
+    "must_have": ["Every substantive claim is traceable to evidence"],
+    "should_have": ["Adapters preserve the same project state across runtimes"],
+    "out_of_scope": ["Evaluation of unpublished runtime internals"]
+  },
+  "created_at": "2026-08-28T12:00:00Z",
+  "updated_at": "2026-08-28T12:00:00Z",
+  "artifacts": {
+    "manifest": "project://manifest",
+    "config": "project://config",
+    "state": "project://state",
+    "decisions": "project://decisions",
+    "outline": "project://structure/outline",
+    "materials": [],
+    "manuscripts": [],
+    "deliverables": [],
+    "archives": []
+  }
+}

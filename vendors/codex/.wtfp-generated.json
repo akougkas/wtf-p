@@ -1,0 +1,12 @@
+{
+  "schema": "wtfp.generated-adapter/v1",
+  "generatorVersion": 4,
+  "target": "codex-marketplace",
+  "sourceHash": "47f09f4f05f267f800b4ba496ee09c15b0391fb6af93adf1504fccb33d0d9844",
+  "files": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "sha256": "be3e7ba607407553d466869c59bd41cfc3b485d0d87b952900a9542281cda738"
+    }
+  ]
+}

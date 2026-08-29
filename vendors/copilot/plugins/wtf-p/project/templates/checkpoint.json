@@ -1,0 +1,25 @@
+{
+  "schema": "wtfp.project.checkpoint/v1",
+  "id": "checkpoint-contribution-framing",
+  "project_id": "portable-research-demo",
+  "kind": "decision",
+  "status": "pending",
+  "blocking": true,
+  "scope_uri": "project://sections/introduction",
+  "request": "Choose the primary contribution framing before the introduction is drafted.",
+  "context": "The choice changes the order and strength of the contribution claims.",
+  "options": [
+    {
+      "id": "protocol-contribution",
+      "label": "Protocol contribution",
+      "implication": "Lead with interoperability and evidence fidelity."
+    },
+    {
+      "id": "workflow-contribution",
+      "label": "Workflow contribution",
+      "implication": "Lead with the end-to-end academic process."
+    }
+  ],
+  "resume_action": "write-section",
+  "created_at": "2026-08-28T12:40:00Z"
+}

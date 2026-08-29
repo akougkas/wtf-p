@@ -1,0 +1,64 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "map-project",
+  "title": "Map an existing project",
+  "description": "Index existing drafts, data, figures, and references into portable project state.",
+  "alias": "wtfp:map-project",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-start-project"
+  },
+  "workflow": "wtfp://workflows/map-project",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute"
+    ],
+    "conditions": [
+      "The project contains material to inventory"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://state",
+    "project://materials/{artifact}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sources/{source}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [
+    "bibliography.index"
+  ],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://state, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "wtfp://tools/bibliography/index"
+    }
+  ]
+}

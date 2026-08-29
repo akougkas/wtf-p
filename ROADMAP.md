@@ -83,24 +83,46 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 
 ---
 
-## Next: v0.6.0
+## Current: v0.6.0 release candidate
 
-**Focus:** Advanced Context & Visual Analysis
+**Focus:** Portable Agent Protocol + Native Client Adapters
 
-### Context Priming v2
-- [ ] Load only relevant PROJECT.md sections per task
-- [ ] Enable journal-scale papers (20–40 pages) without context overflow
-- [ ] Per-project preference overrides (`.planning/prefs.yaml`)
+### Canonical kernel
 
-### Visual Analysis (Multimodal)
-- [ ] Figure critique with vision models
-- [ ] Chart accessibility analysis
-- [ ] Diagram-to-description generation
+- [x] Define 36 versioned semantic action contracts and stable aliases
+- [x] Move workflow prose into one host-neutral canonical source
+- [x] Package seven standard, progressively disclosed Agent Skills
+- [x] Define 11 portable specialist roles and strict result contracts
+- [x] Version the `.planning` project protocol with JSON schemas and fixtures
+- [x] Declare capabilities, effects, approval boundaries, and optional deterministic tools
 
-### Citation Network Visualization
-- [ ] Graph of citing/cited papers
-- [ ] Identify citation clusters and gaps visually
-- [ ] Export to common graph formats
+### Native clients
+
+- [x] Build Clio Coder extension with namespaced prompts, agents, skills, and fleets
+- [x] Build Claude Code plugin with generated commands, agents, and skills
+- [x] Build Codex plugin and repo marketplace
+- [x] Build GitHub Copilot CLI plugin
+- [x] Build OpenCode command/agent/skill bundle
+- [x] Build Antigravity CLI plugin
+- [x] Preserve Gemini CLI as a separate compatibility extension
+- [x] Validate generated resources with installed native CLIs where available
+
+### Deterministic delivery
+
+- [x] Generate every adapter from the canonical protocol
+- [x] Authenticate generated files with per-envelope SHA-256 inventories
+- [x] Detect drift and remove only stale compiler-owned outputs
+- [x] Add explicit `wtfp install <target>` grammar for all seven clients
+- [x] Add exact-file v2 receipts, rollback, containment, and safe uninstall
+- [x] Complete the final isolated live-agent quality evaluation matrix
+- [ ] Publish `0.6.0-rc.1` and gather migration feedback before stable `0.6.0`
+
+### Deferred beyond the release candidate
+
+- [ ] Evaluate an optional MCP research service against deterministic local tools
+- [ ] Add visual figure and chart review workflows
+- [ ] Add citation-network visualization and graph export
+- [ ] Add behavioral quality baselines across client/model releases
 
 ---
 
@@ -141,16 +163,16 @@ Ideas from users — contributions welcome!
 
 ## Design Principles
 
-1. **Substance over ceremony** — No unnecessary files or process
-2. **Speed through automation** — Minimize user round-trips
-3. **Git as source of truth** — All state is version-controlled
-4. **Graceful degradation** — Works with any model size (WCN mode)
-5. **User control** — Always ask before destructive operations
-6. **Vendor-agnostic core** — Support multiple AI coding tools
-7. **Invisible assistant** — Do exactly what asked, no unsolicited suggestions
-8. **Zero risk to user data** — All generated content to suggested.* files only
-9. **Plug-and-play** — Works alongside existing citation managers, doesn't replace
-10. **Confidence-gated autonomy** — Proceed if 80%+ confident, ask otherwise
+1. **Evidence before eloquence** — Never trade citation integrity for fluent prose
+2. **Portable state** — Versioned `.planning` records, not one client's session, carry the project forward
+3. **Portable semantics, native ergonomics** — One academic method, adapted to each host's real capabilities
+4. **Progressive disclosure** — Keep entry points concise while preserving deep action procedures in skills and references
+5. **Human gates at consequential boundaries** — Preview deletion, VCS, publication, package, and external effects separately
+6. **No incidental VCS** — Research and writing actions do not initialize, stage, commit, merge, or push
+7. **Exact ownership** — Generated and installed files are authenticated, contained, reversible, and never broaden ownership silently
+8. **Durable author intent** — Locked, deferred, and discretionary decisions remain explicit project data
+9. **Bounded delegation** — Specialists receive only the context and authority needed for one verifiable task
+10. **Observed compatibility** — A first-class claim requires native discovery and isolated behavioral evidence
 
 ---
 
@@ -160,12 +182,14 @@ These will NOT be built, even if they seem useful:
 
 | Feature | Rationale |
 |---------|-----------|
-| Real-time collaboration | Git handles merging. Too complex for CLI scope. |
+| Real-time collaboration | Outside the focused research-workflow and agent-adapter scope. |
 | Local ML/NLP models | Offload intelligence to LLM, keep tools dumb and fast. |
 | GUI/Web interface | CLI-only. Stay in the terminal. |
 | Autonomous publishing | Human always in loop for external actions. |
-| Persona evolution | "Invisible assistant" — no personality development. |
-| Decision logging | Git commits are the decision log. No separate files. |
+| Hidden Git automation | Checkpoints and workflow state must not move branches or create commits incidentally. |
+| Vendor model policy in the canonical kernel | Model selection belongs to the active host and operator. |
+| Implicit global installation | Every noninteractive installation names a target and scope. |
+| Unverified first-class labels | Schema validity alone is not runtime compatibility. |
 
 ---
 
@@ -173,7 +197,8 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
-| v0.6.0 | Planned | Context priming v2, visual analysis, citation network visualization |
+| v0.6.0-rc.1 | Aug 2026 | Portable protocol, seven native adapters, Clio reference integration, safe transactional installer |
+| v0.6.0 | Planned | Stable release after isolated client/model evaluation and migration feedback |
 | v0.5.0 | Feb 2026 | Multi-runtime parity, GSD architecture, agents, quality loops |
 | v0.4.0 | Jan 2026 | Citation Expert v2, tiered API, provenance tracking |
 | v0.3.0 | Jan 2026 | 4 P's, skills, multi-vendor restructure |
