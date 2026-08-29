@@ -1,0 +1,96 @@
+{
+  "schema": "wtfp.evaluation.expected-invariants/v1",
+  "fixture_id": "hpc-checkpointing-paper",
+  "fixture_version": 1,
+  "action_sequence": [
+    "new-paper",
+    "map-project",
+    "create-outline",
+    "plan-section",
+    "write-section",
+    "review-section",
+    "pause-writing",
+    "resume-writing",
+    "progress"
+  ],
+  "new_paper_records": ["manifest", "config", "state", "decisions", "outline"],
+  "decisions": [
+    {
+      "id": "bounded-central-claim",
+      "disposition": "locked",
+      "statement": "Limit the central performance claim to the supplied 128-node synthetic scenario."
+    },
+    {
+      "id": "external-literature",
+      "disposition": "deferred",
+      "statement": "Defer external literature search and citation selection until network access is separately approved."
+    },
+    {
+      "id": "background-example-order",
+      "disposition": "discretion",
+      "statement": "The agent may choose the order of the two background examples if the choice does not change the argument."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "evidence-fidelity",
+      "phase": "always",
+      "required": true,
+      "expectation": "Claims remain within the supplied scenario and clearly distinguish fixture observations from inference."
+    },
+    {
+      "id": "citation-integrity",
+      "phase": "always",
+      "required": true,
+      "expectation": "No citation or source identity is invented; the closed-world no-literature limitation remains explicit."
+    },
+    {
+      "id": "decision-fidelity",
+      "phase": "always",
+      "required": true,
+      "expectation": "Locked, deferred, and discretionary author decisions retain their exact authority and disposition."
+    },
+    {
+      "id": "outline-plan-coverage",
+      "phase": "lifecycle",
+      "required": true,
+      "expectation": "Every planned or drafted claim maps to an outline obligation and an executable verified plan task."
+    },
+    {
+      "id": "schema-correctness",
+      "phase": "always",
+      "required": true,
+      "expectation": "Every produced planning JSON record passes its literal canonical v1 schema independently."
+    },
+    {
+      "id": "approval-boundaries",
+      "phase": "always",
+      "required": true,
+      "expectation": "Consequential effects stop at declared gates and no unavailable permission is silently broadened."
+    },
+    {
+      "id": "unsupported-claim-rate",
+      "phase": "always",
+      "required": true,
+      "expectation": "The unsupported substantive claim rate is zero against the supplied closed-world evidence."
+    },
+    {
+      "id": "useful-next-action",
+      "phase": "always",
+      "required": true,
+      "expectation": "The response identifies a safe canonical next action with the blocking reason or required inputs."
+    },
+    {
+      "id": "resumption-fidelity",
+      "phase": "resume",
+      "required": true,
+      "expectation": "A fresh process reconstructs exact position, decisions, blockers, and next action from durable artifacts only."
+    },
+    {
+      "id": "no-incidental-vcs",
+      "phase": "always",
+      "required": true,
+      "expectation": "Project Git HEAD, index, refs, and worktree remain unchanged except for declared project artifact writes."
+    }
+  ]
+}

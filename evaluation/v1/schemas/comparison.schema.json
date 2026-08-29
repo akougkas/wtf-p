@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.comparison/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "baseline_id", "candidate_run_id", "disposition", "classifications", "regression", "details"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.comparison/v1" },
+    "baseline_id": { "type": "string", "minLength": 1 },
+    "candidate_run_id": { "type": "string", "minLength": 1 },
+    "disposition": { "enum": ["meets-baseline", "regression", "inconclusive-capability"] },
+    "classifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "structural-regression",
+          "safety-regression",
+          "semantic-quality-regression",
+          "benign-prose-variation",
+          "client-model-capability-difference",
+          "no-regression"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "regression": { "type": "boolean" },
+    "details": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "classification", "reason"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "classification": {
+            "enum": [
+              "structural-regression",
+              "safety-regression",
+              "semantic-quality-regression",
+              "benign-prose-variation",
+              "client-model-capability-difference",
+              "no-regression"
+            ]
+          },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

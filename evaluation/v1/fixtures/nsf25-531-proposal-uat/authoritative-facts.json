@@ -1,0 +1,249 @@
+{
+  "schema": "wtfp.evaluation.official-funding-opportunity-facts/v1",
+  "fixture_id": "nsf25-531-proposal-uat",
+  "fixture_version": 1,
+  "document_type": "grant-proposal",
+  "accessed_on": "2026-08-29",
+  "identity": {
+    "agency": "U.S. National Science Foundation",
+    "solicitation_number": "NSF 25-531",
+    "program_acronym": "CICI",
+    "program_title": "Cybersecurity Innovation for Cyberinfrastructure",
+    "posted_on": "2025-01-03",
+    "replaces": "NSF 23-517"
+  },
+  "official_urls": {
+    "solicitation": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation",
+    "program_page": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure",
+    "pappg_landing": "https://www.nsf.gov/policies/pappg"
+  },
+  "source_anchors": {
+    "program_description": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#pgm_desc",
+    "award_information": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#awd_info",
+    "eligibility": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#elig",
+    "proposal_preparation": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#prep",
+    "due_dates": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#dates",
+    "review_criteria": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#reviewcrit"
+  },
+  "status_evidence": {
+    "classification": "current-solicitation-with-upcoming-deadline",
+    "official_page_label": "Upcoming due dates",
+    "next_deadline": {
+      "date": "2027-01-20",
+      "time": "17:00",
+      "timezone_rule": "submitting-organization-local-time",
+      "source": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure"
+    },
+    "not_a_submission_guarantee": true
+  },
+  "published_deadline_rule": {
+    "listed_dates": [
+      "2025-04-02",
+      "2026-01-21"
+    ],
+    "recurrence": "Third Wednesday in January, annually thereafter",
+    "time": "17:00",
+    "timezone_rule": "submitting-organization-local-time"
+  },
+  "award_summary": {
+    "estimated_awards_minimum": 12,
+    "estimated_awards_maximum": 20,
+    "anticipated_program_funding_usd_minimum": 8000000,
+    "anticipated_program_funding_usd_maximum": 12000000,
+    "availability_of_funds_caveat": true
+  },
+  "tracks": [
+    {
+      "id": "UCSS",
+      "name": "Usable and Collaborative Security for Science",
+      "maximum_total_award_usd": 600000,
+      "maximum_duration_years": 3,
+      "focus": "Applied security and usability work that facilitates scientific collaboration and integrates security into scientific workflows."
+    },
+    {
+      "id": "RSSD",
+      "name": "Reference Scientific Security Datasets",
+      "maximum_total_award_usd": 600000,
+      "maximum_duration_years": 3,
+      "focus": "Reference data artifacts from instrumented scientific cyberinfrastructure for reproducible security research, testing, and evaluation."
+    },
+    {
+      "id": "TCR",
+      "name": "Transition to Cyberinfrastructure Resilience",
+      "maximum_total_award_usd": 1200000,
+      "maximum_duration_years": 3,
+      "focus": "Operational or at-scale deployment, testing, evaluation, hardening, validation, and transition of cybersecurity research into scientific cyberinfrastructure."
+    },
+    {
+      "id": "IPAAI",
+      "name": "Integrity, Provenance, and Authenticity for Artificial Intelligence Ready Data",
+      "maximum_total_award_usd": 900000,
+      "maximum_duration_years": 3,
+      "focus": "Integrity, provenance, and authenticity of scientific data used by AI systems, with scientific data and science drivers as the primary focus."
+    }
+  ],
+  "proposal_constraints": [
+    {
+      "id": "title-format",
+      "requirement": "The title begins CICI:<TRACK>: followed by the project title.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "no-letter-of-intent",
+      "requirement": "A letter of intent is not required.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "no-preliminary-proposal",
+      "requirement": "A preliminary proposal is not required.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "eligible-organizations",
+      "requirement": "Submission is limited to the qualifying U.S. institutions of higher education and U.S. nonprofit nonacademic research or education organizations described in the solicitation.",
+      "source_section": "eligibility"
+    },
+    {
+      "id": "individual-participation-limit",
+      "requirement": "An individual may participate as PI, co-PI, or senior/key personnel on no more than two CICI proposals.",
+      "source_section": "eligibility"
+    },
+    {
+      "id": "single-lead-proposal",
+      "requirement": "Separately submitted collaborative proposals are not allowed; multi-organization work uses one lead proposal with subawards.",
+      "source_section": "eligibility"
+    },
+    {
+      "id": "voluntary-cost-sharing",
+      "requirement": "Voluntary committed cost sharing is prohibited.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "annual-pi-meeting",
+      "requirement": "The budget includes appropriate travel for one annual PI meeting in each active award year.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "letters-of-collaboration",
+      "requirement": "Applicable collaboration letters appear in Supplementary Documents, state only intent to collaborate, and do not endorse or evaluate the proposed project.",
+      "source_section": "proposal_preparation"
+    },
+    {
+      "id": "curated-data-sharing",
+      "requirement": "Any curated datasets are public through an established community platform and follow FAIR principles.",
+      "source_section": "program_description"
+    },
+    {
+      "id": "effective-pappg",
+      "requirement": "The proposal follows the PAPPG version effective for the actual submission deadline.",
+      "source_section": "proposal_preparation"
+    }
+  ],
+  "program_wide_required_descriptions": [
+    "Existing scientific infrastructure and distributed scientific environments that benefit",
+    "How the security work advances scientific discovery, collaboration, applications, users, and communities",
+    "Unique scientific-domain or infrastructure properties that influence security design",
+    "The software license for released software and justification for that choice",
+    "A sustainability plan beyond the project duration",
+    "Ethical and operational concerns, including consent, privacy, and informed disclosure where applicable"
+  ],
+  "program_wide_encouraged_elements": [
+    "Documented partnerships with domain scientists, research groups, or IT support organizations",
+    "An explicit threat model",
+    "Publicly available software under an open-source license",
+    "Quantitative metrics for anticipated security benefits",
+    "Benefits beyond the proposers and beyond the award lifetime"
+  ],
+  "track_specific_requirements": {
+    "UCSS": [
+      "Address security and usability for scientific collaboration and workflows",
+      "Identify collaborations, existing cyberinfrastructure linkages, and newly enabled functionality where applicable"
+    ],
+    "RSSD": [
+      "Address data value and benefiting communities, ethical collection and sharing, label accuracy, preservation, and adoption metrics",
+      "Produce a publicly available reference dataset through an established community platform following FAIR principles"
+    ],
+    "TCR": [
+      "Explicitly detail the transition plan, platform, pathway, and partners",
+      "Define quantitative metrics for technology maturation or transition success"
+    ],
+    "IPAAI": [
+      "Demonstrate scientific data and corresponding science drivers",
+      "Focus on integrity, provenance, and authenticity that prevent or reveal compromised data in scientific AI results"
+    ]
+  },
+  "review_dimensions": [
+    {
+      "id": "science-driven",
+      "label": "Science-driven",
+      "question": "Does the work meet recognized science and engineering needs and benefit intended and broader communities?"
+    },
+    {
+      "id": "innovation",
+      "label": "Innovation",
+      "question": "Does the work provide innovative or transformational capabilities and integrate innovation into project activities?"
+    },
+    {
+      "id": "open-fair-datasets",
+      "label": "Open and FAIR datasets",
+      "question": "Are applicable curated datasets public through an established platform and addressed by a FAIR data-management plan?"
+    },
+    {
+      "id": "stakeholder-collaboration",
+      "label": "Close collaborations among stakeholders",
+      "question": "Do cyberinfrastructure experts and relevant domain scientists work in close collaboration?"
+    },
+    {
+      "id": "recognized-capabilities",
+      "label": "Building on existing, recognized capabilities",
+      "question": "Does the work appropriately build on existing NSF, national, open-source, cyberinfrastructure, and cybersecurity investments?"
+    },
+    {
+      "id": "plan-and-architecture",
+      "label": "Project plans, and system and process architecture",
+      "question": "Are plans, user interactions, logical and physical architectures, timeline, and proof-of-concept or prototype sufficiently detailed?"
+    },
+    {
+      "id": "sustained-impact",
+      "label": "Sustained impact",
+      "question": "Can benefits extend beyond the participants and award lifetime?"
+    }
+  ],
+  "information_classes": {
+    "call_evidence": {
+      "authority": "official-nsf-source-only",
+      "examples": [
+        "Solicitation identity and status",
+        "Deadline and recurrence",
+        "Track definitions and award caps",
+        "Eligibility and submission constraints",
+        "Required proposal content and review dimensions"
+      ]
+    },
+    "author_evidence": {
+      "authority": "author-or-verified-project-source",
+      "examples": [
+        "Institution and personnel eligibility confirmations",
+        "Existing infrastructure and preliminary results",
+        "Partner commitments and letters",
+        "Technical literature, datasets, and citations",
+        "Available personnel, effort, and facilities"
+      ]
+    },
+    "author_decisions": {
+      "authority": "author-only",
+      "examples": [
+        "Selected track and working title",
+        "Scope, objectives, claims, and milestones",
+        "Budget and duration within the selected-track cap",
+        "License, data platform, metrics, and sustainability approach",
+        "Locked, deferred, and discretionary choices"
+      ]
+    }
+  },
+  "caveats": [
+    "Recheck the program page and applicable PAPPG immediately before submission.",
+    "The official page exposes browser Print to PDF rather than a separate NSF 25-531 PDF artifact.",
+    "This curated fact set supports user acceptance testing and is not legal, institutional, budgetary, or submission-readiness review."
+  ]
+}

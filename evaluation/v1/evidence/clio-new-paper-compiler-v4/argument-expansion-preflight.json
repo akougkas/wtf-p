@@ -1,0 +1,14 @@
+{
+  "source_commit": "b6419b24510b4a4b09d82f6e8590644a5f338476",
+  "prompt_count": 72,
+  "parsed_argument_count": 235,
+  "raw_expected_bytes": 1908,
+  "raw_actual_bytes": 1908,
+  "raw_expected_sha256": "88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326",
+  "raw_actual_sha256": "88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326",
+  "raw_exact": true,
+  "normalized_bytes": 1906,
+  "normalized_sha256": "2d5eef6b59a60b3206a0e360f8fbfdbf29f734d896ab36d7a5ec23078b6a0caf",
+  "matches_attempt_1_expected_normalized_payload": true,
+  "literal_quote_count": 2
+}

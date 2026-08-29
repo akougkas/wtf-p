@@ -1,0 +1,188 @@
+{
+  "schema": "wtfp.evaluation.trace-summary/v1",
+  "session": {
+    "type": "session",
+    "version": 4,
+    "id": "7xry0qv0e4jj",
+    "timestamp": "2026-08-29T12:46:56.120Z",
+    "cwd": "<disposable-root>/fixture",
+    "target": "openai-codex",
+    "model": "gpt-5.6-terra",
+    "clioVersion": "0.3.8"
+  },
+  "eventCount": 3322,
+  "toolNames": [
+    "context",
+    "dispatch",
+    "find",
+    "read",
+    "tasks"
+  ],
+  "toolStats": [
+    {
+      "tool": "context",
+      "count": 2,
+      "ok": 2,
+      "errors": 0,
+      "blocked": 0,
+      "totalDurationMs": 85
+    },
+    {
+      "tool": "dispatch",
+      "count": 1,
+      "ok": 0,
+      "errors": 1,
+      "blocked": 0,
+      "totalDurationMs": 7
+    },
+    {
+      "tool": "find",
+      "count": 2,
+      "ok": 1,
+      "errors": 1,
+      "blocked": 0,
+      "totalDurationMs": 27
+    },
+    {
+      "tool": "read",
+      "count": 3,
+      "ok": 3,
+      "errors": 0,
+      "blocked": 0,
+      "totalDurationMs": 6
+    },
+    {
+      "tool": "tasks",
+      "count": 78,
+      "ok": 77,
+      "errors": 1,
+      "blocked": 0,
+      "totalDurationMs": 152
+    }
+  ],
+  "successfulUnexpectedTools": [],
+  "deniedReadOnlyDispatches": 1,
+  "readPathChecks": [
+    {
+      "tool": "find",
+      "supplied": ".planning",
+      "resolved": "<disposable-root>/fixture/.planning",
+      "contained": true
+    },
+    {
+      "tool": "find",
+      "supplied": ".",
+      "resolved": "<disposable-root>/fixture",
+      "contained": true
+    },
+    {
+      "tool": "read",
+      "supplied": "notes.md",
+      "resolved": "<disposable-root>/fixture/notes.md",
+      "contained": true
+    },
+    {
+      "tool": "read",
+      "supplied": "paper.md",
+      "resolved": "<disposable-root>/fixture/paper.md",
+      "contained": true
+    },
+    {
+      "tool": "read",
+      "supplied": "README.md",
+      "resolved": "<disposable-root>/fixture/README.md",
+      "contained": true
+    }
+  ],
+  "outsideReadPaths": [],
+  "rawArguments": {
+    "expectedBytes": 1908,
+    "actualBytes": 1908,
+    "expectedSha256": "88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326",
+    "actualSha256": "88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326",
+    "exact": true,
+    "literalQuoteCount": 2
+  },
+  "usage": {
+    "costUsd": 1.5429763999999997,
+    "costProvenance": "Clio receipt estimate from measured token usage; not independently reconciled to provider billing",
+    "inputTokens": 168135,
+    "outputTokens": 14705,
+    "cacheReadTokens": 5151232,
+    "cacheWriteTokens": 0,
+    "reasoningTokens": 8395,
+    "totalTokens": 5334072,
+    "apiCalls": 88,
+    "toolCalls": 86
+  },
+  "startedAt": "2026-08-29T12:46:56.041Z",
+  "endedAt": "2026-08-29T12:54:28.336Z",
+  "outcome": "succeeded",
+  "exitCode": 0,
+  "normalProfiles": [
+    {
+      "label": "clio-settings",
+      "before_sha256": "dba0582992d9f44ce152db29d867bc61f81dd521e259c00eaadcbeedec9ba7a5",
+      "after_sha256": "dba0582992d9f44ce152db29d867bc61f81dd521e259c00eaadcbeedec9ba7a5"
+    },
+    {
+      "label": "clio-credentials",
+      "before_sha256": "8aa8f58108e95e2c3268fd3d0273f659ced865ce697b73b124526f364c3a881c",
+      "after_sha256": "8aa8f58108e95e2c3268fd3d0273f659ced865ce697b73b124526f364c3a881c"
+    },
+    {
+      "label": "codex-config",
+      "before_sha256": "900db1675fd401aeaba372a1696cdb870c6d5f842774cd715169bb0d3cb313ec",
+      "after_sha256": "900db1675fd401aeaba372a1696cdb870c6d5f842774cd715169bb0d3cb313ec"
+    },
+    {
+      "label": "codex-auth",
+      "before_sha256": "d94084025068b6df566d30f49b868933a0841ef9dc5d13ad6f4a4d6a80af2b6b",
+      "after_sha256": "d94084025068b6df566d30f49b868933a0841ef9dc5d13ad6f4a4d6a80af2b6b"
+    }
+  ],
+  "credentialCleanup": {
+    "isolated_path": "<disposable-root>/clio/config/credentials.yaml",
+    "absent_after": true,
+    "method": "shred -u",
+    "method_provenance": "operator-attested; no retained cleanup-command log"
+  },
+  "agentSegments": [
+    {
+      "index": 0,
+      "startEvent": 1,
+      "endEvent": 688,
+      "textBytes": 618,
+      "textSha256": "260ac21e1179335bed1e7c9e127a6fe5616a649ed692e1cd7827f3ed5254801f",
+      "usage": {
+        "input": 109848,
+        "output": 7354,
+        "cacheRead": 2637824,
+        "cacheWrite": 0,
+        "reasoning": 4610,
+        "totalTokens": 2755026,
+        "costUsd": 0.8355087999999998,
+        "apiCalls": 61,
+        "measured": true
+      }
+    },
+    {
+      "index": 1,
+      "startEvent": 691,
+      "endEvent": 3321,
+      "textBytes": 9577,
+      "textSha256": "7c0bba506bdfa59d2403e2ae76a5777792ecd0b354cbbbb8a2617304fd854244",
+      "usage": {
+        "input": 58287,
+        "output": 7351,
+        "cacheRead": 2513408,
+        "cacheWrite": 0,
+        "reasoning": 3785,
+        "totalTokens": 2579046,
+        "costUsd": 0.7074676,
+        "apiCalls": 27,
+        "measured": true
+      }
+    }
+  ]
+}

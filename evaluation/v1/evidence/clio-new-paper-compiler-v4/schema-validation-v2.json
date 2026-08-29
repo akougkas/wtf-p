@@ -1,0 +1,75 @@
+{
+  "schema": "wtfp.evaluation.schema-validation/v2",
+  "records": [
+    {
+      "file": "config.json",
+      "discriminator": "wtfp.project.config/v1",
+      "schemaId": "https://schemas.wtf-p.dev/project/config/v1",
+      "valid": true,
+      "errors": []
+    },
+    {
+      "file": "decisions.json",
+      "discriminator": "wtfp.project.decisions/v1",
+      "schemaId": "https://schemas.wtf-p.dev/project/decisions/v1",
+      "valid": true,
+      "errors": []
+    },
+    {
+      "file": "outline.json",
+      "discriminator": "wtfp.project.outline/v1",
+      "schemaId": "https://schemas.wtf-p.dev/project/outline/v1",
+      "valid": true,
+      "errors": []
+    },
+    {
+      "file": "project.json",
+      "discriminator": "wtfp.project.manifest/v1",
+      "schemaId": "https://schemas.wtf-p.dev/project/manifest/v1",
+      "valid": true,
+      "errors": []
+    },
+    {
+      "file": "state.json",
+      "discriminator": "wtfp.project.state/v1",
+      "schemaId": "https://schemas.wtf-p.dev/project/state/v1",
+      "valid": true,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "total": 5,
+    "valid": 5
+  },
+  "crossRecord": {
+    "fiveExpectedSchemas": true,
+    "projectIdsEqual": true,
+    "titleExact": true,
+    "manifestCoreUrisExact": true,
+    "policyExact": true,
+    "initialStateCoherent": true,
+    "sectionIdsUnique": true,
+    "decisionIdsUnique": true,
+    "wordBudgetsEqualTarget": true,
+    "sectionTotalsCoherent": true,
+    "dependencyOrderValid": true,
+    "decisionsSemanticallyPreserved": true,
+    "requiredCoveragePresent": true
+  },
+  "decisionSemantics": {
+    "fixedBaselineLocked": true,
+    "storageBudgetLocked": true,
+    "syntheticLabelingLocked": true,
+    "venueDeferred": true,
+    "sectionOrganizationDiscretionary": true
+  },
+  "requiredCoverage": {
+    "syntheticTrace": true,
+    "fixedBaseline": true,
+    "adaptivePolicy": true,
+    "expectedRecomputation": true,
+    "predictionError": true,
+    "storageOverhead": true,
+    "limitations": true
+  }
+}

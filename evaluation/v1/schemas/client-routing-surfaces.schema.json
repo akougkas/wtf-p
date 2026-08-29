@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.client-routing-surfaces/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "targets"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.client-routing-surfaces/v1" },
+    "version": { "const": 1 },
+    "targets": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/target" }
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "implicit", "explicit", "observability", "cost_policy"],
+      "properties": {
+        "target": { "enum": ["claude", "codex", "clio"] },
+        "implicit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["selector_kind", "expected_signal", "expected_activation", "route_granularity"],
+          "properties": {
+            "selector_kind": { "const": "ambient" },
+            "expected_signal": { "enum": ["selected", "suggested", "unobservable"] },
+            "expected_activation": { "enum": ["loaded", "not-loaded", "unobservable"] },
+            "route_granularity": { "enum": ["skill", "unobservable"] }
+          }
+        },
+        "explicit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["academic", "operations"],
+          "properties": {
+            "academic": { "$ref": "#/$defs/academic-selector" },
+            "operations": { "$ref": "#/$defs/operation-selector" }
+          }
+        },
+        "observability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["discovery", "route", "activation", "action", "arguments", "resources"],
+          "properties": {
+            "discovery": { "$ref": "#/$defs/observability" },
+            "route": { "$ref": "#/$defs/observability" },
+            "activation": { "$ref": "#/$defs/observability" },
+            "action": { "$ref": "#/$defs/observability" },
+            "arguments": { "$ref": "#/$defs/observability" },
+            "resources": { "$ref": "#/$defs/observability" }
+          }
+        },
+        "cost_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "source"],
+          "properties": {
+            "status": { "enum": ["metered", "estimated", "unavailable"] },
+            "source": { "type": "string", "minLength": 12 }
+          }
+        }
+      }
+    },
+    "academic-selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selector_kind", "template", "granularity", "arguments"],
+      "properties": {
+        "selector_kind": { "enum": ["action-command", "skill-mention"] },
+        "template": { "type": "string", "minLength": 8 },
+        "granularity": { "enum": ["action", "skill"] },
+        "arguments": { "enum": ["expanded", "ordinary-prose", "unobservable"] }
+      }
+    },
+    "operation-selector": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["selector_kind", "template", "granularity"],
+          "properties": {
+            "selector_kind": { "const": "action-command" },
+            "template": { "type": "string", "minLength": 8 },
+            "granularity": { "const": "operation" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["selector_kind", "granularity"],
+          "properties": {
+            "selector_kind": { "const": "unsupported" },
+            "granularity": { "const": "none" }
+          }
+        }
+      ]
+    },
+    "observability": {
+      "enum": ["observable", "explicit-only", "partially-observable", "unobservable"]
+    }
+  }
+}

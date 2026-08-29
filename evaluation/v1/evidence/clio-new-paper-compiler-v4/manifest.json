@@ -1,0 +1,154 @@
+{
+  "schema": "wtfp.evaluation.evidence-pack/v1",
+  "id": "clio-new-paper-compiler-v4",
+  "version": 1,
+  "run": {
+    "run_id": "19nk0pdxoq5u",
+    "session_id": "7xry0qv0e4jj",
+    "started_at": "2026-08-29T12:46:56.041Z",
+    "ended_at": "2026-08-29T12:54:28.336Z"
+  },
+  "sanitization": {
+    "disposable_root_marker": "<disposable-root>",
+    "transformation": "Every exact occurrence of the disposable run-root prefix was replaced with <disposable-root>; other retained JSON values were preserved.",
+    "raw_trace_included": false,
+    "credentials_included": false
+  },
+  "claims": {
+    "scope": [
+      "new-paper"
+    ],
+    "lifecycle": false,
+    "routing_matrix": false,
+    "score": {
+      "points": 8,
+      "maximum": 8
+    },
+    "canonical_schema_validation": {
+      "valid": 5,
+      "total": 5
+    },
+    "raw_arguments": {
+      "bytes": 1908,
+      "sha256": "88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326",
+      "literal_quote_count": 2,
+      "exact": true
+    },
+    "normal_profiles_unchanged": true,
+    "credential_absent_after_cleanup": true,
+    "cost": {
+      "usd": 1.5429763999999997,
+      "classification": "estimated",
+      "provider_metered": false
+    },
+    "effects": {
+      "network_tools_invoked": false,
+      "vcs_or_shell_tools_invoked": false,
+      "project_mutation_observed": false
+    }
+  },
+  "limitations": {
+    "launch_binding": "The original event stream does not cryptographically bind the executable path or environment; paths and commits below are launch-time operator attestations rechecked after the run.",
+    "source_identity": "This pack reflects the exact earlier Clio run identity, not the later 9b7b80cc merge.",
+    "raw_trace": "The raw event trace is retained privately only and is not included in this pack.",
+    "scope": "No lifecycle, fleet, routing, cross-version, or broader skill-activation claim is made."
+  },
+  "artifacts": [
+    {
+      "path": "README.md",
+      "role": "human-readable provenance, scope, execution, and limitations",
+      "bytes": 3157,
+      "sha256": "b4113b0b2dd7d10e6e8248710f9a498571710295a83a01b1ad7b0df771366946"
+    },
+    {
+      "path": "argument-expansion-preflight.json",
+      "role": "independent raw-argument fidelity preflight summary",
+      "bytes": 587,
+      "sha256": "bb8cf75a4fabba5f38e786032a7fc6159b14f40562ef1af65ed3920fb2dd877f"
+    },
+    {
+      "path": "records/config.json",
+      "role": "previewed canonical project configuration record",
+      "bytes": 756,
+      "sha256": "cbc10b4f7435f4c7dcaf4ec6ec73128634a17a7486f1b7637653c6b466537e26"
+    },
+    {
+      "path": "records/decisions.json",
+      "role": "previewed canonical author-decision record",
+      "bytes": 2069,
+      "sha256": "e1044250c3ede425e410a1b338b2d8e635a447d25f6fe265feaf6aaf9d026624"
+    },
+    {
+      "path": "records/outline.json",
+      "role": "previewed canonical project outline record",
+      "bytes": 3610,
+      "sha256": "9f8f1c478636426662b8437c1e6ccb1e3536eedd859855fb561618cff70622f7"
+    },
+    {
+      "path": "records/project.json",
+      "role": "previewed canonical project manifest record",
+      "bytes": 1519,
+      "sha256": "706c0fd35de94b59d911737cafa594f63cb6ababbade2f751c1084f3e7155c19"
+    },
+    {
+      "path": "records/state.json",
+      "role": "previewed canonical initial project state record",
+      "bytes": 572,
+      "sha256": "63da8f5818b95f34a75e08315fb6652dd94357b31c9b803190c865f768df81a1"
+    },
+    {
+      "path": "rubric.json",
+      "role": "machine-readable four-dimension behavioral rubric result",
+      "bytes": 3756,
+      "sha256": "c053edfcc3a6b7ef73338c20e72a3843a94693372c195d8926e6ddd6f788ce4d"
+    },
+    {
+      "path": "schema-validation-v2.json",
+      "role": "independent canonical schema and cross-record validation summary",
+      "bytes": 2003,
+      "sha256": "9ec5d1c48539daee7e8042811ad646376de8631b06e8b653f2235948ed47ae51"
+    },
+    {
+      "path": "trace-summary.json",
+      "role": "sanitized trace-derived tool, argument, usage, profile, and cleanup summary",
+      "bytes": 4878,
+      "sha256": "d67b7a8e89ce1e34db2f0648eca76f76455a823bf35cbd36518e9599a5bc3c4d"
+    }
+  ],
+  "validator": {
+    "path": "test/compiler-v4-evidence.test.js",
+    "sha256": "b696a29340687b783c86349548d87648b1c9cd89675ec88da3c6f1b0fd849699"
+  },
+  "canonical_schemas": [
+    {
+      "path": "protocol/project/schemas/common.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/common/v1",
+      "sha256": "d389f3831039598b8e3d6904d4ef6df13437ef9df9bf566c86ccb344f48f3bb0"
+    },
+    {
+      "path": "protocol/project/schemas/config.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/config/v1",
+      "sha256": "ab41328730134974cfdc955c4def019765fdb76d7e373c0ff5dc52dbf9f09366"
+    },
+    {
+      "path": "protocol/project/schemas/decisions.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/decisions/v1",
+      "sha256": "0a97f739d3f62621cbc1750c83b4c0c50e5f52cf35aafc9b8b61f4e6208437d0"
+    },
+    {
+      "path": "protocol/project/schemas/manifest.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/manifest/v1",
+      "sha256": "6098eb621afce830c8ab20764114e8d7854efe5805453cbb3192e7eb3eae66f2"
+    },
+    {
+      "path": "protocol/project/schemas/outline.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/outline/v1",
+      "sha256": "6f6696578ca275c79a468cfc07588ce10ce813f7cd93a4f1c3b009ab5ec994f7"
+    },
+    {
+      "path": "protocol/project/schemas/state.schema.json",
+      "schema_id": "https://schemas.wtf-p.dev/project/state/v1",
+      "sha256": "4ebcb32f63eeb142443a3c588a41acf6f7fdf8bf276542be93dcfa4e0f56c845"
+    }
+  ]
+}

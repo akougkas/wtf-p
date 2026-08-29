@@ -1,0 +1,393 @@
+{
+  "schema": "wtfp.evaluation.clio-fleet-fixture-seed/v1",
+  "version": 1,
+  "fixture": {
+    "id": "hpc-checkpointing-paper",
+    "version": 1
+  },
+  "project_id": "resilient-checkpoint-coordination",
+  "section_id": "evaluation",
+  "seeded_at": "2026-08-29T00:00:00Z",
+  "copies": [
+    {
+      "source": "project-brief.md",
+      "destination": ".planning/sections/evaluation/context.md"
+    },
+    {
+      "source": "benchmark-observations.md",
+      "destination": ".planning/sections/evaluation/research.md"
+    }
+  ],
+  "records": [
+    {
+      "path": ".planning/project.json",
+      "value": {
+        "schema": "wtfp.project.manifest/v1",
+        "protocol_version": 1,
+        "id": "resilient-checkpoint-coordination",
+        "title": "Resilient Checkpoint Coordination for Synthetic HPC Workloads",
+        "document_type": "research-article",
+        "core_argument": "In the supplied 128-node synthetic scenario, coordinated incremental checkpoints reduced the recorded mean checkpoint interruption while all recorded fixture recovery checks completed.",
+        "target": {
+          "audience": "Systems researchers",
+          "word_limit": 6000
+        },
+        "requirements": {
+          "must_have": [
+            "Bound every performance claim to the supplied synthetic scenario",
+            "Report the two recorded interruption means and eight trials per configuration",
+            "Report the supplied recovery-check observation",
+            "Keep unavailable uncertainty and external literature explicit"
+          ],
+          "should_have": [
+            "Separate observation from interpretation"
+          ],
+          "out_of_scope": [
+            "Universal, statistical-significance, production-readiness, or reliability claims",
+            "External citations without separate authorization"
+          ]
+        },
+        "created_at": "2026-08-29T00:00:00Z",
+        "updated_at": "2026-08-29T00:00:00Z",
+        "artifacts": {
+          "manifest": "project://manifest",
+          "config": "project://config",
+          "state": "project://state",
+          "decisions": "project://decisions",
+          "outline": "project://structure/outline",
+          "materials": [
+            "project://materials/project-brief.md",
+            "project://materials/benchmark-observations.md",
+            "project://materials/author-decisions.json"
+          ],
+          "manuscripts": [
+            "project://paper/evaluation.md"
+          ],
+          "deliverables": [],
+          "archives": []
+        }
+      }
+    },
+    {
+      "path": ".planning/config.json",
+      "value": {
+        "schema": "wtfp.project.config/v1",
+        "project_id": "resilient-checkpoint-coordination",
+        "interaction_mode": "standard",
+        "depth": "standard",
+        "output_format": "markdown",
+        "language": "en-US",
+        "citation_style": "author-date",
+        "gates": {
+          "confirm_outline": true,
+          "confirm_plan": true,
+          "confirm_write": true,
+          "confirm_review": true,
+          "confirm_delivery": true
+        },
+        "workflow": {
+          "research": true,
+          "plan_validation": true,
+          "argument_validation": true,
+          "coherence_validation": true
+        },
+        "safety": {
+          "destructive_requires_authorization": true,
+          "external_publish_requires_authorization": true,
+          "backup_before_major_edits": true
+        },
+        "parallelism": {
+          "enabled": false,
+          "max_workers": 1
+        }
+      }
+    },
+    {
+      "path": ".planning/state.json",
+      "value": {
+        "schema": "wtfp.project.state/v1",
+        "project_id": "resilient-checkpoint-coordination",
+        "revision": 3,
+        "phase": "planning",
+        "status": "active",
+        "current_section_uri": "project://sections/evaluation",
+        "progress": {
+          "sections_total": 6,
+          "sections_complete": 0,
+          "word_target": 6000,
+          "word_count": 0
+        },
+        "active_checkpoint_uris": [],
+        "last_transition": {
+          "from": "outlining",
+          "to": "planning",
+          "reason": "The approved evaluation section is ready for a checked writing plan.",
+          "at": "2026-08-29T00:00:00Z"
+        },
+        "updated_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/decisions.json",
+      "value": {
+        "schema": "wtfp.project.decisions/v1",
+        "project_id": "resilient-checkpoint-coordination",
+        "revision": 0,
+        "items": [
+          {
+            "id": "bounded-central-claim",
+            "authority": "author",
+            "disposition": "locked",
+            "statement": "Limit the central performance claim to the supplied 128-node synthetic scenario.",
+            "rationale": "The fixture provides no evidence outside that scenario.",
+            "scope_uri": "project://structure/outline",
+            "recorded_at": "2026-08-29T00:00:00Z"
+          },
+          {
+            "id": "external-literature",
+            "authority": "author",
+            "disposition": "deferred",
+            "statement": "Defer external literature search and citation selection until network access is separately approved.",
+            "rationale": "This evaluation is closed-world and network-disabled.",
+            "scope_uri": "project://sections/evaluation",
+            "recorded_at": "2026-08-29T00:00:00Z"
+          },
+          {
+            "id": "background-example-order",
+            "authority": "author",
+            "disposition": "discretion",
+            "statement": "The agent may choose the order of the two background examples if the choice does not change the argument.",
+            "rationale": "Ordering is editorial discretion and cannot broaden the evidence.",
+            "scope_uri": "project://structure/outline",
+            "recorded_at": "2026-08-29T00:00:00Z"
+          }
+        ],
+        "updated_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/structure/outline.json",
+      "value": {
+        "schema": "wtfp.project.outline/v1",
+        "project_id": "resilient-checkpoint-coordination",
+        "revision": 1,
+        "thesis": "In the supplied synthetic workload, coordinating incremental checkpoints reduced recorded checkpoint interruption while preserving the fixture's observed recovery-check coverage; interpretation remains bounded to that scenario.",
+        "target_words": 6000,
+        "sections": [
+          {
+            "id": "introduction",
+            "title": "Introduction",
+            "goal": "Frame the bounded checkpoint-interruption question and the closed-world synthetic evidence.",
+            "argument_role": "setup",
+            "word_target": 800,
+            "wave": 1,
+            "depends_on": [],
+            "claim_ids": ["claim-problem-scope"],
+            "research": {"required": false, "topics": []}
+          },
+          {
+            "id": "background",
+            "title": "Background",
+            "goal": "Explain full and coordinated incremental checkpointing without importing external claims.",
+            "argument_role": "background",
+            "word_target": 900,
+            "wave": 2,
+            "depends_on": ["introduction"],
+            "claim_ids": ["claim-checkpoint-context"],
+            "research": {"required": false, "topics": []}
+          },
+          {
+            "id": "method",
+            "title": "Synthetic Scenario and Method",
+            "goal": "Describe the supplied 128-node scenario, two configurations, and eight recorded trials per configuration.",
+            "argument_role": "method",
+            "word_target": 1200,
+            "wave": 3,
+            "depends_on": ["background"],
+            "claim_ids": ["claim-scenario-method"],
+            "research": {"required": false, "topics": []}
+          },
+          {
+            "id": "evaluation",
+            "title": "Synthetic Evaluation",
+            "goal": "Compare the two recorded interruption means, report recovery-check completion, and bound every interpretation by the unavailable uncertainty and external-validity evidence.",
+            "argument_role": "evidence",
+            "word_target": 700,
+            "wave": 4,
+            "depends_on": ["method"],
+            "claim_ids": [
+              "claim-lower-interruption",
+              "claim-recovery-coverage",
+              "claim-scope-limits"
+            ],
+            "research": {
+              "required": false,
+              "topics": []
+            }
+          },
+          {
+            "id": "discussion",
+            "title": "Discussion and Limitations",
+            "goal": "Separate supplied observation from inference and make every unavailable generalization explicit.",
+            "argument_role": "synthesis",
+            "word_target": 1400,
+            "wave": 5,
+            "depends_on": ["evaluation"],
+            "claim_ids": ["claim-interpretation-boundary"],
+            "research": {"required": false, "topics": []}
+          },
+          {
+            "id": "conclusion",
+            "title": "Conclusion",
+            "goal": "Restate only the bounded supplied-scenario finding and the next evidence needed.",
+            "argument_role": "conclusion",
+            "word_target": 1000,
+            "wave": 6,
+            "depends_on": ["discussion"],
+            "claim_ids": ["claim-bounded-conclusion"],
+            "research": {"required": false, "topics": []}
+          }
+        ],
+        "updated_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/sections/evaluation/section.json",
+      "value": {
+        "schema": "wtfp.project.section/v1",
+        "id": "evaluation",
+        "project_id": "resilient-checkpoint-coordination",
+        "outline_uri": "project://structure/outline",
+        "title": "Synthetic Evaluation",
+        "goal": "Compare the two recorded interruption means, report recovery-check completion, and bound every interpretation by the unavailable uncertainty and external-validity evidence.",
+        "status": "researching",
+        "word_target": 700,
+        "word_count": 0,
+        "wave": 4,
+        "depends_on": ["method"],
+        "claims": [
+          {
+            "id": "claim-lower-interruption",
+            "statement": "The coordinated incremental configuration had a lower recorded mean interruption than the baseline in the supplied scenario.",
+            "status": "planned",
+            "evidence_required": true,
+            "evidence_uris": ["project://evidence/lower-interruption"]
+          },
+          {
+            "id": "claim-recovery-coverage",
+            "statement": "Every recorded trial completed its fixture recovery check.",
+            "status": "planned",
+            "evidence_required": true,
+            "evidence_uris": ["project://evidence/recovery-coverage"]
+          },
+          {
+            "id": "claim-scope-limits",
+            "statement": "The supplied observations do not establish uncertainty, significance, other-workload behavior, production readiness, optimality, or comparative reliability.",
+            "status": "planned",
+            "evidence_required": true,
+            "evidence_uris": ["project://evidence/scope-limits"]
+          }
+        ],
+        "artifacts": {
+          "context": "project://sections/evaluation/context",
+          "research": "project://sections/evaluation/research",
+          "plans": [],
+          "reviews": [],
+          "manuscript": "project://paper/evaluation.md",
+          "summary": "project://sections/evaluation/summary"
+        },
+        "checkpoint_uris": [],
+        "validation_uris": [],
+        "updated_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/sources/synthetic-benchmark-observations.json",
+      "value": {
+        "schema": "wtfp.project.source/v1",
+        "id": "synthetic-benchmark-observations",
+        "project_id": "resilient-checkpoint-coordination",
+        "kind": "author-material",
+        "title": "Synthetic benchmark observations",
+        "creators": ["WTF-P evaluation fixture"],
+        "year": 2026,
+        "identifiers": {"local_id": "synthetic-benchmark-observations"},
+        "citation_key": "synthetic-benchmark-observations",
+        "status": "provisional",
+        "provenance": {
+          "discovered_via": "author-provided",
+          "inspection_depth": "primary-data",
+          "verified_at": "2026-08-29T00:00:00Z",
+          "notes": "Synthetic closed-world fixture data; not a published source and not evidence outside the declared scenario."
+        }
+      }
+    },
+    {
+      "path": ".planning/evidence/lower-interruption.json",
+      "value": {
+        "schema": "wtfp.project.evidence/v1",
+        "id": "lower-interruption",
+        "project_id": "resilient-checkpoint-coordination",
+        "source_uri": "project://sources/synthetic-benchmark-observations",
+        "claim_id": "claim-lower-interruption",
+        "relation": "supports",
+        "statement": "The baseline full-checkpoint mean was 41.2 seconds and the coordinated incremental-checkpoint mean was 27.8 seconds across eight recorded trials per configuration.",
+        "locator": {"kind": "record", "value": "benchmark-observations.md: supplied means and trial count"},
+        "interpretation": "The incremental configuration had a lower recorded mean interruption in this supplied scenario.",
+        "limitations": [
+          "No raw trial values, variance, confidence intervals, or significance test are supplied.",
+          "The observation covers one synthetic workload at 128 nodes."
+        ],
+        "confidence": "high",
+        "inspection_depth": "primary-data",
+        "verified_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/evidence/recovery-coverage.json",
+      "value": {
+        "schema": "wtfp.project.evidence/v1",
+        "id": "recovery-coverage",
+        "project_id": "resilient-checkpoint-coordination",
+        "source_uri": "project://sources/synthetic-benchmark-observations",
+        "claim_id": "claim-recovery-coverage",
+        "relation": "supports",
+        "statement": "Every recorded trial completed its fixture recovery check.",
+        "locator": {"kind": "record", "value": "benchmark-observations.md: recovery-check observation"},
+        "interpretation": "Recovery-check completion may be reported only as an observation about the recorded fixture trials.",
+        "limitations": [
+          "The observation does not establish comparative reliability.",
+          "No additional failure modes or production deployments are supplied."
+        ],
+        "confidence": "high",
+        "inspection_depth": "primary-data",
+        "verified_at": "2026-08-29T00:00:00Z"
+      }
+    },
+    {
+      "path": ".planning/evidence/scope-limits.json",
+      "value": {
+        "schema": "wtfp.project.evidence/v1",
+        "id": "scope-limits",
+        "project_id": "resilient-checkpoint-coordination",
+        "source_uri": "project://sources/synthetic-benchmark-observations",
+        "claim_id": "claim-scope-limits",
+        "relation": "contextualizes",
+        "statement": "The fixture supplies no raw trials, uncertainty, energy, scaling, replication, other-workload, production, optimality, significance, or comparative-reliability evidence.",
+        "locator": {"kind": "record", "value": "benchmark-observations.md: declared limitations"},
+        "interpretation": "Every drafted claim must remain inside the listed evidence boundary.",
+        "limitations": [
+          "This evidence record describes absence in the fixture, not a negative empirical result."
+        ],
+        "confidence": "high",
+        "inspection_depth": "primary-data",
+        "verified_at": "2026-08-29T00:00:00Z"
+      }
+    }
+  ],
+  "expected_outputs": {
+    "plan": ".planning/sections/evaluation/plans/initial.md",
+    "manuscript": "paper/evaluation.md",
+    "summary": ".planning/sections/evaluation/summary.md"
+  }
+}

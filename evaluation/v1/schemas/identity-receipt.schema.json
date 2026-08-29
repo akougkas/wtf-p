@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.identity-receipt/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "client", "model", "effort", "provenance"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.identity-receipt/v1" },
+    "client": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "actual_version", "binary_sha256"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "actual_version": { "type": "string", "minLength": 1 },
+        "binary_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "actual_id", "actual_version"],
+      "properties": {
+        "provider": { "type": "string", "minLength": 1 },
+        "actual_id": { "type": "string", "minLength": 1 },
+        "actual_version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "effort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "effective"],
+      "properties": {
+        "requested": { "type": "string", "minLength": 1 },
+        "effective": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "source_sha256s"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "native-client-events",
+            "sealed-client-receipt",
+            "client-version-and-native-events",
+            "capability-unavailable"
+          ]
+        },
+        "source_sha256s": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.routing-context/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "project_policy", "files"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.routing-context/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "const": 1 },
+    "project_policy": { "type": "string", "minLength": 20 },
+    "files": { "type": "array", "maxItems": 0 }
+  }
+}

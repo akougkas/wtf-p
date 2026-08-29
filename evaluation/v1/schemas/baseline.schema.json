@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.baseline/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "evidence_status", "scenario", "fixture", "protocol", "expected_invariants", "required_capabilities", "run_metadata_schema", "observed_runs"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.baseline/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "evidence_status": { "enum": ["definition-only", "observed"] },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "phases", "oracle_sha256", "action_sequence", "required_process_boundaries"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["always", "new-paper", "lifecycle", "resume"] },
+          "uniqueItems": true
+        },
+        "oracle_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "action_sequence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+        },
+        "required_process_boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["after_action", "fresh_process"],
+            "properties": {
+              "after_action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+              "fresh_process": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    "fixture": { "$ref": "#/$defs/fixture" },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project_protocol_version", "catalog_schema", "adapter_compiler_version", "canonical_source_commit", "canonical_source_sha256"],
+      "properties": {
+        "project_protocol_version": { "const": 1 },
+        "catalog_schema": { "const": "wtfp.catalog/v1" },
+        "adapter_compiler_version": { "type": "integer", "minimum": 1 },
+        "canonical_source_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "canonical_source_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "expected_invariants": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "class", "phases", "required_status", "minimum_score"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "class": { "enum": ["structural", "safety", "semantic"] },
+          "phases": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "enum": ["always", "new-paper", "lifecycle", "resume"] },
+            "uniqueItems": true
+          },
+          "required_status": { "const": "pass" },
+          "minimum_score": { "type": "number", "minimum": 0, "maximum": 1 },
+          "maximum_observed_value": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "required_capabilities": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+      "uniqueItems": true
+    },
+    "run_metadata_schema": { "const": "wtfp.evaluation.run-metadata/v1" },
+    "observed_runs": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.json$" },
+      "uniqueItems": true
+    },
+    "reference_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "semantic_units"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "semantic_units": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "evidence_status": { "const": "definition-only" } } },
+      "then": { "properties": { "observed_runs": { "maxItems": 0 } } }
+    },
+    {
+      "if": { "properties": { "evidence_status": { "const": "observed" } } },
+      "then": { "properties": { "observed_runs": { "minItems": 1 } } }
+    }
+  ],
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "model_inputs_sha256", "evaluator_oracles_sha256", "aggregate_sha256"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "version": { "type": "integer", "minimum": 1 },
+        "model_inputs_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "evaluator_oracles_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "aggregate_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "wtfp.project.manifest/v1",
+  "protocol_version": 1,
+  "id": "adaptive-checkpoint-scheduling",
+  "title": "Adaptive Checkpoint Scheduling for Failure-Prone HPC Workflows",
+  "document_type": "research-article",
+  "core_argument": "A bounded adaptive checkpoint interval driven by a rolling failure-hazard estimate can reduce expected recomputation relative to a fixed 30-minute interval while keeping checkpoint I/O within a ten-percent overhead budget.",
+  "target": {
+    "audience": "HPC and distributed-systems researchers",
+    "word_limit": 3500
+  },
+  "requirements": {
+    "must_have": [
+      "Synthetic trace evaluation",
+      "Fixed 30-minute checkpoint baseline",
+      "Bounded adaptive checkpoint policy",
+      "Expected recomputation comparison",
+      "Prediction-error sensitivity analysis",
+      "Checkpoint-storage overhead analysis",
+      "Limitations"
+    ],
+    "should_have": [
+      "Analytical intuition"
+    ],
+    "out_of_scope": [
+      "Production deployment",
+      "Universal-generalization claims"
+    ]
+  },
+  "created_at": "2026-08-29T12:46:56Z",
+  "updated_at": "2026-08-29T12:46:56Z",
+  "artifacts": {
+    "manifest": "project://manifest",
+    "config": "project://config",
+    "state": "project://state",
+    "decisions": "project://decisions",
+    "outline": "project://structure/outline",
+    "materials": [
+      "project://materials/notes.md"
+    ],
+    "manuscripts": [
+      "project://paper/paper.md"
+    ],
+    "deliverables": [],
+    "archives": []
+  }
+}

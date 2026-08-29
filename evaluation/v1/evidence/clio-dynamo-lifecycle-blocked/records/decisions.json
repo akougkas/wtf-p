@@ -1,0 +1,35 @@
+{
+  "schema": "wtfp.project.decisions/v1",
+  "project_id": "resilient-checkpoint-coordination",
+  "revision": 0,
+  "items": [
+    {
+      "id": "bounded-central-claim",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "Limit the central performance claim to the supplied 128-node synthetic scenario.",
+      "rationale": "The fixture corpus provides no evidence beyond the declared scenario; generalization would exceed available evidence.",
+      "scope_uri": "project://manifest",
+      "recorded_at": "2026-07-14T00:00:00Z"
+    },
+    {
+      "id": "external-literature",
+      "authority": "author",
+      "disposition": "deferred",
+      "statement": "Defer external literature search and citation selection until network access is separately approved.",
+      "rationale": "No network access is authorized for this project; citations remain unavailable.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-07-14T00:00:00Z"
+    },
+    {
+      "id": "background-example-order",
+      "authority": "author",
+      "disposition": "discretion",
+      "statement": "The agent may choose the order of the two background examples if the choice does not change the argument.",
+      "rationale": "Either order preserves the bounded central argument and venue constraints.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-07-14T00:00:00Z"
+    }
+  ],
+  "updated_at": "2026-07-14T00:00:00Z"
+}

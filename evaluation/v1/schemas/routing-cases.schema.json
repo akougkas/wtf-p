@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.routing-cases/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "cases"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.routing-cases/v1" },
+    "version": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 35,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "prompt", "explicit_invocation", "expected", "tags"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "category": {
+          "enum": [
+            "clear-positive",
+            "paraphrase-positive",
+            "boundary-near-miss",
+            "explicit-negative",
+            "expected-neighbor",
+            "product-operation"
+          ]
+        },
+        "prompt": { "type": "string", "minLength": 12 },
+        "explicit_invocation": { "const": false },
+        "expected": { "$ref": "#/$defs/expectation" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route", "selection_binding"],
+      "properties": {
+        "route": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": { "kind": { "const": "none" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "skill", "action"],
+              "properties": {
+                "kind": { "const": "skill" },
+                "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+                "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "action"],
+              "properties": {
+                "kind": { "const": "operation" },
+                "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+              }
+            }
+          ]
+        },
+        "selection_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["skill_selector", "action_contract_selectors"],
+          "properties": {
+            "skill_selector": {
+              "type": ["string", "null"],
+              "pattern": "^protocol/skills/wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*/SKILL\\.md$"
+            },
+            "action_contract_selectors": {
+              "type": "array",
+              "maxItems": 1,
+              "items": { "type": "string", "pattern": "^protocol/actions/[a-z][a-z0-9]*(?:-[a-z0-9]+)*\\.json$" },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

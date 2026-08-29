@@ -1,0 +1,21 @@
+{
+  "schema": "wtfp.evaluation.author-decisions/v1",
+  "fixture_id": "hpc-checkpointing-paper",
+  "items": [
+    {
+      "id": "bounded-central-claim",
+      "disposition": "locked",
+      "statement": "Limit the central performance claim to the supplied 128-node synthetic scenario."
+    },
+    {
+      "id": "external-literature",
+      "disposition": "deferred",
+      "statement": "Defer external literature search and citation selection until network access is separately approved."
+    },
+    {
+      "id": "background-example-order",
+      "disposition": "discretion",
+      "statement": "The agent may choose the order of the two background examples if the choice does not change the argument."
+    }
+  ]
+}

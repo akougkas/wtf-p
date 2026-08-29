@@ -1,0 +1,94 @@
+{
+  "schema": "wtfp.project.outline/v1",
+  "project_id": "resilient-checkpoint-coordination",
+  "revision": 0,
+  "thesis": "In the supplied 128-node synthetic stencil workload, coordinating incremental checkpoints reduced measured checkpoint interruption while preserving recovery coverage.",
+  "target_words": 6000,
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "goal": "Establish the checkpoint-interruption problem for large HPC applications and state the bounded central argument.",
+      "argument_role": "setup",
+      "word_target": 800,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": ["claim-bounded-central-argument"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "background",
+      "title": "Background",
+      "goal": "Present two background examples of checkpoint coordination approaches and situate the coordinator design.",
+      "argument_role": "background",
+      "word_target": 900,
+      "wave": 2,
+      "depends_on": ["introduction"],
+      "claim_ids": [],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "design",
+      "title": "Coordinator Design",
+      "goal": "Describe the incremental checkpoint coordinator architecture and its coordination protocol.",
+      "argument_role": "method",
+      "word_target": 1000,
+      "wave": 2,
+      "depends_on": ["introduction"],
+      "claim_ids": [],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "evaluation",
+      "title": "Evaluation",
+      "goal": "Report the fixture benchmark results: baseline vs. coordinated incremental interruption and recovery coverage.",
+      "argument_role": "evidence",
+      "word_target": 1200,
+      "wave": 3,
+      "depends_on": ["design"],
+      "claim_ids": ["claim-reduced-interruption", "claim-preserved-coverage"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "discussion",
+      "title": "Discussion",
+      "goal": "Interpret results within the bounded scenario and identify limitations of the fixture corpus.",
+      "argument_role": "synthesis",
+      "word_target": 1000,
+      "wave": 4,
+      "depends_on": ["evaluation"],
+      "claim_ids": [],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "conclusion",
+      "title": "Conclusion",
+      "goal": "Restate the bounded contribution and outline directions for future work beyond the fixture scenario.",
+      "argument_role": "conclusion",
+      "word_target": 700,
+      "wave": 5,
+      "depends_on": ["discussion"],
+      "claim_ids": [],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    }
+  ],
+  "updated_at": "2026-07-14T00:00:00Z"
+}

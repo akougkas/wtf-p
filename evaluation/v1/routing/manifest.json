@@ -1,0 +1,77 @@
+{
+  "schema": "wtfp.evaluation.routing-manifest/v1",
+  "id": "academic-skill-routing",
+  "version": 1,
+  "project_protocol_version": 1,
+  "adapter_compiler_version": 4,
+  "wtfp_commit": "6b58b298cd6c41a587718d279cb0b0b21c0fbd7f",
+  "corpora": [
+    { "path": "evaluation/v1/routing/cases.json", "sha256": "37abf883ce8f80e2f5419861dc52612adee14e09305df0797c82f360939e0687" },
+    { "path": "evaluation/v1/routing/explicit-actions.json", "sha256": "f9b249a43f2b12593478ad98df061fe4f15997aac4d7c76883d879b780cc269a" },
+    { "path": "evaluation/v1/matrix/budget.json", "sha256": "69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039" }
+  ],
+  "fixture": {
+    "id": "routing-prompt-only",
+    "version": 1,
+    "model_inputs_sha256": "23b6c222c9f6c14b941b823c71dd24af29e0cf5a80b9036d76f8dc62218d2d15",
+    "evaluator_oracles_sha256": "244626ce20a79039cc32f47d94935302d688fe41b7b5e180a527d247d21ef608",
+    "aggregate_sha256": "f920f75f354e5e3f8df35b0691aadb23c4b3e87942cab8b21055ff938688cdb8",
+    "project_snapshot_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "generated_envelopes": [
+    {
+      "target": "antigravity",
+      "path": "vendors/antigravity/.wtfp-generated.json",
+      "manifest_sha256": "7cdafa9a9c2ccc29b5bacacedeb4b70a4034fdc248b2d08459d9d5e4e00c7752",
+      "source_sha256": "86a415266b88d07c66bec15a240f7459656ad2d65dc519ed407adedd280cbf3d"
+    },
+    {
+      "target": "claude",
+      "path": "vendors/claude/.wtfp-generated.json",
+      "manifest_sha256": "17810c8a4f860b767c3d11a6b0249aab070668481ac0851844c4c06de8792984",
+      "source_sha256": "49d7833df1ee38528b220c7d8c9e9c70eb78a390f1a110fe1c5ded2c45983ad8"
+    },
+    {
+      "target": "clio",
+      "path": "vendors/clio/.wtfp-generated.json",
+      "manifest_sha256": "102b0cea24244927f689ab2015869ade78c5810a46c7317afdbfc958d62843f8",
+      "source_sha256": "4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2"
+    },
+    {
+      "target": "codex-marketplace",
+      "path": "vendors/codex/.wtfp-generated.json",
+      "manifest_sha256": "463fa4e264c758ff45efc7e8ad7ced661c5a8bc9063da554ddff7f77d728b2e9",
+      "source_sha256": "47f09f4f05f267f800b4ba496ee09c15b0391fb6af93adf1504fccb33d0d9844"
+    },
+    {
+      "target": "codex",
+      "path": "vendors/codex/plugins/wtf-p/.wtfp-generated.json",
+      "manifest_sha256": "d7f3c594cfb983b1b0dcf43997986cdd32b2cb921291ee584948e8f2fbf0f0a3",
+      "source_sha256": "169e9612eed1f758da2e7350fbb92047f66ccc21b99d719223c56092a31a8852"
+    },
+    {
+      "target": "copilot-marketplace",
+      "path": "vendors/copilot/.wtfp-generated.json",
+      "manifest_sha256": "d18478d0192c3479e5d19646dd2b542265fc739a28297f0da47b2dbd38c42507",
+      "source_sha256": "1811be8c73263a8ab73932f733b58065971702bd1c4719775bb04a08f828b95d"
+    },
+    {
+      "target": "copilot",
+      "path": "vendors/copilot/plugins/wtf-p/.wtfp-generated.json",
+      "manifest_sha256": "27f2329b8bd6e1d387f5860169af17a82b7fd871a22b49df6f7ffc42ff52689c",
+      "source_sha256": "d3f28e140287e813646c47d5afebf649f7e00e5d3ae25fba8c5a9f28b7b50f50"
+    },
+    {
+      "target": "gemini",
+      "path": "vendors/gemini/.wtfp-generated.json",
+      "manifest_sha256": "34c36b7bb3806a39846e0fbdc4b4d0e48e56228637fff21e2e03d3dcd2714eab",
+      "source_sha256": "cab0bc9bca4a7d1776f5ea86e90b642e79d174a3a0ba9107e696eee547ea5ff2"
+    },
+    {
+      "target": "opencode",
+      "path": "vendors/opencode/.wtfp-generated.json",
+      "manifest_sha256": "e59760971275b95be6ce7927411fca066064a2e3a791b9534b2e1026da1ac7a9",
+      "source_sha256": "86f857ee615ae078950d3242887cf058069b4f07626da96d856729e20d48a94b"
+    }
+  ]
+}

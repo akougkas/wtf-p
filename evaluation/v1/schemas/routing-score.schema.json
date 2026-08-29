@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.routing-score/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "run",
+    "cost",
+    "latency_ms",
+    "scope",
+    "required_claims",
+    "counts",
+    "implicit",
+    "explicit",
+    "progressive_disclosure",
+    "routing_disposition",
+    "disclosure_disposition",
+    "disposition",
+    "passing",
+    "complete_for_scope",
+    "missing_cases",
+    "cases"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.routing-score/v1" },
+    "run": { "$ref": "wtfp.evaluation.run-metadata/v1" },
+    "cost": { "$ref": "#/$defs/cost" },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "scope": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "full-corpus" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matrix_id", "matrix_version", "row_id"],
+          "properties": {
+            "kind": { "const": "budget-matrix" },
+            "matrix_id": { "type": "string", "minLength": 1 },
+            "matrix_version": { "type": "integer", "minimum": 1 },
+            "row_id": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "required_claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim-summary" }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitions", "required_for_scope", "observed", "missing_for_scope", "missing_from_full_corpus"],
+      "properties": {
+        "definitions": { "type": "integer", "minimum": 1 },
+        "required_for_scope": { "type": "integer", "minimum": 1 },
+        "observed": { "type": "integer", "minimum": 1 },
+        "missing_for_scope": { "type": "integer", "minimum": 0 },
+        "missing_from_full_corpus": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "implicit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counts", "metrics", "route_by_expected_skill", "per_target_skill", "per_category", "product_operations", "confusion"],
+      "properties": {
+        "counts": { "$ref": "#/$defs/implicit-counts" },
+        "metrics": { "$ref": "#/$defs/implicit-rates" },
+        "route_by_expected_skill": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/skill-route" }
+        },
+        "per_target_skill": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/skill-bucket" }
+        },
+        "per_category": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/category-bucket" }
+        },
+        "product_operations": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["observed", "route_observable", "accepted_none_or_matching_operation", "academic_skill_routes", "wrong_operations", "allowed_route_rate", "academic_skill_route_rate"],
+          "properties": {
+            "observed": { "type": "integer", "minimum": 0 },
+            "route_observable": { "type": "integer", "minimum": 0 },
+            "accepted_none_or_matching_operation": { "type": "integer", "minimum": 0 },
+            "academic_skill_routes": { "type": "integer", "minimum": 0 },
+            "wrong_operations": { "type": "integer", "minimum": 0 },
+            "allowed_route_rate": { "$ref": "#/$defs/rate" },
+            "academic_skill_route_rate": { "$ref": "#/$defs/rate" }
+          }
+        },
+        "confusion": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["expected", "actual", "count"],
+            "properties": {
+              "expected": { "type": "string", "minLength": 1 },
+              "actual": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "explicit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["counts", "metrics", "per_owner"],
+      "properties": {
+        "counts": { "$ref": "#/$defs/explicit-counts" },
+        "metrics": { "$ref": "#/$defs/explicit-rates" },
+        "per_owner": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/owner-bucket" }
+        }
+      }
+    },
+    "progressive_disclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed", "partially_observed", "unobservable", "exact", "failed", "exact_rate_among_observable", "capability_inconclusive"],
+      "properties": {
+        "observed": { "type": "integer", "minimum": 0 },
+        "partially_observed": { "type": "integer", "minimum": 0 },
+        "unobservable": { "type": "integer", "minimum": 0 },
+        "exact": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "exact_rate_among_observable": { "$ref": "#/$defs/rate" },
+        "capability_inconclusive": { "type": "boolean" }
+      }
+    },
+    "routing_disposition": { "enum": ["pass", "fail", "inconclusive-capability"] },
+    "disclosure_disposition": { "enum": ["pass", "fail", "inconclusive-capability"] },
+    "disposition": { "enum": ["pass", "fail", "inconclusive-capability"] },
+    "passing": { "type": "boolean" },
+    "complete_for_scope": { "type": "boolean" },
+    "missing_cases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case-score" }
+    }
+  },
+  "$defs": {
+    "rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "amount", "currency", "source", "evidence", "priced_cases", "unpriced_cases"],
+      "properties": {
+        "status": { "enum": ["metered", "estimated", "unavailable"] },
+        "amount": { "type": ["number", "null"], "minimum": 0 },
+        "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
+        "source": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "wtfp.evaluation.run-metadata/v1#/$defs/evidence" },
+        "priced_cases": { "type": "integer", "minimum": 0 },
+        "unpriced_cases": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "claim-summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "applicable", "passed", "failed", "inconclusive", "disposition"],
+      "properties": {
+        "id": { "$ref": "#/$defs/claim-id" },
+        "applicable": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "inconclusive": { "type": "integer", "minimum": 0 },
+        "disposition": { "enum": ["pass", "fail", "inconclusive-capability"] }
+      }
+    },
+    "claim-id": {
+      "enum": ["selector-accepted", "route-skill", "route-action", "suggestion", "activation", "arguments", "resources", "cost"]
+    },
+    "case-claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": { "$ref": "#/$defs/claim-id" },
+        "status": { "enum": ["pass", "fail", "inconclusive-capability", "not-applicable"] }
+      }
+    },
+    "implicit-counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "definitions",
+        "observed",
+        "route_observable",
+        "accepted",
+        "action_observable",
+        "exact_action",
+        "expected_skill",
+        "observable_expected_skill",
+        "correct_skill",
+        "false_negative",
+        "false_negative_none",
+        "false_negative_non_skill",
+        "wrong_neighbor",
+        "expected_non_skill",
+        "observable_expected_non_skill",
+        "academic_false_positive",
+        "suggestion_applicable",
+        "suggestion_observable",
+        "suggestion_correct",
+        "activation_applicable",
+        "activation_observable",
+        "activation_conformant"
+      ],
+      "properties": {
+        "definitions": { "type": "integer", "minimum": 0 },
+        "observed": { "type": "integer", "minimum": 0 },
+        "route_observable": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "integer", "minimum": 0 },
+        "action_observable": { "type": "integer", "minimum": 0 },
+        "exact_action": { "type": "integer", "minimum": 0 },
+        "expected_skill": { "type": "integer", "minimum": 0 },
+        "observable_expected_skill": { "type": "integer", "minimum": 0 },
+        "correct_skill": { "type": "integer", "minimum": 0 },
+        "false_negative": { "type": "integer", "minimum": 0 },
+        "false_negative_none": { "type": "integer", "minimum": 0 },
+        "false_negative_non_skill": { "type": "integer", "minimum": 0 },
+        "wrong_neighbor": { "type": "integer", "minimum": 0 },
+        "expected_non_skill": { "type": "integer", "minimum": 0 },
+        "observable_expected_non_skill": { "type": "integer", "minimum": 0 },
+        "academic_false_positive": { "type": "integer", "minimum": 0 },
+        "suggestion_applicable": { "type": "integer", "minimum": 0 },
+        "suggestion_observable": { "type": "integer", "minimum": 0 },
+        "suggestion_correct": { "type": "integer", "minimum": 0 },
+        "activation_applicable": { "type": "integer", "minimum": 0 },
+        "activation_observable": { "type": "integer", "minimum": 0 },
+        "activation_conformant": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "implicit-rates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "observable_route_accuracy",
+        "observable_exact_action_rate",
+        "micro_skill_route_accuracy",
+        "macro_skill_route_accuracy",
+        "false_positive_rate",
+        "false_negative_rate",
+        "non_skill_false_negative_rate",
+        "wrong_neighbor_route_rate",
+        "suggestion_accuracy",
+        "activation_state_conformance_rate"
+      ],
+      "properties": {
+        "observable_route_accuracy": { "$ref": "#/$defs/rate" },
+        "observable_exact_action_rate": { "$ref": "#/$defs/rate" },
+        "micro_skill_route_accuracy": { "$ref": "#/$defs/rate" },
+        "macro_skill_route_accuracy": { "$ref": "#/$defs/rate" },
+        "false_positive_rate": { "$ref": "#/$defs/rate" },
+        "false_negative_rate": { "$ref": "#/$defs/rate" },
+        "non_skill_false_negative_rate": { "$ref": "#/$defs/rate" },
+        "wrong_neighbor_route_rate": { "$ref": "#/$defs/rate" },
+        "suggestion_accuracy": { "$ref": "#/$defs/rate" },
+        "activation_state_conformance_rate": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "explicit-counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definitions", "observed", "route_observable", "route_exact", "arguments_observed", "arguments_exact", "bypass_observable", "bypass_exact"],
+      "properties": {
+        "definitions": { "type": "integer", "minimum": 0 },
+        "observed": { "type": "integer", "minimum": 0 },
+        "route_observable": { "type": "integer", "minimum": 0 },
+        "route_exact": { "type": "integer", "minimum": 0 },
+        "arguments_observed": { "type": "integer", "minimum": 0 },
+        "arguments_exact": { "type": "integer", "minimum": 0 },
+        "bypass_observable": { "type": "integer", "minimum": 0 },
+        "bypass_exact": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "explicit-rates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observable_action_accuracy", "observable_argument_accuracy", "observable_bypass_accuracy"],
+      "properties": {
+        "observable_action_accuracy": { "$ref": "#/$defs/rate" },
+        "observable_argument_accuracy": { "$ref": "#/$defs/rate" },
+        "observable_bypass_accuracy": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "skill-bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "definitions", "observed", "accepted", "failed", "accuracy"],
+      "properties": {
+        "skill": { "type": "string", "minLength": 1 },
+        "definitions": { "type": "integer", "minimum": 0 },
+        "observed": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "accuracy": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "category-bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "definitions", "observed", "accepted", "failed", "accuracy"],
+      "properties": {
+        "category": { "type": "string", "minLength": 1 },
+        "definitions": { "type": "integer", "minimum": 0 },
+        "observed": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "accuracy": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "owner-bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "definitions", "observed", "accepted", "failed", "accuracy"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "definitions": { "type": "integer", "minimum": 0 },
+        "observed": { "type": "integer", "minimum": 0 },
+        "accepted": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "accuracy": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "skill-route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "expected", "observable", "correct", "false_negative", "wrong_neighbor", "route_accuracy", "false_negative_rate", "wrong_neighbor_rate"],
+      "properties": {
+        "skill": { "type": "string", "minLength": 1 },
+        "expected": { "type": "integer", "minimum": 1 },
+        "observable": { "type": "integer", "minimum": 0 },
+        "correct": { "type": "integer", "minimum": 0 },
+        "false_negative": { "type": "integer", "minimum": 0 },
+        "wrong_neighbor": { "type": "integer", "minimum": 0 },
+        "route_accuracy": { "$ref": "#/$defs/rate" },
+        "false_negative_rate": { "$ref": "#/$defs/rate" },
+        "wrong_neighbor_rate": { "$ref": "#/$defs/rate" }
+      }
+    },
+    "case-score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "mode", "category", "target_skill", "expected_route", "actual_route", "route_acceptable", "route_signal", "route_granularity", "activation", "activation_conformant", "selector", "disclosure", "disclosure_exact", "arguments_exact", "claims"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["implicit", "explicit"] },
+        "category": { "type": "string", "minLength": 1 },
+        "target_skill": { "type": ["string", "null"] },
+        "expected_route": { "type": "string", "minLength": 1 },
+        "actual_route": { "type": "string", "minLength": 1 },
+        "route_acceptable": { "type": ["boolean", "null"] },
+        "route_signal": { "enum": ["selected", "suggested", "none", "unobservable"] },
+        "route_granularity": { "enum": ["action", "skill", "none", "unobservable"] },
+        "activation": { "enum": ["loaded", "not-loaded", "not-applicable", "unobservable"] },
+        "activation_conformant": { "type": ["boolean", "null"] },
+        "selector": { "enum": ["accepted", "rejected", "unsupported", "not-applicable", "unobservable"] },
+        "disclosure": { "enum": ["observed", "partially-observed", "unobservable"] },
+        "disclosure_exact": { "type": ["boolean", "null"] },
+        "arguments_exact": { "type": ["boolean", "null"] },
+        "claims": { "type": "array", "items": { "$ref": "#/$defs/case-claim" } }
+      }
+    }
+  }
+}

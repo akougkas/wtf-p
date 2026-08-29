@@ -1,0 +1,53 @@
+{
+  "schema": "wtfp.project.decisions/v1",
+  "project_id": "adaptive-checkpoint-scheduling",
+  "revision": 0,
+  "items": [
+    {
+      "id": "decision-fixed-baseline",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "Use a fixed 30-minute checkpoint interval as the baseline.",
+      "rationale": "The author specified this baseline for all adaptive-policy comparisons.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-08-29T12:46:56Z"
+    },
+    {
+      "id": "decision-storage-budget",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "Keep checkpoint I/O within a ten-percent overhead budget.",
+      "rationale": "Storage cost is a required constraint on the claimed adaptive benefit.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-08-29T12:46:56Z"
+    },
+    {
+      "id": "decision-synthetic-labeling",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "Label the trace, observations, and results as synthetic.",
+      "rationale": "The available fixture observations are internal and are not peer-reviewed evidence.",
+      "scope_uri": "project://materials/notes.md",
+      "recorded_at": "2026-08-29T12:46:56Z"
+    },
+    {
+      "id": "decision-venue-rules",
+      "authority": "author",
+      "disposition": "deferred",
+      "statement": "Select the exact venue and verify its submission rules later.",
+      "rationale": "No venue or authoritative venue guidance was supplied.",
+      "scope_uri": "project://manifest",
+      "recorded_at": "2026-08-29T12:46:56Z"
+    },
+    {
+      "id": "decision-section-order",
+      "authority": "author",
+      "disposition": "discretion",
+      "statement": "Section titles and order may be revised editorially.",
+      "rationale": "The author delegated this structural choice while retaining the required content.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-08-29T12:46:56Z"
+    }
+  ],
+  "updated_at": "2026-08-29T12:46:56Z"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "wtfp.project.state/v1",
+  "project_id": "adaptive-checkpoint-scheduling",
+  "revision": 0,
+  "phase": "initialized",
+  "status": "active",
+  "current_section_uri": null,
+  "progress": {
+    "sections_total": 5,
+    "sections_complete": 0,
+    "word_target": 3500,
+    "word_count": 0
+  },
+  "active_checkpoint_uris": [],
+  "last_transition": {
+    "from": "uninitialized",
+    "to": "initialized",
+    "reason": "Portable initialization records are ready for author approval.",
+    "at": "2026-08-29T12:46:56Z"
+  },
+  "updated_at": "2026-08-29T12:46:56Z"
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.fixture/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "title",
+    "purpose",
+    "model_visible_inputs",
+    "evaluator_only_oracles",
+    "initial_state",
+    "permissions",
+    "synthetic"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.fixture/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "purpose": { "type": "string", "minLength": 12 },
+    "model_visible_inputs": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "evaluator_only_oracles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "initial_state": { "enum": ["empty-project", "existing-project"] },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["project_read", "project_write", "network", "vcs"],
+      "properties": {
+        "project_read": { "const": true },
+        "project_write": { "type": "boolean" },
+        "network": { "const": false },
+        "vcs": { "const": false }
+      }
+    },
+    "synthetic": { "const": true }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "media_type", "role"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$" },
+        "media_type": { "enum": ["application/json", "text/markdown", "text/plain"] },
+        "role": { "type": "string", "minLength": 3 }
+      }
+    }
+  }
+}

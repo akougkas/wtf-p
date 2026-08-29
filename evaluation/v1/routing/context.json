@@ -1,0 +1,7 @@
+{
+  "schema": "wtfp.evaluation.routing-context/v1",
+  "id": "routing-prompt-only",
+  "version": 1,
+  "project_policy": "Each case starts in a fresh mode-0700 disposable project with no files, no prior WTF-P state, and no shared conversational memory.",
+  "files": []
+}

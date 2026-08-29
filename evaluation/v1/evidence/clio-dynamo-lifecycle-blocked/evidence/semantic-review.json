@@ -1,0 +1,30 @@
+{
+  "schema": "wtfp.evaluation.independent-semantic-review/v1",
+  "candidate_model": "qwen3.8-27b",
+  "reviewer": {
+    "kind": "model",
+    "name": "OpenAI Codex",
+    "version": "GPT-5",
+    "relationship": "independent-evaluator"
+  },
+  "scope": "The five retained planning records and the deterministic validation/tool summaries only.",
+  "findings": [
+    {
+      "id": "word-budget-incoherence",
+      "severity": "failure",
+      "observation": "The outline declares target_words 6000, while its six section word_target values sum to 5600. The action contract requires mutually consistent records, so the first transition does not complete the lifecycle baseline."
+    },
+    {
+      "id": "later-lifecycle-unobserved",
+      "severity": "capability-unavailable",
+      "observation": "The campaign stopped before map-project, create-outline, plan-section, write-section, review-section, pause-writing, the fresh process boundary, resume-writing, and progress. No claim-plan traceability, evidence-dependency, verifier, or resumption result can be awarded."
+    },
+    {
+      "id": "bounded-content",
+      "severity": "pass",
+      "observation": "The retained records preserve the synthetic scope, keep external literature deferred, avoid fabricated citations, and retain the three author decisions with author authority and their locked, deferred, and discretion dispositions."
+    }
+  ],
+  "disposition": "blocked-before-action-02",
+  "quality_claim_limitation": "This review assesses process and record invariants. The suite has no no-WTF-P control arm and cannot establish that WTF-P improves prose quality."
+}

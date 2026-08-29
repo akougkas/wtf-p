@@ -1,0 +1,30 @@
+{
+  "schema": "wtfp.project.config/v1",
+  "project_id": "resilient-checkpoint-coordination",
+  "interaction_mode": "standard",
+  "depth": "standard",
+  "output_format": "markdown",
+  "language": "en-US",
+  "gates": {
+    "confirm_outline": true,
+    "confirm_plan": true,
+    "confirm_write": true,
+    "confirm_review": true,
+    "confirm_delivery": true
+  },
+  "workflow": {
+    "research": true,
+    "plan_validation": true,
+    "argument_validation": true,
+    "coherence_validation": true
+  },
+  "safety": {
+    "destructive_requires_authorization": true,
+    "external_publish_requires_authorization": true,
+    "backup_before_major_edits": true
+  },
+  "parallelism": {
+    "enabled": true,
+    "max_workers": 2
+  }
+}

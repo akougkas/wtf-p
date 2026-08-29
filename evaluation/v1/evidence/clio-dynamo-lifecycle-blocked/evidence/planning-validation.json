@@ -1,0 +1,58 @@
+{
+  "schema": "wtfp.evaluation.planning-validation/v1",
+  "records": [
+    {
+      "path": "records/config.json",
+      "bytes": 724,
+      "sha256": "ec56c52edac71a690b9720958d525012964d98c4cb08961797f4488462313eca",
+      "record_type": "config",
+      "schema_valid": true
+    },
+    {
+      "path": "records/decisions.json",
+      "bytes": 1474,
+      "sha256": "dfe509d25f86bfdaae8def6dc865f364958e429a561af16daea3100d73b8b619",
+      "record_type": "decisions",
+      "schema_valid": true
+    },
+    {
+      "path": "records/project.json",
+      "bytes": 1908,
+      "sha256": "5a4147039b1b09cf6204b6cb4d30f1a7eb74b73ddf1518b043f8cf0797e26d20",
+      "record_type": "manifest",
+      "schema_valid": true
+    },
+    {
+      "path": "records/state.json",
+      "bytes": 600,
+      "sha256": "e1b594800a934b63b98222e96c861afe49cd9087c810a2b466ef445e55448eab",
+      "record_type": "state",
+      "schema_valid": true
+    },
+    {
+      "path": "records/outline.json",
+      "bytes": 2870,
+      "sha256": "a8599698aaca4f65d4a62000f2d37fa8e079acb382bdcc5b02dc90a78d0b7a03",
+      "record_type": "outline",
+      "schema_valid": true
+    }
+  ],
+  "literal_schema_validation": {
+    "validator": "evaluation/tools/validate-planning.js",
+    "read_only": true,
+    "checked": 5,
+    "valid": 5,
+    "invalid": 0,
+    "errors": []
+  },
+  "cross_record_validation": {
+    "validator": "evaluation/lib/clio-lifecycle.js#checkLifecycleRecords",
+    "read_only": true,
+    "valid": false,
+    "record_count": 5,
+    "target_words": 6000,
+    "section_word_target_sum": 5600,
+    "delta": -400,
+    "errors": ["outline word targets total 5600, expected 6000"]
+  }
+}

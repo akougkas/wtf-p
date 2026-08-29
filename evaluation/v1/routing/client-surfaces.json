@@ -1,0 +1,107 @@
+{
+  "schema": "wtfp.evaluation.client-routing-surfaces/v1",
+  "version": 1,
+  "targets": [
+    {
+      "target": "claude",
+      "implicit": {
+        "selector_kind": "ambient",
+        "expected_signal": "selected",
+        "expected_activation": "loaded",
+        "route_granularity": "skill"
+      },
+      "explicit": {
+        "academic": {
+          "selector_kind": "action-command",
+          "template": "/wtfp:{action}{separator}{arguments}",
+          "granularity": "action",
+          "arguments": "expanded"
+        },
+        "operations": {
+          "selector_kind": "action-command",
+          "template": "/wtfp:{action}{separator}{arguments}",
+          "granularity": "operation"
+        }
+      },
+      "observability": {
+        "discovery": "observable",
+        "route": "observable",
+        "activation": "observable",
+        "action": "unobservable",
+        "arguments": "unobservable",
+        "resources": "partially-observable"
+      },
+      "cost_policy": {
+        "status": "metered",
+        "source": "Claude Code result event cost_usd"
+      }
+    },
+    {
+      "target": "codex",
+      "implicit": {
+        "selector_kind": "ambient",
+        "expected_signal": "unobservable",
+        "expected_activation": "unobservable",
+        "route_granularity": "unobservable"
+      },
+      "explicit": {
+        "academic": {
+          "selector_kind": "skill-mention",
+          "template": "$wtf-p:{skill} {action}{separator}{arguments}",
+          "granularity": "skill",
+          "arguments": "ordinary-prose"
+        },
+        "operations": {
+          "selector_kind": "unsupported",
+          "granularity": "none"
+        }
+      },
+      "observability": {
+        "discovery": "observable",
+        "route": "unobservable",
+        "activation": "unobservable",
+        "action": "unobservable",
+        "arguments": "unobservable",
+        "resources": "unobservable"
+      },
+      "cost_policy": {
+        "status": "unavailable",
+        "source": "ChatGPT-auth JSONL exposes token usage but no independently priced USD total"
+      }
+    },
+    {
+      "target": "clio",
+      "implicit": {
+        "selector_kind": "ambient",
+        "expected_signal": "suggested",
+        "expected_activation": "not-loaded",
+        "route_granularity": "skill"
+      },
+      "explicit": {
+        "academic": {
+          "selector_kind": "action-command",
+          "template": "/wtfp:{action}{separator}{arguments}",
+          "granularity": "action",
+          "arguments": "expanded"
+        },
+        "operations": {
+          "selector_kind": "action-command",
+          "template": "/wtfp:{action}{separator}{arguments}",
+          "granularity": "operation"
+        }
+      },
+      "observability": {
+        "discovery": "observable",
+        "route": "observable",
+        "activation": "observable",
+        "action": "explicit-only",
+        "arguments": "explicit-only",
+        "resources": "explicit-only"
+      },
+      "cost_policy": {
+        "status": "unavailable",
+        "source": "sealed receipt costProvenance is mapped per run; unknown provenance remains unavailable"
+      }
+    }
+  ]
+}

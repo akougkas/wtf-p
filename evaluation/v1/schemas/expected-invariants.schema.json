@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.expected-invariants/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "fixture_id", "fixture_version", "action_sequence", "new_paper_records", "decisions", "invariants"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.expected-invariants/v1" },
+    "fixture_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "fixture_version": { "type": "integer", "minimum": 1 },
+    "action_sequence": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+    },
+    "new_paper_records": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "enum": ["manifest", "config", "state", "decisions", "outline"] },
+      "uniqueItems": true
+    },
+    "decisions": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "disposition", "statement"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "disposition": { "enum": ["locked", "deferred", "discretion"] },
+          "statement": { "type": "string", "minLength": 8 }
+        }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "phase", "required", "expectation"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "phase": { "enum": ["always", "new-paper", "lifecycle", "resume"] },
+          "required": { "const": true },
+          "expectation": { "type": "string", "minLength": 12 }
+        }
+      }
+    }
+  }
+}

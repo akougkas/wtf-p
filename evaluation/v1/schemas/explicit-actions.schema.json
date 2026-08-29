@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.explicit-actions/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "disclosure_policy", "actions"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.explicit-actions/v1" },
+    "version": { "const": 1 },
+    "disclosure_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "action_reference", "action_contract", "workflow", "project_records", "observability"],
+      "properties": {
+        "skill": { "const": "protocol/skills/{skill}/SKILL.md for academic actions; none for product operations" },
+        "action_reference": { "const": "protocol/skills/{skill}/references/actions.md is one monolithic skill reference; none for product operations" },
+        "action_contract": { "const": "protocol/actions/{action}.json" },
+        "workflow": { "const": "protocol/workflows/{action}.md" },
+        "project_records": { "const": "common plus only schemas/templates derived from the selected action reads and outputs" },
+        "observability": { "const": "record loaded, not-loaded, or unobservable per resource; never infer a load from routing success" }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 36,
+      "maxItems": 36,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "invocation", "arguments", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "invocation": { "type": "string", "pattern": "^/wtfp:[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?: [\\s\\S]+)?$" },
+          "arguments": { "type": "string" },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "skill", "action"],
+                "properties": {
+                  "kind": { "const": "skill" },
+                  "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+                  "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "action"],
+                "properties": {
+                  "kind": { "const": "operation" },
+                  "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

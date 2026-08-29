@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.budget-matrix/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "currency", "rows"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.budget-matrix/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "const": 1 },
+    "currency": { "const": "USD" },
+    "rows": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "study_kind",
+          "evidence_interpretation",
+          "evidence_level",
+          "client",
+          "model",
+          "adapter_target",
+          "selector_profile",
+          "required_claims",
+          "effort",
+          "permission_policy",
+          "environment_policy",
+          "allow_substitution",
+          "case_ids",
+          "maximum_paid_cases",
+          "cost_policy",
+          "rationale"
+        ],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "status": { "enum": ["planned", "completed", "unavailable", "skipped"] },
+          "study_kind": { "enum": ["routing-behavior", "capability-and-behavior", "unavailable-target", "native-static-only"] },
+          "evidence_interpretation": { "type": "string", "minLength": 40 },
+          "evidence_level": { "enum": ["native-discovery", "paid-model"] },
+          "client": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "version", "commit"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "version": { "type": "string", "minLength": 1 },
+              "commit": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" }
+            }
+          },
+          "model": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "version"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "version": { "type": "string", "minLength": 1 }
+            }
+          },
+          "adapter_target": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "selector_profile": { "enum": ["claude", "codex", "clio", null] },
+          "required_claims": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "selector-accepted",
+                "route-skill",
+                "route-action",
+                "suggestion",
+                "activation",
+                "arguments",
+                "resources",
+                "cost"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "effort": { "type": "string", "minLength": 1 },
+          "permission_policy": { "type": "string", "minLength": 12 },
+          "environment_policy": { "type": "string", "minLength": 20 },
+          "allow_substitution": { "const": false },
+          "case_ids": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+            "uniqueItems": true
+          },
+          "maximum_paid_cases": { "type": "integer", "minimum": 0 },
+          "cost_policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "maximum_usd"],
+            "properties": {
+              "status": { "enum": ["metered", "estimated", "unavailable"] },
+              "maximum_usd": { "type": ["number", "null"], "minimum": 0 }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "status": { "const": "unavailable" } } },
+                "then": { "properties": { "maximum_usd": { "const": null } } },
+                "else": { "properties": { "maximum_usd": { "type": "number", "minimum": 0 } } }
+              }
+            ]
+          },
+          "rationale": { "type": "string", "minLength": 12 },
+          "reason": { "type": "string", "minLength": 12 },
+          "result": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "schema", "row_id", "run_id"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.json$" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "schema": { "const": "wtfp.evaluation.routing-score/v1" },
+              "row_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+              "run_id": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "status": { "enum": ["unavailable", "skipped"] } } },
+            "then": {
+              "required": ["reason"],
+              "properties": {
+                "maximum_paid_cases": { "const": 0 },
+                "cost_policy": {
+                  "properties": { "status": { "const": "unavailable" }, "maximum_usd": { "const": null } }
+                }
+              }
+            }
+          },
+          {
+            "if": { "properties": { "status": { "const": "completed" } } },
+            "then": { "required": ["result"] },
+            "else": { "not": { "required": ["result"] } }
+          }
+        ]
+      }
+    }
+  }
+}

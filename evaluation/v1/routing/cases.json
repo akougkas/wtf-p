@@ -1,0 +1,516 @@
+{
+  "schema": "wtfp.evaluation.routing-cases/v1",
+  "version": 1,
+  "cases": [
+    {
+      "id": "start-clear-new-paper",
+      "category": "clear-positive",
+      "prompt": "Start a new academic paper about resilient checkpointing for large HPC applications and set up its research plan.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-start-project", "action": "new-paper" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-start-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/new-paper.json"]
+        }
+      },
+      "tags": ["target-wtfp-start-project", "synthetic-hpc"]
+    },
+    {
+      "id": "start-paraphrase-map-project",
+      "category": "paraphrase-positive",
+      "prompt": "I already have draft sections, figures, data notes, and a bibliography; inventory them into a durable paper workspace before we continue.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-start-project", "action": "map-project" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-start-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/map-project.json"]
+        }
+      },
+      "tags": ["target-wtfp-start-project", "brownfield"]
+    },
+    {
+      "id": "start-boundary-software-readme",
+      "category": "boundary-near-miss",
+      "prompt": "Create a new README outline for this software repository, with installation and API headings.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-start-project", "non-academic"]
+    },
+    {
+      "id": "start-negative-general-question",
+      "category": "explicit-negative",
+      "prompt": "Do not initialize or map an academic project; just explain what an abstract is in two sentences.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-start-project", "negative"]
+    },
+    {
+      "id": "start-neighbor-progress",
+      "category": "expected-neighbor",
+      "prompt": "The WTF-P project already exists; reconcile its current paper state and tell me the next safe workflow step.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-manage-project", "action": "progress" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-manage-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/progress.json"]
+        }
+      },
+      "tags": ["target-wtfp-start-project", "neighbor-wtfp-manage-project"]
+    },
+
+    {
+      "id": "research-clear-gap",
+      "category": "clear-positive",
+      "prompt": "Research the literature gap around incremental checkpoint coordination in exascale systems and preserve source provenance for every proposed claim.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-research-literature", "action": "research-gap" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-research-literature/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/research-gap.json"]
+        }
+      },
+      "tags": ["target-wtfp-research-literature", "synthetic-hpc"]
+    },
+    {
+      "id": "research-paraphrase-bibliography",
+      "category": "paraphrase-positive",
+      "prompt": "Characterize the supplied BibTeX collection and connect each verified reference to the paper sections and claims it can support.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-research-literature", "action": "analyze-bib" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-research-literature/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/analyze-bib.json"]
+        }
+      },
+      "tags": ["target-wtfp-research-literature", "bibliography"]
+    },
+    {
+      "id": "research-boundary-code-references",
+      "category": "boundary-near-miss",
+      "prompt": "Find every JavaScript reference to the deprecated cache key and list the source-code locations.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-research-literature", "non-academic"]
+    },
+    {
+      "id": "research-negative-translation",
+      "category": "explicit-negative",
+      "prompt": "Do not search for literature or inspect citations; translate this supplied sentence into French only.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-research-literature", "negative"]
+    },
+    {
+      "id": "research-neighbor-review",
+      "category": "expected-neighbor",
+      "prompt": "The evidence records already exist; review the drafted methods section for unsupported claims and citation misuse.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "review-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-review-manuscript/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/review-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-research-literature", "neighbor-wtfp-review-manuscript"]
+    },
+
+    {
+      "id": "plan-clear-section",
+      "category": "clear-positive",
+      "prompt": "Create and independently check a detailed writing plan for the checkpoint-overhead evaluation section, but do not draft prose yet.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-plan-section", "action": "plan-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-plan-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/plan-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-plan-section", "synthetic-hpc"]
+    },
+    {
+      "id": "plan-paraphrase-assumptions",
+      "category": "paraphrase-positive",
+      "prompt": "Before changing any files, show me your intended approach and every assumption you would make about the results section.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-plan-section", "action": "list-assumptions" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-plan-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/list-assumptions.json"]
+        }
+      },
+      "tags": ["target-wtfp-plan-section", "preview-only"]
+    },
+    {
+      "id": "plan-boundary-software-rollout",
+      "category": "boundary-near-miss",
+      "prompt": "Plan the deployment of this web service across the staging and production Kubernetes clusters.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-plan-section", "non-academic"]
+    },
+    {
+      "id": "plan-negative-arithmetic",
+      "category": "explicit-negative",
+      "prompt": "Do not create a manuscript plan or alter structure; calculate the mean of these five numbers only: 2, 4, 6, 8, 10.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-plan-section", "negative"]
+    },
+    {
+      "id": "plan-neighbor-write",
+      "category": "expected-neighbor",
+      "prompt": "The section plan is approved and validation passed; execute it now and draft the manuscript section from verified evidence.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-write-section", "action": "write-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-write-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/write-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-plan-section", "neighbor-wtfp-write-section"]
+    },
+
+    {
+      "id": "write-clear-section",
+      "category": "clear-positive",
+      "prompt": "Write the approved discussion-section plan using only its verified evidence records, then report claim coverage and the next review action.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-write-section", "action": "write-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-write-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/write-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-write-section", "evidence-grounded"]
+    },
+    {
+      "id": "write-paraphrase-quick-fix",
+      "category": "paraphrase-positive",
+      "prompt": "Make one narrow wording correction in the abstract without changing its claim, citation, structure, or project scope.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-write-section", "action": "quick" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-write-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/quick.json"]
+        }
+      },
+      "tags": ["target-wtfp-write-section", "bounded-edit"]
+    },
+    {
+      "id": "write-boundary-code-docs",
+      "category": "boundary-near-miss",
+      "prompt": "Write the configuration section of the package's developer documentation from the exported TypeScript API.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-write-section", "non-academic"]
+    },
+    {
+      "id": "write-negative-brainstorm",
+      "category": "explicit-negative",
+      "prompt": "Do not draft or edit manuscript prose; give me three informal brainstorming questions about the topic.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-write-section", "negative"]
+    },
+    {
+      "id": "write-neighbor-plan",
+      "category": "expected-neighbor",
+      "prompt": "The section has no approved plan; create a verifiable plan and run the plan checker, without writing manuscript text.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-plan-section", "action": "plan-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-plan-section/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/plan-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-write-section", "neighbor-wtfp-plan-section"]
+    },
+
+    {
+      "id": "review-clear-section",
+      "category": "clear-positive",
+      "prompt": "Review the drafted results section for evidence support, citation integrity, logical coherence, and compliance with its approved plan.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "review-section" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-review-manuscript/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/review-section.json"]
+        }
+      },
+      "tags": ["target-wtfp-review-manuscript", "evidence-grounded"]
+    },
+    {
+      "id": "review-paraphrase-polish",
+      "category": "paraphrase-positive",
+      "prompt": "Improve this completed academic section's clarity, flow, precision, and voice while preserving every supported claim and citation.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "polish-prose" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-review-manuscript/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/polish-prose.json"]
+        }
+      },
+      "tags": ["target-wtfp-review-manuscript", "meaning-preserving"]
+    },
+    {
+      "id": "review-boundary-pull-request",
+      "category": "boundary-near-miss",
+      "prompt": "Review this pull request for test coverage, API compatibility, and JavaScript style defects.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-review-manuscript", "non-academic"]
+    },
+    {
+      "id": "review-negative-copy",
+      "category": "explicit-negative",
+      "prompt": "Do not review, verify, or polish the manuscript; copy the supplied title exactly as written.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-review-manuscript", "negative"]
+    },
+    {
+      "id": "review-neighbor-delivery",
+      "category": "expected-neighbor",
+      "prompt": "The manuscript has already passed its required reviews; turn its argument and verified findings into a fifteen-minute academic presentation.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "create-slides" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-deliver-research/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/create-slides.json"]
+        }
+      },
+      "tags": ["target-wtfp-review-manuscript", "neighbor-wtfp-deliver-research"]
+    },
+
+    {
+      "id": "manage-clear-pause",
+      "category": "clear-positive",
+      "prompt": "Pause the current writing workflow and persist an exact durable handoff that a fresh session can resume without conversational memory.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-manage-project", "action": "pause-writing" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-manage-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/pause-writing.json"]
+        }
+      },
+      "tags": ["target-wtfp-manage-project", "resumption"]
+    },
+    {
+      "id": "manage-paraphrase-progress",
+      "category": "paraphrase-positive",
+      "prompt": "Reconcile the paper artifacts with durable state, summarize what is complete or blocked, and recommend the next compatible action.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-manage-project", "action": "progress" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-manage-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/progress.json"]
+        }
+      },
+      "tags": ["target-wtfp-manage-project", "state-reconciliation"]
+    },
+    {
+      "id": "manage-boundary-git-status",
+      "category": "boundary-near-miss",
+      "prompt": "Show the Git branch, staged files, and untracked files in this source-code repository.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-manage-project", "non-academic"]
+    },
+    {
+      "id": "manage-negative-reminder",
+      "category": "explicit-negative",
+      "prompt": "Do not inspect or update project state; rewrite this personal reminder as a shorter sentence.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-manage-project", "negative"]
+    },
+    {
+      "id": "manage-neighbor-map",
+      "category": "expected-neighbor",
+      "prompt": "There is no WTF-P state yet; inventory this existing collection of manuscript drafts, figures, data, and references into a project.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-start-project", "action": "map-project" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-start-project/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/map-project.json"]
+        }
+      },
+      "tags": ["target-wtfp-manage-project", "neighbor-wtfp-start-project"]
+    },
+
+    {
+      "id": "deliver-clear-latex",
+      "category": "clear-positive",
+      "prompt": "Export the reviewed manuscript and verified bibliography to portable LaTeX source without overwriting the source manuscript.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "export-latex" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-deliver-research/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/export-latex.json"]
+        }
+      },
+      "tags": ["target-wtfp-deliver-research", "artifact-generation"]
+    },
+    {
+      "id": "deliver-paraphrase-poster",
+      "category": "paraphrase-positive",
+      "prompt": "Turn the completed paper's argument, methods, and supported findings into a concise conference poster with traceable assets.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "create-poster" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-deliver-research/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/create-poster.json"]
+        }
+      },
+      "tags": ["target-wtfp-deliver-research", "poster"]
+    },
+    {
+      "id": "deliver-boundary-sales-slides",
+      "category": "boundary-near-miss",
+      "prompt": "Create sales slides from the quarterly revenue spreadsheet for the account team meeting.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-deliver-research", "non-academic"]
+    },
+    {
+      "id": "deliver-negative-image-resize",
+      "category": "explicit-negative",
+      "prompt": "Do not package, export, archive, or present research; only tell me the pixel dimensions of this image.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "none" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": [] }
+      },
+      "tags": ["target-wtfp-deliver-research", "negative"]
+    },
+    {
+      "id": "deliver-neighbor-audit",
+      "category": "expected-neighbor",
+      "prompt": "Before creating any delivery artifact, audit the whole manuscript for section, argument, citation, length, and review readiness gaps.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "audit-milestone" },
+        "selection_binding": {
+          "skill_selector": "protocol/skills/wtfp-review-manuscript/SKILL.md",
+          "action_contract_selectors": ["protocol/actions/audit-milestone.json"]
+        }
+      },
+      "tags": ["target-wtfp-deliver-research", "neighbor-wtfp-review-manuscript"]
+    },
+
+    {
+      "id": "operation-help",
+      "category": "product-operation",
+      "prompt": "Show me the stable WTF-P action reference and explain which command starts a new paper.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "operation", "action": "help" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": ["protocol/actions/help.json"] }
+      },
+      "tags": ["product-operation", "must-not-activate-academic-skill"]
+    },
+    {
+      "id": "operation-update",
+      "category": "product-operation",
+      "prompt": "Check whether a newer compatible WTF-P package or plugin release exists, but do not install it without approval.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "operation", "action": "update" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": ["protocol/actions/update.json"] }
+      },
+      "tags": ["product-operation", "must-not-activate-academic-skill"]
+    },
+    {
+      "id": "operation-report-bug",
+      "category": "product-operation",
+      "prompt": "Help me collect a reproducible WTF-P bug report; do not publish it until I explicitly approve.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "operation", "action": "report-bug" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": ["protocol/actions/report-bug.json"] }
+      },
+      "tags": ["product-operation", "must-not-activate-academic-skill"]
+    },
+    {
+      "id": "operation-request-feature",
+      "category": "product-operation",
+      "prompt": "Shape this WTF-P enhancement idea into a concrete feature request and keep publication behind an explicit gate.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "operation", "action": "request-feature" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": ["protocol/actions/request-feature.json"] }
+      },
+      "tags": ["product-operation", "must-not-activate-academic-skill"]
+    },
+    {
+      "id": "operation-contribute",
+      "category": "product-operation",
+      "prompt": "Guide a bounded contribution to WTF-P itself from a feature branch to a reviewable change request.",
+      "explicit_invocation": false,
+      "expected": {
+        "route": { "kind": "operation", "action": "contribute" },
+        "selection_binding": { "skill_selector": null, "action_contract_selectors": ["protocol/actions/contribute.json"] }
+      },
+      "tags": ["product-operation", "must-not-activate-academic-skill"]
+    }
+  ]
+}

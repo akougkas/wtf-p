@@ -10,7 +10,9 @@
   "scripts": {
     "build:adapters": "node scripts/build-adapters.js",
     "check:adapters": "node scripts/build-adapters.js --check",
-    "test:protocol": "node test/protocol-catalog.test.js && node test/canonical-workflows.test.js && node test/portable-roles.test.js && node test/project-protocol.test.js && node test/test-skills.test.js && node test/adapter-compiler.test.js",
+    "test:evaluation": "node evaluation/tools/lint.js && node test/compiler-v4-evidence.test.js && node test/dynamo-lifecycle-evidence.test.js && node test/evaluation-comparison.test.js && node test/evaluation.test.js && node test/evaluation-routing-runner.test.js && node test/evaluation-lifecycle.test.js && node test/evaluation-fleets.test.js && node test/nsf25-531-proposal-uat.test.js",
+    "test:tools": "node test/lib/bib-format.test.js && node test/lib/citation-ranker.test.js && node test/lib/analyze-impact.test.js && node test/lib/scholar-lookup.test.js && node test/lib/semantic-scholar.test.js && node test/lib/citation-fetcher.test.js",
+    "test:protocol": "node test/protocol-catalog.test.js && node test/canonical-workflows.test.js && node test/portable-roles.test.js && node test/project-protocol.test.js && node test/test-skills.test.js && npm run test:tools && npm run test:evaluation && node test/adapter-compiler.test.js",
     "test:installer": "node test/import-safety.test.js && node test/ownership.test.js && node test/ownership-races.test.js && node test/status-partial.test.js && node test/paths.js && node test/modern-targets.test.js && node test/installer.test.js",
     "test:compatibility": "node test/sanity.js && node test/linter.js && node test/wcn-integrity.js && node test/dry-run.js && node test/feature-tests.js",
     "test": "npm run check:adapters && npm run test:protocol && npm run test:installer && npm run test:compatibility",
@@ -23,9 +25,11 @@
   "files": [
     "bin",
     "core",
+    "evaluation",
     "protocol",
     "scripts/build-adapters.js",
-    "vendors"
+    "vendors",
+    "!vendors/claude/mcp/**"
   ],
   "peerDependencies": {
     "@marp-team/marp-cli": ">=3.0.0"

@@ -1,0 +1,131 @@
+{
+  "schema": "wtfp.evaluation.sanitized-run-summary/v1",
+  "recorded_at": "2026-08-29T18:00:00Z",
+  "source": {
+    "wtfp_commit": "6b58b298cd6c41a587718d279cb0b0b21c0fbd7f",
+    "adapter_compiler_version": 4,
+    "generated_clio_source_sha256": "4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2",
+    "clio_commit": "9b7b80ccbd3d2211d4079bc76558bb06d66a8583",
+    "clio_version": "0.3.8",
+    "clio_binary_path_at_execution": "/tmp/clio-v038-fixed-source.Xbdr8a/dist/cli/index.js",
+    "clio_binary_sha256": "f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162"
+  },
+  "runtime": {
+    "target": "dynamo",
+    "provider": "lmstudio",
+    "kind": "http",
+    "api": "openai-completions",
+    "requested_model_id": "qwen3.8-27b",
+    "reported_model_id": "qwen3.8-27b",
+    "model_version": "wire-id-only:qwen3.8-27b",
+    "auth_required": false,
+    "context_tokens": 131072,
+    "maximum_output_tokens": 131072
+  },
+  "fixture": {
+    "id": "hpc-checkpointing-paper",
+    "version": 1,
+    "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
+    "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
+    "aggregate_sha256": "9479bf971aeccec5ca76955fb6b865a566fb6539949f4f8aea518dca305c6b9c",
+    "control_commit": "a6f33bbc8258b23025b4965f509caa28b0640500",
+    "control_tree": "78d51a1ab58432a8614dc18437b6c977bdac06d2",
+    "control_tree_listing_sha256": "8660528ce18c00be86ec7510230ffc439b74cead7a1364c5c28498faf1c1fa5b"
+  },
+  "invocation": {
+    "action": "new-paper",
+    "invocation_bytes": 1478,
+    "invocation_sha256": "874b6070dfbc2b23ab6efcae6a88b7adf5e40c080d8333f45f5f44a9263e5a24",
+    "command_prefix": "/wtfp:new-paper\\n",
+    "command_prefix_bytes": 16,
+    "arguments_bytes": 1462,
+    "arguments_sha256": "d6aa82a299dbb34fb8acb33025ad819dc670d72be12fda12ac3c78d9efcbc2e1",
+    "exact_argument_expansion": true,
+    "literal_quote_characters": 4,
+    "literal_tab_characters": 1
+  },
+  "fleet_validation": {
+    "wtfp-plan-section": {
+      "valid": true,
+      "contract_sha256": "ab081aa268c8ab7d39f5a3f4d8a1e94a5c8fdeec60f15f66a10d3e39c72ce1f1"
+    },
+    "wtfp-draft-review": {
+      "valid": true,
+      "contract_sha256": "c9d11db2ddfc0b748579071deec19f132a7c39592881d6954d7b1479471b0ed1"
+    }
+  },
+  "runs": [
+    {
+      "id": "29591h4ck5pk",
+      "session_id": "117u23d6mhm0",
+      "requested_effort": "high",
+      "effective_effort": "high",
+      "provider_reasoning_effort": "xhigh",
+      "started_at": "2026-08-29T17:10:52.082Z",
+      "ended_at": "2026-08-29T17:29:45.807Z",
+      "latency_ms": 1133725,
+      "client_status": "interrupted",
+      "client_outcome": "canceled",
+      "exit_code": 143,
+      "termination": "Evaluator stopped the owned process group after the fixed ceiling; the process group was verified quiescent.",
+      "trace": {
+        "retained": false,
+        "bytes": 1513596,
+        "events": 22986,
+        "sha256": "10a63ca6423f569b3bcd9f276bd8e5ca253717d66558270f045b9ce031b76d86",
+        "stderr_bytes": 101,
+        "stderr_sha256": "93c46c3e9e5e5e0794be247bad86f87dbc1d13af163be10222aae493b1295e3c"
+      },
+      "usage": {
+        "input_tokens": 45114,
+        "output_tokens": 23329,
+        "reasoning_tokens": 15709,
+        "total_tokens": 68443,
+        "api_calls": 2,
+        "client_reported_cost_usd": 0
+      },
+      "tool_starts": { "context": 2, "ls": 1, "find": 1, "read": 3 },
+      "planning_records": 0,
+      "project_mutation": false,
+      "git_control_mutation": false
+    },
+    {
+      "id": "23rcwi7nihwn",
+      "session_id": "191q9wcpuv5j",
+      "requested_effort": "off",
+      "effective_effort": "off",
+      "started_at": "2026-08-29T17:32:07.798Z",
+      "ended_at": "2026-08-29T17:34:59.650Z",
+      "latency_ms": 171852,
+      "client_status": "completed",
+      "client_outcome": "succeeded",
+      "exit_code": 0,
+      "trace": {
+        "retained": false,
+        "bytes": 381393,
+        "events": 578,
+        "sha256": "03eebff0d17c1dbfdb87d6b69e6d8c28c811c8832d2c5a17133db5a30c884eec",
+        "stderr_bytes": 0,
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "usage": {
+        "input_tokens": 559826,
+        "output_tokens": 3882,
+        "reasoning_tokens": 0,
+        "total_tokens": 563708,
+        "api_calls": 18,
+        "client_reported_cost_usd": 0
+      },
+      "tool_starts": { "context": 1, "ls": 6, "read": 13, "bash": 1, "write": 5 },
+      "planning_records": 5,
+      "literal_schema_validation": "5/5",
+      "cross_record_validation": "failed",
+      "campaign_disposition": "blocked-before-action-02"
+    }
+  ],
+  "command_plan_sha256": {
+    "high": "3c0aa1a7c7f20243f9e4b1bab3f7aefa3f390f76700eac1fc5286cc828468644",
+    "off": "a64a505536db1807d4d0a62cba905a182f6d29e3ae4aa1bc1c477caef9530b52",
+    "provenance": "Reconstructed deterministically from the lifecycle action plan, exact invocation bytes, and observed native receipt; this is not a captured shell-history record."
+  }
+}

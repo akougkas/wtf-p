@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.evaluation.routing-manifest/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "id", "version", "project_protocol_version", "adapter_compiler_version",
+    "wtfp_commit", "corpora", "fixture", "generated_envelopes"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.routing-manifest/v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "version": { "const": 1 },
+    "project_protocol_version": { "const": 1 },
+    "adapter_compiler_version": { "const": 4 },
+    "wtfp_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "corpora": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/file" }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "version", "model_inputs_sha256", "evaluator_oracles_sha256",
+        "aggregate_sha256", "project_snapshot_sha256"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "version": { "const": 1 },
+        "model_inputs_sha256": { "$ref": "#/$defs/sha256" },
+        "evaluator_oracles_sha256": { "$ref": "#/$defs/sha256" },
+        "aggregate_sha256": { "$ref": "#/$defs/sha256" },
+        "project_snapshot_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "generated_envelopes": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target", "path", "manifest_sha256", "source_sha256"],
+        "properties": {
+          "target": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+          "path": { "type": "string", "pattern": "^vendors/[A-Za-z0-9._/-]+/\\.wtfp-generated\\.json$|^vendors/[A-Za-z0-9._-]+/\\.wtfp-generated\\.json$" },
+          "manifest_sha256": { "$ref": "#/$defs/sha256" },
+          "source_sha256": { "$ref": "#/$defs/sha256" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^evaluation/v1/(?:routing|matrix)/[A-Za-z0-9._/-]+\\.json$" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

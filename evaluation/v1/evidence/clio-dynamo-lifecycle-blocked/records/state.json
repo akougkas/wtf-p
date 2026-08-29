@@ -1,0 +1,22 @@
+{
+  "schema": "wtfp.project.state/v1",
+  "project_id": "resilient-checkpoint-coordination",
+  "revision": 0,
+  "phase": "initialized",
+  "status": "active",
+  "current_section_uri": null,
+  "progress": {
+    "sections_total": 6,
+    "sections_complete": 0,
+    "word_target": 6000,
+    "word_count": 0
+  },
+  "active_checkpoint_uris": [],
+  "last_transition": {
+    "from": "none",
+    "to": "initialized",
+    "reason": "Project initialized from project-brief.md, benchmark-observations.md, and author-decisions.json.",
+    "at": "2026-07-14T00:00:00Z"
+  },
+  "updated_at": "2026-07-14T00:00:00Z"
+}

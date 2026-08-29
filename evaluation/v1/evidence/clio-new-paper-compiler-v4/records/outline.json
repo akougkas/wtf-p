@@ -1,0 +1,115 @@
+{
+  "schema": "wtfp.project.outline/v1",
+  "project_id": "adaptive-checkpoint-scheduling",
+  "revision": 0,
+  "thesis": "Provisional thesis: under synthetic workload conditions, a bounded adaptive checkpoint interval based on a rolling failure-hazard estimate can reduce expected recomputation relative to a fixed 30-minute baseline while respecting a ten-percent checkpoint-I/O budget.",
+  "target_words": 3500,
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "goal": "Frame the checkpointing problem, the synthetic-study scope, and the need to evaluate adaptation together with prediction error and storage cost.",
+      "argument_role": "setup",
+      "word_target": 400,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": [
+        "claim-problem-scope",
+        "claim-evaluation-principle"
+      ],
+      "research": {
+        "required": true,
+        "topics": [
+          "Checkpointing tradeoffs in HPC workflows",
+          "Failure prediction scope and limitations"
+        ]
+      }
+    },
+    {
+      "id": "policy-and-design",
+      "title": "Adaptive Policy and Evaluation Design",
+      "goal": "Specify the synthetic trace, fixed 30-minute baseline, bounded adaptive policy, rolling hazard estimate, and evaluation measures.",
+      "argument_role": "method",
+      "word_target": 700,
+      "wave": 2,
+      "depends_on": [
+        "introduction"
+      ],
+      "claim_ids": [
+        "claim-bounded-policy",
+        "claim-fixed-baseline"
+      ],
+      "research": {
+        "required": true,
+        "topics": [
+          "Synthetic trace provenance",
+          "Bounded rolling-hazard policy specification"
+        ]
+      }
+    },
+    {
+      "id": "evaluation",
+      "title": "Expected Recomputation, Sensitivity, and Storage Overhead",
+      "goal": "Compare the adaptive policy with the fixed baseline and separate expected recomputation, prediction-error sensitivity, and checkpoint-storage overhead.",
+      "argument_role": "evidence",
+      "word_target": 1200,
+      "wave": 3,
+      "depends_on": [
+        "policy-and-design"
+      ],
+      "claim_ids": [
+        "claim-expected-recomputation",
+        "claim-error-sensitivity",
+        "claim-storage-budget"
+      ],
+      "research": {
+        "required": true,
+        "topics": [
+          "Expected recomputation comparison",
+          "Prediction-error sensitivity",
+          "Checkpoint-storage overhead"
+        ]
+      }
+    },
+    {
+      "id": "limitations",
+      "title": "Limitations and Implications",
+      "goal": "Bound the interpretation to synthetic observations, discuss threats to validity, and exclude production or universal claims.",
+      "argument_role": "synthesis",
+      "word_target": 700,
+      "wave": 4,
+      "depends_on": [
+        "evaluation"
+      ],
+      "claim_ids": [
+        "claim-limitations"
+      ],
+      "research": {
+        "required": true,
+        "topics": [
+          "Limitations of synthetic evaluation",
+          "External literature claims requiring verification"
+        ]
+      }
+    },
+    {
+      "id": "conclusion",
+      "title": "Conclusion",
+      "goal": "Restate the constrained contribution and the evaluation principle without extending the evidence beyond the synthetic study.",
+      "argument_role": "conclusion",
+      "word_target": 500,
+      "wave": 5,
+      "depends_on": [
+        "limitations"
+      ],
+      "claim_ids": [
+        "claim-contribution"
+      ],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    }
+  ],
+  "updated_at": "2026-08-29T12:46:56Z"
+}

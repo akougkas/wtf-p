@@ -1,0 +1,39 @@
+{
+  "schema": "wtfp.evaluation.fixture/v1",
+  "id": "hpc-checkpointing-paper",
+  "version": 1,
+  "title": "Synthetic resilient-checkpointing paper",
+  "purpose": "Provide harmless, versioned inputs for new-paper routing, lifecycle, schema, safety, and semantic-quality evaluation.",
+  "model_visible_inputs": [
+    {
+      "path": "project-brief.md",
+      "media_type": "text/markdown",
+      "role": "author brief and exact invocation context"
+    },
+    {
+      "path": "benchmark-observations.md",
+      "media_type": "text/markdown",
+      "role": "closed-world synthetic evidence"
+    },
+    {
+      "path": "author-decisions.json",
+      "media_type": "application/json",
+      "role": "locked, deferred, and discretionary author decisions"
+    }
+  ],
+  "evaluator_only_oracles": [
+    {
+      "path": "expected-invariants.json",
+      "media_type": "application/json",
+      "role": "machine-readable behavioral expectations hidden from the model"
+    }
+  ],
+  "initial_state": "empty-project",
+  "permissions": {
+    "project_read": true,
+    "project_write": true,
+    "network": false,
+    "vcs": false
+  },
+  "synthetic": true
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "wtfp.evaluation.fixture-hashes/v1",
+  "fixture_id": "hpc-checkpointing-paper",
+  "fixture_version": 1,
+  "hash_algorithm": "sha256",
+  "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
+  "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
+  "aggregate_sha256": "9479bf971aeccec5ca76955fb6b865a566fb6539949f4f8aea518dca305c6b9c",
+  "files": [
+    {
+      "path": "author-decisions.json",
+      "bytes": 715,
+      "sha256": "203156f89490242ab2723eb36c24f9bf6b87f27ed5ac2224d5dd0069731c7cce",
+      "audience": "model"
+    },
+    {
+      "path": "benchmark-observations.md",
+      "bytes": 1116,
+      "sha256": "b7a201441b059b2dd80d186d974e37ffd86f00e2dd9895418587b917b43a0fde",
+      "audience": "model"
+    },
+    {
+      "path": "expected-invariants.json",
+      "bytes": 3254,
+      "sha256": "9e6012678003c1252f07d4a81e89c0049152da3cf9621205f7cbfd9db7f5c0bf",
+      "audience": "evaluator"
+    },
+    {
+      "path": "fixture.json",
+      "bytes": 1141,
+      "sha256": "0d61993ae955366a20fccbd917a2d94021f19503fe9e0c35daa236fd811a03e9",
+      "audience": "harness"
+    },
+    {
+      "path": "project-brief.md",
+      "bytes": 1103,
+      "sha256": "1a18c07fd5181609cfc826a0bf24668b9e1944cb8b54d30793566a64b3960321",
+      "audience": "model"
+    }
+  ]
+}
