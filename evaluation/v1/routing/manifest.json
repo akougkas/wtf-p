@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 4,
-  "wtfp_commit": "cbba38cb0036bc42de6d0ace3e5ebe1d46b3c0e5",
+  "wtfp_commit": "4cd4a2aca768f5d5d45737e4e841f280f42cc6ad",
   "corpora": [
     { "path": "evaluation/v1/routing/cases.json", "sha256": "37abf883ce8f80e2f5419861dc52612adee14e09305df0797c82f360939e0687" },
     { "path": "evaluation/v1/routing/explicit-actions.json", "sha256": "f9b249a43f2b12593478ad98df061fe4f15997aac4d7c76883d879b780cc269a" },
@@ -22,20 +22,20 @@
     {
       "target": "antigravity",
       "path": "vendors/antigravity/.wtfp-generated.json",
-      "manifest_sha256": "ba4604ce6d3e0376e51a3e24996087e9bdefe11e771d64fb95c9122f64ffdcc4",
-      "source_sha256": "bfdc5a5611b04ed50b433ebda1d4f700f3a723e2f38f208c6a3ade2018163d42"
+      "manifest_sha256": "914a9b44ac13d121c6a2ddbb8fb85cbb39ea466f78dd3ef19331152a5dacc889",
+      "source_sha256": "1850b5dc3ce513101a568b3ab0427e9e6be59fe0b8e9898206708ee77bc77dd6"
     },
     {
       "target": "claude",
       "path": "vendors/claude/.wtfp-generated.json",
-      "manifest_sha256": "a2c1f81e5468ddae7cf3481d6989fac8c1c45121fd34b546020f11a0de58fe4d",
-      "source_sha256": "78eab1714050581471811ce48a16e8bbf1050f8014275df6140393d06c0e1cc7"
+      "manifest_sha256": "30d55bd433a9be71f42b5cbc232a18d3609b31ab7181b185aa12ef00990f512b",
+      "source_sha256": "ce64f5fd9e55a6e6575826ed49924e076f9a5cfa087cf2e82b71ded549bf265c"
     },
     {
       "target": "clio",
       "path": "vendors/clio/.wtfp-generated.json",
-      "manifest_sha256": "a41aedaa6eb01d5caaddf11bc95e93a80ee9e8a49ab667dd813484eeec3e9fa0",
-      "source_sha256": "e41e8e80979de205176a1afa8db78a391f984b4e9e454b9664acef6e18640578"
+      "manifest_sha256": "063a098f0959f42708eb330e56919e5fabb89e0b4abc5e56251fbda2878041a0",
+      "source_sha256": "d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3"
     },
     {
       "target": "codex-marketplace",
@@ -46,32 +46,32 @@
     {
       "target": "codex",
       "path": "vendors/codex/plugins/wtf-p/.wtfp-generated.json",
-      "manifest_sha256": "f90c8b75ab0ac72095ffaaeda7dccb0f96775b92e7210a12ba18b1ccf693af18",
-      "source_sha256": "920a829207d6cdfe85c96328b73f9981bcdd5539771e0f3ac505955ef2cd55b5"
+      "manifest_sha256": "b742c3eaf743ce993ef17bb3c1f8e7650729a506f26925699e44ed5b9644b381",
+      "source_sha256": "e089606e3070fc0ef13c7c2695a1e330d2414208d4524b556216d29c743c603d"
     },
     {
       "target": "copilot-marketplace",
       "path": "vendors/copilot/.wtfp-generated.json",
-      "manifest_sha256": "cfee0b54305bab23131c5449a8d7d902cc7535e6865c4dcb1487570c59441529",
-      "source_sha256": "13123d699e9bced42ceb26037a608cacb2ab785696081bb64009954bbda6f78a"
+      "manifest_sha256": "929dc38b3c0ac0cd0ac43cf4431c76e82925c306a83b4d0be33b6e710a0932f9",
+      "source_sha256": "1ba5638d5892a3376c3fee9cbcf556b14178d67ac74f04eaab44771f9d23fffc"
     },
     {
       "target": "copilot",
       "path": "vendors/copilot/plugins/wtf-p/.wtfp-generated.json",
-      "manifest_sha256": "3490d9a4822db84867f0bcc6d657e0909fb570003931608057fca53f638ac5a4",
-      "source_sha256": "a0466371d19185638d4499bff12fc7a1f147758eed96697b9107d95cd824a6eb"
+      "manifest_sha256": "24173f9e2c51141ac5bca55ae5b4bdbe6bf0fa389eafb10454894553d6daef4d",
+      "source_sha256": "2b54772a14211be1b97e822415d5231a8f6cc9a24bdc5166c3f4b306be82abfe"
     },
     {
       "target": "gemini",
       "path": "vendors/gemini/.wtfp-generated.json",
-      "manifest_sha256": "6a5951a1ba7bf1dd290927e47f08784dba55d7ba1673104c443563130f6166b9",
-      "source_sha256": "28f5d66ca53cc6acc7c67108624e703bd366c7a13019f41ff707ed05574fddde"
+      "manifest_sha256": "1786f0d6118e99ff17ccae50d66cd6f1a53ef875f747866bdf3f0693b76a9075",
+      "source_sha256": "ba0c91fcfa291ad0e8e17cec6fd6ca604a2d880ef8f892d3c5d7eb435461dd37"
     },
     {
       "target": "opencode",
       "path": "vendors/opencode/.wtfp-generated.json",
-      "manifest_sha256": "9c1d02fcff747d90f6a3e171618561e390efcdace8502cc1aa35657055a136d3",
-      "source_sha256": "ee15b9d09dcdf2e50eab7cee4ce95a6e64cf5a10e85452fd98f7b664f2b14aac"
+      "manifest_sha256": "077a72773bbb2647a5eb83e8bcc178a5836d5d2cc0fa9c4ed0b313b9bf088e33",
+      "source_sha256": "82241cc5fe13a4a33b63e046026ac9049901a5f228ebdf5420f1cf70d3500990"
     }
   ]
 }

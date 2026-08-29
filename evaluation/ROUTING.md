@@ -69,25 +69,25 @@ Dry-run, preparation, and execution verification recompute these bindings:
 
 | Input | Required identity |
 |---|---|
-| Routing manifest | SHA-256 `a87c82be91fca2b5240f59574412b4df22fdf3327d32a92f4fcd0fc159f94460` |
+| Routing manifest | SHA-256 `5cec0412f4e1d48fcc44091b4b5f6e5dcd00a14a6306386f66ee935484a57c5e` |
 | Client-surface contract | SHA-256 `cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594` |
 | Budget matrix | SHA-256 `69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039` |
-| WTF-P canonical source | commit `cbba38cb0036bc42de6d0ace3e5ebe1d46b3c0e5`, projection SHA-256 `f2bf6de3ce6d1c4b0323fc611912179c4b6923c941073caa75b4488e0e6feb47`, protocol v1, compiler v4 |
+| WTF-P canonical source | commit `4cd4a2aca768f5d5d45737e4e841f280f42cc6ad`, projection SHA-256 `8fca06a34a3189e912dabe2510eba2225a5580f2ccb956652a02f6b1e022cfad`, protocol v1, compiler v4 |
 | Claude Code | `2.1.251`, binary SHA-256 `fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7` |
 | Codex CLI | `0.144.1`, binary SHA-256 `a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902` |
 | Clio Coder | `0.3.8`, source commit `9b7b80ccbd3d2211d4079bc76558bb06d66a8583`, binary SHA-256 `f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162` |
 | Clio distribution tree | SHA-256 `27472f9b7253dc6608d70fbe623e4953896a9f0899ead00aa5faad1c783acae7` (213 files) |
-| Clio generated inventory | SHA-256 `a41aedaa6eb01d5caaddf11bc95e93a80ee9e8a49ab667dd813484eeec3e9fa0` |
-| Clio generated source | SHA-256 `e41e8e80979de205176a1afa8db78a391f984b4e9e454b9664acef6e18640578` |
+| Clio generated inventory | SHA-256 `063a098f0959f42708eb330e56919e5fabb89e0b4abc5e56251fbda2878041a0` |
+| Clio generated source | SHA-256 `d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3` |
 
 The WTF-P commit in the routing manifest is the immutable canonical-source
 commit, not a requirement that the repository remain checked out at that exact
 HEAD. The runner requires that commit to exist and be an ancestor of the actual
 HEAD. It then proves that the working projection still matches the canonical
 commit byte-for-byte and mode-for-mode across all 138 `protocol/**` files, all
-1,576 tracked `vendors/**` runtime files, the compiler, generator metadata and
+1,582 tracked `vendors/**` runtime files, the compiler, generator metadata and
 entry script, `CONTRIBUTING.md`, all seven registry-selected tool sources, the
-package version input, all nine generated inventories, and their 1,565
+package version input, all nine generated inventories, and their 1,573
 authenticated entries. A Git-visible untracked file under `protocol/` or
 `vendors/` also fails the projection. The sole local-state exclusion is
 `vendors/opencode/.gitignore`; it is untracked, is not inventory-authenticated,

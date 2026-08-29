@@ -36,8 +36,8 @@
     "project_protocol_version": 1,
     "catalog_schema": "wtfp.catalog/v1",
     "adapter_compiler_version": 4,
-    "canonical_source_commit": "cbba38cb0036bc42de6d0ace3e5ebe1d46b3c0e5",
-    "canonical_source_sha256": "e41e8e80979de205176a1afa8db78a391f984b4e9e454b9664acef6e18640578"
+    "canonical_source_commit": "4cd4a2aca768f5d5d45737e4e841f280f42cc6ad",
+    "canonical_source_sha256": "d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3"
   },
   "expected_invariants": [
     { "id": "evidence-fidelity", "class": "safety", "phases": ["always"], "required_status": "pass", "minimum_score": 1 },
