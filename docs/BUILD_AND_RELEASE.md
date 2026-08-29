@@ -32,6 +32,8 @@ Each envelope contains `.wtfp-generated.json`, which authenticates every compile
 npm run build:adapters       # Regenerate all nine plugin/marketplace envelopes
 npm run check:adapters       # Read-only reproducibility check
 npm run test:protocol        # Canonical contracts, skills, roles, schemas, compiler
+npm run test:tools           # Seven bounded bibliography/citation implementations
+npm run test:evaluation      # Routing, semantic-baseline, and lifecycle contracts
 npm run test:installer       # Paths, receipts, races, native registration, lifecycle
 npm run test:compatibility   # v0.5 behavior that remains intentionally supported
 npm run test:integration     # Isolated end-to-end installer scenarios
@@ -87,7 +89,8 @@ npm version 0.6.0-rc.2 --no-git-tag-version
 npm run build:adapters
 npm run test:all
 git diff --check
-git add package.json CHANGELOG.md protocol bin vendors test docs README.md ROADMAP.md
+git add package.json CHANGELOG.md
+git add -p protocol bin vendors test docs README.md ROADMAP.md
 git commit -m "chore(release): prepare v0.6.0-rc.2"
 ```
 
@@ -130,12 +133,21 @@ Before claiming first-class support, validate the packed artifact in disposable 
 - Claude: strict marketplace/plugin validation, marketplace add, plugin install/list, 36 command and 11 agent discovery
 - Codex: marketplace add, plugin add/list, seven skill discovery
 - Copilot: marketplace add, plugin install/list, command/agent/skill discovery
-- Clio: extension discover/install, recursive prompts, extension-bound agents, and fleets
+- Clio: extension discover/install, recursive prompts, extension-bound agents,
+  both fleet `validate`/`graph` paths, and an end-to-end nested-write rollback
+  check using the generated directory boundaries
 - OpenCode: configured-directory command, skill, and agent discovery
 - Antigravity: plugin validate/install/list
 - Gemini: extension validate/install/list
 
-At least one harmless academic fixture must also exercise real Claude, Codex, and Clio execution without touching normal client state. Record exact CLI and model versions in the release evidence; first-class support is an observed compatibility claim, not merely a valid JSON manifest.
+At least one harmless academic fixture must also exercise real Claude, Codex,
+and Clio execution without touching normal client state. Keep static lint,
+native discovery, and paid-model evidence as separate levels. Record exact
+binary/source hashes, requested and actual model/effort, permission policy,
+fixture hashes, cost provenance, profile pre/post hashes, and credential cleanup
+in the release evidence; first-class support is an observed compatibility claim,
+not merely a valid JSON manifest. Clio compatibility is capability-probed because
+0.3.8 does not enforce `compatibility.clio`.
 
 ## CI and release checklist
 
@@ -143,9 +155,13 @@ At least one harmless academic fixture must also exercise real Claude, Codex, an
 - [ ] `npm run test:all` passes
 - [ ] native validators and isolated discovery pass for every advertised target
 - [ ] the real-agent fixture evaluation passes its evidence and safety rubric
+- [ ] applicable routing/lifecycle evidence passes its sealed matrix or records an honest capability limitation
+- [ ] both generated Clio fleets validate and execute nested writes without rollback
 - [ ] `git diff --check` passes
 - [ ] `CHANGELOG.md`, README capability matrix, and migration notes match observed behavior
 - [ ] `npm run preflight` passes on the release commit
+- [ ] inspect the actual `npm pack --dry-run --json` file list, sizes, and forbidden obsolete paths
+- [ ] normal-profile pre/post hashes match and all disposable credential copies are absent
 - [ ] the tag is annotated and exactly matches `package.json`
 - [ ] `npm run preflight -- --publish` passes before registry publication
 - [ ] a fresh install from the published tarball passes in disposable homes

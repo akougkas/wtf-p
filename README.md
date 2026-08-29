@@ -32,7 +32,9 @@ npx wtf-p install gemini --advanced
 
 An interactive terminal can also run `npx wtf-p` and choose a target. A noninteractive bare invocation refuses to write anything; it requires an explicit target or scope.
 
-Then start a paper with the native WTF-P action exposed by your client:
+Then start a paper with the native WTF-P action exposed by your client. The
+following is the slash-command form used by Clio, Claude, Copilot, OpenCode,
+Antigravity, and Gemini:
 
 ```text
 /wtfp:new-paper
@@ -43,6 +45,14 @@ Then start a paper with the native WTF-P action exposed by your client:
 ```
 
 Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The coordinated Clio integration discovers the preferred nested `/wtfp:new-paper` namespace; installation probes that capability in a credential-free disposable profile and falls back gracefully for legacy clients.
+
+Codex exposes the same academic methods as native Agent Skills instead of a
+`/wtfp:*` command namespace. Select the owning plugin skill explicitly when the
+route must be unambiguous (for example, `$wtf-p:wtfp-start-project` followed by
+the `new-paper` request and its exact arguments). Existing user-level commands
+can take precedence over extension commands in clients that support both; use
+the client's discovery listing to confirm the reported source before testing a
+new installation.
 
 ## First-class adapters
 
@@ -60,7 +70,26 @@ The adapters are generated artifacts, not seven hand-maintained copies. Every ge
 
 For a GitHub-hosted Copilot coding agent, review and copy the `.github/` tree from `vendors/copilot/project/` in the release archive into the target repository, then commit it through that repository's normal review process. The user-level `install copilot` command configures the CLI plugin; it deliberately does not write into an unrelated project checkout.
 
-The release-candidate matrix was exercised with Claude Code 2.1.251, Codex CLI 0.144.1, Copilot CLI 1.0.80, OpenCode 1.18.16, Antigravity 1.1.22, Gemini CLI 0.57.0, and the coordinated Clio branch. Real isolated evaluations used Claude Sonnet 5/xhigh, Codex GPT-5.4/xhigh (GPT-5.6 was unavailable through that CLI's ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. See [compatibility evidence](docs/COMPATIBILITY.md) for exact claims and caveats. These are validation results for the repository release candidate, not a claim that `0.6.0-rc.1` has been published.
+The release-candidate native-discovery matrix was exercised with Claude Code
+2.1.251, Codex CLI 0.144.1, Copilot CLI 1.0.80, OpenCode 1.18.16,
+Antigravity 1.1.22, Gemini CLI 0.57.0, and Clio Coder 0.3.8 at merged
+commit `9b7b80cc`. Real isolated `new-paper` evaluations used Claude Sonnet
+5/xhigh, Codex GPT-5.4/xhigh (GPT-5.6 was unavailable through that CLI's
+ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. The compiler-v4 Clio rerun
+earned 8/8 with independent validation of all five previewed records. The
+broader paid routing matrix, full lifecycle chain, and cross-version baseline
+remain separate evidence gates. See [compatibility evidence](docs/COMPATIBILITY.md)
+for exact claims and caveats. These are repository validation results, not a
+claim that `0.6.0-rc.1` has been published.
+
+The first retained local-model lifecycle reading used Clio 0.3.8 with
+`dynamo/qwen3.8-27b`. Both native fleet contracts validated, but the lifecycle
+did not pass: high effort timed out before writing, and an effort-off retry
+stopped after `new-paper` because the model attempted a denied shell call and
+made 5,600 section words disagree with the 6,000-word outline target. The five
+records were individually schema-valid. See the
+[blocked evidence](evaluation/v1/evidence/clio-dynamo-lifecycle-blocked/README.md);
+the remaining lifecycle and routing roadmap items stay open.
 
 ## The paper lifecycle
 
@@ -81,7 +110,7 @@ Run `/wtfp:help` for all 36 stable actions.
 
 The canonical source lives under `protocol/` and has four parts:
 
-- A versioned `.planning` project protocol for the project manifest, configuration, state, sources, evidence, decisions, outline, sections, checkpoints, and validation results.
+- A versioned `.planning` project protocol with 11 JSON schemas and ten templates for the project manifest, configuration, state, sources, evidence, decisions, outline, sections, checkpoints, and validation results.
 - Seven standard Agent Skills for starting a project, literature research, section planning, section writing, manuscript review, project management, and research delivery.
 - Thirty-six semantic action contracts declaring inputs, reads, outputs, specialist delegation, tools, effects, and approval boundaries.
 - Eleven host-neutral specialist roles with strict mutation or verification result contracts.
@@ -153,7 +182,17 @@ npm run test:integration
 
 `check:adapters` fails when committed generated resources drift from their canonical inputs. The test suite also checks action parity, skills, portable roles, `.planning` schemas, resource containment, exact installer ownership, rollback, uninstall preservation, and native envelope structure.
 
-The Clio reference integration is developed alongside WTF-P in `clio-coder` at coordinated commits `1cf31602` and `1aebddfb`. It adds recursive namespaced extension prompts, extension-owned agents and fleets, same-extension skill binding, contained `${extensionRoot}` resource resolution, and preservation of nested template `state.json` resources. Effective source-branch discovery certifies 72 prompts (36 nested and 36 flat), 11 agents, seven skills, two fleets, and zero diagnostics.
+The Clio reference integration is merged into Clio Coder `v0.3.8` at
+`9b7b80cc`. It adds recursive namespaced extension prompts, extension-owned
+agents and fleets, same-extension skill binding, contained `${extensionRoot}`
+resource resolution, exact operator-argument preservation, preservation of
+nested template `state.json` resources, and extension-aware fleet preflight.
+Effective package discovery certifies 72 prompts (36 nested and 36 flat), 11
+agents, seven skills, two fleets, and zero diagnostics. WTF-P capability-probes
+that surface because Clio currently records, but does not enforce,
+`compatibility.clio`. The generated fleet contracts use directory boundaries
+(`.planning/` and `paper/`) so nested writes are authorized without broadening
+the worker sandbox.
 
 ## Design principles
 
@@ -173,6 +212,8 @@ WTF-P was built at the [Gnosis Research Center](https://grc.iit.edu/) at Illinoi
 - [Changelog](CHANGELOG.md)
 - [Modernization architecture](docs/agent-platform-modernization.md)
 - [Compatibility evidence](docs/COMPATIBILITY.md)
+- [Behavioral evaluation methodology](evaluation/README.md)
+- [Tool execution and MCP decision](docs/adr/0001-hybrid-tool-execution.md)
 - [v0.5 → v0.6 migration guide](docs/MIGRATION_V05_TO_V06.md)
 - [Build and release](docs/BUILD_AND_RELEASE.md)
 - [Contributing](CONTRIBUTING.md)

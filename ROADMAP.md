@@ -114,15 +114,21 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Detect drift and remove only stale compiler-owned outputs
 - [x] Add explicit `wtfp install <target>` grammar for all seven clients
 - [x] Add exact-file v2 receipts, rollback, containment, and safe uninstall
-- [x] Complete the final isolated live-agent quality evaluation matrix
+- [x] Complete isolated native discovery and the primary Claude, Codex, and Clio `new-paper` evaluations
+- [x] Define versioned routing corpora, semantic invariants, budget metadata, and fail-closed comparison tooling
+- [x] Canonicalize both Clio fleets and validate their corrected directory boundaries with Clio 0.3.8
+- [x] Retain the first `dynamo/qwen3.8-27b` lifecycle reading as an honest action-1 block, without promoting it to a baseline
+- [ ] Complete the paid skill-routing matrix and full Clio lifecycle/fleet runs
+- [ ] Establish observed cross-version academic-output baselines
 - [ ] Publish `0.6.0-rc.1` and gather migration feedback before stable `0.6.0`
 
 ### Deferred beyond the release candidate
 
-- [ ] Evaluate an optional MCP research service against deterministic local tools
+- [x] Evaluate MCP versus deterministic local tools and accept the local-first hybrid ADR
+- [ ] Reconsider an optional network-only MCP server when the ADR activation gates and a Clio gateway exist
 - [ ] Add visual figure and chart review workflows
 - [ ] Add citation-network visualization and graph export
-- [ ] Add behavioral quality baselines across client/model releases
+- [ ] Accumulate comparable observed behavioral baselines across client/model releases
 
 ---
 

@@ -13,7 +13,7 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | Claude Code | 2.1.251 | Strict marketplace validation; native marketplace add/install/list; 36 commands and 11 agents loaded with zero plugin errors; `/wtfp:new-paper` confirmed through TUI autocomplete |
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
 | GitHub Copilot CLI | 1.0.80 | Native marketplace install/list and Claude-compatible plugin discovery; generated, committed `.github` projection with 36 prompts, 11 agents, seven skills, instructions, and portable resources |
-| Clio Coder | coordinated `feat/wtfp-extension-resources` branch | Effective source-branch discovery at commits `1cf31602` + `1aebddfb`: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics |
+| Clio Coder | 0.3.8, merged source `9b7b80cc` | Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
 | OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources |
 | Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills |
 | Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered |
@@ -30,18 +30,94 @@ The fixture is a harmless synthetic HPC-checkpointing research project with an e
 | --- | --- | --- |
 | Claude Code | `claude-sonnet-5`, xhigh, restricted, isolated plugin/profile | 8/8. Created exactly the five requested `.planning` records. Independent Draft 2020-12 validation passed 5/5. No network or VCS effect. |
 | Codex CLI | `gpt-5.4`, xhigh, read-only, approval `never`, `$wtfp-start-project` | 8/8. Returned a complete five-record preview; independent schema validation passed 5/5; worktree and HEAD unchanged. |
-| Clio Coder | `gpt-5.6-terra`, xhigh, read-only, isolated extension/profile | 7/8 on compiler v3. Invocation arguments propagated correctly and all evidence/safety gates passed. It truthfully declined literal schema validation because extension schemas were outside project-scoped read tools. Compiler v4 addresses that exact cause by binding each action contract plus only its relevant schemas and templates into the expanded prompt. |
+| Clio Coder | `gpt-5.6-terra`, xhigh, read-only, isolated compiler-v3 extension/profile | Historical 7/8. Invocation arguments and the evidence/safety gates passed. It truthfully declined literal schema validation because the schemas were outside project-scoped read tools. |
+| Clio Coder | `gpt-5.6-terra`, xhigh, read-only, isolated compiler-v4 extension/profile | 8/8. The complete five-record preview independently passed 5/5 canonical schemas; exact raw invocation arguments, evidence safety, approval/effect boundaries, and a contract-compatible next action all passed. No project, network, or VCS mutation occurred. |
 
 Codex was first asked for GPT-5.6, but the installed CLI rejected that model through its ChatGPT-auth route. The supported GPT-5.4/xhigh result is reported rather than relabeling the model.
 
-The v4 compiler change is a context-delivery fix over the evaluated v3 workflow: it adds exact action/schema/template includes, prunes undeclared host tools, and changes no model identity or permission policy. Native validators, static self-containment tests, and the zero-diagnostic effective source-branch discovery cover the v4 projection; the 7/8 Clio score remains the conservative live claim. No paid v4 real-model rerun was performed.
+The v4 run used Clio Coder 0.3.8, GPT-5.6 Terra, xhigh effort, and the
+`openai-codex` target in a mode-0700 disposable root with every HOME, XDG,
+temporary, and Clio-specific directory contained there. The exact 1,908-byte
+raw payload retained both literal quotes and matched SHA-256
+`88cb937f67e740270b63d65c21c011d1e523e7d0aef66177bd4380d271b91326`.
+It took approximately 453.4 seconds. Clio reported an estimated USD
+`1.5429764`; that value is preserved as client-estimated with unknown provider
+metering provenance, not rounded or presented as a provider invoice. The v4
+change binds the selected action plus only its relevant schemas/templates and
+does not change the model or permission policy.
+
+### Local Dynamo lifecycle reading
+
+The first retained process-lifecycle reading used the same Clio 0.3.8 binary
+digest with the local `dynamo` LM Studio target and `qwen3.8-27b`. Both
+generated fleets first passed native validation. A high-effort `new-paper`
+attempt was stopped after 1,133,725 ms with no writes or prohibited effects. A
+fresh effort-off retry completed the Clio turn in 171,852 ms and produced the
+five expected records; literal canonical schema validation passed 5/5.
+
+The campaign stopped before `map-project`. The independent cross-record check
+found section targets totaling 5,600 against an outline target of 6,000, and
+native events recorded one explicitly forbidden `bash` attempt. Clio denied
+that call in 17 ms and no shell effect occurred, which validates the host
+safety boundary but does not make the model behavior compliant. The typed
+[blocked result](../evaluation/v1/evidence/clio-dynamo-lifecycle-blocked/README.md)
+therefore remains a regression reading; it is not an observed lifecycle
+baseline. The local runtime reported zero cost counters, but no provider-priced
+billing provenance exists, so cost is recorded as unavailable rather than as a
+metered USD 0 claim.
 
 ## Isolation evidence
 
-Live traces and non-secret fixture artifacts remain under `/tmp/wtfp-live-eval.FEmB4M` with mode `0700` for local inspection. Copied credential files were securely deleted after the runs. Preflight and postflight SHA-256 values for normal Claude, Codex, Clio, Copilot, and Antigravity credential/config files were byte-for-byte identical. Separate tmux processes and stale isolated Gemini process groups were terminated.
+The sanitized compiler-v4 rubric, five records, validation report, trace
+summary, exact argument receipt, and authenticated inventory are retained in
+[`evaluation/v1/evidence/clio-new-paper-compiler-v4`](../evaluation/v1/evidence/clio-new-paper-compiler-v4/README.md),
+with an executable 11-check verifier. Where still present, the fuller private
+traces are under `/tmp/wtfp-live-eval.FEmB4M` and
+`/tmp/wtfp-clio-v4-rerun.gydonK`; those temporary paths are optional local
+evidence, not release dependencies. Copied credential files were securely
+removed after the completed runs. Preflight and postflight SHA-256 inventories
+for monitored normal client configuration and credential files were
+byte-for-byte identical. Separate evaluation processes and stale isolated
+process groups were terminated.
 
 ## Clio release boundary
 
-The WTF-P extension declares the capability level implemented by coordinated Clio commits `1cf31602` and `1aebddfb`: recursive namespaced prompt discovery, `${extensionRoot}` containment, extension-owned agents/fleets, same-extension skill binding, and preservation of nested template `state.json` resources. Effective installation from that source branch produced 72 prompts, 11 agents, seven skills, two fleets, and zero diagnostics. Flat `/wtfp-<action>` prompts remain in the bundle for older shallow prompt discovery. Until those Clio changes are released, the full agents/fleets/nested-prompt claim applies to the named branch rather than an older registry package.
+The WTF-P extension consumes the resource surface merged into Clio Coder
+`v0.3.8`: recursive namespaced prompt discovery, `${extensionRoot}`
+containment, extension-owned agents/fleets, same-extension skill binding, and
+preservation of nested resources named `state.json`. Package-level exercise
+loaded all 11 agents from source `extension`, both two-step fleets, all nested
+and flat prompts, and the seven skills. The nested
+`project/templates/state.json` survived installation byte-exact while the
+extension-manager's package-root `state.json` was correctly excluded. A
+reserved built-in agent still cannot be shadowed and `coder` continues to
+resolve to source `builtin`.
+
+Two coordinated patch-release fixes matter to WTF-P behavior. Clio issue #240
+preserves byte-exact raw `$ARGUMENTS` while retaining tokenized `$1`, `$@`, and
+slice semantics. Clio issue #241 makes `fleet validate` and `fleet graph` use
+the same extension-aware agent catalog as fleet execution. WTF-P also corrected
+its own fleet contracts from the literal-file boundaries `.planning` and
+`paper` to the directory boundaries `.planning/` and `paper/`; the former shape
+was observed to roll back a real nested planner output at the write-boundary
+gate.
+
+Clio 0.3.8 parses and stores `compatibility.clio` but does not enforce it
+(tracked as Clio issue #242). WTF-P therefore uses its credential-free
+capability probe as the authoritative compatibility gate. Flat
+`/wtfp-<action>` prompts remain for older shallow discovery, but those older
+clients do not receive an agents/fleets claim. A pre-existing user-level prompt
+can legitimately take precedence over the extension's namespaced prompt; the
+client discovery listing reports the selected source, and WTF-P does not delete
+the user's copy.
+
+## Evidence not yet claimed
+
+The compiler-v4 `new-paper` result does not stand in for the broader studies.
+No completed claim is made here yet for the paid nine-action Clio lifecycle
+chain, corrected fleets end to end beyond native validation, the paid Claude/Codex/Clio activation
+matrix, or an observed cross-version academic-output baseline. The versioned
+fixtures, rubrics, and fail-closed runners exist under `evaluation/`; their
+static contract tests remain a different evidence level from model execution.
 
 This document records release-candidate evidence only. It does not claim that WTF-P `0.6.0-rc.1` or the coordinated Clio changes have been published.

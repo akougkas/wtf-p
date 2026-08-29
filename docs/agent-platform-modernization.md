@@ -1,6 +1,6 @@
 # WTF-P Agent Platform Modernization
 
-Status: implemented; release-candidate engineering validation complete; publication pending
+Status: architecture implemented; final behavioral evaluation in progress; publication pending
 
 Target release: `0.6.0-rc`
 
@@ -44,7 +44,7 @@ The following content is generated and must pass a reproducibility check:
 - Codex plugin metadata and target-specific UI metadata
 - Copilot agents, plugin metadata, and cloud-safe repository projections
 - OpenCode commands and agents
-- Antigravity plugin, command/skill, agent, rule, hook, and MCP projections
+- Antigravity plugin, command/skill, agent, rule, and hook projections
 - Gemini TOML commands and extension resources
 - Flat Clio prompt aliases required by current Clio releases
 - Package inventories and installation receipts
@@ -58,7 +58,7 @@ Targets are explicit. The installer must never silently treat two clients as ali
 | Target ID | Product role | Native package strategy | Priority |
 | --- | --- | --- | --- |
 | `clio` | Reference implementation and primary orchestration target | Clio extension, skills, prompts, strict agents, fleets | First |
-| `claude` | First-class terminal agent | Claude plugin, skills, agents, hooks, MCP, compatibility commands | First |
+| `claude` | First-class terminal agent | Claude plugin, skills, agents, hooks, compatibility commands | First |
 | `codex` | First-class OpenAI terminal/app agent | Codex plugin and standard skills, native agents/hooks where supported | First |
 | `copilot` | Local CLI and cloud coding agent | Native/Open Plugin envelope plus committed cloud projection | First |
 | `opencode` | First-class open terminal agent | Skills, commands, agents, optional minimal JS plugin | First |
@@ -74,23 +74,29 @@ Clio already has the strongest primitives for WTF-P's orchestration model: recur
 The initial WTF-P adapter must work with the current Clio release without modifying a user's normal home:
 
 - Ship a self-contained extension.
-- Expose flat compatibility prompts such as `prompts/wtfp-new-paper.md` (`/wtfp-new-paper`) while current prompt discovery is shallow. Do not use colon characters in filenames because they are invalid on Windows.
-- Ship the future-native nested form beside each alias, such as `prompts/wtfp/new-paper.md`; current Clio ignores it and patched Clio derives `/wtfp:new-paper` from it.
+- Expose flat compatibility prompts such as `prompts/wtfp-new-paper.md` (`/wtfp-new-paper`) for older shallow discovery. Do not use colon characters in filenames because they are invalid on Windows.
+- Ship the native nested form beside each alias, such as `prompts/wtfp/new-paper.md`; Clio Coder 0.3.8 derives `/wtfp:new-paper` from it.
 - Ship standard skills and extension-owned workflow resources.
 - Install only explicitly owned agent and fleet recipe files.
 - Resolve every resource from the extension root or a declared project root.
 - Test with `HOME`, `CLIO_CODER_HOME`, `CLIO_CODER_{CONFIG,DATA,STATE,CACHE,BIN}_DIR`, and `TMPDIR` all pointed into the same disposable root. Per-role directories can override `CLIO_CODER_HOME`, so every value is set explicitly.
 - Set `CLIO_CODER_REQUIRE_HOME_PREFIX=1` in isolation tests.
 
-Three coordinated changes in `~/iowarp/clio-coder` unlock the intended native UX:
+The coordinated changes merged into Clio Coder `v0.3.8` at `9b7b80cc`
+provide the intended native UX:
 
 1. Recursive namespaced prompt discovery, for example `prompts/wtfp/new-paper.md` becoming `/wtfp:new-paper`.
 2. Extension manifest resource kinds for agents and fleets with exact ownership and lifecycle handling.
 3. Prompt-relative or `${extensionRoot}` references with lexical and realpath containment checks.
+4. Byte-faithful raw `$ARGUMENTS` after tokenized positional/slice expansion.
+5. One extension-aware agent catalog for execution and fleet preflight.
 
 `compatibility.clio` is currently parsed but not enforced, so compatibility must be capability-probed. The clean probe is whether `clio-coder extensions discover <bundle> --json` preserves `resources.agents` and `resources.fleets` in its normalized manifest. Extension agent recipes must resolve bound skills from their own extension skill root before global collision handling; a same-named untrusted project compatibility skill must never become an explicit worker path.
 
-MCP integration is deferred until Clio's operational MCP gateway exists. The first adapter must not pretend that a reserved manifest field activates a server.
+ADR 0001 selects local contained transforms and no MCP server for the release
+candidate. A network-only MCP service remains conditional on executable
+security/lifecycle gates and a supported host gateway; no adapter may pretend
+that a reserved manifest field activates a server.
 
 ## Skills and explicit workflows
 
@@ -262,7 +268,12 @@ Gate: every state-changing command is inspectable, contained, reversible, and co
 
 Gate: no known high-severity ownership or data-loss defect, no false first-class claim, and a clean package preflight.
 
-The release-candidate evidence intentionally stops short of two broader behavioral claims: stable cross-version academic-output baselines and a paid Clio map/plan/draft/review/pause/resume chain. Static protocol fixtures, native discovery, isolated installation, and the real `new-paper` rubric are release-candidate gates; activation/non-activation model studies, the full Clio chain, and repeatable output baselines remain required before `1.0.0`. `COMPATIBILITY.md` reports that boundary instead of converting planned coverage into observed evidence.
+The compiler-v4 Clio `new-paper` rerun is now observed at 8/8 with independent
+validation of all five previewed records. Stable cross-version academic-output
+baselines, the paid activation/non-activation matrix, corrected fleet execution,
+and the paid Clio map/plan/draft/review/pause/resume chain remain distinct until
+their retained evidence is complete. `COMPATIBILITY.md` reports that boundary
+instead of converting planned coverage into observed evidence.
 
 ## Current execution ledger
 
@@ -279,13 +290,20 @@ The release-candidate evidence intentionally stops short of two broader behavior
 - [x] Clio installation capability-probes agents, fleets, skills, and namespaced prompts inside a credential-free disposable probe home.
 - [x] Isolated native discovery matrix completed for Claude, Codex, Copilot, Clio, OpenCode, Antigravity, and Gemini.
 - [x] Real Claude Sonnet 5/xhigh, Codex xhigh, and Clio GPT-5.6 Terra/xhigh evaluations completed with normal-profile hash verification and credential cleanup.
+- [x] Paid compiler-v4 Clio `new-paper` rerun completed at 8/8 with five-of-five independent schema validation.
+- [x] MCP-versus-local decision recorded as local-first hybrid in ADR 0001; no server is shipped.
+- [x] Versioned routing corpus, semantic rubric, fixtures, comparison tooling, and lifecycle/routing harnesses implemented.
+- [x] Both Clio fleet contracts moved to canonical `protocol/fleets/*.md` sources and passed native Clio 0.3.8 validation with directory write boundaries.
+- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper`; no later action, process-boundary resume, or fleet execution was inferred.
+- [ ] Complete and retain the paid routing matrix, corrected Clio fleet runs, full process-boundary lifecycle chain, and independent semantic assessment.
+- [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
 - [ ] Publish `0.6.0-rc.1` after final human review; publishing remains deliberately outside the implementation run.
 
 ## Decisions intentionally deferred
 
-- Whether the research service remains MCP-based or becomes a deterministic local tool with optional MCP exposure.
-- A paid Clio compiler-v4 rerun, full lifecycle execution, skill activation/non-activation study, and stable academic-output baseline. These are `1.0.0` evidence gates and are not claimed by the release candidate.
+- Whether a future network-only MCP service clears ADR 0001's activation gates after a supported Clio gateway exists. The release candidate decision itself is complete: local-first, no server shipped.
+- Full lifecycle execution, paid skill activation/non-activation measurement, corrected fleet execution, and an observed cross-version academic-output baseline remain evidence gates until their exact retained results exist.
 - A `1.0.0` date. First-class support is an observed compatibility claim, not a roadmap label.
 
 Seven intent-oriented skills are now fixed for the release-candidate cycle. Generated target artifacts are committed with authenticated inventories so reviewers and CI can inspect reproducibility directly.

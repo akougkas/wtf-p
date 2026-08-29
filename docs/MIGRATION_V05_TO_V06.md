@@ -24,7 +24,7 @@ Inspect each existing installation:
 ```bash
 npx wtf-p status --claude
 npx wtf-p doctor --claude
-npx wtf-p-uninstall --claude --dry-run
+npx wtf-p uninstall --claude --dry-run
 ```
 
 Replace `--claude` with `--gemini` or `--opencode` for another v0.5 target. A legacy installation without a v2 ownership receipt is diagnostic-only by default. WTF-P reports it and preserves it unless you explicitly choose the documented forced migration path.
@@ -34,7 +34,7 @@ Replace `--claude` with `--gemini` or `--opencode` for another v0.5 target. A le
 If the dry run identifies a trustworthy v2 installation, uninstall exact owned files:
 
 ```bash
-npx wtf-p-uninstall --claude --backup --yes
+npx wtf-p uninstall --claude --backup --yes
 ```
 
 If ownership cannot be proven, either leave the legacy copy in place while testing v0.6 under an isolated client home, or review the reported files and use the explicit force policy only after making a backup. The uninstaller never recursively removes a generic `commands/`, `skills/`, `agents/`, `bin/`, or `mcp/` directory.
@@ -64,7 +64,23 @@ npx wtf-p status --<target>
 npx wtf-p doctor --<target>
 ```
 
-For Clio, the installer also performs an isolated, credential-free capability probe. Older Clio builds retain flat prompts and skills, while recursive `/wtfp:*` prompts, extension agents, and fleets require the coordinated Clio resource support described in `COMPATIBILITY.md`.
+For Clio, the installer also performs an isolated, credential-free capability
+probe. Clio Coder 0.3.8 includes recursive `/wtfp:*` prompts, extension agents,
+and fleets. The manifest's `compatibility.clio` field is advisory in 0.3.8, so
+the probe—not the field—is the authoritative gate. Older builds retain flat
+prompts and skills but can silently load zero extension agents or fleets.
+
+Clio preserves the raw operator prose bound to `$ARGUMENTS` in 0.3.8, including
+quotes, tabs, repeated spaces, and literal `$1`; positional forms such as `$1`,
+`$@`, and `${@:N:L}` retain tokenized semantics. Existing user-level prompts
+may take precedence over an extension prompt. Inspect `/prompts` and its
+reported source before assuming `/wtfp:new-paper` resolves to the newly
+installed extension; preserve or remove an older copy through the user's normal
+backup process rather than letting WTF-P overwrite it.
+
+Codex exposes academic workflows through Agent Skills, not the slash-command
+surface shown below. Use the owning `$wtf-p:<skill>` selector when explicit
+routing is required.
 
 For a GitHub-hosted Copilot coding agent, the user-level CLI installation is not enough: review and copy `vendors/copilot/project/.github/` from the release archive into the academic repository and commit it through the repository's normal review process. WTF-P does not silently merge or overwrite a project's existing `.github` instructions.
 
@@ -117,13 +133,13 @@ Then preview one bounded write, such as `/wtfp:plan-section`, and confirm that:
 Preview exact removal:
 
 ```bash
-npx wtf-p-uninstall --<target> --dry-run
+npx wtf-p uninstall --<target> --dry-run
 ```
 
 Then remove unchanged owned files:
 
 ```bash
-npx wtf-p-uninstall --<target> --backup --yes
+npx wtf-p uninstall --<target> --backup --yes
 ```
 
 Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.
