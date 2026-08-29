@@ -73,7 +73,7 @@
     },
     {
       "id": "filesystem.write",
-      "scope": "selected section review artifact"
+      "scope": "project://sections/{section}/reviews/{review}, project://validations/{validation}, project://sections/{section}"
     },
     {
       "id": "user.gate",

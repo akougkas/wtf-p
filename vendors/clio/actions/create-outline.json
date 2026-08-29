@@ -62,7 +62,7 @@
     },
     {
       "id": "filesystem.create",
-      "scope": "project://structure/outline, project://sections/{section}, project://state, project://validations/{validation}"
+      "scope": "project://sections/{section}, project://validations/{validation}"
     },
     {
       "id": "filesystem.read",

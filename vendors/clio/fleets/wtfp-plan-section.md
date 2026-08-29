@@ -7,7 +7,7 @@ steps:
     id: plan
     agent: wtfp-section-planner
     scope: workspace
-    writes: [.planning]
+    writes: [.planning/]
     dependencies: []
   - kind: agent
     id: check

@@ -13,7 +13,7 @@ argument-hint: "[arguments]"
 
 ## Record contract
 
-Read: `project://state`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: `project://checkpoints/{checkpoint}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -22,8 +22,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Reconcile state and inspect the active checkpoint plus linked Markdown handoff.
-2. Report completed work, pending work, blockers, stale assumptions, and the exact resume action.
+1. Reconcile the manifest, config, state, and author decisions; inspect the active checkpoint plus linked Markdown handoff, section plan, reviews, validations, manuscript artifact, and outline.
+2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact resume action.
 3. After user selection, resolve the checkpoint and set state active; preserve the handoff until successful continuation is confirmed.
 
 ## Safety and completion
@@ -38,10 +38,20 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${extensionRoot}/project/schemas/common.schema.json
 @${extensionRoot}/project/schemas/checkpoint.schema.json
 @${extensionRoot}/project/templates/checkpoint.json
+@${extensionRoot}/project/schemas/config.schema.json
+@${extensionRoot}/project/templates/config.json
+@${extensionRoot}/project/schemas/decisions.schema.json
+@${extensionRoot}/project/templates/decisions.json
+@${extensionRoot}/project/schemas/manifest.schema.json
+@${extensionRoot}/project/templates/manifest.json
+@${extensionRoot}/project/schemas/outline.schema.json
+@${extensionRoot}/project/templates/outline.json
 @${extensionRoot}/project/schemas/section.schema.json
 @${extensionRoot}/project/templates/section.json
 @${extensionRoot}/project/schemas/state.schema.json
 @${extensionRoot}/project/templates/state.json
+@${extensionRoot}/project/schemas/validation.schema.json
+@${extensionRoot}/project/templates/validation.json
 
 ## Invocation input
 

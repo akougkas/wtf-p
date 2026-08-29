@@ -21,7 +21,7 @@ Contract: [protocol/actions/write-section.json](../../../actions/write-section.j
 8. Run goal-backward verification against every plan success criterion and assigned outline claim. Check word target, citation resolution through source/evidence records, figures and tables, terminology, transitions, and prohibited scope. Persist the read-only result at `project://validations/{validation}`.
 9. If gaps remain, offer to fix bounded defects, accept documented debt, create a revision plan, or request human review. Do not mark the plan complete merely because prose exists.
 10. After successful writing, create or update `project://sections/{section}/summary` in Markdown with outputs, word count, claims addressed, citations and assets used, decisions, deviations, validation, and next work.
-11. Reconcile the section record and `project://state` only after the manuscript, summary, and validation persist successfully. Never run a VCS operation; return it only as a handoff to a separately declared action.
+11. Reconcile `manifest.artifacts.manuscripts`, the section record, and `project://state` only after the manuscript, summary, and validation persist successfully. Never run a VCS operation; return it only as a handoff to a separately declared action.
 
 Completion requires readable manuscript output, a durable summary, honest verification, and consistent project state.
 

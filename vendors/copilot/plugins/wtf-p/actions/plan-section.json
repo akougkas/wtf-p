@@ -87,7 +87,7 @@
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sections/{section}/plans/{plan}, project://validations/{validation}, project://sections/{section}, project://state"
+      "scope": "project://sections/{section}/plans/{plan}, project://validations/{validation}, project://checkpoints/{checkpoint}, project://sections/{section}, project://state"
     },
     {
       "id": "user.gate",

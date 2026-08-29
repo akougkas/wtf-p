@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the author-selected bibliography, every in-scope manuscript citation, and verified or provisional source/evidence records under the configured citation policy.
-2. Report missing identities, metadata conflicts, uncited entries, unsupported citations, and style defects; verify external metadata only after the declared user gate.
+2. Report missing identities, metadata conflicts, uncited entries, unsupported citations, and style defects; search declared metadata providers for candidate records only after the gate names the providers and bounded query set. Treat provider results as candidate audit evidence until independently verified.
 3. Leave the bibliography, manuscript, source records, and evidence records unchanged. When requested, preview and create a separate corrected-bibliography candidate, validate it, and record unresolved issues and exact input revisions in the audit result.
 
 ## Safety and completion

@@ -46,7 +46,7 @@
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
+      "scope": "project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.read",

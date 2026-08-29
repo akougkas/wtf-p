@@ -7,7 +7,7 @@ steps:
     id: draft
     agent: wtfp-section-writer
     scope: workspace
-    writes: [paper, .planning]
+    writes: [paper/, .planning/]
     dependencies: []
   - kind: agent
     id: review

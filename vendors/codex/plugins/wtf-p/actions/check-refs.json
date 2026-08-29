@@ -14,7 +14,7 @@
       "agent.delegate",
       "filesystem.read",
       "filesystem.write",
-      "network.fetch",
+      "network.search",
       "tool.execute",
       "user.interaction"
     ],
@@ -65,8 +65,8 @@
       "scope": "project://config, project://sources/{source}, project://evidence/{evidence}, project://materials/{artifact}, project://paper/{artifact}"
     },
     {
-      "id": "network.fetch",
-      "scope": "declared citation metadata providers"
+      "id": "network.search",
+      "scope": "bounded queries against declared citation metadata providers"
     },
     {
       "id": "tool.execute",
@@ -74,7 +74,7 @@
     },
     {
       "id": "user.gate",
-      "scope": "external metadata lookup and corrected-candidate generation"
+      "scope": "the external providers, bounded query set, and corrected-candidate generation"
     }
   ]
 }

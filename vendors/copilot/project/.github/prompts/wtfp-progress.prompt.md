@@ -15,7 +15,7 @@ tools: ["read","search"]
 [skills/wtfp-manage-project/references/actions.md](../wtfp/skills/wtfp-manage-project/references/actions.md)
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: none.
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -24,7 +24,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Validate and reconcile manifest, state, outline, section records, checkpoints, validations, and linked artifacts.
+1. Validate and reconcile manifest, state, outline, section records, linked plans, reviews, summaries, handoffs, source/evidence records, checkpoints, validations, and manuscript artifacts.
 2. Compute status and counts from records and actual artifacts; report contradictions instead of silently repairing them.
 3. Recommend one next action with its reason, prerequisites, and blocking checkpoint, if any.
 
@@ -44,12 +44,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 [project/templates/config.json](../wtfp/project/templates/config.json)
 [project/schemas/decisions.schema.json](../wtfp/project/schemas/decisions.schema.json)
 [project/templates/decisions.json](../wtfp/project/templates/decisions.json)
+[project/schemas/evidence.schema.json](../wtfp/project/schemas/evidence.schema.json)
+[project/templates/evidence.json](../wtfp/project/templates/evidence.json)
 [project/schemas/manifest.schema.json](../wtfp/project/schemas/manifest.schema.json)
 [project/templates/manifest.json](../wtfp/project/templates/manifest.json)
 [project/schemas/outline.schema.json](../wtfp/project/schemas/outline.schema.json)
 [project/templates/outline.json](../wtfp/project/templates/outline.json)
 [project/schemas/section.schema.json](../wtfp/project/schemas/section.schema.json)
 [project/templates/section.json](../wtfp/project/templates/section.json)
+[project/schemas/source.schema.json](../wtfp/project/schemas/source.schema.json)
+[project/templates/source.json](../wtfp/project/templates/source.json)
 [project/schemas/state.schema.json](../wtfp/project/schemas/state.schema.json)
 [project/templates/state.json](../wtfp/project/templates/state.json)
 [project/schemas/validation.schema.json](../wtfp/project/schemas/validation.schema.json)

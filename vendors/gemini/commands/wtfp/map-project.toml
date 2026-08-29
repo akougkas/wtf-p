@@ -271,7 +271,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
+      "scope": "project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.read",

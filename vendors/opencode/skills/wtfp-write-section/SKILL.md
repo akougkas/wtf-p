@@ -23,7 +23,7 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 4. Support claims only with verified project evidence. Never fabricate citations, quotations, results, measurements, methods, or limitations.
 5. Preserve citation keys, technical notation, figure and table references, and declared terminology.
 6. Verify the result backward against the plan and assigned claims. Classify remaining gaps as fix now, accepted debt, revision work, or human review.
-7. Update the Markdown section summary, section record, and `project://state` only after the manuscript write succeeds and validation is recorded.
+7. Update the Markdown section summary, synchronize the manuscript URI in `project://manifest`, and update the section record and `project://state` only after the manuscript write succeeds and validation is recorded.
 8. Report changed files, word-count delta, evidence gaps, verification state, and the next review action.
 
 ## Bound execution

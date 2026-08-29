@@ -12,7 +12,15 @@ const bibIndex = require('./index.js');
  * 3. Returns summary
  */
 
-async function analyze(filePath) {
+async function analyze(filePath, options = {}) {
+  const referenceDate = options.referenceDate === undefined ? new Date() : options.referenceDate;
+  if (!(referenceDate instanceof Date) || Number.isNaN(referenceDate.getTime())) {
+    throw new TypeError('referenceDate must be a valid Date');
+  }
+  const batchDelayMs = options.batchDelayMs === undefined ? 1000 : options.batchDelayMs;
+  if (!Number.isFinite(batchDelayMs) || batchDelayMs < 0) {
+    throw new TypeError('batchDelayMs must be a non-negative finite number');
+  }
   // 1. Index/Parse
   let entries = [];
   try {
@@ -48,8 +56,9 @@ async function analyze(filePath) {
         const papers = await s2.search(entry.title, { limit: 1 });
         if (papers && papers.length > 0) {
           const p = papers[0];
-          const velocity = ranker.calculateVelocity(p.citationCount, p.year);
-          const age = new Date().getFullYear() - (p.year || new Date().getFullYear());
+          const velocity = ranker.calculateVelocity(p.citationCount, p.year, referenceDate);
+          const currentYear = referenceDate.getUTCFullYear();
+          const age = currentYear - (p.year || currentYear);
 
           const enriched = {
             key: entry.key,
@@ -75,8 +84,10 @@ async function analyze(filePath) {
         results.unknown.push({ key: entry.key, title: entry.title, error: e.message });
       }
     }));
-    // Small delay between batches
-    await new Promise(r => setTimeout(r, 1000));
+    // Small delay between network batches, but never delay after the final batch.
+    if (i + BATCH_SIZE < entries.length && batchDelayMs > 0) {
+      await new Promise(r => setTimeout(r, batchDelayMs));
+    }
   }
 
   // Sort

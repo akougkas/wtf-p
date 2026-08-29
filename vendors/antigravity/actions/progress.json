@@ -25,8 +25,15 @@
     "project://decisions",
     "project://structure/outline",
     "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/summary",
+    "project://sections/{section}/handoff",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
     "project://checkpoints/{checkpoint}",
-    "project://validations/{validation}"
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
   ],
   "produces": [],
   "delegation": [],
@@ -34,7 +41,7 @@
   "effects": [
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://checkpoints/{checkpoint}, project://validations/{validation}"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://sections/{section}/handoff, project://sources/{source}, project://evidence/{evidence}, project://checkpoints/{checkpoint}, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "user.gate",

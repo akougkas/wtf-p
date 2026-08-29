@@ -18,7 +18,7 @@ allowed-tools:
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: none.
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -27,7 +27,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Validate and reconcile manifest, state, outline, section records, checkpoints, validations, and linked artifacts.
+1. Validate and reconcile manifest, state, outline, section records, linked plans, reviews, summaries, handoffs, source/evidence records, checkpoints, validations, and manuscript artifacts.
 2. Compute status and counts from records and actual artifacts; report contradictions instead of silently repairing them.
 3. Recommend one next action with its reason, prerequisites, and blocking checkpoint, if any.
 
@@ -47,12 +47,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${CLAUDE_PLUGIN_ROOT}/project/templates/config.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/decisions.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/decisions.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/evidence.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/evidence.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/manifest.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/manifest.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/outline.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/outline.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/section.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/section.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/source.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/source.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/state.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/state.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/validation.schema.json

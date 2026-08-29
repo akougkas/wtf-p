@@ -19,7 +19,7 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 ## Apply the state contract
 
-1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, manuscript artifacts, and checkpoints before reporting progress.
+1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, handoffs, manuscript artifacts, source/evidence records, validations, and checkpoints before reporting progress.
 2. Keep durable state factual and concise: position, completed work, decisions, blockers, pending work, word counts, and exact next action.
 3. Preserve Markdown handoffs, validation records, and human-action checkpoints after every decision that must survive a new session.
 4. Show a proposed settings diff and validate its schema before writing it.

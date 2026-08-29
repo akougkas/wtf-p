@@ -14,7 +14,7 @@ argument-hint: "[arguments]"
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://paper/{artifact}`.
-Produce: `project://paper/{artifact}` (create), `project://paper/{artifact}` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://validations/{validation}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
+Produce: `project://paper/{artifact}` (create), `project://paper/{artifact}` (update), `project://manifest` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://validations/{validation}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -24,7 +24,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Require one approved plan and resolve all linked context, research, source/evidence records, decisions, prior summary, existing target, and necessary neighboring prose before choosing create or update.
 2. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions.
-3. Validate the draft, create or update its Markdown summary, and reconcile section/state records from actual word count and validation status. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.
+3. Validate the draft, create or update its Markdown summary, synchronize the manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records from actual word count and validation status. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.
 
 ## Safety and completion
 

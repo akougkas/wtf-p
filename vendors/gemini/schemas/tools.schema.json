@@ -18,7 +18,7 @@
           "implementation": { "type": "string", "pattern": "^wtfp://tools/" },
           "legacyName": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
           "deterministic": { "type": "boolean" },
-          "effects": { "type": "array", "minItems": 1, "items": { "type": "string" }, "uniqueItems": true }
+          "effects": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
         }
       }
     }

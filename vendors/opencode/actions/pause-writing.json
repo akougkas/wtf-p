@@ -20,8 +20,13 @@
   },
   "reads": [
     "project://state",
+    "project://decisions",
+    "project://structure/outline",
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/summary",
+    "project://sections/{section}/handoff",
     "project://validations/{validation}",
     "project://paper/{artifact}"
   ],
@@ -31,8 +36,16 @@
       "mode": "create"
     },
     {
+      "uri": "project://sections/{section}/handoff",
+      "mode": "update"
+    },
+    {
       "uri": "project://checkpoints/{checkpoint}",
       "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
     },
     {
       "uri": "project://state",
@@ -44,15 +57,15 @@
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}, project://state"
+      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}"
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}, project://state"
+      "scope": "project://sections/{section}/handoff, project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://state, project://sections/{section}, project://sections/{section}/plans/{plan}, project://validations/{validation}, project://paper/{artifact}"
+      "scope": "project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://sections/{section}/handoff, project://validations/{validation}, project://paper/{artifact}"
     }
   ]
 }

@@ -14,7 +14,9 @@
       "agent.delegate",
       "filesystem.read",
       "filesystem.write",
-      "tool.execute"
+      "network.search",
+      "tool.execute",
+      "user.interaction"
     ],
     "conditions": [
       "A readable bibliography is available"
@@ -23,11 +25,17 @@
   "reads": [
     "project://manifest",
     "project://structure/outline",
+    "project://sections/{section}",
     "project://sources/{source}",
+    "project://evidence/{evidence}",
     "project://materials/{artifact}",
     "project://paper/{artifact}"
   ],
   "produces": [
+    {
+      "uri": "project://sources/{source}",
+      "mode": "create"
+    },
     {
       "uri": "project://sources/{source}",
       "mode": "update"
@@ -35,6 +43,10 @@
     {
       "uri": "project://evidence/{evidence}",
       "mode": "create"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "update"
     },
     {
       "uri": "project://validations/{validation}",
@@ -59,19 +71,27 @@
     },
     {
       "id": "filesystem.create",
-      "scope": "project://evidence/{evidence}, project://validations/{validation}"
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://validations/{validation}"
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sources/{source}"
+      "scope": "project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://structure/outline, project://sources/{source}, project://materials/{artifact}, project://paper/{artifact}"
+      "scope": "project://manifest, project://structure/outline, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "network.search",
+      "scope": "declared scholarly index used by bibliography.analyze-impact"
     },
     {
       "id": "tool.execute",
       "scope": "wtfp://tools/bibliography/**"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the provider and bounded query set for external citation-metric enrichment"
     }
   ]
 }

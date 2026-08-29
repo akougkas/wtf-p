@@ -10,10 +10,28 @@ assert.strictEqual(ranker.scoreVenue('arXiv preprint'), 0.3, 'arXiv should be Ti
 assert.strictEqual(ranker.scoreVenue('Random Journal'), 0.5, 'Unknown should be 0.5');
 
 // Test 2: calculateVelocity
-const now = new Date();
-const currentYear = now.getFullYear();
+const referenceDate = new Date('2026-01-15T12:00:00Z');
+const currentYear = referenceDate.getUTCFullYear();
 // Paper published 2 years ago (24 months) with 240 citations = 10/month
-assert.ok(Math.abs(ranker.calculateVelocity(240, currentYear - 2) - 10) < 1, 'Velocity calc incorrect');
+assert.strictEqual(ranker.calculateVelocity(240, currentYear - 2, referenceDate), 10, 'Velocity calc incorrect');
+assert.throws(
+  () => ranker.calculateVelocity(0, currentYear - 2, new Date('invalid')),
+  /referenceDate must be a valid Date/,
+  'invalid explicit clocks must fail closed'
+);
+const previousTimezone = process.env.TZ;
+const boundaryDate = new Date('2026-01-01T00:30:00Z');
+const boundaryVelocities = ['UTC', 'America/Chicago'].map((timezone) => {
+  process.env.TZ = timezone;
+  return ranker.calculateVelocity(240, 2024, boundaryDate);
+});
+if (previousTimezone === undefined) delete process.env.TZ;
+else process.env.TZ = previousTimezone;
+assert.deepStrictEqual(
+  boundaryVelocities,
+  [10, 10],
+  'an explicit UTC clock must produce the same velocity across host timezones'
+);
 
 // Test 3: calculateScore - Seminal vs Recent
 const seminal = {
@@ -30,14 +48,14 @@ const recent = {
   venue: "NeurIPS"
 };
 
-const seminalScore = ranker.calculateScore(seminal, 'seminal');
-const recentScore = ranker.calculateScore(recent, 'recent');
+const seminalScore = ranker.calculateScore(seminal, 'seminal', referenceDate);
+const recentScore = ranker.calculateScore(recent, 'recent', referenceDate);
 
 // Seminal intent should favor high citations
 assert.ok(seminalScore > 0.5, 'Seminal score should be high for highly cited paper');
 
 // Recent intent should favor new papers even with low citations
-const recentScoreWithSeminalIntent = ranker.calculateScore(recent, 'seminal');
+const recentScoreWithSeminalIntent = ranker.calculateScore(recent, 'seminal', referenceDate);
 assert.ok(recentScore > recentScoreWithSeminalIntent, 'Recent intent should score new paper higher than seminal intent');
 
 // Test 4: Rank
@@ -47,10 +65,15 @@ const papers = [
   { id: 3, citationCount: 100, year: currentYear, venue: "CVPR" } // Recent, hot
 ];
 
-const rankedSeminal = ranker.rank([...papers], 'seminal');
+const rankedSeminal = ranker.rank([...papers], 'seminal', referenceDate);
 assert.strictEqual(rankedSeminal[0].id, 2, 'Seminal ranking should pick high citations');
+assert.throws(
+  () => ranker.rank([], 'balanced', new Date('invalid')),
+  /referenceDate must be a valid Date/,
+  'rank must validate an explicit clock even when there are no papers'
+);
 
-const rankedRecent = ranker.rank([...papers], 'recent');
+const rankedRecent = ranker.rank([...papers], 'recent', referenceDate);
 // Depending on weights, the recent one might be 1 or 2, but definitely not 3 (old)
 // Recency (0.4) + Velocity vs Citation (0.2).
 // ID 3: Age 0 -> Recency 1.0. Citations 100.

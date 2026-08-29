@@ -118,7 +118,7 @@ function validateArguments() {
     '--list', '--no-color', '--quiet', '-q', '--verbose', '--beginner', '--advanced'
   ]);
   const validOnlyValues = new Set([
-    'all', 'commands', 'workflows', 'skills', 'agents', 'mcp', 'scripts', 'plugin', 'extension'
+    'all', 'commands', 'workflows', 'skills', 'agents', 'scripts', 'plugin', 'extension'
   ]);
   let configCount = 0;
   let onlyCount = 0;

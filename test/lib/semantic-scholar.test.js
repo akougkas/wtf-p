@@ -1,6 +1,6 @@
 const assert = require('assert');
 const https = require('https');
-const { search, getPaper, SemanticScholarError } = require('../../bin/lib/semantic-scholar');
+const { search, getPaper, getCitations, SemanticScholarError } = require('../../bin/lib/semantic-scholar');
 
 console.log('Running semantic-scholar tests...');
 
@@ -51,8 +51,17 @@ async function runTests() {
     
     const paper = await getPaper('123');
     assert.strictEqual(paper.title, 'Test Paper Details');
+
+    // Test 3: Fetch citations for an identified record.
+    mockRequest({
+      data: [{ citingPaper: { paperId: '456', title: 'Citing Paper' } }]
+    });
+
+    const citations = await getCitations('123');
+    assert.strictEqual(citations.length, 1);
+    assert.strictEqual(citations[0].citingPaper.title, 'Citing Paper');
     
-    // Test 3: Rate Limit Error
+    // Test 4: Rate Limit Error
     https.request = (options, callback) => {
         const res = {
           statusCode: 429,

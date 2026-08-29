@@ -98,7 +98,7 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 ## Apply the state contract
 
-1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, manuscript artifacts, and checkpoints before reporting progress.
+1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, handoffs, manuscript artifacts, source/evidence records, validations, and checkpoints before reporting progress.
 2. Keep durable state factual and concise: position, completed work, decisions, blockers, pending work, word counts, and exact next action.
 3. Preserve Markdown handoffs, validation records, and human-action checkpoints after every decision that must survive a new session.
 4. Show a proposed settings diff and validate its schema before writing it.
@@ -131,7 +131,7 @@ Use exactly one action procedure per invocation. Resolve logical resources throu
 Contract: [protocol/actions/progress.json](../../../actions/progress.json)
 
 1. Require and schema-validate `project://manifest`, `project://config`, `project://state`, `project://decisions`, and `project://structure/outline`; report the exact initialization or repair action for a missing record.
-2. Reconcile outline entries with `project://sections/{section}`, linked plans, summaries, reviews, validations, manuscript outputs, evidence, handoffs, and active checkpoints.
+2. Reconcile outline entries with `project://sections/{section}`, linked plans, summaries, reviews, source/evidence records, validations, manuscript outputs, handoffs, and active checkpoints.
 3. Calculate actual and target sections and words, section statuses, unresolved validation issues, and active checkpoints from records and verified artifacts. State the counting method and every discrepancy.
 4. Summarize recent factual transitions, author decisions, completed work, and blockers.
 5. Route by evidence: active checkpoint to resumption; validation issue to revision planning; approved plan to writing; ready unplanned section to discussion/research/planning; written unreviewed section to review; complete outline to milestone audit.
@@ -143,12 +143,12 @@ Completion requires evidence-backed status, surfaced inconsistencies, and a reas
 
 Contract: [protocol/actions/pause-writing.json](../../../actions/pause-writing.json)
 
-1. Resolve `project://state` and the exact active section, plan, task, and manuscript artifact.
-2. Gather completed and partial work, remaining tasks, decisions, blockers, current validation, and safest next operation.
+1. Resolve `project://state` and the exact active section, plan, task, manuscript artifact, summary, review, validation, decisions, and outline revision.
+2. Gather completed and partial work, remaining tasks, decisions, blockers, review disposition, current validation, and safest next operation.
 3. Write `project://sections/{section}/handoff` in Markdown with section/plan/task IDs, timestamp, completed and remaining work, decisions, blockers, exact resume action, and required verification.
 4. Merge with an existing handoff deliberately; never erase newer or unresolved context.
-5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Link it from `state.active_checkpoint_uris`, set status `paused`, and record the transition.
-6. Read handoff, checkpoint, and state back and verify all logical references. Do not stage or commit them.
+5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Set `section.artifacts.handoff`, append the checkpoint URI to `section.checkpoint_uris` and `state.active_checkpoint_uris`, set state status `paused`, and record the transition.
+6. Read handoff, checkpoint, section, and state back and verify all logical references. Do not stage or commit them.
 
 Completion requires both human-readable continuity and a schema-valid machine-readable resume gate.
 
@@ -157,8 +157,8 @@ Completion requires both human-readable continuity and a schema-valid machine-re
 Contract: [protocol/actions/resume-writing.json](../../../actions/resume-writing.json)
 
 1. Require `project://state` and enumerate pending active checkpoints. If more than one resume checkpoint exists, require a choice.
-2. Read the chosen checkpoint, linked handoff, section record, plan, partial manuscript, relevant summary, outline, and decisions.
-3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, and no conflicting work supersedes it.
+2. Read the manifest and config plus the chosen checkpoint, linked handoff, section record, selected plan, partial manuscript, relevant summary, review and validation records, outline, and decisions.
+3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, the validation status is still applicable, and no conflicting work supersedes it.
 4. Present where work stopped, completed and remaining tasks, decisions, blockers, stale context, and proposed resume action.
 5. Ask whether to resume, repair context, choose another action, waive, or expire the checkpoint.
 6. Preserve the handoff while work is proposed. After confirmed continuation or closure, update checkpoint status and atomically reconcile state to active; retain checkpoint history.
@@ -216,7 +216,7 @@ Completion requires checkpoint history to remain recoverable and state to match 
 </details>
 ## Record contract
 
-Read: `project://state`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: `project://checkpoints/{checkpoint}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -225,8 +225,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Reconcile state and inspect the active checkpoint plus linked Markdown handoff.
-2. Report completed work, pending work, blockers, stale assumptions, and the exact resume action.
+1. Reconcile the manifest, config, state, and author decisions; inspect the active checkpoint plus linked Markdown handoff, section plan, reviews, validations, manuscript artifact, and outline.
+2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact resume action.
 3. After user selection, resolve the checkpoint and set state active; preserve the handoff until successful continuation is confirmed.
 
 ## Safety and completion
@@ -262,11 +262,19 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     ]
   },
   "reads": [
+    "project://manifest",
+    "project://config",
     "project://state",
+    "project://decisions",
+    "project://structure/outline",
     "project://checkpoints/{checkpoint}",
     "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
     "project://sections/{section}/handoff",
-    "project://sections/{section}/summary"
+    "project://sections/{section}/summary",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
   ],
   "produces": [
     {
@@ -283,7 +291,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "effects": [
     {
       "id": "filesystem.read",
-      "scope": "project://state, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/handoff, project://sections/{section}/summary"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/handoff, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",
@@ -469,6 +477,449 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   ],
   "resume_action": "write-section",
   "created_at": "2026-08-28T12:40:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/config.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/config.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/config/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_id",
+    "interaction_mode",
+    "depth",
+    "output_format",
+    "language",
+    "gates",
+    "workflow",
+    "safety",
+    "parallelism"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.config/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "interaction_mode": { "enum": ["guided", "standard", "autonomous"] },
+    "depth": { "enum": ["quick", "standard", "comprehensive"] },
+    "output_format": { "enum": ["markdown", "latex", "typst"] },
+    "language": { "type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
+    "citation_style": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirm_outline", "confirm_plan", "confirm_write", "confirm_review", "confirm_delivery"],
+      "properties": {
+        "confirm_outline": { "type": "boolean" },
+        "confirm_plan": { "type": "boolean" },
+        "confirm_write": { "type": "boolean" },
+        "confirm_review": { "type": "boolean" },
+        "confirm_delivery": { "type": "boolean" }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["research", "plan_validation", "argument_validation", "coherence_validation"],
+      "properties": {
+        "research": { "type": "boolean" },
+        "plan_validation": { "type": "boolean" },
+        "argument_validation": { "type": "boolean" },
+        "coherence_validation": { "type": "boolean" }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destructive_requires_authorization", "external_publish_requires_authorization", "backup_before_major_edits"],
+      "properties": {
+        "destructive_requires_authorization": { "const": true },
+        "external_publish_requires_authorization": { "const": true },
+        "backup_before_major_edits": { "type": "boolean" }
+      }
+    },
+    "parallelism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "max_workers"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "max_workers": { "type": "integer", "minimum": 1, "maximum": 32 }
+      }
+    }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/config.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/config.json</summary>
+
+{
+  "schema": "wtfp.project.config/v1",
+  "project_id": "portable-research-demo",
+  "interaction_mode": "standard",
+  "depth": "standard",
+  "output_format": "markdown",
+  "language": "en-US",
+  "citation_style": "author-date",
+  "gates": {
+    "confirm_outline": true,
+    "confirm_plan": true,
+    "confirm_write": true,
+    "confirm_review": true,
+    "confirm_delivery": true
+  },
+  "workflow": {
+    "research": true,
+    "plan_validation": true,
+    "argument_validation": true,
+    "coherence_validation": true
+  },
+  "safety": {
+    "destructive_requires_authorization": true,
+    "external_publish_requires_authorization": true,
+    "backup_before_major_edits": true
+  },
+  "parallelism": {
+    "enabled": true,
+    "max_workers": 3
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/decisions.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/decisions.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/decisions/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "project_id", "revision", "items", "updated_at"],
+  "properties": {
+    "schema": { "const": "wtfp.project.decisions/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "authority", "disposition", "statement", "rationale", "scope_uri", "recorded_at"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "authority": { "enum": ["author", "venue", "project-evidence"] },
+          "disposition": { "enum": ["locked", "deferred", "discretion", "superseded"] },
+          "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "rationale": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "recorded_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+          "supersedes": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" }
+        }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/decisions.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/decisions.json</summary>
+
+{
+  "schema": "wtfp.project.decisions/v1",
+  "project_id": "portable-research-demo",
+  "revision": 1,
+  "items": [
+    {
+      "id": "decision-host-neutral-core",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "The project record remains independent of any one runtime.",
+      "rationale": "Portability is the central contribution under evaluation.",
+      "scope_uri": "project://manifest",
+      "recorded_at": "2026-08-28T12:05:00Z"
+    },
+    {
+      "id": "decision-runtime-benchmarks",
+      "authority": "author",
+      "disposition": "deferred",
+      "statement": "Comparative runtime performance benchmarks are reserved for later work.",
+      "rationale": "The current paper evaluates protocol fidelity rather than runtime speed.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-08-28T12:06:00Z"
+    },
+    {
+      "id": "decision-example-order",
+      "authority": "author",
+      "disposition": "discretion",
+      "statement": "The editor may choose the order of the two implementation examples.",
+      "rationale": "Either order preserves the argument and venue constraints.",
+      "scope_uri": "project://sections/implementation",
+      "recorded_at": "2026-08-28T12:07:00Z"
+    }
+  ],
+  "updated_at": "2026-08-28T12:07:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/manifest.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/manifest.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/manifest/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "protocol_version",
+    "id",
+    "title",
+    "document_type",
+    "core_argument",
+    "created_at",
+    "updated_at",
+    "artifacts"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.manifest/v1" },
+    "protocol_version": { "const": 1 },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "document_type": {
+      "enum": [
+        "research-article",
+        "conference-paper",
+        "review",
+        "grant-proposal",
+        "thesis",
+        "dissertation",
+        "book-chapter",
+        "other"
+      ]
+    },
+    "core_argument": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "venue": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "audience": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "word_limit": { "type": "integer", "minimum": 1 },
+        "deadline": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/date" }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["must_have", "should_have", "out_of_scope"],
+      "properties": {
+        "must_have": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "should_have": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        },
+        "out_of_scope": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "config", "state", "decisions", "outline"],
+      "properties": {
+        "manifest": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "config": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "state": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "decisions": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "outline": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "materials": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://materials/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "manuscripts": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://paper/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "deliverables": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://deliverables/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        },
+        "archives": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^project://archives/[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/manifest.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/manifest.json</summary>
+
+{
+  "schema": "wtfp.project.manifest/v1",
+  "protocol_version": 1,
+  "id": "portable-research-demo",
+  "title": "Portable Research Workflow",
+  "document_type": "research-article",
+  "core_argument": "A host-neutral project protocol makes academic workflows portable without weakening evidence and decision fidelity.",
+  "target": {
+    "audience": "Researchers evaluating agent-supported academic workflows",
+    "word_limit": 6000
+  },
+  "requirements": {
+    "must_have": ["Every substantive claim is traceable to evidence"],
+    "should_have": ["Adapters preserve the same project state across runtimes"],
+    "out_of_scope": ["Evaluation of unpublished runtime internals"]
+  },
+  "created_at": "2026-08-28T12:00:00Z",
+  "updated_at": "2026-08-28T12:00:00Z",
+  "artifacts": {
+    "manifest": "project://manifest",
+    "config": "project://config",
+    "state": "project://state",
+    "decisions": "project://decisions",
+    "outline": "project://structure/outline",
+    "materials": [],
+    "manuscripts": [],
+    "deliverables": [],
+    "archives": []
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/outline.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/outline.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/outline/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "project_id", "revision", "thesis", "target_words", "sections", "updated_at"],
+  "properties": {
+    "schema": { "const": "wtfp.project.outline/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "thesis": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "target_words": { "type": "integer", "minimum": 1 },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "goal",
+          "argument_role",
+          "word_target",
+          "wave",
+          "depends_on",
+          "claim_ids",
+          "research"
+        ],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "goal": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "argument_role": {
+            "enum": ["setup", "background", "method", "evidence", "synthesis", "implications", "conclusion", "other"]
+          },
+          "word_target": { "type": "integer", "minimum": 1 },
+          "wave": { "type": "integer", "minimum": 1 },
+          "depends_on": {
+            "type": "array",
+            "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+            "uniqueItems": true
+          },
+          "claim_ids": {
+            "type": "array",
+            "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+            "uniqueItems": true
+          },
+          "research": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["required", "topics"],
+            "properties": {
+              "required": { "type": "boolean" },
+              "topics": {
+                "type": "array",
+                "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/outline.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/outline.json</summary>
+
+{
+  "schema": "wtfp.project.outline/v1",
+  "project_id": "portable-research-demo",
+  "revision": 1,
+  "thesis": "A host-neutral project protocol makes academic workflows portable without weakening evidence and decision fidelity.",
+  "target_words": 6000,
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "goal": "Establish the portability problem, the evidence-fidelity requirement, and the paper's contribution.",
+      "argument_role": "setup",
+      "word_target": 1500,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": ["claim-portable-state"],
+      "research": {
+        "required": true,
+        "topics": ["Portable workflow protocols", "Evidence provenance in research systems"]
+      }
+    },
+    {
+      "id": "implementation",
+      "title": "Protocol Design",
+      "goal": "Define the portable records, safety boundaries, and adapter responsibilities.",
+      "argument_role": "method",
+      "word_target": 4500,
+      "wave": 2,
+      "depends_on": ["introduction"],
+      "claim_ids": ["claim-adapter-boundary"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    }
+  ],
+  "updated_at": "2026-08-28T12:30:00Z"
 }
 
 </details>
@@ -696,6 +1147,122 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     "at": "2026-08-28T12:10:00Z"
   },
   "updated_at": "2026-08-28T12:10:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/validation.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/validation.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/validation/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "subject_uri",
+    "validator_role",
+    "action_id",
+    "status",
+    "checks",
+    "issues",
+    "next_actions",
+    "effects_applied",
+    "executed_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.validation/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "subject_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "validator_role": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "action_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "status": { "enum": ["passed", "issues-found", "needs-input", "failed"] },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "summary", "evidence"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "status": { "enum": ["passed", "warning", "failed", "not-applicable"] },
+          "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "evidence": {
+            "type": "array",
+            "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "summary"],
+        "properties": {
+          "severity": { "enum": ["info", "warning", "error", "blocker"] },
+          "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "reason"],
+        "properties": {
+          "action": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "reason": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "effects_applied": { "const": [] },
+    "executed_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/validation.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/validation.json</summary>
+
+{
+  "schema": "wtfp.project.validation/v1",
+  "id": "validation-introduction-plan",
+  "project_id": "portable-research-demo",
+  "subject_uri": "project://sections/introduction/plans/plan-01",
+  "validator_role": "plan-checker",
+  "action_id": "plan-section",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "argument-coverage",
+      "status": "passed",
+      "summary": "Every section claim has a bounded writing unit.",
+      "evidence": ["claim-portable-state is assigned to the opening argument unit"]
+    },
+    {
+      "id": "decision-fidelity",
+      "status": "passed",
+      "summary": "Locked and deferred decisions are represented correctly.",
+      "evidence": ["The host-neutral core is required and runtime benchmarks are excluded"]
+    }
+  ],
+  "issues": [],
+  "next_actions": [
+    {
+      "action": "write-section",
+      "reason": "The plan passed all required verification checks."
+    }
+  ],
+  "effects_applied": [],
+  "executed_at": "2026-08-28T12:45:00Z"
 }
 
 </details>

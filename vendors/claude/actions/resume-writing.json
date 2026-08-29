@@ -20,11 +20,19 @@
     ]
   },
   "reads": [
+    "project://manifest",
+    "project://config",
     "project://state",
+    "project://decisions",
+    "project://structure/outline",
     "project://checkpoints/{checkpoint}",
     "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
     "project://sections/{section}/handoff",
-    "project://sections/{section}/summary"
+    "project://sections/{section}/summary",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
   ],
   "produces": [
     {
@@ -41,7 +49,7 @@
   "effects": [
     {
       "id": "filesystem.read",
-      "scope": "project://state, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/handoff, project://sections/{section}/summary"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/handoff, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",

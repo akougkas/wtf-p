@@ -20,8 +20,8 @@ allowed-tools:
 
 ## Record contract
 
-Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/handoff` (create), `project://checkpoints/{checkpoint}` (create), `project://state` (update).
+Read: `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/handoff` (create), `project://sections/{section}/handoff` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -29,9 +29,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Reconcile current state and identify the exact section, completed work, pending work, blockers, and next action.
+1. Reconcile current state, decisions, outline revision, section plan, manuscript, summary, reviews, and validations; identify completed work, pending work, blockers, and the next action.
 2. Write a Markdown handoff artifact for narrative continuity plus a human-action checkpoint for machine-readable resumption.
-3. Set state.status to paused and link the checkpoint; do not commit automatically.
+3. Link the handoff from `section.artifacts.handoff` and the checkpoint from `section.checkpoint_uris`, then set `state.status` to paused and link the checkpoint from `state.active_checkpoint_uris`; do not commit automatically.
 
 ## Safety and completion
 
@@ -45,6 +45,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/common.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/checkpoint.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/decisions.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/decisions.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/outline.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/outline.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/section.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/section.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/state.schema.json

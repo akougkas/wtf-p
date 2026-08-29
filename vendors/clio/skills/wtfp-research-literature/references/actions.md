@@ -41,7 +41,7 @@ Contract: [protocol/actions/analyze-bib.json](../../../actions/analyze-bib.json)
 4. Calculate transparent descriptive signals such as publication years, entry types, venues, authors, topic terms, identifier coverage, and duplicate candidates. Do not present a heuristic score as scholarly impact.
 5. Load `project://manifest`, `project://structure/outline`, section records, existing source/evidence records, and relevant manuscript citations.
 6. Group works by research question, method, evidence type, historical role, and competing position. Mark classifications as interpretations.
-7. Identify likely foundational and central works using evidence available in the records or verified external metadata. Explain the basis; do not infer importance solely from age or title.
+7. Identify likely foundational and central works using evidence available in the records or verified external metadata. Before external citation-metric enrichment, disclose the provider and bounded query set and obtain explicit approval. If the network is unavailable or approval is withheld, remain local-only and label external metrics unavailable. Explain the basis; do not infer importance solely from age, title, or a time-varying heuristic score.
 8. Map each useful source to one or more section claims, with intended citation purpose: background, method, support, contrast, limitation, or future work.
 9. Identify bibliography-level gaps: missing periods, missing competing approaches, unsupported claims, overreliance on one group or venue, and records needing verification.
 10. Create or reconcile source identity/provenance in `project://sources/{source}`, claim mappings in `project://evidence/{evidence}`, and a read-only `project://validations/{validation}` with corpus summary, clusters, key-work rationale, coverage, gaps, and unverified items. Do not create a Markdown source-of-truth index.
@@ -64,7 +64,7 @@ Contract: [protocol/actions/check-refs.json](../../../actions/check-refs.json)
    - exact and probable duplicates;
    - inconsistent keys, names, dates, identifiers, and venue fields.
 4. Distinguish errors from policy choices. An unused reference is not automatically an error; a preprint and published version are not automatically duplicates.
-5. Verify suspicious metadata against a primary publication record only when external lookup is approved. Treat verified lookup results as audit evidence; do not create or update source records in this action.
+5. Search for suspicious metadata only after disclosing and receiving approval for the external providers and bounded query set. Treat provider results as candidate audit evidence until they are independently verified; do not create or update source records in this action.
 6. Present an audit with logical URIs, affected keys, severity, confidence, and a proposed repair. Persist findings at `project://validations/{validation}` with the exact input record revisions or artifact hashes.
 7. Ask the author how to handle unused, duplicate, missing, and conflicting records. Never remove, rename, merge, or rewrite an input in this action.
 8. When a corrected bibliography is requested, preview the complete candidate and write it separately to `project://deliverables/bibliography/{artifact}`. Never overwrite the selected bibliography or manuscript, so this action requires no destructive backup or recovery mutation.

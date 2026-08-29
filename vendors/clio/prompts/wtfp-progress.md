@@ -13,7 +13,7 @@ argument-hint: "[arguments]"
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: none.
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Validate and reconcile manifest, state, outline, section records, checkpoints, validations, and linked artifacts.
+1. Validate and reconcile manifest, state, outline, section records, linked plans, reviews, summaries, handoffs, source/evidence records, checkpoints, validations, and manuscript artifacts.
 2. Compute status and counts from records and actual artifacts; report contradictions instead of silently repairing them.
 3. Recommend one next action with its reason, prerequisites, and blocking checkpoint, if any.
 
@@ -42,12 +42,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${extensionRoot}/project/templates/config.json
 @${extensionRoot}/project/schemas/decisions.schema.json
 @${extensionRoot}/project/templates/decisions.json
+@${extensionRoot}/project/schemas/evidence.schema.json
+@${extensionRoot}/project/templates/evidence.json
 @${extensionRoot}/project/schemas/manifest.schema.json
 @${extensionRoot}/project/templates/manifest.json
 @${extensionRoot}/project/schemas/outline.schema.json
 @${extensionRoot}/project/templates/outline.json
 @${extensionRoot}/project/schemas/section.schema.json
 @${extensionRoot}/project/templates/section.json
+@${extensionRoot}/project/schemas/source.schema.json
+@${extensionRoot}/project/templates/source.json
 @${extensionRoot}/project/schemas/state.schema.json
 @${extensionRoot}/project/templates/state.json
 @${extensionRoot}/project/schemas/validation.schema.json

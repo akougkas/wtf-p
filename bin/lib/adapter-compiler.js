@@ -447,7 +447,7 @@ steps:
     id: plan
     agent: wtfp-section-planner
     scope: workspace
-    writes: [.planning]
+    writes: [.planning/]
     dependencies: []
   - kind: agent
     id: check
@@ -474,7 +474,7 @@ steps:
     id: draft
     agent: wtfp-section-writer
     scope: workspace
-    writes: [paper, .planning]
+    writes: [paper/, .planning/]
     dependencies: []
   - kind: agent
     id: review

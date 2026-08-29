@@ -2,14 +2,14 @@
   "schema": "wtfp.tools/v1",
   "tools": [
     {
-      "deterministic": true,
-      "effects": ["filesystem.read"],
+      "deterministic": false,
+      "effects": ["filesystem.read", "network.search"],
       "id": "bibliography.analyze-impact",
       "implementation": "wtfp://tools/bibliography/analyze-impact",
       "legacyName": "analyze-impact"
     },
     {
-      "deterministic": true,
+      "deterministic": false,
       "effects": ["filesystem.read"],
       "id": "bibliography.format",
       "implementation": "wtfp://tools/bibliography/format",
@@ -24,14 +24,14 @@
     },
     {
       "deterministic": false,
-      "effects": ["network.fetch"],
+      "effects": ["network.search"],
       "id": "citation.fetch",
       "implementation": "wtfp://tools/citation/fetch",
       "legacyName": "citation-fetcher"
     },
     {
-      "deterministic": true,
-      "effects": ["filesystem.read"],
+      "deterministic": false,
+      "effects": [],
       "id": "citation.rank",
       "implementation": "wtfp://tools/citation/rank",
       "legacyName": "citation-ranker"
@@ -45,7 +45,7 @@
     },
     {
       "deterministic": false,
-      "effects": ["network.search"],
+      "effects": ["network.fetch", "network.search"],
       "id": "citation.semantic-scholar",
       "implementation": "wtfp://tools/citation/semantic-scholar",
       "legacyName": "semantic-scholar"

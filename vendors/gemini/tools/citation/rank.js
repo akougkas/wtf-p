@@ -49,13 +49,17 @@ function scoreVenue(venue) {
  * Calculate citation velocity
  * @param {number} citations
  * @param {number} year
+ * @param {Date} [referenceDate] explicit clock for reproducible evaluation
  * @returns {number} Citations per month
  */
-function calculateVelocity(citations, year) {
+function calculateVelocity(citations, year, referenceDate = new Date()) {
+  const now = referenceDate;
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) {
+    throw new TypeError('referenceDate must be a valid Date');
+  }
   if (!citations || !year) return 0;
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-11
+  const currentYear = now.getUTCFullYear();
+  const currentMonth = now.getUTCMonth(); // 0-11
 
   // Calculate months since publication (assuming Jan 1st of year)
   // If current year, use months passed. If past year, (diff * 12) + currentMonth.
@@ -71,13 +75,17 @@ function calculateVelocity(citations, year) {
  * Calculate impact score for a paper
  * @param {Object} paper
  * @param {string} intent "seminal" | "recent" | "specific" | "balanced"
+ * @param {Date} [referenceDate] explicit clock for reproducible evaluation
  */
-function calculateScore(paper, intent = "balanced") {
-  const now = new Date().getFullYear();
-  const year = paper.year || now;
-  const age = Math.max(0, now - year);
+function calculateScore(paper, intent = "balanced", referenceDate = new Date()) {
+  if (!(referenceDate instanceof Date) || Number.isNaN(referenceDate.getTime())) {
+    throw new TypeError('referenceDate must be a valid Date');
+  }
+  const currentYear = referenceDate.getUTCFullYear();
+  const year = paper.year || currentYear;
+  const age = Math.max(0, currentYear - year);
   const citations = paper.citationCount || 0;
-  const velocity = calculateVelocity(citations, year);
+  const velocity = calculateVelocity(citations, year, referenceDate);
 
   // Normalize factors (approximate ranges)
   // Citations: log10(100,000) = 5. So score is 0-1.
@@ -113,13 +121,17 @@ function calculateScore(paper, intent = "balanced") {
  * Rank a list of papers
  * @param {Array} papers
  * @param {string} intent
+ * @param {Date} [referenceDate] explicit clock for reproducible evaluation
  * @returns {Array} Sorted papers with score attached
  */
-function rank(papers, intent = "balanced") {
+function rank(papers, intent = "balanced", referenceDate = new Date()) {
+  if (!(referenceDate instanceof Date) || Number.isNaN(referenceDate.getTime())) {
+    throw new TypeError('referenceDate must be a valid Date');
+  }
   const scored = papers.map(p => ({
     ...p,
-    wtfp_score: calculateScore(p, intent),
-    wtfp_velocity: calculateVelocity(p.citationCount, p.year)
+    wtfp_score: calculateScore(p, intent, referenceDate),
+    wtfp_velocity: calculateVelocity(p.citationCount, p.year, referenceDate)
   }));
 
   return scored.sort((a, b) => b.wtfp_score - a.wtfp_score);

@@ -23,7 +23,6 @@ const MANIFEST = {
       workflows: ['workflows'],
       skills: ['skills'],
       agents: ['agents'],
-      mcp: ['mcp'],
       scripts: ['tools'],
       plugin: ['.claude-plugin']
     }, {
@@ -31,7 +30,6 @@ const MANIFEST = {
       skills: 'skills',
       agents: 'agents',
       workflows: 'workflows',
-      mcp: 'mcp',
       tools: 'scripts',
       '.claude-plugin': 'plugin'
     }, 'marketplaces/wtfp'),

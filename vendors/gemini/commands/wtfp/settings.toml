@@ -98,7 +98,7 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 ## Apply the state contract
 
-1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, manuscript artifacts, and checkpoints before reporting progress.
+1. Treat schema-valid v1 records and verified authored artifacts as the source of truth. Reconcile `project://state` with `project://structure/outline`, section records, linked plans, summaries, reviews, handoffs, manuscript artifacts, source/evidence records, validations, and checkpoints before reporting progress.
 2. Keep durable state factual and concise: position, completed work, decisions, blockers, pending work, word counts, and exact next action.
 3. Preserve Markdown handoffs, validation records, and human-action checkpoints after every decision that must survive a new session.
 4. Show a proposed settings diff and validate its schema before writing it.
@@ -131,7 +131,7 @@ Use exactly one action procedure per invocation. Resolve logical resources throu
 Contract: [protocol/actions/progress.json](../../../actions/progress.json)
 
 1. Require and schema-validate `project://manifest`, `project://config`, `project://state`, `project://decisions`, and `project://structure/outline`; report the exact initialization or repair action for a missing record.
-2. Reconcile outline entries with `project://sections/{section}`, linked plans, summaries, reviews, validations, manuscript outputs, evidence, handoffs, and active checkpoints.
+2. Reconcile outline entries with `project://sections/{section}`, linked plans, summaries, reviews, source/evidence records, validations, manuscript outputs, handoffs, and active checkpoints.
 3. Calculate actual and target sections and words, section statuses, unresolved validation issues, and active checkpoints from records and verified artifacts. State the counting method and every discrepancy.
 4. Summarize recent factual transitions, author decisions, completed work, and blockers.
 5. Route by evidence: active checkpoint to resumption; validation issue to revision planning; approved plan to writing; ready unplanned section to discussion/research/planning; written unreviewed section to review; complete outline to milestone audit.
@@ -143,12 +143,12 @@ Completion requires evidence-backed status, surfaced inconsistencies, and a reas
 
 Contract: [protocol/actions/pause-writing.json](../../../actions/pause-writing.json)
 
-1. Resolve `project://state` and the exact active section, plan, task, and manuscript artifact.
-2. Gather completed and partial work, remaining tasks, decisions, blockers, current validation, and safest next operation.
+1. Resolve `project://state` and the exact active section, plan, task, manuscript artifact, summary, review, validation, decisions, and outline revision.
+2. Gather completed and partial work, remaining tasks, decisions, blockers, review disposition, current validation, and safest next operation.
 3. Write `project://sections/{section}/handoff` in Markdown with section/plan/task IDs, timestamp, completed and remaining work, decisions, blockers, exact resume action, and required verification.
 4. Merge with an existing handoff deliberately; never erase newer or unresolved context.
-5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Link it from `state.active_checkpoint_uris`, set status `paused`, and record the transition.
-6. Read handoff, checkpoint, and state back and verify all logical references. Do not stage or commit them.
+5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Set `section.artifacts.handoff`, append the checkpoint URI to `section.checkpoint_uris` and `state.active_checkpoint_uris`, set state status `paused`, and record the transition.
+6. Read handoff, checkpoint, section, and state back and verify all logical references. Do not stage or commit them.
 
 Completion requires both human-readable continuity and a schema-valid machine-readable resume gate.
 
@@ -157,8 +157,8 @@ Completion requires both human-readable continuity and a schema-valid machine-re
 Contract: [protocol/actions/resume-writing.json](../../../actions/resume-writing.json)
 
 1. Require `project://state` and enumerate pending active checkpoints. If more than one resume checkpoint exists, require a choice.
-2. Read the chosen checkpoint, linked handoff, section record, plan, partial manuscript, relevant summary, outline, and decisions.
-3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, and no conflicting work supersedes it.
+2. Read the manifest and config plus the chosen checkpoint, linked handoff, section record, selected plan, partial manuscript, relevant summary, review and validation records, outline, and decisions.
+3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, the validation status is still applicable, and no conflicting work supersedes it.
 4. Present where work stopped, completed and remaining tasks, decisions, blockers, stale context, and proposed resume action.
 5. Ask whether to resume, repair context, choose another action, waive, or expire the checkpoint.
 6. Preserve the handoff while work is proposed. After confirmed continuation or closure, update checkpoint status and atomically reconcile state to active; retain checkpoint history.

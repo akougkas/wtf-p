@@ -73,6 +73,15 @@ for (const id of runtimeIds) {
   check(runtime.components.length === 1, `${id} installs one generated, self-contained bundle`);
   check(fs.existsSync(runtime.components[0].src), `${id} bundle source exists`);
 }
+const claudeBundle = MANIFEST.claude.components[0];
+check(!Object.hasOwn(claudeBundle.selectionRoots, 'mcp'), 'Claude does not advertise an unowned MCP install scope');
+check(!Object.hasOwn(claudeBundle.componentIds, 'mcp'), 'Claude cannot classify stale MCP files for delivery');
+const obsoleteMcpRoot = path.join(ROOT, 'vendors', 'claude', 'mcp');
+check(
+  !fs.existsSync(obsoleteMcpRoot) || recursiveCount('vendors/claude/mcp') === 0,
+  'obsolete Claude research MCP prototype has no deliverable files'
+);
+check(packageJson.files.includes('!vendors/claude/mcp/**'), 'npm archive excludes obsolete Claude MCP artifacts');
 
 section('Canonical protocol');
 const catalog = json('protocol/catalog.json');

@@ -693,6 +693,16 @@ process.exitCode = 91;
     );
   });
 
+  record('removed MCP component selector fails before creating a target', () => {
+    const targetDir = path.join(testRoot, 'removed-mcp-component');
+    const result = run(INSTALL, [
+      'install', 'claude', '--only=mcp', '--config-dir', targetDir,
+      '--advanced', '--quiet', '--no-color'
+    ]);
+    assertFailure(result, /Unknown --only component: mcp/, 'removed MCP component selector');
+    assert.strictEqual(fs.existsSync(targetDir), false);
+  });
+
   record('modern compatibility target flags dispatch without implicit fallback', () => {
     for (const runtime of ALL_TARGETS) {
       const nonMatchingComponent = runtime === 'clio' ? 'plugin' : 'extension';

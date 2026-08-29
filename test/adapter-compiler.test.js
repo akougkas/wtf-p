@@ -456,6 +456,16 @@ record('every command-capable host exposes the same 36 stable aliases', () => {
           }
         }
       }
+      if (actionIds[index] === 'analyze-bib') {
+        assert.ok(
+          source.includes('project/schemas/section.schema.json'),
+          `${target}:${sourcePath}: missing relevant section schema`
+        );
+        assert.ok(
+          source.includes('project/templates/section.json'),
+          `${target}:${sourcePath}: missing relevant section template`
+        );
+      }
     }
   }
 });
@@ -540,10 +550,20 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     'fleets/wtfp-draft-review.md': ['wtfp-section-writer', 'wtfp-section-reviewer'],
     'fleets/wtfp-plan-section.md': ['wtfp-section-planner', 'wtfp-plan-checker']
   };
+  const expectedFleetWrites = {
+    'fleets/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
+    'fleets/wtfp-plan-section.md': 'writes: [.planning/]'
+  };
   for (const sourcePath of fleetPaths) {
     const source = planText(plan, sourcePath);
     assert.match(source, /^---\nversion: 4\n/);
     assert.ok(source.includes(GENERATED_BANNER), `${sourcePath}: missing source banner`);
+    assert.ok(source.includes(expectedFleetWrites[sourcePath]), `${sourcePath}: directory write boundary lost its trailing slash`);
+    assert.doesNotMatch(
+      source,
+      /writes: \[(?:paper, )?\.planning\]/,
+      `${sourcePath}: a bare path is one exact file in Clio's write-boundary grammar`
+    );
     assert.doesNotMatch(source, /^\s*- kind: code$/m, `${sourcePath}: initial Clio fleets must remain agent-only`);
     const agents = [...source.matchAll(/^\s+agent: (wtfp-[a-z0-9-]+)$/gm)].map((match) => match[1]);
     assert.deepStrictEqual(agents, expectedFleetAgents[sourcePath]);

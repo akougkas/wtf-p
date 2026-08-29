@@ -162,7 +162,7 @@ Contract: [protocol/actions/analyze-bib.json](../../../actions/analyze-bib.json)
 4. Calculate transparent descriptive signals such as publication years, entry types, venues, authors, topic terms, identifier coverage, and duplicate candidates. Do not present a heuristic score as scholarly impact.
 5. Load `project://manifest`, `project://structure/outline`, section records, existing source/evidence records, and relevant manuscript citations.
 6. Group works by research question, method, evidence type, historical role, and competing position. Mark classifications as interpretations.
-7. Identify likely foundational and central works using evidence available in the records or verified external metadata. Explain the basis; do not infer importance solely from age or title.
+7. Identify likely foundational and central works using evidence available in the records or verified external metadata. Before external citation-metric enrichment, disclose the provider and bounded query set and obtain explicit approval. If the network is unavailable or approval is withheld, remain local-only and label external metrics unavailable. Explain the basis; do not infer importance solely from age, title, or a time-varying heuristic score.
 8. Map each useful source to one or more section claims, with intended citation purpose: background, method, support, contrast, limitation, or future work.
 9. Identify bibliography-level gaps: missing periods, missing competing approaches, unsupported claims, overreliance on one group or venue, and records needing verification.
 10. Create or reconcile source identity/provenance in `project://sources/{source}`, claim mappings in `project://evidence/{evidence}`, and a read-only `project://validations/{validation}` with corpus summary, clusters, key-work rationale, coverage, gaps, and unverified items. Do not create a Markdown source-of-truth index.
@@ -185,7 +185,7 @@ Contract: [protocol/actions/check-refs.json](../../../actions/check-refs.json)
    - exact and probable duplicates;
    - inconsistent keys, names, dates, identifiers, and venue fields.
 4. Distinguish errors from policy choices. An unused reference is not automatically an error; a preprint and published version are not automatically duplicates.
-5. Verify suspicious metadata against a primary publication record only when external lookup is approved. Treat verified lookup results as audit evidence; do not create or update source records in this action.
+5. Search for suspicious metadata only after disclosing and receiving approval for the external providers and bounded query set. Treat provider results as candidate audit evidence until they are independently verified; do not create or update source records in this action.
 6. Present an audit with logical URIs, affected keys, severity, confidence, and a proposed repair. Persist findings at `project://validations/{validation}` with the exact input record revisions or artifact hashes.
 7. Ask the author how to handle unused, duplicate, missing, and conflicting records. Never remove, rename, merge, or rewrite an input in this action.
 8. When a corrected bibliography is requested, preview the complete candidate and write it separately to `project://deliverables/bibliography/{artifact}`. Never overwrite the selected bibliography or manuscript, so this action requires no destructive backup or recovery mutation.
@@ -198,8 +198,8 @@ Completion requires a reproducible integrity audit and, when requested, a parsea
 </details>
 ## Record contract
 
-Read: `project://manifest`, `project://structure/outline`, `project://sources/{source}`, `project://materials/{artifact}`, `project://paper/{artifact}`.
-Produce: `project://sources/{source}` (update), `project://evidence/{evidence}` (create), `project://validations/{validation}` (create).
+Read: `project://manifest`, `project://structure/outline`, `project://sections/{section}`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://materials/{artifact}`, `project://paper/{artifact}`.
+Produce: `project://sources/{source}` (create), `project://sources/{source}` (update), `project://evidence/{evidence}` (create), `project://evidence/{evidence}` (update), `project://validations/{validation}` (create).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -207,13 +207,14 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Index source records and cited manuscript locations; distinguish verified, provisional, unavailable, and retracted sources.
-2. Identify clusters, foundational works, gaps, duplicate identities, and claim coverage.
-3. Write source/evidence changes separately and record the analysis as a read-only validation.
+1. Index source records and cited manuscript locations locally; distinguish verified, provisional, unavailable, and retracted sources.
+2. Before external citation-metric enrichment, disclose the provider and bounded query set and obtain explicit approval. If network use is unavailable or not approved, continue with the local corpus and label external metrics unavailable.
+3. Identify clusters, foundational works, gaps, duplicate identities, and claim coverage. Treat external metrics as time-varying observations, not deterministic facts or a substitute for source inspection.
+4. Write source/evidence changes separately and record the analysis as a read-only validation.
 
 ## Safety and completion
 
-Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. If requested, return a clearly labeled optional handoff for a separately authorized action.
+Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. Do not invoke a network-capable bibliography tool through a filesystem-only permission path. If requested, return a clearly labeled optional handoff for a separately authorized action.
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
@@ -238,7 +239,9 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "agent.delegate",
       "filesystem.read",
       "filesystem.write",
-      "tool.execute"
+      "network.search",
+      "tool.execute",
+      "user.interaction"
     ],
     "conditions": [
       "A readable bibliography is available"
@@ -247,11 +250,17 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "reads": [
     "project://manifest",
     "project://structure/outline",
+    "project://sections/{section}",
     "project://sources/{source}",
+    "project://evidence/{evidence}",
     "project://materials/{artifact}",
     "project://paper/{artifact}"
   ],
   "produces": [
+    {
+      "uri": "project://sources/{source}",
+      "mode": "create"
+    },
     {
       "uri": "project://sources/{source}",
       "mode": "update"
@@ -259,6 +268,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "uri": "project://evidence/{evidence}",
       "mode": "create"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "update"
     },
     {
       "uri": "project://validations/{validation}",
@@ -283,19 +296,27 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "filesystem.create",
-      "scope": "project://evidence/{evidence}, project://validations/{validation}"
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://validations/{validation}"
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sources/{source}"
+      "scope": "project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://structure/outline, project://sources/{source}, project://materials/{artifact}, project://paper/{artifact}"
+      "scope": "project://manifest, project://structure/outline, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "network.search",
+      "scope": "declared scholarly index used by bibliography.analyze-impact"
     },
     {
       "id": "tool.execute",
       "scope": "wtfp://tools/bibliography/**"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the provider and bounded query set for external citation-metric enrichment"
     }
   ]
 }
@@ -669,6 +690,143 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     }
   ],
   "updated_at": "2026-08-28T12:30:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/section.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/section.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/section/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "outline_uri",
+    "title",
+    "goal",
+    "status",
+    "word_target",
+    "word_count",
+    "wave",
+    "depends_on",
+    "claims",
+    "artifacts",
+    "checkpoint_uris",
+    "validation_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.section/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "outline_uri": { "const": "project://structure/outline" },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "goal": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "status": {
+      "enum": ["not-started", "researching", "planned", "writing", "reviewing", "complete", "blocked"]
+    },
+    "word_target": { "type": "integer", "minimum": 1 },
+    "word_count": { "type": "integer", "minimum": 0 },
+    "wave": { "type": "integer", "minimum": 1 },
+    "depends_on": {
+      "type": "array",
+      "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+      "uniqueItems": true
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "status", "evidence_required", "evidence_uris"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "status": { "enum": ["planned", "drafted", "verified", "rejected"] },
+          "evidence_required": { "type": "boolean" },
+          "evidence_uris": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^project://evidence/[A-Za-z0-9._~-]+$" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plans", "reviews"],
+      "properties": {
+        "context": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "research": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "plans": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "reviews": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "manuscript": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "handoff": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" }
+      }
+    },
+    "checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "validation_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://validations/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/section.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/section.json</summary>
+
+{
+  "schema": "wtfp.project.section/v1",
+  "id": "introduction",
+  "project_id": "portable-research-demo",
+  "outline_uri": "project://structure/outline",
+  "title": "Introduction",
+  "goal": "Establish the portability problem, the evidence-fidelity requirement, and the paper's contribution.",
+  "status": "researching",
+  "word_target": 1500,
+  "word_count": 0,
+  "wave": 1,
+  "depends_on": [],
+  "claims": [
+    {
+      "id": "claim-portable-state",
+      "statement": "Portable project state reduces coupling between academic workflows and runtime-specific interfaces.",
+      "status": "planned",
+      "evidence_required": true,
+      "evidence_uris": ["project://evidence/evidence-portability-boundaries"]
+    }
+  ],
+  "artifacts": {
+    "context": "project://sections/introduction/context",
+    "research": "project://sections/introduction/research",
+    "plans": ["project://sections/introduction/plans/initial"],
+    "reviews": [],
+    "manuscript": "project://paper/introduction"
+  },
+  "checkpoint_uris": [],
+  "validation_uris": [],
+  "updated_at": "2026-08-28T12:35:00Z"
 }
 
 </details>

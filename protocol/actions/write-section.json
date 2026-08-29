@@ -45,6 +45,10 @@
       "mode": "update"
     },
     {
+      "uri": "project://manifest",
+      "mode": "update"
+    },
+    {
       "uri": "project://sections/{section}/summary",
       "mode": "create"
     },
@@ -93,7 +97,7 @@
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://sections/{section}, project://state"
+      "scope": "project://paper/{artifact}, project://manifest, project://sections/{section}/summary, project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
@@ -101,7 +105,7 @@
     },
     {
       "id": "filesystem.write",
-      "scope": "declared manuscript, summary, validation, checkpoint, section, and state resources"
+      "scope": "declared manuscript, manifest, summary, validation, checkpoint, section, and state resources"
     },
     {
       "id": "user.gate",

@@ -34,6 +34,7 @@ const catalog = load('protocol/catalog.json');
 const aliases = load('protocol/aliases.lock.json');
 const effectsRegistry = load('protocol/effects.json');
 const toolsRegistry = load('protocol/tools.json');
+const toolsSchema = load('protocol/schemas/tools.schema.json');
 
 const workflowIds = sorted(
   fs.readdirSync(path.join(protocolRoot, 'workflows'))
@@ -161,6 +162,45 @@ for (const tool of toolsRegistry.tools) {
   }
 }
 
+assert.deepStrictEqual(
+  Object.fromEntries(toolsRegistry.tools.map((tool) => [tool.id, tool.deterministic])),
+  {
+    'bibliography.analyze-impact': false,
+    'bibliography.format': false,
+    'bibliography.index': true,
+    'citation.fetch': false,
+    'citation.rank': false,
+    'citation.scholar-lookup': false,
+    'citation.semantic-scholar': false,
+  },
+  'tool determinism must describe observable clock and network dependencies',
+);
+assert.deepStrictEqual(
+  toolsRegistry.tools.find((tool) => tool.id === 'bibliography.analyze-impact').effects,
+  ['filesystem.read', 'network.search'],
+  'bibliography.analyze-impact must not conceal its Semantic Scholar search',
+);
+assert.deepStrictEqual(
+  toolsRegistry.tools.find((tool) => tool.id === 'citation.fetch').effects,
+  ['network.search'],
+  'citation.fetch must disclose exactly the provider searches it performs',
+);
+assert.deepStrictEqual(
+  toolsRegistry.tools.find((tool) => tool.id === 'citation.rank').effects,
+  [],
+  'citation.rank is a pure in-memory transform and must not claim filesystem access',
+);
+assert.strictEqual(
+  toolsSchema.properties.tools.items.properties.effects.minItems,
+  undefined,
+  'the tool registry schema must permit pure tools with an empty effect list',
+);
+assert.deepStrictEqual(
+  toolsRegistry.tools.find((tool) => tool.id === 'citation.semantic-scholar').effects,
+  ['network.fetch', 'network.search'],
+  'citation.semantic-scholar must disclose its search and record-fetch methods',
+);
+
 const projectMutationEffects = new Set([
   'artifact.archive',
   'filesystem.create',
@@ -224,6 +264,19 @@ for (const catalogEntry of catalog.actions) {
   if (action.tools.length > 0) {
     assert.ok(capabilities.has('tool.execute'), `${action.id} declares tools without tool.execute capability`);
     assert.ok(effects.has('tool.execute'), `${action.id} declares tools without a tool.execute effect`);
+    for (const toolId of action.tools) {
+      const tool = toolsRegistry.tools.find((entry) => entry.id === toolId);
+      for (const toolEffect of tool.effects) {
+        assert.ok(
+          effects.has(toolEffect),
+          `${action.id} invokes ${toolId} without declaring its ${toolEffect} effect`,
+        );
+        assert.ok(
+          capabilities.has(capabilityByEffect.get(toolEffect)),
+          `${action.id} invokes ${toolId} without the ${capabilityByEffect.get(toolEffect)} capability`,
+        );
+      }
+    }
   }
 
   const reads = new Set(action.reads);
@@ -267,6 +320,137 @@ assert.strictEqual(
   'plan-section must retain an independent required plan-checker pass',
 );
 
+function actionOutputUris(action, mode) {
+  return new Set(action.produces.filter((output) => output.mode === mode).map((output) => output.uri));
+}
+
+function commaSeparatedScope(action, effectId) {
+  const effect = action.effects.find((entry) => entry.id === effectId);
+  assert.ok(effect, `${action.id} must declare ${effectId}`);
+  return effect.scope.split(', ');
+}
+
+const mapProject = load('protocol/actions/map-project.json');
+assert.deepStrictEqual(
+  commaSeparatedScope(mapProject, 'filesystem.create'),
+  [...actionOutputUris(mapProject, 'create')],
+  'map-project must not classify its state update as a file creation',
+);
+
+const createOutline = load('protocol/actions/create-outline.json');
+assert.deepStrictEqual(
+  commaSeparatedScope(createOutline, 'filesystem.create'),
+  [...actionOutputUris(createOutline, 'create')],
+  'create-outline must not classify outline and state updates as file creations',
+);
+
+assert.ok(
+  commaSeparatedScope(planSection, 'filesystem.write').includes('project://checkpoints/{checkpoint}'),
+  'plan-section must disclose its blocked-path checkpoint write',
+);
+
+const reviewSection = load('protocol/actions/review-section.json');
+assert.deepStrictEqual(
+  commaSeparatedScope(reviewSection, 'filesystem.write'),
+  reviewSection.produces.map((output) => output.uri),
+  'review-section write scope must disclose its review, validation, and section outputs',
+);
+
+const pauseWriting = load('protocol/actions/pause-writing.json');
+assert.deepStrictEqual(
+  pauseWriting.produces.find((output) => output.uri === 'project://sections/{section}'),
+  { uri: 'project://sections/{section}', mode: 'update' },
+  'pause-writing must update the section record that links its handoff and checkpoint',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(pauseWriting, 'filesystem.create'),
+  ['project://sections/{section}/handoff', 'project://checkpoints/{checkpoint}'],
+  'pause-writing create effects must be limited to the new handoff and checkpoint',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(pauseWriting, 'filesystem.modify'),
+  ['project://sections/{section}/handoff', 'project://sections/{section}', 'project://state'],
+  'pause-writing modify effects must cover a merged handoff and the records that link it',
+);
+const pauseContinuityReads = [
+  'project://decisions',
+  'project://structure/outline',
+  'project://sections/{section}/plans/{plan}',
+  'project://sections/{section}/reviews/{review}',
+  'project://sections/{section}/summary',
+  'project://sections/{section}/handoff',
+  'project://validations/{validation}',
+  'project://paper/{artifact}',
+];
+for (const uri of pauseContinuityReads) {
+  assert.ok(pauseWriting.reads.includes(uri), `pause-writing must read ${uri} before preserving continuity`);
+}
+assert.deepStrictEqual(
+  commaSeparatedScope(pauseWriting, 'filesystem.read'),
+  pauseWriting.reads,
+  'pause-writing read effects must exactly disclose every continuity input',
+);
+assert.deepStrictEqual(
+  pauseWriting.produces.filter((output) => output.uri === 'project://sections/{section}/handoff'),
+  [
+    { uri: 'project://sections/{section}/handoff', mode: 'create' },
+    { uri: 'project://sections/{section}/handoff', mode: 'update' },
+  ],
+  'pause-writing must deliberately create or merge its durable handoff',
+);
+
+const resumeWriting = load('protocol/actions/resume-writing.json');
+const resumeFreshnessReads = [
+  'project://manifest',
+  'project://config',
+  'project://decisions',
+  'project://structure/outline',
+  'project://sections/{section}/plans/{plan}',
+  'project://sections/{section}/reviews/{review}',
+  'project://validations/{validation}',
+  'project://paper/{artifact}',
+];
+for (const uri of resumeFreshnessReads) {
+  assert.ok(resumeWriting.reads.includes(uri), `resume-writing must read ${uri} before declaring a handoff current`);
+}
+assert.deepStrictEqual(
+  commaSeparatedScope(resumeWriting, 'filesystem.read'),
+  resumeWriting.reads,
+  'resume-writing read effects must exactly disclose every freshness input',
+);
+
+const writeSection = load('protocol/actions/write-section.json');
+assert.deepStrictEqual(
+  writeSection.produces.find((output) => output.uri === 'project://manifest'),
+  { uri: 'project://manifest', mode: 'update' },
+  'write-section must update the manifest manuscript index after creating an artifact',
+);
+assert.ok(
+  commaSeparatedScope(writeSection, 'filesystem.modify').includes('project://manifest'),
+  'write-section must disclose the manifest mutation effect',
+);
+
+const progress = load('protocol/actions/progress.json');
+const progressReconciliationReads = [
+  'project://sections/{section}/plans/{plan}',
+  'project://sections/{section}/reviews/{review}',
+  'project://sections/{section}/summary',
+  'project://sections/{section}/handoff',
+  'project://sources/{source}',
+  'project://evidence/{evidence}',
+  'project://checkpoints/{checkpoint}',
+  'project://validations/{validation}',
+  'project://paper/{artifact}',
+];
+for (const uri of progressReconciliationReads) {
+  assert.ok(progress.reads.includes(uri), `progress must read ${uri} before reconciling it`);
+}
+assert.deepStrictEqual(
+  commaSeparatedScope(progress, 'filesystem.read'),
+  progress.reads,
+  'progress read effects must exactly disclose every reconciled resource',
+);
+
 const checkRefs = load('protocol/actions/check-refs.json');
 const checkRefsMutableInputs = new Set([
   'project://sources/{source}',
@@ -277,6 +461,55 @@ const checkRefsMutableInputs = new Set([
 assert.ok(
   !checkRefs.produces.some((output) => checkRefsMutableInputs.has(output.uri)),
   'check-refs is non-destructive: corrections must be emitted as a separate bibliography candidate',
+);
+assert.ok(!checkRefs.requirements.capabilities.includes('network.fetch'), 'check-refs must not claim record fetches its tools do not perform');
+assert.ok(checkRefs.requirements.capabilities.includes('network.search'), 'check-refs must disclose provider searches');
+assert.ok(!checkRefs.effects.some((effect) => effect.id === 'network.fetch'), 'check-refs must not declare a selected-record fetch effect');
+assert.ok(
+  checkRefs.effects.some((effect) => effect.id === 'user.gate' && effect.scope.includes('query set')),
+  'check-refs must gate its providers and bounded query set',
+);
+
+const analyzeBib = load('protocol/actions/analyze-bib.json');
+assert.ok(analyzeBib.requirements.capabilities.includes('network.search'), 'analyze-bib must disclose network search');
+assert.ok(analyzeBib.requirements.capabilities.includes('user.interaction'), 'analyze-bib needs an external-search gate');
+assert.ok(
+  analyzeBib.effects.some((effect) => effect.id === 'user.gate' && effect.scope.includes('provider')),
+  'analyze-bib must gate the external provider and query set',
+);
+for (const uri of ['project://sections/{section}', 'project://evidence/{evidence}']) {
+  assert.ok(analyzeBib.reads.includes(uri), `analyze-bib must read ${uri} before section-aware reconciliation`);
+}
+assert.deepStrictEqual(
+  analyzeBib.produces.filter((output) => output.uri === 'project://sources/{source}'),
+  [
+    { uri: 'project://sources/{source}', mode: 'create' },
+    { uri: 'project://sources/{source}', mode: 'update' },
+  ],
+  'analyze-bib must support creating or reconciling source identities',
+);
+assert.deepStrictEqual(
+  analyzeBib.produces.filter((output) => output.uri === 'project://evidence/{evidence}'),
+  [
+    { uri: 'project://evidence/{evidence}', mode: 'create' },
+    { uri: 'project://evidence/{evidence}', mode: 'update' },
+  ],
+  'analyze-bib must support creating or reconciling claim mappings',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(analyzeBib, 'filesystem.create'),
+  [...actionOutputUris(analyzeBib, 'create')],
+  'analyze-bib create scope must exactly disclose source, evidence, and validation creation',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(analyzeBib, 'filesystem.modify'),
+  [...actionOutputUris(analyzeBib, 'update')],
+  'analyze-bib modify scope must exactly disclose source and evidence reconciliation',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(analyzeBib, 'filesystem.read'),
+  analyzeBib.reads,
+  'analyze-bib read scope must exactly disclose every analysis input',
 );
 
 const roleIds = new Set([

@@ -15,7 +15,7 @@ tools: ["read","search","edit"]
 [skills/wtfp-manage-project/references/actions.md](../wtfp/skills/wtfp-manage-project/references/actions.md)
 ## Record contract
 
-Read: `project://state`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://checkpoints/{checkpoint}`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/handoff`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: `project://checkpoints/{checkpoint}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -24,8 +24,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Reconcile state and inspect the active checkpoint plus linked Markdown handoff.
-2. Report completed work, pending work, blockers, stale assumptions, and the exact resume action.
+1. Reconcile the manifest, config, state, and author decisions; inspect the active checkpoint plus linked Markdown handoff, section plan, reviews, validations, manuscript artifact, and outline.
+2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact resume action.
 3. After user selection, resolve the checkpoint and set state active; preserve the handoff until successful continuation is confirmed.
 
 ## Safety and completion
@@ -40,10 +40,20 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 [project/schemas/common.schema.json](../wtfp/project/schemas/common.schema.json)
 [project/schemas/checkpoint.schema.json](../wtfp/project/schemas/checkpoint.schema.json)
 [project/templates/checkpoint.json](../wtfp/project/templates/checkpoint.json)
+[project/schemas/config.schema.json](../wtfp/project/schemas/config.schema.json)
+[project/templates/config.json](../wtfp/project/templates/config.json)
+[project/schemas/decisions.schema.json](../wtfp/project/schemas/decisions.schema.json)
+[project/templates/decisions.json](../wtfp/project/templates/decisions.json)
+[project/schemas/manifest.schema.json](../wtfp/project/schemas/manifest.schema.json)
+[project/templates/manifest.json](../wtfp/project/templates/manifest.json)
+[project/schemas/outline.schema.json](../wtfp/project/schemas/outline.schema.json)
+[project/templates/outline.json](../wtfp/project/templates/outline.json)
 [project/schemas/section.schema.json](../wtfp/project/schemas/section.schema.json)
 [project/templates/section.json](../wtfp/project/templates/section.json)
 [project/schemas/state.schema.json](../wtfp/project/schemas/state.schema.json)
 [project/templates/state.json](../wtfp/project/templates/state.json)
+[project/schemas/validation.schema.json](../wtfp/project/schemas/validation.schema.json)
+[project/templates/validation.json](../wtfp/project/templates/validation.json)
 
 ## Invocation input
 
