@@ -25,6 +25,32 @@
       "duration_ms": 12
     },
     {
+      "tool": "ls",
+      "args": {
+        "path": ".git",
+        "limit": 10
+      },
+      "outcome": "ok",
+      "is_error": false,
+      "block_reason": null,
+      "duration_ms": 17,
+      "policy_classification": "contract-excluded-vcs-metadata-read",
+      "entries_shown": 10,
+      "entries_total": 11
+    },
+    {
+      "tool": "read",
+      "args": {
+        "path": "/home/akougkas/iowarp/clio-coder/docs/extensions-and-sharing.md"
+      },
+      "outcome": "ok",
+      "is_error": false,
+      "block_reason": null,
+      "duration_ms": 15,
+      "policy_classification": "outside-authorized-project-and-extension-roots",
+      "bytes": 17460
+    },
+    {
       "tool": "dispatch",
       "args": {
         "list": true
@@ -76,6 +102,12 @@
       "duration_ms": 2
     }
   ],
+  "read_only_policy_findings": {
+    "contract_excluded_vcs_metadata_listings_succeeded": 1,
+    "out_of_scope_absolute_reads_succeeded": 1,
+    "mutating_effects_applied": 0,
+    "network_effects_applied": 0
+  },
   "planning_directory_exists": false,
   "assistant_terminal_content": [
     {

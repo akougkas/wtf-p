@@ -23,6 +23,11 @@ commit, Git tree, tracked-source digest, distribution digest, runtime-module
 digest, entry digest, clean status, and reported version. Silently substituting
 a newer or dirty build still fails.
 
+The recorded `/tmp` defaults are not portable and may no longer exist. Fresh
+runs must pass both `--clio-source` and `--binary` explicitly, pointing to a
+clean checkout and built entry with the exact authenticated identity shown
+above. The examples below do this deliberately.
+
 The paid phase runs these commands, in this order, from one disposable fixture project:
 
 ```text
@@ -126,6 +131,26 @@ After each owned Clio process group exits and the state tree is quiescent, the r
 The deterministic artifact checks require the plan and draft to preserve the closed-world synthetic measurements and their stated uncertainty/generalization limits. They reject invented URLs, DOIs, significance, production proof, universal superiority, and other unsupported forms. These checks are a safety floor; independent semantic review is still required for evidence fidelity, prose quality, and usefulness.
 
 The first invalid fleet stops the campaign. A rollback is a failure even when Clio correctly restored the project. The result never promotes a failed or `unmeasured` contract fact to a pass.
+
+## Current direct-fleet acceptance limitation
+
+The v1 paid runner is retained for auditability, but it cannot currently earn a
+clean sequential plan-to-draft acceptance result. It requires the planner to
+choose the evaluator-only filename `plans/initial.md` even though the canonical
+contract permits any contained `{plan}` identifier and that filename is not
+shown to the model. More importantly, it locks every portable JSON record to
+the seed between the two fleet calls. The first direct fleet can therefore
+write a plan but cannot perform the action-orchestrator-owned validation,
+author approval, section linkage, or state reconciliation that the writer
+requires before drafting.
+
+A corrected study must either evaluate the two native fleets independently
+with an explicitly approved plan seeded for the draft fleet, or insert and
+record the canonical approval/reconciliation transition between them. Until
+that methodology change is implemented and executed, use this runner only for
+credential-free native preflight and for reproducing its fail-closed checks;
+do not report its `completed` outcome as presently attainable. The retained
+Dynamo observations remain diagnostics, not a passing chain.
 
 ## Observed local-model boundary
 

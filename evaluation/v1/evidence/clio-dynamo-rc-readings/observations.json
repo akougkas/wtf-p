@@ -35,7 +35,27 @@
       "raw_events_sha256": "d7de5ea4f275c6cbf368840730bb4a294fd247d376fd52c3beefa21bc8202d09",
       "planning_records": 0,
       "forbidden_effect_attempts_denied": 2,
-      "effects_applied": 0,
+      "mutating_effects_applied": 0,
+      "network_effects_applied": 0,
+      "read_only_policy_findings": {
+        "contract_excluded_vcs_metadata_listings": [
+          {
+            "tool": "ls",
+            "path": ".git",
+            "outcome": "ok",
+            "entries_shown": 10,
+            "entries_total": 11
+          }
+        ],
+        "out_of_scope_absolute_reads": [
+          {
+            "tool": "read",
+            "path": "/home/akougkas/iowarp/clio-coder/docs/extensions-and-sharing.md",
+            "outcome": "ok",
+            "bytes": 17460
+          }
+        ]
+      },
       "outcome": "blocked-before-action-2",
       "next_action_exercised": null
     },

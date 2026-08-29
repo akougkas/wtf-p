@@ -18,7 +18,7 @@ the first transition failed the safety and cross-record floor, later lifecycle
 phases were not exercised, and the comparator correctly classifies it as a
 regression rather than weakening the baseline.
 
-That blocked reading predates the current canonical remediation: it binds
+That blocked reading predates later canonical remediation: it binds
 WTF-P `6b58b298` and generated source `4db9d040…`, while later source adds the
 exact outline-total and direct-tool constraints prompted by those failures.
 
@@ -26,10 +26,12 @@ The separate
 [`clio-dynamo-rc-readings`](v1/evidence/clio-dynamo-rc-readings/README.md)
 pack retains post-remediation slash and fleet observations with their distinct
 `0245818`, `b4f0543`, and `cbba38c` identities. The slash action produced no
-records, the plan fleet was semantic-quality unmeasured, and the final draft
-fleet fixed physical path projection but failed lifecycle and word-budget
-invariants. They are executable failure/structural evidence, not entries in
-the observed semantic baseline.
+records and, despite applying zero mutating and network effects, successfully
+listed excluded `.git` metadata and read an out-of-scope absolute Clio
+documentation path. The plan fleet was semantic-quality unmeasured, and the
+`cbba38c` manuscript-path projection observation fixed physical path projection
+but failed lifecycle and word-budget invariants. They are executable
+failure/structural evidence, not entries in the observed semantic baseline.
 
 This suite has no no-WTF-P control arm. It cannot establish that WTF-P produces
 better prose than the same model and task without WTF-P, and no result should be

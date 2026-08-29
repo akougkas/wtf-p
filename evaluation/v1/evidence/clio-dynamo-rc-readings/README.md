@@ -11,20 +11,29 @@ using target `dynamo`, exact wire model `qwen3.8-27b`, and effective thinking
 `off`. Network tools were disabled. Client receipts report numeric zero with
 `costProvenance: unknown`, so cost is **unavailable**, not measured USD 0.
 
+The `slash-024` trace does not support a generic "no effects" claim. It records
+zero mutating effects and zero network effects, but Clio allowed two read-only
+policy violations: the model listed 10 of 11 entries under the fixture's
+contract-excluded `.git` metadata and read the absolute host path
+`/home/akougkas/iowarp/clio-coder/docs/extensions-and-sharing.md`, outside the
+authorized project and installed-extension roots. Both accesses are disclosed
+in `observations.json` and `slash-024/tool-summary.json`.
+
 ## Observed results
 
 1. `slash-024` binds WTF-P `024581816148cd6e962f36ceb210d08343605123`.
-   `/wtfp:new-paper` received the exact 1,462-byte payload, then made two
-   denied `bash` attempts and looped on agent discovery. The loop guard stopped
-   the fourth repeated dispatch. Exit was 0, but no `.planning` directory or
-   JSON record was produced, so the lifecycle stopped before `map-project`.
+   `/wtfp:new-paper` received the exact 1,462-byte payload, made the two
+   successful read-only accesses disclosed above, then made two denied `bash`
+   attempts and looped on agent discovery. The loop guard stopped the fourth
+   repeated dispatch. Exit was 0, but no `.planning` directory or JSON record
+   was produced, so the lifecycle stopped before `map-project`.
 2. `plan-b4` binds WTF-P `b4f0543658a14855ba41b68626c9771dd977cd11`.
    Both native agents executed, the nested Markdown plan survived the
    `.planning/` boundary, and no boundary violation occurred. Result envelopes
    conformed structurally, but Clio marked semantic quality `unmeasured` and
    grounded none of four claimed validations. This is a structural dispatch
    observation, not a semantic plan pass.
-3. `draft-cbba` binds final projection commit
+3. `draft-cbba` binds manuscript-path projection observation commit
    `cbba38cb0036bc42de6d0ace3e5ebe1d46b3c0e5`. Both agents executed and the
    physical-path repair worked: the manuscript is `paper/evaluation.md`, the
    summary is under `.planning/`, and `.planning/paper/` was not created. Both
