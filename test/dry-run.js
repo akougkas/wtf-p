@@ -15,6 +15,7 @@ const ACTION_DIR = path.join(ROOT, 'protocol', 'actions');
 const ROLE_DIR = path.join(ROOT, 'protocol', 'roles');
 const CLAUDE_COMMAND_DIR = path.join(ROOT, 'vendors', 'claude', 'commands');
 const CLAUDE_AGENT_DIR = path.join(ROOT, 'vendors', 'claude', 'agents', 'wtfp');
+const UNAVAILABLE_MARKER = 'WTFP_ACTION_UNAVAILABLE';
 
 const COLORS = {
   red: '\x1b[31m',
@@ -54,6 +55,10 @@ const actions = fs.readdirSync(ACTION_DIR)
   .filter((name) => name.endsWith('.json'))
   .sort()
   .map((name) => readJson(path.join(ACTION_DIR, name)));
+const claudeAvailability = new Map(
+  readJson(path.join(ROOT, 'vendors', 'claude', 'compatibility', 'action-availability.json'))
+    .actions.map((entry) => [entry.id, entry.status])
+);
 
 console.log('=== Portable Workflow Dry-Run Tests ===');
 
@@ -81,13 +86,23 @@ for (const action of actions) {
 
   const source = fs.readFileSync(file, 'utf8');
   const needsDelegation = (action.delegation || []).length > 0;
+  const available = claudeAvailability.get(action.id) === 'available';
   const hasTask = /^\s*- Task\s*$/m.test(source);
   const actionBinding = `@\${CLAUDE_PLUGIN_ROOT}/actions/${action.id}.json`;
 
   check(source.includes(`from protocol/actions/${action.id}`), `${action.alias} retains canonical provenance`);
-  check(source.includes(actionBinding), `${action.alias} binds its exact action contract`);
-  check(source.includes('$ARGUMENTS'), `${action.alias} forwards invocation input`);
-  check(hasTask === needsDelegation, `${action.alias} grants delegation exactly when declared`);
+  check(
+    available ? source.includes(actionBinding) : source.includes(UNAVAILABLE_MARKER) && !source.includes(actionBinding),
+    available ? `${action.alias} binds its exact action contract` : `${action.alias} fails closed without an action binding`
+  );
+  check(
+    available ? source.includes('$ARGUMENTS') : !source.includes('$ARGUMENTS'),
+    available ? `${action.alias} forwards invocation input` : `${action.alias} refuses invocation input`
+  );
+  check(
+    hasTask === (available && needsDelegation),
+    available ? `${action.alias} grants delegation exactly when declared` : `${action.alias} grants no delegation`
+  );
   check(!/\b(?:opus|sonnet|haiku|gpt-[0-9]|gemini-[0-9])\b/i.test(source), `${action.alias} leaves model choice to Claude`);
 }
 
@@ -112,19 +127,25 @@ check(projected.includes('on approval'), 'would cross the declared user gate bef
 
 section('Cross-host invocation and command shape');
 const hosts = {
-  claude: { dir: path.join(ROOT, 'vendors', 'claude', 'commands'), file: (id) => `${id}.md`, args: '$ARGUMENTS' },
-  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS' },
-  opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS' },
-  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS' },
-  gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}' },
-  clio: { dir: path.join(ROOT, 'vendors', 'clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS' }
+  claude: { dir: path.join(ROOT, 'vendors', 'claude', 'commands'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/claude/compatibility/action-availability.json' },
+  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/wtf-p/compatibility/action-availability.json' },
+  opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
+  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json' },
+  gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
+  clio: { dir: path.join(ROOT, 'vendors', 'clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/clio/compatibility/action-availability.json' }
 };
 
 for (const [host, spec] of Object.entries(hosts)) {
-  const files = actions.map((action) => path.join(spec.dir, spec.file(action.id)));
-  const allExist = files.every((file) => fs.existsSync(file));
+  const availability = new Map(readJson(path.join(ROOT, spec.availability)).actions.map((entry) => [entry.id, entry.status]));
+  const files = actions.map((action) => ({ action, file: path.join(spec.dir, spec.file(action.id)) }));
+  const allExist = files.every((entry) => fs.existsSync(entry.file));
   check(allExist, `${host} exposes all 36 stable commands`);
-  check(allExist && files.every((file) => fs.readFileSync(file, 'utf8').includes(spec.args)), `${host} forwards user arguments in every command`);
+  check(allExist && files.every(({ action, file }) => {
+    const source = fs.readFileSync(file, 'utf8');
+    return availability.get(action.id) === 'available'
+      ? source.includes(spec.args) && !source.includes(UNAVAILABLE_MARKER)
+      : !source.includes(spec.args) && source.includes(UNAVAILABLE_MARKER);
+  }), `${host} forwards arguments only to executable commands and refuses blocked routes`);
 }
 
 section('Legacy assumptions are absent from generated commands');
