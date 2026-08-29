@@ -564,7 +564,12 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     'fleets/wtfp-plan-section.md': 'writes: [.planning/]'
   };
   const expectedFleetInstructions = {
-    'fleets/wtfp-draft-review.md': ['update its declared portable Markdown summary', 'independently review'],
+    'fleets/wtfp-draft-review.md': [
+      'update its declared portable Markdown summary',
+      'independently review',
+      'resolve logical `project://paper/...` artifacts under the project-root `paper/` directory',
+      'never under `.planning/paper/`'
+    ],
     'fleets/wtfp-plan-section.md': ['support for every required claim', 'independently review']
   };
   for (const sourcePath of fleetPaths) {

@@ -531,6 +531,12 @@ function clioFleet(fleetId) {
     /\{([a-z][a-z0-9-]*)\}/gu,
     (_match, parameter) => `{{${parameter}}}`
   );
+  const logicalWrites = fleet.steps.flatMap(step => step.writes);
+  const nativeResourceProjection = logicalWrites.some(resource =>
+    /^project:\/\/paper(?:\/|$)/u.test(resource)
+  )
+    ? 'For this Clio projection, resolve logical `project://paper/...` artifacts under the project-root `paper/` directory, never under `.planning/paper/`.'
+    : null;
   return [
     '---',
     'version: 4',
@@ -545,6 +551,7 @@ function clioFleet(fleetId) {
     generatedBanner('protocol/fleets', sourceName),
     '',
     nativeInstruction,
+    ...(nativeResourceProjection ? ['', nativeResourceProjection] : []),
     ''
   ].join('\n');
 }
