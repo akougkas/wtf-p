@@ -5,6 +5,10 @@ HPC-checkpointing lifecycle fixture against WTF-P compiler v4. It is an
 observed blocked result, not a completed lifecycle baseline and not a prose
 quality claim.
 
+This reading predates the current canonical remediation that added exact
+outline-total and direct-tool constraints. It remains evidence for the exact
+source identity below; no claim is made that it measures the remediated RC.
+
 ## Exact surface
 
 - WTF-P canonical source: `6b58b298cd6c41a587718d279cb0b0b21c0fbd7f`
@@ -69,7 +73,12 @@ The original mode-0700 temporary roots and raw JSONL traces were removed after
 their hashes, event counts, timings, tool activity, and five non-secret records
 were retained here. No credential was forwarded. Normal Clio settings and
 credential hashes were unchanged before and after. The raw traces are not a
-release dependency.
+release dependency. Their bytes are no longer available, so the retained
+identity/tool receipts are sanitized evaluator summaries bound to the recorded
+raw-trace digests, not independently replay-auditable native event streams.
+Exact argument delivery, the denied tool event, wire model ID, and usage totals
+should therefore be treated as observed-and-sanitized evidence rather than a
+claim that another reviewer can reconstruct the event stream from this tree.
 
 This evaluation has no no-WTF-P control arm. It can establish process
 discipline and failure modes, but it cannot establish that WTF-P produces

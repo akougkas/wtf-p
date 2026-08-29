@@ -15,7 +15,8 @@
     "effective": "off"
   },
   "provenance": {
-    "kind": "client-version-and-native-events",
+    "kind": "sanitized-evaluator-summary",
+    "source_retention": "digest-only",
     "source_sha256s": [
       "5e4e3b8278270bb0f30fcd5e8a0f3acab5b438e227697d7ec157d1d9b89baa6b",
       "03eebff0d17c1dbfdb87d6b69e6d8c28c811c8832d2c5a17133db5a30c884eec"

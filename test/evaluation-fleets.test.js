@@ -14,6 +14,7 @@ const {
   CONFIRMATION_ENV,
   EXPECTED_CLIO,
   FLEETS,
+  assertExpectedClioIdentity,
   assertExecutionConfirmation,
   auditFleetLedger,
   auditFleetMutation,
@@ -161,6 +162,32 @@ function testDryRunIdentityAndArguments() {
   assert.strictEqual(options.ambientConfirmationIgnored, true);
   assert.strictEqual(options.binary, EXPECTED_CLIO.binary);
   assert.strictEqual(options.clioSource, EXPECTED_CLIO.source);
+
+  const relocated = parseArgs([
+    '--dry-run',
+    '--clio-source', '/opt/certified/clio-coder',
+    '--binary', '/opt/certified/clio-coder/dist/cli/index.js'
+  ]);
+  assert.strictEqual(relocated.clioSource, '/opt/certified/clio-coder');
+  assert.strictEqual(relocated.binary, '/opt/certified/clio-coder/dist/cli/index.js');
+  assert.strictEqual(assertExpectedClioIdentity({
+    commit: EXPECTED_CLIO.commit,
+    source_sha256: EXPECTED_CLIO.source_sha256,
+    binary: { sha256: EXPECTED_CLIO.binary_sha256 },
+    dist: { sha256: EXPECTED_CLIO.dist_sha256 },
+    runtime_modules: { sha256: EXPECTED_CLIO.modules_sha256 },
+    dirty: false,
+    status_entry_count: 0
+  }, EXPECTED_CLIO.tree, EXPECTED_CLIO.version), true);
+  assert.throws(() => assertExpectedClioIdentity({
+    commit: EXPECTED_CLIO.commit,
+    source_sha256: EXPECTED_CLIO.source_sha256,
+    binary: { sha256: '0'.repeat(64) },
+    dist: { sha256: EXPECTED_CLIO.dist_sha256 },
+    runtime_modules: { sha256: EXPECTED_CLIO.modules_sha256 },
+    dirty: false,
+    status_entry_count: 0
+  }, EXPECTED_CLIO.tree, EXPECTED_CLIO.version), /Clio binary/u);
 
   const plan = buildPlan(options, fakeSources());
   assert.strictEqual(plan.schema, 'wtfp.evaluation.clio-fleets-plan/v1');

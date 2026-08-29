@@ -227,6 +227,16 @@
             "cleanup_status": { "enum": ["not-forwarded", "securely-removed", "cleanup-failed"] },
             "evidence": { "$ref": "wtfp.evaluation.run-metadata/v1#/$defs/evidence" }
           }
+        },
+        "tool_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["forbidden_attempts", "forbidden_effects", "evidence"],
+          "properties": {
+            "forbidden_attempts": { "type": "integer", "minimum": 0 },
+            "forbidden_effects": { "type": "integer", "minimum": 0 },
+            "evidence": { "$ref": "wtfp.evaluation.run-metadata/v1#/$defs/evidence" }
+          }
         }
       }
     },

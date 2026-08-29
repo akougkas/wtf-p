@@ -295,7 +295,7 @@ function main() {
 
     const humanIdentity = clone(candidate);
     humanIdentity.run.identity_evidence.assessor = { kind: 'human', name: 'operator', version: '1' };
-    assert.throws(() => observedComparison(baseline, humanIdentity, root), /identity evidence must be a deterministic/);
+    assert.throws(() => observedComparison(baseline, humanIdentity, root), /identity must be a deterministic/);
 
     const hybridMissingSemantic = clone(candidate);
     const hybrid = expectedAnchor(hybridMissingSemantic, 'hybrid');
@@ -346,14 +346,49 @@ function main() {
     unknownCost.cost.source = 'native client exposes no independently priced USD total';
     assert.strictEqual(observedComparison(baseline, unknownCost, root).disposition, 'meets-baseline');
 
+    const localModel = clone(unknownCost);
+    localModel.run.evidence_level = 'local-model';
+    assert.strictEqual(observedComparison(baseline, localModel, root).disposition, 'meets-baseline');
+
+    const blockedVcsContradiction = clone(candidate);
+    blockedVcsContradiction.outcome = 'blocked';
+    delete blockedVcsContradiction.output;
+    blockedVcsContradiction.artifacts.vcs.after_sha256 = '1'.repeat(64);
+    assert.throws(
+      () => observedComparison(baseline, blockedVcsContradiction, root),
+      /VCS unchanged claim conflicts/u
+    );
+
+    const blockedCleanupFailure = clone(candidate);
+    blockedCleanupFailure.outcome = 'blocked';
+    delete blockedCleanupFailure.output;
+    blockedCleanupFailure.artifacts.credentials.forwarded = true;
+    blockedCleanupFailure.artifacts.credentials.cleanup_status = 'cleanup-failed';
+    const cleanupComparison = observedComparison(baseline, blockedCleanupFailure, root);
+    assert.strictEqual(cleanupComparison.disposition, 'regression');
+    assert(cleanupComparison.classifications.includes('safety-regression'));
+
+    const blockedToolAttempt = clone(candidate);
+    blockedToolAttempt.outcome = 'blocked';
+    delete blockedToolAttempt.output;
+    blockedToolAttempt.artifacts.tool_policy = {
+      forbidden_attempts: 1,
+      forbidden_effects: 0,
+      evidence: blockedToolAttempt.artifacts.credentials.evidence
+    };
+    const toolPolicyComparison = observedComparison(baseline, blockedToolAttempt, root);
+    assert.strictEqual(toolPolicyComparison.disposition, 'regression');
+    assert(toolPolicyComparison.details.some(detail => detail.id === 'artifacts:tool-policy'));
+
     const observedEffortDifference = clone(candidate);
     observedEffortDifference.run.effective_effort = 'high';
     bindIdentityReceipt(observedEffortDifference, root, 'identity-effective-effort-difference');
     assert.strictEqual(observedComparison(baseline, observedEffortDifference, root).disposition,
       'inconclusive-capability');
 
-    process.stdout.write('✓ semantic comparison requires typed hybrid evidence, sealed paid identity, and honest cost provenance\n');
+    process.stdout.write('✓ semantic comparison requires typed hybrid evidence, sealed model identity, and honest cost provenance\n');
     process.stdout.write('✓ missing, forged, mismatched, human-self-attested, and candidate-model evidence fails closed\n');
+    process.stdout.write('✓ blocked results retain VCS, profile, and credential safety enforcement\n');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

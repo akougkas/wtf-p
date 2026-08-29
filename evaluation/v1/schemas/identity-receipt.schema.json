@@ -45,8 +45,12 @@
             "native-client-events",
             "sealed-client-receipt",
             "client-version-and-native-events",
+            "sanitized-evaluator-summary",
             "capability-unavailable"
           ]
+        },
+        "source_retention": {
+          "enum": ["retained", "digest-only"]
         },
         "source_sha256s": {
           "type": "array",
@@ -54,7 +58,19 @@
           "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
           "uniqueItems": true
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["kind"],
+            "properties": { "kind": { "const": "sanitized-evaluator-summary" } }
+          },
+          "then": {
+            "required": ["source_retention"],
+            "properties": { "source_retention": { "const": "digest-only" } }
+          }
+        }
+      ]
     }
   }
 }

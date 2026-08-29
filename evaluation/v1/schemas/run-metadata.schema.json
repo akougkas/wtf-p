@@ -20,7 +20,7 @@
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "started_at": { "type": "string", "format": "date-time" },
-    "evidence_level": { "enum": ["static-lint", "native-discovery", "paid-model"] },
+    "evidence_level": { "enum": ["static-lint", "native-discovery", "local-model", "paid-model"] },
     "client": {
       "type": "object",
       "additionalProperties": false,

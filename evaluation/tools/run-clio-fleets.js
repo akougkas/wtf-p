@@ -318,14 +318,6 @@ function runtimeBinding() {
 }
 
 function inspectSources(options) {
-  const expectedSource = fs.realpathSync(EXPECTED_CLIO.source);
-  const expectedBinary = fs.realpathSync(EXPECTED_CLIO.binary);
-  if (fs.realpathSync(options.clioSource) !== expectedSource) {
-    throw new Error(`fleet evaluator is bound to the final contained Clio source ${EXPECTED_CLIO.source}`);
-  }
-  if (fs.realpathSync(options.binary) !== expectedBinary) {
-    throw new Error(`fleet evaluator is bound to the final contained Clio binary ${EXPECTED_CLIO.binary}`);
-  }
   if (path.resolve(options.extension) !== generatedExtension) {
     throw new Error('fleet evaluator is bound to the current generated vendors/clio extension');
   }
@@ -339,21 +331,7 @@ function inspectSources(options) {
   const sources = lifecycle.inspectSources(lifecycleOptions);
   const tree = commandResult('git', ['-C', options.clioSource, 'rev-parse', 'HEAD^{tree}']).stdout.trim();
   const version = commandResult(process.execPath, [options.binary, '--version']).stdout.trim();
-  const checks = [
-    ['Clio commit', sources.clio.commit, EXPECTED_CLIO.commit],
-    ['Clio tree', tree, EXPECTED_CLIO.tree],
-    ['Clio tracked source', sources.clio.source_sha256, EXPECTED_CLIO.source_sha256],
-    ['Clio binary', sources.clio.binary.sha256, EXPECTED_CLIO.binary_sha256],
-    ['Clio dist', sources.clio.dist.sha256, EXPECTED_CLIO.dist_sha256],
-    ['Clio modules', sources.clio.runtime_modules.sha256, EXPECTED_CLIO.modules_sha256],
-    ['Clio version', version, EXPECTED_CLIO.version]
-  ];
-  for (const [label, actual, expected] of checks) {
-    if (actual !== expected) throw new Error(`${label} ${actual} != required ${expected}`);
-  }
-  if (sources.clio.dirty || sources.clio.status_entry_count !== 0) {
-    throw new Error('contained Clio source must remain clean');
-  }
+  assertExpectedClioIdentity(sources.clio, tree, version);
   const seedStat = fs.lstatSync(seedFile);
   if (seedStat.isSymbolicLink() || !seedStat.isFile()) throw new Error('fleet fixture seed changed type');
   return {
@@ -371,6 +349,25 @@ function inspectSources(options) {
       schema: readJson(seedFile).schema
     }
   };
+}
+
+function assertExpectedClioIdentity(clio, tree, version) {
+  const checks = [
+    ['Clio commit', clio.commit, EXPECTED_CLIO.commit],
+    ['Clio tree', tree, EXPECTED_CLIO.tree],
+    ['Clio tracked source', clio.source_sha256, EXPECTED_CLIO.source_sha256],
+    ['Clio binary', clio.binary.sha256, EXPECTED_CLIO.binary_sha256],
+    ['Clio dist', clio.dist.sha256, EXPECTED_CLIO.dist_sha256],
+    ['Clio modules', clio.runtime_modules.sha256, EXPECTED_CLIO.modules_sha256],
+    ['Clio version', version, EXPECTED_CLIO.version]
+  ];
+  for (const [label, actual, expected] of checks) {
+    if (actual !== expected) throw new Error(`${label} ${actual} != required ${expected}`);
+  }
+  if (clio.dirty || clio.status_entry_count !== 0) {
+    throw new Error('contained Clio source must remain clean');
+  }
+  return true;
 }
 
 function buildPlan(options, sources, root = '<new-mode-0700-root>') {
@@ -1914,6 +1911,7 @@ module.exports = {
   FLEETS,
   PROFILE_PATHS_ENV,
   SETTINGS_SOURCE_ENV,
+  assertExpectedClioIdentity,
   assertExecutionConfirmation,
   auditArtifactInvariants,
   auditFleetGraph,
