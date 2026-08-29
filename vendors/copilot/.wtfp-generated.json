@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot-marketplace",
-  "sourceHash": "58ba670ab865d02be52004ace0bd05fab0a28e65b3d704dad46dd6d826ae2929",
+  "sourceHash": "1811be8c73263a8ab73932f733b58065971702bd1c4719775bb04a08f828b95d",
   "files": [
     {
       "path": "marketplace.json",
@@ -439,6 +439,14 @@
     {
       "path": "project/.github/wtfp/effects.json",
       "sha256": "7757a904a65563fe56409ed39e221ab79f48f94ea47f5f2eebac29da8200926b"
+    },
+    {
+      "path": "project/.github/wtfp/fleets/wtfp-draft-review.md",
+      "sha256": "92aa1909babc852f1fd1b92dda70822ae0483c2091d3b45bb74c1d5bb42229d2"
+    },
+    {
+      "path": "project/.github/wtfp/fleets/wtfp-plan-section.md",
+      "sha256": "a504fd30764135140a01b88e0a8bab32646d088710510a10526e3066675bd4b3"
     },
     {
       "path": "project/.github/wtfp/project/README.md",

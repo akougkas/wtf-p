@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "claude",
-  "sourceHash": "d8878de22328971dc8c490172df6ea7795d62d65d2fccc1d8e8f26f08f2ff31f",
+  "sourceHash": "49d7833df1ee38528b220c7d8c9e9c70eb78a390f1a110fe1c5ded2c45983ad8",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -355,6 +355,14 @@
     {
       "path": "effects.json",
       "sha256": "7757a904a65563fe56409ed39e221ab79f48f94ea47f5f2eebac29da8200926b"
+    },
+    {
+      "path": "fleets/wtfp-draft-review.md",
+      "sha256": "92aa1909babc852f1fd1b92dda70822ae0483c2091d3b45bb74c1d5bb42229d2"
+    },
+    {
+      "path": "fleets/wtfp-plan-section.md",
+      "sha256": "a504fd30764135140a01b88e0a8bab32646d088710510a10526e3066675bd4b3"
     },
     {
       "path": "project/README.md",

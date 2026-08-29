@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "clio",
-  "sourceHash": "d8441f39bcfc54804c35701fedeb70819db0dde578ba51cac062edb1e9d82d87",
+  "sourceHash": "4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,11 +210,11 @@
     },
     {
       "path": "fleets/wtfp-draft-review.md",
-      "sha256": "ad8ee05255e3ddbce30f374fd5b54092c01ab6709a71d410311c4d05bf7aedd2"
+      "sha256": "fc59541db8b101b4f7964f124941e95f715b3f837af904c3e3c3b5a5c629d36e"
     },
     {
       "path": "fleets/wtfp-plan-section.md",
-      "sha256": "9ed070d0eca236dcb6c724709cb4c58ee33bf5093b3466d5bafd898fff67f9b0"
+      "sha256": "633ea679c1f90c97252b6f5fd4ea1ce30c68f431ae256022c6c775b6e04e8578"
     },
     {
       "path": "project/README.md",

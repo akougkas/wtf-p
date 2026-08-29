@@ -67,6 +67,14 @@ function addFile(plan, relativePath, content) {
   plan.files.set(normalized, bytes);
 }
 
+function replaceFile(plan, relativePath, content) {
+  const normalized = assertRelative(relativePath);
+  if (!plan.files.delete(normalized)) {
+    throw new Error(`cannot project missing canonical path for ${plan.id}: ${normalized}`);
+  }
+  addFile(plan, normalized, content);
+}
+
 function walkFiles(root) {
   const files = [];
   function visit(directory, relativeDirectory) {
@@ -437,58 +445,19 @@ function clioManifest(version) {
   ].join('\n');
 }
 
-function clioPlanFleet() {
-  return `---
-version: 4
-name: wtfp-plan-section
-description: Create and independently check one evidence-grounded section plan.
-steps:
-  - kind: agent
-    id: plan
-    agent: wtfp-section-planner
-    scope: workspace
-    writes: [.planning/]
-    dependencies: []
-  - kind: agent
-    id: check
-    agent: wtfp-plan-checker
-    scope: readonly
-    dependencies: [plan]
-maxWorkers: 1
-onFailure: stop
----
-
-${generatedBanner('protocol/fleets', 'wtfp-plan-section')}
-
-Plan section {{section}} from the portable project state. The checker must independently assess traceability, evidence coverage, author-decision fidelity, and feasibility.
-`;
-}
-
-function clioDraftFleet() {
-  return `---
-version: 4
-name: wtfp-draft-review
-description: Draft one approved section and independently review its argument and evidence.
-steps:
-  - kind: agent
-    id: draft
-    agent: wtfp-section-writer
-    scope: workspace
-    writes: [paper/, .planning/]
-    dependencies: []
-  - kind: agent
-    id: review
-    agent: wtfp-section-reviewer
-    scope: readonly
-    dependencies: [draft]
-maxWorkers: 1
-onFailure: stop
----
-
-${generatedBanner('protocol/fleets', 'wtfp-draft-review')}
-
-Draft section {{section}} from its approved plan, then review the resulting prose against the plan, sources, decisions, and venue constraints.
-`;
+function clioFleet(fleetId) {
+  const sourcePath = path.join(PROTOCOL_ROOT, 'fleets', `${fleetId}.md`);
+  const source = fs.readFileSync(sourcePath, 'utf8');
+  const match = source.match(/^(---\n[\s\S]*?\n---\n)([\s\S]*)$/u);
+  if (!match) throw new Error(`missing fleet Markdown frontmatter: ${sourcePath}`);
+  return [
+    match[1].trimEnd(),
+    '',
+    generatedBanner('protocol/fleets', `${fleetId}.md`),
+    '',
+    match[2].trim(),
+    ''
+  ].join('\n');
 }
 
 function codexPluginManifest(version) {
@@ -633,8 +602,8 @@ function compilePlans() {
 
   const clio = byId.get('clio');
   addFile(clio, 'clio-coder-extension.yaml', clioManifest(model.version));
-  addFile(clio, 'fleets/wtfp-plan-section.md', clioPlanFleet());
-  addFile(clio, 'fleets/wtfp-draft-review.md', clioDraftFleet());
+  replaceFile(clio, 'fleets/wtfp-plan-section.md', clioFleet('wtfp-plan-section'));
+  replaceFile(clio, 'fleets/wtfp-draft-review.md', clioFleet('wtfp-draft-review'));
 
   const claude = byId.get('claude');
   addFile(claude, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version, 'wtfp'));
