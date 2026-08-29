@@ -1,7 +1,7 @@
 {
   "schema": "wtfp.evaluation.user-acceptance-invariants/v1",
   "fixture_id": "nsf25-531-proposal-uat",
-  "fixture_version": 1,
+  "fixture_version": 2,
   "document_type": "grant-proposal",
   "action_sequence": [
     "new-paper",

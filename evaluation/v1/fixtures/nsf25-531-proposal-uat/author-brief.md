@@ -1,6 +1,6 @@
 ---
 fixture_id: nsf25-531-proposal-uat
-fixture_version: 1
+fixture_version: 2
 document_type: grant-proposal
 source_class: author-evidence-and-author-decisions
 ---

@@ -43,7 +43,7 @@ test('NSF fixture is a separate grant-proposal UAT with complete file inventory'
   const fixture = json('fixture.json');
   assert.strictEqual(fixture.schema, 'wtfp.evaluation.user-acceptance-fixture/v1');
   assert.strictEqual(fixture.id, 'nsf25-531-proposal-uat');
-  assert.strictEqual(fixture.version, 1);
+  assert.strictEqual(fixture.version, 2);
   assert.strictEqual(fixture.document_type, 'grant-proposal');
   assert.strictEqual(fixture.suite_class, 'hands-on-user-acceptance');
   assert.strictEqual(fixture.academic_baseline, false);
@@ -85,6 +85,7 @@ test('authoritative facts preserve official identity, deadline, tracks, and auth
   assert.strictEqual(facts.status_evidence.next_deadline.time, '17:00');
   assert.strictEqual(facts.status_evidence.next_deadline.timezone_rule, 'submitting-organization-local-time');
   assert.strictEqual(facts.status_evidence.not_a_submission_guarantee, true);
+  assert.strictEqual(facts.source_anchors.program_description, `${SOLICITATION_URL}#pgm_desc_txt`);
 
   assert.deepStrictEqual(
     facts.tracks.map(track => [track.id, track.maximum_total_award_usd, track.maximum_duration_years]),
@@ -103,6 +104,12 @@ test('authoritative facts preserve official identity, deadline, tracks, and auth
   assert(facts.proposal_constraints.some(item => item.id === 'effective-pappg'));
   assert(facts.proposal_constraints.some(item => item.id === 'single-lead-proposal'));
   assert(facts.proposal_constraints.some(item => item.id === 'curated-data-sharing'));
+  assert.deepStrictEqual(facts.track_specific_requirements.UCSS, [
+    'Address security and usability for scientific collaboration and workflows'
+  ]);
+  assert.deepStrictEqual(facts.track_specific_encouraged_elements.UCSS, [
+    'Identify collaborations, existing cyberinfrastructure linkages, and newly enabled functionality where applicable'
+  ]);
 });
 
 test('machine-readable invariants bind the exact lifecycle and fresh-process boundary', () => {
@@ -187,6 +194,9 @@ test('user test documents isolated discovery, gates, and canonical initial artif
     '.planning/structure/outline.json'
   ]) assert(guide.includes(artifact), `guide omits initial artifact ${artifact}`);
   assert(guide.includes('/wtfp:new-paper'));
+  assert(guide.includes('/thinking off'));
+  assert(guide.includes('validate-planning.js'));
+  assert(guide.includes('Approval responses are'));
   assert(guide.includes('confirm_outline'));
   assert(guide.includes('confirm_plan'));
   assert(guide.includes('fresh process'));

@@ -53,9 +53,12 @@ node "$wtfp_root/bin/install.js" install clio \
 ```
 
 Register the operator-selected local Dynamo surface inside the isolated Clio
-configuration. The 0.3.8 RC reading completed `new-paper` only with thinking
-off; high thinking reached the fixed timeout without producing records, so use
-`off` for this first hands-on proposal test and record that exact setting:
+configuration. An earlier-source 0.3.8 reading completed `new-paper` with
+thinking off, but the post-remediation RC reading produced no planning records
+after looping on agent discovery. Completion on the current RC is therefore
+unproven. Use `off` for this diagnostic hands-on proposal test, record the exact
+setting, and stop rather than weakening a gate if initialization does not
+produce a usable preview:
 
 ```bash
 clio-coder configure \
@@ -70,8 +73,9 @@ clio-coder targets --probe
 clio-coder models --target dynamo
 ```
 
-In Clio Settings, confirm the orchestrator and fleet target are `dynamo`, the
-model is `qwen3.8-27b`, and thinking is `off` before the first invocation. A
+In Clio, run `/thinking off`. Confirm the orchestrator and fleet target are
+`dynamo`, the model is `qwen3.8-27b`, and thinking is `off` before the first
+invocation. A
 different target, model, or effort is a new reading and must be reported as
 such. This local runtime requires no credential forwarding. If a different
 runtime does require authentication, use an approved isolated method; do not
@@ -99,7 +103,12 @@ Both validations must report `valid` before you continue. The generated fleet
 contracts are native Clio entry points; ordinary `/wtfp:*` commands do not
 silently route through them.
 
-Run the nine inputs in `invocations.md` in order. Stop and inspect every preview. Approve only when the proposed records or diffs preserve the source classes and author authority. Quit Clio after `pause-writing`, then launch a genuinely fresh process for `resume-writing` and `progress`.
+Run the nine action inputs in `invocations.md` in order. Approval responses are
+additional operator turns: initialization, outline, and plan must each stop for
+their documented approval before the next action. Stop and inspect every
+preview. Approve only when the proposed records or diffs preserve the source
+classes and author authority. Quit Clio after `pause-writing`, then launch a
+genuinely fresh process for `resume-writing` and `progress`.
 
 ## 5. Expected gates and artifacts
 
@@ -127,3 +136,17 @@ Required gates and boundaries are:
 - no model network tools and no Git, push, tag, publish, or submission effect.
 
 Compare the run with `authoritative-facts.json` and `expected-invariants.json` outside the model-visible project. Treat semantic wording differences as benign when the invariants hold. Any invented evidence, bypassed gate, invalid record, hidden-memory resume, ordinary prose labeled as official fact, or claim of submission readiness is a failure.
+
+After every state transition, independently validate the portable records from
+the WTF-P checkout:
+
+```bash
+node "$wtfp_root/evaluation/tools/validate-planning.js" \
+  --json "$uat_root/project"
+```
+
+Before declaring the run isolated, verify that the project has no `.git`
+directory and compare SHA-256 hashes of the normal Clio settings and credential
+files with hashes captured before exporting the disposable environment. A
+missing normal-profile file must remain missing; do not create it merely to
+hash it.

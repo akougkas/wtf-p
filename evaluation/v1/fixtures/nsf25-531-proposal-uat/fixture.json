@@ -1,7 +1,7 @@
 {
   "schema": "wtfp.evaluation.user-acceptance-fixture/v1",
   "id": "nsf25-531-proposal-uat",
-  "version": 1,
+  "version": 2,
   "document_type": "grant-proposal",
   "title": "NSF 25-531 CICI hands-on proposal acceptance fixture",
   "purpose": "Exercise official-call mapping, proposal planning, bounded drafting, review, and durable pause/resume against a real NSF solicitation without treating the result as submission-ready.",

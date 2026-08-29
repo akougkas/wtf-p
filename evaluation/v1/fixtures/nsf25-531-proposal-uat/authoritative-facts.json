@@ -1,7 +1,7 @@
 {
   "schema": "wtfp.evaluation.official-funding-opportunity-facts/v1",
   "fixture_id": "nsf25-531-proposal-uat",
-  "fixture_version": 1,
+  "fixture_version": 2,
   "document_type": "grant-proposal",
   "accessed_on": "2026-08-29",
   "identity": {
@@ -18,7 +18,7 @@
     "pappg_landing": "https://www.nsf.gov/policies/pappg"
   },
   "source_anchors": {
-    "program_description": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#pgm_desc",
+    "program_description": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#pgm_desc_txt",
     "award_information": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#awd_info",
     "eligibility": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#elig",
     "proposal_preparation": "https://www.nsf.gov/funding/opportunities/cici-cybersecurity-innovation-cyberinfrastructure/nsf25-531/solicitation#prep",
@@ -156,8 +156,7 @@
   ],
   "track_specific_requirements": {
     "UCSS": [
-      "Address security and usability for scientific collaboration and workflows",
-      "Identify collaborations, existing cyberinfrastructure linkages, and newly enabled functionality where applicable"
+      "Address security and usability for scientific collaboration and workflows"
     ],
     "RSSD": [
       "Address data value and benefiting communities, ethical collection and sharing, label accuracy, preservation, and adoption metrics",
@@ -170,6 +169,11 @@
     "IPAAI": [
       "Demonstrate scientific data and corresponding science drivers",
       "Focus on integrity, provenance, and authenticity that prevent or reveal compromised data in scientific AI results"
+    ]
+  },
+  "track_specific_encouraged_elements": {
+    "UCSS": [
+      "Identify collaborations, existing cyberinfrastructure linkages, and newly enabled functionality where applicable"
     ]
   },
   "review_dimensions": [
