@@ -13,7 +13,7 @@ This entry describes the locally validated repository state; it does not assert 
 
 ### Added
 
-- **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets; 24 semantic actions are executable and the other 12 have nested and flat fail-closed aliases
+- **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets; 24 semantic actions are adapter-available and the other 12 have nested and flat fail-closed aliases
 - **Codex, GitHub Copilot CLI, and Antigravity CLI support** alongside modernized Claude Code, OpenCode, and Gemini adapters
 - **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin; five actions execute and 31 fail closed until exact capability and approval bindings exist
 - **Canonical protocol catalog** — 36 versioned action contracts describing reads, outputs, delegation, tools, effects, and approval boundaries
@@ -30,7 +30,8 @@ This entry describes the locally validated repository state; it does not assert 
 ### Changed
 
 - Host-neutral Markdown is now the sole workflow-prose source; all 36 client command projections are generated from it
-- The adapter compiler now fails closed when a canonical capability, semantic effect, or approval gate lacks an exact target binding. Every target receives a machine-readable `wtfp.action-availability/v1` manifest; unavailable routes emit deterministic `WTFP_ACTION_UNAVAILABLE` stubs without the normal workflow, arguments, or tools. Seven local/plugin projections execute 24/36 actions; the GitHub Copilot cloud projection executes 5/36 because it has no exact explicit-approval binding.
+- The adapter compiler now fails closed when a canonical capability, semantic effect, or approval gate lacks an exact target binding. Every target receives a machine-readable `wtfp.action-availability/v1` manifest; unavailable routes emit deterministic `WTFP_ACTION_UNAVAILABLE` stubs without the normal workflow, arguments, or tools. Seven local/plugin projections mark 24/36 actions adapter-available; the GitHub Copilot cloud projection marks 5/36 because it has no exact explicit-approval binding.
+- Clio action availability now records that 0.3.8 slash prompts inherit the host session tool surface rather than enforcing a per-prompt allowlist. Read-only previews or supervised `suggest` autonomy are required for behavioral certification, and any undeclared tool call fails the gate. The two native fleets are documented as explicit `fleet run` primitives, not implicit `/wtfp:*` routing.
 - Concrete vendor model names and host-specific delegation syntax were removed from canonical workflows
 - Each generated adapter is self-contained and carries the canonical protocol, skills, roles, project schemas, tools, and source inventory
 - Claude commands now use a dual plugin/marketplace envelope and expose exact `/wtfp:<action>` names without redundant namespace segments
@@ -67,7 +68,7 @@ This entry describes the locally validated repository state; it does not assert 
 - The first retained Clio 0.3.8 `dynamo/qwen3.8-27b` lifecycle reading is deliberately reported as blocked at `new-paper`: high effort timed out safely; effort-off produced five schema-valid records but attempted one denied shell call and created a 5,600/6,000 word-budget mismatch. It binds earlier WTF-P source `6b58b298`, predates the current remediation, and is not a current-RC behavioral reading. No later lifecycle action or end-to-end fleet pass is claimed.
 - Post-remediation local readings remain non-passing: exact `new-paper` arguments at `0245818` led to an agent-discovery loop and zero records; the `b4f0543` plan fleet completed only structurally; and the `cbba38c` draft fleet verified the corrected `paper/` projection but failed the approved-plan, state-reconciliation, and word-budget invariants. Raw traces and ledgers are retained without promoting them to a baseline.
 - A final current-source `bf50e23` Dynamo reading created five literal schema-valid initialization records, but failed a cross-record dependency-wave invariant and the explicit no-shell boundary: three shell calls succeeded and ten retries were denied. The campaign stopped before `map-project`, has no terminal receipt, and is retained as blocked evidence rather than a lifecycle result.
-- Exact catalog and discovery parity: all applicable adapters project 36 stable action IDs, seven skills, and 11 specialist roles. Executable action availability is target-specific: 24/36 on Clio, Claude, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini; 5/36 on the Copilot cloud projection.
+- Exact catalog and discovery parity: all applicable adapters project 36 stable action IDs, seven skills, and 11 specialist roles. Adapter availability is target-specific: 24/36 on Clio, Claude, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini; 5/36 on the Copilot cloud projection. These counts do not replace host enforcement or model-behavior evidence.
 - Canonical workflow portability, standard-skill validation, project-schema conformance, reproducible generation, and legacy regression suites
 
 ## [0.5.0] - 2026-02-09

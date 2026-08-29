@@ -150,7 +150,7 @@ effects:
     approval: explicit
 ```
 
-Adapters must reject an unmapped required capability or effect. They must not broaden permissions, substitute an arbitrary model, silently commit, silently initialize Git, or drop an approval boundary.
+Adapters must reject an unmapped required capability or effect. They must not broaden permissions, substitute an arbitrary model, silently commit, silently initialize Git, or drop an approval boundary. Capability availability and host enforcement are separate facts: where a host cannot narrow tools per action, the generated metadata must say so, evaluation must use a supervised outer permission policy, and any undeclared tool call fails the behavioral gate. Clio 0.3.8 prompt templates inherit the main session tool surface; they do not turn capability bindings into a per-prompt allowlist.
 
 ## Installation ownership and safety invariants
 
@@ -242,6 +242,11 @@ Gate: one canonical change regenerates every adapter deterministically, and exis
 - Exercise prompt discovery, dispatch, steering, resumption, and receipts under disposable state roots.
 
 Release-candidate gate: the complete extension is discovered, nested prompts expand with exact arguments and contained resources, agents/skills/fleets resolve from the owning extension, and no normal Clio state is touched. The paid full-lifecycle chain remains a `1.0.0` evidence gate rather than an unqualified `0.6.0-rc.1` claim.
+
+The native fleets are explicit operator entry points, not hidden routing behind
+ordinary `/wtfp:*` prompts. Their worker boundaries are narrower than the
+action orchestrator: approval, plan linkage, and portable-state reconciliation
+remain action-level responsibilities.
 
 ### Phase 3 — native envelopes
 

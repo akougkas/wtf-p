@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "clio",
-  "sourceHash": "d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3",
+  "sourceHash": "967ce1fb54583e33528c16881534d6f12deb7c70965a4c3c396f0503a1213c33",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -206,7 +206,7 @@
     },
     {
       "path": "compatibility/action-availability.json",
-      "sha256": "79b98035924fb5b9c80af6c519ed790ab363fe6251f8356b3056066b73cc799e"
+      "sha256": "61371ae3f2b3267259011400ff4049339ce773b18198d4c50adc68fd44bd6d0e"
     },
     {
       "path": "effects.json",

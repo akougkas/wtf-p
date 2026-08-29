@@ -2,6 +2,15 @@
   "schema": "wtfp.action-availability/v1",
   "target": "clio",
   "marker": "WTFP_ACTION_UNAVAILABLE",
+  "hostToolEnforcement": {
+    "actionScoped": false,
+    "surface": "clio:session-tools",
+    "certificationAutonomy": [
+      "read-only",
+      "suggest"
+    ],
+    "undeclaredToolCall": "fail"
+  },
   "capabilityBindings": {
     "agent.delegate": "clio:extension-agent",
     "agent.parallel": "clio:fleet",

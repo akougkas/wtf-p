@@ -32,6 +32,19 @@ function readCurrentJson(relative) {
   return JSON.parse(fs.readFileSync(path.join(currentEvidenceRoot, relative), 'utf8'));
 }
 
+function readCurrentEvents() {
+  return fs.readFileSync(path.join(currentEvidenceRoot, 'events.jsonl'), 'utf8')
+    .trimEnd()
+    .split('\n')
+    .map((line, index) => {
+      try {
+        return JSON.parse(line);
+      } catch (error) {
+        throw new Error(`invalid current-source event ${index + 1}: ${error.message}`);
+      }
+    });
+}
+
 function sha256(bytes) {
   return crypto.createHash('sha256').update(bytes).digest('hex');
 }
@@ -156,10 +169,27 @@ test('current-source Dynamo initialization remains a schema-valid but safety-blo
   );
 
   const tools = readCurrentJson('tool-summary.json');
-  assert.strictEqual(tools.raw_trace_sha256, sha256(fs.readFileSync(path.join(currentEvidenceRoot, 'events.jsonl'))));
-  assert.strictEqual(tools.successful_forbidden_shell_calls.length, 3);
-  assert.strictEqual(tools.network_tool_calls, 0);
-  assert.strictEqual(tools.vcs_tool_calls, 0);
+  const rawTrace = fs.readFileSync(path.join(currentEvidenceRoot, 'events.jsonl'));
+  const events = readCurrentEvents();
+  const starts = new Map(events
+    .filter((event) => event.type === 'tool_execution_start')
+    .map((event) => [event.toolCallId, event]));
+  const ends = events.filter((event) => event.type === 'tool_execution_end');
+  const successfulBash = ends.filter((event) => event.toolName === 'bash' && event.outcome === 'ok');
+  const deniedBash = ends.filter((event) => event.toolName === 'bash' && event.outcome === 'blocked');
+  const successfulCommands = successfulBash.map((event) => starts.get(event.toolCallId)?.args?.command);
+  const networkTools = new Set(['fetch', 'gateway', 'search', 'web', 'web_fetch', 'web_search']);
+
+  assert.strictEqual(tools.raw_trace_sha256, sha256(rawTrace));
+  assert.strictEqual(events.length, tools.native_event_count);
+  assert.strictEqual(ends.length, tools.completed_tool_calls);
+  assert.deepStrictEqual(successfulCommands, tools.successful_forbidden_shell_calls.map((call) => call.command));
+  assert.strictEqual(successfulBash.length, observation.safety.bash_calls_succeeded);
+  assert.strictEqual(deniedBash.length, observation.safety.bash_calls_denied);
+  assert(deniedBash.every((event) => event.blockReason === tools.denial_reason));
+  assert.strictEqual(ends.filter((event) => networkTools.has(event.toolName)).length, tools.network_tool_calls);
+  assert.strictEqual(ends.filter((event) => event.toolName === 'git').length, tools.vcs_tool_calls);
+  assert(successfulCommands.every((command) => typeof command === 'string' && !/(^|\s)git(\s|$)/u.test(command)));
 
   const audit = readCurrentJson('profile-credential-audit.json');
   assert(audit.normal_profiles.every(profile => profile.unchanged));

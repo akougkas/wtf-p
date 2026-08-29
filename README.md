@@ -61,9 +61,9 @@ confirm the reported source before testing a new installation.
 
 ## First-class adapters
 
-| Target | Native envelope | Semantic actions: discoverable / executable | Specialists | Skills | Target-specific capabilities |
+| Target | Native envelope | Semantic actions: discoverable / adapter-available | Specialists | Skills | Target-specific capabilities |
 | --- | --- | ---: | ---: | ---: | --- |
-| Clio Coder | Extension | 36 / 24 (72 prompt aliases: 48 executable) | 11 | 7 | Strict recipes, extension-bound skills, two fleets |
+| Clio Coder | Extension | 36 / 24 (72 prompt aliases: 48 available) | 11 | 7 | Strict worker recipes; host-session tool policy for slash prompts; two explicit fleets |
 | Claude Code | Claude plugin | 36 / 24 | 11 | 7 | Native command permissions and plugin validation |
 | Codex | Codex plugin | 36 / 24 through skills | Host-managed | 7 | `.codex-plugin` metadata and marketplace packaging |
 | GitHub Copilot | Native CLI plugin plus committed cloud `.github` projection | CLI 36 / 24; cloud 36 / 5 | 11 | 7 | CLI discovery and cloud-safe prompts, agents, skills, and instructions |
@@ -72,17 +72,27 @@ confirm the reported source before testing a new installation.
 | Gemini CLI | Gemini extension | 36 / 24 | 11 | 7 | TOML commands and extension context |
 
 Discovery counts stable action routes, including deterministic refusal stubs;
-it does not by itself establish executable support. Clio, Claude, Codex,
-Copilot CLI, OpenCode, Antigravity, and Gemini execute 24 of the 36 canonical
-actions and return `WTFP_ACTION_UNAVAILABLE` for `analyze-bib`,
+it does not by itself establish behavioral support. Clio, Claude, Codex,
+Copilot CLI, OpenCode, Antigravity, and Gemini project 24 of the 36 canonical
+actions as adapter-available and return `WTFP_ACTION_UNAVAILABLE` for `analyze-bib`,
 `audit-milestone`, `check-refs`, `contribute`, `create-poster`,
 `create-slides`, `export-latex`, `remove-section`, `report-bug`,
 `request-feature`, `research-gap`, and `update`, because those actions lack an
 exact target binding for at least one declared capability or effect. The
-Copilot cloud projection executes only `add-todo`, `help`, `list-assumptions`,
+Copilot cloud projection marks only `add-todo`, `help`, `list-assumptions`,
 `map-project`, and `pause-writing`; it refuses the other 31 because it also
 lacks an exact explicit-approval binding. Each generated target records its
 machine-readable result in `compatibility/action-availability.json`.
+
+An available action has complete semantic capability, effect, and approval
+bindings; that is not automatically an action-scoped host tool allowlist.
+Clio 0.3.8 prompt templates expand into an ordinary main-agent turn and retain
+the session tool surface. The Clio manifest records this as
+`hostToolEnforcement.actionScoped: false`. Use `read-only` for previews or
+supervised `suggest` autonomy for mutations, and deny and stop on any tool call
+outside the action contract. A run under `auto-edit` cannot earn WTF-P's
+no-undeclared-tool safety result merely because the generated prompt told the
+model not to use shell.
 
 The adapters are generated artifacts, not seven hand-maintained copies. Every generated envelope includes a cryptographic inventory and the portable protocol resources needed to understand its workflows. Copilot additionally receives a generated, commit-ready `.github` projection for cloud/repository use.
 
@@ -233,12 +243,18 @@ resource resolution, exact operator-argument preservation, preservation of
 nested template `state.json` resources, and extension-aware fleet preflight.
 Effective package discovery certifies 72 prompts (36 nested and 36 flat), 11
 agents, seven skills, two fleets, and zero diagnostics. Of those prompts, 48
-aliases represent 24 executable semantic actions and 24 aliases are the nested
+aliases represent 24 adapter-available semantic actions and 24 aliases are the nested
 and flat forms of 12 deterministic refusal routes. WTF-P capability-probes that
 surface because Clio currently records, but does not enforce,
 `compatibility.clio`. The generated fleet contracts use directory boundaries
 (`.planning/` and `paper/`) so nested writes are authorized without broadening
 the worker sandbox.
+
+The two Clio fleets are operator-invoked native primitives, not implicit
+routes behind `/wtfp:*`. Use `clio-coder fleet run wtfp-plan-section` or
+`clio-coder fleet run wtfp-draft-review` when their narrower specialist
+contracts are appropriate; the slash-command orchestrator remains responsible
+for approval and portable-state reconciliation around those worker steps.
 
 ## Design principles
 

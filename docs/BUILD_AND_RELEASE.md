@@ -135,7 +135,9 @@ Before claiming first-class support, validate the packed artifact in disposable 
 - Copilot: marketplace add, plugin install/list, command/agent/skill discovery
 - Clio: extension discover/install, recursive prompts, extension-bound agents,
   both fleet `validate`/`graph` paths, and an end-to-end nested-write rollback
-  check using the generated directory boundaries
+  check using the generated directory boundaries. Treat the fleets as explicit
+  `fleet run` primitives; ordinary `/wtfp:*` prompts do not auto-route through
+  them.
 - OpenCode: configured-directory command, skill, and agent discovery
 - Antigravity: plugin validate/install/list
 - Gemini: extension validate/install/list
@@ -156,6 +158,7 @@ not merely a valid JSON manifest. Clio compatibility is capability-probed becaus
 - [ ] native validators and isolated discovery pass for every advertised target
 - [ ] the real-agent fixture evaluation passes its evidence and safety rubric
 - [ ] applicable routing/lifecycle evidence passes its sealed matrix or records an honest capability limitation
+- [ ] Clio lifecycle evidence uses `read-only` preview or supervised `suggest` autonomy and fails on every undeclared tool call; Clio 0.3.8 slash prompts do not enforce an action-scoped tool surface
 - [ ] both generated Clio fleets validate and execute nested writes without rollback
 - [ ] `git diff --check` passes
 - [ ] `CHANGELOG.md`, README capability matrix, and migration notes match observed behavior

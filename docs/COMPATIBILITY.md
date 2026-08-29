@@ -12,7 +12,7 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | --- | ---: | --- |
 | Claude Code | 2.1.251 | Strict marketplace validation; native marketplace add/install/list; 36 commands and 11 agents loaded with zero plugin errors; `/wtfp:new-paper` confirmed through TUI autocomplete |
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
-| GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered, 24 executable. Cloud: 36 prompts projected, five executable. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
+| GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered, 24 adapter-available. Cloud: 36 prompts projected, five adapter-available. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
 | Clio Coder | 0.3.8, merged source `9b7b80cc` | Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
 | OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources |
 | Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills |
@@ -20,12 +20,24 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 
 Native discovery counts routes that the client can locate, including
 fail-closed compatibility stubs; it is not an executable-support count. Claude,
-Clio, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini currently execute
-24/36 canonical actions. The Copilot cloud projection executes 5/36.
+Clio, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini currently project
+24/36 canonical actions as adapter-available. The Copilot cloud projection
+marks 5/36 as adapter-available.
 Unsupported routes return `WTFP_ACTION_UNAVAILABLE` without receiving the
 normal workflow, invocation arguments, or tool policy. Exact action-level
 reasons are recorded in each generated
 `compatibility/action-availability.json`.
+
+Here, `available` means the adapter has a complete mapping for the action's
+semantic capabilities, effects, and approval class. It does not claim that the
+host enforces an action-scoped tool allowlist. In particular, Clio 0.3.8 prompt
+templates become ordinary main-agent turns and inherit the session tool
+surface. Its generated availability file therefore records
+`hostToolEnforcement.actionScoped: false`, `surface: clio:session-tools`, and
+an undeclared-tool disposition of `fail`. Preview certification uses
+`read-only`; a mutating lifecycle must use supervised `suggest` autonomy and
+the operator must deny and stop on undeclared tool requests. Strict dispatched
+agents and fleets retain their separate recipe/tool-profile enforcement.
 
 All discovery ran with disposable `HOME`, XDG, temp, and client configuration roots. Native registrations and caches were not written to the operator's normal profiles.
 
@@ -141,6 +153,12 @@ its own fleet contracts from the literal-file boundaries `.planning` and
 `paper` to the directory boundaries `.planning/` and `paper/`; the former shape
 was observed to roll back a real nested planner output at the write-boundary
 gate.
+
+Neither fleet is hidden behind an ordinary `/wtfp:*` command. They are explicit
+expert entry points invoked with `clio-coder fleet run wtfp-plan-section` and
+`clio-coder fleet run wtfp-draft-review`; the action orchestrator must still
+perform approval, plan linkage, and portable-state reconciliation around the
+native worker steps.
 
 Clio 0.3.8 parses and stores `compatibility.clio` but does not enforce it
 (tracked as Clio issue #242). WTF-P therefore uses its credential-free

@@ -185,6 +185,21 @@ const TARGET_POLICIES = Object.freeze({
   }), approvals: Object.freeze({ none: 'gemini:permission-policy', implicit: 'gemini:permission-policy', explicit: 'gemini:conversation-confirmation' }) })
 });
 
+// Availability says that a target has a native binding for every required
+// capability and effect. It does not imply that every host can narrow its
+// main-agent tool surface for one prompt. Clio 0.3.8 prompt templates expand
+// into an ordinary user turn and therefore inherit the session tool surface.
+// Keep that limitation machine-readable so an evaluation cannot mistake a
+// semantic binding for action-scoped enforcement.
+const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
+  clio: Object.freeze({
+    actionScoped: false,
+    surface: 'clio:session-tools',
+    certificationAutonomy: Object.freeze(['read-only', 'suggest']),
+    undeclaredToolCall: 'fail'
+  })
+});
+
 const ROLE_SKILLS = Object.freeze({
   'outliner': 'wtfp-start-project',
   'section-planner': 'wtfp-plan-section',
@@ -936,6 +951,9 @@ function addActionAvailability(plan, model, target, targetPolicies, options = {}
     schema: 'wtfp.action-availability/v1',
     target,
     marker: 'WTFP_ACTION_UNAVAILABLE',
+    ...(TARGET_HOST_TOOL_ENFORCEMENT[target]
+      ? { hostToolEnforcement: TARGET_HOST_TOOL_ENFORCEMENT[target] }
+      : {}),
     capabilityBindings: targetPolicies[target].capabilities,
     approvalBindings: targetPolicies[target].approvals,
     effectCapabilityBindings: EFFECT_CAPABILITY_BINDINGS,

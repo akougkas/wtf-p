@@ -73,9 +73,14 @@ clio-coder targets --probe
 clio-coder models --target dynamo
 ```
 
-In Clio, run `/thinking off`. Confirm the orchestrator and fleet target are
-`dynamo`, the model is `qwen3.8-27b`, and thinking is `off` before the first
-invocation. A
+In Clio, run `/thinking off` and use `/settings` to set autonomy to `suggest`
+inside the disposable profile. Confirm the orchestrator and fleet target are
+`dynamo`, the model is `qwen3.8-27b`, thinking is `off`, and autonomy is
+`suggest` before the first invocation. Clio 0.3.8 slash prompts inherit the
+main session tool surface; their action capability metadata is not a
+per-prompt allowlist. Deny and stop the turn if the model requests `bash`, Git,
+network, or any other tool outside the current action contract. Do not approve
+such a call merely to let the sequence continue. A
 different target, model, or effort is a new reading and must be reported as
 such. This local runtime requires no credential forwarding. If a different
 runtime does require authentication, use an approved isolated method; do not
@@ -101,7 +106,9 @@ clio-coder fleet graph wtfp-draft-review
 
 Both validations must report `valid` before you continue. The generated fleet
 contracts are native Clio entry points; ordinary `/wtfp:*` commands do not
-silently route through them.
+silently route through them. Run a fleet only through an explicit
+`clio-coder fleet run <name>` action, and keep its worker result separate from
+the slash-command orchestrator's approval and state-reconciliation work.
 
 Run the nine action inputs in `invocations.md` in order. Approval responses are
 additional operator turns: initialization, outline, and plan must each stop for
