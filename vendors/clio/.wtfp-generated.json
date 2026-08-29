@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "clio",
-  "sourceHash": "4db9d0405a4cc5722ede1734cad55e3918c005167b9524736cffee324700d7c2",
+  "sourceHash": "d6b6885c2e2a35e0cb965558434677413a2099c7846187d36c92002242f23b6b",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,11 +210,11 @@
     },
     {
       "path": "fleets/wtfp-draft-review.md",
-      "sha256": "fc59541db8b101b4f7964f124941e95f715b3f837af904c3e3c3b5a5c629d36e"
+      "sha256": "8bb240ab00b8c7a85afdc8adda82d51226e6261e232d0e970e77390c9bc83fc5"
     },
     {
       "path": "fleets/wtfp-plan-section.md",
-      "sha256": "633ea679c1f90c97252b6f5fd4ea1ce30c68f431ae256022c6c775b6e04e8578"
+      "sha256": "e1b1f854fd5eb5f8d1c6aea480d12c4b463c35e816863d7f20378c2893e7603f"
     },
     {
       "path": "project/README.md",
@@ -374,7 +374,7 @@
     },
     {
       "path": "prompts/wtfp-new-paper.md",
-      "sha256": "637dd447a41682b1d11126a12a33bfd54db0e19974980e900313cba71fa87fe1"
+      "sha256": "b6b6fa0882ae471cfb4e931bbf2dd9847c07c2892958580989e6ba8faddd2cd8"
     },
     {
       "path": "prompts/wtfp-pause-writing.md",
@@ -518,7 +518,7 @@
     },
     {
       "path": "prompts/wtfp/new-paper.md",
-      "sha256": "637dd447a41682b1d11126a12a33bfd54db0e19974980e900313cba71fa87fe1"
+      "sha256": "b6b6fa0882ae471cfb4e931bbf2dd9847c07c2892958580989e6ba8faddd2cd8"
     },
     {
       "path": "prompts/wtfp/pause-writing.md",
@@ -854,7 +854,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "a385265c82cbd7d36ae2b8030792d627d9d0eb96663c33c1e6663f73f3150b95"
+      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
     },
     {
       "path": "workflows/pause-writing.md",

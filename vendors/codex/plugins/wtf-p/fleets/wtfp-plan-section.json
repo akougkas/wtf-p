@@ -1,0 +1,38 @@
+{
+  "schema": "wtfp.fleet/v1",
+  "id": "wtfp-plan-section",
+  "description": "Create and independently check one evidence-grounded section plan.",
+  "parameters": [
+    {
+      "id": "section",
+      "required": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "plan",
+      "role": "role://section-planner",
+      "operation": "mutate",
+      "writes": [
+        "project://sections/{section}/plans/{plan}",
+        "project://validations/{validation}",
+        "project://checkpoints/{checkpoint}",
+        "project://sections/{section}",
+        "project://state"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "check",
+      "role": "role://plan-checker",
+      "operation": "verify",
+      "writes": [],
+      "dependsOn": [
+        "plan"
+      ]
+    }
+  ],
+  "maxConcurrency": 1,
+  "failurePolicy": "stop",
+  "instructionTemplate": "Plan section {section} from the portable project state. The checker must independently assess traceability, evidence coverage, author-decision fidelity, and feasibility."
+}

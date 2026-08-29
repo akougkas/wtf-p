@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "antigravity",
-  "sourceHash": "86a415266b88d07c66bec15a240f7459656ad2d65dc519ed407adedd280cbf3d",
+  "sourceHash": "0e159dd53635ddce2e87b9e7881c0be798e277fff0efa6e7d7bd079074111012",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -206,15 +206,15 @@
     },
     {
       "path": "commands/wtfp-analyze-bib.md",
-      "sha256": "f2add56d3a111f248ba4d1270fd2db331cb2973e073fd1c845fc2c7c649d5d10"
+      "sha256": "1101f9362a9f94d3955719c55e90f2091427eb8f41eb299ce412715ce13e82b7"
     },
     {
       "path": "commands/wtfp-audit-milestone.md",
-      "sha256": "2cd4a580a5508bd6ec8afcb238f16294816e4e0c36d7d67cd52b1aed780783f3"
+      "sha256": "0a9d2477bc7956b169cdd283fb9ca791e19871c06b8392d333faf6f5d1992c74"
     },
     {
       "path": "commands/wtfp-check-refs.md",
-      "sha256": "521c2ee55800d1df5d0f234a32dc1e34d87ea21af7a9e49c3338f2644f55928f"
+      "sha256": "72b354e879da6c6a84c76059674f40100ec9fa5c143b43af829a19e3d3864bcf"
     },
     {
       "path": "commands/wtfp-check-todos.md",
@@ -226,7 +226,7 @@
     },
     {
       "path": "commands/wtfp-contribute.md",
-      "sha256": "83f395936dc4049393f00bb8c6f57ef2400c6bd04ed7c91e1befeb01334eb23f"
+      "sha256": "fe1d0e193e38c6759b12c71cc26e26781634e3692a92ad3a5a0a3883f764a98d"
     },
     {
       "path": "commands/wtfp-create-outline.md",
@@ -234,11 +234,11 @@
     },
     {
       "path": "commands/wtfp-create-poster.md",
-      "sha256": "171dfacaa6bd38c5915f44b6f4e95c8c7b06e69b5933903fd2e3604a68573e6f"
+      "sha256": "91fd33906db5c04e124cab0aa995aaff455298c5ca29603f60f279add27fdcfb"
     },
     {
       "path": "commands/wtfp-create-slides.md",
-      "sha256": "6bc82293e8c1b0beebd3a22877d6e873a3a386487d34f3a9d277d31ff1b6b865"
+      "sha256": "d351338c332ef2caaf3362b10a3e36cfdd996079dff6f6bcc2664dba2be93d13"
     },
     {
       "path": "commands/wtfp-discuss-section.md",
@@ -250,7 +250,7 @@
     },
     {
       "path": "commands/wtfp-export-latex.md",
-      "sha256": "2f9297c5b6bd6f85ab628cb1eed2517aa1f422d03df82307f314f8d087bf8f93"
+      "sha256": "a2f0d544403112d497549b45e92469f35430fbe20882496e7ec94405c7dd923d"
     },
     {
       "path": "commands/wtfp-help.md",
@@ -266,11 +266,11 @@
     },
     {
       "path": "commands/wtfp-map-project.md",
-      "sha256": "3355f174d5f93caf9548789d1a262b2c8b1d39aa3a4e5fa1ff45fa97dd4add53"
+      "sha256": "fd835b8e73cd87d2772596f3e61f7dad8cb1accd207f5498a0ba4b9506d76590"
     },
     {
       "path": "commands/wtfp-new-paper.md",
-      "sha256": "0dcc25d28676b060360c058418d9a14c23fc1d0e39b21031c85b3546c9d960ba"
+      "sha256": "2c5e81ba07b6ae91c12129116c4b8cb2df9ec7b6372a8923fd4181cc9a6d4b27"
     },
     {
       "path": "commands/wtfp-pause-writing.md",
@@ -314,7 +314,7 @@
     },
     {
       "path": "commands/wtfp-research-gap.md",
-      "sha256": "ec88c3352b0f691692ef8055e0ee22c2227ac072b6d6a22d0bb19c4fc30fba2a"
+      "sha256": "2f8d09b438cbf6b1bb6a14a91bed141d298dd0eefde89f342797618c8b9fb0df"
     },
     {
       "path": "commands/wtfp-resume-writing.md",
@@ -349,12 +349,12 @@
       "sha256": "7757a904a65563fe56409ed39e221ab79f48f94ea47f5f2eebac29da8200926b"
     },
     {
-      "path": "fleets/wtfp-draft-review.md",
-      "sha256": "92aa1909babc852f1fd1b92dda70822ae0483c2091d3b45bb74c1d5bb42229d2"
+      "path": "fleets/wtfp-draft-review.json",
+      "sha256": "1a2dfcf32eb57062fea25952bf862a93a31a8539c906eb97978e1ee199077454"
     },
     {
-      "path": "fleets/wtfp-plan-section.md",
-      "sha256": "a504fd30764135140a01b88e0a8bab32646d088710510a10526e3066675bd4b3"
+      "path": "fleets/wtfp-plan-section.json",
+      "sha256": "4876d8abd79f9484316f67aa8fcc7fec00af7836ee1e3fa7f1794b303654e4bb"
     },
     {
       "path": "plugin.json",
@@ -710,7 +710,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "a385265c82cbd7d36ae2b8030792d627d9d0eb96663c33c1e6663f73f3150b95"
+      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
     },
     {
       "path": "workflows/pause-writing.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot",
-  "sourceHash": "d3f28e140287e813646c47d5afebf649f7e00e5d3ae25fba8c5a9f28b7b50f50",
+  "sourceHash": "3fce6885c72a6cb48bbb8bdf2bb60c6bbebaf246c602fd6c11c80ad519937b17",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -210,15 +210,15 @@
     },
     {
       "path": "commands/wtfp-analyze-bib.md",
-      "sha256": "42142d4d623d59c6a5197f33749245fbd6c46ccd2bc97bf955d5386cce2b64b0"
+      "sha256": "bd83e55b1acf5e0461f42d3fb2f54090412f4c412d43d9c9226ab6ce0a0a0c6b"
     },
     {
       "path": "commands/wtfp-audit-milestone.md",
-      "sha256": "717fddcfc64bbcc943233acbd35e742d78995d296ba1f6fbc58425b06d2f55a7"
+      "sha256": "b646e314ea0a8993abb2c493c0b69cd104ee9eade97aaf6488dc6fa7911beb5a"
     },
     {
       "path": "commands/wtfp-check-refs.md",
-      "sha256": "689aab0d059c1224a6b0f07697c36b32a146cf645d7dade43042cbb9e4702ade"
+      "sha256": "14880d626d401b49da6589df6ff9d1fe72117cf86a2697cf226a2694d2baf4a8"
     },
     {
       "path": "commands/wtfp-check-todos.md",
@@ -230,7 +230,7 @@
     },
     {
       "path": "commands/wtfp-contribute.md",
-      "sha256": "62510c250819680ec9d4c198324ba6363ddef493bf7eebe861463d7f172f3d73"
+      "sha256": "5c37edae1fd59e080bc088c0192ec8e43d957c0326e32095b0147e2a289edbd4"
     },
     {
       "path": "commands/wtfp-create-outline.md",
@@ -238,11 +238,11 @@
     },
     {
       "path": "commands/wtfp-create-poster.md",
-      "sha256": "264cecd968fe3f9dee5f6d917175b35f1e682865315779b61e920514e2fc419e"
+      "sha256": "c15da709c5b50f54a02bf147328b407c13dc7355d5f5ad79eac87070627786ba"
     },
     {
       "path": "commands/wtfp-create-slides.md",
-      "sha256": "0289a84a0ccd2037066fe9ba4ac0ded02ae5b890ec781439906df85bfcf5aed9"
+      "sha256": "b7143b664e13b80cda0d566bd2acbbaf62f107357837021278dff9f101a0d4dc"
     },
     {
       "path": "commands/wtfp-discuss-section.md",
@@ -254,7 +254,7 @@
     },
     {
       "path": "commands/wtfp-export-latex.md",
-      "sha256": "7c131351cda1775975c3d213ebd3b0967a92493a681b0505c6d9fd93f01c06a0"
+      "sha256": "299c5010f637c1ded7bf160c26a1b49758f1e43e374f371e7e962120f6f1d052"
     },
     {
       "path": "commands/wtfp-help.md",
@@ -270,11 +270,11 @@
     },
     {
       "path": "commands/wtfp-map-project.md",
-      "sha256": "9e5e79a694fe989ab635f556724d4da49f13907e81e1764625fdca106d972a5d"
+      "sha256": "42c8e3f24e34e0d91fc04d8b72155a08281a5665be716843dbdca229e40c3652"
     },
     {
       "path": "commands/wtfp-new-paper.md",
-      "sha256": "7f6fc38469c913b18e412d9415b2b726e4075947fa7adb3f8d020a8ae73d0c26"
+      "sha256": "2bf9523ee7a5b435ea6d5494325620122488960467aa574efa478e97ace45201"
     },
     {
       "path": "commands/wtfp-pause-writing.md",
@@ -318,7 +318,7 @@
     },
     {
       "path": "commands/wtfp-research-gap.md",
-      "sha256": "ddd569cdfe98ccee9933674d988337c5c758c54500fd9f582d52018732142295"
+      "sha256": "fbb690d576df6753b18f4878485af078754e9c38688943cd68a1099d3dca7846"
     },
     {
       "path": "commands/wtfp-resume-writing.md",
@@ -353,12 +353,12 @@
       "sha256": "7757a904a65563fe56409ed39e221ab79f48f94ea47f5f2eebac29da8200926b"
     },
     {
-      "path": "fleets/wtfp-draft-review.md",
-      "sha256": "92aa1909babc852f1fd1b92dda70822ae0483c2091d3b45bb74c1d5bb42229d2"
+      "path": "fleets/wtfp-draft-review.json",
+      "sha256": "1a2dfcf32eb57062fea25952bf862a93a31a8539c906eb97978e1ee199077454"
     },
     {
-      "path": "fleets/wtfp-plan-section.md",
-      "sha256": "a504fd30764135140a01b88e0a8bab32646d088710510a10526e3066675bd4b3"
+      "path": "fleets/wtfp-plan-section.json",
+      "sha256": "4876d8abd79f9484316f67aa8fcc7fec00af7836ee1e3fa7f1794b303654e4bb"
     },
     {
       "path": "project/README.md",
@@ -710,7 +710,7 @@
     },
     {
       "path": "workflows/new-paper.md",
-      "sha256": "a385265c82cbd7d36ae2b8030792d627d9d0eb96663c33c1e6663f73f3150b95"
+      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
     },
     {
       "path": "workflows/pause-writing.md",

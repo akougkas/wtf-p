@@ -120,7 +120,10 @@ function actionTools(action) {
   if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) {
     ['Write', 'Edit'].forEach((tool) => tools.add(tool));
   }
-  if (capabilities.has('tool.execute') || [...capabilities].some((item) => item.startsWith('vcs.'))) tools.add('Bash');
+  // A logical tool.execute capability is not equivalent to an unrestricted
+  // host shell. Hosts without an exact logical-tool binding must report that
+  // capability unavailable instead of receiving Bash implicitly. The same
+  // rule applies to explicit VCS capabilities: metadata is not a shell grant.
   if (capabilities.has('user.interaction')) tools.add('AskUserQuestion');
   if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.add('Task');
   if (capabilities.has('network.fetch')) tools.add('WebFetch');
@@ -316,9 +319,6 @@ function copilotCloudTools(action) {
   }
   if (capabilities.has('filesystem.read')) tools.add('search');
   if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) tools.add('edit');
-  if (capabilities.has('tool.execute') || [...capabilities].some((item) => item.startsWith('vcs.'))) {
-    tools.add('execute');
-  }
   if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.add('agent');
   if (capabilities.has('network.fetch') || capabilities.has('network.search')) tools.add('web');
   return [...tools];
@@ -445,17 +445,106 @@ function clioManifest(version) {
   ].join('\n');
 }
 
+function clioFleetWriteBoundary(resource, fleetId) {
+  if (/^project:\/\/paper(?:\/|$)/u.test(resource)) return 'paper/';
+  if (/^project:\/\//u.test(resource)) return '.planning/';
+  throw new Error(`fleet ${fleetId} has no Clio write-boundary projection for ${resource}`);
+}
+
 function clioFleet(fleetId) {
-  const sourcePath = path.join(PROTOCOL_ROOT, 'fleets', `${fleetId}.md`);
-  const source = fs.readFileSync(sourcePath, 'utf8');
-  const match = source.match(/^(---\n[\s\S]*?\n---\n)([\s\S]*)$/u);
-  if (!match) throw new Error(`missing fleet Markdown frontmatter: ${sourcePath}`);
+  const sourceName = `${fleetId}.json`;
+  const sourcePath = path.join(PROTOCOL_ROOT, 'fleets', sourceName);
+  const fleet = readJson(sourcePath);
+  const allowedFleetFields = new Set([
+    'schema', 'id', 'description', 'parameters', 'steps',
+    'maxConcurrency', 'failurePolicy', 'instructionTemplate'
+  ]);
+  const unknownFleetFields = Object.keys(fleet).filter(field => !allowedFleetFields.has(field));
+  if (unknownFleetFields.length > 0) {
+    throw new Error(`fleet ${fleetId} has unknown canonical fields: ${unknownFleetFields.join(', ')}`);
+  }
+  if (fleet.schema !== 'wtfp.fleet/v1' || fleet.id !== fleetId) {
+    throw new Error(`fleet identity drift: ${fleetId}`);
+  }
+  if (!Array.isArray(fleet.steps) || fleet.steps.length === 0) {
+    throw new Error(`fleet ${fleetId} must declare at least one semantic step`);
+  }
+  if (!Array.isArray(fleet.parameters) || !fleet.parameters.some(parameter =>
+    parameter?.id === 'section' && parameter.required === true
+  )) {
+    throw new Error(`fleet ${fleetId} must require the section parameter`);
+  }
+  if (fleet.maxConcurrency !== 1 || fleet.failurePolicy !== 'stop') {
+    throw new Error(`fleet ${fleetId} must remain serial and fail closed`);
+  }
+
+  const stepIds = new Set();
+  const renderedSteps = [];
+  for (const step of fleet.steps) {
+    const allowedStepFields = new Set(['id', 'role', 'operation', 'writes', 'dependsOn']);
+    const unknownStepFields = Object.keys(step).filter(field => !allowedStepFields.has(field));
+    if (unknownStepFields.length > 0) {
+      throw new Error(`fleet ${fleetId} step has unknown canonical fields: ${unknownStepFields.join(', ')}`);
+    }
+    if (!/^[a-z][a-z0-9-]*$/u.test(step.id) || stepIds.has(step.id)) {
+      throw new Error(`fleet ${fleetId} has invalid or duplicate step id ${step.id}`);
+    }
+    if (!/^role:\/\/[a-z][a-z0-9-]*$/u.test(step.role)) {
+      throw new Error(`fleet ${fleetId} step ${step.id} has invalid logical role ${step.role}`);
+    }
+    const role = step.role.slice('role://'.length);
+    if (!fs.existsSync(path.join(PROTOCOL_ROOT, 'roles', `${role}.md`))) {
+      throw new Error(`fleet ${fleetId} step ${step.id} refers to missing role ${step.role}`);
+    }
+    if (!['mutate', 'verify'].includes(step.operation)) {
+      throw new Error(`fleet ${fleetId} step ${step.id} has invalid operation ${step.operation}`);
+    }
+    if (!Array.isArray(step.writes) || !Array.isArray(step.dependsOn)) {
+      throw new Error(`fleet ${fleetId} step ${step.id} must declare writes and dependsOn arrays`);
+    }
+    if (step.operation === 'verify' && step.writes.length > 0) {
+      throw new Error(`fleet ${fleetId} verifier step ${step.id} may not declare writes`);
+    }
+    if (step.dependsOn.some(dependency => !stepIds.has(dependency))) {
+      throw new Error(`fleet ${fleetId} step ${step.id} has an unresolved or forward dependency`);
+    }
+    const boundaries = [...new Set(step.writes.map(resource =>
+      clioFleetWriteBoundary(resource, fleetId)
+    ))];
+    renderedSteps.push('  - kind: agent');
+    renderedSteps.push(`    id: ${step.id}`);
+    renderedSteps.push(`    agent: wtfp-${role}`);
+    renderedSteps.push(`    scope: ${step.operation === 'mutate' ? 'workspace' : 'readonly'}`);
+    if (boundaries.length > 0) renderedSteps.push(`    writes: [${boundaries.join(', ')}]`);
+    renderedSteps.push(`    dependencies: [${step.dependsOn.join(', ')}]`);
+    stepIds.add(step.id);
+  }
+
+  const parameterIds = new Set(fleet.parameters.map(parameter => parameter.id));
+  const instructionParameters = [...fleet.instructionTemplate.matchAll(/\{([a-z][a-z0-9-]*)\}/gu)]
+    .map(match => match[1]);
+  const unknownInstructionParameters = instructionParameters.filter(parameter => !parameterIds.has(parameter));
+  if (unknownInstructionParameters.length > 0) {
+    throw new Error(`fleet ${fleetId} has unknown instruction parameters: ${unknownInstructionParameters.join(', ')}`);
+  }
+  const nativeInstruction = fleet.instructionTemplate.replace(
+    /\{([a-z][a-z0-9-]*)\}/gu,
+    (_match, parameter) => `{{${parameter}}}`
+  );
   return [
-    match[1].trimEnd(),
+    '---',
+    'version: 4',
+    `name: ${fleet.id}`,
+    `description: ${fleet.description}`,
+    'steps:',
+    ...renderedSteps,
+    `maxWorkers: ${fleet.maxConcurrency}`,
+    `onFailure: ${fleet.failurePolicy}`,
+    '---',
     '',
-    generatedBanner('protocol/fleets', `${fleetId}.md`),
+    generatedBanner('protocol/fleets', sourceName),
     '',
-    match[2].trim(),
+    nativeInstruction,
     ''
   ].join('\n');
 }
@@ -602,8 +691,12 @@ function compilePlans() {
 
   const clio = byId.get('clio');
   addFile(clio, 'clio-coder-extension.yaml', clioManifest(model.version));
-  replaceFile(clio, 'fleets/wtfp-plan-section.md', clioFleet('wtfp-plan-section'));
-  replaceFile(clio, 'fleets/wtfp-draft-review.md', clioFleet('wtfp-draft-review'));
+  for (const fleetId of ['wtfp-plan-section', 'wtfp-draft-review']) {
+    if (!clio.files.delete(`fleets/${fleetId}.json`)) {
+      throw new Error(`cannot project missing canonical fleet for Clio: ${fleetId}`);
+    }
+    addFile(clio, `fleets/${fleetId}.md`, clioFleet(fleetId));
+  }
 
   const claude = byId.get('claude');
   addFile(claude, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version, 'wtfp'));

@@ -39,6 +39,14 @@ npx wtf-p uninstall --claude --backup --yes
 
 If ownership cannot be proven, either leave the legacy copy in place while testing v0.6 under an isolated client home, or review the reported files and use the explicit force policy only after making a backup. The uninstaller never recursively removes a generic `commands/`, `skills/`, `agents/`, `bin/`, or `mcp/` directory.
 
+An earlier development build may have copied the obsolete unregistered
+`vendors/claude/mcp/research-server` prototype. An in-place v0.6 installation
+does not guess that those files are disposable or terminate a process started
+outside WTF-P. Use the receipt-backed dry run and uninstall above before
+installing the release candidate; if the prototype is not receipt-owned, review
+and remove that exact legacy copy yourself. The release-candidate archive and
+generated inventories contain no MCP server or registration.
+
 Avoid activating both the old direct Claude commands and the v0.6 Claude plugin at once; duplicate command names are confusing even when the files themselves are safe.
 
 ## 3. Install one explicit v0.6 target
@@ -146,6 +154,6 @@ Modified files and unowned siblings are preserved by default. A client-install r
 
 ## Compatibility boundary
 
-The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, bounded tools, and portable project records.
+The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell: a client without an exact contained logical-tool binding must report `tool.execute` unavailable.
 
 See [COMPATIBILITY.md](COMPATIBILITY.md) for exact client versions and live-evaluation caveats, and [BUILD_AND_RELEASE.md](BUILD_AND_RELEASE.md) for maintainer validation and package checks.

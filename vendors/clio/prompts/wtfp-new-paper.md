@@ -24,11 +24,15 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Detect existing project://manifest first; stop and offer inspection or repair rather than reinitializing it.
 2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions.
-3. Preview the five v1 JSON records, validate every record, then create them atomically. Do not run git init, stage, commit, branch, or merge.
+3. Preview the five v1 JSON records, validate every record and the cross-record
+   invariants, then create them atomically. In particular, the outline section
+   `targetWords` values must sum exactly to the configured project
+   `targetWords`; revise the proposed allocation before writing if they do not.
+   Do not run git init, stage, commit, branch, or merge.
 
 ## Safety and completion
 
-Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. If requested, return a clearly labeled optional handoff for a separately authorized action.
+Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. Use only the action's declared tools and capabilities; never attempt a shell command as a substitute for direct project read, listing, or write capabilities. If requested, return a clearly labeled optional handoff for a separately authorized action.
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 

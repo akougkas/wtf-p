@@ -1,0 +1,40 @@
+{
+  "schema": "wtfp.fleet/v1",
+  "id": "wtfp-draft-review",
+  "description": "Draft one approved section and independently review its argument and evidence.",
+  "parameters": [
+    {
+      "id": "section",
+      "required": true
+    }
+  ],
+  "steps": [
+    {
+      "id": "draft",
+      "role": "role://section-writer",
+      "operation": "mutate",
+      "writes": [
+        "project://paper/{artifact}",
+        "project://sections/{section}/summary",
+        "project://validations/{validation}",
+        "project://checkpoints/{checkpoint}",
+        "project://manifest",
+        "project://sections/{section}",
+        "project://state"
+      ],
+      "dependsOn": []
+    },
+    {
+      "id": "review",
+      "role": "role://section-reviewer",
+      "operation": "verify",
+      "writes": [],
+      "dependsOn": [
+        "draft"
+      ]
+    }
+  ],
+  "maxConcurrency": 1,
+  "failurePolicy": "stop",
+  "instructionTemplate": "Draft section {section} from its approved plan, then review the resulting prose against the plan, sources, decisions, and venue constraints."
+}

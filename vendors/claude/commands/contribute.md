@@ -5,7 +5,6 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-  - Bash
   - AskUserQuestion
   - WebFetch
 ---

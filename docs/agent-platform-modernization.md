@@ -93,7 +93,7 @@ provide the intended native UX:
 
 `compatibility.clio` is currently parsed but not enforced, so compatibility must be capability-probed. The clean probe is whether `clio-coder extensions discover <bundle> --json` preserves `resources.agents` and `resources.fleets` in its normalized manifest. Extension agent recipes must resolve bound skills from their own extension skill root before global collision handling; a same-named untrusted project compatibility skill must never become an explicit worker path.
 
-ADR 0001 selects local contained transforms and no MCP server for the release
+ADR 0001 selects packaged local transforms and no MCP server for the release
 candidate. A network-only MCP service remains conditional on executable
 security/lifecycle gates and a supported host gateway; no adapter may pretend
 that a reserved manifest field activates a server.

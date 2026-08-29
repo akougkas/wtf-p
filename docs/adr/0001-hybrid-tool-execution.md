@@ -1,4 +1,4 @@
-# ADR 0001: Keep contained transforms local and defer network MCP exposure
+# ADR 0001: Keep transforms local and defer network MCP exposure
 
 - Status: Accepted for `0.6.0-rc.1`; optional MCP implementation deferred
 - Date: 2026-08-29
@@ -9,7 +9,17 @@
 
 WTF-P will ship no MCP server in `0.6.0-rc.1`.
 
-Contained bibliography transforms remain local Node.js modules. Network research remains behind the canonical action capability, effect, and approval contracts and uses the existing local implementations for now. A future, optional MCP process boundary is permitted only for the network-dependent portion of the canonical tools, after every activation gate in this ADR passes. The local index, format, and rank transforms—and workflow-level degraded paths that explicitly report unavailable enrichment—remain the offline fallback; the network-tool implementations themselves are not claimed to work offline.
+Bibliography transforms remain local Node.js modules. Network research remains behind the canonical action capability, effect, and approval contracts and uses the existing local implementations for now. A future, optional MCP process boundary is permitted only for the network-dependent portion of the canonical tools, after every activation gate in this ADR passes. The local index, format, and rank transforms—and workflow-level degraded paths that explicitly report unavailable enrichment—remain the offline fallback; the network-tool implementations themselves are not claimed to work offline.
+
+The release candidate deliberately does **not** translate logical
+`tool.execute` into an unrestricted Claude `Bash` or Copilot `execute` grant.
+The seven modules are packaged and inventory-authenticated, but WTF-P does not
+yet ship a closed logical-tool launcher or native Clio binding. A host must bind
+the exact logical tool itself, or report the capability unavailable; an operator
+may also invoke a module manually under the host's own containment policy. The
+current local modules are therefore not claimed to be an autonomously contained
+tool surface. Closed schemas, project-path containment, environment filtering,
+deadlines, and byte limits remain gates for any future autonomous binding.
 
 The obsolete Claude-only research-server prototype is removed. It was not a viable fallback: it was outside compiler-v4 ownership, had no Claude `.mcp.json` registration, declared two ad hoc tool names instead of the seven canonical logical tools, depended on packages that were not installed with the extension, and targeted `@modelcontextprotocol/sdk` `^0.6.0`. The current official TypeScript SDK is v2 and implements the 2026-07-28 specification.
 
@@ -57,7 +67,7 @@ The following indicative microbenchmark was run on 2026-08-29 with Node.js `v24.
 | `bibliography.format`, one entry and an explicit date | 10,000 | 0.0002 ms | 0.0013 ms |
 | Fresh Node process plus indexing 1,000 entries | 40 | 39.6142 ms | 42.9494 ms |
 
-For the contained transforms, a server adds startup, framing, schema validation, serialization, lifecycle, and observability work to sub-millisecond warm operations. Error isolation does not justify that overhead by itself because these modules have no long-lived state and can already be executed in a bounded child process where a host needs isolation.
+For the in-process transforms, a server adds startup, framing, schema validation, serialization, lifecycle, and observability work to sub-millisecond warm operations. Error isolation does not justify that overhead by itself; a future host binding can choose a bounded child process once the launcher gates below are implemented.
 
 ### Protocol and SDK state
 
@@ -80,7 +90,10 @@ The official SDK catalog currently classifies TypeScript, Python, C#, Go, and Ru
 | OpenCode | Supports local and remote servers in OpenCode configuration. | Not established for the generated filesystem bundle | Treat as host-configured, not WTF-P-owned |
 | Antigravity CLI | No certified MCP lifecycle is present in the generated plugin or its validator evidence. | No certified path | Report unsupported rather than infer compatibility |
 
-This asymmetry would make MCP behavior less portable than the current local allowlist. In particular, GitHub Copilot cloud's autonomous calls do not satisfy the same interactive approval model as Claude or Codex.
+This asymmetry would make MCP behavior less portable than the current packaged
+module allowlist. That allowlist controls package provenance, not arbitrary host
+execution. In particular, GitHub Copilot cloud's autonomous calls do not satisfy
+the same interactive approval model as Claude or Codex.
 
 ## Options considered
 
@@ -100,17 +113,17 @@ Accepted conditionally. It preserves fast offline behavior and the same seven lo
 
 | Criterion | Local implementation now | Optional network MCP after gates |
 | --- | --- | --- |
-| Portability | All seven generated clients already receive the same modules | Native transport and lifecycle differ by host |
+| Portability | All seven generated clients receive the same authenticated modules, but not an autonomous shell grant | Native transport and lifecycle differ by host |
 | Determinism | Strong for `bibliography.index`; explicit clock/date makes local tests repeatable | Does not make remote data deterministic |
 | Startup/per-call latency | Sub-millisecond warm transforms; about 40 ms measured cold process baseline | Adds protocol and server lifecycle overhead |
-| Schema fidelity | Registry identifies tools but does not yet define closed executable input/output schemas | Can enforce JSON Schema once those canonical schemas exist |
-| Cancellation/timeouts | Provider modules have partial timeouts/retries and no common cancellation contract | MCP provides protocol hooks, but the server must honor them |
+| Schema fidelity | Registry identifies tools but does not yet define closed executable input/output schemas; autonomous host binding is withheld | Can enforce JSON Schema once those canonical schemas exist |
+| Cancellation/timeouts | Provider modules have partial timeouts/retries and no common cancellation contract; this blocks autonomous binding | MCP provides protocol hooks, but the server must honor them |
 | Error isolation | Host may use a bounded child process | Stronger crash boundary and structured transport errors |
-| Credential/environment isolation | Host process currently supplies provider environment | Server launcher can forward only allowlisted variables |
-| Network permission boundary | Declared by action/tool metadata; enforcement varies by host | Can be separately enabled and approved per server/tool |
+| Credential/environment isolation | Manual invocation or an external host binding supplies provider environment; WTF-P does not claim isolation | Server launcher can forward only allowlisted variables |
+| Network permission boundary | Declared by action/tool metadata; generated adapters do not widen it to a general shell | Can be separately enabled and approved per server/tool |
 | Lifecycle/ownership | Exact generated-file receipts already exist | Incomplete across Clio, OpenCode, Antigravity, and Copilot cloud |
 | Provenance/observability | Must be recorded by each workflow | Natural place for request IDs, provider, latency, and status telemetry |
-| Offline fallback | Native for index/format/rank; network workflows must degrade explicitly when enrichment is unavailable | Must delegate back to local contained transforms and the same honest degraded workflow path |
+| Offline fallback | Available for manual or exact host binding of index/format/rank; network workflows must degrade explicitly when enrichment is unavailable | Must delegate back to local transforms and the same honest degraded workflow path |
 | Packaging/cross-platform | Dependency-free CommonJS on Node.js 20+ | Adds SDK/version/dependency and subprocess packaging risk |
 
 ## Activation gates for a future MCP server
@@ -134,7 +147,11 @@ No generated client manifest may declare the server until all of these are execu
 - Clock-dependent format and ranking tools are no longer labeled deterministic. Ranking accepts an explicit reference date so required tests and baselines can be repeatable.
 - Legacy tool tests are part of the required npm graph, and the citation-fetcher test uses an offline provider fixture.
 - No MCP SDK is added to the package, no server is registered, and no compatibility claim is upgraded.
-- Closed executable schemas, generic abort propagation, stronger path handling in the legacy command-line tools, and a network-server implementation are deliberately deferred to the activation gates rather than being improvised in this release candidate.
+- Closed executable schemas, a contained logical-tool launcher, generic abort
+  propagation, response limits, stronger path handling in the legacy
+  command-line tools, and a network-server implementation are deliberately
+  deferred to the activation gates. Until those exist, generated adapters do
+  not grant a general shell merely because an action declares `tool.execute`.
 
 ## Sources
 

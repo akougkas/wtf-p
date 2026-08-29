@@ -7,7 +7,6 @@ allowed-tools:
   - Grep
   - Write
   - Edit
-  - Bash
   - AskUserQuestion
   - Task
   - WebFetch

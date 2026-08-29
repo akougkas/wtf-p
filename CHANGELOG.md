@@ -25,7 +25,7 @@ This entry describes the locally validated repository state; it does not assert 
 - **Explicit target grammar** — `wtfp install <clio|claude|codex|copilot|opencode|antigravity|gemini>` with compatibility flags retained
 - **Seven-target isolated installer matrix** covering exact install, receipt, uninstall, sentinel preservation, environment-root resolution, and all-target overlap rejection
 - **Versioned behavioral-evaluation layer** — 40 implicit routing cases, all 36 explicit actions, seven-client surface contracts, budgeted paid-matrix definitions, a ten-dimension semantic rubric, stable fixture/oracle hashes, independent planning validation, and fail-closed routing and lifecycle runners
-- **Tool-execution ADR** — keeps contained transforms local, removes the unusable Claude-only MCP prototype, and defines executable gates for any future optional network MCP server
+- **Tool-execution ADR** — keeps transforms local, removes the unusable Claude-only MCP prototype, withholds unrestricted shell grants for logical tools, and defines executable gates for any future autonomous binding or optional network MCP server
 
 ### Changed
 

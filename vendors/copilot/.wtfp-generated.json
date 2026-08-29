@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot-marketplace",
-  "sourceHash": "1811be8c73263a8ab73932f733b58065971702bd1c4719775bb04a08f828b95d",
+  "sourceHash": "9fa5b093b23afba0c34372fd97f539310aaf62ad2b98ed341ed3c8c7372f517c",
   "files": [
     {
       "path": "marketplace.json",
@@ -62,15 +62,15 @@
     },
     {
       "path": "project/.github/prompts/wtfp-analyze-bib.prompt.md",
-      "sha256": "3f4002eedf62add53df8f40920c0af647f3d86e42120303081042e2ea89bc68f"
+      "sha256": "b157a753a6766209c99b1002fa5f29415c6391c43590b139d3f456cdee67b927"
     },
     {
       "path": "project/.github/prompts/wtfp-audit-milestone.prompt.md",
-      "sha256": "5257bb7351b3e831e292663366f0d7256ce68014518aeb94570a67239bf293a6"
+      "sha256": "3612f90789c9bbfd19f9b52ed7b281c70ae1838a4a2ed5ed2397b54595708c2f"
     },
     {
       "path": "project/.github/prompts/wtfp-check-refs.prompt.md",
-      "sha256": "170601c33eaef73ef97e64ae5c38128a58efc86c181570aa92262b669d3aa9a1"
+      "sha256": "6374b76788f5e9d40410c1c93da88f63d2d7e2c54aa959e8ad9f6886af5705fe"
     },
     {
       "path": "project/.github/prompts/wtfp-check-todos.prompt.md",
@@ -82,7 +82,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-contribute.prompt.md",
-      "sha256": "df4a150e73768f4d6ec299252f58c4fefd00c55dea70b6a92c8e56b2fce9fc6c"
+      "sha256": "3e5f565b98b1ffb5f33af85d21c397898aabbf189fbaac07a86849eeb198b709"
     },
     {
       "path": "project/.github/prompts/wtfp-create-outline.prompt.md",
@@ -90,11 +90,11 @@
     },
     {
       "path": "project/.github/prompts/wtfp-create-poster.prompt.md",
-      "sha256": "cc558c02c8070fc3915520ac134eff5ee654c90abecfca1029b1b189b414e5d6"
+      "sha256": "93a6726fe3ba9b2aaa9e80958afcfb515d0b0d20535063294e208f6f8ea0495c"
     },
     {
       "path": "project/.github/prompts/wtfp-create-slides.prompt.md",
-      "sha256": "7d60064297ef37544f5c00805a6828d6760c460ab808b20cc1433a752bfca25e"
+      "sha256": "b27c402720548b2d9e96bcb2a0cdf91ff75d7d714c1c3b957ef67a129af4103f"
     },
     {
       "path": "project/.github/prompts/wtfp-discuss-section.prompt.md",
@@ -106,7 +106,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-export-latex.prompt.md",
-      "sha256": "fa1bea02f6512edd939f60e17f9ca071fcc52a478d6a64cb696cdf32e425de82"
+      "sha256": "557e8c0fbfe61f9b3b19174ac9ae72eb80b021831a91714456a95779d52aa5e6"
     },
     {
       "path": "project/.github/prompts/wtfp-help.prompt.md",
@@ -122,11 +122,11 @@
     },
     {
       "path": "project/.github/prompts/wtfp-map-project.prompt.md",
-      "sha256": "4cfcc0d9a05a35f4c5a4bc336031045e8be58e8993c270ae741db3c4a3dcbbd2"
+      "sha256": "4567feea5f31a7ad475492208135daa238f6187cc29afa677bed1b0ea65ab160"
     },
     {
       "path": "project/.github/prompts/wtfp-new-paper.prompt.md",
-      "sha256": "359d8259bef3dd3ddb42fc929dd7c11be608a94f17e06e557dc50852174763c7"
+      "sha256": "c93adbfe6d04292f4cf850445e5b487ed6b4bee349cbea0e37ac646a0286ad12"
     },
     {
       "path": "project/.github/prompts/wtfp-pause-writing.prompt.md",
@@ -170,7 +170,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-research-gap.prompt.md",
-      "sha256": "9fa6cb6c9cc8037f4c258c4e4543ad6dc2f640afe544c11385ad95e77020b877"
+      "sha256": "3741719848daadfc9808104681a2b9c4e110fde27fb13c24de4e08c5c0208552"
     },
     {
       "path": "project/.github/prompts/wtfp-resume-writing.prompt.md",
@@ -441,12 +441,12 @@
       "sha256": "7757a904a65563fe56409ed39e221ab79f48f94ea47f5f2eebac29da8200926b"
     },
     {
-      "path": "project/.github/wtfp/fleets/wtfp-draft-review.md",
-      "sha256": "92aa1909babc852f1fd1b92dda70822ae0483c2091d3b45bb74c1d5bb42229d2"
+      "path": "project/.github/wtfp/fleets/wtfp-draft-review.json",
+      "sha256": "1a2dfcf32eb57062fea25952bf862a93a31a8539c906eb97978e1ee199077454"
     },
     {
-      "path": "project/.github/wtfp/fleets/wtfp-plan-section.md",
-      "sha256": "a504fd30764135140a01b88e0a8bab32646d088710510a10526e3066675bd4b3"
+      "path": "project/.github/wtfp/fleets/wtfp-plan-section.json",
+      "sha256": "4876d8abd79f9484316f67aa8fcc7fec00af7836ee1e3fa7f1794b303654e4bb"
     },
     {
       "path": "project/.github/wtfp/project/README.md",
@@ -762,7 +762,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/new-paper.md",
-      "sha256": "a385265c82cbd7d36ae2b8030792d627d9d0eb96663c33c1e6663f73f3150b95"
+      "sha256": "878ceda49f501f74e71b2adc2b828e6aa7b8b8349634dfdf85552ec3ca051a23"
     },
     {
       "path": "project/.github/wtfp/workflows/pause-writing.md",
