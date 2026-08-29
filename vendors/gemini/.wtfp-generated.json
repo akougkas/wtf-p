@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "gemini",
-  "sourceHash": "ba0c91fcfa291ad0e8e17cec6fd6ca604a2d880ef8f892d3c5d7eb435461dd37",
+  "sourceHash": "f9bc6f0a2e5a70c98fdb29a7bf8ab448b8e0bd14f63714c89f9b4003b53a0185",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -34,7 +34,7 @@
     },
     {
       "path": "actions/create-outline.json",
-      "sha256": "ad9ca19c0981ed6475d9e08f155d024b3cc791ea76a397f2beb0402029deacf4"
+      "sha256": "6e3b1d5778855f7b3eda92bb7c2d6775ab1963da793cb4e30c3dd226a59eabb7"
     },
     {
       "path": "actions/create-poster.json",
@@ -90,7 +90,7 @@
     },
     {
       "path": "actions/plan-section.json",
-      "sha256": "fd418626ce5705e2eee5527eaad651d18c165dd5f0876ccd4d91a071006bb630"
+      "sha256": "30401c1ef1afef9b0179cc5a2964ab6801cb2459f5a6d5a2ea60392fe0d45a98"
     },
     {
       "path": "actions/polish-prose.json",
@@ -230,7 +230,7 @@
     },
     {
       "path": "commands/wtfp/create-outline.toml",
-      "sha256": "5750b8d64ef76557a66402a0c6227d5f160e0f8e2db1c581e527fee3b6a2faed"
+      "sha256": "e14e503a452db85e2f39b7fc24eb11868015a505040de0f7d1e8c6b70c4a9117"
     },
     {
       "path": "commands/wtfp/create-poster.toml",
@@ -242,7 +242,7 @@
     },
     {
       "path": "commands/wtfp/discuss-section.toml",
-      "sha256": "924d4b13f30e5175e9eb4dc36754ab04428aadf86994b456afaea6e2c8ba13de"
+      "sha256": "2d5f9026f7963958e26ae0e1dd37b72847feedb4e9b25b761406750da579a3af"
     },
     {
       "path": "commands/wtfp/execute-outline.toml",
@@ -258,19 +258,19 @@
     },
     {
       "path": "commands/wtfp/insert-section.toml",
-      "sha256": "d7bc3bc7710629a97db02becc5944161c0f84a6d0fe84ea9b147fd89b607cafb"
+      "sha256": "e93004a4f75dca76ce3bae816396361e6fff3f76e297c8ab0343f7b706b32cd5"
     },
     {
       "path": "commands/wtfp/list-assumptions.toml",
-      "sha256": "000d32ca06b26f601b4b6e5ce108378003289a0c4511e7c3fd8c6d0ecda11c74"
+      "sha256": "0f5a88f0a812bb812109e6500fef260105bffb389265213290f9c67a3f2ec955"
     },
     {
       "path": "commands/wtfp/map-project.toml",
-      "sha256": "6d21ca81ae077c44d419677bcb862745a54b4062dfe82071a5644d8cdeb238da"
+      "sha256": "4d54cb1ac4a2c22fb6b6220e8db9084fc81bf33714934555deaa7b7fe942e6eb"
     },
     {
       "path": "commands/wtfp/new-paper.toml",
-      "sha256": "af3ae02f74d8e6c78a2233d3de37e7401294e29b4149f951e932b3649cda866e"
+      "sha256": "b16fcbf0794f48e26c4884abb144d597390866196ec623e99efb502cd653e5b9"
     },
     {
       "path": "commands/wtfp/pause-writing.toml",
@@ -282,11 +282,11 @@
     },
     {
       "path": "commands/wtfp/plan-revision.toml",
-      "sha256": "5740615f1157a897828ad547548113a8469e171a99c8732d0671e290185b9d98"
+      "sha256": "b4cd4a79f3ae3a520ca5f987050b2b41b61aca3a23037ccd6b28407869e0ac80"
     },
     {
       "path": "commands/wtfp/plan-section.toml",
-      "sha256": "f9717d5578875a9c2a49037b588e1d4228b0231ca330bdf4992f29e0b235fcf7"
+      "sha256": "378ce346712750b4532fd1ab1e6eb467a2c0e06f305140ed810822e686902503"
     },
     {
       "path": "commands/wtfp/polish-prose.toml",
@@ -558,11 +558,11 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "83f30f53ca709c1e976cc6b130d0d29ebef7e8384d758eb53f7c2e4f47721591"
+      "sha256": "4d54c568591c9d0b5742f038db8919f47bf1927189dae4461be86ba7131cf3a6"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
-      "sha256": "9feeaea35d60a22eeb1f22763b83effba7a39e0bef055d5bbda1cfa4458b9737"
+      "sha256": "160c20748f9484ae628b48a1a281dd296fd3afb1092c33930991fd9822683f0a"
     },
     {
       "path": "skills/wtfp-research-literature/agents/openai.yaml",
@@ -594,7 +594,7 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "37c22a7edb464f890ecfbdb4d52e8ebf1f532effeeebc04c30010c8d05d8bfe3"
+      "sha256": "9ef7572a6d6c9e87f8d9f468b35b45418f98336c8fc73db0b70585e8903f6942"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
@@ -678,7 +678,7 @@
     },
     {
       "path": "workflows/create-outline.md",
-      "sha256": "0a6d95dbae915dcf161931ec218b8bcd27c52763497d500f903050807c568225"
+      "sha256": "2c4182db0453b7a85eb95579e6ebaed6c44a7cc63b806a8544e3eb26292148c0"
     },
     {
       "path": "workflows/create-poster.md",
@@ -734,7 +734,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "b2f698a71000105a24708aeaca1ec21eb4fe63fd8a8ac39d987c2b1c5b140699"
+      "sha256": "02311226aa784dea4a6a5219ef59fcea6c904f92566318e3327aa4e883228446"
     },
     {
       "path": "workflows/polish-prose.md",

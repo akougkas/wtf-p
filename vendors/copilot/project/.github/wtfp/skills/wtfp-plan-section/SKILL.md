@@ -21,12 +21,13 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 1. Resolve the section against `project://structure/outline` and `project://sections/{section}`; reject ambiguity instead of guessing.
 2. Load `project://manifest`, `project://state`, `project://decisions`, the outline, prior section summaries, `project://sections/{section}/context`, and `project://sections/{section}/research` when they exist.
-3. Treat context as author guidance, research as synthesis, source records as identity/provenance, evidence records as claim support, and outline claim IDs as obligations. Preserve those distinctions through planning and checking.
-4. Honor `project://config` gates and its destructive-change safety policy.
-5. Give every plan a concrete objective, declared dependencies, target files, ordered tasks, checkpoints, verification steps, success criteria, and expected outputs.
-6. Check the plan goal-backward: completing its tasks must be sufficient to satisfy the section goal and assigned claims.
-7. Iterate on checkable defects; escalate unresolved judgment calls to the author.
-8. Report the plan path, verification state, open decisions, and next executable action.
+3. For `plan-section`, read `project://validations/*` and apply the prerequisite selector and decision-fidelity gate in the detailed [action reference](references/actions.md) before any specialist dispatch.
+4. Treat context as author guidance, research as synthesis, source records as identity/provenance, evidence records as claim support, and outline claim IDs as obligations. Preserve those distinctions through planning and checking.
+5. Honor `project://config` gates and its destructive-change safety policy.
+6. Give every plan a concrete objective, declared dependencies, target files, ordered tasks, checkpoints, verification steps, success criteria, and expected outputs.
+7. Check the plan goal-backward: completing its tasks must be sufficient to satisfy the section goal and assigned claims.
+8. Iterate on checkable defects; escalate unresolved judgment calls to the author.
+9. Report the plan path, verification state, open decisions, and next executable action.
 
 ## Preserve outline integrity
 

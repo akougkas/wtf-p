@@ -104,12 +104,13 @@ Read [references/actions.md](references/actions.md) for the selected action befo
 
 1. Resolve the section against `project://structure/outline` and `project://sections/{section}`; reject ambiguity instead of guessing.
 2. Load `project://manifest`, `project://state`, `project://decisions`, the outline, prior section summaries, `project://sections/{section}/context`, and `project://sections/{section}/research` when they exist.
-3. Treat context as author guidance, research as synthesis, source records as identity/provenance, evidence records as claim support, and outline claim IDs as obligations. Preserve those distinctions through planning and checking.
-4. Honor `project://config` gates and its destructive-change safety policy.
-5. Give every plan a concrete objective, declared dependencies, target files, ordered tasks, checkpoints, verification steps, success criteria, and expected outputs.
-6. Check the plan goal-backward: completing its tasks must be sufficient to satisfy the section goal and assigned claims.
-7. Iterate on checkable defects; escalate unresolved judgment calls to the author.
-8. Report the plan path, verification state, open decisions, and next executable action.
+3. For `plan-section`, read `project://validations/*` and apply the prerequisite selector and decision-fidelity gate in the detailed [action reference](references/actions.md) before any specialist dispatch.
+4. Treat context as author guidance, research as synthesis, source records as identity/provenance, evidence records as claim support, and outline claim IDs as obligations. Preserve those distinctions through planning and checking.
+5. Honor `project://config` gates and its destructive-change safety policy.
+6. Give every plan a concrete objective, declared dependencies, target files, ordered tasks, checkpoints, verification steps, success criteria, and expected outputs.
+7. Check the plan goal-backward: completing its tasks must be sufficient to satisfy the section goal and assigned claims.
+8. Iterate on checkable defects; escalate unresolved judgment calls to the author.
+9. Report the plan path, verification state, open decisions, and next executable action.
 
 ## Preserve outline integrity
 
@@ -170,10 +171,12 @@ Completion requires all five assumption areas and no project mutation.
 Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.json)
 
 1. Require an initialized `project://structure/outline`. Resolve the requested section or select the earliest unplanned `project://sections/{section}` whose dependencies are complete.
-2. Read the complete planning context before decomposing work: manifest, config, state, decisions, outline, section record, context, research, source/evidence records, and relevant prior summaries.
-3. If the section is literature-heavy and research obligations remain empty, offer `research-gap`; do not manufacture citations to keep planning moving.
-4. Summarize the section goal, claims, evidence, manuscript artifact, dependencies, and open decisions at `config.gates.confirm_plan`.
-5. Create one or more immutable Markdown `project://sections/{section}/plans/{plan}` artifacts. Each plan must declare:
+2. Read the complete planning context before decomposing work: manifest, config, state, decisions, outline, section record, context, research, source/evidence records, relevant prior summaries, and the bounded `project://validations/*` collection.
+3. Before any specialist dispatch, filter the validation records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
+4. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
+5. If the section is literature-heavy and research obligations remain empty, offer `research-gap`; do not manufacture citations to keep planning moving.
+6. Summarize the section goal, claims, evidence, manuscript artifact, dependencies, and open decisions at `config.gates.confirm_plan`.
+7. After the prerequisites pass, require `section-planner` in a bounded delegated pass to create one or more immutable Markdown `project://sections/{section}/plans/{plan}` artifacts. Each plan must declare:
    - stable section and plan identifiers;
    - objective and reader-facing outcome;
    - prerequisite plans or sections and execution wave;
@@ -182,11 +185,11 @@ Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.jso
    - ordered tasks with purpose, action, evidence inputs, and local verification;
    - checkpoints for irreversible judgment calls;
    - overall verification, success criteria, and outputs.
-6. Keep task boundaries independently verifiable. Split plans when context, output ownership, or approval boundaries differ; do not split merely to create more work units.
-7. Estimate words by rhetorical function and reconcile the total with the section budget.
-8. Require `plan-checker` in a fresh delegated pass against the outline goal and claim IDs, decisions, context, research, evidence, dependencies, output URIs, and verification criteria. Persist that read-only result at `project://validations/{validation}`; configuration may tighten its rubric but must not skip the independent pass.
-9. Revise concrete defects and re-check. After a bounded number of failed passes, create a checkpoint for remaining author judgment rather than self-approving.
-10. Link the approved plan from the section record and set section/state status to planned only after the plan and validation are readable. Do not execute VCS effects.
+8. Keep task boundaries independently verifiable. Split plans when context, output ownership, or approval boundaries differ; do not split merely to create more work units.
+9. Estimate words by rhetorical function and reconcile the total with the section budget.
+10. After the `section-planner` result, require `plan-checker` in a fresh delegated pass against the outline goal and claim IDs, decisions, context, research, evidence, dependencies, output URIs, and verification criteria. Persist that read-only result at `project://validations/{validation}`; configuration may tighten its rubric but must not skip the independent pass.
+11. Revise concrete defects and re-check. After a bounded number of failed passes, create a checkpoint for remaining author judgment rather than self-approving.
+12. Link the approved plan from the section record and set section/state status to planned only after the plan and validation are readable. Do not execute VCS effects.
 
 Completion requires an executable plan whose tasks are sufficient for its success criteria and whose evidence obligations are explicit.
 
@@ -242,7 +245,7 @@ Completion requires preservation of all authored work and consistent outline/sta
 </details>
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://validations/*`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`.
 Produce: `project://sections/{section}/plans/{plan}` (create), `project://validations/{validation}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -251,9 +254,11 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Resolve one section record and load its linked context, research, evidence, decisions, and outline constraints.
-2. Delegate a bounded plan, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity.
-3. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
+1. Resolve one section record, load its linked context, research, evidence, decisions, and outline constraints, and enumerate the bounded `project://validations/*` collection before any specialist dispatch.
+2. Filter those records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
+3. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
+4. Only after those prerequisites pass, delegate a bounded plan to `section-planner`, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity.
+5. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
 
 ## Safety and completion
 
@@ -285,7 +290,9 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "user.interaction"
     ],
     "conditions": [
-      "A target section exists in project://structure/outline and has a matching v1 section record"
+      "A target section exists in project://structure/outline and has a matching v1 section record",
+      "Exactly one applicable current validation exists with subject_uri project://structure/outline, action_id create-outline, and executed_at greater than or equal to the outline updated_at, and that validation has status passed",
+      "project://structure/outline and the target project://sections/{section} record are consistent with all current locked and deferred choices in project://decisions"
     ]
   },
   "reads": [
@@ -294,6 +301,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     "project://state",
     "project://decisions",
     "project://structure/outline",
+    "project://validations/*",
     "project://sections/{section}",
     "project://sections/{section}/context",
     "project://sections/{section}/research",
@@ -351,7 +359,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://validations/*, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.write",
@@ -359,7 +367,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "user.gate",
-      "scope": "plan approval and verifier exceptions"
+      "scope": "plan approval, verifier exceptions, and recovery checkpoint approval after complete preview"
     }
   ]
 }

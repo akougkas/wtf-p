@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot",
-  "sourceHash": "2b54772a14211be1b97e822415d5231a8f6cc9a24bdc5166c3f4b306be82abfe",
+  "sourceHash": "d05d6a0fea8f07dd9a7c40fcaa2df887db26ef6091b3cbe9e24998cc37f0b3b3",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -38,7 +38,7 @@
     },
     {
       "path": "actions/create-outline.json",
-      "sha256": "ad9ca19c0981ed6475d9e08f155d024b3cc791ea76a397f2beb0402029deacf4"
+      "sha256": "6e3b1d5778855f7b3eda92bb7c2d6775ab1963da793cb4e30c3dd226a59eabb7"
     },
     {
       "path": "actions/create-poster.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": "actions/plan-section.json",
-      "sha256": "fd418626ce5705e2eee5527eaad651d18c165dd5f0876ccd4d91a071006bb630"
+      "sha256": "30401c1ef1afef9b0179cc5a2964ab6801cb2459f5a6d5a2ea60392fe0d45a98"
     },
     {
       "path": "actions/polish-prose.json",
@@ -234,7 +234,7 @@
     },
     {
       "path": "commands/wtfp-create-outline.md",
-      "sha256": "951b098463d3a8b2dc5aea45113efb4bba5a38b6f1dd68b72edd73d989c308a8"
+      "sha256": "e86266852a034f7e2911c29d5bc9a4608bfd1b4626733884ddeb2b984b98963c"
     },
     {
       "path": "commands/wtfp-create-poster.md",
@@ -290,7 +290,7 @@
     },
     {
       "path": "commands/wtfp-plan-section.md",
-      "sha256": "d67992f4f213240e21d9ca4682ef08fe186e2f79179baf75ab185ce284a004b9"
+      "sha256": "dea11d87e67e1605e57ce204b4a2badc5261520d6406984ad7a6110d35d61703"
     },
     {
       "path": "commands/wtfp-polish-prose.md",
@@ -554,11 +554,11 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "c536abaf66cd1bab752cf44bd54751b08728260e904660f829cc4519b6aae1c9"
+      "sha256": "ddfeb01658e6f3a8a0f6b0802e0945f61199184e6881f5957f305705ca3fdfd6"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
-      "sha256": "9feeaea35d60a22eeb1f22763b83effba7a39e0bef055d5bbda1cfa4458b9737"
+      "sha256": "160c20748f9484ae628b48a1a281dd296fd3afb1092c33930991fd9822683f0a"
     },
     {
       "path": "skills/wtfp-research-literature/agents/openai.yaml",
@@ -590,7 +590,7 @@
     },
     {
       "path": "skills/wtfp-start-project/references/actions.md",
-      "sha256": "37c22a7edb464f890ecfbdb4d52e8ebf1f532effeeebc04c30010c8d05d8bfe3"
+      "sha256": "9ef7572a6d6c9e87f8d9f468b35b45418f98336c8fc73db0b70585e8903f6942"
     },
     {
       "path": "skills/wtfp-start-project/SKILL.md",
@@ -674,7 +674,7 @@
     },
     {
       "path": "workflows/create-outline.md",
-      "sha256": "0a6d95dbae915dcf161931ec218b8bcd27c52763497d500f903050807c568225"
+      "sha256": "2c4182db0453b7a85eb95579e6ebaed6c44a7cc63b806a8544e3eb26292148c0"
     },
     {
       "path": "workflows/create-poster.md",
@@ -730,7 +730,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "b2f698a71000105a24708aeaca1ec21eb4fe63fd8a8ac39d987c2b1c5b140699"
+      "sha256": "02311226aa784dea4a6a5219ef59fcea6c904f92566318e3327aa4e883228446"
     },
     {
       "path": "workflows/polish-prose.md",

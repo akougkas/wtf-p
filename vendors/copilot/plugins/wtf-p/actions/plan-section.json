@@ -17,7 +17,9 @@
       "user.interaction"
     ],
     "conditions": [
-      "A target section exists in project://structure/outline and has a matching v1 section record"
+      "A target section exists in project://structure/outline and has a matching v1 section record",
+      "Exactly one applicable current validation exists with subject_uri project://structure/outline, action_id create-outline, and executed_at greater than or equal to the outline updated_at, and that validation has status passed",
+      "project://structure/outline and the target project://sections/{section} record are consistent with all current locked and deferred choices in project://decisions"
     ]
   },
   "reads": [
@@ -26,6 +28,7 @@
     "project://state",
     "project://decisions",
     "project://structure/outline",
+    "project://validations/*",
     "project://sections/{section}",
     "project://sections/{section}/context",
     "project://sections/{section}/research",
@@ -83,7 +86,7 @@
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://validations/*, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.write",
@@ -91,7 +94,7 @@
     },
     {
       "id": "user.gate",
-      "scope": "plan approval and verifier exceptions"
+      "scope": "plan approval, verifier exceptions, and recovery checkpoint approval after complete preview"
     }
   ]
 }

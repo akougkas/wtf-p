@@ -13,7 +13,7 @@ argument-hint: "[arguments]"
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`.
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://validations/*`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`.
 Produce: `project://sections/{section}/plans/{plan}` (create), `project://validations/{validation}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -22,9 +22,11 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Resolve one section record and load its linked context, research, evidence, decisions, and outline constraints.
-2. Delegate a bounded plan, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity.
-3. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
+1. Resolve one section record, load its linked context, research, evidence, decisions, and outline constraints, and enumerate the bounded `project://validations/*` collection before any specialist dispatch.
+2. Filter those records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
+3. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
+4. Only after those prerequisites pass, delegate a bounded plan to `section-planner`, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity.
+5. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
 
 ## Safety and completion
 

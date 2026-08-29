@@ -228,6 +228,65 @@ function assertAcyclic(sections) {
   for (const id of dependencies.keys()) visit(id);
 }
 
+function matchesBoundedCollection(selector, uri) {
+  assert(selector.endsWith('/*'), `unsupported bounded selector ${selector}`);
+  const prefix = selector.slice(0, -2);
+  if (!uri.startsWith(`${prefix}/`)) return false;
+  const child = uri.slice(prefix.length + 1);
+  return child.length > 0 && !child.includes('/');
+}
+
+function selectCurrentOutlineValidation(entries, outline) {
+  const applicable = entries
+    .filter(entry => matchesBoundedCollection('project://validations/*', entry.uri))
+    .map(entry => entry.value)
+    .filter(record =>
+      record.subject_uri === 'project://structure/outline' &&
+      record.action_id === 'create-outline'
+    );
+  if (applicable.length === 0) return { eligible: false, reason: 'missing' };
+
+  const outlineTime = Date.parse(outline.updated_at);
+  const current = applicable.filter(record => Date.parse(record.executed_at) >= outlineTime);
+  if (current.length === 0) return { eligible: false, reason: 'stale' };
+  if (current.length > 1) return { eligible: false, reason: 'ambiguous' };
+  if (current[0].status !== 'passed') return { eligible: false, reason: 'nonpassing' };
+  return { eligible: true, reason: 'passed', validation: current[0] };
+}
+
+function decisionSupersessionErrors(before, after, priorId, replacementId, resolutionTime) {
+  const errors = [];
+  const priorBefore = before.items.find(item => item.id === priorId);
+  const priorAfter = after.items.find(item => item.id === priorId);
+  const replacements = after.items.filter(item => item.id === replacementId);
+  const replacement = replacements[0];
+
+  if (!priorBefore || priorBefore.disposition !== 'deferred') errors.push('prior item must be deferred');
+  if (after.revision !== before.revision + 1) errors.push('revision must advance exactly once');
+  if (after.updated_at !== resolutionTime) errors.push('updated_at must equal the actual resolution time');
+  if (Date.parse(resolutionTime) <= Date.parse(before.updated_at)) errors.push('resolution timestamp must advance');
+  if (before.items.some(item => item.id === replacementId) || replacements.length !== 1) {
+    errors.push('replacement ID must be fresh and unique');
+  }
+
+  if (!priorAfter || !priorBefore || !deepEqual(priorAfter, { ...priorBefore, disposition: 'superseded' })) {
+    errors.push('prior deferred item may change only to superseded');
+  }
+  if (!replacement) {
+    errors.push('replacement item is missing');
+  } else {
+    if (replacement.authority !== 'author') errors.push('replacement authority must be author');
+    if (replacement.disposition !== 'locked') errors.push('replacement must be locked');
+    if (replacement.supersedes !== priorId) errors.push('replacement must name the superseded item');
+    if (replacement.recorded_at !== resolutionTime) errors.push('recorded_at must equal the actual resolution time');
+  }
+
+  const unrelatedBefore = before.items.filter(item => item.id !== priorId);
+  const unrelatedAfter = after.items.filter(item => item.id !== priorId && item.id !== replacementId);
+  if (!deepEqual(unrelatedAfter, unrelatedBefore)) errors.push('unrelated decisions must remain unchanged');
+  return errors;
+}
+
 function main() {
   const expectedSchemaFiles = ['common.schema.json', ...recordNames.map(name => `${name}.schema.json`)].sort();
   const expectedTemplateFiles = recordNames.map(name => `${name}.json`).sort();
@@ -297,6 +356,170 @@ function main() {
   assert.strictEqual(new Set(decisionIds).size, decisionIds.length, 'decision ids must be unique');
   const optionIds = templates.checkpoint.options.map(option => option.id);
   assert.strictEqual(new Set(optionIds).size, optionIds.length, 'checkpoint option ids must be unique');
+
+  const resolutionTime = '2026-08-28T13:00:00Z';
+  const decisionsBefore = clone(templates.decisions);
+  const decisionsAfter = clone(decisionsBefore);
+  decisionsAfter.revision += 1;
+  decisionsAfter.updated_at = resolutionTime;
+  decisionsAfter.items.find(item => item.id === 'decision-runtime-benchmarks').disposition = 'superseded';
+  decisionsAfter.items.push({
+    id: 'decision-runtime-benchmarks-resolved',
+    authority: 'author',
+    disposition: 'locked',
+    statement: 'The outline will reserve one bounded runtime-comparison subsection.',
+    rationale: 'The author explicitly resolved the previously deferred outline choice.',
+    scope_uri: 'project://structure/outline',
+    recorded_at: resolutionTime,
+    supersedes: 'decision-runtime-benchmarks'
+  });
+  assert.deepStrictEqual(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      decisionsAfter,
+      'decision-runtime-benchmarks',
+      'decision-runtime-benchmarks-resolved',
+      resolutionTime
+    ),
+    [],
+    'an explicit author resolution must preserve decision history and append a fresh locked replacement'
+  );
+  const decisionsSchemaFile = path.join(schemasRoot, 'decisions.schema.json');
+  assert.deepStrictEqual(
+    validate(decisionsAfter, loadSchema(decisionsSchemaFile), decisionsSchemaFile),
+    [],
+    'the valid supersession transition must remain schema-valid'
+  );
+
+  const driftedPrior = clone(decisionsAfter);
+  driftedPrior.items.find(item => item.id === 'decision-runtime-benchmarks').statement = 'Rewritten history';
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      driftedPrior,
+      'decision-runtime-benchmarks',
+      'decision-runtime-benchmarks-resolved',
+      resolutionTime
+    ).join('\n'),
+    /prior deferred item may change only to superseded/
+  );
+  const staleResolutionTime = clone(decisionsAfter);
+  staleResolutionTime.updated_at = decisionsBefore.updated_at;
+  staleResolutionTime.items.at(-1).recorded_at = decisionsBefore.updated_at;
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      staleResolutionTime,
+      'decision-runtime-benchmarks',
+      'decision-runtime-benchmarks-resolved',
+      resolutionTime
+    ).join('\n'),
+    /updated_at.*actual resolution time[\s\S]*recorded_at.*actual resolution time/
+  );
+  const reusedReplacement = clone(decisionsAfter);
+  reusedReplacement.items.at(-1).id = 'decision-example-order';
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      reusedReplacement,
+      'decision-runtime-benchmarks',
+      'decision-example-order',
+      resolutionTime
+    ).join('\n'),
+    /replacement ID must be fresh and unique/
+  );
+  const changedUnrelated = clone(decisionsAfter);
+  changedUnrelated.items.find(item => item.id === 'decision-host-neutral-core').disposition = 'deferred';
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      changedUnrelated,
+      'decision-runtime-benchmarks',
+      'decision-runtime-benchmarks-resolved',
+      resolutionTime
+    ).join('\n'),
+    /unrelated decisions must remain unchanged/
+  );
+  const unlockedReplacement = clone(decisionsAfter);
+  unlockedReplacement.items.at(-1).disposition = 'deferred';
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      unlockedReplacement,
+      'decision-runtime-benchmarks',
+      'decision-runtime-benchmarks-resolved',
+      resolutionTime
+    ).join('\n'),
+    /replacement must be locked/
+  );
+  const lockedPriorAttempt = clone(decisionsBefore);
+  lockedPriorAttempt.revision += 1;
+  lockedPriorAttempt.updated_at = resolutionTime;
+  lockedPriorAttempt.items.find(item => item.id === 'decision-host-neutral-core').disposition = 'superseded';
+  lockedPriorAttempt.items.push({
+    id: 'decision-host-neutral-core-replacement',
+    authority: 'author',
+    disposition: 'locked',
+    statement: 'An attempted replacement of an already locked choice.',
+    rationale: 'This negative fixture must be rejected.',
+    scope_uri: 'project://manifest',
+    recorded_at: resolutionTime,
+    supersedes: 'decision-host-neutral-core'
+  });
+  assert.match(
+    decisionSupersessionErrors(
+      decisionsBefore,
+      lockedPriorAttempt,
+      'decision-host-neutral-core',
+      'decision-host-neutral-core-replacement',
+      resolutionTime
+    ).join('\n'),
+    /prior item must be deferred/
+  );
+
+  const makeOutlineValidation = (id, executedAt, status = 'passed') => {
+    const record = clone(templates.validation);
+    record.id = id;
+    record.subject_uri = 'project://structure/outline';
+    record.action_id = 'create-outline';
+    record.status = status;
+    record.executed_at = executedAt;
+    return { uri: `project://validations/${id}`, value: record };
+  };
+  assert(matchesBoundedCollection('project://validations/*', 'project://validations/outline-current'));
+  assert(!matchesBoundedCollection('project://validations/*', 'project://validations'));
+  assert(!matchesBoundedCollection('project://validations/*', 'project://validations/archive/outline-current'));
+  assert(!matchesBoundedCollection('project://validations/*', 'project://checkpoints/outline-current'));
+
+  const currentValidation = makeOutlineValidation('validation-outline-current', templates.outline.updated_at);
+  const nestedNonpassing = makeOutlineValidation('validation-outline-nested', '2026-08-28T13:01:00Z', 'failed');
+  nestedNonpassing.uri = 'project://validations/archive/validation-outline-nested';
+  const selected = selectCurrentOutlineValidation([currentValidation, nestedNonpassing], templates.outline);
+  assert.strictEqual(selected.eligible, true, 'one passed validation at the outline timestamp must be eligible');
+  assert.strictEqual(selected.validation.id, 'validation-outline-current');
+  assert.deepStrictEqual(selectCurrentOutlineValidation([], templates.outline), {
+    eligible: false,
+    reason: 'missing'
+  });
+  assert.deepStrictEqual(
+    selectCurrentOutlineValidation([
+      makeOutlineValidation('validation-outline-stale', '2026-08-28T12:29:59Z')
+    ], templates.outline),
+    { eligible: false, reason: 'stale' }
+  );
+  assert.deepStrictEqual(
+    selectCurrentOutlineValidation([
+      currentValidation,
+      makeOutlineValidation('validation-outline-second', '2026-08-28T12:31:00Z')
+    ], templates.outline),
+    { eligible: false, reason: 'ambiguous' }
+  );
+  assert.deepStrictEqual(
+    selectCurrentOutlineValidation([
+      makeOutlineValidation('validation-outline-issues', '2026-08-28T12:31:00Z', 'issues-found')
+    ], templates.outline),
+    { eligible: false, reason: 'nonpassing' }
+  );
 
   const snapshot = clone(templates.checkpoint);
   snapshot.id = 'checkpoint-pre-revision';

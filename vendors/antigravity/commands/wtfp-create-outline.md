@@ -23,7 +23,7 @@ allowed-tools:
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`.
-Produce: `project://structure/outline` (update), `project://sections/{section}` (create), `project://state` (update), `project://validations/{validation}` (create).
+Produce: `project://structure/outline` (update), `project://sections/{section}` (create), `project://decisions` (update), `project://state` (update), `project://validations/{validation}` (create).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -31,9 +31,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Read existing outline and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
-2. Present the complete outline diff at the confirm_outline gate.
-3. After approval, write outline and one section record per entry, preserve stable section IDs, update state, and record plan validation findings.
+1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
+2. Reconcile only choices the author explicitly resolves during the outline interview. Preserve every unrelated decision unchanged. For each explicitly resolved item whose current disposition is `deferred`, preserve the prior item unchanged except for setting its disposition to `superseded`; append a new replacement whose ID is fresh and unique in the ledger, whose authority is `author`, whose disposition is `locked`, and whose `supersedes` field names the prior item. Set the replacement's `recorded_at` to the actual resolution time, increment the decision-record revision, and set the record's `updated_at` to that same actual resolution time. Never supersede a locked choice or treat an agent suggestion or approval of an unrelated outline detail as authority to resolve a decision. If the author resolves no choice, do not rewrite the decision record.
+3. Present the complete outline and decision diffs at the confirm_outline gate. If the proposed outline contradicts a locked decision, preserve that decision as locked and unchanged. If it assumes a choice that was already deferred and the author did not resolve it, preserve that choice as deferred. In either case, record a non-passing validation and stop before downstream planning.
+4. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
 
 ## Safety and completion
 

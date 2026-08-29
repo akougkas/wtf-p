@@ -39,6 +39,10 @@
       "mode": "create"
     },
     {
+      "uri": "project://decisions",
+      "mode": "update"
+    },
+    {
       "uri": "project://state",
       "mode": "update"
     },
@@ -70,11 +74,11 @@
     },
     {
       "id": "filesystem.write",
-      "scope": "project://structure/outline, project://sections/{section}, project://state, project://validations/{validation}"
+      "scope": "project://structure/outline, project://sections/{section}, project://decisions, project://state, project://validations/{validation}"
     },
     {
       "id": "user.gate",
-      "scope": "outline approval"
+      "scope": "project://structure/outline, project://sections/{section}, project://decisions, project://state, project://validations/{validation}"
     }
   ]
 }

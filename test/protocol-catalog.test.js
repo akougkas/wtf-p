@@ -343,10 +343,45 @@ assert.deepStrictEqual(
   [...actionOutputUris(createOutline, 'create')],
   'create-outline must not classify outline and state updates as file creations',
 );
+assert.deepStrictEqual(
+  createOutline.produces.find((output) => output.uri === 'project://decisions'),
+  { uri: 'project://decisions', mode: 'update' },
+  'create-outline must reconcile author choices captured by its outline interview',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(createOutline, 'filesystem.write'),
+  createOutline.produces.map((output) => output.uri),
+  'create-outline write scope must disclose its complete transactional record set',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(createOutline, 'user.gate'),
+  createOutline.produces.map((output) => output.uri),
+  'create-outline approval gate must cover the complete transactional record set',
+);
 
 assert.ok(
   commaSeparatedScope(planSection, 'filesystem.write').includes('project://checkpoints/{checkpoint}'),
   'plan-section must disclose its blocked-path checkpoint write',
+);
+assert.ok(
+  planSection.reads.includes('project://validations/*'),
+  'plan-section must enumerate the bounded validation collection before dispatch',
+);
+assert.deepStrictEqual(
+  commaSeparatedScope(planSection, 'filesystem.read'),
+  planSection.reads,
+  'plan-section read effects must exactly disclose every prerequisite input',
+);
+for (const condition of [
+  'Exactly one applicable current validation exists with subject_uri project://structure/outline, action_id create-outline, and executed_at greater than or equal to the outline updated_at, and that validation has status passed',
+  'project://structure/outline and the target project://sections/{section} record are consistent with all current locked and deferred choices in project://decisions',
+]) {
+  assert.ok(planSection.requirements.conditions.includes(condition), `plan-section condition drift: ${condition}`);
+}
+assert.deepStrictEqual(
+  planSection.delegation.map((entry) => [entry.role, entry.mode]),
+  [['section-planner', 'required'], ['plan-checker', 'required']],
+  'plan-section must preserve the required planner-to-checker delegation sequence',
 );
 
 const reviewSection = load('protocol/actions/review-section.json');

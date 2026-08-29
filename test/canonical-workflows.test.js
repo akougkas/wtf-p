@@ -199,7 +199,7 @@ for (const action of actionIds) {
     }
     assert.match(
       reference,
-      /^(?:protocol|project|invocation|package):\/\/[A-Za-z0-9.][A-Za-z0-9._{}/-]*\/?$/,
+      /^(?:protocol|project|invocation|package):\/\/[A-Za-z0-9.][A-Za-z0-9._{}-]*(?:\/[A-Za-z0-9._{}-]+)*(?:\/\*|\/)?$/,
       `${fileName} may refer only to declared logical resources: ${reference}`,
     );
     assert.ok(!reference.split('/').includes('..'), `${fileName} resource URI must not traverse: ${reference}`);
@@ -218,12 +218,22 @@ for (const skill of catalog.skills) {
 
 const projectUriVocabulary = [
   /^project:\/\/(?:manifest|config|state|decisions|structure\/outline)$/,
-  /^project:\/\/(?:sources|evidence|checkpoints|validations)\/[A-Za-z0-9*{}._-]+$/,
-  /^project:\/\/sections\/[A-Za-z0-9*{}._-]+(?:\/(?:context|research|summary|handoff|plans\/[A-Za-z0-9*{}._-]+|reviews\/[A-Za-z0-9*{}._-]+))?$/,
-  /^project:\/\/(?:materials|paper)\/[A-Za-z0-9*{}._/-]+$/,
-  /^project:\/\/deliverables\/[A-Za-z0-9*{}._-]+\/[A-Za-z0-9*{}._/-]+$/,
-  /^project:\/\/archives\/[A-Za-z0-9*{}._-]+\/[A-Za-z0-9*{}._/-]+$/,
+  /^project:\/\/(?:sources|evidence|checkpoints|validations)\/[A-Za-z0-9{}._-]+$/,
+  /^project:\/\/validations\/\*$/,
+  /^project:\/\/sections\/[A-Za-z0-9{}._-]+(?:\/(?:context|research|summary|handoff|plans\/[A-Za-z0-9{}._-]+|reviews\/[A-Za-z0-9{}._-]+))?$/,
+  /^project:\/\/(?:materials|paper)\/[A-Za-z0-9{}._/-]+$/,
+  /^project:\/\/deliverables\/[A-Za-z0-9{}._-]+\/[A-Za-z0-9{}._/-]+$/,
+  /^project:\/\/archives\/[A-Za-z0-9{}._-]+\/[A-Za-z0-9{}._/-]+$/,
 ];
+const declaredProjectUri = (uri) => projectUriVocabulary.some((pattern) => pattern.test(uri));
+assert.ok(declaredProjectUri('project://validations/*'), 'bounded validation collection selector must be canonical');
+for (const malformed of [
+  'project://validations/foo*bar',
+  'project://validations/archive/*',
+  'project://sections/eval*/plans/{plan}',
+]) {
+  assert.ok(!declaredProjectUri(malformed), `wildcard must be one terminal bounded collection segment: ${malformed}`);
+}
 const legacyProjectTokens = [
   '.planning/PROJECT.md',
   '.planning/ROADMAP.md',
@@ -246,7 +256,7 @@ for (const file of portableResourceFiles) {
   }
   for (const uri of source.match(/project:\/\/[A-Za-z0-9*{}._/-]+/g) || []) {
     assert.ok(
-      projectUriVocabulary.some((pattern) => pattern.test(uri)),
+      declaredProjectUri(uri),
       `${label} uses undeclared portable project URI ${uri}`,
     );
   }

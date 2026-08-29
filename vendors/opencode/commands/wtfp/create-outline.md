@@ -188,7 +188,7 @@ Contract: [protocol/actions/create-outline.json](../../../actions/create-outline
 
 1. Require `project://manifest`, `project://decisions`, and `project://config`. If `project://structure/outline` already contains established sections, present a structural diff and obtain approval before revising it.
 2. Load project requirements, verified and provisional source/evidence records, venue constraints, and current state. Identify unresolved argument or evidence questions before outlining.
-3. Present the proposed thesis, major supporting claims, counterarguments, limitations, and likely document shape at `config.gates.confirm_outline`.
+3. Interview the author about unresolved structural choices before presenting the proposed thesis, major supporting claims, counterarguments, limitations, and likely document shape at `config.gates.confirm_outline`. Treat only an explicit author answer as authority to resolve a deferred choice. For each explicitly resolved item whose current disposition is `deferred`, preserve the prior item unchanged except for setting its disposition to `superseded`; append a new replacement whose ID is fresh and unique in the ledger, whose authority is `author`, whose disposition is `locked`, and whose `supersedes` field names the prior item. Set the replacement's `recorded_at` to the actual resolution time, increment the decision-record revision, set the record's `updated_at` to that same actual resolution time, and preserve every unrelated decision unchanged. Never supersede a locked choice. If the author resolves no choice, do not rewrite the decision record.
 4. Build one `project://structure/outline` record in which every major claim has a stable ID and every section has:
    - a stable ID and title;
    - a goal and argument role;
@@ -199,9 +199,9 @@ Contract: [protocol/actions/create-outline.json](../../../actions/create-outline
 6. Assign the same wave only to sections that can be drafted independently and do not write the same manuscript artifact. Reject dependency cycles and references to missing section IDs.
 7. Create one `project://sections/{section}` record per outline entry. Link its context, research, plans, manuscript, and summary artifact URIs without claiming those authored artifacts already exist.
 8. Reconcile `project://state`: phase `outlining` or `planning`, exact totals, target words, current section URI, and a factual transition. Keep author decisions in `project://decisions`, not duplicated into state.
-9. Independently validate requirement coverage, claim ownership, evidence obligations, dependency order, wave safety, artifact-link containment, exact equality between the sum of `sections[*].word_target` and `target_words`, and cross-record project IDs. Write the result to `project://validations/{validation}`.
-10. If validation fails, revise checkable defects and return author-owned conflicts as checkpoints. At final approval, atomically publish the outline and section/state records. Do not perform VCS operations.
-11. Report the approved outline revision, section record URIs, validation status, open evidence work, and first section eligible for discussion or planning.
+9. Independently validate requirement coverage, claim ownership, evidence obligations, dependency order, wave safety, artifact-link containment, decision-ledger consistency, exact equality between the sum of `sections[*].word_target` and `target_words`, and cross-record project IDs. An outline that contradicts a locked decision cannot change that decision's disposition; it remains locked and unchanged. A choice remains deferred only when it was already deferred and the author did not explicitly resolve it. Either contradiction prevents a passing validation. Write the result to `project://validations/{validation}`.
+10. If validation fails, revise checkable defects and return author-owned conflicts as unresolved input without inventing a decision. At final approval, atomically publish the decision update when one is required together with the outline, section records, state, and validation. Do not perform VCS operations.
+11. Report the approved outline and decision revisions, section record URIs, validation status, open evidence work, unresolved author choices, and first section eligible for discussion or planning.
 
 Completion requires an executable, validated v1 outline and matching section/state records, not merely a table of contents.
 
@@ -209,7 +209,7 @@ Completion requires an executable, validated v1 outline and matching section/sta
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`.
-Produce: `project://structure/outline` (update), `project://sections/{section}` (create), `project://state` (update), `project://validations/{validation}` (create).
+Produce: `project://structure/outline` (update), `project://sections/{section}` (create), `project://decisions` (update), `project://state` (update), `project://validations/{validation}` (create).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -217,9 +217,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Read existing outline and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
-2. Present the complete outline diff at the confirm_outline gate.
-3. After approval, write outline and one section record per entry, preserve stable section IDs, update state, and record plan validation findings.
+1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
+2. Reconcile only choices the author explicitly resolves during the outline interview. Preserve every unrelated decision unchanged. For each explicitly resolved item whose current disposition is `deferred`, preserve the prior item unchanged except for setting its disposition to `superseded`; append a new replacement whose ID is fresh and unique in the ledger, whose authority is `author`, whose disposition is `locked`, and whose `supersedes` field names the prior item. Set the replacement's `recorded_at` to the actual resolution time, increment the decision-record revision, and set the record's `updated_at` to that same actual resolution time. Never supersede a locked choice or treat an agent suggestion or approval of an unrelated outline detail as authority to resolve a decision. If the author resolves no choice, do not rewrite the decision record.
+3. Present the complete outline and decision diffs at the confirm_outline gate. If the proposed outline contradicts a locked decision, preserve that decision as locked and unchanged. If it assumes a choice that was already deferred and the author did not resolve it, preserve that choice as deferred. In either case, record a non-passing validation and stop before downstream planning.
+4. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
 
 ## Safety and completion
 
@@ -273,6 +274,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "mode": "create"
     },
     {
+      "uri": "project://decisions",
+      "mode": "update"
+    },
+    {
       "uri": "project://state",
       "mode": "update"
     },
@@ -304,11 +309,11 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "filesystem.write",
-      "scope": "project://structure/outline, project://sections/{section}, project://state, project://validations/{validation}"
+      "scope": "project://structure/outline, project://sections/{section}, project://decisions, project://state, project://validations/{validation}"
     },
     {
       "id": "user.gate",
-      "scope": "outline approval"
+      "scope": "project://structure/outline, project://sections/{section}, project://decisions, project://state, project://validations/{validation}"
     }
   ]
 }
