@@ -197,7 +197,7 @@ test('user test documents isolated discovery, gates, and canonical initial artif
   assert(guide.includes('/thinking off'));
   assert(guide.includes('autonomy to `suggest`'));
   assert(guide.includes('Deny and stop the turn if the model requests `bash`'));
-  assert(guide.includes('`clio-coder fleet run <name>`'));
+  assert(guide.includes('`clio-coder fleet run <name> --var section=<id>`'));
   assert(guide.includes('validate-planning.js'));
   assert(guide.includes('Approval responses are'));
   assert(guide.includes('confirm_outline'));

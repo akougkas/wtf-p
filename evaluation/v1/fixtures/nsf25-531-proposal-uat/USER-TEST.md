@@ -107,8 +107,9 @@ clio-coder fleet graph wtfp-draft-review
 Both validations must report `valid` before you continue. The generated fleet
 contracts are native Clio entry points; ordinary `/wtfp:*` commands do not
 silently route through them. Run a fleet only through an explicit
-`clio-coder fleet run <name>` action, and keep its worker result separate from
-the slash-command orchestrator's approval and state-reconciliation work.
+`clio-coder fleet run <name> --var section=<id>` action, and keep its worker
+result separate from the slash-command orchestrator's approval and
+state-reconciliation work.
 
 Run the nine action inputs in `invocations.md` in order. Approval responses are
 additional operator turns: initialization, outline, and plan must each stop for
