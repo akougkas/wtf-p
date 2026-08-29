@@ -1,0 +1,74 @@
+{
+  "schema": "wtfp.evaluation.planning-validation/v1",
+  "valid": true,
+  "checked": 10,
+  "roots": [
+    {
+      "input": "/tmp/wtfp-dynamo-current-rc.vhQqkM/fleet-project-remediated",
+      "planning_root": "/tmp/wtfp-dynamo-current-rc.vhQqkM/fleet-project-remediated/.planning",
+      "valid": true,
+      "records": [
+        {
+          "file": "config.json",
+          "record_type": "config",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "decisions.json",
+          "record_type": "decisions",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "evidence/lower-interruption.json",
+          "record_type": "evidence",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "evidence/recovery-coverage.json",
+          "record_type": "evidence",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "evidence/scope-limits.json",
+          "record_type": "evidence",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "project.json",
+          "record_type": "manifest",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "sections/evaluation/section.json",
+          "record_type": "section",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "sources/synthetic-benchmark-observations.json",
+          "record_type": "source",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "state.json",
+          "record_type": "state",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "structure/outline.json",
+          "record_type": "outline",
+          "valid": true,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

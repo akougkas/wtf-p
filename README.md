@@ -89,7 +89,21 @@ stopped after `new-paper` because the model attempted a denied shell call and
 made 5,600 section words disagree with the 6,000-word outline target. The five
 records were individually schema-valid. See the
 [blocked evidence](evaluation/v1/evidence/clio-dynamo-lifecycle-blocked/README.md);
-the remaining lifecycle and routing roadmap items stay open.
+the remaining lifecycle and routing roadmap items stay open. That reading
+binds the earlier WTF-P source `6b58b298`; it predates the current remediation
+for exact outline totals and direct-tool use, and is not a behavioral reading
+of the current RC source.
+
+Later post-remediation readings are retained separately because they bind
+different WTF-P commits. At `0245818`, exact `/wtfp:new-paper` arguments arrived
+but the model looped on agent discovery and produced no planning records. At
+`b4f0543`, the plan/check fleet completed structurally but its semantic checks
+were ungrounded. At final projection commit `cbba38c`, the draft/review fleet
+placed manuscript and summary files in the correct roots with no boundary
+violation, but drafted without the required approved plan, left portable state
+unreconciled, and failed its word target. See the
+[retained RC readings](evaluation/v1/evidence/clio-dynamo-rc-readings/README.md).
+Neither the full lifecycle nor a semantic fleet pass is claimed.
 
 ## The paper lifecycle
 

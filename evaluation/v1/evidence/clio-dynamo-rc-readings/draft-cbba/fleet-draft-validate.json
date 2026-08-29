@@ -1,0 +1,27 @@
+{
+  "valid": true,
+  "fleet": "wtfp-draft-review",
+  "checks": [
+    {
+      "check": "parse",
+      "summary": "parsed contract version 4"
+    },
+    {
+      "check": "graph",
+      "summary": "validated 2 declared steps"
+    },
+    {
+      "check": "commands",
+      "summary": "validated 0 code steps"
+    },
+    {
+      "check": "agents",
+      "summary": "resolved 2 agents"
+    },
+    {
+      "check": "plan",
+      "summary": "compiled 2 plan steps with hash e39d1c7f62ded6fc70e46b30275d9b2c5fec87e378224d6dbb9aff7fa6e0f0aa"
+    }
+  ],
+  "planHash": "e39d1c7f62ded6fc70e46b30275d9b2c5fec87e378224d6dbb9aff7fa6e0f0aa"
+}

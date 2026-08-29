@@ -1,0 +1,27 @@
+# Section Summary: Synthetic Evaluation
+
+- Status: drafted
+- Output: `project://paper/evaluation.md` (`paper/evaluation.md`)
+- Word count: ~340 (target 700, within the lower bound; section is intentionally compact because the fixture supplies exactly three recorded observations)
+- Outline claims addressed:
+  - `claim-lower-interruption`: reported both recorded means (baseline full-checkpoint 41.2 s; coordinated incremental 27.8 s) over eight recorded trials per configuration, and stated that the coordinated incremental configuration had a lower recorded mean interruption in the supplied scenario.
+  - `claim-recovery-coverage`: reported that every recorded trial completed its fixture recovery check, bounded to the recorded fixture trials.
+  - `claim-scope-limits`: explicitly stated the absence of uncertainty, significance, energy, scaling, replication, other-workload, production, optimality, and comparative-reliability evidence in the fixture.
+- Evidence used:
+  - `project://evidence/lower-interruption` (primary-data, high confidence)
+  - `project://evidence/recovery-coverage` (primary-data, high confidence)
+  - `project://evidence/scope-limits` (primary-data, high confidence)
+  - Source: `project://sources/synthetic-benchmark-observations` (author-provided fixture; no external citations, per locked decision `external-literature`)
+- Decisions honored:
+  - `bounded-central-claim` (locked): all performance claims bounded to the supplied 128-node synthetic scenario.
+  - `external-literature` (deferred): no external citations introduced.
+- Deviations: none. No separate approved plan artifact existed under `.planning/sections/evaluation/plans/`; execution proceeded from the section record, outline, locked decisions, and evidence records, which together fully specify this section's claims and scope. This is recorded as a deviation of process (missing plan artifact), not of content.
+- Validation:
+  - All three outline claim IDs are covered by prose in `paper/evaluation.md`.
+  - Both recorded means and the eight-trials-per-configuration count are reported, per manifest `must_have` requirements.
+  - Recovery-check observation is reported, per manifest `must_have` requirements.
+  - Unavailable uncertainty and external validity are kept explicit, per manifest `must_have` requirements.
+  - Observation and interpretation are separated (permitted interpretations stated alongside explicit non-claims), per `should_have`.
+  - No out-of-scope claims (significance, production readiness, universal or comparative reliability) appear in the prose.
+  - Word count is below target; this is an accepted debt because the closed-world fixture provides no further verifiable material for this section without fabricating evidence.
+- Next work: review the drafted prose against plan/decisions/sources (independent reviewer); if word coverage of the 700-word target is required, route back to planning to declare additional bounded content before expanding.

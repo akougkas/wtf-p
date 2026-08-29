@@ -136,7 +136,7 @@ if (packed.error || packed.status !== 0) {
       'vendors/gemini/gemini-extension.json'
     ];
     const absent = requiredPackedFiles.filter((relativePath) => !files.has(relativePath));
-    const forbiddenPrefixes = ['vendors/claude/mcp/'];
+    const forbiddenPrefixes = ['vendors/claude/mcp/', 'evaluation/'];
     const forbidden = [...files].filter((relativePath) =>
       forbiddenPrefixes.some((prefix) => relativePath.startsWith(prefix))
     );

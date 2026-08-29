@@ -289,12 +289,13 @@ instead of converting planned coverage into observed evidence.
 - [x] Copilot native marketplace/plugin envelope and committed `.github` repository projection generated from the same protocol.
 - [x] Clio installation capability-probes agents, fleets, skills, and namespaced prompts inside a credential-free disposable probe home.
 - [x] Isolated native discovery matrix completed for Claude, Codex, Copilot, Clio, OpenCode, Antigravity, and Gemini.
-- [x] Real Claude Sonnet 5/xhigh, Codex xhigh, and Clio GPT-5.6 Terra/xhigh evaluations completed with normal-profile hash verification and credential cleanup.
+- [x] Real Claude Sonnet 5/xhigh, Codex xhigh, and Clio GPT-5.6 Terra/xhigh evaluations completed with normal-profile hash verification and credential cleanup; only the retained Clio v4 evidence pack is independently replayable from this tree.
 - [x] Paid compiler-v4 Clio `new-paper` rerun completed at 8/8 with five-of-five independent schema validation.
 - [x] MCP-versus-local decision recorded as local-first hybrid in ADR 0001; no server is shipped.
 - [x] Versioned routing corpus, semantic rubric, fixtures, comparison tooling, and lifecycle/routing harnesses implemented.
-- [x] Both Clio fleet contracts moved to canonical `protocol/fleets/*.md` sources and passed native Clio 0.3.8 validation with directory write boundaries.
-- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper`; no later action, process-boundary resume, or fleet execution was inferred.
+- [x] Both Clio fleet contracts moved to canonical `protocol/fleets/*.json` sources and passed native Clio 0.3.8 validation with directory write boundaries.
+- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action, process-boundary resume, fleet execution, or post-remediation RC rerun was inferred.
+- [x] Post-remediation Dynamo readings retained with exact source identities: current slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; final draft/review proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
 - [ ] Complete and retain the paid routing matrix, corrected Clio fleet runs, full process-boundary lifecycle chain, and independent semantic assessment.
 - [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
@@ -303,7 +304,7 @@ instead of converting planned coverage into observed evidence.
 ## Decisions intentionally deferred
 
 - Whether a future network-only MCP service clears ADR 0001's activation gates after a supported Clio gateway exists. The release candidate decision itself is complete: local-first, no server shipped.
-- Full lifecycle execution, paid skill activation/non-activation measurement, corrected fleet execution, and an observed cross-version academic-output baseline remain evidence gates until their exact retained results exist.
+- Passing full-lifecycle execution, paid skill activation/non-activation measurement, a semantically accepted fleet chain, and an observed cross-version academic-output baseline remain evidence gates until their exact retained results exist.
 - A `1.0.0` date. First-class support is an observed compatibility claim, not a roadmap label.
 
 Seven intent-oriented skills are now fixed for the release-candidate cycle. Generated target artifacts are committed with authenticated inventories so reviewers and CI can inspect reproducibility directly.

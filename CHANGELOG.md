@@ -24,7 +24,7 @@ This entry describes the locally validated repository state; it does not assert 
 - **Action-bound runtime context** — every generated command carries its exact action contract, relevant project schemas/templates, and a guarded native invocation-argument block
 - **Explicit target grammar** — `wtfp install <clio|claude|codex|copilot|opencode|antigravity|gemini>` with compatibility flags retained
 - **Seven-target isolated installer matrix** covering exact install, receipt, uninstall, sentinel preservation, environment-root resolution, and all-target overlap rejection
-- **Versioned behavioral-evaluation layer** — 40 implicit routing cases, all 36 explicit actions, seven-client surface contracts, budgeted paid-matrix definitions, a ten-dimension semantic rubric, stable fixture/oracle hashes, independent planning validation, and fail-closed routing and lifecycle runners
+- **Versioned behavioral-evaluation layer** — 40 implicit routing cases, all 36 explicit actions, three primary-client routing surface contracts, authenticated identities for all nine generated envelopes, budgeted paid-matrix definitions, a ten-dimension semantic rubric, stable fixture/oracle hashes, independent planning validation, and fail-closed routing and lifecycle runners
 - **Tool-execution ADR** — keeps transforms local, removes the unusable Claude-only MCP prototype, withholds unrestricted shell grants for logical tools, and defines executable gates for any future autonomous binding or optional network MCP server
 
 ### Changed
@@ -57,10 +57,11 @@ This entry describes the locally validated repository state; it does not assert 
 
 - Native Claude plugin, Codex plugin, Copilot external plugin, and Antigravity plugin validators
 - Native install/list discovery for Claude 2.1.251, Codex 0.144.1, Copilot 1.0.80, Clio, OpenCode 1.18.16, Antigravity 1.1.22, and Gemini 0.57.0 under disposable profiles
-- Real isolated Claude Sonnet 5/xhigh (8/8 rubric), Codex GPT-5.4/xhigh (8/8), and Clio GPT-5.6 Terra/xhigh evaluations: the historical compiler-v3 Clio run scored 7/8; the paid compiler-v4 rerun scored 8/8 and independently validated all five previewed records
+- Real isolated Claude Sonnet 5/xhigh (8/8 rubric), Codex GPT-5.4/xhigh (8/8), and Clio GPT-5.6 Terra/xhigh evaluations: the historical compiler-v3 Clio run scored 7/8; the paid compiler-v4 rerun scored 8/8 and independently validated all five previewed records. Claude/Codex raw packs are no longer retained and those two historical observations are not independently replayable from this tree; the Clio v4 pack is checked in and executable.
 - Clio Coder `v0.3.8` at merged commit `9b7b80cc`: effective package discovery reports 72 prompts (36 nested and 36 flat), 11 agents, seven skills, two fleets, and zero diagnostics; exact raw `$ARGUMENTS`, nested `state.json`, same-extension skill resolution, and reserved-builtin refusal were exercised
-- Both generated Clio fleet contracts pass native `fleet validate` with the corrected `.planning/` and `paper/` directory boundaries and canonical `protocol/fleets/*.md` sources
-- The first retained Clio 0.3.8 `dynamo/qwen3.8-27b` lifecycle reading is deliberately reported as blocked at `new-paper`: high effort timed out safely; effort-off produced five schema-valid records but attempted one denied shell call and created a 5,600/6,000 word-budget mismatch. No later lifecycle action or end-to-end fleet pass is claimed.
+- Both generated Clio fleet contracts pass native `fleet validate` with the corrected `.planning/` and `paper/` directory boundaries and canonical `protocol/fleets/*.json` sources
+- The first retained Clio 0.3.8 `dynamo/qwen3.8-27b` lifecycle reading is deliberately reported as blocked at `new-paper`: high effort timed out safely; effort-off produced five schema-valid records but attempted one denied shell call and created a 5,600/6,000 word-budget mismatch. It binds earlier WTF-P source `6b58b298`, predates the current remediation, and is not a current-RC behavioral reading. No later lifecycle action or end-to-end fleet pass is claimed.
+- Post-remediation local readings remain non-passing: exact `new-paper` arguments at `0245818` led to an agent-discovery loop and zero records; the `b4f0543` plan fleet completed only structurally; and the `cbba38c` draft fleet verified the corrected `paper/` projection but failed the approved-plan, state-reconciliation, and word-budget invariants. Raw traces and ledgers are retained without promoting them to a baseline.
 - Exact adapter parity: 36 actions, seven skills, and 11 specialist roles wherever the host exposes those resource types
 - Canonical workflow portability, standard-skill validation, project-schema conformance, reproducible generation, and legacy regression suites
 

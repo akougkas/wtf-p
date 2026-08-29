@@ -6,7 +6,9 @@ This is deliberately narrower than the canonical lifecycle runner in [`LIFECYCLE
 
 ## Authenticated client and exact actions
 
-Harness v1 accepts only this coordinated Clio build:
+Harness v1 accepts only this coordinated Clio build identity. The paths below
+record the checkout used for the original certification; they are defaults, not
+part of the accepted identity:
 
 - source: `/tmp/clio-v038-fixed-source.Xbdr8a`;
 - commit: `9b7b80ccbd3d2211d4079bc76558bb06d66a8583`;
@@ -15,7 +17,11 @@ Harness v1 accepts only this coordinated Clio build:
 - reported version: `Clio Coder 0.3.8`;
 - target/model/effort: `openai-codex` / `gpt-5.6-terra` / `xhigh`.
 
-A movable `clio-coder` symlink is not used. If that exact source tree is unavailable, preparation fails; silently substituting a newer binary would make the measurement incomparable.
+A movable `clio-coder` symlink is not used. A byte-identical relocation is
+accepted through `--clio-source` and `--binary`; the harness authenticates the
+commit, Git tree, tracked-source digest, distribution digest, runtime-module
+digest, entry digest, clean status, and reported version. Silently substituting
+a newer or dirty build still fails.
 
 The paid phase runs these commands, in this order, from one disposable fixture project:
 
@@ -38,7 +44,9 @@ The trailing slashes are contract semantics, not presentation. Clio interprets a
 `--dry-run` authenticates the WTF-P and Clio inputs and prints the exact plan. It forwards no credentials, creates no disposable project, and calls no model:
 
 ```bash
-node evaluation/tools/run-clio-fleets.js --dry-run
+node evaluation/tools/run-clio-fleets.js --dry-run \
+  --clio-source /absolute/path/to/clio-coder \
+  --binary /absolute/path/to/clio-coder/dist/cli/index.js
 ```
 
 Review the binary, commit, target/model/effort, invocation arrays, budget, timeout, extension inventory, fixture identity, isolation paths, and stop conditions in that output.
@@ -49,7 +57,9 @@ Preparation requires a new path. It creates the path with mode 0700 and refuses 
 
 ```bash
 node evaluation/tools/run-clio-fleets.js --prepare \
-  --root /absolute/path/to/new-disposable-root
+  --root /absolute/path/to/new-disposable-root \
+  --clio-source /absolute/path/to/clio-coder \
+  --binary /absolute/path/to/clio-coder/dist/cli/index.js
 ```
 
 Preparation performs no model call and reads no credential. It:
@@ -116,6 +126,25 @@ After each owned Clio process group exits and the state tree is quiescent, the r
 The deterministic artifact checks require the plan and draft to preserve the closed-world synthetic measurements and their stated uncertainty/generalization limits. They reject invented URLs, DOIs, significance, production proof, universal superiority, and other unsupported forms. These checks are a safety floor; independent semantic review is still required for evidence fidelity, prose quality, and usefulness.
 
 The first invalid fleet stops the campaign. A rollback is a failure even when Clio correctly restored the project. The result never promotes a failed or `unmeasured` contract fact to a pass.
+
+## Observed local-model boundary
+
+The retained `dynamo/qwen3.8-27b` observations are under
+[`v1/evidence/clio-dynamo-rc-readings`](v1/evidence/clio-dynamo-rc-readings/README.md).
+They were manual diagnostic executions, not a successful run of this paid,
+fail-closed harness:
+
+- the plan/check fleet ran both agents and preserved its nested plan, but Clio
+  recorded semantic quality `unmeasured` and grounded 0/4 claimed validations;
+- the final-source draft/review fleet created the correct `paper/` manuscript
+  and `.planning/` summary with clean boundaries, but both contracts recorded
+  `quality: fail`; independent review also found no approved plan, stale
+  portable state, and 304 words against the 595–805 accepted range.
+
+Clio 0.3.8 treats an ordinary sequential verifier as another completed agent
+step. Its negative result does not by itself change the native fleet process
+exit from zero. The WTF-P harness therefore reads and enforces structured
+quality/verdict fields instead of treating process exit as semantic success.
 
 ## Evidence and credential cleanup
 

@@ -2,6 +2,11 @@
 
 This directory is the versioned, executable evidence layer for WTF-P behavior. It evaluates routing and academic invariants without treating prose bytes as a quality oracle. Canonical behavior remains under `protocol/`; evaluation data does not change an action contract or generated adapter.
 
+The suite is repository/CI evidence, not runtime payload. It is deliberately
+excluded from the npm archive; release users receive the authenticated protocol,
+adapters, installer, and tools, while evaluators use a source checkout whose
+commit and fixture hashes can be verified.
+
 The current suite is `v1`. A change that alters a fixture's meaning, expected route, semantic floor, or required invariant must create a new fixture or suite version. Editorial corrections still require refreshed SHA-256 metadata so every run identifies its exact inputs.
 
 The checked-in HPC baseline is intentionally `definition-only`. It contains no observed run and makes no live-model claim. Change it to `observed` only when every referenced, non-secret `wtfp.evaluation.result/v1` file is checked in and passes the linter.
@@ -12,6 +17,19 @@ It is valuable observed failure evidence, but it cannot enter `observed_runs`:
 the first transition failed the safety and cross-record floor, later lifecycle
 phases were not exercised, and the comparator correctly classifies it as a
 regression rather than weakening the baseline.
+
+That blocked reading predates the current canonical remediation: it binds
+WTF-P `6b58b298` and generated source `4db9d040…`, while later source adds the
+exact outline-total and direct-tool constraints prompted by those failures.
+
+The separate
+[`clio-dynamo-rc-readings`](v1/evidence/clio-dynamo-rc-readings/README.md)
+pack retains post-remediation slash and fleet observations with their distinct
+`0245818`, `b4f0543`, and `cbba38c` identities. The slash action produced no
+records, the plan fleet was semantic-quality unmeasured, and the final draft
+fleet fixed physical path projection but failed lifecycle and word-budget
+invariants. They are executable failure/structural evidence, not entries in
+the observed semantic baseline.
 
 This suite has no no-WTF-P control arm. It cannot establish that WTF-P produces
 better prose than the same model and task without WTF-P, and no result should be
@@ -27,17 +45,27 @@ Its authenticated pack and dedicated verifier support exactly that four-part,
 8/8 entry-workflow claim; they are not an observed full-lifecycle baseline or a
 routing-matrix row.
 
+The reported Claude and Codex entry-workflow results are historical
+operator-observed evidence. Their temporary raw evidence is no longer present
+and no checked-in replay pack exists, so they are not independently replayable
+from this repository. The retained Clio compiler-v4 pack is the independently
+verifiable paid entry-workflow evidence.
+
 ## Evidence levels and run identity
 
 Every routing observation and semantic result embeds the shared `wtfp.evaluation.run-metadata/v1` record. It distinguishes:
 
 1. `static-lint`: catalog ownership, trigger-corpus coverage, explicit mappings, fixture integrity, and statically derived resource closure.
 2. `native-discovery`: what one exact client build discovers or exposes without claiming model behavior.
-3. `paid-model`: an observed model run with cost, latency, and independently assessed artifacts.
+3. `local-model`: an observed model run on a local or operator-owned endpoint,
+   with latency, usage, and independently assessed artifacts but no paid-cost
+   claim.
+4. `paid-model`: an observed billed model run with cost provenance, latency, and
+   independently assessed artifacts.
 
-Run metadata records the exact requested and actual client/model identities, requested and effective effort, permission policy, client binary path and SHA-256, source SHA-256, source commits, protocol/compiler versions, separate model-input and evaluator-oracle fixture hashes, command hash, disposable-environment policy, normal-profile pre/post hash pairs, and case-session isolation. Requested and actual identities are never silently collapsed into one field. A paid semantic result must also bind these values to a contained, SHA-256-exact `wtfp.evaluation.identity-receipt/v1` produced from native client events or a sealed client receipt; metadata alone is not identity evidence.
+Run metadata records the exact requested and actual client/model identities, requested and effective effort, permission policy, client binary path and SHA-256, source SHA-256, source commits, protocol/compiler versions, separate model-input and evaluator-oracle fixture hashes, command hash, disposable-environment policy, normal-profile pre/post hash pairs, and case-session isolation. Requested and actual identities are never silently collapsed into one field. A local or paid model result must also bind these values to a contained, SHA-256-exact `wtfp.evaluation.identity-receipt/v1` produced from native client events or a sealed client receipt; metadata alone is not identity evidence.
 
-Static success is not a paid-model result. An unavailable historical target stays `unavailable`; a different model is not a substitute.
+Static or local-model success is not a paid-model result. An unavailable historical target stays `unavailable`; a different model is not a substitute.
 
 ## Stable routing corpus
 
@@ -130,7 +158,7 @@ A `wtfp.evaluation.result/v1` records:
 
 Each anchor is a machine-readable criterion in the versioned rubric. A result must reproduce the exact anchor IDs and weights, derive points from the closed `pass`/`warning`/`fail`/`capability-unavailable` verdict scale, and bind each anchor to typed independently assessed evidence. A `deterministic-check` accepts only independent-tool or static-analysis evidence; an `independent-semantic-review` accepts a human reviewer or a model explicitly identified as an independent evaluator; a `hybrid` anchor requires both kinds in distinct retained files. Candidate-model self-report cannot satisfy any anchor. The comparator recomputes anchor totals and scores; free-form prose cannot award points.
 
-Completed results require artifacts and output. Blocked or capability-unavailable results cannot masquerade as completed output. For native and paid results, the comparator also requires every relative evidence locator and the model-output locator to resolve as a regular non-symlink file inside the candidate result directory, remain inside it after realpath resolution, and match its declared SHA-256. Paid results additionally require the typed native identity receipt to agree with the recorded client name/version/binary digest, model provider/ID/version, and requested/effective effort. It rejects missing, traversing, symlinked, digest-mismatched, method-mismatched, single-sided hybrid, candidate-model-only, or identity-mismatched evidence; unpriced cost remains literally `unavailable` rather than being synthesized as zero.
+Completed results require artifacts and output. Blocked or capability-unavailable results cannot masquerade as completed output. For native, local-model, and paid results, the comparator also requires every relative evidence locator and the model-output locator to resolve as a regular non-symlink file inside the candidate result directory, remain inside it after realpath resolution, and match its declared SHA-256. Local and paid results additionally require the typed identity receipt to agree with the recorded client name/version/binary digest, model provider/ID/version, and requested/effective effort. It rejects missing, traversing, symlinked, digest-mismatched, method-mismatched, single-sided hybrid, candidate-model-only, or identity-mismatched evidence; unpriced cost remains literally `unavailable` rather than being synthesized as zero. A receipt marked `source_retention: digest-only` authenticates the retained summary file but does not make deleted native events independently replayable.
 
 Compare a candidate to the floor, or two results from the same scenario:
 

@@ -142,7 +142,7 @@ Before claiming first-class support, validate the packed artifact in disposable 
 
 At least one harmless academic fixture must also exercise real Claude, Codex,
 and Clio execution without touching normal client state. Keep static lint,
-native discovery, and paid-model evidence as separate levels. Record exact
+native discovery, local-model, and paid-model evidence as separate levels. Record exact
 binary/source hashes, requested and actual model/effort, permission policy,
 fixture hashes, cost provenance, profile pre/post hashes, and credential cleanup
 in the release evidence; first-class support is an observed compatibility claim,

@@ -66,6 +66,20 @@ baseline. The local runtime reported zero cost counters, but no provider-priced
 billing provenance exists, so cost is recorded as unavailable rather than as a
 metered USD 0 claim.
 
+This reading binds WTF-P `6b58b298` and generated source `4db9d040…`. It
+predates the current canonical remediation for exact outline totals and direct
+tool use and is therefore evidence about that earlier source.
+
+Three later local observations are retained separately under
+[`clio-dynamo-rc-readings`](../evaluation/v1/evidence/clio-dynamo-rc-readings/README.md).
+The `0245818` slash reading preserved exact arguments but produced zero records
+after an agent-discovery loop. The `b4f0543` plan fleet completed both native
+steps with semantic quality unmeasured. The final `cbba38c` draft fleet proved
+the physical `paper/` projection and both write-boundary windows, but it wrote
+without an approved plan, left JSON state unreconciled, and failed the
+595–805-word range with 304 words. These observations are current remediation
+evidence, not a passing lifecycle or fleet certification.
+
 ## Isolation evidence
 
 The sanitized compiler-v4 rubric, five records, validation report, trace
@@ -79,6 +93,11 @@ removed after the completed runs. Preflight and postflight SHA-256 inventories
 for monitored normal client configuration and credential files were
 byte-for-byte identical. Separate evaluation processes and stale isolated
 process groups were terminated.
+
+The Claude and Codex 8/8 results above are historical operator-observed
+evidence. Their temporary raw packs are no longer present, so they are not
+independently replayable from this repository. The checked-in Clio compiler-v4
+pack is the retained executable evidence for the paid entry workflow.
 
 ## Clio release boundary
 
@@ -114,8 +133,10 @@ the user's copy.
 ## Evidence not yet claimed
 
 The compiler-v4 `new-paper` result does not stand in for the broader studies.
-No completed claim is made here yet for the paid nine-action Clio lifecycle
-chain, corrected fleets end to end beyond native validation, the paid Claude/Codex/Clio activation
+Model-backed execution now exists for both corrected fleets, but neither the
+separate structural plan observation nor the failed draft observation is an
+accepted end-to-end fleet result. No completed claim is made here yet for the
+paid nine-action Clio lifecycle chain, the paid Claude/Codex/Clio activation
 matrix, or an observed cross-version academic-output baseline. The versioned
 fixtures, rubrics, and fail-closed runners exist under `evaluation/`; their
 static contract tests remain a different evidence level from model execution.
