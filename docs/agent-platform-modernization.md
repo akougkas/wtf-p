@@ -294,8 +294,9 @@ instead of converting planned coverage into observed evidence.
 - [x] MCP-versus-local decision recorded as local-first hybrid in ADR 0001; no server is shipped.
 - [x] Versioned routing corpus, semantic rubric, fixtures, comparison tooling, and lifecycle/routing harnesses implemented.
 - [x] Both Clio fleet contracts moved to canonical `protocol/fleets/*.json` sources and passed native Clio 0.3.8 validation with directory write boundaries.
-- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action, process-boundary resume, fleet execution, or post-remediation RC rerun was inferred.
-- [x] Post-remediation Dynamo readings retained with exact source identities: current slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; final draft/review proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
+- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action or process-boundary resume was inferred from that run.
+- [x] Post-remediation Dynamo readings retained with exact source identities: the `0245818` slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; and the `cbba38c` draft/review observation proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
+- [x] Current canonical-runtime Dynamo initialization reading retained at `bf50e23`: five records passed literal schema validation, but the dependency-wave invariant and no-shell boundary failed, so the operator stopped before `map-project` and made no full-lifecycle claim.
 - [ ] Complete and retain the paid routing matrix, corrected Clio fleet runs, full process-boundary lifecycle chain, and independent semantic assessment.
 - [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
