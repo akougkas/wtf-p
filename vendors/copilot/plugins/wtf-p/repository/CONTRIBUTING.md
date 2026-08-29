@@ -1,296 +1,183 @@
 # Contributing to WTF-P
 
-WTF-P is an open-source context engineering toolkit for academic writing with AI coding assistants. We welcome contributions from the community!
+WTF-P is a portable academic-research and writing protocol for AI coding agents. Contributions are welcome across workflows, project schemas, Agent Skills, specialist roles, runtime adapters, installation safety, documentation, and tests.
 
-## Ways to Contribute
+## Before you start
 
-### 1. Report Issues (Non-technical)
-Open a [GitHub Issue](https://github.com/akougkas/wtf-p/issues) for:
-- Bug reports
-- Feature requests
-- Workflow improvements
-- Documentation gaps
+- Open an issue for behavior changes that affect the public action catalog, project protocol, or compatibility claims.
+- Never test an installer against your normal agent profile. Use explicit disposable client homes and a disposable fixture project.
+- Treat `protocol/` as the source of truth and `vendors/` as generated output.
+- Preserve user-authored worktree changes and unrelated files.
+- Do not publish packages, push branches, register personal marketplaces, or modify a user's normal client configuration as part of a development test.
 
-Use the issue templates when available.
+## Development setup
 
-### 2. Submit Code (Developers)
-Fork, branch, and submit a Pull Request for:
-- New commands or workflows
-- Bug fixes
-- Performance improvements
-- Documentation updates
-
----
-
-## Development Setup
+WTF-P requires Node.js 20 or newer and has no runtime package dependencies.
 
 ```bash
-# Clone your fork
 git clone https://github.com/YOUR_USERNAME/wtf-p.git
 cd wtf-p
-
-# Test the installation locally
-node bin/install.js --local
-
-# Run tests
 npm test
 ```
 
-### Testing Your Changes
+Useful commands:
 
 ```bash
-# Full test suite (sanity + paths + linter + wcn-integrity + dry-run + features + installer)
-npm test
-
-# Manual testing — install to your AI assistant and try the commands:
-node bin/install.js --local            # Claude Code
-node bin/install.js --local --gemini   # Gemini CLI
-node bin/install.js --local --opencode # OpenCode
+npm run build:adapters       # Regenerate all native envelopes
+npm run check:adapters       # Fail if generated output is stale
+npm run test:protocol        # Catalog, workflows, roles, schemas, skills, compiler
+npm run test:installer       # Import safety, containment, ownership, races, targets
+npm run test:compatibility   # Retained v0.5 behavior and v0.6 product structure
+npm run test:integration     # Isolated install/uninstall lifecycle
+npm run test:all             # Complete regression suite
+npm run preflight            # Complete suite plus release-archive inspection
 ```
 
----
+## Architecture and ownership
 
-## Project Structure
+The repository has four layers:
 
-```
-wtf-p/
-├── bin/
-│   ├── install.js                     # npx wtf-p entry point
-│   ├── uninstall.js                   # npx wtf-p-uninstall entry point
-│   ├── commands/                      # CLI subcommands (doctor, install-logic, list, status, update)
-│   └── lib/                           # Shared libraries (manifest, checkpoint, citation, context-primer)
-├── core/write-the-f-paper/            # Vendor-agnostic content
-│   ├── references/                    # 16 reference docs (principles, formats, patterns)
-│   ├── templates/                     # 20+ templates (config, context, manuscript, venues, posters, slides)
-│   ├── venues/                        # 5 venue configs (acm-cs, ieee-cs, arxiv-ml, nature, thesis)
-│   └── workflows/                     # 14 workflows × 2 (verbose + WCN compressed)
-├── vendors/
-│   ├── claude/                        # Claude Code: 36 commands (.md), 11 agents (.md), MCP, skills, plugin
-│   │   ├── commands/wtfp/             # Slash commands
-│   │   └── agents/wtfp/              # Specialized agents
-│   ├── gemini/                        # Gemini CLI: 36 commands (.toml), 11 agents (.md)
-│   │   ├── commands/wtfp/
-│   │   └── agents/wtfp/
-│   └── opencode/                      # OpenCode: 36 commands (.md), 11 agents (.md)
-│       ├── commands/wtfp/
-│       └── agents/wtfp/
-├── test/                              # 7 test suites
-├── tests/e2e/                         # E2E test framework
-├── tools/wcn/                         # WCN compression tool
-├── scripts/                           # release.js, preflight.js
-└── docs/                              # Developer docs
-```
+```text
+protocol/
+  actions/                  machine-readable action contracts
+  workflows/                canonical host-neutral workflow prose
+  skills/                   seven standard Agent Skills
+  roles/                    eleven semantic specialist contracts
+  project/                  portable .planning v1 schemas and templates
+  catalog.json              stable public action/skill inventory
+  effects.json              effect and capability vocabulary
+  tools.json                exact portable-tool allowlist
 
----
+bin/
+  lib/adapter-compiler.js    deterministic native-envelope compiler
+  lib/manifest.js            installer target and component definitions
+  lib/native-registration.js native marketplace/plugin lifecycle drivers
+  commands/install-logic.js  transactional installation
 
-## Adding a New Command
+vendors/                    generated client resources; do not hand-edit
+  clio/                     Clio extension, prompts, agents, skills, fleets
+  claude/                   Claude Code plugin and marketplace
+  codex/                    Codex plugin and personal-marketplace envelope
+  copilot/                  Copilot CLI plugin plus .github project projection
+  opencode/                 OpenCode filesystem bundle
+  antigravity/              Antigravity CLI plugin
+  gemini/                   Gemini CLI extension
 
-Commands live in `vendors/<runtime>/commands/wtfp/`. Each runtime has its own format.
-
-### Claude Code (Markdown)
-
-File: `vendors/claude/commands/wtfp/your-command.md`
-
-```markdown
----
-name: wtfp:your-command
-description: Brief description of what it does
-allowed-tools:
-  - Read
-  - Write
-  - Bash
-  - Task
----
-
-<objective>
-Clear statement of what this command accomplishes.
-</objective>
-
-<context>
-@~/.claude/write-the-f-paper/references/principles.md
-</context>
-
-<process>
-## Step 1: Validate Prerequisites
-...
-
-## Step 2: Execute Main Logic
-...
-
-## Step 3: Output Results
-...
-</process>
+core/write-the-f-paper/     retained v0.5 compatibility and migration material
+test/                       contract, regression, adversarial, and integration tests
 ```
 
-### Gemini CLI (TOML)
+Canonical changes flow in one direction:
 
-File: `vendors/gemini/commands/wtfp/your-command.toml`
-
-Gemini uses TOML frontmatter. No `allowed-tools` field — tools are available by default in Gemini.
-
-```toml
-[command]
-name = "wtfp:your-command"
-description = "Brief description of what it does"
-
-[command.content]
-text = """
-<objective>
-Clear statement of what this command accomplishes.
-</objective>
-
-<context>
-@~/.config/gemini/write-the-f-paper/references/principles.md
-</context>
-
-<process>
-## Step 1: ...
-</process>
-"""
+```text
+protocol source → adapter compiler → vendors/* → isolated native validation
 ```
 
-### OpenCode (Markdown)
+Generated files carry a compiler provenance marker and are authenticated by `.wtfp-generated.json` inventories. A generated output may be inspected or tested, but its fix belongs in the canonical source or compiler. Run the compiler once after the source change and commit its complete output.
 
-File: `vendors/opencode/commands/wtfp/your-command.md`
+## Adding or changing an action
 
-Same Markdown format as Claude, but **no `allowed-tools` frontmatter** (tools are available by default) and paths use `~/.opencode/` instead of `~/.claude/`.
+The stable public namespace currently contains 36 `wtfp:<action>` aliases. To add or change one:
 
-### Multi-Vendor Checklist
+1. Add or edit `protocol/actions/<action>.json`.
+2. Add or edit `protocol/workflows/<action>.md`.
+3. Assign an academic action to exactly one skill in `protocol/catalog.json`; product operations remain outside default skill trigger space.
+4. Update the owning skill's `references/actions.md` and, when the trigger boundary changes, its `SKILL.md` description.
+5. Declare every read, output mode, delegation, capability, tool, effect, and user gate exactly. An update or deletion must read the target first.
+6. Use logical `project://`, `protocol://`, `role://`, and `wtfp://tools/` URIs. Do not embed a workstation path, client home, concrete model, or vendor tool name in canonical content.
+7. Run `npm run build:adapters` once.
+8. Run `npm run test:protocol` and `npm run check:adapters`.
 
-When adding a new command, you must create it for **all three runtimes**:
-- [ ] `vendors/claude/commands/wtfp/your-command.md`
-- [ ] `vendors/gemini/commands/wtfp/your-command.toml`
-- [ ] `vendors/opencode/commands/wtfp/your-command.md`
-- [ ] Update `vendors/claude/commands/wtfp/help.md` with the new command
-- [ ] Add the command to `bin/lib/manifest.js` if it needs installer awareness
-- [ ] Run `npm test` to validate linting and structure
+Do not add a second hand-maintained Claude, Gemini, OpenCode, or other runtime body. The compiler owns native syntax, resource roots, frontmatter, command namespaces, argument placeholders, and relevant action/schema/template binding.
 
-### Naming Conventions
+## Changing project state
 
-| Prefix | Purpose | Example |
-|--------|---------|---------|
-| `new-*` | Create something new | `new-paper` |
-| `create-*` | Generate structure | `create-outline` |
-| `plan-*` | Planning phase | `plan-section` |
-| `write-*` | Writing execution | `write-section` |
-| `review-*` | Review and polish | `review-section` |
-| `check-*` | Validation | `check-refs` |
-| `export-*` | Output generation | `export-latex` |
+Portable control state lives in versioned JSON records under `.planning/`; authored manuscripts, context, research, plans, reviews, summaries, and deliverables retain their natural formats and are linked from those records.
 
-### Best Practices
+When changing the project protocol:
 
-1. **Use structured interaction** — Never ask inline text questions; use the assistant's structured prompting
-2. **Batch related questions** — Group independent questions together
-3. **Validate inputs early** — Check prerequisites before doing work
-4. **Provide clear error messages** — Tell users how to fix problems
-5. **Commit results** — Use git to checkpoint progress
+- Update the relevant schema and minimal valid template together.
+- Keep objects closed with `additionalProperties: false` unless a documented extension point requires otherwise.
+- Preserve stable identifiers, revision rules, timestamps, cross-record references, and logical-URI containment.
+- Extend positive and negative fixtures in `test/project-protocol.test.js`.
+- Never infer v1 state from legacy `PROJECT.md`, `ROADMAP.md`, or `STATE.md` files.
+- Implement checkpoints as portable records and immutable hashed archives, not Git commits, tags, resets, branches, or worktree movement.
 
----
+## Skills and specialist roles
 
-## Adding a New Workflow
+Skills follow the Agent Skills standard:
 
-Workflows live in `core/write-the-f-paper/workflows/` and are vendor-agnostic.
+- `SKILL.md` has valid `name` and trigger-focused `description` frontmatter.
+- Keep the main skill concise; place action detail in `references/actions.md`.
+- Avoid vendor names, absolute paths, and hidden state assumptions.
+- Keep each academic action uniquely owned.
+- Store OpenAI UI metadata in `agents/openai.yaml` when present.
 
-### Workflow vs Command
+Roles are semantic contracts, not vendor-specific agent recipes. Each role must declare purpose, capability classes, inputs, procedure, boundaries, and the `wtfp.role-result/v1` return contract. A role never prompts the user directly; unresolved judgment returns through its structured result.
 
-| Type | Location | Invoked By |
-|------|----------|------------|
-| Command | `vendors/<runtime>/commands/wtfp/*.md` | User via `/wtfp:*` |
-| Workflow | `core/write-the-f-paper/workflows/*.md` | Commands via `@` reference |
+## Adapter compiler changes
 
-### WCN (Workflow Compression Notation)
+Compiler output must be deterministic across machines and isolated homes. Adapter changes must preserve:
 
-For token efficiency, workflows have two versions:
-- `workflow.md` — Verbose, human-readable
-- `workflow.wcn.md` — Compressed, fewer tokens (35–50% savings)
+- exact 36-action alias parity on command-capable hosts;
+- all seven skills and eleven roles;
+- target-native command syntax and invocation-argument forwarding;
+- contained resource references with no unresolved include;
+- exact, fail-closed generated inventories and stale-file cleanup;
+- only the seven tools declared by `protocol/tools.json`;
+- marketplace/plugin manifests that native validators accept;
+- no incidental network, VCS, package-publish, or profile mutation behavior.
 
-See `core/write-the-f-paper/workflows/WCN-SPEC.md` for compression syntax.
+Update `test/adapter-compiler.test.js` for a new invariant. Never loosen a test merely to accept nondeterminism or a broader permission projection.
 
----
+## Installer and uninstaller safety
 
-## Pull Request Process
+Installation code handles user data and has a higher review bar. Preserve these invariants:
 
-1. **Fork and branch**
-   ```bash
-   git checkout -b feat/your-feature
-   ```
+- CLI modules remain silent and mutation-free when imported.
+- Noninteractive mutation requires an explicit target or scope.
+- Roots, homes, repository roots, traversal, and symlink escapes are rejected.
+- Planning snapshots source and destination identity before publication.
+- Writes and receipts are atomic where the platform permits.
+- A v2 receipt records only actual owned writes with SHA-256 hashes.
+- Rollback preserves concurrent edits and reports any residual recovery work.
+- Uninstall removes exact unchanged owned files only, unless an explicit force policy applies.
+- Generic directories and unowned siblings are never recursively deleted.
+- Native marketplace registration is idempotent and collision-safe.
+- Native activation compensates registrations created by a failed activation attempt.
+- A partial bundle with preserved conflicts is never newly registered as native.
+- Every test uses disposable client roots; a developer's real profile is out of scope.
 
-2. **Make changes** following the patterns above
+Add adversarial coverage for path, race, receipt, rollback, and repeated-operation behavior. A happy-path test is not sufficient for a new filesystem mutation.
 
-3. **Test locally**
-   ```bash
-   npm test
-   node bin/install.js --local
-   # Test in your AI assistant
-   ```
+## Native validation
 
-4. **Commit with conventional commits**
-   ```bash
-   git commit -m "feat(commands): add your-command across all runtimes"
-   ```
+Static tests are the minimum. Before advertising a client as verified, validate its generated envelope with the actual supported CLI under an isolated home. Record exact client/model versions and distinguish discovery, static validation, and paid model evaluation.
 
-5. **Push and create PR**
-   ```bash
-   git push origin feat/your-feature
-   ```
+Never copy or expose credentials in logs. If an isolated credential store is necessary, use restrictive permissions, verify normal-profile hashes before and after the run, and securely remove copied credentials. See `docs/COMPATIBILITY.md` and `docs/BUILD_AND_RELEASE.md` for the current matrix and release procedure.
 
-6. **PR Description** should include:
-   - What the change does
-   - How to test it
-   - Any breaking changes
+## Pull requests
 
----
+Before opening a PR:
 
-## Commit Message Format
+1. Run `npm run check:adapters`.
+2. Run `npm run test:all` for code or protocol changes.
+3. Run `npm run preflight` for release-facing changes.
+4. Check `git diff --check` and review the package archive summary.
+5. Describe canonical sources changed, generated outputs affected, tests run, compatibility implications, and any deliberate deferral.
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
-<type>(<scope>): <description>
-
-[optional body]
+```text
+<type>(optional-scope): <imperative description>
 ```
 
-### Types
-- `feat` — New feature
-- `fix` — Bug fix
-- `docs` — Documentation only
-- `refactor` — Code change that neither fixes a bug nor adds a feature
-- `test` — Adding or updating tests
-- `chore` — Maintenance tasks
-- `copy` — UX copy / public-facing strings
+Common types are `feat`, `fix`, `docs`, `refactor`, `test`, and `chore`. Useful scopes include `protocol`, `skills`, `adapters`, `clio`, `cli`, `installer`, `safety`, and `release`. A scope is encouraged when it makes the ownership boundary clearer, but is not required.
 
-### Scopes
-- `commands` — Slash commands
-- `workflows` — Writing workflows
-- `cli` — Installer/uninstaller
-- `templates` — LaTeX templates
-- `parity` — Multi-runtime parity
-- `safety` — Install/uninstall safety
+## Questions and responsible reports
 
----
+- Use [Discussions](https://github.com/akougkas/wtf-p/discussions) for design questions.
+- Search existing [Issues](https://github.com/akougkas/wtf-p/issues) before filing a report.
+- Do not include credentials, unpublished manuscripts, private bibliographies, or isolated live-test traces in an issue.
 
-## Code Style
-
-### JavaScript (bin/)
-- Use `const`/`let`, never `var`
-- Async/await for promises
-- Descriptive variable names
-- Error messages should be helpful
-
-### Markdown Commands
-- YAML frontmatter required (Claude, OpenCode)
-- TOML frontmatter required (Gemini)
-- Use `<objective>`, `<context>`, `<process>` blocks
-- Keep instructions clear and unambiguous
-- Reference shared files with runtime-appropriate paths
-
----
-
-## Questions?
-
-- Open a [Discussion](https://github.com/akougkas/wtf-p/discussions) for questions
-- Check existing [Issues](https://github.com/akougkas/wtf-p/issues) before reporting
-- Tag issues with appropriate labels
-
-Thank you for contributing to WTF-P!
+Thank you for helping make rigorous academic workflows portable across agent platforms.

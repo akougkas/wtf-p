@@ -1,0 +1,111 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "write-section",
+  "title": "Write a section",
+  "description": "Execute an approved section plan, update state, and optionally verify argument coverage.",
+  "alias": "wtfp:write-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-write-section"
+  },
+  "workflow": "wtfp://workflows/write-section",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected section has an executable plan"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/context",
+    "project://sections/{section}/research",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/summary",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "section-writer",
+      "mode": "required",
+      "purpose": "Draft the section from its approved plan and evidence"
+    },
+    {
+      "role": "argument-verifier",
+      "mode": "optional",
+      "purpose": "Independently verify claim, evidence, and requirement coverage"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://section-writer, role://argument-verifier"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://validations/{validation}, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/research, project://sections/{section}/plans/{plan}, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "declared manuscript, summary, validation, checkpoint, section, and state resources"
+    },
+    {
+      "id": "user.gate",
+      "scope": "verification exceptions and blocked plan decisions"
+    }
+  ]
+}

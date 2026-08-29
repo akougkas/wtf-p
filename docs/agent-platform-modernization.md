@@ -1,10 +1,10 @@
 # WTF-P Agent Platform Modernization
 
-Status: implemented; release-candidate validation complete
+Status: implemented; release-candidate engineering validation complete; publication pending
 
 Target release: `0.6.0-rc`
 
-Last updated: 2026-08-28
+Last updated: 2026-08-29
 
 Implementation branch: `feat/agent-platform-modernization`
 
@@ -151,8 +151,8 @@ Adapters must reject an unmapped required capability or effect. They must not br
 Safety work precedes new targets. These invariants are release blockers:
 
 1. Importing any CLI module has no side effects.
-2. A noninteractive invocation without an explicit target and scope does not install anything.
-3. Project-local installation is the documented default for new workflows; user/global installation requires explicit scope.
+2. A noninteractive invocation without an explicit target (or a deprecated explicit Claude scope alias) does not install anything.
+3. Each modern target maps to one documented native client root. `--config-dir` selects an explicit custom root; project-local installation is offered only where the client has a real project-scoped package model, including the deprecated Claude `--local` compatibility path.
 4. Custom destinations reject filesystem roots, the user's home itself, the repository root, unsafe traversal, and paths that escape through symlinks.
 5. The installer writes atomically where practical and records only files it actually created or replaced.
 6. Receipts use repository-relative normalized paths and SHA-256 content hashes. They record target, scope, package version, adapter version, generator version, ownership action, and backup information.
@@ -235,7 +235,7 @@ Gate: one canonical change regenerates every adapter deterministically, and exis
 - Implement the three coordinated Clio features on a separate Clio branch.
 - Exercise prompt discovery, dispatch, steering, resumption, and receipts under disposable state roots.
 
-Gate: a new paper can be mapped, planned, drafted, reviewed, paused, and resumed without touching normal Clio state.
+Release-candidate gate: the complete extension is discovered, nested prompts expand with exact arguments and contained resources, agents/skills/fleets resolve from the owning extension, and no normal Clio state is touched. The paid full-lifecycle chain remains a `1.0.0` evidence gate rather than an unqualified `0.6.0-rc.1` claim.
 
 ### Phase 3 — native envelopes
 
@@ -247,7 +247,7 @@ Gate: every advertised target passes native discovery or is explicitly marked un
 
 ### Phase 4 — deterministic CLI and optional MCP
 
-- Replace target flags with explicit target/scope commands while preserving deprecated aliases.
+- Replace target flags with explicit target commands and deterministic native destinations while preserving deprecated target/scope aliases.
 - Implement install plans, dry runs, atomic application, receipts, migrations, status, doctor, update, and uninstall for every target.
 - Modernize or remove the research MCP server based on whether it adds value beyond deterministic local scripts.
 
@@ -256,11 +256,13 @@ Gate: every state-changing command is inspectable, contained, reversible, and co
 ### Phase 5 — release candidate evaluation
 
 - Run the full isolated client matrix.
-- Compare academic outputs against stable baselines and judge rubrics.
+- Score a harmless real-model entry workflow against an explicit judge rubric.
 - Publish an honest capability matrix and migration guide.
 - Release `0.6.0-rc`; reserve `1.0.0` for a fully validated matrix.
 
 Gate: no known high-severity ownership or data-loss defect, no false first-class claim, and a clean package preflight.
+
+The release-candidate evidence intentionally stops short of two broader behavioral claims: stable cross-version academic-output baselines and a paid Clio map/plan/draft/review/pause/resume chain. Static protocol fixtures, native discovery, isolated installation, and the real `new-paper` rubric are release-candidate gates; activation/non-activation model studies, the full Clio chain, and repeatable output baselines remain required before `1.0.0`. `COMPATIBILITY.md` reports that boundary instead of converting planned coverage into observed evidence.
 
 ## Current execution ledger
 
@@ -273,13 +275,17 @@ Gate: no known high-severity ownership or data-loss defect, no false first-class
 - [x] Canonical source model accepted through executable catalog, workflow, skill, role, and project-schema fixtures.
 - [x] Clio reference adapter implemented, including coordinated recursive prompts, extension agents/fleets, contained resources, and same-extension skill binding.
 - [x] Native target envelopes implemented and reproducibly generated for all seven clients.
+- [x] Copilot native marketplace/plugin envelope and committed `.github` repository projection generated from the same protocol.
+- [x] Clio installation capability-probes agents, fleets, skills, and namespaced prompts inside a credential-free disposable probe home.
 - [x] Isolated native discovery matrix completed for Claude, Codex, Copilot, Clio, OpenCode, Antigravity, and Gemini.
 - [x] Real Claude Sonnet 5/xhigh, Codex xhigh, and Clio GPT-5.6 Terra/xhigh evaluations completed with normal-profile hash verification and credential cleanup.
+- [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
 - [ ] Publish `0.6.0-rc.1` after final human review; publishing remains deliberately outside the implementation run.
 
 ## Decisions intentionally deferred
 
 - Whether the research service remains MCP-based or becomes a deterministic local tool with optional MCP exposure.
+- A paid Clio compiler-v4 rerun, full lifecycle execution, skill activation/non-activation study, and stable academic-output baseline. These are `1.0.0` evidence gates and are not claimed by the release candidate.
 - A `1.0.0` date. First-class support is an observed compatibility claim, not a roadmap label.
 
 Seven intent-oriented skills are now fixed for the release-candidate cycle. Generated target artifacts are committed with authenticated inventories so reviewers and CI can inspect reproducibility directly.

@@ -58,6 +58,16 @@ const MANIFEST = {
     discovery: {
       kind: 'directory',
       path: 'extensions/wtf-p'
+    },
+    native: {
+      kind: 'clio-capability-probe',
+      source: 'extensions/wtf-p',
+      requiredResources: {
+        skills: 'skills',
+        prompts: 'prompts',
+        agents: 'agents',
+        fleets: 'fleets'
+      }
     }
   },
   codex: {

@@ -5,14 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0-rc.1] - 2026-08-28
+## [0.6.0-rc.1] - 2026-08-29
 
 Agent-platform modernization release candidate. WTF-P now has one portable academic protocol and deterministic native envelopes for seven coding-agent clients.
+
+This entry describes the locally validated repository state; it does not assert npm or marketplace publication.
 
 ### Added
 
 - **Clio Coder reference adapter** — self-contained extension with 36 namespaced prompts, 36 flat compatibility aliases, 11 strict agents, seven extension-bound skills, and two dependency-aware fleets
 - **Codex, GitHub Copilot CLI, and Antigravity CLI support** alongside modernized Claude Code, OpenCode, and Gemini adapters
+- **GitHub Copilot cloud projection** — generated, committed `.github` prompts, agents, skills, instructions, and portable protocol resources in addition to the native CLI plugin
 - **Canonical protocol catalog** — 36 versioned action contracts describing reads, outputs, delegation, tools, effects, and approval boundaries
 - **Seven standard Agent Skills** — focused packages for project setup, literature research, section planning, section writing, manuscript review, project management, and delivery
 - **Portable specialist contracts** — 11 host-neutral roles with strict mutation or verifier result shapes
@@ -29,6 +32,7 @@ Agent-platform modernization release candidate. WTF-P now has one portable acade
 - Each generated adapter is self-contained and carries the canonical protocol, skills, roles, project schemas, tools, and source inventory
 - Claude commands now use a dual plugin/marketplace envelope and expose exact `/wtfp:<action>` names without redundant namespace segments
 - OpenCode and Gemini commands embed static protocol resources when the host has no reliable prompt-time plugin-root variable
+- Clio installation performs an isolated, credential-free extension capability probe and retains flat-prompt/skill compatibility with a warning when a legacy client lacks the full resource surface
 - Host tool bundles contain only seven declared bibliography/citation implementations at URI-derived paths; installer internals and legacy Git-backed checkpoint code are excluded
 - The package now targets Node.js 20 or newer
 - Noninteractive installation requires an explicit target or scope
@@ -38,7 +42,10 @@ Agent-platform modernization release candidate. WTF-P now has one portable acade
 
 - Added import-safe CLIs, dangerous-root and symlink containment checks, source/destination race detection, and atomic file publication
 - Added v2 exact-file ownership receipts with SHA-256 hashes; skipped files can no longer become owned implicitly
+- Ownership receipts now identify adapter contract v1 and generator v4 instead of reporting stale generator metadata
 - Added transactional rollback, receipt-race detection, modified-file preservation, and non-recursive uninstall cleanup
+- Native marketplace/plugin activation now uses compensating rollback, including cleanup when registration succeeds but a later install or verification step fails
+- A bundle with preserved conflict files remains receipted as partial and is never newly registered with a native client
 - Added adversarial fault-injection coverage for symlink swaps, concurrent edits, malformed receipts, traversal, and overlapping target roots
 
 ### Validated
@@ -46,6 +53,7 @@ Agent-platform modernization release candidate. WTF-P now has one portable acade
 - Native Claude plugin, Codex plugin, Copilot external plugin, and Antigravity plugin validators
 - Native install/list discovery for Claude 2.1.251, Codex 0.144.1, Copilot 1.0.80, Clio, OpenCode 1.18.16, Antigravity 1.1.22, and Gemini 0.57.0 under disposable profiles
 - Real isolated Claude Sonnet 5/xhigh (8/8 rubric), Codex GPT-5.4/xhigh (8/8), and Clio GPT-5.6 Terra/xhigh (7/8 before action-specific schema inlining) evaluations
+- Coordinated Clio commits `1cf31602` and `1aebddfb`: effective source-branch discovery reports 72 prompts (36 nested and 36 flat), 11 agents, seven skills, two fleets, and zero diagnostics
 - Exact adapter parity: 36 actions, seven skills, and 11 specialist roles wherever the host exposes those resource types
 - Canonical workflow portability, standard-skill validation, project-schema conformance, reproducible generation, and legacy regression suites
 

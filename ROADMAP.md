@@ -101,7 +101,7 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Build Clio Coder extension with namespaced prompts, agents, skills, and fleets
 - [x] Build Claude Code plugin with generated commands, agents, and skills
 - [x] Build Codex plugin and repo marketplace
-- [x] Build GitHub Copilot CLI plugin
+- [x] Build GitHub Copilot CLI plugin and committed `.github` cloud projection
 - [x] Build OpenCode command/agent/skill bundle
 - [x] Build Antigravity CLI plugin
 - [x] Preserve Gemini CLI as a separate compatibility extension
@@ -188,7 +188,7 @@ These will NOT be built, even if they seem useful:
 | Autonomous publishing | Human always in loop for external actions. |
 | Hidden Git automation | Checkpoints and workflow state must not move branches or create commits incidentally. |
 | Vendor model policy in the canonical kernel | Model selection belongs to the active host and operator. |
-| Implicit global installation | Every noninteractive installation names a target and scope. |
+| Implicit targetless installation | Every noninteractive installation names a target or uses an explicit deprecated scope alias. |
 | Unverified first-class labels | Schema validity alone is not runtime compatibility. |
 
 ---

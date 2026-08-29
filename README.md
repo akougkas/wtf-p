@@ -42,7 +42,7 @@ Then start a paper with the native WTF-P action exposed by your client:
 /wtfp:review-section 1
 ```
 
-Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The patched Clio integration discovers the preferred nested `/wtfp:new-paper` namespace.
+Clio also ships flat `/wtfp-new-paper` compatibility prompts for current releases. The coordinated Clio integration discovers the preferred nested `/wtfp:new-paper` namespace; installation probes that capability in a credential-free disposable profile and falls back gracefully for legacy clients.
 
 ## First-class adapters
 
@@ -51,14 +51,16 @@ Clio also ships flat `/wtfp-new-paper` compatibility prompts for current release
 | Clio Coder | Extension | 36, plus 36 flat aliases | 11 | 7 | Strict recipes, extension-bound skills, two fleets |
 | Claude Code | Claude plugin | 36 | 11 | 7 | Native command permissions and plugin validation |
 | Codex | Codex plugin | Through skills | Host-managed | 7 | `.codex-plugin` metadata and marketplace packaging |
-| GitHub Copilot CLI | Copilot/Claude-compatible plugin | 36 | 11 | 7 | CLI plugin discovery and cloud-safe resources |
+| GitHub Copilot CLI | Native plugin plus committed `.github` projection | 36 | 11 | 7 | CLI discovery and cloud-safe prompts, agents, skills, and instructions |
 | OpenCode | Filesystem bundle | 36 | 11 | 7 | Native commands and agents |
 | Antigravity CLI | `agy` plugin | 36 | 11 | 7 | Commands converted to native skills by `agy` |
 | Gemini CLI | Gemini extension | 36 | 11 | 7 | TOML commands and extension context |
 
-The adapters are generated artifacts, not seven hand-maintained copies. Every generated envelope includes a cryptographic inventory and the portable protocol resources needed to understand its workflows.
+The adapters are generated artifacts, not seven hand-maintained copies. Every generated envelope includes a cryptographic inventory and the portable protocol resources needed to understand its workflows. Copilot additionally receives a generated, commit-ready `.github` projection for cloud/repository use.
 
-The release-candidate matrix was exercised with Claude Code 2.1.251, Codex CLI 0.144.1, Copilot CLI 1.0.80, OpenCode 1.18.16, Antigravity 1.1.22, Gemini CLI 0.57.0, and the coordinated Clio branch. Real isolated evaluations used Claude Sonnet 5/xhigh, Codex GPT-5.4/xhigh (GPT-5.6 was unavailable through that CLI's ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. See [compatibility evidence](docs/COMPATIBILITY.md) for exact claims and caveats.
+For a GitHub-hosted Copilot coding agent, review and copy the `.github/` tree from `vendors/copilot/project/` in the release archive into the target repository, then commit it through that repository's normal review process. The user-level `install copilot` command configures the CLI plugin; it deliberately does not write into an unrelated project checkout.
+
+The release-candidate matrix was exercised with Claude Code 2.1.251, Codex CLI 0.144.1, Copilot CLI 1.0.80, OpenCode 1.18.16, Antigravity 1.1.22, Gemini CLI 0.57.0, and the coordinated Clio branch. Real isolated evaluations used Claude Sonnet 5/xhigh, Codex GPT-5.4/xhigh (GPT-5.6 was unavailable through that CLI's ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. See [compatibility evidence](docs/COMPATIBILITY.md) for exact claims and caveats. These are validation results for the repository release candidate, not a claim that `0.6.0-rc.1` has been published.
 
 ## The paper lifecycle
 
@@ -113,7 +115,9 @@ The `0.6` installer is an ownership-aware transaction engine:
 - It rejects filesystem roots, the home directory itself, the repository root, traversal, and symlink escapes.
 - It snapshots package sources and refuses source or destination path races.
 - It publishes files atomically where possible and rolls back a failed transaction.
-- It records only files it actually wrote, with SHA-256 hashes, in a v2 receipt.
+- It compensates native marketplace/plugin registration if a later activation step fails.
+- It does not register a partial adapter when any conflicting file was preserved.
+- It records only files it actually wrote, with SHA-256 hashes, adapter-contract v1, and generator-v4 metadata, in a v2 receipt.
 - Reinstallation cannot claim ownership of files it skipped.
 - Uninstall removes exact unchanged owned files. It preserves modified files and unrelated siblings by default.
 - Dry runs are byte-preserving.
@@ -149,7 +153,7 @@ npm run test:integration
 
 `check:adapters` fails when committed generated resources drift from their canonical inputs. The test suite also checks action parity, skills, portable roles, `.planning` schemas, resource containment, exact installer ownership, rollback, uninstall preservation, and native envelope structure.
 
-The Clio reference integration is developed alongside WTF-P in `clio-coder`. It adds recursive namespaced extension prompts, extension-owned agents and fleets, same-extension skill binding, and contained `${extensionRoot}` resource resolution.
+The Clio reference integration is developed alongside WTF-P in `clio-coder` at coordinated commits `1cf31602` and `1aebddfb`. It adds recursive namespaced extension prompts, extension-owned agents and fleets, same-extension skill binding, contained `${extensionRoot}` resource resolution, and preservation of nested template `state.json` resources. Effective source-branch discovery certifies 72 prompts (36 nested and 36 flat), 11 agents, seven skills, two fleets, and zero diagnostics.
 
 ## Design principles
 
@@ -168,6 +172,9 @@ WTF-P was built at the [Gnosis Research Center](https://grc.iit.edu/) at Illinoi
 
 - [Changelog](CHANGELOG.md)
 - [Modernization architecture](docs/agent-platform-modernization.md)
+- [Compatibility evidence](docs/COMPATIBILITY.md)
+- [v0.5 → v0.6 migration guide](docs/MIGRATION_V05_TO_V06.md)
+- [Build and release](docs/BUILD_AND_RELEASE.md)
 - [Contributing](CONTRIBUTING.md)
 - [Roadmap](ROADMAP.md)
 - [License](LICENSE)

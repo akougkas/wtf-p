@@ -1,0 +1,54 @@
+{
+  "schema": "wtfp.tools/v1",
+  "tools": [
+    {
+      "deterministic": true,
+      "effects": ["filesystem.read"],
+      "id": "bibliography.analyze-impact",
+      "implementation": "wtfp://tools/bibliography/analyze-impact",
+      "legacyName": "analyze-impact"
+    },
+    {
+      "deterministic": true,
+      "effects": ["filesystem.read"],
+      "id": "bibliography.format",
+      "implementation": "wtfp://tools/bibliography/format",
+      "legacyName": "bib-format"
+    },
+    {
+      "deterministic": true,
+      "effects": ["filesystem.read"],
+      "id": "bibliography.index",
+      "implementation": "wtfp://tools/bibliography/index",
+      "legacyName": "bib-index"
+    },
+    {
+      "deterministic": false,
+      "effects": ["network.fetch"],
+      "id": "citation.fetch",
+      "implementation": "wtfp://tools/citation/fetch",
+      "legacyName": "citation-fetcher"
+    },
+    {
+      "deterministic": true,
+      "effects": ["filesystem.read"],
+      "id": "citation.rank",
+      "implementation": "wtfp://tools/citation/rank",
+      "legacyName": "citation-ranker"
+    },
+    {
+      "deterministic": false,
+      "effects": ["network.search"],
+      "id": "citation.scholar-lookup",
+      "implementation": "wtfp://tools/citation/scholar-lookup",
+      "legacyName": "scholar-lookup"
+    },
+    {
+      "deterministic": false,
+      "effects": ["network.search"],
+      "id": "citation.semantic-scholar",
+      "implementation": "wtfp://tools/citation/semantic-scholar",
+      "legacyName": "semantic-scholar"
+    }
+  ]
+}

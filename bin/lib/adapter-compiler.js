@@ -3,10 +3,10 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { GENERATOR_VERSION } = require('./adapter-metadata');
 
 const ROOT = path.resolve(__dirname, '../..');
 const PROTOCOL_ROOT = path.join(ROOT, 'protocol');
-const GENERATOR_VERSION = 4;
 const INVENTORY_NAME = '.wtfp-generated.json';
 
 const TARGET_ROOTS = Object.freeze({
@@ -122,13 +122,23 @@ function actionTools(action) {
 
 function nativeWorkflowBody(workflowBody, target) {
   let body = workflowBody;
-  const argumentToken = target === 'gemini' ? '{{args}}' : '$ARGUMENTS';
+  const argumentToken = target === 'gemini'
+    ? '{{args}}'
+    : target === 'copilot-cloud'
+      ? '${input:arguments:Describe the requested WTF-P action input}'
+      : '$ARGUMENTS';
   body = body.replaceAll('{{arguments}}', argumentToken);
 
   if (target === 'clio') {
     body = body.replaceAll('protocol://', '${extensionRoot}/');
   } else if (target === 'claude' || target === 'copilot') {
     body = body.replaceAll('protocol://', '${CLAUDE_PLUGIN_ROOT}/');
+  } else if (target === 'copilot-cloud') {
+    // Repository prompt and agent files both live one directory below
+    // `.github/`. Copilot documents Markdown links as its portable file
+    // reference syntax, while the local plugin envelope uses @includes.
+    body = body.replace(/^@protocol:\/\/([^\s]+)\s*$/gm, '[$1](../wtfp/$1)');
+    body = body.replaceAll('protocol://', '.github/wtfp/');
   } else if (target === 'antigravity') {
     body = body.replaceAll('protocol://', '${PLUGIN_ROOT}/');
   } else if (target === 'gemini' || target === 'opencode') {
@@ -162,7 +172,11 @@ function projectSchemasForAction(action) {
 }
 
 function nativeCommandBody(action, workflowBody, target) {
-  const argumentToken = target === 'gemini' ? '{{args}}' : '$ARGUMENTS';
+  const argumentToken = target === 'gemini'
+    ? '{{args}}'
+    : target === 'copilot-cloud'
+      ? '${input:arguments:Describe the requested WTF-P action input}'
+      : '$ARGUMENTS';
   const schemas = projectSchemasForAction(action);
   const protocolIncludes = [
     `@protocol://actions/${action.id}.json`,
@@ -284,6 +298,45 @@ function renderGeminiCommand(action, workflowBody) {
   ].join('\n');
 }
 
+function copilotCloudTools(action) {
+  const capabilities = new Set(action.requirements.capabilities);
+  const tools = new Set();
+  if (capabilities.has('filesystem.read') ||
+      capabilities.has('filesystem.write') ||
+      capabilities.has('filesystem.delete')) {
+    tools.add('read');
+  }
+  if (capabilities.has('filesystem.read')) tools.add('search');
+  if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) tools.add('edit');
+  if (capabilities.has('tool.execute') || [...capabilities].some((item) => item.startsWith('vcs.'))) {
+    tools.add('execute');
+  }
+  if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.add('agent');
+  if (capabilities.has('network.fetch') || capabilities.has('network.search')) tools.add('web');
+  return [...tools];
+}
+
+function renderCopilotCloudPrompt(action, workflowBody) {
+  const lines = [
+    '---',
+    `name: wtfp-${action.id}`,
+    `description: ${yamlScalar(action.description)}`,
+    'agent: agent',
+    'argument-hint: "[arguments]"'
+  ];
+  const tools = copilotCloudTools(action);
+  if (tools.length > 0) lines.push(`tools: ${JSON.stringify(tools)}`);
+  lines.push(
+    '---',
+    '',
+    generatedBanner('protocol/actions', action.id),
+    '',
+    nativeCommandBody(action, workflowBody, 'copilot-cloud'),
+    ''
+  );
+  return lines.join('\n');
+}
+
 function roleDescription(role) {
   const purpose = role.body.match(/^## Purpose\n\n([^\n]+)/m)?.[1];
   return purpose || `${role.fields.name} specialist for portable WTF-P research workflows.`;
@@ -308,6 +361,23 @@ function renderPortableRole(role, slug, target) {
   }
   lines.push('---', '', generatedBanner('protocol/roles', slug), '', nativeWorkflowBody(role.body, target), '');
   return lines.join('\n');
+}
+
+function renderCopilotCloudRole(role, slug) {
+  const verifier = role.fields.execution_class === 'verifier-report';
+  const tools = verifier ? ['read', 'search'] : ['read', 'edit', 'search'];
+  return [
+    '---',
+    `name: wtfp-${slug}`,
+    `description: ${yamlScalar(roleDescription(role))}`,
+    `tools: ${JSON.stringify(tools)}`,
+    '---',
+    '',
+    generatedBanner('protocol/roles', slug),
+    '',
+    nativeWorkflowBody(role.body, 'copilot-cloud'),
+    ''
+  ].join('\n');
 }
 
 function renderClioRole(role, slug) {
@@ -652,6 +722,40 @@ function compilePlans() {
       skills: './skills/'
     }]
   }));
+  copyTree(copilotMarketplace, PROTOCOL_ROOT, 'project/.github/wtfp');
+  copyTree(copilotMarketplace, path.join(PROTOCOL_ROOT, 'skills'), 'project/.github/skills');
+  for (const action of model.actions) {
+    addFile(
+      copilotMarketplace,
+      `project/.github/prompts/wtfp-${action.id}.prompt.md`,
+      renderCopilotCloudPrompt(action, action.workflowBody)
+    );
+  }
+  for (const role of model.roles) {
+    addFile(
+      copilotMarketplace,
+      `project/.github/agents/wtfp-${role.slug}.agent.md`,
+      renderCopilotCloudRole(role, role.slug)
+    );
+  }
+  addFile(copilotMarketplace, 'project/.github/copilot-instructions.md', [
+    generatedBanner('protocol', 'copilot-cloud-projection'),
+    '',
+    '# WTF-P repository instructions',
+    '',
+    'For academic research and writing requests, use the relevant `wtfp-*` skill under `.github/skills/` and the matching generated prompt under `.github/prompts/`.',
+    '',
+    'Treat `.planning` v1 JSON records as control state, resolve logical resources through `.github/wtfp/project/README.md`, validate records before mutation, preserve author-owned decisions, and never perform incidental Git or publish operations.',
+    ''
+  ].join('\n'));
+  addFile(copilotMarketplace, 'project/README.md', [
+    '# WTF-P Copilot repository projection',
+    '',
+    'Copy the contents of this directory into a repository root when GitHub Copilot coding agents must discover WTF-P without a user-level plugin installation.',
+    '',
+    'The `.github/` tree is generated from the canonical protocol. It contains 36 prompt files, 11 custom agents, seven Agent Skills, and the bound portable protocol resources. Do not edit the projection directly; change `protocol/` or the adapter compiler and regenerate.',
+    ''
+  ].join('\n'));
   plans.push(copilotMarketplace);
 
   return plans;

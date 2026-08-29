@@ -1,0 +1,63 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "verify-work",
+  "title": "Verify written work",
+  "description": "Test a drafted section against each plan requirement and record evidence one check at a time.",
+  "alias": "wtfp:verify-work",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-review-manuscript"
+  },
+  "workflow": "wtfp://workflows/verify-work",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected section has an approved plan and a draft"
+    ]
+  },
+  "reads": [
+    "project://state",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://evidence/{evidence}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "selected section verification artifact"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://validations/{validation}, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://state, project://sections/{section}, project://sections/{section}/plans/{plan}, project://evidence/{evidence}, project://paper/{artifact}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "each failed or disputed verification check"
+    }
+  ]
+}

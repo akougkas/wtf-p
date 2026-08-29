@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const MANIFEST = require('../lib/manifest');
+const {
+  ADAPTER_CONTRACT_VERSION,
+  GENERATOR_VERSION
+} = require('../lib/adapter-metadata');
 const { activateNativeRegistration } = require('../lib/native-registration');
 const {
   expandTilde,
@@ -13,6 +17,7 @@ const {
   prompt
 } = require('../lib/utils');
 const {
+  RECEIPT_FILE,
   assertGuardMatchesTarget,
   assertTargetGuard,
   assertOwnedAbsolutePath,
@@ -677,45 +682,98 @@ async function install(runtime, isUpdate, options, pkg) {
     targetGuard
   });
 
-  // A no-op update must not claim a newer version. When files were written,
-  // receipt creation is part of the transaction and any failure rolls them
-  // back to their prior bytes.
-  if (stats.writtenFiles.length > 0) {
-    try {
+  // Native registration consumes the staged adapter, so it must complete
+  // before the ownership receipt makes the file transaction durable. A
+  // successful activation exposes an exact compensator in case receipt
+  // publication subsequently fails.
+  let nativeActivation = { status: 'not-required', results: [] };
+  const nativeRequested = onlyInstall === 'all' && Boolean(vendorConfig.native);
+  const nativeSourceComplete = stats.skipped === 0;
+  if (nativeRequested && !nativeSourceComplete) {
+    nativeActivation = {
+      status: 'deferred',
+      reason: `Native registration was skipped because ${stats.skipped} adapter file(s) were preserved`,
+      results: []
+    };
+  }
+  let transactionPhase = 'ownership receipt preflight';
+  try {
+    if (stats.writtenFiles.length > 0) {
+      const receiptPath = path.join(targetDir, RECEIPT_FILE);
+      assertOwnedAbsolutePath(targetDir, receiptPath, targetGuard);
+      // Reject a directory, symlink, or other impossible receipt destination
+      // before invoking an external client that may create auxiliary state.
+      readOwnedRegularSnapshot(targetDir, receiptPath, targetGuard, { allowMissing: true });
+    }
+
+    transactionPhase = 'native registration';
+    if (nativeRequested && nativeSourceComplete) {
+      nativeActivation = activateNativeRegistration(
+        vendorKey,
+        targetDir,
+        vendorConfig.native,
+        options.nativeRegistrationOptions
+      );
+      if (Array.isArray(nativeActivation.rollbackFailures) && nativeActivation.rollbackFailures.length > 0) {
+        const error = new Error('native registration returned incomplete rollback work');
+        error.nativeRollbackFailures = nativeActivation.rollbackFailures;
+        throw error;
+      }
+    }
+
+    transactionPhase = 'ownership receipt';
+    // A no-op update must not claim a newer version. When files were written,
+    // receipt creation is part of the transaction and any failure rolls them
+    // back to their prior bytes.
+    if (stats.writtenFiles.length > 0) {
       writeVersionFile(targetDir, pkg.version, stats.writtenFiles, {
         runtime: vendorKey,
         scope: isGlobal ? (explicitConfigDir ? 'custom' : 'user') : 'project',
         skipped: stats.skipped,
         selectionComplete: onlyInstall === 'all',
-        adapterVersion: 1,
-        generatorVersion: 1,
+        adapterVersion: ADAPTER_CONTRACT_VERSION,
+        generatorVersion: GENERATOR_VERSION,
         targetGuard
       });
-      stats.commit();
-    } catch (error) {
+    }
+    stats.commit();
+  } catch (error) {
+    const nativeRollbackFailures = Array.isArray(error.nativeRollbackFailures)
+      ? [...error.nativeRollbackFailures]
+      : [];
+    if (nativeActivation && typeof nativeActivation.rollback === 'function') {
+      try {
+        nativeRollbackFailures.push(...nativeActivation.rollback());
+      } catch (rollbackError) {
+        nativeRollbackFailures.push(rollbackError.message);
+      }
+    }
+
+    if (nativeRollbackFailures.length === 0) {
       const failures = stats.rollback();
       if (failures.length > 0) {
         error.message += `; rollback also failed for ${failures.length} path(s)`;
         error.rollbackFailures = failures;
       }
-      throw error;
+    } else {
+      // Keep the source available when an external client could still point at
+      // it. Deleting it would turn a recoverable registry residue into a broken
+      // registration. The primary error carries exact manual recovery work.
+      stats.commit();
+      error.message += `; native rollback also failed: ${nativeRollbackFailures.join('; ')}; staged source was preserved`;
+      error.nativeRollbackFailures = nativeRollbackFailures;
     }
-  } else {
-    stats.commit();
+    error.message = `WTF-P ${transactionPhase} failed: ${error.message}`;
+    throw error;
   }
 
-  let nativeActivation = { status: 'not-required', results: [] };
-  if (onlyInstall === 'all' && vendorConfig.native) {
-    try {
-      nativeActivation = activateNativeRegistration(vendorKey, targetDir, vendorConfig.native);
-    } catch (error) {
-      error.message = `WTF-P files are safely staged in ${targetDir}, but native ${vendorConfig.name} registration failed: ${error.message}`;
-      throw error;
-    }
+  if (nativeRequested) {
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
       out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);
+    } else if (nativeActivation.status === 'incompatible' && !hasQuiet) {
+      out.warn(`The installed Clio version does not expose the complete WTF-P extension contract: ${nativeActivation.reason}. Flat prompts and skills remain staged; upgrade Clio for agents, fleets, and namespaced prompts.`);
     }
   }
 

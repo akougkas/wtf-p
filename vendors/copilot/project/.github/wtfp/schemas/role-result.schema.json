@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wtfp.role-result/v1",
+  "title": "WTF-P portable specialist result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "role",
+    "action",
+    "status",
+    "summary",
+    "artifacts",
+    "issues",
+    "next_actions",
+    "effects_applied"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.role-result/v1" },
+    "role": { "type": "string", "minLength": 1 },
+    "action": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["completed", "needs_input", "blocked", "failed"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uri", "description"],
+        "properties": {
+          "uri": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["severity", "summary"],
+        "properties": {
+          "severity": { "enum": ["info", "warning", "error", "blocker"] },
+          "summary": { "type": "string", "minLength": 1 },
+          "evidence": { "type": "string" }
+        }
+      }
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "reason"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "effects_applied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "scope"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "scope": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

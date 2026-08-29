@@ -99,6 +99,8 @@ const requiredArtifacts = [
   'vendors/claude/.claude-plugin/marketplace.json',
   'vendors/codex/.agents/plugins/marketplace.json',
   'vendors/copilot/marketplace.json',
+  'vendors/copilot/project/.github/copilot-instructions.md',
+  'vendors/copilot/project/.github/prompts/wtfp-new-paper.prompt.md',
   'vendors/opencode/.wtfp-generated.json',
   'vendors/antigravity/plugin.json',
   'vendors/gemini/gemini-extension.json'
@@ -128,6 +130,8 @@ if (packed.error || packed.status !== 0) {
       'vendors/claude/.claude-plugin/marketplace.json',
       'vendors/codex/.agents/plugins/marketplace.json',
       'vendors/copilot/marketplace.json',
+      'vendors/copilot/project/.github/copilot-instructions.md',
+      'vendors/copilot/project/.github/prompts/wtfp-new-paper.prompt.md',
       'vendors/antigravity/plugin.json',
       'vendors/gemini/gemini-extension.json'
     ];

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
@@ -40,6 +41,44 @@ function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env) {
   return environment;
 }
 
+function clioProbeContext(baseEnvironment = process.env) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-probe-'));
+  fs.chmodSync(root, 0o700);
+  const directory = (name) => path.join(root, name);
+  const environment = {
+    PATH: baseEnvironment.PATH || '',
+    HOME: root,
+    USERPROFILE: root,
+    XDG_CONFIG_HOME: directory('xdg-config'),
+    XDG_DATA_HOME: directory('xdg-data'),
+    XDG_STATE_HOME: directory('xdg-state'),
+    XDG_CACHE_HOME: directory('xdg-cache'),
+    TMPDIR: directory('tmp'),
+    CLIO_CODER_HOME: directory('clio-home'),
+    CLIO_CODER_CONFIG_DIR: directory('clio-config'),
+    CLIO_CODER_DATA_DIR: directory('clio-data'),
+    CLIO_CODER_STATE_DIR: directory('clio-state'),
+    CLIO_CODER_CACHE_DIR: directory('clio-cache'),
+    CLIO_CODER_BIN_DIR: directory('clio-bin'),
+    CLIO_CODER_REQUIRE_HOME_PREFIX: '1',
+    NO_COLOR: '1'
+  };
+  for (const name of ['LANG', 'LC_ALL', 'TERM', 'SystemRoot', 'WINDIR', 'PATHEXT']) {
+    if (baseEnvironment[name]) environment[name] = baseEnvironment[name];
+  }
+  for (const value of Object.values(environment)) {
+    if (typeof value === 'string' && value.startsWith(`${root}${path.sep}`)) {
+      fs.mkdirSync(value, { recursive: true });
+    }
+  }
+  return {
+    environment,
+    cleanup() {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  };
+}
+
 function execute(command, args, environment, options = {}) {
   const runner = options.runner || spawnSync;
   const result = runner(command, args, {
@@ -59,6 +98,16 @@ function execute(command, args, environment, options = {}) {
     throw new Error(`${command} ${args.join(' ')} could not run: ${result.error.message}`);
   }
   if (result.status !== 0) {
+    if (options.allowAlreadyAbsent && isAlreadyAbsent(result)) {
+      return {
+        status: 'already-absent',
+        command,
+        args,
+        stdout: result.stdout || '',
+        stderr: result.stderr || '',
+        output: combinedOutput(result)
+      };
+    }
     const detail = conciseOutput(result);
     throw new Error(
       `${command} ${args.join(' ')} failed with exit ${result.status}${detail ? `: ${detail}` : ''}`
@@ -76,6 +125,14 @@ function execute(command, args, environment, options = {}) {
 
 function nativeCommands(runtime, targetDir, native) {
   const source = path.join(targetDir, native.source);
+  if (runtime === 'clio') {
+    return {
+      executable: 'clio-coder',
+      install: [],
+      verify: ['extensions', 'discover', source, '--json'],
+      uninstall: []
+    };
+  }
   if (runtime === 'claude') {
     return {
       executable: 'claude',
@@ -207,6 +264,36 @@ function inspectMarketplace(runtime, native, source, result) {
 }
 
 function verifyRegistration(runtime, native, result) {
+  if (runtime === 'clio') {
+    let discovered;
+    try {
+      discovered = JSON.parse(result.stdout);
+    } catch {
+      return { compatible: false, reason: `Clio discovery returned invalid JSON: ${conciseOutput(result)}` };
+    }
+    const candidate = Array.isArray(discovered)
+      ? discovered[0]
+      : (Array.isArray(discovered?.candidates) ? discovered.candidates[0] : discovered);
+    const resources = candidate?.resources || candidate?.manifest?.resources;
+    const diagnostics = Array.isArray(candidate?.diagnostics) ? candidate.diagnostics : [];
+    const errors = diagnostics.filter(diagnostic => diagnostic?.type === 'error');
+    if (!candidate || candidate.valid !== true || errors.length > 0 || !resources) {
+      return {
+        compatible: false,
+        reason: errors[0]?.message || 'Clio did not return a valid normalized extension manifest'
+      };
+    }
+    for (const [kind, expected] of Object.entries(native.requiredResources || {})) {
+      if (resources[kind] !== expected) {
+        return {
+          compatible: false,
+          reason: `Clio does not preserve resources.${kind}=${expected}`
+        };
+      }
+    }
+    return { compatible: true };
+  }
+
   if (runtime === 'claude') {
     let listing;
     try {
@@ -218,7 +305,7 @@ function verifyRegistration(runtime, native, result) {
         !listing.some(plugin => plugin.id === native.selector && plugin.enabled !== false)) {
       throw new Error(`Claude did not report ${native.selector} as installed and enabled after registration`);
     }
-    return;
+    return { compatible: true };
   }
 
   if (runtime === 'codex') {
@@ -232,19 +319,25 @@ function verifyRegistration(runtime, native, result) {
     if (!installed.some(plugin => plugin.pluginId === native.selector && plugin.installed !== false)) {
       throw new Error(`Codex did not report ${native.selector} as installed after registration`);
     }
-    return;
+    return { compatible: true };
   }
 
   if (!result.output.includes(native.plugin)) {
     throw new Error(`${runtime} did not report ${native.plugin} after native registration`);
   }
+  return { compatible: true };
 }
 
 function activateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
-  const environment = nativeEnvironment(runtime, targetDir, options.environment);
+  const clioProbe = runtime === 'clio'
+    ? clioProbeContext(options.environment || process.env)
+    : null;
+  const environment = clioProbe
+    ? clioProbe.environment
+    : nativeEnvironment(runtime, targetDir, options.environment);
   if (!environment) {
     return {
       status: 'deferred',
@@ -253,37 +346,166 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
     };
   }
 
-  const results = [];
-  let installCommands = commands.install;
-  if (runtime === 'claude' || runtime === 'codex' || runtime === 'copilot') {
-    const source = path.join(targetDir, native.source);
-    const marketplaceListArgs = marketplaceListArguments(runtime);
-    const marketplaceList = execute(commands.executable, marketplaceListArgs, environment, options);
-    if (marketplaceList.status === 'unavailable') {
-      return { status: 'unavailable', executable: commands.executable, results };
-    }
-    results.push(marketplaceList);
-    if (inspectMarketplace(runtime, native, source, marketplaceList) === 'same') {
-      installCommands = commands.install.slice(1);
-    }
-  } else if (runtime === 'antigravity' && antigravityPluginState(targetDir) === 'foreign') {
-    throw new Error('Antigravity already has a non-WTF-P plugin named wtf-p; native registration was not changed');
-  }
+  try {
+    const results = [];
+    let installCommands = commands.install;
+    let marketplaceAdded = false;
+    let pluginAdded = false;
 
-  for (const args of installCommands) {
-    const result = execute(commands.executable, args, environment, options);
-    if (result.status === 'unavailable') {
-      return { status: 'unavailable', executable: commands.executable, results };
+    function compensate() {
+      const failures = [];
+      const rollbackCommands = [];
+      if (pluginAdded && commands.uninstall[0]) rollbackCommands.push(commands.uninstall[0]);
+      if (marketplaceAdded && commands.uninstall.length > 1) {
+        rollbackCommands.push(commands.uninstall[commands.uninstall.length - 1]);
+      }
+      let pluginRollbackFailed = false;
+      for (const args of rollbackCommands) {
+        if (pluginRollbackFailed && args === commands.uninstall[commands.uninstall.length - 1]) {
+          failures.push('native marketplace was preserved because plugin rollback did not complete');
+          continue;
+        }
+        try {
+          const result = execute(commands.executable, args, environment, {
+            ...options,
+            allowAlreadyAbsent: true
+          });
+          results.push(result);
+          if (result.status === 'unavailable') {
+            throw new Error(`${commands.executable} became unavailable during native registration rollback`);
+          }
+          if (args === commands.uninstall[0]) pluginAdded = false;
+          if (args === commands.uninstall[commands.uninstall.length - 1]) marketplaceAdded = false;
+        } catch (error) {
+          failures.push(error.message);
+          if (args === commands.uninstall[0]) pluginRollbackFailed = true;
+        }
+      }
+      return failures;
     }
-    results.push(result);
+
+    function activationResult(status, extra = {}) {
+      return {
+        status,
+        executable: commands.executable,
+        results,
+        ...extra,
+        // The installer keeps this handle alive until its ownership receipt is
+        // durable. It removes only registry state created by this invocation.
+        rollback: compensate
+      };
+    }
+
+    function registrationIsPresent(result) {
+      try {
+        verifyRegistration(runtime, native, result);
+        return true;
+      } catch (error) {
+        if (/did not report/.test(error.message)) return false;
+        throw error;
+      }
+    }
+
+    try {
+      if (runtime === 'claude' || runtime === 'codex' || runtime === 'copilot') {
+        const source = path.join(targetDir, native.source);
+        const marketplaceListArgs = marketplaceListArguments(runtime);
+        const marketplaceList = execute(commands.executable, marketplaceListArgs, environment, options);
+        if (marketplaceList.status === 'unavailable') {
+          return activationResult('unavailable');
+        }
+        results.push(marketplaceList);
+        const marketplaceState = inspectMarketplace(runtime, native, source, marketplaceList);
+        const priorVerification = execute(commands.executable, commands.verify, environment, options);
+        if (priorVerification.status === 'unavailable') {
+          return activationResult('unavailable');
+        }
+        results.push(priorVerification);
+        if (registrationIsPresent(priorVerification)) {
+          return activationResult('registered');
+        }
+        if (marketplaceState === 'same') {
+          installCommands = commands.install.slice(1);
+        }
+      } else if (runtime === 'antigravity') {
+        if (antigravityPluginState(targetDir) === 'foreign') {
+          throw new Error('Antigravity already has a non-WTF-P plugin named wtf-p; native registration was not changed');
+        }
+        const priorVerification = execute(commands.executable, commands.verify, environment, options);
+        if (priorVerification.status === 'unavailable') return activationResult('unavailable');
+        results.push(priorVerification);
+        if (registrationIsPresent(priorVerification)) return activationResult('registered');
+      }
+
+      for (const args of installCommands) {
+        const addsMarketplace = args === commands.install[0] && commands.install.length > 1;
+        // Preflight established that this exact registration did not exist.
+        // Record rollback intent before spawning so a command that mutates and
+        // then exits nonzero is still compensated.
+        if (addsMarketplace) marketplaceAdded = true;
+        else pluginAdded = true;
+
+        const result = execute(commands.executable, args, environment, options);
+        if (result.status === 'unavailable') {
+          // ENOENT means this individual command never started. Preserve any
+          // earlier successful rollback intent, but clear this attempt.
+          if (addsMarketplace) marketplaceAdded = false;
+          else pluginAdded = false;
+          const rollbackFailures = compensate();
+          if (rollbackFailures.length > 0) {
+            const error = new Error(`${commands.executable} became unavailable and native registration rollback did not complete`);
+            error.nativeRollbackFailures = rollbackFailures;
+            throw error;
+          }
+          return activationResult('unavailable');
+        }
+        results.push(result);
+      }
+      let verification;
+      try {
+        verification = execute(commands.executable, commands.verify, environment, options);
+      } catch (error) {
+        if (runtime !== 'clio') throw error;
+        return {
+          status: 'incompatible',
+          executable: commands.executable,
+          reason: error.message,
+          results
+        };
+      }
+      if (verification.status === 'unavailable') {
+        const rollbackFailures = compensate();
+        if (rollbackFailures.length > 0) {
+          const error = new Error(`${commands.executable} became unavailable and native registration rollback did not complete`);
+          error.nativeRollbackFailures = rollbackFailures;
+          throw error;
+        }
+        return activationResult('unavailable');
+      }
+      results.push(verification);
+      const verified = verifyRegistration(runtime, native, verification);
+      if (verified.compatible === false) {
+        return {
+          status: 'incompatible',
+          executable: commands.executable,
+          reason: verified.reason,
+          results
+        };
+      }
+      return activationResult(runtime === 'clio' ? 'compatible' : 'registered');
+    } catch (error) {
+      const failures = Array.isArray(error.nativeRollbackFailures)
+        ? error.nativeRollbackFailures
+        : compensate();
+      if (failures.length > 0) {
+        error.message += `; native registration rollback also failed: ${failures.join('; ')}`;
+        error.nativeRollbackFailures = failures;
+      }
+      throw error;
+    }
+  } finally {
+    if (clioProbe) clioProbe.cleanup();
   }
-  const verification = execute(commands.executable, commands.verify, environment, options);
-  if (verification.status === 'unavailable') {
-    return { status: 'unavailable', executable: commands.executable, results };
-  }
-  results.push(verification);
-  verifyRegistration(runtime, native, verification);
-  return { status: 'registered', executable: commands.executable, results };
 }
 
 function isAlreadyAbsent(result) {
@@ -293,6 +515,7 @@ function isAlreadyAbsent(result) {
 
 function deactivateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
+  if (runtime === 'clio') return { status: 'not-required', results: [] };
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
   const environment = nativeEnvironment(runtime, targetDir, options.environment);
@@ -334,37 +557,15 @@ function deactivateNativeRegistration(runtime, targetDir, native, options = {}) 
     }
   }
 
-  const runner = options.runner || spawnSync;
   for (const args of commands.uninstall) {
-    const result = runner(commands.executable, args, {
-      cwd: options.cwd || process.cwd(),
-      env: environment,
-      encoding: 'utf8',
-      input: '',
-      timeout: options.timeout || DEFAULT_TIMEOUT_MS,
-      maxBuffer: MAX_OUTPUT_BYTES,
-      windowsHide: true
+    const result = execute(commands.executable, args, environment, {
+      ...options,
+      allowAlreadyAbsent: true
     });
-    if (result.error && result.error.code === 'ENOENT') {
+    if (result.status === 'unavailable') {
       return { status: 'unavailable', executable: commands.executable, results };
     }
-    if (result.error) {
-      throw new Error(`${commands.executable} ${args.join(' ')} could not run: ${result.error.message}`);
-    }
-    if (result.status !== 0 && !isAlreadyAbsent(result)) {
-      const detail = conciseOutput(result);
-      throw new Error(
-        `${commands.executable} ${args.join(' ')} failed with exit ${result.status}${detail ? `: ${detail}` : ''}`
-      );
-    }
-    results.push({
-      status: result.status === 0 ? 'ok' : 'already-absent',
-      command: commands.executable,
-      args,
-      stdout: result.stdout || '',
-      stderr: result.stderr || '',
-      output: combinedOutput(result)
-    });
+    results.push(result);
   }
   return { status: 'unregistered', executable: commands.executable, results };
 }
@@ -372,6 +573,7 @@ function deactivateNativeRegistration(runtime, targetDir, native, options = {}) 
 module.exports = {
   activateNativeRegistration,
   antigravityHome,
+  clioProbeContext,
   deactivateNativeRegistration,
   nativeEnvironment
 };

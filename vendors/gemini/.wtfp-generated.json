@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "gemini",
-  "sourceHash": "32aab3b3ac55f1099d193c277ee0a84d58755634cc391b0184cf1ac6f7954732",
+  "sourceHash": "54a7c596807a2ef6df681581335697608ec6ea89edd701a78a78a36e7619b045",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -446,7 +446,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "f96bcd0c948728c62bddd3f9f8ad364b2358b6c2d24e3c6807f69e9740868ffd"
+      "sha256": "3eb7aa3f5af235d233c49a7c953afe2e1f0e0368cc99d093bd37d00f13e4a42c"
     },
     {
       "path": "roles/argument-verifier.md",

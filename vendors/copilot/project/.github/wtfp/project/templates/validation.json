@@ -1,0 +1,32 @@
+{
+  "schema": "wtfp.project.validation/v1",
+  "id": "validation-introduction-plan",
+  "project_id": "portable-research-demo",
+  "subject_uri": "project://sections/introduction/plans/plan-01",
+  "validator_role": "plan-checker",
+  "action_id": "plan-section",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "argument-coverage",
+      "status": "passed",
+      "summary": "Every section claim has a bounded writing unit.",
+      "evidence": ["claim-portable-state is assigned to the opening argument unit"]
+    },
+    {
+      "id": "decision-fidelity",
+      "status": "passed",
+      "summary": "Locked and deferred decisions are represented correctly.",
+      "evidence": ["The host-neutral core is required and runtime benchmarks are excluded"]
+    }
+  ],
+  "issues": [],
+  "next_actions": [
+    {
+      "action": "write-section",
+      "reason": "The plan passed all required verification checks."
+    }
+  ],
+  "effects_applied": [],
+  "executed_at": "2026-08-28T12:45:00Z"
+}

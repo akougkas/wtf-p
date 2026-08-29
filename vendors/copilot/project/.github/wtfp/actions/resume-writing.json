@@ -1,0 +1,55 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "resume-writing",
+  "title": "Resume writing",
+  "description": "Restore the latest portable handoff and route the researcher to the next safe action.",
+  "alias": "wtfp:resume-writing",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/resume-writing",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state or a session handoff exists"
+    ]
+  },
+  "reads": [
+    "project://state",
+    "project://checkpoints/{checkpoint}",
+    "project://sections/{section}",
+    "project://sections/{section}/handoff",
+    "project://sections/{section}/summary"
+  ],
+  "produces": [
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "project://state, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/handoff, project://sections/{section}/summary"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "user.gate",
+      "scope": "selection of the resumed action"
+    }
+  ]
+}

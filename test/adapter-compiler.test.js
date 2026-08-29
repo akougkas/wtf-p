@@ -551,6 +551,40 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
   }
 });
 
+record('Copilot carries a committed cloud-safe repository projection', () => {
+  const plan = plansById.get('copilot-marketplace');
+  const prompts = planFiles(plan, /^project\/\.github\/prompts\/wtfp-[^/]+\.prompt\.md$/);
+  const agents = planFiles(plan, /^project\/\.github\/agents\/wtfp-[^/]+\.agent\.md$/);
+  const skills = planFiles(plan, /^project\/\.github\/skills\/[^/]+\/SKILL\.md$/);
+  assert.strictEqual(prompts.length, 36);
+  assert.strictEqual(agents.length, 11);
+  assert.deepStrictEqual(
+    skills,
+    EXPECTED_SKILLS.map((skill) => `project/.github/skills/${skill}/SKILL.md`)
+  );
+  assert.ok(plan.files.has('project/.github/copilot-instructions.md'));
+  assert.ok(plan.files.has('project/.github/wtfp/project/README.md'));
+  for (const sourcePath of [...prompts, ...agents]) {
+    const source = planText(plan, sourcePath);
+    assert.ok(source.includes(GENERATED_BANNER), `${sourcePath}: missing provenance`);
+    assert.doesNotMatch(source, /\$\{CLAUDE_PLUGIN_ROOT\}/, `${sourcePath}: user-plugin root leaked into cloud projection`);
+    assert.doesNotMatch(source, /\$ARGUMENTS/, `${sourcePath}: local-plugin arguments leaked into cloud projection`);
+    assert.doesNotMatch(source, /^@\.github\//m, `${sourcePath}: local-plugin include leaked into cloud projection`);
+    for (const match of source.matchAll(/\]\(\.\.\/wtfp\/([^)]+)\)/g)) {
+      assert.ok(plan.files.has(`project/.github/wtfp/${match[1]}`), `${sourcePath}: unresolved cloud link ${match[0]}`);
+    }
+  }
+  for (const sourcePath of prompts) {
+    const source = planText(plan, sourcePath);
+    assert.match(
+      source,
+      /\$\{input:arguments:Describe the requested WTF-P action input\}/,
+      `${sourcePath}: missing Copilot input variable`
+    );
+    assert.match(source, /^tools: \[[^\n]+\]$/m, `${sourcePath}: missing bounded Copilot tools`);
+  }
+});
+
 record('Codex, Claude, Copilot, Antigravity, Gemini, and Clio manifests resolve locally', () => {
   const codex = plansById.get('codex');
   const codexManifest = JSON.parse(planText(codex, '.codex-plugin/plugin.json'));

@@ -11,6 +11,7 @@ const INSTALL = path.join(ROOT, 'bin', 'install.js');
 const UNINSTALL = path.join(ROOT, 'bin', 'uninstall.js');
 const RECEIPT = '.wtfp-version';
 const MANIFEST = require('../bin/lib/manifest');
+const { GENERATOR_VERSION } = require('../bin/lib/adapter-metadata');
 const installLogic = require('../bin/commands/install-logic');
 const uninstallLogic = require('../bin/uninstall');
 const {
@@ -298,6 +299,12 @@ try {
         const adds = fake.state.calls.filter(call => call.slice(1, 4).join(' ') === 'plugin marketplace add');
         assert.strictEqual(adds.length, 1, `${runtime} should add its marketplace only once`);
       }
+      const pluginAdds = fake.state.calls.filter(call => {
+        const args = call.slice(1).join(' ');
+        return args.startsWith('plugin install') ||
+          (runtime === 'codex' && args.startsWith('plugin add'));
+      });
+      assert.strictEqual(pluginAdds.length, 1, `${runtime} should install its plugin only once`);
       assert.strictEqual(
         deactivateNativeRegistration(runtime, targetDir, native, options).status,
         'unregistered'
@@ -342,6 +349,257 @@ try {
       );
       assert.strictEqual(mutationAttempted, false, `${runtime} mutated a colliding marketplace`);
     }
+  });
+
+  record('Clio capability probing is isolated and fails closed on missing resource kinds', () => {
+    const native = MANIFEST.clio.native;
+    const targetDir = path.join(testRoot, 'native-fake', 'clio');
+    const expectedSource = path.join(targetDir, native.source);
+    let observedEnvironment = null;
+    const compatibleRunner = (command, args, options) => {
+      assert.strictEqual(command, 'clio-coder');
+      assert.deepStrictEqual(args, ['extensions', 'discover', expectedSource, '--json']);
+      observedEnvironment = options.env;
+      return {
+        status: 0,
+        stdout: JSON.stringify({
+          candidates: [{
+            valid: true,
+            manifest: { resources: native.requiredResources },
+            diagnostics: []
+          }]
+        }),
+        stderr: ''
+      };
+    };
+    const compatible = activateNativeRegistration('clio', targetDir, native, {
+      runner: compatibleRunner,
+      environment: { PATH: process.env.PATH, SECRET_SENTINEL: 'must-not-leak' }
+    });
+    assert.strictEqual(compatible.status, 'compatible');
+    assert.strictEqual(observedEnvironment.SECRET_SENTINEL, undefined);
+    assert.strictEqual(observedEnvironment.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
+    assert.ok(observedEnvironment.CLIO_CODER_STATE_DIR.startsWith(os.tmpdir()));
+    assert.strictEqual(fs.existsSync(observedEnvironment.HOME), false, 'Clio probe home was not removed');
+
+    const incompatible = activateNativeRegistration('clio', targetDir, native, {
+      runner: () => ({
+        status: 0,
+        stdout: JSON.stringify({
+          candidates: [{
+            valid: true,
+            manifest: { resources: { skills: 'skills', prompts: 'prompts' } },
+            diagnostics: []
+          }]
+        }),
+        stderr: ''
+      }),
+      environment: { PATH: process.env.PATH }
+    });
+    assert.strictEqual(incompatible.status, 'incompatible');
+    assert.match(incompatible.reason, /resources\.agents/);
+  });
+
+  record('native registration compensates a partial marketplace transaction', () => {
+    const runtime = 'claude';
+    const native = MANIFEST[runtime].native;
+    const targetDir = path.join(testRoot, 'native-rollback', runtime);
+    const fake = createNativeRunner(runtime, native, targetDir);
+    const runner = (command, args, options) => {
+      if (args.join(' ').startsWith('plugin install')) {
+        fake.state.calls.push([command, ...args]);
+        fake.state.plugin = true;
+        return { status: 9, stdout: '', stderr: 'injected plugin install failure', error: null };
+      }
+      return fake.runner(command, args, options);
+    };
+    assert.throws(
+      () => activateNativeRegistration(runtime, targetDir, native, { runner, environment: {} }),
+      /injected plugin install failure/
+    );
+    assert.strictEqual(fake.state.marketplace, false, 'new marketplace survived failed activation');
+    assert.strictEqual(fake.state.plugin, false, 'plugin survived failed activation');
+    assert.ok(fake.state.calls.some(call => call.slice(1, 4).join(' ') === 'plugin marketplace remove'));
+  });
+
+  record('native activation rollback removes only state created by that activation', () => {
+    const runtime = 'claude';
+    const native = MANIFEST[runtime].native;
+    const targetDir = path.join(testRoot, 'native-exact-rollback', runtime);
+    const created = createNativeRunner(runtime, native, targetDir);
+    const activation = activateNativeRegistration(runtime, targetDir, native, {
+      runner: created.runner,
+      environment: {}
+    });
+    assert.strictEqual(activation.status, 'registered');
+    assert.deepStrictEqual(activation.rollback(), []);
+    assert.strictEqual(created.state.marketplace, false);
+    assert.strictEqual(created.state.plugin, false);
+
+    const preexisting = createNativeRunner(runtime, native, targetDir);
+    preexisting.state.plugin = true;
+    const retained = activateNativeRegistration(runtime, targetDir, native, {
+      runner: preexisting.runner,
+      environment: {}
+    });
+    assert.strictEqual(retained.status, 'registered');
+    assert.deepStrictEqual(retained.rollback(), []);
+    assert.strictEqual(preexisting.state.marketplace, false);
+    assert.strictEqual(preexisting.state.plugin, true, 'rollback removed a pre-existing plugin');
+    assert.strictEqual(
+      preexisting.state.calls.some(call => call.slice(1, 3).join(' ') === 'plugin install'),
+      false,
+      'activation reinstalled a pre-existing plugin'
+    );
+  });
+
+  record('native rollback surfaces an unavailable executable without claiming cleanup', () => {
+    const runtime = 'claude';
+    const native = MANIFEST[runtime].native;
+    const targetDir = path.join(testRoot, 'native-unavailable-rollback', runtime);
+    const fake = createNativeRunner(runtime, native, targetDir);
+    let disappeared = false;
+    const runner = (command, args, options) => {
+      if (disappeared) {
+        return { status: null, stdout: '', stderr: '', error: { code: 'ENOENT' } };
+      }
+      if (args.join(' ').startsWith('plugin install')) {
+        fake.state.calls.push([command, ...args]);
+        disappeared = true;
+        return { status: null, stdout: '', stderr: '', error: { code: 'ENOENT' } };
+      }
+      return fake.runner(command, args, options);
+    };
+    let failure;
+    try {
+      activateNativeRegistration(runtime, targetDir, native, { runner, environment: {} });
+    } catch (error) {
+      failure = error;
+    }
+    assert.ok(failure, 'activation falsely reported a clean unavailable result');
+    assert.match(failure.message, /rollback did not complete/);
+    assert.ok(failure.nativeRollbackFailures.length > 0);
+    assert.strictEqual(fake.state.marketplace, true, 'fixture should retain the unremovable marketplace');
+  });
+
+  record('plugin rollback failure preserves its marketplace source', () => {
+    const runtime = 'claude';
+    const native = MANIFEST[runtime].native;
+    const targetDir = path.join(testRoot, 'native-plugin-rollback-failure', runtime);
+    const fake = createNativeRunner(runtime, native, targetDir);
+    let failPluginRemoval = false;
+    const runner = (command, args, options) => {
+      if (failPluginRemoval && args.join(' ').startsWith('plugin uninstall')) {
+        fake.state.calls.push([command, ...args]);
+        return { status: 7, stdout: '', stderr: 'injected uninstall failure', error: null };
+      }
+      return fake.runner(command, args, options);
+    };
+    const activation = activateNativeRegistration(runtime, targetDir, native, {
+      runner,
+      environment: {}
+    });
+    failPluginRemoval = true;
+    const failures = activation.rollback();
+    assert.ok(failures.some((failure) => /injected uninstall failure/.test(failure)));
+    assert.ok(failures.some((failure) => /marketplace was preserved/.test(failure)));
+    assert.strictEqual(fake.state.plugin, true);
+    assert.strictEqual(fake.state.marketplace, true);
+    assert.strictEqual(
+      fake.state.calls.some(call => call.slice(1, 4).join(' ') === 'plugin marketplace remove'),
+      false,
+      'rollback orphaned a plugin by removing its marketplace'
+    );
+  });
+
+  record('receipt failure compensates native registration before rolling back staged files', () => {
+    const fakeBin = path.join(testRoot, 'transaction-native-bin');
+    const statePath = path.join(testRoot, 'transaction-native-state.json');
+    const targetDir = path.join(testRoot, 'transaction-receipt-failure');
+    const source = path.join(targetDir, MANIFEST.claude.native.source);
+    fs.mkdirSync(fakeBin, { recursive: true });
+    const executable = path.join(fakeBin, 'claude');
+    fs.writeFileSync(executable, `#!/usr/bin/env node
+const fs = require('fs');
+const statePath = process.env.WTFP_NATIVE_STATE;
+const source = process.env.WTFP_NATIVE_SOURCE;
+const receiptPath = process.env.WTFP_RECEIPT_PATH;
+const args = process.argv.slice(2).join(' ');
+const state = fs.existsSync(statePath)
+  ? JSON.parse(fs.readFileSync(statePath, 'utf8'))
+  : { marketplace: false, plugin: false };
+if (args.startsWith('plugin marketplace list')) {
+  process.stdout.write(JSON.stringify(state.marketplace ? [{ name: 'wtfp', path: source, installLocation: source }] : []));
+} else if (args.startsWith('plugin marketplace add')) {
+  state.marketplace = true;
+} else if (args.startsWith('plugin marketplace remove')) {
+  state.marketplace = false;
+} else if (args.startsWith('plugin install')) {
+  state.plugin = true;
+} else if (args.startsWith('plugin uninstall')) {
+  state.plugin = false;
+} else if (args.startsWith('plugin list')) {
+  process.stdout.write(JSON.stringify(state.plugin ? [{ id: 'wtfp@wtfp', enabled: true }] : []));
+  if (state.plugin) fs.mkdirSync(receiptPath, { recursive: true });
+} else {
+  process.stderr.write('unexpected command: ' + args);
+  process.exitCode = 2;
+}
+fs.writeFileSync(statePath, JSON.stringify(state));
+`);
+    fs.chmodSync(executable, 0o755);
+
+    const result = run(INSTALL, [
+      'install', 'claude',
+      '--config-dir', targetDir,
+      '--force', '--advanced', '--quiet', '--no-color'
+    ], {
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+      WTFP_NATIVE_STATE: statePath,
+      WTFP_NATIVE_SOURCE: source,
+      WTFP_RECEIPT_PATH: path.join(targetDir, RECEIPT)
+    });
+    assertFailure(result, /ownership receipt failed/, 'transactional receipt failure');
+    assert.deepStrictEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), {
+      marketplace: false,
+      plugin: false
+    });
+    assert.deepStrictEqual(fs.readdirSync(targetDir), [RECEIPT]);
+  });
+
+  record('a conflicted partial bundle is never newly registered as native', () => {
+    const fakeBin = path.join(testRoot, 'partial-native-bin');
+    const calledPath = path.join(testRoot, 'partial-native-called');
+    const targetDir = path.join(testRoot, 'partial-native-target');
+    const preserved = path.join(targetDir, 'marketplaces', 'wtfp', '.wtfp-generated.json');
+    fs.mkdirSync(fakeBin, { recursive: true });
+    fs.mkdirSync(path.dirname(preserved), { recursive: true });
+    fs.writeFileSync(preserved, 'operator-owned conflict\n');
+    const executable = path.join(fakeBin, 'claude');
+    fs.writeFileSync(executable, `#!/usr/bin/env node
+require('fs').writeFileSync(process.env.WTFP_NATIVE_CALLED, process.argv.slice(2).join(' '));
+process.exitCode = 91;
+`);
+    fs.chmodSync(executable, 0o755);
+
+    const result = run(INSTALL, [
+      'install', 'claude',
+      '--config-dir', targetDir,
+      '--advanced', '--quiet', '--no-color'
+    ], {
+      PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+      WTFP_NATIVE_CALLED: calledPath
+    });
+    assertSuccess(result, 'partial bundle install');
+    assert.strictEqual(fs.existsSync(calledPath), false, 'partial bundle invoked native registration');
+    assert.strictEqual(fs.readFileSync(preserved, 'utf8'), 'operator-owned conflict\n');
+    const receipt = JSON.parse(fs.readFileSync(path.join(targetDir, RECEIPT), 'utf8'));
+    assert.strictEqual(receipt.partial, true);
+    assert.strictEqual(
+      receipt.files.some((entry) => entry.path === 'marketplaces/wtfp/.wtfp-generated.json'),
+      false,
+      'receipt claimed ownership of the preserved conflict'
+    );
   });
 
   record('Claude, Gemini, and OpenCode full installs include their generated adapter roots', () => {
@@ -505,6 +763,8 @@ try {
       assert.strictEqual(receipt.runtime, runtime);
       assert.strictEqual(receipt.scope, 'custom');
       assert.strictEqual(receipt.partial, false);
+      assert.strictEqual(receipt.adapterVersion, 1);
+      assert.strictEqual(receipt.generatorVersion, GENERATOR_VERSION);
       assert.strictEqual(receipt.files.length, sourceFiles.length);
       const allowedComponents = new Set([
         expected.component,
