@@ -92,6 +92,15 @@ windows, but it wrote without an approved plan, left JSON state unreconciled,
 and failed the 595–805-word range with 304 words. These are commit-specific
 remediation observations, not a passing lifecycle or fleet certification.
 
+The subsequent current-source run under
+[`clio-dynamo-current-source-blocked`](../evaluation/v1/evidence/clio-dynamo-current-source-blocked/README.md)
+binds WTF-P `bf50e23`. It produced exactly five records and passed literal
+schema validation 5/5, but failed both the cross-record dependency-wave check
+and the no-shell boundary: three `bash` calls succeeded and ten retries were
+denied. The operator stopped before `map-project`. Because the turn was
+terminated at that failed gate, there is no terminal receipt and cost remains
+unavailable.
+
 ## Isolation evidence
 
 The sanitized compiler-v4 rubric, five records, validation report, trace

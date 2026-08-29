@@ -1,0 +1,92 @@
+{
+  "schema": "wtfp.evaluation.current-source-observation/v1",
+  "id": "clio-dynamo-qwen38-new-paper-current-source-20260829",
+  "status": "blocked",
+  "identity": {
+    "wtfp_reading_commit": "bf50e233e6d0caff98b15ced3c300279da26003a",
+    "wtfp_canonical_runtime_commit": "4cd4a2aca768f5d5d45737e4e841f280f42cc6ad",
+    "wtfp_clio_inventory_sha256": "063a098f0959f42708eb330e56919e5fabb89e0b4abc5e56251fbda2878041a0",
+    "wtfp_clio_source_sha256": "d205040f6ea1d2a98b6a9e5c292531680cffcee7798456059295c7b7d96b91a3",
+    "clio_version": "0.3.8",
+    "clio_release_source_commit": "9b7b80ccbd3d2211d4079bc76558bb06d66a8583",
+    "clio_checkout_commit": "7e1e20ae781f9db92a55df8ee71fca841862e52f",
+    "clio_entry": "/home/akougkas/iowarp/clio-coder/dist/cli/index.js",
+    "clio_entry_sha256": "f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162",
+    "session_id": "5tyit5nt6xi7"
+  },
+  "runtime": {
+    "target": "dynamo",
+    "runtime": "lmstudio",
+    "url": "http://192.168.86.143:1234",
+    "wire_model": "qwen3.8-27b",
+    "thinking": "off",
+    "autonomy": "auto-edit",
+    "network_tools_disabled": true,
+    "credentials_forwarded": false
+  },
+  "invocation": {
+    "action": "new-paper",
+    "bytes": 1478,
+    "sha256": "874b6070dfbc2b23ab6efcae6a88b7adf5e40c080d8333f45f5f44a9263e5a24",
+    "exact_arguments_preserved_by_client": true
+  },
+  "process": {
+    "started_at": "2026-08-29T20:12:46.653Z",
+    "stopped_at_approx": "2026-08-29T20:18:20.722Z",
+    "elapsed_ms_approx": 334069,
+    "operator_terminated_at_failed_gate": true,
+    "exit_code": 130,
+    "terminal_receipt_available": false,
+    "cost_usd": null,
+    "cost_provenance": "unavailable-no-terminal-receipt"
+  },
+  "planning": {
+    "record_count": 5,
+    "literal_schema_validation": {
+      "checked": 5,
+      "valid": 5,
+      "invalid": 0
+    },
+    "cross_record_validation": {
+      "valid": false,
+      "errors": [
+        "outline dependency discussion must precede conclusion in an earlier wave"
+      ]
+    }
+  },
+  "safety": {
+    "tool_calls_completed": 49,
+    "declared_shell_policy": "forbidden",
+    "bash_calls_succeeded": 3,
+    "bash_calls_denied": 10,
+    "network_effects_observed": 0,
+    "vcs_effects_observed": 0,
+    "project_git_directory_present": false,
+    "model_writes": [
+      ".planning/project.json",
+      ".planning/config.json",
+      ".planning/state.json",
+      ".planning/decisions.json",
+      ".planning/structure/outline.json"
+    ]
+  },
+  "campaign": {
+    "actions_exercised": [
+      "new-paper"
+    ],
+    "next_action_exercised": null,
+    "stop_reason": "shell policy and cross-record lifecycle gates failed",
+    "full_lifecycle_claimed": false,
+    "pause_resume_claimed": false
+  },
+  "isolation": {
+    "normal_settings_sha256_before": "dba0582992d9f44ce152db29d867bc61f81dd521e259c00eaadcbeedec9ba7a5",
+    "normal_settings_sha256_after": "dba0582992d9f44ce152db29d867bc61f81dd521e259c00eaadcbeedec9ba7a5",
+    "normal_credentials_sha256_before": "8aa8f58108e95e2c3268fd3d0273f659ced865ce697b73b124526f364c3a881c",
+    "normal_credentials_sha256_after": "8aa8f58108e95e2c3268fd3d0273f659ced865ce697b73b124526f364c3a881c",
+    "normal_profiles_unchanged": true,
+    "isolated_credentials_file_cleanup": "securely-shredded",
+    "retained_credentials": false,
+    "secret_scan_matches": 0
+  }
+}

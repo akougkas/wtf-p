@@ -33,6 +33,14 @@ documentation path. The plan fleet was semantic-quality unmeasured, and the
 but failed lifecycle and word-budget invariants. They are executable
 failure/structural evidence, not entries in the observed semantic baseline.
 
+The later
+[`clio-dynamo-current-source-blocked`](v1/evidence/clio-dynamo-current-source-blocked/README.md)
+pack binds the canonical runtime correction. It created exactly five records
+that passed literal schema validation, but failed a dependency-wave invariant
+and the explicit no-shell boundary after three successful shell calls and ten
+denied retries. The operator stopped before action 2. It is a current-source
+blocked reading, not an observed baseline or full lifecycle.
+
 This suite has no no-WTF-P control arm. It cannot establish that WTF-P produces
 better prose than the same model and task without WTF-P, and no result should be
 read as that claim. It measures observable process discipline instead: evidence

@@ -1,0 +1,26 @@
+{
+  "candidates": [
+    {
+      "path": "/home/akougkas/projects/wtf-p/vendors/clio",
+      "manifestPath": "/home/akougkas/projects/wtf-p/vendors/clio/clio-coder-extension.yaml",
+      "manifest": {
+        "manifestVersion": 1,
+        "id": "wtfp",
+        "name": "WTF-P",
+        "version": "0.6.0-rc.1",
+        "description": "Portable, evidence-grounded academic research and writing workflows.",
+        "resources": {
+          "skills": "skills",
+          "prompts": "prompts",
+          "agents": "agents",
+          "fleets": "fleets"
+        },
+        "compatibility": {
+          "clio": ">=0.3.8"
+        }
+      },
+      "valid": true,
+      "diagnostics": []
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "wtfp.project.outline/v1",
+  "project_id": "resilient-checkpoint-coordination",
+  "revision": 0,
+  "thesis": "In the supplied 128-node synthetic stencil workload scenario, coordinating incremental checkpoints reduced measured checkpoint interruption while preserving recovery coverage.",
+  "target_words": 6000,
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "goal": "Establish the checkpoint-interruption problem for large HPC applications, introduce the bounded central claim, and state the paper's contribution within the closed-world fixture scenario.",
+      "argument_role": "setup",
+      "word_target": 800,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": ["claim-bounded-interruption-reduction"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "background",
+      "title": "Background: Checkpointing in HPC Systems",
+      "goal": "Provide the two background examples (full-checkpoint and incremental-checkpoint approaches) sufficient for a systems researcher to understand the coordination design, without external citations.",
+      "argument_role": "background",
+      "word_target": 900,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": ["claim-checkpoint-background"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "method",
+      "title": "Checkpoint Coordinator Design",
+      "goal": "Describe the coordination mechanism for incremental checkpoints: scheduling policy, state tracking, and recovery-coverage preservation invariant.",
+      "argument_role": "method",
+      "word_target": 1400,
+      "wave": 2,
+      "depends_on": ["introduction", "background"],
+      "claim_ids": ["claim-coordination-design", "claim-recovery-coverage-preserved"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "evidence",
+      "title": "Fixture Evidence: Measured Interruption and Recovery",
+      "goal": "Present the closed-world benchmark observations (128 nodes, 8 trials per configuration, baseline 41.2 s vs coordinated 27.8 s mean interruption, all recovery checks passed) with explicit fixture limitations.",
+      "argument_role": "evidence",
+      "word_target": 1500,
+      "wave": 3,
+      "depends_on": ["method"],
+      "claim_ids": ["claim-bounded-interruption-reduction", "claim-recovery-coverage-preserved"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "discussion",
+      "title": "Discussion: Interpretation and Limitations",
+      "goal": "Interpret the interruption reduction strictly within the supplied scenario, state fixture limitations (no variance, no CIs, no raw values, no other workloads), and address the alternative explanation that the result is a scenario artifact.",
+      "argument_role": "synthesis",
+      "word_target": 900,
+      "wave": 4,
+      "depends_on": ["evidence"],
+      "claim_ids": ["claim-bounded-interruption-reduction"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    },
+    {
+      "id": "conclusion",
+      "title": "Conclusion",
+      "goal": "Restate the bounded contribution, summarize what the fixture evidence does and does not support, and identify the deferred external-literature work as a future direction.",
+      "argument_role": "conclusion",
+      "word_target": 500,
+      "wave": 4,
+      "depends_on": ["discussion"],
+      "claim_ids": [],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    }
+  ],
+  "updated_at": "2026-08-29T15:12:00Z"
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "wtfp.evaluation.lifecycle-invariants/v1",
+  "phase": "new-paper",
+  "valid": false,
+  "record_count": 5,
+  "record_counts": {
+    "config": 1,
+    "decisions": 1,
+    "manifest": 1,
+    "outline": 1,
+    "state": 1
+  },
+  "errors": [
+    "outline dependency discussion must precede conclusion in an earlier wave"
+  ],
+  "records": [
+    {
+      "path": ".planning/config.json",
+      "type": "config",
+      "sha256": "52bd038552bbba05e146cd86e2f8eae95dff5dfe32b297225f78f8c1f8fde90c"
+    },
+    {
+      "path": ".planning/decisions.json",
+      "type": "decisions",
+      "sha256": "08b42531f07c0160a510abad99b4b078de578bf76d82be4e058a50835a765e6e"
+    },
+    {
+      "path": ".planning/project.json",
+      "type": "manifest",
+      "sha256": "d0ef895e1381d474f78c821b77745b5e22097cc67c15a99543d4cd92224faf50"
+    },
+    {
+      "path": ".planning/state.json",
+      "type": "state",
+      "sha256": "32259301804c426be0fe911362d9059ce54e32d6b8c2c9995031647871e0195f"
+    },
+    {
+      "path": ".planning/structure/outline.json",
+      "type": "outline",
+      "sha256": "a5f279172a67d8f0825edc976b1da0f55b602b92aded0a504c36eab0047b976f"
+    }
+  ]
+}

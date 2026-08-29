@@ -1,0 +1,21 @@
+{
+  "extension": {
+    "id": "wtfp",
+    "name": "WTF-P",
+    "version": "0.6.0-rc.1",
+    "description": "Portable, evidence-grounded academic research and writing workflows.",
+    "scope": "user",
+    "rootPath": "/tmp/wtfp-dynamo-current.RVFYZD/clio/config/extensions/wtfp",
+    "manifestPath": "/tmp/wtfp-dynamo-current.RVFYZD/clio/config/extensions/wtfp/clio-coder-extension.yaml",
+    "enabled": true,
+    "effective": true,
+    "resources": {
+      "skills": "skills",
+      "prompts": "prompts",
+      "agents": "agents",
+      "fleets": "fleets"
+    },
+    "diagnostics": []
+  },
+  "diagnostics": []
+}

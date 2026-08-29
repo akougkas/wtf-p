@@ -1,0 +1,62 @@
+{
+  "schema": "wtfp.evaluation.tool-summary/v1",
+  "action": "new-paper",
+  "native_event_count": 473,
+  "completed_tool_calls": 49,
+  "by_tool_and_outcome": {
+    "bash": {
+      "ok": 3,
+      "error": 10
+    },
+    "context": {
+      "ok": 1,
+      "error": 0
+    },
+    "find": {
+      "ok": 1,
+      "error": 0
+    },
+    "ls": {
+      "ok": 0,
+      "error": 1
+    },
+    "read": {
+      "ok": 8,
+      "error": 0
+    },
+    "tasks": {
+      "ok": 16,
+      "error": 4
+    },
+    "write": {
+      "ok": 5,
+      "error": 0
+    }
+  },
+  "successful_forbidden_shell_calls": [
+    {
+      "command": "pwd && ls -la",
+      "exit_code": 0
+    },
+    {
+      "command": "ls .planning/",
+      "exit_code": 0
+    },
+    {
+      "command": "ls .planning/structure/",
+      "exit_code": 0
+    }
+  ],
+  "denied_shell_calls": 10,
+  "denial_reason": "clio-coder run cannot confirm permission requests; rerun interactively to approve this action.",
+  "write_paths": [
+    ".planning/project.json",
+    ".planning/config.json",
+    ".planning/state.json",
+    ".planning/decisions.json",
+    ".planning/structure/outline.json"
+  ],
+  "network_tool_calls": 0,
+  "vcs_tool_calls": 0,
+  "raw_trace_sha256": "1a633dbeb2e5a372f5bbf5fea6b60471ea0c9693565b61e4e17bc2e44a007800"
+}

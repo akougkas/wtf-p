@@ -1,0 +1,47 @@
+{
+  "schema": "wtfp.project.manifest/v1",
+  "protocol_version": 1,
+  "id": "resilient-checkpoint-coordination",
+  "title": "Resilient Checkpoint Coordination for Synthetic HPC Workloads",
+  "document_type": "research-article",
+  "core_argument": "In the supplied 128-node synthetic stencil workload scenario, coordinating incremental checkpoints reduced measured checkpoint interruption while preserving recovery coverage.",
+  "target": {
+    "audience": "Systems researchers",
+    "word_limit": 6000
+  },
+  "requirements": {
+    "must_have": [
+      "Central performance claim is bounded to the supplied 128-node synthetic scenario",
+      "All evidence is drawn exclusively from the closed-world fixture corpus (benchmark-observations.md)",
+      "No statistical significance claims are made",
+      "No external literature is invented or cited"
+    ],
+    "should_have": [
+      "Fixture limitations are stated explicitly in the discussion",
+      "Recovery coverage preservation is demonstrated from fixture data"
+    ],
+    "out_of_scope": [
+      "Generalization beyond the supplied synthetic scenario",
+      "Statistical significance testing or confidence intervals",
+      "Production deployment claims",
+      "External citation selection (deferred until network access is separately approved)"
+    ]
+  },
+  "created_at": "2026-08-29T15:12:00Z",
+  "updated_at": "2026-08-29T15:12:00Z",
+  "artifacts": {
+    "manifest": "project://manifest",
+    "config": "project://config",
+    "state": "project://state",
+    "decisions": "project://decisions",
+    "outline": "project://structure/outline",
+    "materials": [
+      "project://materials/project-brief.md",
+      "project://materials/benchmark-observations.md",
+      "project://materials/author-decisions.json"
+    ],
+    "manuscripts": [],
+    "deliverables": [],
+    "archives": []
+  }
+}

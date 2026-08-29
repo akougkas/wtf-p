@@ -1,0 +1,44 @@
+{
+  "schema": "wtfp.evaluation.planning-validation/v1",
+  "valid": true,
+  "checked": 5,
+  "roots": [
+    {
+      "input": "/tmp/wtfp-dynamo-current.RVFYZD/project",
+      "planning_root": "/tmp/wtfp-dynamo-current.RVFYZD/project/.planning",
+      "valid": true,
+      "records": [
+        {
+          "file": "config.json",
+          "record_type": "config",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "decisions.json",
+          "record_type": "decisions",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "project.json",
+          "record_type": "manifest",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "state.json",
+          "record_type": "state",
+          "valid": true,
+          "errors": []
+        },
+        {
+          "file": "structure/outline.json",
+          "record_type": "outline",
+          "valid": true,
+          "errors": []
+        }
+      ]
+    }
+  ]
+}

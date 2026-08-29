@@ -125,6 +125,14 @@ plan, left portable state unreconciled, and failed its word target. See the
 [retained RC readings](evaluation/v1/evidence/clio-dynamo-rc-readings/README.md).
 Neither the full lifecycle nor a semantic fleet pass is claimed.
 
+A final current-source Dynamo reading at `bf50e23` created exactly five
+initialization records and passed literal schema validation 5/5. It still
+failed the release gate: the outline placed a dependency in the same wave, and
+the model made three successful shell calls plus ten denied shell retries
+despite an explicit no-shell policy. The operator stopped the run before
+`map-project`; no terminal receipt or trustworthy numeric cost exists. See the
+[current-source blocked evidence](evaluation/v1/evidence/clio-dynamo-current-source-blocked/README.md).
+
 ## The paper lifecycle
 
 WTF-P keeps the human in control while making the repeatable work deterministic:

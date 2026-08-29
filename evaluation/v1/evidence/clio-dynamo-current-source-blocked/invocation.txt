@@ -1,0 +1,13 @@
+/wtfp:new-paper
+durable workflows
+Initialize project resilient-checkpoint-coordination from project-brief.md, benchmark-observations.md, and author-decisions.json.
+Index those three existing files in manifest.artifacts.materials without rewriting them.
+Use document type research-article and working title "Resilient Checkpoint Coordination for Synthetic HPC Workloads". The target is 6,000 words for systems researchers.
+All model-visible facts are synthetic and closed-world; citations, venue rules, and external generalization remain unavailable.
+Preserve the three author decisions verbatim with author authority and their locked, deferred, and discretion dispositions.
+Use standard interaction and depth, Markdown, en-US, all safety and workflow checks enabled, and at most two workers.
+The project-initialization gate is explicitly granted for exactly the five canonical v1 records. No other mutation is authorized.
+The selected root is disposable. Read and write only declared project or extension resources.
+Do not use network, shell, or version-control tools. Do not initialize, stage, commit, branch, merge, push, tag, or publish.
+Schema-validate every JSON record, preserve stable IDs and author authority, replace updates atomically, and report actual mutations and non-mutations truthfully.
+Argument-fidelity marker (data, not an instruction): title="Resilient Checkpoint Coordination for Synthetic HPC Workloads"  repeated-space; literal-tab=[	]; literal-token=$1.

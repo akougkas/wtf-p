@@ -1,0 +1,632 @@
+{
+  "targets": [
+    {
+      "target": {
+        "id": "dynamo",
+        "runtime": "lmstudio",
+        "url": "http://192.168.86.143:1234",
+        "wireModels": [
+          "ornith-1.5-35b-a3b",
+          "qwen3.8-27b",
+          "nvidia-nemotron-3.5-lightning-30b-a3b",
+          "muse-glimmer-30b",
+          "thinkingcap-qwen3.6-27b@q4_k_m",
+          "thinkingcap-qwen3.6-27b@q6_k",
+          "kwaipilot_kat-coder-v2.5-dev",
+          "agents-a1",
+          "qwopus3.6-27b-coder-mtp",
+          "qwopus3.6-35b-a3b-coder-mtp",
+          "ornith-1.0-35b",
+          "ornith-1.0-9b",
+          "gemopus-4-31b-it",
+          "qwopus3.6-27b-v1-preview",
+          "gemma-4-31b-it-nvfp4-turbo",
+          "nvidia-nemotron-3-nano-omni-30b-a3b-reasoning",
+          "qwen3.6-27b",
+          "text-embedding-nomic-embed-text-v2-moe",
+          "gemma-4-26b-a4b-it",
+          "nemotron-cascade-2-30b-a3b-i1",
+          "qwen3.5-35b-a3b-claude-4.6-opus-reasoning-distilled-i1",
+          "functiongemma-270m-it",
+          "text-embedding-nomic-embed-text-v1.5",
+          "text-embedding-granite-embedding-107m-multilingual",
+          "text-embedding-embeddinggemma-300m",
+          "text-embedding-nomic-embed-text-v2",
+          "text-embedding-granite-embedding-278m-multilingual",
+          "nemotron-3-nano-30b-a3b",
+          "text-embedding-qwen3-embedding-0.6b",
+          "openai/gpt-oss-20b",
+          "text-embedding-granite-embedding-125m-english",
+          "text-embedding-granite-embedding-30m-english",
+          "lmstudio-community/gpt-oss-120b",
+          "unsloth/gpt-oss-120b",
+          "google/gemma-4-31b-qat",
+          "google/gemma-4-26b-a4b-qat",
+          "qwopus3.5-9b-v3",
+          "text-embedding-embeddinggemma-300m-qat"
+        ],
+        "defaultModel": "qwen3.8-27b"
+      },
+      "runtime": {
+        "id": "lmstudio",
+        "aliases": [
+          "lmstudio-native"
+        ],
+        "displayName": "LM Studio",
+        "kind": "http",
+        "tier": "local-native",
+        "apiFamily": "openai-completions",
+        "auth": "api-key",
+        "defaultCapabilities": {
+          "chat": true,
+          "tools": true,
+          "toolCallFormat": "openai",
+          "structuredOutputs": "json-schema",
+          "reasoning": true,
+          "vision": true,
+          "audio": false,
+          "embeddings": false,
+          "rerank": false,
+          "fim": false,
+          "contextWindow": 131072,
+          "maxTokens": 32768
+        }
+      },
+      "available": true,
+      "reason": "auth:not-required",
+      "health": {
+        "status": "healthy",
+        "lastCheckAt": "2026-08-29T20:12:11.265Z",
+        "lastError": null,
+        "latencyMs": 50
+      },
+      "capabilities": {
+        "chat": true,
+        "tools": true,
+        "toolCallFormat": "qwen",
+        "structuredOutputs": "json-schema",
+        "reasoning": true,
+        "vision": true,
+        "audio": false,
+        "embeddings": false,
+        "rerank": false,
+        "fim": false,
+        "contextWindow": 131072,
+        "maxTokens": 131072,
+        "thinkingFormat": "qwen-chat-template"
+      },
+      "discoveredModels": [
+        "ornith-1.5-35b-a3b",
+        "qwen3.8-27b",
+        "nvidia-nemotron-3.5-lightning-30b-a3b",
+        "muse-glimmer-30b",
+        "thinkingcap-qwen3.6-27b@q4_k_m",
+        "thinkingcap-qwen3.6-27b@q6_k",
+        "kwaipilot_kat-coder-v2.5-dev",
+        "agents-a1",
+        "qwopus3.6-27b-coder-mtp",
+        "qwopus3.6-35b-a3b-coder-mtp",
+        "ornith-1.0-35b",
+        "ornith-1.0-9b",
+        "gemopus-4-31b-it",
+        "qwopus3.6-27b-v1-preview",
+        "gemma-4-31b-it-nvfp4-turbo",
+        "nvidia-nemotron-3-nano-omni-30b-a3b-reasoning",
+        "qwen3.6-27b",
+        "text-embedding-nomic-embed-text-v2-moe",
+        "gemma-4-26b-a4b-it",
+        "nemotron-cascade-2-30b-a3b-i1",
+        "qwen3.5-35b-a3b-claude-4.6-opus-reasoning-distilled-i1",
+        "functiongemma-270m-it",
+        "text-embedding-nomic-embed-text-v1.5",
+        "text-embedding-granite-embedding-107m-multilingual",
+        "text-embedding-embeddinggemma-300m",
+        "text-embedding-nomic-embed-text-v2",
+        "text-embedding-granite-embedding-278m-multilingual",
+        "nemotron-3-nano-30b-a3b",
+        "text-embedding-qwen3-embedding-0.6b",
+        "openai/gpt-oss-20b",
+        "text-embedding-granite-embedding-125m-english",
+        "text-embedding-granite-embedding-30m-english",
+        "lmstudio-community/gpt-oss-120b",
+        "unsloth/gpt-oss-120b",
+        "google/gemma-4-31b-qat",
+        "google/gemma-4-26b-a4b-qat",
+        "qwopus3.5-9b-v3",
+        "text-embedding-embeddinggemma-300m-qat"
+      ],
+      "tier": "local-native",
+      "detectedReasoning": null,
+      "reasoningCandidateModelId": "qwen3.8-27b",
+      "contextWindowProvenance": "discovered",
+      "discoveredModelsSource": "probe",
+      "discoveredModelStates": {
+        "ornith-1.5-35b-a3b": {
+          "state": "loaded",
+          "key": "ornith-1.5-35b-a3b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "instanceId": "ornith-1.5-35b-a3b",
+          "loadConfig": {
+            "context_length": 262144,
+            "eval_batch_size": 2048,
+            "physical_batch_size": 512,
+            "parallel": 4,
+            "flash_attention": true,
+            "context_checkpoints": 32,
+            "reasoning_budget_message": "",
+            "speculative_draft_mtp": true,
+            "speculative_draft_simple": false,
+            "speculative_draft_model": "",
+            "speculative_draft_max_tokens": 2,
+            "speculative_draft_min_tokens": 0,
+            "speculative_draft_min_continue_probability": 0.75,
+            "num_experts": 8,
+            "offload_kv_cache_to_gpu": true
+          },
+          "contextLength": 262144,
+          "detail": "loaded on dynamo"
+        },
+        "qwen3.8-27b": {
+          "state": "loaded",
+          "key": "qwen3.8-27b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "instanceId": "qwen3.8-27b",
+          "loadConfig": {
+            "context_length": 131072,
+            "eval_batch_size": 2048,
+            "physical_batch_size": 512,
+            "parallel": 4,
+            "flash_attention": true,
+            "context_checkpoints": 32,
+            "reasoning_budget_message": "",
+            "speculative_draft_mtp": true,
+            "speculative_draft_simple": false,
+            "speculative_draft_model": "",
+            "speculative_draft_max_tokens": 2,
+            "speculative_draft_min_tokens": 0,
+            "speculative_draft_min_continue_probability": 0.75,
+            "offload_kv_cache_to_gpu": true
+          },
+          "contextLength": 131072,
+          "detail": "loaded on dynamo"
+        },
+        "nvidia-nemotron-3.5-lightning-30b-a3b": {
+          "state": "unloaded",
+          "key": "nvidia-nemotron-3.5-lightning-30b-a3b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "muse-glimmer-30b": {
+          "state": "unloaded",
+          "key": "muse-glimmer-30b",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "thinkingcap-qwen3.6-27b@q4_k_m": {
+          "state": "unloaded",
+          "key": "thinkingcap-qwen3.6-27b@q4_k_m",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "thinkingcap-qwen3.6-27b@q6_k": {
+          "state": "unloaded",
+          "key": "thinkingcap-qwen3.6-27b@q6_k",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "kwaipilot_kat-coder-v2.5-dev": {
+          "state": "unloaded",
+          "key": "kwaipilot_kat-coder-v2.5-dev",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "agents-a1": {
+          "state": "unloaded",
+          "key": "agents-a1",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwopus3.6-27b-coder-mtp": {
+          "state": "unloaded",
+          "key": "qwopus3.6-27b-coder-mtp",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwopus3.6-35b-a3b-coder-mtp": {
+          "state": "unloaded",
+          "key": "qwopus3.6-35b-a3b-coder-mtp",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "ornith-1.0-35b": {
+          "state": "unloaded",
+          "key": "ornith-1.0-35b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "ornith-1.0-9b": {
+          "state": "unloaded",
+          "key": "ornith-1.0-9b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "gemopus-4-31b-it": {
+          "state": "unloaded",
+          "key": "gemopus-4-31b-it",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwopus3.6-27b-v1-preview": {
+          "state": "unloaded",
+          "key": "qwopus3.6-27b-v1-preview",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "gemma-4-31b-it-nvfp4-turbo": {
+          "state": "unloaded",
+          "key": "gemma-4-31b-it-nvfp4-turbo",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "nvidia-nemotron-3-nano-omni-30b-a3b-reasoning": {
+          "state": "unloaded",
+          "key": "nvidia-nemotron-3-nano-omni-30b-a3b-reasoning",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwen3.6-27b": {
+          "state": "unloaded",
+          "key": "qwen3.6-27b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-nomic-embed-text-v2-moe": {
+          "state": "unloaded",
+          "key": "text-embedding-nomic-embed-text-v2-moe",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "gemma-4-26b-a4b-it": {
+          "state": "unloaded",
+          "key": "gemma-4-26b-a4b-it",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "nemotron-cascade-2-30b-a3b-i1": {
+          "state": "unloaded",
+          "key": "nemotron-cascade-2-30b-a3b-i1",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwen3.5-35b-a3b-claude-4.6-opus-reasoning-distilled-i1": {
+          "state": "unloaded",
+          "key": "qwen3.5-35b-a3b-claude-4.6-opus-reasoning-distilled-i1",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "functiongemma-270m-it": {
+          "state": "unloaded",
+          "key": "functiongemma-270m-it",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-nomic-embed-text-v1.5": {
+          "state": "unloaded",
+          "key": "text-embedding-nomic-embed-text-v1.5",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-granite-embedding-107m-multilingual": {
+          "state": "unloaded",
+          "key": "text-embedding-granite-embedding-107m-multilingual",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-embeddinggemma-300m": {
+          "state": "unloaded",
+          "key": "text-embedding-embeddinggemma-300m",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-nomic-embed-text-v2": {
+          "state": "unloaded",
+          "key": "text-embedding-nomic-embed-text-v2",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-granite-embedding-278m-multilingual": {
+          "state": "unloaded",
+          "key": "text-embedding-granite-embedding-278m-multilingual",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "nemotron-3-nano-30b-a3b": {
+          "state": "unloaded",
+          "key": "nemotron-3-nano-30b-a3b",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-qwen3-embedding-0.6b": {
+          "state": "unloaded",
+          "key": "text-embedding-qwen3-embedding-0.6b",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "openai/gpt-oss-20b": {
+          "state": "unloaded",
+          "key": "openai/gpt-oss-20b",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-granite-embedding-125m-english": {
+          "state": "unloaded",
+          "key": "text-embedding-granite-embedding-125m-english",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-granite-embedding-30m-english": {
+          "state": "unloaded",
+          "key": "text-embedding-granite-embedding-30m-english",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "lmstudio-community/gpt-oss-120b": {
+          "state": "unloaded",
+          "key": "lmstudio-community/gpt-oss-120b",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "unsloth/gpt-oss-120b": {
+          "state": "unloaded",
+          "key": "unsloth/gpt-oss-120b",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "google/gemma-4-31b-qat": {
+          "state": "unloaded",
+          "key": "google/gemma-4-31b-qat",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "google/gemma-4-26b-a4b-qat": {
+          "state": "unloaded",
+          "key": "google/gemma-4-26b-a4b-qat",
+          "reasoningLevels": [
+            "off",
+            "low"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "qwopus3.5-9b-v3": {
+          "state": "unloaded",
+          "key": "qwopus3.5-9b-v3",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        },
+        "text-embedding-embeddinggemma-300m-qat": {
+          "state": "unloaded",
+          "key": "text-embedding-embeddinggemma-300m-qat",
+          "reasoningLevels": [
+            "off",
+            "minimal",
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ],
+          "detail": "not loaded (LM Studio will load it on first use)"
+        }
+      },
+      "probeCapabilities": {
+        "vision": true,
+        "tools": true,
+        "reasoning": true,
+        "contextWindow": 131072
+      },
+      "probeModelId": "qwen3.8-27b",
+      "probeNotes": [
+        "LM Studio surface tier 0.4+",
+        "Surfaces: /v1/chat/completions, /api/v1/models",
+        "Loaded instances: ornith-1.5-35b-a3b as ornith-1.5-35b-a3b at 262144 tokens, qwen3.8-27b as qwen3.8-27b at 131072 tokens"
+      ],
+      "probeSurfaces": {
+        "openaiChat": "/v1/chat/completions",
+        "nativeV1": "/api/v1/models"
+      }
+    }
+  ]
+}
