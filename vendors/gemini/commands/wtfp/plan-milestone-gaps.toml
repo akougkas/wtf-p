@@ -136,9 +136,9 @@ Contract: [protocol/actions/review-section.json](../../../actions/review-section
    - mechanical: citation keys, figure and table references, formatting, terminology, and obvious requirement checks;
    - logical: claim support, coherence, assumptions, counterarguments, limitations, and relation to the thesis;
    - rubric: section goal, plan success criteria, venue constraints, author decisions, and word budget.
-4. For every gap, record a stable identifier, layer, severity, confidence, failed criterion, quoted or located evidence, impact, and bounded recommendation.
+4. For every gap, record a stable identifier, layer, severity, confidence, failed criterion, quoted or located evidence, impact, and bounded recommendation in the Markdown review.
 5. Distinguish blockers, major issues, minor issues, and optional suggestions. Include passes so the review is not only a fault list.
-6. Write detailed findings to a new Markdown `project://sections/{section}/reviews/{review}` artifact and the machine-readable result to `project://validations/{validation}`. Link both without erasing resolved history. Never edit the manuscript as an implicit part of review.
+6. Write detailed findings to a new Markdown `project://sections/{section}/reviews/{review}` artifact and the machine-readable result to `project://validations/{validation}`. The validation must use only the closed v1 members; encode issue detail through severity, summary, and optional evidence, never extra keys such as `input_revisions`. Link both without erasing resolved history. Never edit the manuscript, project state, checkpoint, or handoff as an implicit part of review.
 7. Report overall disposition, strongest elements, prioritized findings, review limitations, and route issues to `plan-revision`.
 
 Completion requires all three layers, traceable findings, and a clear separation between critique and mutation.

@@ -14,23 +14,23 @@ Portable, evidence-grounded academic workflows for modern coding agents.
 
 WTF-P turns an AI coding agent into a structured research and writing system. It plans before drafting, grounds claims in evidence, isolates section context, delegates bounded work to specialist agents, and verifies the result against the approved plan.
 
-Version `0.6.0-rc.1` is a ground-up modernization of the agent platform. One canonical protocol now generates native resources for Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.
+Version `0.6.0-rc.2` is the corrective release candidate for the modernized agent platform. One canonical protocol generates native resources for Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI; RC2 tightens decision fidelity and durable write/review/pause/resume handling after supervised local-model testing.
 
 ## Quick start
 
 Install explicitly for the agent you use:
 
 ```bash
-npx wtf-p install clio --advanced
-npx wtf-p install claude --advanced
-npx wtf-p install codex --advanced
-npx wtf-p install copilot --advanced
-npx wtf-p install opencode --advanced
-npx wtf-p install antigravity --advanced
-npx wtf-p install gemini --advanced
+npx wtf-p@next install clio --advanced
+npx wtf-p@next install claude --advanced
+npx wtf-p@next install codex --advanced
+npx wtf-p@next install copilot --advanced
+npx wtf-p@next install opencode --advanced
+npx wtf-p@next install antigravity --advanced
+npx wtf-p@next install gemini --advanced
 ```
 
-An interactive terminal can also run `npx wtf-p` and choose a target. A noninteractive bare invocation refuses to write anything; it requires an explicit target or scope.
+An interactive terminal can also run `npx wtf-p@next` and choose a target. A noninteractive bare invocation refuses to write anything; it requires an explicit target or scope.
 
 Then start a paper with the native WTF-P action exposed by your client. The
 following is the slash-command form used by Clio, Claude, Copilot CLI,
@@ -107,8 +107,9 @@ ChatGPT-auth route), and Clio GPT-5.6 Terra/xhigh. The compiler-v4 Clio rerun
 earned 8/8 with independent validation of all five previewed records. The
 broader paid routing matrix, full lifecycle chain, and cross-version baseline
 remain separate evidence gates. See [compatibility evidence](docs/COMPATIBILITY.md)
-for exact claims and caveats. These are repository validation results, not a
-claim that `0.6.0-rc.1` has been published.
+for exact claims and caveats. WTF-P `0.6.0-rc.1` was published to npm under
+the `next` tag on 2026-08-29; each later candidate remains a separate operator
+publication action.
 
 The first retained local-model lifecycle reading used Clio 0.3.8 with
 `dynamo/qwen3.8-27b`. Both native fleet contracts validated, but the lifecycle
@@ -143,6 +144,22 @@ despite an explicit no-shell policy. The operator stopped the run before
 `map-project`; no terminal receipt or trustworthy numeric cost exists. See the
 [current-source blocked evidence](evaluation/v1/evidence/clio-dynamo-current-source-blocked/README.md).
 
+The later operator-observed NSF 25-531 toy UAT used Clio Coder 0.3.8 and
+Dynamo `qwen3.8-27b-dynamo` with thinking off in a disposable offline profile.
+It continued an already mapped fixture through outline, discussion, plan,
+write, review, and durable pause for one section. The provisional section had
+1,019 measured body words; its review retained four author-accepted warning
+items; and 25/25 portable JSON records passed independent schema validation.
+The first genuinely fresh-process resume attempt did not pass: the pre-
+hardening workflow skipped required durable reads and the author gate and
+described mutations that never occurred. With the regenerated RC2 bundle, a
+new process read the durable records, invoked the real Clio `ask_user`
+interview, waited for the author choice, resolved the checkpoint, advanced
+state to revision 7/active while preserving phase `reviewing`, and read both
+records back; independent validation remained 25/25. This is a corrected
+one-section resumption observation, not a full proposal, completed research,
+submission-readiness, safety-certification, or improved-writing claim.
+
 ## The paper lifecycle
 
 WTF-P keeps the human in control while making the repeatable work deterministic:
@@ -150,7 +167,7 @@ WTF-P keeps the human in control while making the repeatable work deterministic:
 1. `/wtfp:new-paper` captures research questions, intended contribution, evidence, audience, venue, and constraints.
 2. `/wtfp:map-project` indexes existing drafts, sources, data, figures, and decisions.
 3. `/wtfp:create-outline` turns the argument into sections, dependencies, and word budgets.
-4. `/wtfp:research-gap` and `/wtfp:analyze-bib` build an evidence map without inventing citations.
+4. `/wtfp:research-gap` and `/wtfp:analyze-bib` define the canonical research methods, but current adapters return `WTFP_ACTION_UNAVAILABLE` until exact logical-tool bindings exist. Available project actions can map supplied sources; placeholders must never be represented as completed research.
 5. `/wtfp:plan-section` creates a traceable section plan and can send it through an independent plan checker.
 6. `/wtfp:write-section` drafts from the approved plan in bounded context.
 7. `/wtfp:review-section`, `/wtfp:verify-work`, and `/wtfp:polish-prose` check argument coverage, evidence, coherence, venue requirements, and prose quality.

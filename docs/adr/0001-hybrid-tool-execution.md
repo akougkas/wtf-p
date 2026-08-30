@@ -1,13 +1,13 @@
 # ADR 0001: Keep transforms local and defer network MCP exposure
 
-- Status: Accepted for `0.6.0-rc.1`; optional MCP implementation deferred
+- Status: Accepted for the `0.6` release-candidate series; optional MCP implementation deferred
 - Date: 2026-08-29
 - Decision owners: WTF-P protocol and adapter maintainers
 - Scope: the seven logical tools in `protocol/tools.json`
 
 ## Decision
 
-WTF-P will ship no MCP server in `0.6.0-rc.1`.
+WTF-P will ship no MCP server in `0.6.0-rc.2`.
 
 Bibliography transforms remain local Node.js modules. Network research remains behind the canonical action capability, effect, and approval contracts and uses the existing local implementations for now. A future, optional MCP process boundary is permitted only for the network-dependent portion of the canonical tools, after every activation gate in this ADR passes. The local index, format, and rank transforms—and workflow-level degraded paths that explicitly report unavailable enrichment—remain the offline fallback; the network-tool implementations themselves are not claimed to work offline.
 

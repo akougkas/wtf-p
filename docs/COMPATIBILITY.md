@@ -113,6 +113,56 @@ denied. The operator stopped before `map-project`. Because the turn was
 terminated at that failed gate, there is no terminal receipt and cost remains
 unavailable.
 
+### Corrected NSF 25-531 one-section UAT
+
+A later operator-observed run used Clio source
+`1eefee9494abc9bd174c8d0d6231729741ed75dc`, binary SHA-256
+`f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162`,
+and WTF-P corrections `c500b4a21c6befdd6bfcc7971eeef27201aff79c`
+and `8707b3bf397b7c9b895e8f9a745e6a039c5b84fb`. The requested local model
+was `qwen3.8-27b`; the observed wire model was `qwen3.8-27b-dynamo`, with
+thinking off. Clio ran interactively in an isolated full-auto profile with its
+hard safety rails, worker permission fallback set to deny, network tools
+disabled, and every client root under one disposable directory.
+
+The run continued an already mapped NSF 25-531 fixture through
+`create-outline`, `discuss-section`, `plan-section`, `write-section`,
+`review-section`, and `pause-writing` for `problem-landscape`. It produced a
+1,019-word provisional section, linked summary, `issues-found` write and review
+validations, four author-accepted warning-class review debts, and a durable
+handoff plus pending checkpoint. Independent validation passed all 25 portable
+JSON records.
+
+The first fresh-process `resume-writing` attempt failed before RC2 hardening.
+It did not read the required durable records or cross the interactive author
+gate, wrote an undeclared report, and described checkpoint/state changes that
+never occurred. The real state correctly remained paused and schema-valid.
+
+The post-hardening retry used WTF-P commit
+`bfe8956a8fc3a0c5edbd8ce4a74f041b7d2f0374` and installed Clio inventory
+SHA-256 `1e143685a035f3e507cb2ab816484211774009dd3f4ddd25fdc03a76b2f14956`.
+A genuinely new Clio process read state, checkpoint, handoff, section, plan,
+outline, decisions, config, manifest, validation, and manuscript resources;
+called native `ask_user`; waited for the author to choose
+`resume-plan-wave-2`; updated and read back checkpoint plus state; preserved
+phase `reviewing`; and left state revision 7/active with no active checkpoint.
+Independent canonical validation passed 25/25. A following `progress` action
+made no project mutation and selected `plan-section` for
+`tcr-fit-significance` as the next safe action.
+
+This was an exploratory full-auto reading, not a safety certification. Clio
+used contained read-only shell helpers; the pause record's pre-existing future
+timestamp makes strict event ordering imperfect; and progress prose described
+the four validation files inaccurately as “4 of 6 passed” rather than two
+`passed` and two `issues-found`. `research-gap` remained adapter-unavailable,
+no external literature was supplied or mapped, and the provisional section
+contains zero citations. Runtime cost is unavailable rather than reported as
+metered USD 0. The normal credentials and GitHub-host hashes were unchanged;
+the normal Clio settings hash changed concurrently, while the running UAT
+process independently showed every HOME, XDG, temporary, and Clio-specific
+root inside the disposable tree. This temporary observation is not a retained,
+replayable baseline.
+
 ## Isolation evidence
 
 The sanitized compiler-v4 rubric, five records, validation report, trace
@@ -175,10 +225,10 @@ the user's copy.
 The compiler-v4 `new-paper` result does not stand in for the broader studies.
 Model-backed execution now exists for both corrected fleets, but neither the
 separate structural plan observation nor the failed draft observation is an
-accepted end-to-end fleet result. No completed claim is made here yet for the
-paid nine-action Clio lifecycle chain, the paid Claude/Codex/Clio activation
-matrix, or an observed cross-version academic-output baseline. The versioned
+accepted end-to-end fleet result. No completed claim is made here yet for a
+full seven-section proposal, the paid nine-action Clio lifecycle chain, the paid Claude/Codex/Clio activation matrix,
+or an observed cross-version academic-output baseline. The versioned
 fixtures, rubrics, and fail-closed runners exist under `evaluation/`; their
 static contract tests remain a different evidence level from model execution.
 
-This document records release-candidate evidence only. It does not claim that WTF-P `0.6.0-rc.1` or the coordinated Clio changes have been published.
+This document records release-candidate evidence only. WTF-P `0.6.0-rc.1` was published to npm under `next` on 2026-08-29. RC2 publication and any coordinated client publication remain separate operator actions.

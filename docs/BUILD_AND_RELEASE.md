@@ -156,9 +156,9 @@ not merely a valid JSON manifest. Clio compatibility is capability-probed becaus
 - [ ] `npm run check:adapters` reports current output
 - [ ] `npm run test:all` passes
 - [ ] native validators and isolated discovery pass for every advertised target
-- [ ] the real-agent fixture evaluation passes its evidence and safety rubric
+- [ ] the real-agent fixture passes the exact scope claimed; partial and failed phases are documented without promotion to a full-lifecycle result
 - [ ] applicable routing/lifecycle evidence passes its sealed matrix or records an honest capability limitation
-- [ ] Clio lifecycle evidence uses `read-only` preview or supervised `suggest` autonomy and fails on every undeclared tool call; Clio 0.3.8 slash prompts do not enforce an action-scoped tool surface
+- [ ] certifying Clio lifecycle evidence uses `read-only` preview or supervised `suggest` autonomy and fails on every undeclared tool call; exploratory `full-auto` runs are labeled non-certifying because Clio 0.3.8 slash prompts do not enforce an action-scoped tool surface
 - [ ] both generated Clio fleets validate and execute nested writes without rollback
 - [ ] `git diff --check` passes
 - [ ] `CHANGELOG.md`, README capability matrix, and migration notes match observed behavior

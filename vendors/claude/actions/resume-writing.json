@@ -16,7 +16,9 @@
       "user.interaction"
     ],
     "conditions": [
-      "Portable project state or a session handoff exists"
+      "Portable project state or a session handoff exists",
+      "Every declared resume input is read and validated in the current invocation before options are presented",
+      "A host-native user gate returns one exact checkpoint option in the current invocation before any checkpoint or state mutation"
     ]
   },
   "reads": [

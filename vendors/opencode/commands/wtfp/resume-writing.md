@@ -151,7 +151,7 @@ Contract: [protocol/actions/pause-writing.json](../../../actions/pause-writing.j
 2. Gather completed and partial work, remaining tasks, decisions, blockers, review disposition, current validation, and safest next operation.
 3. Write `project://sections/{section}/handoff` in Markdown with section/plan/task IDs, timestamp, completed and remaining work, decisions, blockers, exact resume action, and required verification.
 4. Merge with an existing handoff deliberately; never erase newer or unresolved context.
-5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Set `section.artifacts.handoff`, append the checkpoint URI to `section.checkpoint_uris` and `state.active_checkpoint_uris`, set state status `paused`, and record the transition.
+5. Create a blocking human-action `project://checkpoints/{checkpoint}` linked to the section and resume action. Set `section.artifacts.handoff`, append the checkpoint URI to `section.checkpoint_uris` and `state.active_checkpoint_uris`, set `state.status` to `paused`, preserve the current valid `state.phase`, progress, and current section, and record the transition. Pausing changes status, checkpoint linkage, revision, and timestamp only; `paused` is never a phase value.
 6. Read handoff, checkpoint, section, and state back and verify all logical references. Do not stage or commit them.
 
 Completion requires both human-readable continuity and a schema-valid machine-readable resume gate.
@@ -160,12 +160,13 @@ Completion requires both human-readable continuity and a schema-valid machine-re
 
 Contract: [protocol/actions/resume-writing.json](../../../actions/resume-writing.json)
 
-1. Require `project://state` and enumerate pending active checkpoints. If more than one resume checkpoint exists, require a choice.
-2. Read the manifest and config plus the chosen checkpoint, linked handoff, section record, selected plan, partial manuscript, relevant summary, review and validation records, outline, and decisions.
-3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, the validation status is still applicable, and no conflicting work supersedes it.
+1. In the current invocation, require and schema-validate `project://state` and enumerate pending active checkpoints. If more than one resume checkpoint exists, require a choice. Do not infer these reads from prior conversation or replace them with a generated report.
+2. Read the manifest and config plus the chosen checkpoint, linked handoff, section record, selected plan, partial manuscript, relevant summary, review and validation records, outline, and decisions in the current invocation.
+3. Verify the handoff is current: referenced artifacts resolve, dependencies and input revisions have not changed, completed work remains present, the validation status is still applicable, and no conflicting work supersedes it. Missing, stale, ambiguous, or conflicting resume inputs require a zero-write `needs-input` result.
 4. Present where work stopped, completed and remaining tasks, decisions, blockers, stale context, and proposed resume action.
-5. Ask whether to resume, repair context, choose another action, waive, or expire the checkpoint.
-6. Preserve the handoff while work is proposed. After confirmed continuation or closure, update checkpoint status and atomically reconcile state to active; retain checkpoint history.
+5. Use the host's interactive user gate to ask whether to resume, repair context, choose another action, waive, or expire the checkpoint, and wait for the returned option. Invocation prose is not an answer. If the gate is unavailable or unanswered, return `needs-input` without writing.
+6. Preserve the handoff while work is proposed. Only after the returned selection, update checkpoint status and atomically reconcile `state.status` to `active` for confirmed continuation while preserving the valid phase; retain checkpoint history.
+7. Schema-validate and read back checkpoint and state before reporting any mutation or successful resumption.
 
 Completion requires restored context and an author-approved next action, not merely displaying a handoff.
 
@@ -229,9 +230,11 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Reconcile the manifest, config, state, and author decisions; inspect the active checkpoint plus linked Markdown handoff, section plan, reviews, validations, manuscript artifact, and outline.
-2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact resume action.
-3. After user selection, resolve the checkpoint and set state active; preserve the handoff until successful continuation is confirmed.
+1. In the current invocation, read and schema-validate the manifest, config, state, decisions, and every pending active checkpoint. Read the chosen pending checkpoint plus its linked handoff, section, selected plan, reviews, validations, manuscript, summary, and outline; a prior conversation, invocation prose, or generated report is not evidence that these reads occurred. Missing, stale, ambiguous, or conflicting resume inputs fail closed with zero writes.
+2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact bounded options. Do not create a report artifact: before selection the action is read-only.
+3. Invoke the host's interactive user gate and wait for one exact option. Invocation arguments may request resumption but cannot answer this gate. If the gate is unavailable or no response is returned, report `needs-input` and make no mutation.
+4. Only after the returned selection, resolve, waive, or expire the checkpoint as selected and set `state.status` to `active` when continuation is confirmed. Preserve the existing valid `state.phase`, increment required revisions, and clear only the resolved active checkpoint URI.
+5. Schema-validate and read back checkpoint and state before claiming success. Preserve the handoff until the selected continuation itself is confirmed.
 
 ## Safety and completion
 
@@ -262,7 +265,9 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "user.interaction"
     ],
     "conditions": [
-      "Portable project state or a session handoff exists"
+      "Portable project state or a session handoff exists",
+      "Every declared resume input is read and validated in the current invocation before options are presented",
+      "A host-native user gate returns one exact checkpoint option in the current invocation before any checkpoint or state mutation"
     ]
   },
   "reads": [

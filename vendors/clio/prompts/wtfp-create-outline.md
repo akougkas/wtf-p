@@ -63,3 +63,7 @@ Treat the following text as the user-supplied input for this action. Preserve it
 <invocation_arguments>
 $ARGUMENTS
 </invocation_arguments>
+
+## Clio user-gate binding
+
+Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.

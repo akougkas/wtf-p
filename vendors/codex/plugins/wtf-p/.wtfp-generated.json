@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "codex",
-  "sourceHash": "5f5bc223eee119480d1c114bf54bb212c2f3b150e3a9624b66526a26a18307b9",
+  "sourceHash": "8eedfef3886ccbcebcf24aec4f975d75356277cbf8a509d9f1f743e2bd3e4fc9",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "af100e41db25fe60ce4e3f63cab327636506425253b54b4e39a56880e288bc0b"
+      "sha256": "f538fbaf510241f3c5edd0022b1180a0daa83635fd39e31d790966c01e2f5181"
     },
     {
       "path": "actions/add-todo.json",
@@ -126,7 +126,7 @@
     },
     {
       "path": "actions/resume-writing.json",
-      "sha256": "ef1c1f66607c62de4c8f6835f1558cfc68316622de48ccda5da1a5aae5ec5c00"
+      "sha256": "ebdd19235c2201a19ebecbf7eabec4011652bd41e7fc66abe88510f7c67869a9"
     },
     {
       "path": "actions/review-section.json",
@@ -306,11 +306,11 @@
     },
     {
       "path": "roles/section-reviewer.md",
-      "sha256": "1d2fd131106cd7ad2f6c40037e0a51641d6b02792b61099631226a9817f0a4cb"
+      "sha256": "5259ad0a9c76c5158f6baa7effe8925a28c502111dcad01510fb2ffa0ed1963f"
     },
     {
       "path": "roles/section-writer.md",
-      "sha256": "0b96304e2262bda921139ba53ae3d8bf963de0047861a682f27b656f3423db25"
+      "sha256": "8a7800539f47a6435fd607ebd983a3e0ee1ffe1a7993e61b6b110d5d4facd2f8"
     },
     {
       "path": "schemas/action.schema.json",
@@ -354,7 +354,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "717ede22d141481180ac743ccb52fe6768a4afe24ebc376e701476cbef684db3"
+      "sha256": "f0f2d486952459ba75665cb69ce4f338446252ff4a41f3621fe765fe1ac473d3"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",
@@ -390,7 +390,7 @@
     },
     {
       "path": "skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "482695f899c2343b93892c1cb12f878b44a0af867fcb1ac52693e7be7bdb1a73"
+      "sha256": "43e210a4c8764bd3b1cf906f64b3ac89f0555d78e677d0d6ee21a3f7a933b7cb"
     },
     {
       "path": "skills/wtfp-review-manuscript/SKILL.md",
@@ -414,7 +414,7 @@
     },
     {
       "path": "skills/wtfp-write-section/references/actions.md",
-      "sha256": "5582b3f25d546e6282c6b8bfd85cba8de76a2f4f869a4470c2b074a337ae57e6"
+      "sha256": "367b9144ce76b4e6116d9a2566c02070e80bbb57325a43bf5aa22447e6cb83f5"
     },
     {
       "path": "skills/wtfp-write-section/SKILL.md",
@@ -530,7 +530,7 @@
     },
     {
       "path": "workflows/pause-writing.md",
-      "sha256": "fae4e4e114a1ca9fe5db13a9e2d773fc123bbc2e5ebc6bc63d40df20fc27dd5c"
+      "sha256": "5925c00a573e65c99a34e19984804f6407373e560621874cff29dbff4080fd0a"
     },
     {
       "path": "workflows/plan-milestone-gaps.md",
@@ -574,11 +574,11 @@
     },
     {
       "path": "workflows/resume-writing.md",
-      "sha256": "7c035e04d205eb758970f9fcdc621d0da3ebe8f88b7137e017a8d26b846474de"
+      "sha256": "8f101d7ac480abb9198402dc35a2e909d4b374a4016146b85751b4c7ba6cdabb"
     },
     {
       "path": "workflows/review-section.md",
-      "sha256": "31e73b357d9b1f309af1970b46991a91eb94a5c5d1cbaf6c19eeb3cf83744a24"
+      "sha256": "a85252f9bf6067602548c0355817f27e3689fc10ec9292441da09a5351045a6a"
     },
     {
       "path": "workflows/settings.md",
@@ -598,7 +598,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "5948f17a30f4ce765ed8c37e11080d1c70f223f4950ec2df1ea1e8755497d9a6"
+      "sha256": "cfb3a0f9c61830d62cebdf8be5dacd17cef996d99cbab1df18267313ca05aacc"
     }
   ]
 }

@@ -45,6 +45,7 @@ Review a section as an academic evaluator and produce prioritized, actionable fe
 5. Record strengths as evidence-backed observations, not reassurance. Consolidate duplicate concerns so revision work is prioritized rather than noisy.
 6. Express each issue with severity, location, evidence, impact on the reader or review outcome, and an actionable recommendation. Distinguish blockers, major revisions, minor revisions, and cosmetic notes.
 7. Summarize the likely disposition—proceed, minor revision, major revision, or blocked—while keeping the standard result status machine-readable.
+8. Keep the structured result compact: consolidate duplicate findings, quote no long passages, expose no private reasoning, and return only the result object required by the host contract.
 
 ## Boundaries
 
@@ -56,4 +57,4 @@ Review a section as an academic evaluator and produce prioritized, actionable fe
 
 ## Clio result contract
 
-Your entire final response must be one JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check.
+Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each evidence value to one short sentence, keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.

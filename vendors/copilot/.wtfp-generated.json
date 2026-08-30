@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 4,
   "target": "copilot-marketplace",
-  "sourceHash": "37081322a8e37f80009b36ce19e55e85fa273ddb33cabcef34548fba162447f1",
+  "sourceHash": "54d136466ec2c758919d32737e3a748996df01d8fc423593b8cb098af028e9c6",
   "files": [
     {
       "path": "marketplace.json",
-      "sha256": "466b138f4604559d0c56115bbdd55118f5b2176d2355db0f29d26dc41b566b05"
+      "sha256": "9dddacdf1969005455fa669562fd90dae5009d7be41cae80a6baa8e5d8762857"
     },
     {
       "path": "project/.github/agents/wtfp-argument-verifier.agent.md",
@@ -46,11 +46,11 @@
     },
     {
       "path": "project/.github/agents/wtfp-section-reviewer.agent.md",
-      "sha256": "6abdf72609efb4f60e17e34d38e49fd8012132ae7d0a506c3776c6556570e8a7"
+      "sha256": "d7f02c3b701f3e74374d29a6c47504f1848a585eb1209471b2ae0dc4e1c87bc5"
     },
     {
       "path": "project/.github/agents/wtfp-section-writer.agent.md",
-      "sha256": "5d754f5d639f634e43b3086547993725fc4ffa92394617f8ff03e08f28edd32c"
+      "sha256": "0333e98d772c5dafe99b2ad8ce2465b22006b39d2b0898a6531dc024caab4d35"
     },
     {
       "path": "project/.github/copilot-instructions.md",
@@ -130,7 +130,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-pause-writing.prompt.md",
-      "sha256": "4c6f94b9a9cdb48e63fbc0526963b364f01bd262c94fc81b60520a02f4736a59"
+      "sha256": "595d0fdebafea7c4180708e87607596969d5c5d8d010651dbfce49ca6e2240dc"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-milestone-gaps.prompt.md",
@@ -218,7 +218,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "379bd338674ac8fa4e9b8af1da8b2ff4ac44d3e5f3760dee0c32414d57418ff1"
+      "sha256": "fb351344ef8dfd138fa20e5c765dfed2f45226f87aa9eae8dafac2162614a55a"
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/SKILL.md",
@@ -254,7 +254,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "268fdb66e1c88850b896bd0c6c817ff8d76b7f658019c36ba5d95acbc4194112"
+      "sha256": "de6a2cf5c73b3e25c7c781b30b4218cff05e006fe0c010ad24845c733a4612f3"
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/SKILL.md",
@@ -278,7 +278,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-write-section/references/actions.md",
-      "sha256": "03f4d83787d77002f69f8f087f655acb1b04efaa09304a08a5398a324bd06225"
+      "sha256": "602c6f92e9a826d9d02d7190f00f61b2e7389a960da89f6e83e84f2854ed9d62"
     },
     {
       "path": "project/.github/skills/wtfp-write-section/SKILL.md",
@@ -402,7 +402,7 @@
     },
     {
       "path": "project/.github/wtfp/actions/resume-writing.json",
-      "sha256": "ef1c1f66607c62de4c8f6835f1558cfc68316622de48ccda5da1a5aae5ec5c00"
+      "sha256": "ebdd19235c2201a19ebecbf7eabec4011652bd41e7fc66abe88510f7c67869a9"
     },
     {
       "path": "project/.github/wtfp/actions/review-section.json",
@@ -578,11 +578,11 @@
     },
     {
       "path": "project/.github/wtfp/roles/section-reviewer.md",
-      "sha256": "1d2fd131106cd7ad2f6c40037e0a51641d6b02792b61099631226a9817f0a4cb"
+      "sha256": "5259ad0a9c76c5158f6baa7effe8925a28c502111dcad01510fb2ffa0ed1963f"
     },
     {
       "path": "project/.github/wtfp/roles/section-writer.md",
-      "sha256": "0b96304e2262bda921139ba53ae3d8bf963de0047861a682f27b656f3423db25"
+      "sha256": "8a7800539f47a6435fd607ebd983a3e0ee1ffe1a7993e61b6b110d5d4facd2f8"
     },
     {
       "path": "project/.github/wtfp/schemas/action.schema.json",
@@ -626,7 +626,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "717ede22d141481180ac743ccb52fe6768a4afe24ebc376e701476cbef684db3"
+      "sha256": "f0f2d486952459ba75665cb69ce4f338446252ff4a41f3621fe765fe1ac473d3"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/SKILL.md",
@@ -662,7 +662,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "64c4a41624173713342541aad44a235dd55f0173d06fc4112b34364b26686ba9"
+      "sha256": "1169b104ed87673db340314247043926a70861b7a0cbff9c80ffe2ccf9864419"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/SKILL.md",
@@ -686,7 +686,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-write-section/references/actions.md",
-      "sha256": "5582b3f25d546e6282c6b8bfd85cba8de76a2f4f869a4470c2b074a337ae57e6"
+      "sha256": "367b9144ce76b4e6116d9a2566c02070e80bbb57325a43bf5aa22447e6cb83f5"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-write-section/SKILL.md",
@@ -770,7 +770,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/pause-writing.md",
-      "sha256": "fae4e4e114a1ca9fe5db13a9e2d773fc123bbc2e5ebc6bc63d40df20fc27dd5c"
+      "sha256": "5925c00a573e65c99a34e19984804f6407373e560621874cff29dbff4080fd0a"
     },
     {
       "path": "project/.github/wtfp/workflows/plan-milestone-gaps.md",
@@ -814,11 +814,11 @@
     },
     {
       "path": "project/.github/wtfp/workflows/resume-writing.md",
-      "sha256": "7c035e04d205eb758970f9fcdc621d0da3ebe8f88b7137e017a8d26b846474de"
+      "sha256": "8f101d7ac480abb9198402dc35a2e909d4b374a4016146b85751b4c7ba6cdabb"
     },
     {
       "path": "project/.github/wtfp/workflows/review-section.md",
-      "sha256": "31e73b357d9b1f309af1970b46991a91eb94a5c5d1cbaf6c19eeb3cf83744a24"
+      "sha256": "a85252f9bf6067602548c0355817f27e3689fc10ec9292441da09a5351045a6a"
     },
     {
       "path": "project/.github/wtfp/workflows/settings.md",
@@ -838,7 +838,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/write-section.md",
-      "sha256": "5948f17a30f4ce765ed8c37e11080d1c70f223f4950ec2df1ea1e8755497d9a6"
+      "sha256": "cfb3a0f9c61830d62cebdf8be5dacd17cef996d99cbab1df18267313ca05aacc"
     },
     {
       "path": "project/README.md",

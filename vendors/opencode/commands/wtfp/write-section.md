@@ -143,10 +143,10 @@ Contract: [protocol/actions/write-section.json](../../../actions/write-section.j
    - run the task's local checks before continuing.
 6. Pause when the plan requires unavailable evidence, author judgment, a changed thesis, a destructive rewrite, or another undeclared effect. Create a `project://checkpoints/{checkpoint}` record and resume only after its recorded resolution.
 7. Maintain academic honesty. Use explicit placeholders for missing values or citations; never generate plausible-looking facts to smooth the draft.
-8. Run goal-backward verification against every plan success criterion and assigned outline claim. Check word target, citation resolution through source/evidence records, figures and tables, terminology, transitions, and prohibited scope. Persist the read-only result at `project://validations/{validation}`.
+8. Read the persisted manuscript text and run goal-backward verification against every plan success criterion and assigned outline claim. Calculate the actual body word count from the saved artifact with one stated deterministic method rather than trusting a worker self-report, plan target, or summary count. Check that count against the word target plus citation resolution through source/evidence records, figures and tables, terminology, transitions, and prohibited scope. Persist the read-only result at `project://validations/{validation}`.
 9. If gaps remain, offer to fix bounded defects, accept documented debt, create a revision plan, or request human review. Do not mark the plan complete merely because prose exists.
-10. After successful writing, create or update `project://sections/{section}/summary` in Markdown with outputs, word count, claims addressed, citations and assets used, decisions, deviations, validation, and next work.
-11. Reconcile `manifest.artifacts.manuscripts`, the section record, and `project://state` only after the manuscript, summary, and validation persist successfully. Never run a VCS operation; return it only as a handoff to a separately declared action.
+10. After successful writing, create or update `project://sections/{section}/summary` in Markdown with outputs, measured word count, claims addressed, citations and assets used, decisions, deviations, validation, and next work.
+11. Read back the manuscript, summary, and validation and verify that every linked path exists and is non-empty. Reconcile `manifest.artifacts.manuscripts`, the section record, and `project://state` only after all three persist consistently; otherwise leave shared records unreconciled and return a bounded repair action. Never run a VCS operation; return it only as a handoff to a separately declared action.
 
 Completion requires readable manuscript output, a durable summary, honest verification, and consistent project state.
 
@@ -207,7 +207,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Require one approved plan and resolve all linked context, research, source/evidence records, decisions, prior summary, existing target, and necessary neighboring prose before choosing create or update.
 2. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions.
-3. Validate the draft, create or update its Markdown summary, synchronize the manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records from actual word count and validation status. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.
+3. Read the persisted manuscript text back and calculate its actual body word count with one deterministic method; never copy a worker self-report, plan target, or summary count into project records. Validate the persisted draft against its plan and word budget.
+4. Create or update the required Markdown summary with that measured count, then read back both manuscript and summary. Missing, empty, or inconsistent output is a failed completion condition, not permission to link a path that does not exist.
+5. Persist the validation, synchronize the manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records only after manuscript, summary, and validation readback succeeds. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.
 
 ## Safety and completion
 

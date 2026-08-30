@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0-rc.2] - 2026-08-29
+
+Corrective release candidate for decision fidelity and durable lifecycle handling. This release does not claim a completed proposal lifecycle or improved writing quality.
+
+### Fixed
+
+- `create-outline` may supersede a deferred choice only from an explicit author answer; it preserves locked and unrelated decisions and appends a fresh locked replacement with provenance
+- `plan-section` requires exactly one current passing `create-outline` validation and independently checks locked and deferred decision consistency before specialist dispatch
+- `write-section` now reconciles project records only from a measured persisted manuscript, a present non-empty summary, and a persisted validation rather than worker self-report
+- `review-section` bounds malformed-result retries, preserves accepted warning debt, uses only the closed validation schema, and cannot mutate project state or invent a paused phase
+- `pause-writing` preserves the valid lifecycle phase while setting only `state.status` to `paused`
+- `resume-writing` requires direct current-invocation reads, a host-native author gate, fail-closed no-mutation behavior before selection, and schema-valid checkpoint/state readback before reporting success
+- Clio verifier recipes now require compact JSON-only results with bounded, non-duplicate checks
+
+### Validated
+
+- A monitored disposable full-auto Clio Coder 0.3.8 / Dynamo `qwen3.8-27b-dynamo` / thinking-off UAT continued an already mapped NSF 25-531 fixture through `create-outline`, `discuss-section`, `plan-section`, `write-section`, `review-section`, and `pause-writing` for one section
+- The provisional section contained 1,019 measured body words; write and review validations retained explicit warning debt; the durable handoff/checkpoint remained coherent; and all 25 portable JSON records passed independent schema validation
+- A genuinely fresh-process pre-hardening resume attempt failed by narrating tools it never called. Against the regenerated RC2 bundle, a new process read the durable records, invoked Clio's real `ask_user` interview, waited for the author selection, resolved the checkpoint, advanced state to revision 7/active while preserving phase `reviewing`, and read both records back. Independent schema validation passed 25/25; a following `progress` action was read-only and identified wave-2 planning as the next action.
+
+### Known limitations
+
+- `research-gap` remains adapter-unavailable because current adapters lack an exact `tool.execute` binding. No external literature was supplied or mapped in this toy UAT; the draft has zero citations, and authorized placeholders are not research evidence.
+- This is one-section process-discipline evidence, not a completed seven-section proposal, paid lifecycle, observed semantic baseline, submission-ready artifact, or controlled writing-quality result.
+- The exploratory full-auto run is not a safety certification: it used read-only shell helpers, inherited Clio's session tool surface, retained a pre-existing future pause timestamp that makes resume-time ordering imperfect, and its final progress prose misstated two passed plus two `issues-found` validation files as “4 of 6 passed.” The portable records themselves remained schema-valid.
+
 ## [0.6.0-rc.1] - 2026-08-29
 
 Agent-platform modernization release candidate. WTF-P now has one portable academic protocol and deterministic native envelopes for seven coding-agent clients.
@@ -160,6 +186,7 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
+[0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/akougkas/wtf-p/compare/v0.3.0...v0.4.0

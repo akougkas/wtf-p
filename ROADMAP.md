@@ -118,9 +118,11 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Define versioned routing corpora, semantic invariants, budget metadata, and fail-closed comparison tooling
 - [x] Canonicalize both Clio fleets and validate their corrected directory boundaries with Clio 0.3.8
 - [x] Retain exact `dynamo/qwen3.8-27b` blocked lifecycle and mixed fleet readings without promoting them to a baseline
+- [x] Exercise a monitored one-section NSF 25-531 write/review/pause path and a corrected fresh-process resume/progress path with 25/25 schema-valid records
 - [ ] Complete the paid skill-routing matrix and full Clio lifecycle/fleet runs
 - [ ] Establish observed cross-version academic-output baselines
-- [ ] Publish `0.6.0-rc.1` and gather migration feedback before stable `0.6.0`
+- [x] Publish `0.6.0-rc.1` under the npm `next` tag
+- [ ] Publish `0.6.0-rc.2`, verify a fresh install, and gather migration feedback before stable `0.6.0`
 
 ### Deferred beyond the release candidate
 
@@ -203,6 +205,7 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
+| v0.6.0-rc.2 | Aug 2026 | Decision fidelity, lifecycle guardrails, and bounded NSF proposal UAT |
 | v0.6.0-rc.1 | Aug 2026 | Portable protocol, seven native adapters, Clio reference integration, safe transactional installer |
 | v0.6.0 | Planned | Stable release after isolated client/model evaluation and migration feedback |
 | v0.5.0 | Feb 2026 | Multi-runtime parity, GSD architecture, agents, quality loops |

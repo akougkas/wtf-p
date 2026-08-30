@@ -1,6 +1,6 @@
 {
   "name": "wtf-p",
-  "version": "0.6.0-rc.1",
+  "version": "0.6.0-rc.2",
   "description": "Portable, evidence-grounded academic workflows for Clio Coder, Claude Code, Codex, Copilot, OpenCode, Antigravity, and Gemini.",
   "bin": {
     "wtfp": "bin/install.js",

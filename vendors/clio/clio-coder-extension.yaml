@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: wtfp
 name: WTF-P
-version: 0.6.0-rc.1
+version: 0.6.0-rc.2
 description: Portable, evidence-grounded academic research and writing workflows.
 resources:
   skills: skills

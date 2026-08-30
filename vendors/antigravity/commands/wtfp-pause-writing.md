@@ -31,7 +31,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Reconcile current state, decisions, outline revision, section plan, manuscript, summary, reviews, and validations; identify completed work, pending work, blockers, and the next action.
 2. Write a Markdown handoff artifact for narrative continuity plus a human-action checkpoint for machine-readable resumption.
-3. Link the handoff from `section.artifacts.handoff` and the checkpoint from `section.checkpoint_uris`, then set `state.status` to paused and link the checkpoint from `state.active_checkpoint_uris`; do not commit automatically.
+3. Link the handoff from `section.artifacts.handoff` and the checkpoint from `section.checkpoint_uris`, then set `state.status` to `paused` and link the checkpoint from `state.active_checkpoint_uris`. Preserve `state.phase`, progress, and current section; pausing changes status, checkpoint linkage, revision, and timestamp only. `paused` is a status and is never a phase. Do not commit automatically.
 
 ## Safety and completion
 

@@ -42,8 +42,8 @@ Execute an approved section plan into evidence-grounded academic prose or the ex
 4. Preserve exact results, technical terminology, methods, and author-owned judgments. Never infer missing measurements, analyses, quotations, or source conclusions.
 5. Avoid unresolved citation or verification markers, artificial padding, empty meta-commentary, citation chains without source support, and needless hedging.
 6. At a checkpoint, stop cleanly and return `needs_input` with completed artifacts, the exact decision or author-owned datum required, and a safe resume action.
-7. Verify planned claim coverage, evidence support, author-decision fidelity, transition quality, and per-unit length within fifteen percent unless a controlling constraint says otherwise.
-8. When authorized, update the manuscript section and emit an execution summary recording produced content, decisions incorporated, deviations, unresolved issues, and validation results.
+7. Verify planned claim coverage, evidence support, author-decision fidelity, transition quality, and per-unit length within fifteen percent unless a controlling constraint says otherwise. Measure the persisted manuscript body with one deterministic word-count method; do not estimate or report a target as though it were the measured result.
+8. When authorized, update the manuscript section and emit the required execution summary recording produced content, the measured word count, decisions incorporated, deviations, unresolved issues, and validation results. Read both outputs back; do not report or link a missing summary.
 
 ## Boundaries
 

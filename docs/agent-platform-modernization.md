@@ -241,7 +241,7 @@ Gate: one canonical change regenerates every adapter deterministically, and exis
 - Implement the three coordinated Clio features on a separate Clio branch.
 - Exercise prompt discovery, dispatch, steering, resumption, and receipts under disposable state roots.
 
-Release-candidate gate: the complete extension is discovered, nested prompts expand with exact arguments and contained resources, agents/skills/fleets resolve from the owning extension, and no normal Clio state is touched. The paid full-lifecycle chain remains a `1.0.0` evidence gate rather than an unqualified `0.6.0-rc.1` claim.
+Release-candidate gate: the complete extension is discovered, nested prompts expand with exact arguments and contained resources, agents/skills/fleets resolve from the owning extension, and no normal Clio state is touched. The full-lifecycle chain remains a `1.0.0` evidence gate rather than an unqualified `0.6` claim.
 
 The native fleets are explicit operator entry points, not hidden routing behind
 ordinary `/wtfp:*` prompts. Their worker boundaries are narrower than the
@@ -302,10 +302,12 @@ instead of converting planned coverage into observed evidence.
 - [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action or process-boundary resume was inferred from that run.
 - [x] Post-remediation Dynamo readings retained with exact source identities: the `0245818` slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; and the `cbba38c` draft/review observation proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
 - [x] Current canonical-runtime Dynamo initialization reading retained at `bf50e23`: five records passed literal schema validation, but the dependency-wave invariant and no-shell boundary failed, so the operator stopped before `map-project` and made no full-lifecycle claim.
+- [x] Later NSF 25-531 toy UAT exercised one section through outline, discussion, plan, write, review, durable pause, and a post-hardening fresh-process resume/progress path with 25/25 schema-valid records; the full proposal and certifying lifecycle remain open.
 - [ ] Complete and retain the paid routing matrix, corrected Clio fleet runs, full process-boundary lifecycle chain, and independent semantic assessment.
 - [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
-- [ ] Publish `0.6.0-rc.1` after final human review; publishing remains deliberately outside the implementation run.
+- [x] Publish `0.6.0-rc.1` under the npm `next` tag after human review.
+- [ ] Prepare, tag, and publish `0.6.0-rc.2` as a separate reviewed operator action.
 
 ## Decisions intentionally deferred
 

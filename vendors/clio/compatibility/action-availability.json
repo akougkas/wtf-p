@@ -22,14 +22,14 @@
     "network.search": "clio:network-search",
     "package.update": null,
     "tool.execute": null,
-    "user.interaction": "clio:conversation",
+    "user.interaction": "clio:ask_user",
     "vcs.branch": null,
     "vcs.commit": null
   },
   "approvalBindings": {
     "none": "clio:permission-policy",
     "implicit": "clio:permission-policy",
-    "explicit": "clio:conversation-confirmation"
+    "explicit": "clio:ask_user"
   },
   "effectCapabilityBindings": {
     "agent.delegate": "agent.delegate",
