@@ -30,7 +30,7 @@ npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install gemini
 
 Run only the line for the client you intend to use. For example, if Clio Coder 0.3.8 is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It neither replaces nor launches Clio.
 
-The explicit `--package=wtf-p@0.6.0-rc.2 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.2 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer's first line reports `WTF-P v0.6.0-rc.2`; stop if it reports another version or target.
+The explicit `--package=wtf-p@0.6.0-rc.2 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.2 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.2`; stop if it reports another version or target.
 
 `npx --yes --package=wtf-p@next -- wtf-p install clio` is a convenient moving prerelease form. It may resolve to a later candidate, so do not use it for a run that must reproduce RC2 exactly. An unqualified `npx wtf-p` follows npm's stable `latest` tag and must not be assumed to mean RC2.
 
@@ -89,7 +89,7 @@ The main WTF-P orchestrator is responsible for the complete action contract. It 
 1. Preserve the exact invocation arguments and identify the project root.
 2. Resolve and validate every required `.planning` record and authored artifact.
 3. Load only the owning skill, action, schemas, templates, and role references needed for that action.
-4. Preserve locked, deferred, and discretionary author decisions exactly as recorded.
+4. Preserve locked, deferred, and bounded-discretion author decisions exactly as recorded.
 5. Use the client's native interaction mechanism for a declared author gate. Prompt text, silence, a model's own recommendation, or a client autonomy setting is not approval.
 6. Delegate only to roles declared by the action, verify each specialist's structured result, and keep the specialist inside its mutation or read-only boundary.
 7. Preview the declared mutation, apply it only after the applicable gate, validate the result, and read the persisted records back.
@@ -126,7 +126,7 @@ Source records establish provenance. Evidence records state what a source suppor
 
 - `locked`: preserve the author or venue choice until a genuinely authorized replacement is recorded;
 - `deferred`: do not resolve the choice or draft through it as though it were settled;
-- `discretionary`: the agent may choose only within the recorded boundary; and
+- `discretion`: the agent may choose only within the recorded boundary; and
 - `superseded`: retain the historical choice and its provenance while linking the authorized replacement.
 
 Validation records report findings; they do not imply that a change was applied. Handoffs and checkpoints let a new client process resume without hidden conversational memory.
@@ -169,7 +169,7 @@ Use a fleet only after the slash orchestrator has established the required appro
 
 Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The fleets declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
 
-### Truly isolated Clio evaluation
+### Isolated Clio evaluation
 
 Setting only `CLIO_CODER_CONFIG_DIR` changes one destination; it does not isolate Clio's home, XDG, state, cache, data, binary, and temporary roots. For a disposable evaluation, put all of them beneath one mode-0700 root and run both the installer and Clio through the same environment. The config, data, state, cache, and binary directories below are descendants of `CLIO_CODER_HOME`, as the prefix guard requires:
 
@@ -186,10 +186,14 @@ mkdir -p \
   "$WTFP_CLIO_SANDBOX/home/clio/data" \
   "$WTFP_CLIO_SANDBOX/home/clio/state" \
   "$WTFP_CLIO_SANDBOX/home/clio/cache" \
-  "$WTFP_CLIO_SANDBOX/home/clio/bin"
+  "$WTFP_CLIO_SANDBOX/home/clio/bin" \
+  "$WTFP_CLIO_SANDBOX/home/npm-cache"
 
 run_isolated_clio() {
-  env \
+  env -i \
+    PATH="$PATH" \
+    TERM="${TERM:-dumb}" \
+    LANG="${LANG:-C.UTF-8}" \
     HOME="$WTFP_CLIO_SANDBOX/home" \
     XDG_CONFIG_HOME="$WTFP_CLIO_SANDBOX/home/xdg/config" \
     XDG_DATA_HOME="$WTFP_CLIO_SANDBOX/home/xdg/data" \
@@ -204,6 +208,7 @@ run_isolated_clio() {
     CLIO_CODER_BIN_DIR="$WTFP_CLIO_SANDBOX/home/clio/bin" \
     CLIO_CODER_REQUIRE_HOME_PREFIX=1 \
     CLIO_CODER_NO_NETWORK_TOOLS=1 \
+    NPM_CONFIG_CACHE="$WTFP_CLIO_SANDBOX/home/npm-cache" \
     "$@"
 }
 
@@ -212,7 +217,12 @@ cd /path/to/disposable-proposal
 run_isolated_clio clio-coder --autonomy suggest
 ```
 
-The empty profile does not automatically have model credentials. Use only a Clio-supported isolated credential mechanism; never copy, print, or embed credentials in a fixture or evidence trace. Remove the disposable root after preserving any non-secret evidence you need.
+`env -i` prevents ambient provider keys, npm credentials, and unrelated client
+variables from leaking into the run. The empty profile therefore has no model
+credentials unless you deliberately configure a Clio-supported isolated
+credential mechanism. Never copy, print, or embed credentials in a fixture or
+evidence trace. Remove the disposable root after preserving any non-secret
+evidence you need.
 
 ## Verify or remove an installation
 
@@ -229,7 +239,13 @@ Replace `--clio` with the intended target selector. Uninstall preserves modified
 
 ## Current RC2 boundaries
 
-The seven full adapters discover 36 stable action routes and execute 24. The following 12 routes return deterministic `WTFP_ACTION_UNAVAILABLE` results because RC2 lacks an exact target binding for at least one required capability or effect: `analyze-bib`, `audit-milestone`, `check-refs`, `contribute`, `create-poster`, `create-slides`, `export-latex`, `remove-section`, `report-bug`, `request-feature`, `research-gap`, and `update`.
+The seven full adapters discover 36 stable action routes and mark 24 as
+adapter-available. Availability establishes complete adapter mappings, not a
+successful model run. The following 12 routes return deterministic
+`WTFP_ACTION_UNAVAILABLE` results because RC2 lacks an exact target binding for
+at least one required capability or effect: `analyze-bib`, `audit-milestone`,
+`check-refs`, `contribute`, `create-poster`, `create-slides`, `export-latex`,
+`remove-section`, `report-bug`, `request-feature`, `research-gap`, and `update`.
 
 That means RC2 can organize and reason over sources you supply, but it must not pretend that unavailable literature-search or citation routes performed research. The available `submit-milestone` action creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
 

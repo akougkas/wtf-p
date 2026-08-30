@@ -144,7 +144,7 @@ The same workflow is projected into each client's native interface:
 
 | Client | Start an explicit action |
 | --- | --- |
-| Clio Coder 0.3.8+ | `/wtfp:new-paper …` |
+| Clio Coder (0.3.8 tested; later versions must pass native discovery) | `/wtfp:new-paper …` |
 | Claude Code | `/wtfp:new-paper …` |
 | GitHub Copilot CLI | `/wtfp:new-paper …` |
 | OpenCode | `/wtfp:new-paper …` |
@@ -193,9 +193,10 @@ or submit your work. Those remain separate human-controlled operations.
 
 ## RC2 boundaries
 
-RC2 exposes 36 stable action names. Twenty-four are currently executable on
-the full local adapters; 12 fail closed rather than pretending an unsupported
-tool or approval mechanism exists. Automated literature search, bibliography
+RC2 exposes 36 stable action names. The full local adapters mark 24 as
+adapter-available; that mapping does not by itself prove successful model
+execution. The other 12 fail closed rather than pretending an unsupported tool
+or approval mechanism exists. Automated literature search, bibliography
 analysis, reference checking, LaTeX export, posters, and slides are among the
 deferred routes. Supply vetted sources inside the project and use
 `map-project` in this release candidate.

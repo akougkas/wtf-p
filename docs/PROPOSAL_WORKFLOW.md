@@ -79,7 +79,7 @@ Before approving initialization, inspect the complete preview of:
 .planning/structure/outline.json
 ```
 
-Check that the working title is exact, TCR is recorded as the author-selected primary track rather than model inference, IPAAI remains a conditional fallback requiring new author approval, and every author-reserved choice is recorded as locked, deferred, or discretionary. The five records must validate before they are written.
+Check that the working title is exact, TCR is recorded as the author-selected primary track rather than model inference, IPAAI remains a conditional fallback requiring new author approval, and every author-reserved choice is recorded as `locked`, `deferred`, or bounded `discretion`. The five records must validate before they are written.
 
 If this directory already contains a draft but has no valid `.planning/project.json`, still start with `new-paper`. `map-project` requires initialized v1 state and cannot create the five-record foundation.
 
@@ -208,7 +208,7 @@ Before treating the proposal as ready for an institutional or funder workflow, v
 - Citations identify real supplied sources; placeholders are not represented as completed literature research.
 - The outline target equals the sum of section budgets and its dependency ordering remains valid.
 - Every drafted section has an approved plan, an independent plan check, a review, and understandable validation status.
-- Locked decisions remain locked, deferred decisions remain visibly deferred, and discretionary choices stay within their recorded bounds.
+- Locked decisions remain locked, deferred decisions remain visibly deferred, and choices under `discretion` stay within their recorded bounds.
 - Stable IDs, revisions, timestamps, and cross-record references remain coherent after each state transition.
 - Pause/resume succeeds from a new client process using only persisted project state.
 - No WTF-P action initialized or mutated Git, pushed, published, contacted an external service, or submitted the proposal incidentally.

@@ -27,7 +27,13 @@ npx --yes --package=wtf-p@0.5.0 -- wtf-p doctor --claude
 npx --yes --package=wtf-p@0.5.0 -- wtf-p uninstall --claude --dry-run
 ```
 
-Replace `--claude` with `--gemini` or `--opencode` for another v0.5 target. A legacy installation without a v2 ownership receipt is diagnostic-only by default. WTF-P reports it and preserves it unless you explicitly choose the documented forced migration path.
+In v0.5, `status` and `doctor` inspect only Claude global/local state; do not
+use them to infer Gemini or OpenCode status. The v0.5 uninstaller is
+target-aware, so use `uninstall --gemini --dry-run` or
+`uninstall --opencode --dry-run` when inspecting one of those copies. A legacy
+installation without a v2 ownership receipt is diagnostic-only by default.
+WTF-P reports it and preserves it unless you explicitly choose the documented
+forced migration path.
 
 ## 2. Remove or preserve the legacy client copy
 
@@ -131,7 +137,7 @@ Key distinctions to verify during review:
 
 - `source` records establish bibliographic or data provenance;
 - `evidence` records describe what a source supports, contradicts, or contextualizes;
-- `decisions` preserve locked, deferred, and discretionary author choices;
+- `decisions` preserve locked, deferred, and bounded-discretion author choices;
 - section records link authored context, research, plans, reviews, summaries, and manuscript artifacts;
 - validation records report findings and never imply a mutation was applied;
 - checkpoints record interaction gates or immutable state snapshots without changing Git state.
