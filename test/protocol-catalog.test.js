@@ -385,15 +385,30 @@ assert.deepStrictEqual(
 );
 
 const reviewSection = load('protocol/actions/review-section.json');
+assert.deepStrictEqual(reviewSection.produces, [
+  { uri: 'project://sections/{section}/reviews/{review}', mode: 'create' },
+  { uri: 'project://validations/{validation}', mode: 'create' },
+  { uri: 'project://sections/{section}', mode: 'update' },
+]);
 assert.deepStrictEqual(
   commaSeparatedScope(reviewSection, 'filesystem.write'),
   reviewSection.produces.map((output) => output.uri),
   'review-section write scope must disclose its review, validation, and section outputs',
 );
+for (const forbiddenReviewOutput of [
+  'project://state',
+  'project://checkpoints/{checkpoint}',
+  'project://sections/{section}/handoff',
+]) {
+  assert.ok(!reviewSection.produces.some((output) => output.uri === forbiddenReviewOutput));
+  assert.ok(!commaSeparatedScope(reviewSection, 'filesystem.write').includes(forbiddenReviewOutput));
+  assert.ok(!commaSeparatedScope(reviewSection, 'filesystem.modify').includes(forbiddenReviewOutput));
+}
 const reviewWorkflow = fs.readFileSync(path.join(protocolRoot, 'workflows', 'review-section.md'), 'utf8');
 assert.match(reviewWorkflow, /at most one corrective retry for result-contract compliance/);
-assert.match(reviewWorkflow, /using only properties allowed by the closed validation schema/);
-assert.match(reviewWorkflow, /Review does not write project state, pause the project, or invent a `paused` phase/);
+assert.match(reviewWorkflow, /validation using only members allowed by the closed v1 schema/);
+assert.match(reviewWorkflow, /root never gains an `input_revisions` member/);
+assert.match(reviewWorkflow, /Review does not write project state, create a pause checkpoint or handoff, invoke pause implicitly, or invent a `paused` phase/);
 
 const pauseWriting = load('protocol/actions/pause-writing.json');
 assert.deepStrictEqual(
@@ -437,17 +452,28 @@ assert.deepStrictEqual(
   ],
   'pause-writing must deliberately create or merge its durable handoff',
 );
+assert.deepStrictEqual(
+  pauseWriting.produces.filter((output) => output.uri === 'project://state'),
+  [{ uri: 'project://state', mode: 'update' }],
+  'pause-writing must only update existing project state',
+);
 const pauseWorkflow = fs.readFileSync(path.join(protocolRoot, 'workflows', 'pause-writing.md'), 'utf8');
 assert.match(pauseWorkflow, /`paused` is a status and is never a phase/);
+assert.match(pauseWorkflow, /Preserve `state.phase`, progress, and current section/);
 
 const resumeWriting = load('protocol/actions/resume-writing.json');
 const resumeFreshnessReads = [
   'project://manifest',
   'project://config',
+  'project://state',
   'project://decisions',
   'project://structure/outline',
+  'project://checkpoints/{checkpoint}',
+  'project://sections/{section}',
   'project://sections/{section}/plans/{plan}',
   'project://sections/{section}/reviews/{review}',
+  'project://sections/{section}/handoff',
+  'project://sections/{section}/summary',
   'project://validations/{validation}',
   'project://paper/{artifact}',
 ];
@@ -459,6 +485,14 @@ assert.deepStrictEqual(
   resumeWriting.reads,
   'resume-writing read effects must exactly disclose every freshness input',
 );
+assert.deepStrictEqual(resumeWriting.produces, [
+  { uri: 'project://checkpoints/{checkpoint}', mode: 'update' },
+  { uri: 'project://state', mode: 'update' },
+]);
+assert.deepStrictEqual(
+  resumeWriting.effects.find((effect) => effect.id === 'user.gate'),
+  { id: 'user.gate', scope: 'selection of the resumed action' },
+);
 for (const condition of [
   'Every declared resume input is read and validated in the current invocation before options are presented',
   'A host-native user gate returns one exact checkpoint option in the current invocation before any checkpoint or state mutation',
@@ -467,6 +501,7 @@ for (const condition of [
 }
 const resumeWorkflow = fs.readFileSync(path.join(protocolRoot, 'workflows', 'resume-writing.md'), 'utf8');
 assert.match(resumeWorkflow, /a prior conversation, invocation prose, or generated report is not evidence that these reads occurred/);
+assert.match(resumeWorkflow, /Missing, stale, ambiguous, or conflicting resume inputs fail closed with zero writes/);
 assert.match(resumeWorkflow, /before selection the action is read-only/);
 assert.match(resumeWorkflow, /Invocation arguments may request resumption but cannot answer this gate/);
 assert.match(resumeWorkflow, /If the gate is unavailable or no response is returned, report `needs-input` and make no mutation/);
@@ -482,9 +517,16 @@ assert.ok(
   commaSeparatedScope(writeSection, 'filesystem.modify').includes('project://manifest'),
   'write-section must disclose the manifest mutation effect',
 );
+assert.deepStrictEqual(
+  writeSection.produces.filter((output) => output.uri === 'project://sections/{section}/summary'),
+  [
+    { uri: 'project://sections/{section}/summary', mode: 'create' },
+    { uri: 'project://sections/{section}/summary', mode: 'update' },
+  ],
+);
 const writeWorkflow = fs.readFileSync(path.join(protocolRoot, 'workflows', 'write-section.md'), 'utf8');
 assert.match(writeWorkflow, /calculate its actual body word count with one deterministic method/);
-assert.match(writeWorkflow, /never copy a worker's claimed count into project records/);
+assert.match(writeWorkflow, /never copy a worker self-report, plan target, or summary count into project records/);
 assert.match(writeWorkflow, /Missing, empty, or inconsistent output is a failed completion condition/);
 
 const progress = load('protocol/actions/progress.json');

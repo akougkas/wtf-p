@@ -355,6 +355,9 @@ record('target capability and approval policies are exhaustive and fail closed',
   malformedApproval['copilot-cloud'].approvals.explicit = 'input-approval';
   assert.throws(() => compilePlans({ targetPolicies: malformedApproval }), /malformed exact approval binding for explicit/);
 
+  assert.strictEqual(TARGET_POLICIES.clio.capabilities['user.interaction'], 'clio:ask_user');
+  assert.strictEqual(TARGET_POLICIES.clio.approvals.explicit, 'clio:ask_user');
+
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-policy-registry-'));
   try {
     copyCompilerFixture(temporaryRoot);
@@ -706,7 +709,7 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     ],
     'prompts/wtfp/review-section.md': [
       'at most one corrective retry for result-contract compliance',
-      'Review does not write project state, pause the project, or invent a `paused` phase'
+      'Review does not write project state, create a pause checkpoint or handoff, invoke pause implicitly, or invent a `paused` phase'
     ],
     'prompts/wtfp/pause-writing.md': [
       '`paused` is a status and is never a phase'
@@ -714,7 +717,10 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     'prompts/wtfp/resume-writing.md': [
       'a prior conversation, invocation prose, or generated report is not evidence that these reads occurred',
       'Invocation arguments may request resumption but cannot answer this gate',
-      'If the gate is unavailable or no response is returned, report `needs-input` and make no mutation'
+      'If the gate is unavailable or no response is returned, report `needs-input` and make no mutation',
+      'Call `ask_user` whenever this workflow reaches a declared `user.gate`',
+      'Apply no gated mutation before `ask_user` returns',
+      'perform the workflow-required readback before reporting success'
     ]
   };
   for (const [sourcePath, guards] of Object.entries(lifecycleGuards)) {
@@ -736,8 +742,8 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     assert.match(source, /^## Clio result contract$/m);
     assert.match(source, /entire final response must be one (?:compact )?JSON object/);
     if (verifier) {
-      assert.match(source, /Return at most 16 non-duplicate checks/);
-      assert.match(source, /keep the complete JSON under 16 KiB/);
+      assert.match(source, /Return at most 12 non-duplicate checks/);
+      assert.match(source, /keep the complete UTF-8 response at or below 4096 bytes/);
       assert.match(source, /emit no Markdown, code fence, analysis, or text outside the object/);
     }
   }

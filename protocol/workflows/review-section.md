@@ -23,8 +23,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve one manuscript section, its outline claims, context, plan, research, summary, decisions, evidence, neighboring prose, and review rubric.
 2. Dispatch one read-only review of claim coverage, reasoning, evidence, citations, coherence, prose, and requirements. If the structured result is malformed, allow at most one corrective retry for result-contract compliance; never retry until a reviewer says pass, and do not retry warning-only or explicitly accepted debt.
-3. Write detailed Markdown review notes and a read-only validation using only properties allowed by the closed validation schema. Disputed findings go through a user gate; accepted warning debt remains an `issues-found` result and does not authorize manuscript edits.
-4. Update only the section record to link the review. Review does not write project state, pause the project, or invent a `paused` phase; leave lifecycle transitions to their owning actions.
+3. Write layer, confidence, location, impact, recommendation, and other rich detail in the Markdown review. Encode the read-only validation using only members allowed by the closed v1 schema; issue objects contain only severity, summary, and optional evidence, and the root never gains an `input_revisions` member. Disputed findings go through a user gate; accepted warning debt remains an `issues-found` result and does not authorize manuscript edits.
+4. Update only the section record to link the review. Review does not write project state, create a pause checkpoint or handoff, invoke pause implicitly, or invent a `paused` phase; leave lifecycle transitions to their owning actions.
 
 ## Safety and completion
 

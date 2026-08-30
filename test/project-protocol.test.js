@@ -582,9 +582,17 @@ function main() {
   mutatingValidation.effects_applied = [{ id: 'file.write', scope: 'project://paper/introduction' }];
   assertInvalid('validation', mutatingValidation, /must equal \[\]/);
 
+  const extendedReviewValidation = clone(templates.validation);
+  extendedReviewValidation.input_revisions = { manuscript: 'unexpected' };
+  assertInvalid('validation', extendedReviewValidation, /unknown property input_revisions/);
+
   const negativeProgress = clone(templates.state);
   negativeProgress.progress.word_count = -1;
   assertInvalid('state', negativeProgress, /below 0/);
+
+  const invalidPausedPhase = clone(templates.state);
+  invalidPausedPhase.phase = 'paused';
+  assertInvalid('state', invalidPausedPhase, /must be one of/);
 
   const forbiddenTokens = [
     /\bclaude(?: code)?\b/i,

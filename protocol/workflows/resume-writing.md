@@ -21,7 +21,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. In the current invocation, read and schema-validate the manifest, config, state, decisions, and every pending active checkpoint. Read the chosen checkpoint plus its linked handoff, section, selected plan, reviews, validations, manuscript, summary, and outline; a prior conversation, invocation prose, or generated report is not evidence that these reads occurred.
+1. In the current invocation, read and schema-validate the manifest, config, state, decisions, and every pending active checkpoint. Read the chosen pending checkpoint plus its linked handoff, section, selected plan, reviews, validations, manuscript, summary, and outline; a prior conversation, invocation prose, or generated report is not evidence that these reads occurred. Missing, stale, ambiguous, or conflicting resume inputs fail closed with zero writes.
 2. Verify referenced revisions and artifacts are current, then report completed work, pending work, blockers, stale assumptions, and the exact bounded options. Do not create a report artifact: before selection the action is read-only.
 3. Invoke the host's interactive user gate and wait for one exact option. Invocation arguments may request resumption but cannot answer this gate. If the gate is unavailable or no response is returned, report `needs-input` and make no mutation.
 4. Only after the returned selection, resolve, waive, or expire the checkpoint as selected and set `state.status` to `active` when continuation is confirmed. Preserve the existing valid `state.phase`, increment required revisions, and clear only the resolved active checkpoint URI.
