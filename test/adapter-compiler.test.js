@@ -357,6 +357,7 @@ record('target capability and approval policies are exhaustive and fail closed',
 
   assert.strictEqual(TARGET_POLICIES.clio.capabilities['user.interaction'], 'clio:ask_user');
   assert.strictEqual(TARGET_POLICIES.clio.approvals.explicit, 'clio:ask_user');
+  assert.doesNotThrow(() => compilePlans(), 'native tool bindings may contain underscores after the target prefix');
 
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-policy-registry-'));
   try {

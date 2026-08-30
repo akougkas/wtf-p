@@ -330,14 +330,14 @@ function validateTargetPolicies(targetPolicies, effects) {
     for (const [capabilityId, binding] of Object.entries(policy.capabilities)) {
       if (binding === null) continue;
       if (typeof binding !== 'string' || !binding.startsWith(`${target}:`) ||
-          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9-]*$/u.test(binding)) {
+          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9_-]*$/u.test(binding)) {
         throw new Error(`target ${target} has malformed exact binding for ${capabilityId}`);
       }
     }
     for (const [consent, binding] of Object.entries(policy.approvals)) {
       if (binding === null) continue;
       if (typeof binding !== 'string' || !binding.startsWith(`${target}:`) ||
-          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9-]*$/u.test(binding)) {
+          !/^[a-z0-9-]+:[A-Za-z0-9][A-Za-z0-9_-]*$/u.test(binding)) {
         throw new Error(`target ${target} has malformed exact approval binding for ${consent}`);
       }
     }
