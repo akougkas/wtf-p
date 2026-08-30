@@ -21,14 +21,15 @@ Corrective release candidate for decision fidelity and durable lifecycle handlin
 
 ### Validated
 
-- A monitored disposable full-auto Clio Coder 0.3.8 / Dynamo `qwen3.8-27b-dynamo` / thinking-off UAT continued an already mapped NSF 25-531 fixture through `create-outline`, `discuss-section`, `plan-section`, `write-section`, `review-section`, and `pause-writing` for one section
-- The provisional section contained 1,019 measured body words; write and review validations retained explicit warning debt; the durable handoff/checkpoint remained coherent; and all 25 portable JSON records passed independent schema validation
+- A monitored disposable full-auto Clio Coder 0.3.8 / Dynamo `qwen3.8-27b-dynamo` / thinking-off defect-finding UAT continued an already mapped NSF 25-531 fixture through `create-outline`, `discuss-section`, `plan-section`, `write-section`, `review-section`, and `pause-writing` for one section before the final RC2 write/review/pause hardening
+- The provisional section's persisted writer/state count was 1,019 whitespace-delimited words; the independent reviewer used a different tokenizer and reported 1,026. Write and review validations retained explicit warning debt; the durable handoff/checkpoint remained coherent; and all 25 portable JSON records passed independent schema validation
 - A genuinely fresh-process pre-hardening resume attempt failed by narrating tools it never called. Against the regenerated RC2 bundle, a new process read the durable records, invoked Clio's real `ask_user` interview, waited for the author selection, resolved the checkpoint, advanced state to revision 7/active while preserving phase `reviewing`, and read both records back. Independent schema validation passed 25/25; a following `progress` action was read-only and identified wave-2 planning as the next action.
 
 ### Known limitations
 
 - `research-gap` remains adapter-unavailable because current adapters lack an exact `tool.execute` binding. No external literature was supplied or mapped in this toy UAT; the draft has zero citations, and authorized placeholders are not research evidence.
 - This is one-section process-discipline evidence, not a completed seven-section proposal, paid lifecycle, observed semantic baseline, submission-ready artifact, or controlled writing-quality result.
+- The final RC2 write/review/pause corrections have deterministic regression coverage but were not followed by a second end-to-end model rerun; only corrected resume/progress was rerun against the regenerated bundle.
 - The exploratory full-auto run is not a safety certification: it used read-only shell helpers, inherited Clio's session tool surface, retained a pre-existing future pause timestamp that makes resume-time ordering imperfect, and its final progress prose misstated two passed plus two `issues-found` validation files as “4 of 6 passed.” The portable records themselves remained schema-valid.
 
 ## [0.6.0-rc.1] - 2026-08-29

@@ -125,22 +125,27 @@ thinking off. Clio ran interactively in an isolated full-auto profile with its
 hard safety rails, worker permission fallback set to deny, network tools
 disabled, and every client root under one disposable directory.
 
-The run continued an already mapped NSF 25-531 fixture through
+The defect-finding run continued an already mapped NSF 25-531 fixture through
 `create-outline`, `discuss-section`, `plan-section`, `write-section`,
-`review-section`, and `pause-writing` for `problem-landscape`. It produced a
-1,019-word provisional section, linked summary, `issues-found` write and review
-validations, four author-accepted warning-class review debts, and a durable
-handoff plus pending checkpoint. Independent validation passed all 25 portable
-JSON records.
+`review-section`, and `pause-writing` for `problem-landscape` before the final
+RC2 write/review/pause hardening. It produced a provisional section whose
+persisted writer/state whitespace count was 1,019; the independent review's
+different tokenizer counted 1,026. It also produced a linked summary,
+`issues-found` write and review validations, four author-accepted warning-class
+review debts, and a durable handoff plus pending checkpoint. Independent
+validation passed all 25 portable JSON records.
 
 The first fresh-process `resume-writing` attempt failed before RC2 hardening.
 It did not read the required durable records or cross the interactive author
 gate, wrote an undeclared report, and described checkpoint/state changes that
 never occurred. The real state correctly remained paused and schema-valid.
 
-The post-hardening retry used WTF-P commit
-`bfe8956a8fc3a0c5edbd8ce4a74f041b7d2f0374` and installed Clio inventory
-SHA-256 `1e143685a035f3e507cb2ab816484211774009dd3f4ddd25fdc03a76b2f14956`.
+The post-hardening retry used canonical-input HEAD
+`bfe8956a8fc3a0c5edbd8ce4a74f041b7d2f0374` with generated working-tree Clio
+inventory SHA-256
+`1e143685a035f3e507cb2ab816484211774009dd3f4ddd25fdc03a76b2f14956`;
+that exact generated bundle was first committed in
+`93617d24a1fe4438239534a2d4fab067530dc026`.
 A genuinely new Clio process read state, checkpoint, handoff, section, plan,
 outline, decisions, config, manifest, validation, and manuscript resources;
 called native `ask_user`; waited for the author to choose
@@ -149,6 +154,10 @@ phase `reviewing`; and left state revision 7/active with no active checkpoint.
 Independent canonical validation passed 25/25. A following `progress` action
 made no project mutation and selected `plan-section` for
 `tcr-fit-significance` as the next safe action.
+
+The final RC2 write/review/pause corrections have deterministic regression
+coverage but were not followed by a second end-to-end model rerun. The
+post-hardening model reading covers resume/progress only.
 
 This was an exploratory full-auto reading, not a safety certification. Clio
 used contained read-only shell helpers; the pause record's pre-existing future
@@ -165,7 +174,7 @@ replayable baseline.
 
 ## Isolation evidence
 
-The sanitized compiler-v4 rubric, five records, validation report, trace
+For the earlier compiler-v4 `new-paper` run, the sanitized rubric, five records, validation report, trace
 summary, exact argument receipt, and authenticated inventory are retained in
 [`evaluation/v1/evidence/clio-new-paper-compiler-v4`](../evaluation/v1/evidence/clio-new-paper-compiler-v4/README.md),
 with an executable 11-check verifier. Where still present, the fuller private
@@ -173,7 +182,7 @@ traces are under `/tmp/wtfp-live-eval.FEmB4M` and
 `/tmp/wtfp-clio-v4-rerun.gydonK`; those temporary paths are optional local
 evidence, not release dependencies. Copied credential files were securely
 removed after the completed runs. Preflight and postflight SHA-256 inventories
-for monitored normal client configuration and credential files were
+for that run's monitored normal client configuration and credential files were
 byte-for-byte identical. Separate evaluation processes and stale isolated
 process groups were terminated.
 

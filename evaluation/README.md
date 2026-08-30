@@ -41,9 +41,10 @@ and the explicit no-shell boundary after three successful shell calls and ten
 denied retries. The operator stopped before action 2. It is a current-source
 blocked reading, not an observed baseline or full lifecycle.
 
-A later operator-observed NSF 25-531 toy UAT continued one section through
-outline, discussion, planning, writing, review, and durable pause with 25/25
-schema-valid portable records. Its first fresh-process resume attempt failed
+A later operator-observed NSF 25-531 toy defect-finding UAT continued one
+section through outline, discussion, planning, writing, review, and durable
+pause before the final RC2 write/review/pause hardening, with 25/25 schema-valid
+portable records. Its first fresh-process resume attempt failed
 before RC2 hardening by narrating required reads and a user gate that never
 occurred. A post-hardening new process then performed the durable reads, crossed
 native `ask_user`, applied and read back the selected checkpoint/state updates,
@@ -51,7 +52,9 @@ and preserved 25/25 schema validity; a following progress action was read-only.
 The exploratory run still has timestamp-ordering and progress-count prose debt
 and remains temporary and non-replayable. It is not promoted to
 `observed_runs`, and no complete proposal, external-research, safety, or
-writing-quality claim is made from it.
+writing-quality claim is made from it. The final RC2 write/review/pause
+corrections have deterministic regression coverage but no second end-to-end
+model rerun; the post-hardening model rerun covers resume/progress only.
 
 This suite has no no-WTF-P control arm. It cannot establish that WTF-P produces
 better prose than the same model and task without WTF-P, and no result should be

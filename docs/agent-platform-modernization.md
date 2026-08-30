@@ -1,12 +1,12 @@
 # WTF-P Agent Platform Modernization
 
-Status: architecture implemented; final behavioral evaluation in progress; publication pending
+Status: architecture implemented; RC1 published; RC2 corrective candidate in final release gates
 
-Target release: `0.6.0-rc`
+Target release: `0.6.0-rc.2`
 
 Last updated: 2026-08-29
 
-Implementation branch: `feat/agent-platform-modernization`
+Release line: `main` (modernization originated on `feat/agent-platform-modernization`; RC2 corrections were prepared on `fix/create-outline-decision-fidelity`)
 
 ## Why this document exists
 
@@ -302,7 +302,7 @@ instead of converting planned coverage into observed evidence.
 - [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action or process-boundary resume was inferred from that run.
 - [x] Post-remediation Dynamo readings retained with exact source identities: the `0245818` slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; and the `cbba38c` draft/review observation proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
 - [x] Current canonical-runtime Dynamo initialization reading retained at `bf50e23`: five records passed literal schema validation, but the dependency-wave invariant and no-shell boundary failed, so the operator stopped before `map-project` and made no full-lifecycle claim.
-- [x] Later NSF 25-531 toy UAT exercised one section through outline, discussion, plan, write, review, durable pause, and a post-hardening fresh-process resume/progress path with 25/25 schema-valid records; the full proposal and certifying lifecycle remain open.
+- [x] Later NSF 25-531 toy UAT exercised one pre-final-hardening section through outline, discussion, plan, write, review, and durable pause, then a post-hardening fresh-process resume/progress path, with 25/25 schema-valid records; final RC2 write/review/pause has deterministic regression coverage but no second model rerun, and the full proposal and certifying lifecycle remain open.
 - [ ] Complete and retain the paid routing matrix, corrected Clio fleet runs, full process-boundary lifecycle chain, and independent semantic assessment.
 - [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.

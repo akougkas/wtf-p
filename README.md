@@ -147,9 +147,12 @@ despite an explicit no-shell policy. The operator stopped the run before
 The later operator-observed NSF 25-531 toy UAT used Clio Coder 0.3.8 and
 Dynamo `qwen3.8-27b-dynamo` with thinking off in a disposable offline profile.
 It continued an already mapped fixture through outline, discussion, plan,
-write, review, and durable pause for one section. The provisional section had
-1,019 measured body words; its review retained four author-accepted warning
-items; and 25/25 portable JSON records passed independent schema validation.
+write, review, and durable pause for one section during defect-finding before
+the final RC2 write/review/pause hardening. The provisional section's persisted
+writer/state count was 1,019 whitespace-delimited words; the independent
+reviewer used a different tokenizer and counted 1,026. Its review retained four
+author-accepted warning items, and 25/25 portable JSON records passed
+independent schema validation.
 The first genuinely fresh-process resume attempt did not pass: the pre-
 hardening workflow skipped required durable reads and the author gate and
 described mutations that never occurred. With the regenerated RC2 bundle, a
@@ -157,8 +160,11 @@ new process read the durable records, invoked the real Clio `ask_user`
 interview, waited for the author choice, resolved the checkpoint, advanced
 state to revision 7/active while preserving phase `reviewing`, and read both
 records back; independent validation remained 25/25. This is a corrected
-one-section resumption observation, not a full proposal, completed research,
-submission-readiness, safety-certification, or improved-writing claim.
+one-section resumption observation, not an end-to-end rerun of the final RC2
+write/review/pause contracts, full proposal, completed research, submission-
+readiness, safety-certification, or improved-writing claim. The final contracts
+have deterministic regression evidence; only resume/progress received the
+post-hardening model rerun.
 
 ## The paper lifecycle
 
