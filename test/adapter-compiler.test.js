@@ -699,6 +699,29 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     assert.deepStrictEqual(plan.files.get(nestedPath), plan.files.get(flat[index]), `${actionIds[index]}: Clio compatibility prompt drift`);
   }
 
+  const lifecycleGuards = {
+    'prompts/wtfp/write-section.md': [
+      'calculate its actual body word count with one deterministic method',
+      'Missing, empty, or inconsistent output is a failed completion condition'
+    ],
+    'prompts/wtfp/review-section.md': [
+      'at most one corrective retry for result-contract compliance',
+      'Review does not write project state, pause the project, or invent a `paused` phase'
+    ],
+    'prompts/wtfp/pause-writing.md': [
+      '`paused` is a status and is never a phase'
+    ],
+    'prompts/wtfp/resume-writing.md': [
+      'a prior conversation, invocation prose, or generated report is not evidence that these reads occurred',
+      'Invocation arguments may request resumption but cannot answer this gate',
+      'If the gate is unavailable or no response is returned, report `needs-input` and make no mutation'
+    ]
+  };
+  for (const [sourcePath, guards] of Object.entries(lifecycleGuards)) {
+    const source = planText(plan, sourcePath);
+    for (const guard of guards) assert.ok(source.includes(guard), `${sourcePath}: missing lifecycle guard: ${guard}`);
+  }
+
   assert.ok([...plan.files.keys()].every((file) => !file.split('/').some((segment) => segment.includes(':'))), 'Clio generated a colon-bearing filename');
   for (const role of EXPECTED_ROLES) {
     const sourcePath = `agents/wtfp-${role}.md`;
@@ -711,7 +734,12 @@ record('Clio emits nested and flat prompts, strict agents, and two agent-only fl
     assert.match(source, /^budget: \{toolCalls: \d+, readReserve: \d+, synthesis: true\}$/m);
     assert.match(source, new RegExp(`^resultContract: \\{kind: ${verifier ? 'verifier-report' : 'mutation-report'}\\}$`, 'm'));
     assert.match(source, /^## Clio result contract$/m);
-    assert.match(source, /entire final response must be one JSON object/);
+    assert.match(source, /entire final response must be one (?:compact )?JSON object/);
+    if (verifier) {
+      assert.match(source, /Return at most 16 non-duplicate checks/);
+      assert.match(source, /keep the complete JSON under 16 KiB/);
+      assert.match(source, /emit no Markdown, code fence, analysis, or text outside the object/);
+    }
   }
 
   const fleetPaths = planFiles(plan, /^fleets\/[^/]+\.md$/);

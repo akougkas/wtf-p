@@ -146,6 +146,13 @@ function main() {
     console.log(`✓ ${slug} is a portable ${executionClass} contract`);
   }
 
+  const writer = fs.readFileSync(path.join(rolesDirectory, 'section-writer.md'), 'utf8');
+  assert.match(writer, /Measure the persisted manuscript body with one deterministic word-count method/);
+  assert.match(writer, /do not report or link a missing summary/);
+  const reviewer = fs.readFileSync(path.join(rolesDirectory, 'section-reviewer.md'), 'utf8');
+  assert.match(reviewer, /Keep the structured result compact/);
+  assert.match(reviewer, /return only the result object required by the host contract/);
+
   assert.strictEqual(ids.size, 11, 'all canonical role ids must be unique');
   console.log('\n11 portable role contracts passed.');
 }

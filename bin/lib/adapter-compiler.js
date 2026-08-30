@@ -713,7 +713,7 @@ function renderClioRole(role, slug) {
     ? '[read, grep, find, ls, ledger]'
     : '[grep, find, ls, ledger]';
   const nativeResult = verifier
-    ? 'Your entire final response must be one JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check.'
+    ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 16 non-duplicate checks, keep each evidence value to one short sentence, keep the complete JSON under 16 KiB, and emit no Markdown, code fence, analysis, or text outside the object.'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
   return [
     '---',
