@@ -121,9 +121,11 @@ A later operator-observed run used Clio source
 and WTF-P corrections `c500b4a21c6befdd6bfcc7971eeef27201aff79c`
 and `8707b3bf397b7c9b895e8f9a745e6a039c5b84fb`. The requested local model
 was `qwen3.8-27b`; the observed wire model was `qwen3.8-27b-dynamo`, with
-thinking off. Clio ran interactively in an isolated full-auto profile with its
-hard safety rails, worker permission fallback set to deny, network tools
-disabled, and every client root under one disposable directory.
+thinking off. Clio ran interactively in one isolated profile, using supervised
+`suggest` through outline/plan before the operator switched it to `full-auto`
+for write/review/pause and the later resume/progress. Hard safety rails remained
+enabled, worker permission fallback was deny, network tools were disabled, and
+every client root was under one disposable directory.
 
 The defect-finding run continued an already mapped NSF 25-531 fixture through
 `create-outline`, `discuss-section`, `plan-section`, `write-section`,
@@ -159,8 +161,8 @@ The final RC2 write/review/pause corrections have deterministic regression
 coverage but were not followed by a second end-to-end model rerun. The
 post-hardening model reading covers resume/progress only.
 
-This was an exploratory full-auto reading, not a safety certification. Clio
-used contained read-only shell helpers; the pause record's pre-existing future
+This was an exploratory mixed-autonomy reading, not a safety certification.
+During its `full-auto` phases Clio used contained read-only shell helpers; the pause record's pre-existing future
 timestamp makes strict event ordering imperfect; and progress prose described
 the four validation files inaccurately as “4 of 6 passed” rather than two
 `passed` and two `issues-found`. `research-gap` remained adapter-unavailable,
