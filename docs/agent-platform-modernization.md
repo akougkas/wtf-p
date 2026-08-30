@@ -1,8 +1,8 @@
 # WTF-P Agent Platform Modernization
 
-Status: architecture implemented; RC1 published; RC2 corrective candidate in final release gates
+Status: architecture implemented; RC1 and RC2 published; stable-release evidence gates remain open
 
-Target release: `0.6.0-rc.2`
+Released candidate: `0.6.0-rc.2`; next release target: stable `0.6.0`
 
 Last updated: 2026-08-29
 
@@ -307,7 +307,9 @@ instead of converting planned coverage into observed evidence.
 - [ ] Accumulate a cross-version observed academic-output baseline; unsupported historical targets remain unavailable rather than substituted.
 - [x] Conservative v0.5-to-v0.6 client and project migration guide authored with rollback instructions.
 - [x] Publish `0.6.0-rc.1` under the npm `next` tag after human review.
-- [ ] Prepare, tag, and publish `0.6.0-rc.2` as a separate reviewed operator action.
+- [x] Prepare, tag, and publish `0.6.0-rc.2` under the npm `next` tag as a separate reviewed operator action.
+- [x] Verify a fresh Clio install and native discovery from the published RC2 registry artifact in a disposable client home.
+- [ ] Gather migration feedback before promoting stable `0.6.0`.
 
 ## Decisions intentionally deferred
 

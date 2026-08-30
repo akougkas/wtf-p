@@ -242,4 +242,26 @@ or an observed cross-version academic-output baseline. The versioned
 fixtures, rubrics, and fail-closed runners exist under `evaluation/`; their
 static contract tests remain a different evidence level from model execution.
 
-This document records release-candidate evidence only. WTF-P `0.6.0-rc.1` was published to npm under `next` on 2026-08-29. RC2 publication and any coordinated client publication remain separate operator actions.
+This document records release-candidate evidence only. WTF-P `0.6.0-rc.1`
+was published to npm under `next` on 2026-08-29. WTF-P `0.6.0-rc.2` was
+published under the same tag at `2026-08-30T03:18:49.692Z` (2026-08-29 in
+the operator's CDT timezone), and `next` now resolves to RC2. The immutable
+registry artifact has SHA-1
+`f47a280a83b808f7a130607bf1042323eff6cb82`, SHA-512 integrity
+`sha512-XPirVlq5SPgZGGYMFw9Sf2zAHot6++rUxlalndD0qzCgWHcdQQHAWk4pZ1qluJICYXqNgSiBEBYCuGfn/UHD0Q==`,
+1,828 files, a 1,160,693-byte packed size, and a 7,797,078-byte unpacked
+size. A local archive reproduction matched those registry facts.
+
+A fresh registry installation then selected the artifact explicitly with
+`npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio` inside a
+mode-0700 disposable HOME/XDG/Clio/npm environment. It reported RC2, installed
+233 files, preserved the nested project `state.json`, and exposed 72 prompts,
+11 extension agents, seven skills, and two valid fleets to Clio Coder 0.3.8.
+The same host demonstrated why the explicit package selector matters: the
+shorter `npx wtf-p@0.6.0-rc.2 ...` form was shadowed by an already installed
+global v0.5 executable under npm 11.6.0. Documentation therefore uses the
+unambiguous `--package … -- wtf-p` form.
+
+Migration feedback and any coordinated client publication remain separate
+gates; neither installation nor publication upgrades the partial lifecycle
+evidence above into a completed behavioral claim.

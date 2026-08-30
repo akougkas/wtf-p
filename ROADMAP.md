@@ -122,7 +122,9 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [ ] Complete the paid skill-routing matrix and full Clio lifecycle/fleet runs
 - [ ] Establish observed cross-version academic-output baselines
 - [x] Publish `0.6.0-rc.1` under the npm `next` tag
-- [ ] Publish `0.6.0-rc.2`, verify a fresh install, and gather migration feedback before stable `0.6.0`
+- [x] Publish `0.6.0-rc.2` under the npm `next` tag
+- [x] Verify a fresh Clio install and native discovery from the published `0.6.0-rc.2` registry artifact in a disposable client home
+- [ ] Gather v0.5-to-v0.6 migration feedback before stable `0.6.0`
 
 ### Deferred beyond the release candidate
 

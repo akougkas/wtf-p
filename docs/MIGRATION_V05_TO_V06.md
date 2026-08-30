@@ -22,9 +22,9 @@ Commit or otherwise back up the academic project using your normal process befor
 Inspect each existing installation:
 
 ```bash
-npx wtf-p status --claude
-npx wtf-p doctor --claude
-npx wtf-p uninstall --claude --dry-run
+npx --yes --package=wtf-p@0.5.0 -- wtf-p status --claude
+npx --yes --package=wtf-p@0.5.0 -- wtf-p doctor --claude
+npx --yes --package=wtf-p@0.5.0 -- wtf-p uninstall --claude --dry-run
 ```
 
 Replace `--claude` with `--gemini` or `--opencode` for another v0.5 target. A legacy installation without a v2 ownership receipt is diagnostic-only by default. WTF-P reports it and preserves it unless you explicitly choose the documented forced migration path.
@@ -34,7 +34,7 @@ Replace `--claude` with `--gemini` or `--opencode` for another v0.5 target. A le
 If the dry run identifies a trustworthy v2 installation, uninstall exact owned files:
 
 ```bash
-npx wtf-p uninstall --claude --backup --yes
+npx --yes --package=wtf-p@0.5.0 -- wtf-p uninstall --claude --backup --yes
 ```
 
 If ownership cannot be proven, either leave the legacy copy in place while testing v0.6 under an isolated client home, or review the reported files and use the explicit force policy only after making a backup. The uninstaller never recursively removes a generic `commands/`, `skills/`, `agents/`, `bin/`, or `mcp/` directory.
@@ -51,26 +51,34 @@ Avoid activating both the old direct Claude commands and the v0.6 Claude plugin 
 
 ## 3. Install one explicit v0.6 target
 
-Each modern target maps to that client's documented native user configuration root. Use `--config-dir` for a deliberate custom or isolated root.
+Each modern target maps to that client's documented native user configuration
+root. The examples below pin the immutable release candidate; changing the
+package selector to `--package=wtf-p@next` instead selects the newest moving
+prerelease. Keep the explicit `--package … -- wtf-p` form so an older globally
+installed executable cannot shadow the requested package. An unqualified
+`npx wtf-p` still selects the v0.5 stable line. Use `--config-dir` for a
+deliberate custom installation destination. It does not, by itself, isolate
+every runtime home, data, state, cache, and temporary path used by the client.
 
 ```bash
-npx wtf-p install clio --advanced
-npx wtf-p install claude --advanced
-npx wtf-p install codex --advanced
-npx wtf-p install copilot --advanced
-npx wtf-p install opencode --advanced
-npx wtf-p install antigravity --advanced
-npx wtf-p install gemini --advanced
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install gemini
 ```
 
 The deprecated `--global` and `--local` flags remain Claude compatibility aliases during the release-candidate cycle. No targetless noninteractive invocation installs anything.
 
-After installation, run:
-
-```bash
-npx wtf-p status --<target>
-npx wtf-p doctor --<target>
-```
+In RC2, `status` and `doctor` remain legacy Claude-oriented diagnostics; a
+modern target selector passed to either command is not authoritative. Verify a
+modern adapter with the client's native discovery surface instead. For Clio,
+check `clio-coder --version`, `/prompts`, `clio-coder agents`, and
+`clio-coder fleet list`; use the equivalent native command, plugin, or skill
+listing for another client. A successful install plus native discovery is the
+RC2 verification boundary.
 
 For Clio, the installer also performs an isolated, credential-free capability
 probe. Clio Coder 0.3.8 includes recursive `/wtfp:*` prompts, extension agents,
@@ -106,7 +114,18 @@ For a new project, run `/wtfp:new-paper`; it previews and schema-validates these
 .planning/structure/outline.json
 ```
 
-For an existing paper, run `/wtfp:map-project`. Review the proposed manifest, source/evidence records, decisions, section records, and outline before approving writes. Keep legacy planning files during the release-candidate cycle as historical input, but v0.6 workflows must not treat them as current control state.
+For an existing paper that does **not** already contain
+`.planning/project.json`, run `/wtfp:new-paper` first. Tell the agent explicitly
+to preserve and initialize around the existing manuscript and materials. Review
+and approve the five proposed control records, then run `/wtfp:map-project` to
+inventory the existing drafts, source/evidence material, decisions, and section
+artifacts. `map-project` reads an existing portable manifest and state; it does
+not create those initialization records by itself.
+
+An already initialized portable-v1 project can begin with `/wtfp:progress`,
+`/wtfp:map-project`, or `/wtfp:resume-writing`, depending on its durable state.
+Keep legacy planning files during the release-candidate cycle as historical
+input, but v0.6 workflows must not treat them as current control state.
 
 Key distinctions to verify during review:
 
@@ -141,13 +160,13 @@ Then preview one bounded write, such as `/wtfp:plan-section`, and confirm that:
 Preview exact removal:
 
 ```bash
-npx wtf-p uninstall --<target> --dry-run
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --<target> --dry-run
 ```
 
 Then remove unchanged owned files:
 
 ```bash
-npx wtf-p uninstall --<target> --backup --yes
+npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --<target> --backup --yes
 ```
 
 Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.
@@ -156,4 +175,8 @@ Modified files and unowned siblings are preserved by default. A client-install r
 
 The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell: a client without an exact contained logical-tool binding must report `tool.execute` unavailable.
 
-See [COMPATIBILITY.md](COMPATIBILITY.md) for exact client versions and live-evaluation caveats, and [BUILD_AND_RELEASE.md](BUILD_AND_RELEASE.md) for maintainer validation and package checks.
+See [GETTING_STARTED.md](GETTING_STARTED.md) for client invocation, full runtime
+isolation, and troubleshooting; [COMPATIBILITY.md](COMPATIBILITY.md) for exact
+client versions and live-evaluation caveats; and
+[BUILD_AND_RELEASE.md](BUILD_AND_RELEASE.md) for maintainer validation and
+package checks.

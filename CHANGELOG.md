@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Documentation
+
+- Reworked the public entry point around the human-guided scientist workflow,
+  exact client invocation, durable pause/resume, and RC2's observed limits
+- Added practical getting-started and proposal guides for operators and agents,
+  including a supplied-material NSF 25-531 walkthrough
+- Made prerelease management commands select the package explicitly so an
+  installed v0.5 executable cannot shadow RC2, and corrected migration,
+  native-discovery, existing-project, and release-status guidance
+
 ## [0.6.0-rc.2] - 2026-08-29
 
 Corrective release candidate for decision fidelity and durable lifecycle handling. This release does not claim a completed proposal lifecycle or improved writing quality.
@@ -187,6 +199,7 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...HEAD
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0

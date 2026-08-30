@@ -81,17 +81,19 @@ Publish mode additionally requires a clean tree, an exact `v<package-version>` t
 
 WTF-P follows Semantic Versioning, including prerelease identifiers. Prepare a release as reviewable repository changes; the release helper deliberately does not invent changelog text or silently bump hundreds of generated manifests.
 
-For example, to prepare the next release candidate:
+For example, to prepare a future prerelease, replace the placeholder with the
+reviewed SemVer value before running these commands:
 
 ```bash
-npm version 0.6.0-rc.2 --no-git-tag-version
+wtfp_release_version='<next-prerelease-version>'
+npm version "${wtfp_release_version}" --no-git-tag-version
 # Edit CHANGELOG.md and its comparison link.
 npm run build:adapters
 npm run test:all
 git diff --check
 git add package.json CHANGELOG.md
 git add -p protocol bin vendors test docs README.md ROADMAP.md
-git commit -m "chore(release): prepare v0.6.0-rc.2"
+git commit -m "chore(release): prepare ${wtfp_release_version}"
 ```
 
 If a lockfile exists, include it in the version-preparation commit. Never use a broad add command without inspecting the worktree; generated adapters can coexist with operator-owned local files.
