@@ -1,0 +1,76 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "discuss-section",
+  "title": "Discuss a section",
+  "description": "Capture the researcher's intended purpose, essential content, voice, and boundaries before planning.",
+  "alias": "wtfp:discuss-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/discuss-section",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A target section is identifiable"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/context",
+    "project://sections/{section}/summary"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/context",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/context",
+      "mode": "update"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://decisions",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/context, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://decisions, project://sections/{section}, project://sections/{section}/context"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sections/{section}/summary"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "declared discussion records"
+    },
+    {
+      "id": "user.gate",
+      "scope": "section intent and boundaries"
+    }
+  ]
+}

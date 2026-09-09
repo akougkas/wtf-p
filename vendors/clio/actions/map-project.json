@@ -22,7 +22,9 @@
     "project://manifest",
     "project://state",
     "project://materials/{artifact}",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://sources/{source}",
+    "project://evidence/{evidence}"
   ],
   "produces": [
     {
@@ -36,6 +38,18 @@
     {
       "uri": "project://state",
       "mode": "update"
+    },
+    {
+      "uri": "project://sources/{source}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -47,11 +61,11 @@
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://state, project://materials/{artifact}, project://paper/{artifact}"
+      "scope": "project://manifest, project://state, project://materials/{artifact}, project://paper/{artifact}, project://sources/{source}, project://evidence/{evidence}"
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state"
+      "scope": "project://sources/{source}, project://evidence/{evidence}, project://state, project://manifest"
     }
   ]
 }

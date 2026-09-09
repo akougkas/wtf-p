@@ -1,6 +1,6 @@
 {
   "schema": "wtfp.generated-adapter/v1",
-  "generatorVersion": 4,
+  "generatorVersion": 5,
   "target": "codex-marketplace",
   "sourceHash": "47f09f4f05f267f800b4ba496ee09c15b0391fb6af93adf1504fccb33d0d9844",
   "files": [

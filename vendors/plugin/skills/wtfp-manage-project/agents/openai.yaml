@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Manage Project"
+  short_description: "Track and resume a writing project"
+  default_prompt: "Use $wtfp-manage-project to assess progress and coordinate the next research-writing step."

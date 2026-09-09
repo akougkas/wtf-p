@@ -1,0 +1,65 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "resume-writing",
+  "title": "Resume writing",
+  "description": "Restore the latest portable handoff and route the researcher to the next safe action.",
+  "alias": "wtfp:resume-writing",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/resume-writing",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state or a session handoff exists",
+      "Every declared resume input is read and validated in the current invocation before options are presented",
+      "A host-native user gate returns one exact checkpoint option in the current invocation before any checkpoint or state mutation"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://checkpoints/{checkpoint}",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/handoff",
+    "project://sections/{section}/summary",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://checkpoints/{checkpoint}, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/handoff, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "user.gate",
+      "scope": "selection of the resumed action"
+    }
+  ]
+}

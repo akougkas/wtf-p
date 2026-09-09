@@ -1,0 +1,52 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "add-todo",
+  "title": "Add a todo",
+  "description": "Capture a bounded note or task without disrupting the active research flow.",
+  "alias": "wtfp:add-todo",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/add-todo",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://state",
+    "project://checkpoints/{checkpoint}"
+  ],
+  "produces": [
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://checkpoints/{checkpoint}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://state, project://checkpoints/{checkpoint}"
+    }
+  ]
+}

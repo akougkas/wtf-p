@@ -1,0 +1,12 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "wtf-p",
+  "version": "0.6.0-rc.2",
+  "description": "Portable, evidence-grounded academic research and writing workflows.",
+  "author": {
+    "name": "akougkas"
+  },
+  "homepage": "https://github.com/akougkas/wtf-p",
+  "repository": "https://github.com/akougkas/wtf-p",
+  "license": "MIT"
+}

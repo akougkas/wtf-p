@@ -1,0 +1,20 @@
+{
+  "schema": "wtfp.project.source/v1",
+  "id": "source-portable-protocols-2026",
+  "project_id": "portable-research-demo",
+  "kind": "journal-article",
+  "title": "Portable Protocols for Evidence-Grounded Research Workflows",
+  "creators": ["A. Researcher", "B. Scholar"],
+  "year": 2026,
+  "identifiers": {
+    "doi": "10.1234/example.2026.17"
+  },
+  "citation_key": "Researcher2026Portable",
+  "status": "verified",
+  "provenance": {
+    "discovered_via": "scholarly-index",
+    "inspection_depth": "full-text",
+    "verified_at": "2026-08-28T12:20:00Z",
+    "notes": "Identity and relevant passages were checked against the publisher record."
+  }
+}

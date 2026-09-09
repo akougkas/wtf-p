@@ -1,0 +1,35 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "list-assumptions",
+  "title": "List section assumptions",
+  "description": "Preview the intended approach and assumptions for a section without changing project files.",
+  "alias": "wtfp:list-assumptions",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/list-assumptions",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read"
+    ],
+    "conditions": [
+      "A target section is identifiable"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://decisions, project://structure/outline, project://sections/{section}"
+    }
+  ]
+}

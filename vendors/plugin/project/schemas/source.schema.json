@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/source/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "kind",
+    "title",
+    "creators",
+    "year",
+    "identifiers",
+    "status",
+    "provenance"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.source/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "kind": {
+      "enum": [
+        "journal-article",
+        "conference-paper",
+        "book",
+        "book-chapter",
+        "preprint",
+        "thesis",
+        "dataset",
+        "software",
+        "standard",
+        "web-resource",
+        "author-material",
+        "other"
+      ]
+    },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "creators": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+    },
+    "year": { "type": ["integer", "null"], "minimum": 1000, "maximum": 2200 },
+    "identifiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "doi": { "type": "string", "pattern": "^10\\.[0-9]{4,9}/\\S+$" },
+        "arxiv": { "type": "string", "pattern": "^(?:[a-z-]+/[0-9]{7}|[0-9]{4}\\.[0-9]{4,5})(?:v[0-9]+)?$" },
+        "isbn": { "type": "string", "minLength": 10 },
+        "url": { "type": "string", "format": "uri" },
+        "local_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" }
+      }
+    },
+    "citation_key": { "type": "string", "pattern": "^[A-Za-z0-9:_-]+$" },
+    "status": { "enum": ["verified", "provisional", "unavailable", "retracted"] },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["discovered_via", "inspection_depth", "verified_at"],
+      "properties": {
+        "discovered_via": {
+          "enum": ["scholarly-index", "bibliography-import", "author-provided", "repository", "manual"]
+        },
+        "inspection_depth": { "enum": ["metadata", "abstract", "full-text", "primary-data"] },
+        "verified_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

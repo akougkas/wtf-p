@@ -323,6 +323,7 @@ record('compiler plans and target roots are exact and deterministic', () => {
       ['opencode', EXPECTED_ROOTS.opencode],
       ['antigravity', EXPECTED_ROOTS.antigravity],
       ['gemini', EXPECTED_ROOTS.gemini],
+      ['portable-plugin', path.join(ROOT, 'vendors', 'plugin')],
       ['codex-marketplace', path.join(ROOT, 'vendors', 'codex')],
       ['copilot-marketplace', path.join(ROOT, 'vendors', 'copilot')]
     ]
@@ -960,6 +961,64 @@ record('every bundled native resource reference resolves inside its target envel
         assert.doesNotMatch(planText(plan, sourcePath), /\$\{extensionPath\}/, `${sourcePath}: unsupported Gemini prompt variable`);
       }
     }
+  }
+});
+
+record('standard plugin graph resolves and retains portable host boundaries', () => {
+  const plan = plansById.get('portable-plugin');
+  const manifest = JSON.parse(planText(plan, 'plugin.json'));
+  assert.strictEqual(manifest.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
+  assert.strictEqual(manifest.name, 'wtfp');
+  assert.strictEqual(manifest.version, PACKAGE_VERSION);
+  const { SchemaRegistry, validateInstance } = require('../evaluation/lib/json-schema');
+  const schemaFile = path.join(ROOT, 'test/fixtures/agent-plugin-1.0.0.schema.json');
+  const registry = new SchemaRegistry([schemaFile]);
+  assert.deepStrictEqual(validateInstance(manifest, registry.get(schemaFile), schemaFile, registry), []);
+  assert.ok(validateInstance({ ...manifest, skills: './skills' }, registry.get(schemaFile), schemaFile, registry).length, 'nonstandard top-level metadata must fail');
+  const extension = manifest.extensions['ai.iowarp.clio'];
+  const components = new Map(extension.components.map(item => [`${item.kind}:${item.id}`, item]));
+  assert.strictEqual(components.size, 56);
+  for (const [ref, item] of components) {
+    assert.ok(plan.files.has(item.path), `${ref} has no packaged file`);
+    for (const dependency of item.requires) assert.ok(components.has(dependency), `${ref}: missing ${dependency}`);
+    if (['agent', 'fleet', 'prompt'].includes(item.kind)) assert.ok(item.path.startsWith('ai.iowarp.clio/'));
+  }
+  assertSkillLinksResolve(plan);
+  for (const directory of Object.values(extension.resources)) assert.ok([...plan.files.keys()].some(file => file.startsWith(directory + '/')));
+  const codex = plansById.get('codex');
+  const standard = JSON.parse(planText(codex, 'plugin.json'));
+  const fallback = JSON.parse(planText(codex, '.codex-plugin/plugin.json'));
+  for (const field of ['name', 'version']) assert.strictEqual(standard[field], fallback[field]);
+});
+
+record('research handoff declares incremental state and preserves native decision returns', () => {
+  const action = readJson(path.join(ROOT, 'protocol/actions/map-project.json'));
+  for (const uri of ['project://sources/{source}', 'project://evidence/{evidence}', 'project://manifest']) {
+    assert.ok(action.reads.includes(uri));
+    assert.ok(action.produces.some(output => output.uri === uri && output.mode === 'update'));
+  }
+  for (const target of Object.keys(EXPECTED_ROOTS)) {
+    const plan = plansById.get(target);
+    const role = planText(plan, 'roles/outliner.md');
+    assert.match(role, /sum equals the approved target exactly/);
+    assert.doesNotMatch(role, /within ten percent/);
+    const mapping = planText(plan, 'skills/wtfp-start-project/references/actions.md');
+    assert.match(mapping, /Read existing source and evidence records before any update/);
+    assert.match(mapping, /preserving existing entries/);
+  }
+  const clio = plansById.get('clio');
+  assert.strictEqual(TARGET_POLICIES.clio.capabilities['network.search'], null);
+  for (const role of EXPECTED_ROLES) {
+    const body = planText(clio, `agents/wtfp-${role}.md`);
+    assert.match(body, /entry named wtfp.role-result/);
+    assert.match(body, /status needs_input/);
+    assert.match(body, /Embedded portable result schema:/);
+  }
+  assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
+  for (const role of EXPECTED_ROLES) {
+    const body = planText(plansById.get('claude'), `agents/wtfp/${role}.md`);
+    assert.match(body, /^tools:$/m);
+    assert.doesNotMatch(body, /^allowed-tools:/m);
   }
 });
 

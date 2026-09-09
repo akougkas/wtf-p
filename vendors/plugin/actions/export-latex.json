@@ -1,0 +1,65 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "export-latex",
+  "title": "Export LaTeX",
+  "description": "Export the manuscript and bibliography to portable LaTeX source with declared formatting.",
+  "alias": "wtfp:export-latex",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-deliver-research"
+  },
+  "workflow": "wtfp://workflows/export-latex",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Manuscript source is available",
+      "A contained host-provided LaTeX syntax checker or compiler is configured when compilation is requested"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://structure/outline",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://deliverables/latex/{artifact}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [
+    "bibliography.format",
+    "bibliography.index"
+  ],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://deliverables/latex/{artifact}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://structure/outline, project://sources/{source}, project://evidence/{evidence}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "portable LaTeX and bibliography outputs"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "declared bibliography tools and the configured host-provided LaTeX checker or compiler"
+    },
+    {
+      "id": "user.gate",
+      "scope": "venue template and destructive output replacement"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "request-feature",
+  "title": "Request a WTF-P feature",
+  "description": "Shape a concrete feature request and publish it only after explicit user approval.",
+  "alias": "wtfp:request-feature",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "external.issue",
+      "filesystem.read",
+      "network.fetch",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The user explicitly requested a feature proposal"
+    ]
+  },
+  "reads": [
+    "package://metadata",
+    "protocol://catalog.json"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "external.issue",
+      "scope": "the configured WTF-P issue tracker"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "package://metadata, protocol://catalog.json"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "feature template and duplicate metadata"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the exact issue body before publication"
+    }
+  ]
+}

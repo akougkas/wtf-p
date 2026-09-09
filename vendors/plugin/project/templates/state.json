@@ -1,0 +1,22 @@
+{
+  "schema": "wtfp.project.state/v1",
+  "project_id": "portable-research-demo",
+  "revision": 0,
+  "phase": "outlining",
+  "status": "active",
+  "current_section_uri": "project://sections/introduction",
+  "progress": {
+    "sections_total": 2,
+    "sections_complete": 0,
+    "word_target": 6000,
+    "word_count": 0
+  },
+  "active_checkpoint_uris": [],
+  "last_transition": {
+    "from": "initialized",
+    "to": "outlining",
+    "reason": "The project brief and author decisions are recorded.",
+    "at": "2026-08-28T12:10:00Z"
+  },
+  "updated_at": "2026-08-28T12:10:00Z"
+}

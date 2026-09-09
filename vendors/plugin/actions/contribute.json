@@ -1,0 +1,57 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "contribute",
+  "title": "Contribute to WTF-P",
+  "description": "Guide a bounded WTF-P contribution from branch creation through a reviewable change request.",
+  "alias": "wtfp:contribute",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "external.issue",
+      "filesystem.read",
+      "network.fetch",
+      "user.interaction",
+      "vcs.branch",
+      "vcs.commit"
+    ],
+    "conditions": [
+      "The user has selected a repository and explicitly requested contribution guidance"
+    ]
+  },
+  "reads": [
+    "package://contributing",
+    "project://materials/{artifact}"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "external.issue",
+      "scope": "the selected repository change-request service"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "package://contributing, project://materials/{artifact}"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "selected repository metadata"
+    },
+    {
+      "id": "user.gate",
+      "scope": "branch, commit, publication, and change-request decisions"
+    },
+    {
+      "id": "vcs.branch",
+      "scope": "selected contribution repository"
+    },
+    {
+      "id": "vcs.commit",
+      "scope": "user-approved contribution changes"
+    }
+  ]
+}

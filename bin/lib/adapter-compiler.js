@@ -71,7 +71,7 @@ const TARGET_POLICIES = Object.freeze({
     'filesystem.read': 'clio:workspace-read',
     'filesystem.write': 'clio:workspace-write',
     'network.fetch': 'clio:network-fetch',
-    'network.search': 'clio:network-search',
+    'network.search': null,
     'package.update': null,
     'tool.execute': null,
     'user.interaction': 'clio:ask_user',
@@ -603,7 +603,7 @@ function renderMarkdownCommand(action, workflowBody, target, availability) {
     }
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target);
-  const userGateBody = target === 'clio' ? clioUserGateBody(action) : '';
+  const userGateBody = target === 'clio' ? [clioUserGateBody(action), action.delegation.length ? '## Clio role-result binding\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.' : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -698,7 +698,7 @@ function renderPortableRole(role, slug, target) {
     `description: ${yamlScalar(roleDescription(role))}`
   ];
   if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
-    lines.push('allowed-tools:');
+    lines.push(target === 'claude' ? 'tools:' : 'allowed-tools:');
     for (const tool of tools) lines.push(`  - ${tool}`);
   }
   lines.push('---', '', generatedBanner('protocol/roles', slug), '', nativeWorkflowBody(role.body, target), '');
@@ -731,7 +731,7 @@ function renderClioRole(role, slug) {
     ? '[read, grep, find, ls, ledger]'
     : '[grep, find, ls, ledger]';
   const nativeResult = verifier
-    ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each evidence value to one short sentence, keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.'
+    ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each ordinary evidence value to one short sentence (the wtfp.role-result entry contains compact serialized JSON), keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
   return [
     '---',
@@ -757,8 +757,25 @@ function renderClioRole(role, slug) {
     '## Clio result contract',
     '',
     nativeResult,
+    '',
+    'Embedded portable result schema: ' + JSON.stringify(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json'))),
+    '',
+    'Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string must be serialized JSON conforming to schemas/role-result.schema.json: schema wtfp.role-result/v1, role, action, status, summary, artifacts, issues, next_actions, effects_applied. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.',
     ''
   ].join('\n');
+}
+
+function standardPluginManifest(version, name = 'wtfp', clioExtension) {
+  return stableJson({
+    $schema: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
+    name, version,
+    description: 'Portable, evidence-grounded academic research and writing workflows.',
+    author: { name: 'akougkas' },
+    homepage: 'https://github.com/akougkas/wtf-p',
+    repository: 'https://github.com/akougkas/wtf-p',
+    license: 'MIT',
+    ...(clioExtension ? { extensions: { 'ai.iowarp.clio': clioExtension } } : {})
+  });
 }
 
 function clioManifest(version) {
@@ -1132,6 +1149,7 @@ function compilePlans(options = {}) {
 
   const codex = byId.get('codex');
   addFile(codex, '.codex-plugin/plugin.json', codexPluginManifest(model.version));
+  addFile(codex, 'plugin.json', standardPluginManifest(model.version, 'wtf-p'));
 
   const copilot = byId.get('copilot');
   addFile(copilot, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version));
@@ -1165,6 +1183,37 @@ function compilePlans(options = {}) {
     addFile(copilot, `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, 'copilot'));
     addFile(antigravity, `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, 'antigravity'));
   }
+
+  // Standard domain bundle. Keep legacy extension output independently usable.
+  const portable = makePlan('portable-plugin', path.join(ROOT, 'vendors', 'plugin'));
+  for (const [file, content] of clio.files) {
+    if (file === 'clio-coder-extension.yaml') continue;
+    const native = /^(prompts|agents|fleets)\//.test(file);
+    addFile(portable, native ? `ai.iowarp.clio/${file}` : file, content);
+  }
+  const components = [];
+  for (const action of model.actions) components.push({
+    kind: 'prompt', id: action.id,
+    path: `ai.iowarp.clio/prompts/wtfp/${action.id}.md`,
+    requires: action.delegation.map(item => `agent:${item.role}`)
+  });
+  for (const role of model.roles) components.push({
+    kind: 'agent', id: role.slug, path: `ai.iowarp.clio/agents/wtfp-${role.slug}.md`,
+    requires: [`skill:${ROLE_SKILLS[role.slug]}`]
+  });
+  for (const skill of model.catalog.skills) components.push({
+    kind: 'skill', id: skill.id, path: `skills/${skill.id}/SKILL.md`, requires: []
+  });
+  for (const id of ['wtfp-plan-section', 'wtfp-draft-review']) components.push({
+    kind: 'fleet', id, path: `ai.iowarp.clio/fleets/${id}.md`, requires: []
+  });
+  addFile(portable, 'plugin.json', standardPluginManifest(model.version, 'wtfp', {
+    manifestVersion: 1,
+    compatibility: { clio: '>=0.4.6' },
+    resources: { skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents', fleets: 'ai.iowarp.clio/fleets' },
+    components
+  }));
+  plans.push(portable);
 
   const codexMarketplace = makePlan('codex-marketplace', path.join(ROOT, 'vendors', 'codex'));
   addFile(codexMarketplace, '.agents/plugins/marketplace.json', stableJson({

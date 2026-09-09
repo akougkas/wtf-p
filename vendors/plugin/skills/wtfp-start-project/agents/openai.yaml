@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Start Project"
+  short_description: "Initialize and structure a research paper"
+  default_prompt: "Use $wtfp-start-project to initialize and structure this research paper."

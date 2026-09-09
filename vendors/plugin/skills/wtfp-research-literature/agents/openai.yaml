@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Research Literature"
+  short_description: "Research and audit scholarly literature"
+  default_prompt: "Use $wtfp-research-literature to investigate and organize the literature for this paper."

@@ -1,8 +1,8 @@
 {
   "schema": "wtfp.generated-adapter/v1",
-  "generatorVersion": 4,
+  "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "54d136466ec2c758919d32737e3a748996df01d8fc423593b8cb098af028e9c6",
+  "sourceHash": "d28824942fc0ca22330edcd263c5ddf7d785a41ad029e5cac2f9f68fc0af8bd8",
   "files": [
     {
       "path": "marketplace.json",
@@ -10,195 +10,195 @@
     },
     {
       "path": "project/.github/agents/wtfp-argument-verifier.agent.md",
-      "sha256": "f717e662c6cce22affeb0eab59ec5c94cba85472aae8af578434e86d55ce413a"
+      "sha256": "7cc06443ecab02e71b5f21983277b3c7cb58f573a4d892446328c33fe3703564"
     },
     {
       "path": "project/.github/agents/wtfp-citation-expert.agent.md",
-      "sha256": "cef5187747afb922a2491e5c71af8e2aef8a98c4c7ca76833dac0c4dfd71bd0c"
+      "sha256": "e28ba2d14330185ea1c1544561f3e915f26d0497f29365388d78b7962c626559"
     },
     {
       "path": "project/.github/agents/wtfp-citation-formatter.agent.md",
-      "sha256": "a9e9d5330bcffa935b1a60e7ac9b0339074a6e43418f7d99432f6c22331138f9"
+      "sha256": "7c98d36f9a328b1fbf5b1cf6546aa39ffff87685f86bd1ec2f389de459385cd4"
     },
     {
       "path": "project/.github/agents/wtfp-coherence-checker.agent.md",
-      "sha256": "e149361bb05112c1cb4e2424cd42e990d2558616f41027418b3fdb33562a8430"
+      "sha256": "88233940ebe20cac1327763ea8fafa6ab793c0c2db7fc103e6487170a7abfe48"
     },
     {
       "path": "project/.github/agents/wtfp-outliner.agent.md",
-      "sha256": "ee3ca8a0f6e19d5ddc778dbd232d36523820c39ebc1e2dbb947e8ffe5cfd941d"
+      "sha256": "764a419aae9069d582cf502f3dc0a75e9da5b5eea0d2ff309bb84cc4752c9357"
     },
     {
       "path": "project/.github/agents/wtfp-plan-checker.agent.md",
-      "sha256": "0bbd9e1e20bf51e7279c2fc0b192595cddbf2cf75e8e1c20e4918b975389705c"
+      "sha256": "500901f0d20011cbe146c0f34f04e5ad705e4504de54c0c6f1b29088374e156b"
     },
     {
       "path": "project/.github/agents/wtfp-prose-polisher.agent.md",
-      "sha256": "90d0aea533a0e7cfd1fe726b458f6d51b37e7542735c4562081b528759872cde"
+      "sha256": "a85d8585c36626993d51909d42c32a679f6fa863095331e4476f9a3249907bec"
     },
     {
       "path": "project/.github/agents/wtfp-research-synthesizer.agent.md",
-      "sha256": "d3e06386c5ac18b6020f45d3ee94064569ddb69ed6f555a7ce97af4686b5752b"
+      "sha256": "53eb17ad28cff8b6f4e83e879f217cac3af7bb4085925af881585e08c680cd49"
     },
     {
       "path": "project/.github/agents/wtfp-section-planner.agent.md",
-      "sha256": "80b14bdb1a85a366b863b839f7d522b3dd2f03792ca3d5414a946a75b990b74f"
+      "sha256": "962b5f70d36895d89231c6fd498df42ff0842a359e17d07797bbd3923d8379d0"
     },
     {
       "path": "project/.github/agents/wtfp-section-reviewer.agent.md",
-      "sha256": "d7f02c3b701f3e74374d29a6c47504f1848a585eb1209471b2ae0dc4e1c87bc5"
+      "sha256": "09511163935bb80c6b073818162155db023544dac52986b857cb4bf9fe341c18"
     },
     {
       "path": "project/.github/agents/wtfp-section-writer.agent.md",
-      "sha256": "0333e98d772c5dafe99b2ad8ce2465b22006b39d2b0898a6531dc024caab4d35"
+      "sha256": "3b084bb0122a1c306fa1d85bf7eadbee824526135753ae9aa38608a9b3e576fd"
     },
     {
       "path": "project/.github/copilot-instructions.md",
-      "sha256": "e04d73850bb92960fce8bb588a4c0a7b97d1ac387faec2b0c9bd0ff99f3b0f81"
+      "sha256": "6e92a9b4aa2a6ffdbe983d43376b31503ebb8c090badc5bfcf1e8d81796b23ca"
     },
     {
       "path": "project/.github/prompts/wtfp-add-todo.prompt.md",
-      "sha256": "63530bfaff586447372fe906125a941d836725b70668fadd9ba8316a57fd0d11"
+      "sha256": "35260a88bd8675fc6b3bb4d9344bc497d080987f1cad976d918a294a9ceeef65"
     },
     {
       "path": "project/.github/prompts/wtfp-analyze-bib.prompt.md",
-      "sha256": "d6d567b32d6a4fe75caaec71504103a48ad95149d817dee7a40a8d5f674793dd"
+      "sha256": "c15a3b0d5ac473d4b3f8df07c8002f3042a9b57a3bef68de14333321d7f92124"
     },
     {
       "path": "project/.github/prompts/wtfp-audit-milestone.prompt.md",
-      "sha256": "187eec52c1f113b12a43cd48dcdc3b14642af50389a91911b4b43ab32a1edc9c"
+      "sha256": "f885cd80f180af520ec3d166476d32ec0be4569c6c513f30f5bacb27770c16d8"
     },
     {
       "path": "project/.github/prompts/wtfp-check-refs.prompt.md",
-      "sha256": "6c50f53814187e86082272e781f2298e95efa086ffdae1b2e23237f36daca7b6"
+      "sha256": "12e0402223df2c37594adb85243b2a33ee96af156a8a2842234b539751fba10f"
     },
     {
       "path": "project/.github/prompts/wtfp-check-todos.prompt.md",
-      "sha256": "3d21522efbf325686b908ef908b91687b0db80774fbabe94bc785abc592a39c3"
+      "sha256": "62dd87f917aa6db517475ac7adfabe9f45dae20c2291f6510e5847fdf80e726a"
     },
     {
       "path": "project/.github/prompts/wtfp-checkpoint.prompt.md",
-      "sha256": "ac86265b0cc23fd767509fc035ba7a9160350c4633177e2efe4f9aaa0f58e97b"
+      "sha256": "c352f767ee80d2e0b812fad3c5e79b937a9dac751566cb2e09962cdab62f7b4f"
     },
     {
       "path": "project/.github/prompts/wtfp-contribute.prompt.md",
-      "sha256": "c0784df1e874c092aef01e7c84ccd2d69267fdf95ab95888286c9b453caab448"
+      "sha256": "1237a72d73589a72c6e9630f5b511fcec89eabd7cdf816749e3e247da70f25d6"
     },
     {
       "path": "project/.github/prompts/wtfp-create-outline.prompt.md",
-      "sha256": "2716d35680b1d23195135c0e03e61fbef767e2123c5c7f5743f4753816cb26e1"
+      "sha256": "9ed3a21d6f93c8613c17594d04cc7f83d24399ecc829295d85694772bb10ca3e"
     },
     {
       "path": "project/.github/prompts/wtfp-create-poster.prompt.md",
-      "sha256": "df9a9fb5cfeeb14ffa0b7d94b90c0f19a3c54c03f827131ef1798313ed64dda2"
+      "sha256": "1f62fa8a244a79a35f2d17b9000ab79cc81bea9ab6b30d59ff7e9e945c06a109"
     },
     {
       "path": "project/.github/prompts/wtfp-create-slides.prompt.md",
-      "sha256": "20d94f18547c56b404ec21d2af2a5bfde5d94fa2a167afab62396dc158b1a242"
+      "sha256": "21538aed732a920860d5ebc3f0d63d8e735838a333c2d9f1082c2efc4daee76e"
     },
     {
       "path": "project/.github/prompts/wtfp-discuss-section.prompt.md",
-      "sha256": "92772e6982690e211a38ac4e6d8a3429db869b6f06009b2267271bb63f212623"
+      "sha256": "881ed2802c32785e02db9c9712bd2eb7a8f84fd8ce79236b0bebde12800e018c"
     },
     {
       "path": "project/.github/prompts/wtfp-execute-outline.prompt.md",
-      "sha256": "11b21f89f2513a1032b492e99ce1bda5963ed9fa85806f3411c59a335d37be82"
+      "sha256": "5b63b211a3d9062841c03b9dc0d72f2f594481c7139b2ccd4c4a50f1fa334c7c"
     },
     {
       "path": "project/.github/prompts/wtfp-export-latex.prompt.md",
-      "sha256": "91c04665ed7aa49f804e71a605c1cf59e70bf7f66a6b912db7db692c421dd523"
+      "sha256": "574ccf2bd91ad7e29d3423030570a80e89c1eaca22b35b6eda684dd4e65828b7"
     },
     {
       "path": "project/.github/prompts/wtfp-help.prompt.md",
-      "sha256": "249808e2230c5b74974a723068d735b7980d11cb4df199d8ff288f079601bb1a"
+      "sha256": "0696367a0d9b08a36bcc64f147d44703f973d722067dbc5784eca1abcfa50ecd"
     },
     {
       "path": "project/.github/prompts/wtfp-insert-section.prompt.md",
-      "sha256": "c243e0c7efccaa6e9dc08bbcd4d4980ffc93debe5bfed34e1a86fbb7cf0b4c60"
+      "sha256": "e0a46ef97b258f2cc3bb6258512d8ff8c7a2e6ac0a8b00ad47763db78a2c030d"
     },
     {
       "path": "project/.github/prompts/wtfp-list-assumptions.prompt.md",
-      "sha256": "f5f28ca14863a9bf81cfd5a1985f338596a1b7e348b24f09362ef5ce82947024"
+      "sha256": "d371bee8cc717f4cfa2df3edde64fc0ada67157f2345d5941d34babdda2b6114"
     },
     {
       "path": "project/.github/prompts/wtfp-map-project.prompt.md",
-      "sha256": "4567feea5f31a7ad475492208135daa238f6187cc29afa677bed1b0ea65ab160"
+      "sha256": "3f36ac1e2b0e62c9e5376dfe7156bfed8d44dfafbbcc1404c6826713c4e4166c"
     },
     {
       "path": "project/.github/prompts/wtfp-new-paper.prompt.md",
-      "sha256": "176546dd7989f8f12e4f301bff2f54de63c3ca834c12ec51235c19913efe7215"
+      "sha256": "690e9a3d5cd9f145fa8cc165e424a13d4b8ec5f5f389a2bb08f8cd37ee5c9bfd"
     },
     {
       "path": "project/.github/prompts/wtfp-pause-writing.prompt.md",
-      "sha256": "595d0fdebafea7c4180708e87607596969d5c5d8d010651dbfce49ca6e2240dc"
+      "sha256": "09737062484d1b065a98b6a844bdce21d39ff8b0e83f660394625d0aa219a6cc"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-milestone-gaps.prompt.md",
-      "sha256": "27d5ccef13eb206b91922fc76f8da64b30086139152d99bb9d5681c0d0998611"
+      "sha256": "2ea6c94b1af5f7ea8f11c32f3c5de0d9e3ebc2f14e33df7bde58af60e9d58bb6"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-revision.prompt.md",
-      "sha256": "384d832127927a6a4e73dfd2804266f25d9670cbbf52aeb9b3d0b756f6f1f194"
+      "sha256": "b334f527fa4b346c2a4909f21ce139651bb8e588274d0d5eaf70a44940ca5800"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-section.prompt.md",
-      "sha256": "f063662898689cdec10f0e96f788a49851dc8ca08fad1e3c56a0043825f11f1c"
+      "sha256": "f1c250ee133ee45a9ea5c5dacebab69f7d8be00e60219d4d665bd6299ec8143f"
     },
     {
       "path": "project/.github/prompts/wtfp-polish-prose.prompt.md",
-      "sha256": "c524400271cf5b30eb5326c2aef6797f15937b93b262357ab37d360b24beb0d7"
+      "sha256": "718973408d4d9d8fe8911408f75e0a329b2c32f98e4628ce5597dab22c14a909"
     },
     {
       "path": "project/.github/prompts/wtfp-progress.prompt.md",
-      "sha256": "5b4cb845ae4409aca347a5e5e9ed8a2cf8f8d58a4214dfb9f8b0bd38b22c83c8"
+      "sha256": "58e8be5e5e61f578e37e0472324a9e442d4f33fd421818be33bea0124622fa20"
     },
     {
       "path": "project/.github/prompts/wtfp-quick.prompt.md",
-      "sha256": "bb352b19b0c157ccc0f0594ec3d51803a80cc6f60973ec4e712472e5518c96fa"
+      "sha256": "a6d6f7f42e4192addab0a6aacf864b5d258570f35555cdc214d89e85a7823a19"
     },
     {
       "path": "project/.github/prompts/wtfp-remove-section.prompt.md",
-      "sha256": "6f56e0613e6e86ffeab423ceb3e884fc389974bc8cca2881b614e4c76e0974fc"
+      "sha256": "b38d137de0adec57526f4ddd06f22221be149b55f660ac0e55f80984656c3929"
     },
     {
       "path": "project/.github/prompts/wtfp-report-bug.prompt.md",
-      "sha256": "8dc6557b1a1f08924ba59b7c674399c601f2924085cf3897d5dbec6c6992cfb8"
+      "sha256": "53038a41a833bde40fd4b48d4a37afc12fb5fe4aedc7ecdc6cf5cf643b5d283a"
     },
     {
       "path": "project/.github/prompts/wtfp-request-feature.prompt.md",
-      "sha256": "742cbfe347a3c80978d950477bf915c7a2ad63e86388bcbcf5ff7e1b95ce4fa7"
+      "sha256": "925ee65b12167ca290ceb61b094ef0e84a904b2ef871ad0d5cac827e1f2424cf"
     },
     {
       "path": "project/.github/prompts/wtfp-research-gap.prompt.md",
-      "sha256": "b973083374bf0b5eea23dac38b8201eed53b42b159c39effe8a20d8ba61169ef"
+      "sha256": "dae3e9bdfd8396aa14486876554a052c581cbac4103f2ac54766cf39c3f49ada"
     },
     {
       "path": "project/.github/prompts/wtfp-resume-writing.prompt.md",
-      "sha256": "80f11686e84768e4c579ce8150d524a54f7ea99052bcc6baf3a9d3f615f880b2"
+      "sha256": "6564a5666bf46fcc464c41a70afc517502fa7c265bf58852348bab1bd021f796"
     },
     {
       "path": "project/.github/prompts/wtfp-review-section.prompt.md",
-      "sha256": "be7c97ec76621669537da6acab3a061b0c5a6c375bb193c0cce1c4f6f69bc075"
+      "sha256": "4738003c1f59e2fed34dc8507815d33df1aa41baebc3dfa004b263776726d4d8"
     },
     {
       "path": "project/.github/prompts/wtfp-settings.prompt.md",
-      "sha256": "99192d211a9bf1a80c0c315b206012e49a4de00071d31dcc9434f22385e84ca0"
+      "sha256": "425a8a049445908baefe37d1fbf63c5a0260d6f88e83b30ebe2d18799e7a9338"
     },
     {
       "path": "project/.github/prompts/wtfp-submit-milestone.prompt.md",
-      "sha256": "5e981231736e245023feefd9e5936e223fa1d46a00185195d383de43947491fe"
+      "sha256": "69f1fff95838a05daee0f92ffadf02ba502a0c914c38b362bb718590830b7d81"
     },
     {
       "path": "project/.github/prompts/wtfp-update.prompt.md",
-      "sha256": "c68815848b071b713145fdb61a774f9073374ac1d9be1620f910b45e85176ef9"
+      "sha256": "10afe216a3707ba3abd9801a55338977983917aeb23ec2b2e964a6e93e80e873"
     },
     {
       "path": "project/.github/prompts/wtfp-verify-work.prompt.md",
-      "sha256": "3055af22608b14f71311d366c246c8fc3d2cb981ee2f65d2164e8d587af95732"
+      "sha256": "a24cdc7f610c00057cbcfa0c7c8b44532196d4b4710d7f492631d837ecbca9b2"
     },
     {
       "path": "project/.github/prompts/wtfp-write-section.prompt.md",
-      "sha256": "8f32bc7a50300c9757aeeb165d23e6f2808d34b3f5aec90fcc10535e633cdaa8"
+      "sha256": "04a61df44ef6434b0a2967625dac694c1c5d48a46092189a5b6a1d38bd16cdaf"
     },
     {
       "path": "project/.github/skills/wtfp-deliver-research/agents/openai.yaml",
@@ -266,7 +266,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-start-project/references/actions.md",
-      "sha256": "1f1d23c186e76a81c24cbc98d451659143280d9451664f7dcd84da33870e303d"
+      "sha256": "1f3a18f17c8c23cca7760b52b910ff1b587c42fd272e0ed3473bafa9d1c5d8ed"
     },
     {
       "path": "project/.github/skills/wtfp-start-project/SKILL.md",
@@ -350,7 +350,7 @@
     },
     {
       "path": "project/.github/wtfp/actions/map-project.json",
-      "sha256": "14d01a0baef45ef350e693f51d34c789ef5f6f1f7508d3458aa9ac811a123549"
+      "sha256": "b08f4b3b6d3a6c663b6e960a38b91708f8fe3f5be54f8730e9f70b0c44755de2"
     },
     {
       "path": "project/.github/wtfp/actions/new-paper.json",
@@ -558,7 +558,7 @@
     },
     {
       "path": "project/.github/wtfp/roles/outliner.md",
-      "sha256": "c32ce7af4294819e2f47530925e5bbde596025b9fcf05f767127f73827737d28"
+      "sha256": "28a9cf336f7ff8977892788eccee5b9b545f3dc94d73be1dc41c04b190e5241f"
     },
     {
       "path": "project/.github/wtfp/roles/plan-checker.md",
@@ -674,7 +674,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-start-project/references/actions.md",
-      "sha256": "9ef7572a6d6c9e87f8d9f468b35b45418f98336c8fc73db0b70585e8903f6942"
+      "sha256": "56a04dd70007b0530d38d49cbe2fc2939fdfd8e5656922d8424a729c652977a2"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-start-project/SKILL.md",
@@ -762,7 +762,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/map-project.md",
-      "sha256": "8c395f12ab466971a7200490e2a9bce9309045f0b5cec155be7a8c301ab9be64"
+      "sha256": "f2a134f4c4d5aaf071ffad86b2c1273468dfb9fee877bcec1e962065589de591"
     },
     {
       "path": "project/.github/wtfp/workflows/new-paper.md",

@@ -8,5 +8,5 @@
  */
 module.exports = Object.freeze({
   ADAPTER_CONTRACT_VERSION: 1,
-  GENERATOR_VERSION: 4
+  GENERATOR_VERSION: 5
 });

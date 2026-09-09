@@ -1,0 +1,76 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "checkpoint",
+  "title": "Manage checkpoints",
+  "description": "Save, list, or restore an exact portable paper-state checkpoint.",
+  "alias": "wtfp:checkpoint",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/checkpoint",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://archives/checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://archives/recovery/{artifact}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://checkpoints/{checkpoint}, project://archives/checkpoints/{checkpoint}, project://archives/recovery/{artifact}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "declared project records and authored artifacts selected for the snapshot"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://manifest, project://state, and only snapshot-declared resources during an authorized restore"
+    },
+    {
+      "id": "user.gate",
+      "scope": "checkpoint restore and replacement"
+    }
+  ]
+}

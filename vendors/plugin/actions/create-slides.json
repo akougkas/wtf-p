@@ -1,0 +1,59 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "create-slides",
+  "title": "Create presentation slides",
+  "description": "Transform the paper's argument, evidence, and findings into an audience-appropriate presentation.",
+  "alias": "wtfp:create-slides",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-deliver-research"
+  },
+  "workflow": "wtfp://workflows/create-slides",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A sufficiently complete paper or milestone is available",
+      "A contained host-provided slide renderer is configured when rendering is requested"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://structure/outline",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://deliverables/slides/{artifact}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://deliverables/slides/{artifact}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://structure/outline, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "slide source and generated assets"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "the configured portable slide renderer"
+    },
+    {
+      "id": "user.gate",
+      "scope": "audience, duration, and presentation format"
+    }
+  ]
+}

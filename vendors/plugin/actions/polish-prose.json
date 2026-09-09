@@ -1,0 +1,69 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "polish-prose",
+  "title": "Polish prose",
+  "description": "Improve clarity, flow, precision, and academic voice without changing supported claims.",
+  "alias": "wtfp:polish-prose",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-review-manuscript"
+  },
+  "workflow": "wtfp://workflows/polish-prose",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected prose target exists"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://decisions",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "prose-polisher",
+      "mode": "required",
+      "purpose": "Revise prose while preserving factual content, citations, and author voice"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://prose-polisher"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "proposed substantive changes"
+    }
+  ]
+}

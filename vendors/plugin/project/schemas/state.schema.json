@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/state/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_id",
+    "revision",
+    "phase",
+    "status",
+    "current_section_uri",
+    "progress",
+    "active_checkpoint_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.state/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "phase": {
+      "enum": ["initialized", "mapped", "outlining", "planning", "writing", "reviewing", "ready", "delivered"]
+    },
+    "status": { "enum": ["active", "paused", "blocked", "complete"] },
+    "current_section_uri": {
+      "type": ["string", "null"],
+      "pattern": "^project://sections/[A-Za-z0-9._~-]+$"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections_total", "sections_complete", "word_target", "word_count"],
+      "properties": {
+        "sections_total": { "type": "integer", "minimum": 0 },
+        "sections_complete": { "type": "integer", "minimum": 0 },
+        "word_target": { "type": "integer", "minimum": 0 },
+        "word_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "active_checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "last_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "reason", "at"],
+      "properties": {
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "new-paper",
+  "title": "Start a new paper",
+  "description": "Interview the researcher and initialize a portable WTF-P project.",
+  "alias": "wtfp:new-paper",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-start-project"
+  },
+  "workflow": "wtfp://workflows/new-paper",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected project root is writable",
+      "Existing project state is preserved unless the user approves reuse"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://materials/{artifact}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://manifest",
+      "mode": "create"
+    },
+    {
+      "uri": "project://config",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "create"
+    },
+    {
+      "uri": "project://decisions",
+      "mode": "create"
+    },
+    {
+      "uri": "project://structure/outline",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://materials/{artifact}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline"
+    },
+    {
+      "id": "user.gate",
+      "scope": "project initialization decisions"
+    }
+  ]
+}

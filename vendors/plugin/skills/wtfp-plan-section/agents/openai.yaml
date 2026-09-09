@@ -1,0 +1,4 @@
+interface:
+  display_name: "WTF-P Plan Section"
+  short_description: "Plan and reshape manuscript sections"
+  default_prompt: "Use $wtfp-plan-section to plan the next manuscript section."

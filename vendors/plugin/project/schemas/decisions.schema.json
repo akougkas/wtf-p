@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/decisions/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "project_id", "revision", "items", "updated_at"],
+  "properties": {
+    "schema": { "const": "wtfp.project.decisions/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "authority", "disposition", "statement", "rationale", "scope_uri", "recorded_at"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "authority": { "enum": ["author", "venue", "project-evidence"] },
+          "disposition": { "enum": ["locked", "deferred", "discretion", "superseded"] },
+          "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "rationale": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "recorded_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+          "supersedes": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" }
+        }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}

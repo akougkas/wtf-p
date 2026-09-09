@@ -1,0 +1,42 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "update",
+  "title": "Update WTF-P",
+  "description": "Check for a newer compatible package or plugin release and install it only after approval.",
+  "alias": "wtfp:update",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "network.fetch",
+      "package.update",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The active installation target and scope are explicit"
+    ]
+  },
+  "reads": [
+    "package://metadata",
+    "package://installation-receipt"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "network.fetch",
+      "scope": "configured WTF-P release registry"
+    },
+    {
+      "id": "package.update",
+      "scope": "the explicit installation target and scope"
+    },
+    {
+      "id": "user.gate",
+      "scope": "release selection and package replacement"
+    }
+  ]
+}

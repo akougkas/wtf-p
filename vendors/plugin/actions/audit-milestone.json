@@ -1,0 +1,63 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "audit-milestone",
+  "title": "Audit a milestone",
+  "description": "Run readiness checks across section completion, arguments, length, citations, and reviews.",
+  "alias": "wtfp:audit-milestone",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-review-manuscript"
+  },
+  "workflow": "wtfp://workflows/audit-milestone",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "tool.execute",
+      "user.interaction"
+    ],
+    "conditions": [
+      "A draft and its project state are available"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [],
+  "tools": [
+    "bibliography.index"
+  ],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://validations/{validation}, project://paper/{artifact}"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "wtfp://tools/bibliography/index"
+    },
+    {
+      "id": "user.gate",
+      "scope": "audit exceptions and missing evidence"
+    }
+  ]
+}

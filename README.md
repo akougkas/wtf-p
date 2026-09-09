@@ -231,3 +231,5 @@ time for writer's block.
 **No more excuses. Ship the paper.**
 
 </div>
+
+The working release adds [standard Agent Plugin packaging](docs/AGENT_PLUGIN.md) and a [research-plugin handoff contract](docs/RESEARCH_HANDOFF.md). These describe local source changes; the published RC2 artifact and its historical evidence remain unchanged.
