@@ -4,7 +4,16 @@ The generated `vendors/plugin/` directory is WTF-P's Agent Plugins 1.0.0 bundle.
 
 Clio resource roots and the component graph live under `extensions["ai.iowarp.clio"]`, with `compatibility.clio` set to `>=0.4.7`. Native prompts, agents, and fleets are under `ai.iowarp.clio/`; shared protocol records, schemas, templates, tools, and skills retain their contained paths. Prompts live at `ai.iowarp.clio/prompts/wtfp/<action>.md`, so every action is invoked as `/wtfp:<action>` and nothing else. Prompt and agent bodies resolve packaged files through `${pluginRoot}`. This domain bundle does not register new harness tools or enable MCP execution.
 
-The Codex projection also includes a standard root manifest, with its existing `wtf-p` package identity and `.codex-plugin/plugin.json` compatibility fallback. Claude, Copilot, OpenCode, Antigravity, and Gemini retain their native projections. The compiler remains the source of every generated adapter; never hand-edit these bundles.
+The compiler is a factory: it projects this one bundle into a native package per host, using what each host's plugin format actually supports rather than a lowest common denominator. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the capability matrix with the commands that produced each verification. In summary:
+
+- Claude Code: `commands/`, flat `agents/` each preloading its bound plugin skill through `skills:`, `skills/`, `output-styles/wtfp-academic-writing.md` (selectable, never forced), and `hooks/hooks.json` with a write guard that confines `Write`/`Edit` during the manuscript-writing actions to `.planning/` and `paper/`.
+- Codex: a portable root `plugin.json` whose `extensions["com.openai"]` carries the install-surface interface, the `.codex-plugin/plugin.json` fallback with the same interface, `skills/`, and `agents/*.toml` custom agents that the installer also publishes to `$CODEX_HOME/agents/`, because Codex plugins do not carry agents.
+- OpenCode: nested `commands/wtfp/` and `agents/wtfp/` with explicit frontmatter names (its loader is recursive and honours `name`), `mode: subagent` on every role, and edit/bash denial on verifier roles.
+- Antigravity CLI: a manifest limited to the published schema (`$schema`, `name`, `description`), `commands/`, `agents/` with `subagent: true`, `skills/`, and `rules/wtfp-project-state.md`.
+- Gemini CLI: `gemini-extension.json`, `GEMINI.md`, TOML commands under `commands/wtfp/`, and flat `agents/wtfp-<role>.md` with the strict local-agent frontmatter.
+- Copilot CLI: the Claude-compatible plugin and the `.github` repository projection, unchanged.
+
+Every generated file carries a banner naming its canonical source, and each envelope's `.wtfp-generated.json` authenticates every path. The compiler remains the source of every generated adapter; never hand-edit these bundles.
 
 ## Clio installation and compatibility
 

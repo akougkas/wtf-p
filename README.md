@@ -145,21 +145,24 @@ section loop, decision gates, review criteria, and pause/resume checklist.
 
 The same workflow is projected into each client's native interface:
 
-| Client | Start an explicit action |
-| --- | --- |
-| Clio Coder (`>=0.4.7`, installed as a plugin) | `/wtfp:new-paper …` |
-| Claude Code | `/wtfp:new-paper …` |
-| GitHub Copilot CLI | `/wtfp:new-paper …` |
-| OpenCode | `/wtfp:new-paper …` |
-| Antigravity CLI | `/wtfp:new-paper …` |
-| Gemini CLI | `/wtfp:new-paper …` |
-| Codex | Select `$wtf-p:wtfp-start-project`, then request `new-paper` with the exact brief |
+| Client | Start an explicit action | Native package | Verified |
+| --- | --- | --- | --- |
+| Clio Coder (`>=0.4.7`) | `/wtfp:new-paper …` | Agent Plugins 1.0.0 bundle: 36 prompts, 11 agent recipes, 7 skills, 2 fleets | 0.4.7 |
+| Claude Code | `/wtfp:new-paper …` | Plugin: 36 commands, 11 agents preloading their skills, 7 skills, academic output style, write-guard hooks | 2.1.267 |
+| Codex | Select `$wtf-p:wtfp-start-project`, then request `new-paper` with the exact brief | Plugin: 7 skills, `com.openai` overlay, 11 TOML custom agents in `$CODEX_HOME/agents/` | 0.153.3 |
+| GitHub Copilot CLI | `/wtfp:new-paper …` | Claude-compatible plugin plus the `.github` repository projection | not this round |
+| OpenCode | `/wtfp:new-paper …` | 36 commands, 11 subagents, 7 skills under the config root | not this round |
+| Antigravity CLI | `/wtfp:new-paper …` | Plugin: 36 commands, 11 subagents, 7 skills, one project-state rule | not this round |
+| Gemini CLI | `/wtfp:new-paper …` | Extension: 36 TOML commands, 11 agents, 7 skills, `GEMINI.md` | not this round |
 
 Install a different client by replacing `clio` in the first command with
 `claude`, `codex`, `copilot`, `opencode`, `antigravity`, or `gemini`. Codex uses
 native Agent Skills rather than the `/wtfp:*` namespace. Every other client
 uses the namespaced `/wtfp:<action>` form and nothing else; the flat
 `/wtfp-<action>` aliases Clio carried in earlier candidates are gone.
+[Host capabilities](docs/HOST_CAPABILITIES.md) records what each host can
+load, the commands that produced each verification, and which projections
+are unverified because the CLI was not available.
 
 See [Getting started](docs/GETTING_STARTED.md) for client launch commands,
 Codex skill selectors, Clio prompt discovery, safe test isolation, and

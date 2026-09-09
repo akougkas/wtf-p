@@ -56,7 +56,7 @@ Start the client from the project directory after installation:
 | Antigravity CLI | `agy` | `/wtfp:new-paper <exact brief>` |
 | Gemini CLI | `gemini` | `/wtfp:new-paper <exact brief>` |
 
-Clio, Claude, Copilot CLI, OpenCode, Antigravity, and Gemini expose the preferred `/wtfp:<action>` namespace. Clio also provides flat aliases such as `/wtfp-new-paper` for compatibility. Codex exposes the same action contracts through seven native Agent Skills rather than slash commands. When Codex routing must be unambiguous, name the owning skill and the action as shown in the table; do not ask Codex to run `/wtfp:help`.
+Clio, Claude, Copilot CLI, OpenCode, Antigravity, and Gemini expose the `/wtfp:<action>` namespace and nothing else. Codex exposes the same action contracts through seven native Agent Skills rather than slash commands. When Codex routing must be unambiguous, name the owning skill and the action as shown in the table; do not ask Codex to run `/wtfp:help`.
 
 GitHub Copilot cloud is a separate, deliberately narrower surface. A CLI installation does not alter a repository. To use the cloud projection, review `vendors/copilot/project/.github/` from the release source, copy the desired files into the target repository, and commit them through that repository's normal review process.
 

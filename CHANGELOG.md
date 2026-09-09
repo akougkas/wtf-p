@@ -35,6 +35,21 @@ Local release candidate. Not published to a registry and not tagged.
 
 ### Added
 
+- The adapter compiler is a per-host factory. Claude Code gets an academic
+  output style (`output-styles/wtfp-academic-writing.md`, selectable), a
+  write-guard hook set (`hooks/hooks.json` plus `scripts/wtfp-write-guard.js`)
+  that confines `Write`/`Edit` during `write-section`, `execute-outline`,
+  `quick`, and `polish-prose` to `.planning/` and `paper/`, and agents that
+  preload their bound plugin skill. Codex gets a portable root manifest with the
+  `com.openai` overlay and eleven TOML custom agents that the installer publishes
+  to `$CODEX_HOME/agents/`. OpenCode roles declare `mode: subagent` with verifier
+  permissions. Antigravity gets a schema-conformant manifest, `subagent: true`
+  agents, and a project-state rule. Gemini agents move to the flat `agents/`
+  layout its loader reads, with the strict `kind: local` frontmatter. The Clio
+  help prompt carries `display-only: true`
+- `docs/HOST_CAPABILITIES.md`, the per-host capability matrix with the exact
+  commands used as evidence and an explicit unverified mark for hosts whose CLI
+  was not available
 - `tools/wtfp-tool.js`, a bounded JSON dispatcher for the seven declared
   bibliography and citation tools, generated into every envelope and documented in
   `tools/README.md`. `list` prints each command's declared effects, and
@@ -48,6 +63,12 @@ Local release candidate. Not published to a registry and not tagged.
 
 ### Fixed
 
+- The Antigravity manifest carried `version`, `author`, `commands`, `agents`,
+  and `skills` keys that the published v1 plugin schema rejects
+  (`additionalProperties: false`), and the Gemini extension shipped agents under
+  `agents/wtfp/`, a directory its loader never reads
+- The installer's post-install hint told Codex users to run `/wtfp:help`, a
+  command Codex does not have; it now names the skill selector
 - Without `clio-coder` on PATH the installer told the operator to run
   `clio-coder plugins install` against the managed `plugins/wtfp` root, which Clio
   rejects as a source overlapping its destination. It now says to re-run the

@@ -1,6 +1,6 @@
 # WTF-P 0.6 release-candidate compatibility evidence
 
-Last exercised: 2026-09-09 (Clio 0.4.6 discovery, installation, agents and help smoke only)
+Last exercised: 2026-09-09 (host factory round: Claude 2.1.267, Codex 0.153.3, and Clio 0.4.7 in disposable profiles; see `HOST_CAPABILITIES.md` for the commands)
 
 Upgrading an existing client or paper? Follow the [v0.5 to v0.6 migration guide](MIGRATION_V05_TO_V06.md) before replacing legacy files.
 
@@ -10,15 +10,18 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 
 | Host | Exercised version | Observed result |
 | --- | ---: | --- |
+| Claude Code | 2.1.267 | Disposable `CLAUDE_CONFIG_DIR`: strict plugin/marketplace validation passed; `plugin details` reports 43 skills (36 commands + 7 skills), 11 agents, 3 hooks; headless Sonnet 5 `/wtfp:help` (6 turns) and `/wtfp:new-paper` reached the interview gate with no file written |
+| Codex CLI | 0.153.3 | Disposable `CODEX_HOME` with `features.plugins = true`: marketplace add and `wtf-p@wtfp` install/list; `codex exec` with `gpt-5.6-luna` at `xhigh` loaded the manage-project skill for help (26/36 available reported) and the start-project skill for new-paper, stopping at the interview gate |
+| Clio Coder | 0.4.7 | Disposable `XDG_CONFIG_HOME`: `plugins inspect` valid with zero diagnostics on the bundle carrying `display-only: true`; user-scope install, list, and `agents` discovery of all 11 recipes |
 | Claude Code | 2.1.251 | Strict marketplace validation; native marketplace add/install/list; 36 commands and 11 agents loaded with zero plugin errors; `/wtfp:new-paper` confirmed through TUI autocomplete |
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
 | GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered; 26 adapter-available in the current generated data (24 at the time of this observation). Cloud: 36 prompts projected, five adapter-available. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
 | Clio Coder | 0.3.8, merged source `9b7b80cc` | Prior extension route, retained as history. Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
 | Clio Coder | 0.4.6 | Prior extension route, retained as history. Native discover: valid, zero diagnostics. Native user install/list: enabled `wtfp@0.6.0-rc.2`, zero diagnostics; 36 nested + 36 flat prompts on disk; all 11 `wtfp-*` agent recipes list their bound skills. Headless `/wtfp:help` completed on `dynamo/qwen3.8-27b`. |
 | Clio Coder | 0.4.7 (dist) | Plugin route. Isolated user and project `plugins install`/`inspect`/`remove` lifecycle with exact receipts; see `docs/AGENT_PLUGIN.md` for the command and its scope. |
-| OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources |
-| Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills |
-| Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered |
+| OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources. The current projection adds `mode: subagent` and verifier permissions from the loader source; not re-exercised (CLI absent) |
+| Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills. The current manifest follows the published v1 schema (`name`, `description` only) and adds `subagent: true` agents and a rule; not re-exercised (CLI absent) |
+| Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered, no agents (the nested `agents/wtfp/` layout loads nothing per the loader source). Agents are now flat `agents/wtfp-<role>.md`; not re-exercised (CLI absent) |
 
 Native discovery counts routes that the client can locate, including
 fail-closed compatibility stubs; it is not an executable-support count. Per the
