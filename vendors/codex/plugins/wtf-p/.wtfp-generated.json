@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "e960e55e197f7b3e08802b1a31ad9f24d3f5616a74e44f9dcb2d12253d7ebcad",
+  "sourceHash": "eb521c90908c3374f6e6d8fa443ae5167c4c5967f5e636acbfa07db22db292ee",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -314,7 +314,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "3eb7aa3f5af235d233c49a7c953afe2e1f0e0368cc99d093bd37d00f13e4a42c"
+      "sha256": "937ef44780c19f8deea8bce713a0c40b67fbfd64f3eb1d7d2fd746866be08894"
     },
     {
       "path": "roles/argument-verifier.md",

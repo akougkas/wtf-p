@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "91c8976e3aa15c7f32939e0c3f0e0200dac7f5e53f9c650fc7e8f1358aaf0470",
+  "sourceHash": "f279bb318cb931c45c3e03d305c6d17d895f540a9209892ea7bd1538fe5a7d8a",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -666,7 +666,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "3eb7aa3f5af235d233c49a7c953afe2e1f0e0368cc99d093bd37d00f13e4a42c"
+      "sha256": "937ef44780c19f8deea8bce713a0c40b67fbfd64f3eb1d7d2fd746866be08894"
     },
     {
       "path": "roles/argument-verifier.md",

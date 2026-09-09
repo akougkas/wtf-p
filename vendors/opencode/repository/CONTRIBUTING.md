@@ -55,8 +55,8 @@ bin/
   commands/install-logic.js  transactional installation
 
 vendors/                    generated client resources; do not hand-edit
-  clio/                     Clio extension, prompts, agents, skills, fleets
-  claude/                   Claude Code plugin and marketplace
+  plugin/                   canonical Agent Plugins 1.0.0 bundle; Clio installs this one
+  claude/                   Claude Code plugin and marketplace, carrying the same root manifest
   codex/                    Codex plugin and personal-marketplace envelope
   copilot/                  Copilot CLI plugin plus .github project projection
   opencode/                 OpenCode filesystem bundle
@@ -77,7 +77,7 @@ Generated files carry a compiler provenance marker and are authenticated by `.wt
 
 ## Adding or changing an action
 
-The stable public namespace currently contains 36 `wtfp:<action>` aliases. To add or change one:
+The stable public namespace contains the `wtfp:<action>` aliases listed in `protocol/catalog.json`. To add or change one:
 
 1. Add or edit `protocol/actions/<action>.json`.
 2. Add or edit `protocol/workflows/<action>.md`.
@@ -128,7 +128,7 @@ Compiler output must be deterministic across machines and isolated homes. Adapte
 - marketplace/plugin manifests that native validators accept;
 - no incidental network, VCS, package-publish, or profile mutation behavior.
 
-Update `test/adapter-compiler.test.js` for a new invariant. Never loosen a test merely to accept nondeterminism or a broader permission projection.
+Update `test/adapter-compiler.test.js` for a new invariant. Never loosen a test merely to accept nondeterminism or a broader permission projection. Any change to a generated envelope also requires resealing the routing-matrix evidence; see the reseal procedure in `docs/BUILD_AND_RELEASE.md`.
 
 ## Installer and uninstaller safety
 
