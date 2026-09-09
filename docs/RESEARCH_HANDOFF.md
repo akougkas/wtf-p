@@ -6,6 +6,19 @@ A research plugin can hand its results to WTF-P through three separate public ac
 2. `wtfp:map-project`: provide an explicit list of contained, project-relative material paths, source metadata, inspection depth, provenance, claim interpretations, locators, and uncertainty. Explicitly include hidden `.research/` material when intended. Mapping is local and does not upload, rewrite, or move the files. Repeat mapping reads existing records, preserves stronger verification and curated annotations, reports identity collisions, and reconciles manifest material/manuscript indexes without dropping existing entries.
 3. `wtfp:create-outline`: provide structural preferences and unresolved author choices grounded in the mapped records. The orchestrator delegates structural work, handles requests for author input, and obtains approval of the outline and decision diffs. Section word targets must sum exactly to the approved target.
 
+## Host invocation spelling
+
+Use these entry points for the generated host adapters. Append the corresponding payload after the command or action request; run each step separately.
+
+| Host | Initialize | Map supplied research | Create outline |
+| --- | --- | --- | --- |
+| Clio | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
+| Claude Code | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
+| Codex | `$wtf-p:wtfp-start-project Run the new-paper action.` | `$wtf-p:wtfp-start-project Run the map-project action.` | `$wtf-p:wtfp-start-project Run the create-outline action.` |
+| Gemini CLI | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
+
+Codex's generated marketplace package is named `wtf-p`; all three actions belong to its `wtfp-start-project` skill. Codex does not expose these actions as slash commands. If the standard bundle named `wtfp` is installed directly in another compatible host, use that host's discovered skill qualifier rather than assuming the generated Codex package name. Clio also retains the legacy flat aliases `/wtfp-new-paper`, `/wtfp-map-project`, and `/wtfp-create-outline`; prefer the colon namespace above.
+
 A handoff should contain three paste-ready payloads, each usable separately. For example:
 
 ```text
