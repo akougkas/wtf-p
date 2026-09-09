@@ -1,5 +1,6 @@
 ---
 description: "Render the stable WTF-P action reference from the canonical catalog."
+display-only: true
 argument-hint: "[arguments]"
 ---
 

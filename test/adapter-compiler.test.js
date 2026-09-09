@@ -164,8 +164,10 @@ function commandPaths(target, actionIds) {
   return actionIds.map((id) => `commands/wtfp/${id}.md`);
 }
 
+const FLAT_AGENT_TARGETS = Object.freeze(['clio', 'claude', 'copilot', 'antigravity']);
+
 function expectedAgentPaths(target) {
-  if (['clio', 'claude', 'copilot', 'antigravity'].includes(target)) {
+  if (FLAT_AGENT_TARGETS.includes(target)) {
     return EXPECTED_ROLES.map((role) => `agents/wtfp-${role}.md`);
   }
   return EXPECTED_ROLES.map((role) => `agents/wtfp/${role}.md`);
@@ -692,9 +694,7 @@ record('supported hosts contain exactly 11 generated native roles', () => {
   for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const expected = expectedAgentPaths(target);
-    // Claude, Clio, Copilot, and Antigravity discover agents only at the top
-    // level of `agents/` and name them from the file name.
-    const actual = ['clio', 'claude', 'copilot', 'antigravity'].includes(target)
+    const actual = FLAT_AGENT_TARGETS.includes(target)
       ? planFiles(plan, /^agents\/wtfp-[^/]+\.md$/)
       : planFiles(plan, /^agents\/wtfp\/[^/]+\.md$/);
     assert.deepStrictEqual(actual, expected, `${target}: native role surface drift`);

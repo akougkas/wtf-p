@@ -748,15 +748,19 @@ process.exitCode = 91;
       assert.strictEqual(receipt.partial, false);
       assert.strictEqual(receipt.adapterVersion, 1);
       assert.strictEqual(receipt.generatorVersion, GENERATOR_VERSION);
-      assert.strictEqual(receipt.files.length, sourceFiles.length);
-      const allowedComponents = new Set([
-        expected.component,
-        ...Object.values(MANIFEST[runtime].components[0].componentIds || {})
-      ]);
+      // Every manifest component publishes its whole source tree under its
+      // destination; Codex adds its TOML agents as a second component.
+      const expectedInstalled = MANIFEST[runtime].components.flatMap(component =>
+        listRegularFiles(component.src).map(relative => path.posix.join(component.dest, relative))
+      );
+      assert.strictEqual(receipt.files.length, expectedInstalled.length);
+      const allowedComponents = new Set(MANIFEST[runtime].components.flatMap(component => [
+        component.id,
+        ...Object.values(component.componentIds || {})
+      ]));
       assert.ok(receipt.files.every(file => allowedComponents.has(file.component)));
 
-      for (const relative of sourceFiles) {
-        const installedRelative = path.posix.join(expected.destination, relative);
+      for (const installedRelative of expectedInstalled) {
         assert.ok(
           receipt.files.some(file => file.path === installedRelative),
           `${runtime} receipt omits ${installedRelative}`

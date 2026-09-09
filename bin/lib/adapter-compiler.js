@@ -609,6 +609,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability) {
   // /wtfp:wtfp:new-paper in current Claude Code releases.
   if (target !== 'clio' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
+  // Clio renders a display-only prompt for the human without a model call. The
+  // help route is pure catalog rendering, so it is the one prompt that opts in.
+  // Clio ignores frontmatter keys it does not read, so older builds are unaffected.
+  if (target === 'clio' && action.id === 'help') lines.push('display-only: true');
   if (!availability.available) {
     if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
       lines.push('allowed-tools: []');
@@ -710,8 +714,12 @@ function roleBodyWithoutPortableResult(role) {
   return role.body.split(/^## Result contract\s*$/m)[0].trim();
 }
 
+// Each host reads a different frontmatter dialect for a subagent. The fields
+// below are the ones each loader documents; anything a loader does not know is
+// left out rather than guessed, because Gemini's agent schema is strict.
 function renderPortableRole(role, slug, target) {
-  const tools = role.fields.execution_class === 'verifier-report'
+  const verifier = role.fields.execution_class === 'verifier-report';
+  const tools = verifier
     ? ['Read', 'Glob', 'Grep']
     : ['Read', 'Write', 'Edit', 'Glob', 'Grep'];
   const lines = [
