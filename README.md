@@ -30,7 +30,7 @@ Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.
 ## Start a project
 
 You need Node.js 20 or newer and one supported coding-agent client. This
-example uses Clio Coder 0.3.8:
+example uses Clio Coder (0.3.8 initialization history; 0.4.6 discovery and help smoke verified):
 
 ```bash
 npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
@@ -144,7 +144,7 @@ The same workflow is projected into each client's native interface:
 
 | Client | Start an explicit action |
 | --- | --- |
-| Clio Coder (0.3.8 tested; later versions must pass native discovery) | `/wtfp:new-paper …` |
+| Clio Coder (0.4.6 discovery/install/agents/help verified; 0.3.8 history retained) | `/wtfp:new-paper …` |
 | Claude Code | `/wtfp:new-paper …` |
 | GitHub Copilot CLI | `/wtfp:new-paper …` |
 | OpenCode | `/wtfp:new-paper …` |

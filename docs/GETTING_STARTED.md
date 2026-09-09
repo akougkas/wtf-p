@@ -10,7 +10,7 @@ For a worked grant-writing example, continue with the [proposal workflow](PROPOS
 
 - Node.js 20 or newer, including `npx`.
 - One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI.
-- Clio Coder 0.3.8 or newer for namespaced prompts, extension agents, and extension fleets. Clio 0.3.8 records but does not enforce the manifest's `compatibility.clio` value, so the WTF-P installer also runs a credential-free capability probe.
+- Clio Coder 0.3.8 introduced the required namespaced prompts, extension agents and fleets. Clio 0.4.6 has verified native discovery, user installation/listing, all 11 agent recipes and a completed headless `/wtfp:help` smoke on `dynamo/qwen3.8-27b`; this does not establish initialization or lifecycle behavior on 0.4.6. The installer retains its credential-free discovery probe. See [compatibility evidence](COMPATIBILITY.md) for the 0.3.8 history and exact 0.4.6 usage totals.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
@@ -28,7 +28,7 @@ npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install antigravity
 npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install gemini
 ```
 
-Run only the line for the client you intend to use. For example, if Clio Coder 0.3.8 is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It neither replaces nor launches Clio.
+Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It does not replace Clio or launch an interactive session. The updated source installer invokes native discovery and extension registration when the binary is available; the published RC2 installer predates that registration alignment.
 
 The explicit `--package=wtf-p@0.6.0-rc.2 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.2 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.2`; stop if it reports another version or target.
 
@@ -133,7 +133,9 @@ Validation records report findings; they do not imply that a change was applied.
 
 The default config enables confirmation gates for outline, plan, write, review, and delivery. Review `.planning/config.json` as project policy, not as generated boilerplate to ignore.
 
-## Clio Coder 0.3.8 notes
+## Clio Coder compatibility notes
+
+On 0.4.6, confirm native registration with `clio-coder extensions list --all --json`; an active entry must have valid content, enabled status and zero diagnostics. Discovery alone does not establish activation. If using the published RC2 installer or a copy made without the native binary, run `clio-coder extensions install /absolute/path/to/vendors/clio --user` in the selected profile before relying on the commands. Use `--force` only after reviewing any existing package replacement. The updated source installer delegates this registration automatically; a target at `<working directory>/.clio-coder` uses project scope.
 
 After installing, start Clio in the project and inspect native discovery:
 

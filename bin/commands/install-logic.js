@@ -728,7 +728,9 @@ async function install(runtime, isUpdate, options, pkg) {
     if (stats.writtenFiles.length > 0) {
       writeVersionFile(targetDir, pkg.version, stats.writtenFiles, {
         runtime: vendorKey,
-        scope: isGlobal ? (explicitConfigDir ? 'custom' : 'user') : 'project',
+        scope: vendorKey === 'clio' && targetDir === path.join(process.cwd(), '.clio-coder')
+          ? 'project'
+          : isGlobal ? (explicitConfigDir ? 'custom' : 'user') : 'project',
         skipped: stats.skipped,
         selectionComplete: onlyInstall === 'all',
         adapterVersion: ADAPTER_CONTRACT_VERSION,
@@ -737,6 +739,10 @@ async function install(runtime, isUpdate, options, pkg) {
       });
     }
     stats.commit();
+    if (typeof nativeActivation.commit === 'function') {
+      const warning = nativeActivation.commit();
+      if (warning) out.warn(warning);
+    }
   } catch (error) {
     const nativeRollbackFailures = Array.isArray(error.nativeRollbackFailures)
       ? [...error.nativeRollbackFailures]
@@ -770,10 +776,15 @@ async function install(runtime, isUpdate, options, pkg) {
   if (nativeRequested) {
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
       out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
+      if (vendorKey === 'clio') {
+        const source = `'${path.join(targetDir, vendorConfig.native.source).replaceAll("'", "'\\''")}'`;
+        const scope = targetDir === path.join(process.cwd(), '.clio-coder') ? 'project' : 'user';
+        out.warn(`Activation requires clio-coder extensions install ${source} --${scope} --force in the same Clio configuration profile.`);
+      }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);
     } else if (nativeActivation.status === 'incompatible' && !hasQuiet) {
-      out.warn(`The installed Clio version does not expose the complete WTF-P extension contract: ${nativeActivation.reason}. Flat prompts and skills remain staged; upgrade Clio for agents, fleets, and namespaced prompts.`);
+      out.warn(`The installed Clio version does not expose the complete WTF-P extension contract: ${nativeActivation.reason}. The bundle remains staged, not activated; upgrade Clio and run clio-coder extensions install in the selected profile.`);
     }
   }
 

@@ -1,0 +1,2735 @@
+{"type":"session","version":4,"id":"20j310k0eckl","timestamp":"2026-09-09T14:43:33.485Z","cwd":"/tmp/claude-1000/-home-akougkas-iowarp-wtf-ms/16310afe-21c7-4f71-8038-19ad2a4cd366/scratchpad/smoke","target":"dynamo","model":"dynamo/qwen3.8-27b","clioCoderVersion":"0.4.6"}
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"user","content":[{"type":"text","text":"<system-reminder>\n[Tasks] This request enumerates 8 steps. Before the first edit, declare the task board: tasks action=\"plan\" with a title and one task per authorized step, then work them one at a time (\"start\", then \"done\" with an evidence note). A plan does not authorize implementation: for proposed work awaiting an operator go-ahead, use action=\"block\" with a note naming the pending operator decision, or action=\"drop\", and wait.\n\n[Skills] 16 installed, 32 installable from the marketplace. Start this task by listing them with context(scope=\"skills\") and checking for a match; if one matches, load it with context(scope=\"skills\", name=\"<name>\") and continue the task in the same turn. A marketplace skill is not installed and is offered for install when the operator runs it. If none match, do not mention skills and continue with the task.\n\n[Marketplace] Skill \"design-council\" matches this request; install with clio-coder skills install design-council.\n</system-reminder>\n\n<objective>\nDisplay the complete WTF-P command reference.\n\nOutput ONLY the reference content below. Do NOT add:\n\n- Project-specific analysis\n- Git status or file context\n- Next-step suggestions\n- Any commentary beyond the reference\n</objective>\n\n<process>\n<reference>\n# WTF-P Command Reference\n\n**WTF-P** (Write The F***ing Paper) gives you 36 commands for writing academic papers, proposals, presentations, and posters. You describe your research. WTF-P breaks it into sections you can plan, write, and review one at a time — tracking everything across sessions so you never lose context.\n\n## Happy Path\n\nNew here? These five commands are the core loop. Run them in order:\n\n| Step | Command | What it does |\n|------|---------|-------------|\n| 1 | `/wtfp:new-paper` | Start a new paper with guided interview and setup |\n| 2 | `/wtfp:create-outline` | Build section outline, argument map, and word budgets |\n| 3 | `/wtfp:plan-section 1` | Create detailed writing plan for a section |\n| 4 | `/wtfp:write-section` | Write a section by executing its plan |\n| 5 | `/wtfp:review-section 1` | Review section for citations, coherence, and requirements |\n\nRepeat steps 3-5 for each section. Run `/wtfp:progress` anytime to see where you are and what to do next.\n\n## All Commands\n\n### Setup\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:new-paper` | Start a new paper with guided interview and setup |\n| `/wtfp:create-outline` | Build section outline, argument map, and word budgets |\n| `/wtfp:map-project` | Index existing drafts, data, and references for a project |\n\n```\n/wtfp:new-paper                  # Answer questions about your research, get PROJECT.md\n/wtfp:create-outline             # Produces ROADMAP.md, argument-map, narrative-arc\n/wtfp:map-project                # Got existing files? Index them first, then new-paper\n```\n\n### Planning\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:discuss-section [N]` | Discuss your vision for a section before planning it |\n| `/wtfp:research-gap [N]` | Research literature and domain knowledge for a section |\n| `/wtfp:list-assumptions [N]` | Preview intended approach for a section before writing |\n| `/wtfp:plan-section [N]` | Create detailed writing plan for a section |\n\n```\n/wtfp:discuss-section 2          # Talk through your vision before committing to a plan\n/wtfp:research-gap 3             # Find key citations and standard approaches\n/wtfp:list-assumptions 3         # See what Claude intends — course-correct early\n/wtfp:plan-section 1             # Creates .planning/sections/01-intro/01-01-PLAN.md\n```\n\n### Writing\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:write-section <path>` | Write a section by executing its plan |\n| `/wtfp:execute-outline` | Write all sections in parallel, then check coherence |\n| `/wtfp:quick <task>` | Run a small writing fix without full planning overhead |\n\n```\n/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md\n/wtfp:execute-outline            # Writes all sections by wave, checks coherence after\n/wtfp:quick \"add citation for Smith2023 in methods\"\n```\n\n### Review and Revision\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:review-section [N]` | Review section for citations, coherence, and requirements |\n| `/wtfp:verify-work [N]` | Test a written section against its plan, one check at a time |\n| `/wtfp:plan-revision [N]` | Create revision plan from review issues |\n| `/wtfp:polish-prose [N]` | Improve clarity, flow, and academic voice in written prose |\n\n```\n/wtfp:review-section 2           # Runs citation, coherence, and rubric checks\n/wtfp:verify-work 2              # Walk through acceptance tests one at a time\n/wtfp:plan-revision 02-01        # Turn ISSUES.md into a fix plan\n/wtfp:polish-prose 2             # Kill AI-speak, tighten prose, adjust voice\n```\n\n### Citations\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:analyze-bib` | Analyze bibliography and map citations to sections |\n| `/wtfp:check-refs` | Audit BibTeX for missing, duplicate, or broken references |\n\n```\n/wtfp:analyze-bib                # Deep analysis — maps each reference to sections\n/wtfp:check-refs                 # Finds missing keys, duplicates, broken entries\n```\n\n### Progress and Sessions\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:progress` | Show writing progress and suggest next step |\n| `/wtfp:pause-writing` | Save current progress so you can resume later |\n| `/wtfp:resume-writing` | Resume writing from a previous session |\n| `/wtfp:checkpoint <save/restore/list>` | Save, restore, or list paper state snapshots |\n\n```\n/wtfp:progress                   # Visual progress bar + intelligent next action\n/wtfp:pause-writing              # Creates .continue-here with full context\n/wtfp:resume-writing             # Reads STATE.md, shows where you left off\n/wtfp:checkpoint save draft-1    # Git-tagged snapshot you can restore later\n/wtfp:checkpoint list            # Show all checkpoints\n```\n\n### Outline Management\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:insert-section <after> <desc>` | Insert a new section between existing sections |\n| `/wtfp:remove-section [N]` | Remove an unwritten section and renumber the rest |\n\n```\n/wtfp:insert-section 3 \"Add methodology detail\"   # Creates Section 3.1\n/wtfp:remove-section 7                             # Deletes and renumbers\n```\n\n### Export and Submission\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:export-latex` | Export paper to LaTeX with bibliography and formatting |\n| `/wtfp:audit-milestone` | Run pre-submission checks on sections, citations, and word counts |\n| `/wtfp:plan-milestone-gaps` | Create fix plans for gaps found by audit-milestone |\n| `/wtfp:submit-milestone <version>` | Archive a completed draft or submission version |\n\n```\n/wtfp:export-latex               # Generates .tex + references.bib in paper/\n/wtfp:audit-milestone            # 5-check pre-submission audit → MILESTONE-AUDIT.md\n/wtfp:plan-milestone-gaps        # Reads audit, creates fix plans for each gap\n/wtfp:submit-milestone \"initial-submission\"   # Archives to milestones/\n```\n\n### Presentations and Posters\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:create-slides` | Generate presentation slides from paper content |\n| `/wtfp:create-poster` | Generate academic poster from paper content |\n\n```\n/wtfp:create-slides              # Marp-based markdown slides from your paper\n/wtfp:create-poster              # Academic poster layout from key sections\n```\n\n### Todos\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:add-todo <description>` | Capture a quick note or task without breaking your flow |\n| `/wtfp:check-todos` | Review pending todos and act on, defer, or dismiss each |\n\n```\n/wtfp:add-todo \"Check whether Smith2024 contradicts our methodology claim\"\n/wtfp:check-todos                # Walk through each — act, defer, dismiss, or done\n```\n\n### Settings and Utilities\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:settings` | View and edit project settings interactively |\n| `/wtfp:update` | Check for updates and install newer version |\n| `/wtfp:help` | Show all WTF-P commands and how to use them |\n\n### Contributing\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:report-bug` | Report a bug via GitHub issue |\n| `/wtfp:request-feature` | Request a new feature via GitHub issue |\n| `/wtfp:contribute` | Walk through contributing code to WTF-P via pull request |\n\n## Files and Structure\n\nWTF-P creates a `.planning/` directory in your project:\n\n```\n.planning/\n  PROJECT.md              Paper vision and requirements\n  ROADMAP.md              Section breakdown with status\n  STATE.md                Writing progress and session context\n  config.json             Project settings\n  structure/\n    argument-map.md       Claims mapped to evidence and sections\n    outline.md            Section structure and word budgets\n    narrative-arc.md      Story flow across sections\n  sources/\n    literature.md         Bibliography index\n    data.md               Figures, tables, evidence\n    prior-drafts.md       Existing material to incorporate\n  sections/\n    01-introduction/\n      01-01-PLAN.md       Writing plan\n      01-01-SUMMARY.md    Completion record\n    02-methods/\n      02-01-PLAN.md\n      02-01-SUMMARY.md\n\npaper/                    Written output\n  paper.md                Assembled paper\n  paper.tex               LaTeX output (after export)\n  references.bib          Bibliography\n  figures/                Figure files\n```\n\n## Common Workflows\n\n**Starting a new paper:**\n```\n/wtfp:new-paper\n/wtfp:create-outline\n/wtfp:plan-section 1\n/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md\n```\n\n**Resuming after a break:**\n```\n/wtfp:progress\n```\n\n**Reviving a stalled project with existing files:**\n```\n/wtfp:map-project\n/wtfp:new-paper\n```\n\n**Handling reviewer comments:**\n```\n/wtfp:plan-revision 02-01\n/wtfp:write-section .planning/sections/02-methods/02-01-PLAN.md\n```\n\n## Getting Help\n\n- `/wtfp:progress` — See where you are and what to do next\n- `/wtfp:report-bug` — Report a bug\n- `/wtfp:request-feature` — Request a feature\n- GitHub: https://github.com/akougkas/wtf-p\n</reference>\n</process>"}],"timestamp":1788965013549}}
+{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"<system-reminder>\n[Tasks] This request enumerates 8 steps. Before the first edit, declare the task board: tasks action=\"plan\" with a title and one task per authorized step, then work them one at a time (\"start\", then \"done\" with an evidence note). A plan does not authorize implementation: for proposed work awaiting an operator go-ahead, use action=\"block\" with a note naming the pending operator decision, or action=\"drop\", and wait.\n\n[Skills] 16 installed, 32 installable from the marketplace. Start this task by listing them with context(scope=\"skills\") and checking for a match; if one matches, load it with context(scope=\"skills\", name=\"<name>\") and continue the task in the same turn. A marketplace skill is not installed and is offered for install when the operator runs it. If none match, do not mention skills and continue with the task.\n\n[Marketplace] Skill \"design-council\" matches this request; install with clio-coder skills install design-council.\n</system-reminder>\n\n<objective>\nDisplay the complete WTF-P command reference.\n\nOutput ONLY the reference content below. Do NOT add:\n\n- Project-specific analysis\n- Git status or file context\n- Next-step suggestions\n- Any commentary beyond the reference\n</objective>\n\n<process>\n<reference>\n# WTF-P Command Reference\n\n**WTF-P** (Write The F***ing Paper) gives you 36 commands for writing academic papers, proposals, presentations, and posters. You describe your research. WTF-P breaks it into sections you can plan, write, and review one at a time — tracking everything across sessions so you never lose context.\n\n## Happy Path\n\nNew here? These five commands are the core loop. Run them in order:\n\n| Step | Command | What it does |\n|------|---------|-------------|\n| 1 | `/wtfp:new-paper` | Start a new paper with guided interview and setup |\n| 2 | `/wtfp:create-outline` | Build section outline, argument map, and word budgets |\n| 3 | `/wtfp:plan-section 1` | Create detailed writing plan for a section |\n| 4 | `/wtfp:write-section` | Write a section by executing its plan |\n| 5 | `/wtfp:review-section 1` | Review section for citations, coherence, and requirements |\n\nRepeat steps 3-5 for each section. Run `/wtfp:progress` anytime to see where you are and what to do next.\n\n## All Commands\n\n### Setup\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:new-paper` | Start a new paper with guided interview and setup |\n| `/wtfp:create-outline` | Build section outline, argument map, and word budgets |\n| `/wtfp:map-project` | Index existing drafts, data, and references for a project |\n\n```\n/wtfp:new-paper                  # Answer questions about your research, get PROJECT.md\n/wtfp:create-outline             # Produces ROADMAP.md, argument-map, narrative-arc\n/wtfp:map-project                # Got existing files? Index them first, then new-paper\n```\n\n### Planning\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:discuss-section [N]` | Discuss your vision for a section before planning it |\n| `/wtfp:research-gap [N]` | Research literature and domain knowledge for a section |\n| `/wtfp:list-assumptions [N]` | Preview intended approach for a section before writing |\n| `/wtfp:plan-section [N]` | Create detailed writing plan for a section |\n\n```\n/wtfp:discuss-section 2          # Talk through your vision before committing to a plan\n/wtfp:research-gap 3             # Find key citations and standard approaches\n/wtfp:list-assumptions 3         # See what Claude intends — course-correct early\n/wtfp:plan-section 1             # Creates .planning/sections/01-intro/01-01-PLAN.md\n```\n\n### Writing\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:write-section <path>` | Write a section by executing its plan |\n| `/wtfp:execute-outline` | Write all sections in parallel, then check coherence |\n| `/wtfp:quick <task>` | Run a small writing fix without full planning overhead |\n\n```\n/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md\n/wtfp:execute-outline            # Writes all sections by wave, checks coherence after\n/wtfp:quick \"add citation for Smith2023 in methods\"\n```\n\n### Review and Revision\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:review-section [N]` | Review section for citations, coherence, and requirements |\n| `/wtfp:verify-work [N]` | Test a written section against its plan, one check at a time |\n| `/wtfp:plan-revision [N]` | Create revision plan from review issues |\n| `/wtfp:polish-prose [N]` | Improve clarity, flow, and academic voice in written prose |\n\n```\n/wtfp:review-section 2           # Runs citation, coherence, and rubric checks\n/wtfp:verify-work 2              # Walk through acceptance tests one at a time\n/wtfp:plan-revision 02-01        # Turn ISSUES.md into a fix plan\n/wtfp:polish-prose 2             # Kill AI-speak, tighten prose, adjust voice\n```\n\n### Citations\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:analyze-bib` | Analyze bibliography and map citations to sections |\n| `/wtfp:check-refs` | Audit BibTeX for missing, duplicate, or broken references |\n\n```\n/wtfp:analyze-bib                # Deep analysis — maps each reference to sections\n/wtfp:check-refs                 # Finds missing keys, duplicates, broken entries\n```\n\n### Progress and Sessions\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:progress` | Show writing progress and suggest next step |\n| `/wtfp:pause-writing` | Save current progress so you can resume later |\n| `/wtfp:resume-writing` | Resume writing from a previous session |\n| `/wtfp:checkpoint <save/restore/list>` | Save, restore, or list paper state snapshots |\n\n```\n/wtfp:progress                   # Visual progress bar + intelligent next action\n/wtfp:pause-writing              # Creates .continue-here with full context\n/wtfp:resume-writing             # Reads STATE.md, shows where you left off\n/wtfp:checkpoint save draft-1    # Git-tagged snapshot you can restore later\n/wtfp:checkpoint list            # Show all checkpoints\n```\n\n### Outline Management\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:insert-section <after> <desc>` | Insert a new section between existing sections |\n| `/wtfp:remove-section [N]` | Remove an unwritten section and renumber the rest |\n\n```\n/wtfp:insert-section 3 \"Add methodology detail\"   # Creates Section 3.1\n/wtfp:remove-section 7                             # Deletes and renumbers\n```\n\n### Export and Submission\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:export-latex` | Export paper to LaTeX with bibliography and formatting |\n| `/wtfp:audit-milestone` | Run pre-submission checks on sections, citations, and word counts |\n| `/wtfp:plan-milestone-gaps` | Create fix plans for gaps found by audit-milestone |\n| `/wtfp:submit-milestone <version>` | Archive a completed draft or submission version |\n\n```\n/wtfp:export-latex               # Generates .tex + references.bib in paper/\n/wtfp:audit-milestone            # 5-check pre-submission audit → MILESTONE-AUDIT.md\n/wtfp:plan-milestone-gaps        # Reads audit, creates fix plans for each gap\n/wtfp:submit-milestone \"initial-submission\"   # Archives to milestones/\n```\n\n### Presentations and Posters\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:create-slides` | Generate presentation slides from paper content |\n| `/wtfp:create-poster` | Generate academic poster from paper content |\n\n```\n/wtfp:create-slides              # Marp-based markdown slides from your paper\n/wtfp:create-poster              # Academic poster layout from key sections\n```\n\n### Todos\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:add-todo <description>` | Capture a quick note or task without breaking your flow |\n| `/wtfp:check-todos` | Review pending todos and act on, defer, or dismiss each |\n\n```\n/wtfp:add-todo \"Check whether Smith2024 contradicts our methodology claim\"\n/wtfp:check-todos                # Walk through each — act, defer, dismiss, or done\n```\n\n### Settings and Utilities\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:settings` | View and edit project settings interactively |\n| `/wtfp:update` | Check for updates and install newer version |\n| `/wtfp:help` | Show all WTF-P commands and how to use them |\n\n### Contributing\n\n| Command | Description |\n|---------|-------------|\n| `/wtfp:report-bug` | Report a bug via GitHub issue |\n| `/wtfp:request-feature` | Request a new feature via GitHub issue |\n| `/wtfp:contribute` | Walk through contributing code to WTF-P via pull request |\n\n## Files and Structure\n\nWTF-P creates a `.planning/` directory in your project:\n\n```\n.planning/\n  PROJECT.md              Paper vision and requirements\n  ROADMAP.md              Section breakdown with status\n  STATE.md                Writing progress and session context\n  config.json             Project settings\n  structure/\n    argument-map.md       Claims mapped to evidence and sections\n    outline.md            Section structure and word budgets\n    narrative-arc.md      Story flow across sections\n  sources/\n    literature.md         Bibliography index\n    data.md               Figures, tables, evidence\n    prior-drafts.md       Existing material to incorporate\n  sections/\n    01-introduction/\n      01-01-PLAN.md       Writing plan\n      01-01-SUMMARY.md    Completion record\n    02-methods/\n      02-01-PLAN.md\n      02-01-SUMMARY.md\n\npaper/                    Written output\n  paper.md                Assembled paper\n  paper.tex               LaTeX output (after export)\n  references.bib          Bibliography\n  figures/                Figure files\n```\n\n## Common Workflows\n\n**Starting a new paper:**\n```\n/wtfp:new-paper\n/wtfp:create-outline\n/wtfp:plan-section 1\n/wtfp:write-section .planning/sections/01-introduction/01-01-PLAN.md\n```\n\n**Resuming after a break:**\n```\n/wtfp:progress\n```\n\n**Reviving a stalled project with existing files:**\n```\n/wtfp:map-project\n/wtfp:new-paper\n```\n\n**Handling reviewer comments:**\n```\n/wtfp:plan-revision 02-01\n/wtfp:write-section .planning/sections/02-methods/02-01-PLAN.md\n```\n\n## Getting Help\n\n- `/wtfp:progress` — See where you are and what to do next\n- `/wtfp:report-bug` — Report a bug\n- `/wtfp:request-feature` — Request a feature\n- GitHub: https://github.com/akougkas/wtf-p\n</reference>\n</process>"}],"timestamp":1788965013549}}
+{"type":"message_start","message":{"role":"assistant","content":[{"type":"thinking","thinking":"The","thinkingSignature":"reasoning_content"}],"api":"openai-completions","provider":"litellm","model":"dynamo/qwen3.8-27b","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"pending","timestamp":1788965013687,"responseId":"chatcmpl-01rc667sqw1kfpksl87pl1"}}
+{"type":"thinking_delta","contentIndex":0,"delta":"The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" user"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" asking"}
+{"type":"thinking_delta","contentIndex":0,"delta":" me"}
+{"type":"thinking_delta","contentIndex":0,"delta":" to"}
+{"type":"thinking_delta","contentIndex":0,"delta":" display"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" complete"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" of"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" WTF"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-P"}
+{"type":"thinking_delta","contentIndex":0,"delta":" commands"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" objective"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" clear"}
+{"type":"thinking_delta","contentIndex":0,"delta":":"}
+{"type":"thinking_delta","contentIndex":0,"delta":" output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" only"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":" of"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" below"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" and"}
+{"type":"thinking_delta","contentIndex":0,"delta":" do"}
+{"type":"thinking_delta","contentIndex":0,"delta":" not"}
+{"type":"thinking_delta","contentIndex":0,"delta":" add"}
+{"type":"thinking_delta","contentIndex":0,"delta":" anything"}
+{"type":"thinking_delta","contentIndex":0,"delta":" else"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"There"}
+{"type":"thinking_delta","contentIndex":0,"delta":"'s"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" system"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reminder"}
+{"type":"thinking_delta","contentIndex":0,"delta":" about"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" that"}
+{"type":"thinking_delta","contentIndex":0,"delta":" enumer"}
+{"type":"thinking_delta","contentIndex":0,"delta":"ates"}
+{"type":"thinking_delta","contentIndex":0,"delta":" "}
+{"type":"thinking_delta","contentIndex":0,"delta":"8"}
+{"type":"thinking_delta","contentIndex":0,"delta":" steps"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" saying"}
+{"type":"thinking_delta","contentIndex":0,"delta":" I"}
+{"type":"thinking_delta","contentIndex":0,"delta":" should"}
+{"type":"thinking_delta","contentIndex":0,"delta":" declare"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" board"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" But"}
+{"type":"thinking_delta","contentIndex":0,"delta":" wait"}
+{"type":"thinking_delta","contentIndex":0,"delta":"—the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" objective"}
+{"type":"thinking_delta","contentIndex":0,"delta":" explicitly"}
+{"type":"thinking_delta","contentIndex":0,"delta":" says"}
+{"type":"thinking_delta","contentIndex":0,"delta":":"}
+{"type":"thinking_delta","contentIndex":0,"delta":" \""}
+{"type":"thinking_delta","contentIndex":0,"delta":"output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" only"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":" below"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" Do"}
+{"type":"thinking_delta","contentIndex":0,"delta":" not"}
+{"type":"thinking_delta","contentIndex":0,"delta":" add"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" following"}
+{"type":"thinking_delta","contentIndex":0,"delta":":"}
+{"type":"thinking_delta","contentIndex":0,"delta":" project"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-specific"}
+{"type":"thinking_delta","contentIndex":0,"delta":" analysis"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" git"}
+{"type":"thinking_delta","contentIndex":0,"delta":" status"}
+{"type":"thinking_delta","contentIndex":0,"delta":" or"}
+{"type":"thinking_delta","contentIndex":0,"delta":" file"}
+{"type":"thinking_delta","contentIndex":0,"delta":" context"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" suggestions"}
+{"type":"thinking_delta","contentIndex":0,"delta":" for"}
+{"type":"thinking_delta","contentIndex":0,"delta":" next"}
+{"type":"thinking_delta","contentIndex":0,"delta":" steps"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" or"}
+{"type":"thinking_delta","contentIndex":0,"delta":" any"}
+{"type":"thinking_delta","contentIndex":0,"delta":" comments"}
+{"type":"thinking_delta","contentIndex":0,"delta":" outside"}
+{"type":"thinking_delta","contentIndex":0,"delta":" of"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":".\""}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"This"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" simple"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-display"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" provided"}
+{"type":"thinking_delta","contentIndex":0,"delta":" in"}
+{"type":"thinking_delta","contentIndex":0,"delta":" full"}
+{"type":"thinking_delta","contentIndex":0,"delta":" within"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" process"}
+{"type":"thinking_delta","contentIndex":0,"delta":" section"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" I"}
+{"type":"thinking_delta","contentIndex":0,"delta":" should"}
+{"type":"thinking_delta","contentIndex":0,"delta":" output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" exactly"}
+{"type":"thinking_delta","contentIndex":0,"delta":" that"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"Let"}
+{"type":"thinking_delta","contentIndex":0,"delta":" me"}
+{"type":"thinking_delta","contentIndex":0,"delta":" think"}
+{"type":"thinking_delta","contentIndex":0,"delta":" about"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-board"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reminder"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" It"}
+{"type":"thinking_delta","contentIndex":0,"delta":" says"}
+{"type":"thinking_delta","contentIndex":0,"delta":" \""}
+{"type":"thinking_delta","contentIndex":0,"delta":"This"}
+{"type":"thinking_delta","contentIndex":0,"delta":" request"}
+{"type":"thinking_delta","contentIndex":0,"delta":" enumer"}
+{"type":"thinking_delta","contentIndex":0,"delta":"ates"}
+{"type":"thinking_delta","contentIndex":0,"delta":" "}
+{"type":"thinking_delta","contentIndex":0,"delta":"8"}
+{"type":"thinking_delta","contentIndex":0,"delta":" steps"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" Before"}
+{"type":"thinking_delta","contentIndex":0,"delta":" editing"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" declare"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" board"}
+{"type":"thinking_delta","contentIndex":0,"delta":".\""}
+{"type":"thinking_delta","contentIndex":0,"delta":" But"}
+{"type":"thinking_delta","contentIndex":0,"delta":" this"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" involves"}
+{"type":"thinking_delta","contentIndex":0,"delta":" no"}
+{"type":"thinking_delta","contentIndex":0,"delta":" editing"}
+{"type":"thinking_delta","contentIndex":0,"delta":" at"}
+{"type":"thinking_delta","contentIndex":0,"delta":" all"}
+{"type":"thinking_delta","contentIndex":0,"delta":"—it"}
+{"type":"thinking_delta","contentIndex":0,"delta":"'s"}
+{"type":"thinking_delta","contentIndex":0,"delta":" purely"}
+{"type":"thinking_delta","contentIndex":0,"delta":" displaying"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" objective"}
+{"type":"thinking_delta","contentIndex":0,"delta":" overrides"}
+{"type":"thinking_delta","contentIndex":0,"delta":":"}
+{"type":"thinking_delta","contentIndex":0,"delta":" output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" only"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" no"}
+{"type":"thinking_delta","contentIndex":0,"delta":" comments"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" board"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" for"}
+{"type":"thinking_delta","contentIndex":0,"delta":" authorized"}
+{"type":"thinking_delta","contentIndex":0,"delta":" steps"}
+{"type":"thinking_delta","contentIndex":0,"delta":" that"}
+{"type":"thinking_delta","contentIndex":0,"delta":" require"}
+{"type":"thinking_delta","contentIndex":0,"delta":" implementation"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" Here"}
+{"type":"thinking_delta","contentIndex":0,"delta":" there"}
+{"type":"thinking_delta","contentIndex":0,"delta":" are"}
+{"type":"thinking_delta","contentIndex":0,"delta":" no"}
+{"type":"thinking_delta","contentIndex":0,"delta":" files"}
+{"type":"thinking_delta","contentIndex":0,"delta":" being"}
+{"type":"thinking_delta","contentIndex":0,"delta":" changed"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" no"}
+{"type":"thinking_delta","contentIndex":0,"delta":" work"}
+{"type":"thinking_delta","contentIndex":0,"delta":" to"}
+{"type":"thinking_delta","contentIndex":0,"delta":" be"}
+{"type":"thinking_delta","contentIndex":0,"delta":" tracked"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" This"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" display"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-only"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" Creating"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":" board"}
+{"type":"thinking_delta","contentIndex":0,"delta":" would"}
+{"type":"thinking_delta","contentIndex":0,"delta":" violate"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" \""}
+{"type":"thinking_delta","contentIndex":0,"delta":"output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" only"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":"\""}
+{"type":"thinking_delta","contentIndex":0,"delta":" directive"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" and"}
+{"type":"thinking_delta","contentIndex":0,"delta":" would"}
+{"type":"thinking_delta","contentIndex":0,"delta":" be"}
+{"type":"thinking_delta","contentIndex":0,"delta":" unnecessary"}
+{"type":"thinking_delta","contentIndex":0,"delta":" overhead"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reminder"}
+{"type":"thinking_delta","contentIndex":0,"delta":" also"}
+{"type":"thinking_delta","contentIndex":0,"delta":" mentions"}
+{"type":"thinking_delta","contentIndex":0,"delta":" skills"}
+{"type":"thinking_delta","contentIndex":0,"delta":"—"}
+{"type":"thinking_delta","contentIndex":0,"delta":"\"["}
+{"type":"thinking_delta","contentIndex":0,"delta":"Market"}
+{"type":"thinking_delta","contentIndex":0,"delta":"place"}
+{"type":"thinking_delta","contentIndex":0,"delta":"]"}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" skill"}
+{"type":"thinking_delta","contentIndex":0,"delta":" '"}
+{"type":"thinking_delta","contentIndex":0,"delta":"design"}
+{"type":"thinking_delta","contentIndex":0,"delta":"-c"}
+{"type":"thinking_delta","contentIndex":0,"delta":"ouncil"}
+{"type":"thinking_delta","contentIndex":0,"delta":"'"}
+{"type":"thinking_delta","contentIndex":0,"delta":" matches"}
+{"type":"thinking_delta","contentIndex":0,"delta":" this"}
+{"type":"thinking_delta","contentIndex":0,"delta":" request"}
+{"type":"thinking_delta","contentIndex":0,"delta":".\""}
+{"type":"thinking_delta","contentIndex":0,"delta":" But"}
+{"type":"thinking_delta","contentIndex":0,"delta":" this"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" command"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" display"}
+{"type":"thinking_delta","contentIndex":0,"delta":","}
+{"type":"thinking_delta","contentIndex":0,"delta":" not"}
+{"type":"thinking_delta","contentIndex":0,"delta":" a"}
+{"type":"thinking_delta","contentIndex":0,"delta":" design"}
+{"type":"thinking_delta","contentIndex":0,"delta":" task"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" skill"}
+{"type":"thinking_delta","contentIndex":0,"delta":" doesn"}
+{"type":"thinking_delta","contentIndex":0,"delta":"'t"}
+{"type":"thinking_delta","contentIndex":0,"delta":" match"}
+{"type":"thinking_delta","contentIndex":0,"delta":" what"}
+{"type":"thinking_delta","contentIndex":0,"delta":" I"}
+{"type":"thinking_delta","contentIndex":0,"delta":" should"}
+{"type":"thinking_delta","contentIndex":0,"delta":" be"}
+{"type":"thinking_delta","contentIndex":0,"delta":" doing"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" objective"}
+{"type":"thinking_delta","contentIndex":0,"delta":" is"}
+{"type":"thinking_delta","contentIndex":0,"delta":" explicit"}
+{"type":"thinking_delta","contentIndex":0,"delta":" and"}
+{"type":"thinking_delta","contentIndex":0,"delta":" narrow"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"The"}
+{"type":"thinking_delta","contentIndex":0,"delta":" correct"}
+{"type":"thinking_delta","contentIndex":0,"delta":" behavior"}
+{"type":"thinking_delta","contentIndex":0,"delta":":"}
+{"type":"thinking_delta","contentIndex":0,"delta":" just"}
+{"type":"thinking_delta","contentIndex":0,"delta":" output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":" exactly"}
+{"type":"thinking_delta","contentIndex":0,"delta":" as"}
+{"type":"thinking_delta","contentIndex":0,"delta":" given"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" Do"}
+{"type":"thinking_delta","contentIndex":0,"delta":" not"}
+{"type":"thinking_delta","contentIndex":0,"delta":" add"}
+{"type":"thinking_delta","contentIndex":0,"delta":" anything"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"Let"}
+{"type":"thinking_delta","contentIndex":0,"delta":" me"}
+{"type":"thinking_delta","contentIndex":0,"delta":" output"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" complete"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" ver"}
+{"type":"thinking_delta","contentIndex":0,"delta":"batim"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":" I"}
+{"type":"thinking_delta","contentIndex":0,"delta":" need"}
+{"type":"thinking_delta","contentIndex":0,"delta":" to"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reproduce"}
+{"type":"thinking_delta","contentIndex":0,"delta":" it"}
+{"type":"thinking_delta","contentIndex":0,"delta":" exactly"}
+{"type":"thinking_delta","contentIndex":0,"delta":" as"}
+{"type":"thinking_delta","contentIndex":0,"delta":" provided"}
+{"type":"thinking_delta","contentIndex":0,"delta":" in"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" "}
+{"type":"thinking_delta","contentIndex":0,"delta":"<reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":">"}
+{"type":"thinking_delta","contentIndex":0,"delta":" section"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n\n"}
+{"type":"thinking_delta","contentIndex":0,"delta":"I"}
+{"type":"thinking_delta","contentIndex":0,"delta":"'ll"}
+{"type":"thinking_delta","contentIndex":0,"delta":" copy"}
+{"type":"thinking_delta","contentIndex":0,"delta":" the"}
+{"type":"thinking_delta","contentIndex":0,"delta":" reference"}
+{"type":"thinking_delta","contentIndex":0,"delta":" content"}
+{"type":"thinking_delta","contentIndex":0,"delta":" exactly"}
+{"type":"thinking_delta","contentIndex":0,"delta":"."}
+{"type":"thinking_delta","contentIndex":0,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"#"}
+{"type":"text_delta","contentIndex":1,"delta":" WTF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" Reference"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":"W"}
+{"type":"text_delta","contentIndex":1,"delta":"TF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":" ("}
+{"type":"text_delta","contentIndex":1,"delta":"Write"}
+{"type":"text_delta","contentIndex":1,"delta":" The"}
+{"type":"text_delta","contentIndex":1,"delta":" F"}
+{"type":"text_delta","contentIndex":1,"delta":"***"}
+{"type":"text_delta","contentIndex":1,"delta":"ing"}
+{"type":"text_delta","contentIndex":1,"delta":" Paper"}
+{"type":"text_delta","contentIndex":1,"delta":")"}
+{"type":"text_delta","contentIndex":1,"delta":" gives"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":"6"}
+{"type":"text_delta","contentIndex":1,"delta":" commands"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" academic"}
+{"type":"text_delta","contentIndex":1,"delta":" papers"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" proposals"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" presentations"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" posters"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":" You"}
+{"type":"text_delta","contentIndex":1,"delta":" describe"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" research"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":" WTF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":" breaks"}
+{"type":"text_delta","contentIndex":1,"delta":" it"}
+{"type":"text_delta","contentIndex":1,"delta":" into"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" can"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" write"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" review"}
+{"type":"text_delta","contentIndex":1,"delta":" one"}
+{"type":"text_delta","contentIndex":1,"delta":" at"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" time"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" tracking"}
+{"type":"text_delta","contentIndex":1,"delta":" everything"}
+{"type":"text_delta","contentIndex":1,"delta":" across"}
+{"type":"text_delta","contentIndex":1,"delta":" sessions"}
+{"type":"text_delta","contentIndex":1,"delta":" so"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" never"}
+{"type":"text_delta","contentIndex":1,"delta":" lose"}
+{"type":"text_delta","contentIndex":1,"delta":" context"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"##"}
+{"type":"text_delta","contentIndex":1,"delta":" Happy"}
+{"type":"text_delta","contentIndex":1,"delta":" Path"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"New"}
+{"type":"text_delta","contentIndex":1,"delta":" here"}
+{"type":"text_delta","contentIndex":1,"delta":"?"}
+{"type":"text_delta","contentIndex":1,"delta":" These"}
+{"type":"text_delta","contentIndex":1,"delta":" five"}
+{"type":"text_delta","contentIndex":1,"delta":" commands"}
+{"type":"text_delta","contentIndex":1,"delta":" are"}
+{"type":"text_delta","contentIndex":1,"delta":" the"}
+{"type":"text_delta","contentIndex":1,"delta":" core"}
+{"type":"text_delta","contentIndex":1,"delta":" loop"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":" Run"}
+{"type":"text_delta","contentIndex":1,"delta":" them"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" order"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Step"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" What"}
+{"type":"text_delta","contentIndex":1,"delta":" it"}
+{"type":"text_delta","contentIndex":1,"delta":" does"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Start"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" guided"}
+{"type":"text_delta","contentIndex":1,"delta":" interview"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" setup"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Build"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" outline"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" argument"}
+{"type":"text_delta","contentIndex":1,"delta":" map"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" word"}
+{"type":"text_delta","contentIndex":1,"delta":" budgets"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Create"}
+{"type":"text_delta","contentIndex":1,"delta":" detailed"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"4"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"write"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Write"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" by"}
+{"type":"text_delta","contentIndex":1,"delta":" executing"}
+{"type":"text_delta","contentIndex":1,"delta":" its"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"5"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"review"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Review"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" citations"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" coherence"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" requirements"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"Repeat"}
+{"type":"text_delta","contentIndex":1,"delta":" steps"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"5"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" each"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":" Run"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"progress"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" anytime"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" see"}
+{"type":"text_delta","contentIndex":1,"delta":" where"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" are"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" what"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" do"}
+{"type":"text_delta","contentIndex":1,"delta":" next"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"##"}
+{"type":"text_delta","contentIndex":1,"delta":" All"}
+{"type":"text_delta","contentIndex":1,"delta":" Commands"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Setup"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Start"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" guided"}
+{"type":"text_delta","contentIndex":1,"delta":" interview"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" setup"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Build"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" outline"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" argument"}
+{"type":"text_delta","contentIndex":1,"delta":" map"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" word"}
+{"type":"text_delta","contentIndex":1,"delta":" budgets"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"map"}
+{"type":"text_delta","contentIndex":1,"delta":"-project"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Index"}
+{"type":"text_delta","contentIndex":1,"delta":" existing"}
+{"type":"text_delta","contentIndex":1,"delta":" drafts"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" data"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" references"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" project"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"                 "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Answer"}
+{"type":"text_delta","contentIndex":1,"delta":" questions"}
+{"type":"text_delta","contentIndex":1,"delta":" about"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" research"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" get"}
+{"type":"text_delta","contentIndex":1,"delta":" PROJECT"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Produ"}
+{"type":"text_delta","contentIndex":1,"delta":"ces"}
+{"type":"text_delta","contentIndex":1,"delta":" ROAD"}
+{"type":"text_delta","contentIndex":1,"delta":"MAP"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" argument"}
+{"type":"text_delta","contentIndex":1,"delta":"-map"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" narrative"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"arc"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"map"}
+{"type":"text_delta","contentIndex":1,"delta":"-project"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Got"}
+{"type":"text_delta","contentIndex":1,"delta":" existing"}
+{"type":"text_delta","contentIndex":1,"delta":" files"}
+{"type":"text_delta","contentIndex":1,"delta":"?"}
+{"type":"text_delta","contentIndex":1,"delta":" Index"}
+{"type":"text_delta","contentIndex":1,"delta":" them"}
+{"type":"text_delta","contentIndex":1,"delta":" first"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" then"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Planning"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"disc"}
+{"type":"text_delta","contentIndex":1,"delta":"uss"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Discuss"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" vision"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" before"}
+{"type":"text_delta","contentIndex":1,"delta":" planning"}
+{"type":"text_delta","contentIndex":1,"delta":" it"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"research"}
+{"type":"text_delta","contentIndex":1,"delta":"-gap"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Research"}
+{"type":"text_delta","contentIndex":1,"delta":" literature"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" domain"}
+{"type":"text_delta","contentIndex":1,"delta":" knowledge"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":list"}
+{"type":"text_delta","contentIndex":1,"delta":"-ass"}
+{"type":"text_delta","contentIndex":1,"delta":"um"}
+{"type":"text_delta","contentIndex":1,"delta":"ptions"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Preview"}
+{"type":"text_delta","contentIndex":1,"delta":" intended"}
+{"type":"text_delta","contentIndex":1,"delta":" approach"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" before"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Create"}
+{"type":"text_delta","contentIndex":1,"delta":" detailed"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"disc"}
+{"type":"text_delta","contentIndex":1,"delta":"uss"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"         "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Talk"}
+{"type":"text_delta","contentIndex":1,"delta":" through"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" vision"}
+{"type":"text_delta","contentIndex":1,"delta":" before"}
+{"type":"text_delta","contentIndex":1,"delta":" committing"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"research"}
+{"type":"text_delta","contentIndex":1,"delta":"-gap"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Find"}
+{"type":"text_delta","contentIndex":1,"delta":" key"}
+{"type":"text_delta","contentIndex":1,"delta":" citations"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" standard"}
+{"type":"text_delta","contentIndex":1,"delta":" approaches"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":list"}
+{"type":"text_delta","contentIndex":1,"delta":"-ass"}
+{"type":"text_delta","contentIndex":1,"delta":"um"}
+{"type":"text_delta","contentIndex":1,"delta":"ptions"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":"        "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" See"}
+{"type":"text_delta","contentIndex":1,"delta":" what"}
+{"type":"text_delta","contentIndex":1,"delta":" Claude"}
+{"type":"text_delta","contentIndex":1,"delta":" intends"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" course"}
+{"type":"text_delta","contentIndex":1,"delta":"-c"}
+{"type":"text_delta","contentIndex":1,"delta":"orrect"}
+{"type":"text_delta","contentIndex":1,"delta":" early"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Creates"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"sections"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-int"}
+{"type":"text_delta","contentIndex":1,"delta":"ro"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Writing"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"write"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<path"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Write"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" by"}
+{"type":"text_delta","contentIndex":1,"delta":" executing"}
+{"type":"text_delta","contentIndex":1,"delta":" its"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"execute"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Write"}
+{"type":"text_delta","contentIndex":1,"delta":" all"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" parallel"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" then"}
+{"type":"text_delta","contentIndex":1,"delta":" check"}
+{"type":"text_delta","contentIndex":1,"delta":" coherence"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"quick"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<task"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Run"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" small"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" fix"}
+{"type":"text_delta","contentIndex":1,"delta":" without"}
+{"type":"text_delta","contentIndex":1,"delta":" full"}
+{"type":"text_delta","contentIndex":1,"delta":" planning"}
+{"type":"text_delta","contentIndex":1,"delta":" overhead"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"write"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"sections"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-int"}
+{"type":"text_delta","contentIndex":1,"delta":"roduction"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"execute"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"           "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Writes"}
+{"type":"text_delta","contentIndex":1,"delta":" all"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":" by"}
+{"type":"text_delta","contentIndex":1,"delta":" wave"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" checks"}
+{"type":"text_delta","contentIndex":1,"delta":" coherence"}
+{"type":"text_delta","contentIndex":1,"delta":" after"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"quick"}
+{"type":"text_delta","contentIndex":1,"delta":" \""}
+{"type":"text_delta","contentIndex":1,"delta":"add"}
+{"type":"text_delta","contentIndex":1,"delta":" citation"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" Smith"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" methods"}
+{"type":"text_delta","contentIndex":1,"delta":"\""}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Review"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Revision"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"review"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Review"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" citations"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" coherence"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" requirements"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"verify"}
+{"type":"text_delta","contentIndex":1,"delta":"-work"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Test"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" written"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" against"}
+{"type":"text_delta","contentIndex":1,"delta":" its"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" one"}
+{"type":"text_delta","contentIndex":1,"delta":" check"}
+{"type":"text_delta","contentIndex":1,"delta":" at"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" time"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-re"}
+{"type":"text_delta","contentIndex":1,"delta":"vision"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Create"}
+{"type":"text_delta","contentIndex":1,"delta":" revision"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" review"}
+{"type":"text_delta","contentIndex":1,"delta":" issues"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"pol"}
+{"type":"text_delta","contentIndex":1,"delta":"ish"}
+{"type":"text_delta","contentIndex":1,"delta":"-pro"}
+{"type":"text_delta","contentIndex":1,"delta":"se"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Improve"}
+{"type":"text_delta","contentIndex":1,"delta":" clarity"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" flow"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" academic"}
+{"type":"text_delta","contentIndex":1,"delta":" voice"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" written"}
+{"type":"text_delta","contentIndex":1,"delta":" prose"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"review"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"          "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Runs"}
+{"type":"text_delta","contentIndex":1,"delta":" citation"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" coherence"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" rub"}
+{"type":"text_delta","contentIndex":1,"delta":"ric"}
+{"type":"text_delta","contentIndex":1,"delta":" checks"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"verify"}
+{"type":"text_delta","contentIndex":1,"delta":"-work"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Walk"}
+{"type":"text_delta","contentIndex":1,"delta":" through"}
+{"type":"text_delta","contentIndex":1,"delta":" acceptance"}
+{"type":"text_delta","contentIndex":1,"delta":" tests"}
+{"type":"text_delta","contentIndex":1,"delta":" one"}
+{"type":"text_delta","contentIndex":1,"delta":" at"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" time"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-re"}
+{"type":"text_delta","contentIndex":1,"delta":"vision"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"       "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Turn"}
+{"type":"text_delta","contentIndex":1,"delta":" ISS"}
+{"type":"text_delta","contentIndex":1,"delta":"UES"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":" into"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" fix"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"pol"}
+{"type":"text_delta","contentIndex":1,"delta":"ish"}
+{"type":"text_delta","contentIndex":1,"delta":"-pro"}
+{"type":"text_delta","contentIndex":1,"delta":"se"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Kill"}
+{"type":"text_delta","contentIndex":1,"delta":" AI"}
+{"type":"text_delta","contentIndex":1,"delta":"-s"}
+{"type":"text_delta","contentIndex":1,"delta":"peak"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" tighten"}
+{"type":"text_delta","contentIndex":1,"delta":" prose"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" adjust"}
+{"type":"text_delta","contentIndex":1,"delta":" voice"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Cit"}
+{"type":"text_delta","contentIndex":1,"delta":"ations"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"analyze"}
+{"type":"text_delta","contentIndex":1,"delta":"-b"}
+{"type":"text_delta","contentIndex":1,"delta":"ib"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Analy"}
+{"type":"text_delta","contentIndex":1,"delta":"ze"}
+{"type":"text_delta","contentIndex":1,"delta":" bibliography"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" map"}
+{"type":"text_delta","contentIndex":1,"delta":" citations"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"check"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"refs"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Audit"}
+{"type":"text_delta","contentIndex":1,"delta":" Bib"}
+{"type":"text_delta","contentIndex":1,"delta":"TeX"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" missing"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" duplicate"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" broken"}
+{"type":"text_delta","contentIndex":1,"delta":" references"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"analyze"}
+{"type":"text_delta","contentIndex":1,"delta":"-b"}
+{"type":"text_delta","contentIndex":1,"delta":"ib"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Deep"}
+{"type":"text_delta","contentIndex":1,"delta":" analysis"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" maps"}
+{"type":"text_delta","contentIndex":1,"delta":" each"}
+{"type":"text_delta","contentIndex":1,"delta":" reference"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"check"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"refs"}
+{"type":"text_delta","contentIndex":1,"delta":"                "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Finds"}
+{"type":"text_delta","contentIndex":1,"delta":" missing"}
+{"type":"text_delta","contentIndex":1,"delta":" keys"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" duplicates"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" broken"}
+{"type":"text_delta","contentIndex":1,"delta":" entries"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Progress"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Sessions"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"progress"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Show"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" progress"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" suggest"}
+{"type":"text_delta","contentIndex":1,"delta":" next"}
+{"type":"text_delta","contentIndex":1,"delta":" step"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"pause"}
+{"type":"text_delta","contentIndex":1,"delta":"-writing"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Save"}
+{"type":"text_delta","contentIndex":1,"delta":" current"}
+{"type":"text_delta","contentIndex":1,"delta":" progress"}
+{"type":"text_delta","contentIndex":1,"delta":" so"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" can"}
+{"type":"text_delta","contentIndex":1,"delta":" resume"}
+{"type":"text_delta","contentIndex":1,"delta":" later"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"resume"}
+{"type":"text_delta","contentIndex":1,"delta":"-writing"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Resume"}
+{"type":"text_delta","contentIndex":1,"delta":" writing"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" previous"}
+{"type":"text_delta","contentIndex":1,"delta":" session"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"checkpoint"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<save"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"restore"}
+{"type":"text_delta","contentIndex":1,"delta":"/list"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Save"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" restore"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" list"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" state"}
+{"type":"text_delta","contentIndex":1,"delta":" snapshots"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"progress"}
+{"type":"text_delta","contentIndex":1,"delta":"                  "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Visual"}
+{"type":"text_delta","contentIndex":1,"delta":" progress"}
+{"type":"text_delta","contentIndex":1,"delta":" bar"}
+{"type":"text_delta","contentIndex":1,"delta":" +"}
+{"type":"text_delta","contentIndex":1,"delta":" intelligent"}
+{"type":"text_delta","contentIndex":1,"delta":" next"}
+{"type":"text_delta","contentIndex":1,"delta":" action"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"pause"}
+{"type":"text_delta","contentIndex":1,"delta":"-writing"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Creates"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"continue"}
+{"type":"text_delta","contentIndex":1,"delta":"-h"}
+{"type":"text_delta","contentIndex":1,"delta":"ere"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" full"}
+{"type":"text_delta","contentIndex":1,"delta":" context"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"resume"}
+{"type":"text_delta","contentIndex":1,"delta":"-writing"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Reads"}
+{"type":"text_delta","contentIndex":1,"delta":" STATE"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" shows"}
+{"type":"text_delta","contentIndex":1,"delta":" where"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" left"}
+{"type":"text_delta","contentIndex":1,"delta":" off"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"checkpoint"}
+{"type":"text_delta","contentIndex":1,"delta":" save"}
+{"type":"text_delta","contentIndex":1,"delta":" draft"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Git"}
+{"type":"text_delta","contentIndex":1,"delta":"-tag"}
+{"type":"text_delta","contentIndex":1,"delta":"ged"}
+{"type":"text_delta","contentIndex":1,"delta":" snapshot"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" can"}
+{"type":"text_delta","contentIndex":1,"delta":" restore"}
+{"type":"text_delta","contentIndex":1,"delta":" later"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"checkpoint"}
+{"type":"text_delta","contentIndex":1,"delta":" list"}
+{"type":"text_delta","contentIndex":1,"delta":"           "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Show"}
+{"type":"text_delta","contentIndex":1,"delta":" all"}
+{"type":"text_delta","contentIndex":1,"delta":" checkpoints"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Outline"}
+{"type":"text_delta","contentIndex":1,"delta":" Management"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"insert"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<after"}
+{"type":"text_delta","contentIndex":1,"delta":">"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<desc"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Insert"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" between"}
+{"type":"text_delta","contentIndex":1,"delta":" existing"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"remove"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ["}
+{"type":"text_delta","contentIndex":1,"delta":"N"}
+{"type":"text_delta","contentIndex":1,"delta":"]"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Remove"}
+{"type":"text_delta","contentIndex":1,"delta":" an"}
+{"type":"text_delta","contentIndex":1,"delta":" unw"}
+{"type":"text_delta","contentIndex":1,"delta":"ritten"}
+{"type":"text_delta","contentIndex":1,"delta":" section"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" re"}
+{"type":"text_delta","contentIndex":1,"delta":"number"}
+{"type":"text_delta","contentIndex":1,"delta":" the"}
+{"type":"text_delta","contentIndex":1,"delta":" rest"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"insert"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":" \""}
+{"type":"text_delta","contentIndex":1,"delta":"Add"}
+{"type":"text_delta","contentIndex":1,"delta":" methodology"}
+{"type":"text_delta","contentIndex":1,"delta":" detail"}
+{"type":"text_delta","contentIndex":1,"delta":"\""}
+{"type":"text_delta","contentIndex":1,"delta":"  "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Creates"}
+{"type":"text_delta","contentIndex":1,"delta":" Section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"3"}
+{"type":"text_delta","contentIndex":1,"delta":"."}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"remove"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"7"}
+{"type":"text_delta","contentIndex":1,"delta":"                            "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Deletes"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" re"}
+{"type":"text_delta","contentIndex":1,"delta":"numbers"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Export"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Submission"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"export"}
+{"type":"text_delta","contentIndex":1,"delta":"-lat"}
+{"type":"text_delta","contentIndex":1,"delta":"ex"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Export"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" LaTeX"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" bibliography"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" formatting"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"audit"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Run"}
+{"type":"text_delta","contentIndex":1,"delta":" pre"}
+{"type":"text_delta","contentIndex":1,"delta":"-sub"}
+{"type":"text_delta","contentIndex":1,"delta":"mission"}
+{"type":"text_delta","contentIndex":1,"delta":" checks"}
+{"type":"text_delta","contentIndex":1,"delta":" on"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" citations"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" word"}
+{"type":"text_delta","contentIndex":1,"delta":" counts"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":"-g"}
+{"type":"text_delta","contentIndex":1,"delta":"aps"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Create"}
+{"type":"text_delta","contentIndex":1,"delta":" fix"}
+{"type":"text_delta","contentIndex":1,"delta":" plans"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" gaps"}
+{"type":"text_delta","contentIndex":1,"delta":" found"}
+{"type":"text_delta","contentIndex":1,"delta":" by"}
+{"type":"text_delta","contentIndex":1,"delta":" audit"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"submit"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<version"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Archive"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" completed"}
+{"type":"text_delta","contentIndex":1,"delta":" draft"}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" submission"}
+{"type":"text_delta","contentIndex":1,"delta":" version"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"export"}
+{"type":"text_delta","contentIndex":1,"delta":"-lat"}
+{"type":"text_delta","contentIndex":1,"delta":"ex"}
+{"type":"text_delta","contentIndex":1,"delta":"              "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Generates"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"tex"}
+{"type":"text_delta","contentIndex":1,"delta":" +"}
+{"type":"text_delta","contentIndex":1,"delta":" references"}
+{"type":"text_delta","contentIndex":1,"delta":".b"}
+{"type":"text_delta","contentIndex":1,"delta":"ib"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"audit"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":"           "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"5"}
+{"type":"text_delta","contentIndex":1,"delta":"-check"}
+{"type":"text_delta","contentIndex":1,"delta":" pre"}
+{"type":"text_delta","contentIndex":1,"delta":"-sub"}
+{"type":"text_delta","contentIndex":1,"delta":"mission"}
+{"type":"text_delta","contentIndex":1,"delta":" audit"}
+{"type":"text_delta","contentIndex":1,"delta":" →"}
+{"type":"text_delta","contentIndex":1,"delta":" M"}
+{"type":"text_delta","contentIndex":1,"delta":"ILE"}
+{"type":"text_delta","contentIndex":1,"delta":"STONE"}
+{"type":"text_delta","contentIndex":1,"delta":"-A"}
+{"type":"text_delta","contentIndex":1,"delta":"UD"}
+{"type":"text_delta","contentIndex":1,"delta":"IT"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":"-g"}
+{"type":"text_delta","contentIndex":1,"delta":"aps"}
+{"type":"text_delta","contentIndex":1,"delta":"       "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Reads"}
+{"type":"text_delta","contentIndex":1,"delta":" audit"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" creates"}
+{"type":"text_delta","contentIndex":1,"delta":" fix"}
+{"type":"text_delta","contentIndex":1,"delta":" plans"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" each"}
+{"type":"text_delta","contentIndex":1,"delta":" gap"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"submit"}
+{"type":"text_delta","contentIndex":1,"delta":"-mile"}
+{"type":"text_delta","contentIndex":1,"delta":"stone"}
+{"type":"text_delta","contentIndex":1,"delta":" \""}
+{"type":"text_delta","contentIndex":1,"delta":"initial"}
+{"type":"text_delta","contentIndex":1,"delta":"-sub"}
+{"type":"text_delta","contentIndex":1,"delta":"mission"}
+{"type":"text_delta","contentIndex":1,"delta":"\""}
+{"type":"text_delta","contentIndex":1,"delta":"  "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Archives"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" milestones"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Present"}
+{"type":"text_delta","contentIndex":1,"delta":"ations"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Post"}
+{"type":"text_delta","contentIndex":1,"delta":"ers"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-sl"}
+{"type":"text_delta","contentIndex":1,"delta":"ides"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Generate"}
+{"type":"text_delta","contentIndex":1,"delta":" presentation"}
+{"type":"text_delta","contentIndex":1,"delta":" slides"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" content"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-post"}
+{"type":"text_delta","contentIndex":1,"delta":"er"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Generate"}
+{"type":"text_delta","contentIndex":1,"delta":" academic"}
+{"type":"text_delta","contentIndex":1,"delta":" poster"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":" content"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-sl"}
+{"type":"text_delta","contentIndex":1,"delta":"ides"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Mar"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":"-based"}
+{"type":"text_delta","contentIndex":1,"delta":" markdown"}
+{"type":"text_delta","contentIndex":1,"delta":" slides"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-post"}
+{"type":"text_delta","contentIndex":1,"delta":"er"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Academic"}
+{"type":"text_delta","contentIndex":1,"delta":" poster"}
+{"type":"text_delta","contentIndex":1,"delta":" layout"}
+{"type":"text_delta","contentIndex":1,"delta":" from"}
+{"type":"text_delta","contentIndex":1,"delta":" key"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Todos"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":add"}
+{"type":"text_delta","contentIndex":1,"delta":"-t"}
+{"type":"text_delta","contentIndex":1,"delta":"odo"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"<description"}
+{"type":"text_delta","contentIndex":1,"delta":">`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Capture"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" quick"}
+{"type":"text_delta","contentIndex":1,"delta":" note"}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" task"}
+{"type":"text_delta","contentIndex":1,"delta":" without"}
+{"type":"text_delta","contentIndex":1,"delta":" breaking"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" flow"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"check"}
+{"type":"text_delta","contentIndex":1,"delta":"-t"}
+{"type":"text_delta","contentIndex":1,"delta":"odos"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Review"}
+{"type":"text_delta","contentIndex":1,"delta":" pending"}
+{"type":"text_delta","contentIndex":1,"delta":" todos"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" act"}
+{"type":"text_delta","contentIndex":1,"delta":" on"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" defer"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" dismiss"}
+{"type":"text_delta","contentIndex":1,"delta":" each"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":add"}
+{"type":"text_delta","contentIndex":1,"delta":"-t"}
+{"type":"text_delta","contentIndex":1,"delta":"odo"}
+{"type":"text_delta","contentIndex":1,"delta":" \""}
+{"type":"text_delta","contentIndex":1,"delta":"Check"}
+{"type":"text_delta","contentIndex":1,"delta":" whether"}
+{"type":"text_delta","contentIndex":1,"delta":" Smith"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"4"}
+{"type":"text_delta","contentIndex":1,"delta":" contrad"}
+{"type":"text_delta","contentIndex":1,"delta":"icts"}
+{"type":"text_delta","contentIndex":1,"delta":" our"}
+{"type":"text_delta","contentIndex":1,"delta":" methodology"}
+{"type":"text_delta","contentIndex":1,"delta":" claim"}
+{"type":"text_delta","contentIndex":1,"delta":"\""}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"check"}
+{"type":"text_delta","contentIndex":1,"delta":"-t"}
+{"type":"text_delta","contentIndex":1,"delta":"odos"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" #"}
+{"type":"text_delta","contentIndex":1,"delta":" Walk"}
+{"type":"text_delta","contentIndex":1,"delta":" through"}
+{"type":"text_delta","contentIndex":1,"delta":" each"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" act"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" defer"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" dismiss"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" or"}
+{"type":"text_delta","contentIndex":1,"delta":" done"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Settings"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Utilities"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"settings"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" View"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" edit"}
+{"type":"text_delta","contentIndex":1,"delta":" project"}
+{"type":"text_delta","contentIndex":1,"delta":" settings"}
+{"type":"text_delta","contentIndex":1,"delta":" interact"}
+{"type":"text_delta","contentIndex":1,"delta":"ively"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":update"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Check"}
+{"type":"text_delta","contentIndex":1,"delta":" for"}
+{"type":"text_delta","contentIndex":1,"delta":" updates"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" install"}
+{"type":"text_delta","contentIndex":1,"delta":" newer"}
+{"type":"text_delta","contentIndex":1,"delta":" version"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"help"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Show"}
+{"type":"text_delta","contentIndex":1,"delta":" all"}
+{"type":"text_delta","contentIndex":1,"delta":" WTF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":" commands"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" how"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" use"}
+{"type":"text_delta","contentIndex":1,"delta":" them"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"###"}
+{"type":"text_delta","contentIndex":1,"delta":" Contrib"}
+{"type":"text_delta","contentIndex":1,"delta":"uting"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" Command"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Description"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"---------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"-------------"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"report"}
+{"type":"text_delta","contentIndex":1,"delta":"-b"}
+{"type":"text_delta","contentIndex":1,"delta":"ug"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Report"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" bug"}
+{"type":"text_delta","contentIndex":1,"delta":" via"}
+{"type":"text_delta","contentIndex":1,"delta":" GitHub"}
+{"type":"text_delta","contentIndex":1,"delta":" issue"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":request"}
+{"type":"text_delta","contentIndex":1,"delta":"-feature"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Request"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":" feature"}
+{"type":"text_delta","contentIndex":1,"delta":" via"}
+{"type":"text_delta","contentIndex":1,"delta":" GitHub"}
+{"type":"text_delta","contentIndex":1,"delta":" issue"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"|"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"con"}
+{"type":"text_delta","contentIndex":1,"delta":"tribute"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":" Walk"}
+{"type":"text_delta","contentIndex":1,"delta":" through"}
+{"type":"text_delta","contentIndex":1,"delta":" contributing"}
+{"type":"text_delta","contentIndex":1,"delta":" code"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" WTF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":" via"}
+{"type":"text_delta","contentIndex":1,"delta":" pull"}
+{"type":"text_delta","contentIndex":1,"delta":" request"}
+{"type":"text_delta","contentIndex":1,"delta":" |"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"##"}
+{"type":"text_delta","contentIndex":1,"delta":" Files"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" Structure"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"W"}
+{"type":"text_delta","contentIndex":1,"delta":"TF"}
+{"type":"text_delta","contentIndex":1,"delta":"-P"}
+{"type":"text_delta","contentIndex":1,"delta":" creates"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" `."}
+{"type":"text_delta","contentIndex":1,"delta":"pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" directory"}
+{"type":"text_delta","contentIndex":1,"delta":" in"}
+{"type":"text_delta","contentIndex":1,"delta":" your"}
+{"type":"text_delta","contentIndex":1,"delta":" project"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":".pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" PROJECT"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" Paper"}
+{"type":"text_delta","contentIndex":1,"delta":" vision"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" requirements"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" ROAD"}
+{"type":"text_delta","contentIndex":1,"delta":"MAP"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"             "}
+{"type":"text_delta","contentIndex":1,"delta":" Section"}
+{"type":"text_delta","contentIndex":1,"delta":" breakdown"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" status"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" STATE"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" Writing"}
+{"type":"text_delta","contentIndex":1,"delta":" progress"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" session"}
+{"type":"text_delta","contentIndex":1,"delta":" context"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" config"}
+{"type":"text_delta","contentIndex":1,"delta":".json"}
+{"type":"text_delta","contentIndex":1,"delta":"            "}
+{"type":"text_delta","contentIndex":1,"delta":" Project"}
+{"type":"text_delta","contentIndex":1,"delta":" settings"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" structure"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" argument"}
+{"type":"text_delta","contentIndex":1,"delta":"-map"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"      "}
+{"type":"text_delta","contentIndex":1,"delta":" Claims"}
+{"type":"text_delta","contentIndex":1,"delta":" mapped"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" evidence"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" outline"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"           "}
+{"type":"text_delta","contentIndex":1,"delta":" Section"}
+{"type":"text_delta","contentIndex":1,"delta":" structure"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" word"}
+{"type":"text_delta","contentIndex":1,"delta":" budgets"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" narrative"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"arc"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"     "}
+{"type":"text_delta","contentIndex":1,"delta":" Story"}
+{"type":"text_delta","contentIndex":1,"delta":" flow"}
+{"type":"text_delta","contentIndex":1,"delta":" across"}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" sources"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" literature"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"        "}
+{"type":"text_delta","contentIndex":1,"delta":" Bibli"}
+{"type":"text_delta","contentIndex":1,"delta":"ography"}
+{"type":"text_delta","contentIndex":1,"delta":" index"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" data"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"              "}
+{"type":"text_delta","contentIndex":1,"delta":" Figures"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" tables"}
+{"type":"text_delta","contentIndex":1,"delta":","}
+{"type":"text_delta","contentIndex":1,"delta":" evidence"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" prior"}
+{"type":"text_delta","contentIndex":1,"delta":"-d"}
+{"type":"text_delta","contentIndex":1,"delta":"raft"}
+{"type":"text_delta","contentIndex":1,"delta":"s"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"      "}
+{"type":"text_delta","contentIndex":1,"delta":" Existing"}
+{"type":"text_delta","contentIndex":1,"delta":" material"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" incorporate"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" sections"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-int"}
+{"type":"text_delta","contentIndex":1,"delta":"roduction"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"     "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"      "}
+{"type":"text_delta","contentIndex":1,"delta":" Writing"}
+{"type":"text_delta","contentIndex":1,"delta":" plan"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"     "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-S"}
+{"type":"text_delta","contentIndex":1,"delta":"UM"}
+{"type":"text_delta","contentIndex":1,"delta":"MARY"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" Completion"}
+{"type":"text_delta","contentIndex":1,"delta":" record"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"   "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-method"}
+{"type":"text_delta","contentIndex":1,"delta":"s"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"     "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"     "}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-S"}
+{"type":"text_delta","contentIndex":1,"delta":"UM"}
+{"type":"text_delta","contentIndex":1,"delta":"MARY"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"paper"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"                   "}
+{"type":"text_delta","contentIndex":1,"delta":" Written"}
+{"type":"text_delta","contentIndex":1,"delta":" output"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" As"}
+{"type":"text_delta","contentIndex":1,"delta":"sembled"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":".tex"}
+{"type":"text_delta","contentIndex":1,"delta":"              "}
+{"type":"text_delta","contentIndex":1,"delta":" LaTeX"}
+{"type":"text_delta","contentIndex":1,"delta":" output"}
+{"type":"text_delta","contentIndex":1,"delta":" ("}
+{"type":"text_delta","contentIndex":1,"delta":"after"}
+{"type":"text_delta","contentIndex":1,"delta":" export"}
+{"type":"text_delta","contentIndex":1,"delta":")"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" references"}
+{"type":"text_delta","contentIndex":1,"delta":".b"}
+{"type":"text_delta","contentIndex":1,"delta":"ib"}
+{"type":"text_delta","contentIndex":1,"delta":"         "}
+{"type":"text_delta","contentIndex":1,"delta":" Bibli"}
+{"type":"text_delta","contentIndex":1,"delta":"ography"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":" figures"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"               "}
+{"type":"text_delta","contentIndex":1,"delta":" Figure"}
+{"type":"text_delta","contentIndex":1,"delta":" files"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"##"}
+{"type":"text_delta","contentIndex":1,"delta":" Common"}
+{"type":"text_delta","contentIndex":1,"delta":" Work"}
+{"type":"text_delta","contentIndex":1,"delta":"flows"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":"Starting"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" new"}
+{"type":"text_delta","contentIndex":1,"delta":" paper"}
+{"type":"text_delta","contentIndex":1,"delta":":**"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":create"}
+{"type":"text_delta","contentIndex":1,"delta":"-outline"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"write"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"sections"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-int"}
+{"type":"text_delta","contentIndex":1,"delta":"roduction"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":"Res"}
+{"type":"text_delta","contentIndex":1,"delta":"uming"}
+{"type":"text_delta","contentIndex":1,"delta":" after"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" break"}
+{"type":"text_delta","contentIndex":1,"delta":":**"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"progress"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":"Rev"}
+{"type":"text_delta","contentIndex":1,"delta":"iving"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" stalled"}
+{"type":"text_delta","contentIndex":1,"delta":" project"}
+{"type":"text_delta","contentIndex":1,"delta":" with"}
+{"type":"text_delta","contentIndex":1,"delta":" existing"}
+{"type":"text_delta","contentIndex":1,"delta":" files"}
+{"type":"text_delta","contentIndex":1,"delta":":**"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"map"}
+{"type":"text_delta","contentIndex":1,"delta":"-project"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":new"}
+{"type":"text_delta","contentIndex":1,"delta":"-paper"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"**"}
+{"type":"text_delta","contentIndex":1,"delta":"Handling"}
+{"type":"text_delta","contentIndex":1,"delta":" reviewer"}
+{"type":"text_delta","contentIndex":1,"delta":" comments"}
+{"type":"text_delta","contentIndex":1,"delta":":**"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"plan"}
+{"type":"text_delta","contentIndex":1,"delta":"-re"}
+{"type":"text_delta","contentIndex":1,"delta":"vision"}
+{"type":"text_delta","contentIndex":1,"delta":" "}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"write"}
+{"type":"text_delta","contentIndex":1,"delta":"-section"}
+{"type":"text_delta","contentIndex":1,"delta":" ."}
+{"type":"text_delta","contentIndex":1,"delta":"pl"}
+{"type":"text_delta","contentIndex":1,"delta":"anning"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"sections"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-method"}
+{"type":"text_delta","contentIndex":1,"delta":"s"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"2"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"0"}
+{"type":"text_delta","contentIndex":1,"delta":"1"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":"PLAN"}
+{"type":"text_delta","contentIndex":1,"delta":".md"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"```"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"##"}
+{"type":"text_delta","contentIndex":1,"delta":" Getting"}
+{"type":"text_delta","contentIndex":1,"delta":" Help"}
+{"type":"text_delta","contentIndex":1,"delta":"\n\n"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"progress"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" See"}
+{"type":"text_delta","contentIndex":1,"delta":" where"}
+{"type":"text_delta","contentIndex":1,"delta":" you"}
+{"type":"text_delta","contentIndex":1,"delta":" are"}
+{"type":"text_delta","contentIndex":1,"delta":" and"}
+{"type":"text_delta","contentIndex":1,"delta":" what"}
+{"type":"text_delta","contentIndex":1,"delta":" to"}
+{"type":"text_delta","contentIndex":1,"delta":" do"}
+{"type":"text_delta","contentIndex":1,"delta":" next"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":"report"}
+{"type":"text_delta","contentIndex":1,"delta":"-b"}
+{"type":"text_delta","contentIndex":1,"delta":"ug"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" Report"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" bug"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":" `/"}
+{"type":"text_delta","contentIndex":1,"delta":"w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"p"}
+{"type":"text_delta","contentIndex":1,"delta":":request"}
+{"type":"text_delta","contentIndex":1,"delta":"-feature"}
+{"type":"text_delta","contentIndex":1,"delta":"`"}
+{"type":"text_delta","contentIndex":1,"delta":" —"}
+{"type":"text_delta","contentIndex":1,"delta":" Request"}
+{"type":"text_delta","contentIndex":1,"delta":" a"}
+{"type":"text_delta","contentIndex":1,"delta":" feature"}
+{"type":"text_delta","contentIndex":1,"delta":"\n"}
+{"type":"text_delta","contentIndex":1,"delta":"-"}
+{"type":"text_delta","contentIndex":1,"delta":" GitHub"}
+{"type":"text_delta","contentIndex":1,"delta":":"}
+{"type":"text_delta","contentIndex":1,"delta":" https"}
+{"type":"text_delta","contentIndex":1,"delta":"://"}
+{"type":"text_delta","contentIndex":1,"delta":"github"}
+{"type":"text_delta","contentIndex":1,"delta":".com"}
+{"type":"text_delta","contentIndex":1,"delta":"/"}
+{"type":"text_delta","contentIndex":1,"delta":"ak"}
+{"type":"text_delta","contentIndex":1,"delta":"oug"}
+{"type":"text_delta","contentIndex":1,"delta":"kas"}
+{"type":"text_delta","contentIndex":1,"delta":"/w"}
+{"type":"text_delta","contentIndex":1,"delta":"tf"}
+{"type":"text_delta","contentIndex":1,"delta":"-p"}
+{"type":"message_end","message":{"role":"assistant","content":[{"type":"thinking","thinkingSignature":"reasoning_content","streamed":true,"thinkingLength":1723},{"type":"text","streamed":true,"textLength":8981}],"api":"openai-completions","provider":"litellm","model":"dynamo/qwen3.8-27b","usage":{"input":14360,"output":2729,"cacheRead":0,"cacheWrite":0,"reasoning":351,"totalTokens":17089,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"stop","timestamp":1788965013687,"responseId":"chatcmpl-01rc667sqw1kfpksl87pl1","rawStopReason":"stop","responseModelIdObservation":{"state":"reported","reportedModelId":"dynamo/qwen3.8-27b"},"gatewayRouting":{"gateway":"litellm","callId":"48c5202c-b7f4-42e7-92f1-b506584cff45","modelGroup":"dynamo/qwen3.8-27b","modelName":"openai/qwen3.8-27b","apiBaseHost":"dynamo.tail78f300.ts.net:1234","deploymentId":"710c16842c99047b83da3230939fdf5ab8adc1fde5a2318578fef8f81d6f7a17","attemptedFallbacks":0,"attemptedRetries":0,"overheadMs":1.537,"responseDurationMs":10.949,"version":"1.98.0"}}}
+{"type":"turn_end","message":{"role":"assistant","content":[{"type":"thinking","thinkingSignature":"reasoning_content","streamed":true,"thinkingLength":1723},{"type":"text","streamed":true,"textLength":8981}],"api":"openai-completions","provider":"litellm","model":"dynamo/qwen3.8-27b","usage":{"input":14360,"output":2729,"cacheRead":0,"cacheWrite":0,"reasoning":351,"totalTokens":17089,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"stop","timestamp":1788965013687,"responseId":"chatcmpl-01rc667sqw1kfpksl87pl1","rawStopReason":"stop","responseModelIdObservation":{"state":"reported","reportedModelId":"dynamo/qwen3.8-27b"},"gatewayRouting":{"gateway":"litellm","callId":"48c5202c-b7f4-42e7-92f1-b506584cff45","modelGroup":"dynamo/qwen3.8-27b","modelName":"openai/qwen3.8-27b","apiBaseHost":"dynamo.tail78f300.ts.net:1234","deploymentId":"710c16842c99047b83da3230939fdf5ab8adc1fde5a2318578fef8f81d6f7a17","attemptedFallbacks":0,"attemptedRetries":0,"overheadMs":1.537,"responseDurationMs":10.949,"version":"1.98.0"}}}
+{"type":"agent_end","messageCount":2,"usage":{"input":14360,"output":2729,"cacheRead":0,"cacheWrite":0,"reasoning":351,"totalTokens":17089,"costUsd":0,"apiCalls":1,"measured":true}}

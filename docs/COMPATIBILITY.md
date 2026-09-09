@@ -1,6 +1,6 @@
 # WTF-P 0.6 release-candidate compatibility evidence
 
-Last exercised: 2026-08-29
+Last exercised: 2026-09-09 (Clio 0.4.6 discovery, installation, agents and help smoke only)
 
 Upgrading an existing client or paper? Follow the [v0.5 to v0.6 migration guide](MIGRATION_V05_TO_V06.md) before replacing legacy files.
 
@@ -14,6 +14,7 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
 | GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered, 24 adapter-available. Cloud: 36 prompts projected, five adapter-available. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
 | Clio Coder | 0.3.8, merged source `9b7b80cc` | Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
+| Clio Coder | 0.4.6 | Native discover: valid, zero diagnostics. Native user install/list: enabled `wtfp@0.6.0-rc.2`, zero diagnostics; 36 nested + 36 flat prompts on disk; all 11 `wtfp-*` agent recipes list their bound skills. Headless `/wtfp:help` completed on `dynamo/qwen3.8-27b`. |
 | OpenCode | 1.18.16 | Custom config root discovered seven skills and generated agents; commands use embedded portable resources |
 | Antigravity CLI | 1.1.22 | Plugin validate/install/list; exactly 36 commands, 11 agents, and seven skills |
 | Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered |
@@ -39,9 +40,12 @@ an undeclared-tool disposition of `fail`. Preview certification uses
 the operator must deny and stop on undeclared tool requests. Strict dispatched
 agents and fleets retain their separate recipe/tool-profile enforcement.
 
-All discovery ran with disposable `HOME`, XDG, temp, and client configuration roots. Native registrations and caches were not written to the operator's normal profiles.
+The earlier release-gate discovery ran with disposable `HOME`, XDG, temp, and client configuration roots. The separately reported 2026-09-09 Clio 0.4.6 observation used the operator's user installation; it is not an isolated lifecycle certification.
 
-Clio installation now runs its compatibility discovery in a fresh, credential-free profile. A legacy or unavailable client does not receive an unsupported full-capability claim: installation preserves the flat prompt/skill surface and reports the compatibility limitation. Native marketplace/plugin mutations are compensating operations, so a later activation or verification failure removes registrations created by that transaction. A bundle with preserved file conflicts is recorded as partial and is not newly registered. Installer v2 receipts record adapter contract v1 and generator v4.
+Clio installation retains the fresh, credential-free discovery probe. With a compatible native client, the installer stages the adapter, delegates to `clio-coder extensions install`, and verifies an active entry through `extensions list --all --json`. Clio 0.4.6 installs under the manifest ID, `<config>/extensions/wtfp/`, and owns the digest/provenance record in `extensions/state.json`. The installer retains its separate v2 exact-file receipt; native removal is used only when it cannot recursively remove unowned or modified files. Without the binary, the bundle is copied to the same manifest-ID directory and activation is explicitly pending until the operator runs native installation in that profile. Older clients that fail the discovery contract remain unactivated. A preserved file conflict or extra bundle file defers native activation. Native registration and file publication are compensated if activation, verification or receipt publication fails.
+
+On 2026-09-09, Clio Coder 0.4.6 accepted `extensions discover vendors/clio --json` with zero diagnostics, installed the package with `extensions install vendors/clio --user`, and listed `wtfp` version `0.6.0-rc.2` enabled at user scope with zero diagnostics. `clio-coder agents` listed all 11 recipes with their bound skills. The retained JSON events for `clio-coder --no-context-files run --target dynamo --json "/wtfp:help"` identify model `dynamo/qwen3.8-27b` and a completed help response with stop reason `stop`. The final `agent_end` reports 1 measured API call, 14,360 input tokens, 2,729 output tokens, 17,089 total tokens (351 reasoning). The retained event stream and its one stderr line are checked in under [`evaluation/v1/evidence/clio-0.4.6-help-smoke`](../evaluation/v1/evidence/clio-0.4.6-help-smoke/README.md). No `new-paper`, gate behavior, fleet execution or project lifecycle result on 0.4.6 is claimed by this smoke run.
+
 
 ## Real workflow evaluation
 

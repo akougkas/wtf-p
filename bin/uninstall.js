@@ -770,15 +770,21 @@ async function uninstall(runtime, options, out) {
     plan.items.every(item => item.state === 'missing' || item.removable)
   );
   if (canRemoveNativeRegistration) {
+    assertReceiptUnchanged(plan);
     const nativeRemoval = deactivateNativeRegistration(
       vendorKey,
       targetDir,
-      vendorConfig.native
+      vendorConfig.native,
+      { ...(vendorKey === 'clio' && plan.receipt.scope === 'project'
+        ? { scope: 'project', cwd: path.dirname(targetDir) } : {}),
+      ownedFiles: new Map(plan.items
+        .filter(item => item.path.startsWith(`${vendorConfig.native.source}/`) && item.state === 'unchanged')
+        .map(item => [item.path.slice(vendorConfig.native.source.length + 1), item.entry.sha256])) }
     );
     if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
       out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);
     } else if (nativeRemoval.status === 'deferred' && !options.hasQuiet) {
-      out.warn('The Antigravity target is not a native <home>/.gemini/config path; only WTF-P-owned staging files will be removed.');
+      out.warn(nativeRemoval.reason || 'The target cannot be natively unregistered; only WTF-P-owned staging files will be removed.');
     }
   } else if (vendorConfig.native && !options.hasQuiet) {
     out.warn('Native registration was preserved because this uninstall cannot remove every WTF-P-owned source file safely.');

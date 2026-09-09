@@ -16,7 +16,8 @@ const installLogic = require('../bin/commands/install-logic');
 const uninstallLogic = require('../bin/uninstall');
 const {
   activateNativeRegistration,
-  deactivateNativeRegistration
+  deactivateNativeRegistration,
+  probeClioRegistration
 } = require('../bin/lib/native-registration');
 
 const MODERN_TARGETS = {
@@ -24,7 +25,7 @@ const MODERN_TARGETS = {
     configDirEnv: 'CLIO_CODER_CONFIG_DIR',
     defaultDir: '.config/clio-coder',
     source: path.join(ROOT, 'vendors', 'clio'),
-    destination: 'extensions/wtf-p',
+    destination: 'extensions/wtfp',
     resource: '.',
     component: 'extension'
   },
@@ -372,7 +373,7 @@ try {
         stderr: ''
       };
     };
-    const compatible = activateNativeRegistration('clio', targetDir, native, {
+    const compatible = probeClioRegistration(targetDir, native, {
       runner: compatibleRunner,
       environment: { PATH: process.env.PATH, SECRET_SENTINEL: 'must-not-leak' }
     });
@@ -382,7 +383,7 @@ try {
     assert.ok(observedEnvironment.CLIO_CODER_STATE_DIR.startsWith(os.tmpdir()));
     assert.strictEqual(fs.existsSync(observedEnvironment.HOME), false, 'Clio probe home was not removed');
 
-    const incompatible = activateNativeRegistration('clio', targetDir, native, {
+    const incompatible = probeClioRegistration(targetDir, native, {
       runner: () => ({
         status: 0,
         stdout: JSON.stringify({

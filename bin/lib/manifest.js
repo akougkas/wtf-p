@@ -49,17 +49,18 @@ const MANIFEST = {
       {
         id: 'extension',
         src: path.join(ROOT, 'vendors', 'clio'),
-        dest: 'extensions/wtf-p',
+        dest: 'extensions/wtfp',
         type: 'dir'
       }
     ],
     discovery: {
       kind: 'directory',
-      path: 'extensions/wtf-p'
+      path: 'extensions/wtfp'
     },
     native: {
-      kind: 'clio-capability-probe',
-      source: 'extensions/wtf-p',
+      kind: 'clio-extension',
+      id: 'wtfp',
+      source: 'extensions/wtfp',
       requiredResources: {
         skills: 'skills',
         prompts: 'prompts',
