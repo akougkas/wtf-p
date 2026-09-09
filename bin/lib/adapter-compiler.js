@@ -731,6 +731,11 @@ function renderPortableRole(role, slug, target) {
     lines.push(target === 'claude' ? 'tools:' : 'allowed-tools:');
     for (const tool of tools) lines.push(`  - ${tool}`);
   }
+  if (target === 'claude') {
+    // Plugin skills are addressed as <plugin>:<skill>. Preloading the bound
+    // skill gives the worker its action guides without a Skill-tool round trip.
+    lines.push('skills:', `  - wtfp:${ROLE_SKILLS[slug]}`);
+  }
   if (target === 'opencode') {
     // OpenCode agent Markdown: `mode: subagent` keeps the role out of the
     // primary-agent picker; verifier roles are denied edit and bash.
@@ -996,6 +1001,204 @@ function antigravityRule() {
     readme,
     ''
   ].join('\n');
+}
+
+// Claude Code output style for the academic-writing session. It replaces the
+// software-engineering system prompt (keep-coding-instructions stays false)
+// and is derived from the catalog so the skill and action inventory cannot
+// drift from the protocol. It is selectable, not forced: `force-for-plugin`
+// would override the operator's outputStyle setting in every session.
+function claudeOutputStyle(model) {
+  const skillLines = model.catalog.skills.map((skill) => {
+    const skillPath = path.join(PROTOCOL_ROOT, 'skills', skill.id, 'SKILL.md');
+    const description = splitFrontmatter(fs.readFileSync(skillPath, 'utf8'), skillPath).fields.description;
+    return `- \`${skill.id}\` (${skill.actions.map((id) => `/wtfp:${id}`).join(', ')}): ${description}`;
+  });
+  return [
+    '---',
+    'name: WTF-P Academic Writing',
+    'description: Evidence-grounded academic research and writing sessions driven by the WTF-P protocol',
+    'keep-coding-instructions: false',
+    '---',
+    '',
+    generatedBanner('protocol', 'catalog.json'),
+    '',
+    '# WTF-P academic writing',
+    '',
+    'You are working with a researcher on an academic manuscript, proposal, poster, or talk. The researcher holds epistemic authority over claims, scope, and voice; you hold the process. Do research-writing work through the WTF-P actions and skills instead of improvising.',
+    '',
+    '## How to work',
+    '',
+    '- Route every research or writing request through one `/wtfp:<action>` command or its skill. Run one action at a time and stop at each declared gate for the author\'s decision.',
+    '- Treat `.planning/` JSON records as the project\'s source of truth and `paper/` as the manuscript. Validate a record before mutating it, preserve stable identifiers, and replace files atomically.',
+    '- Support every claim with evidence recorded in the project. Never fabricate a citation, quotation, result, measurement, method, or limitation; mark an unknown as unknown.',
+    '- Preserve citation keys, notation, figure and table references, declared terminology, and the author\'s decisions. Record deviations instead of silently routing around them.',
+    '- Delegate specialist work to the `wtfp:wtfp-*` agents when an action declares delegation, and verify their output against the plan rather than trusting a summary.',
+    '- Never initialize a repository, stage, commit, branch, merge, push, publish, or submit. Return those as clearly labeled handoffs.',
+    '',
+    '## Voice',
+    '',
+    'Write academic prose that is precise, direct, and free of filler. Prefer concrete numbers, named methods, and explicit limitations over adjectives. Keep the author\'s register; do not homogenize it. In conversation, be concise: report what changed, what evidence supports it, and what decision is needed next.',
+    '',
+    '## Skills and actions',
+    '',
+    ...skillLines,
+    `- Product operations outside any skill: ${model.catalog.operations.actions.map((id) => `/wtfp:${id}`).join(', ')}.`,
+    '',
+    `Availability differs by host: read \`\${CLAUDE_PLUGIN_ROOT}/compatibility/action-availability.json\` before promising an action. On this host ${model.actions.length} actions are catalogued; the file names the ones that fail closed.`,
+    ''
+  ].join('\n');
+}
+
+// Roots (relative to the project root) an action may write, derived from its
+// produced resources and filesystem effect scopes through the project
+// protocol's conventional locations.
+function actionWriteRoots(action) {
+  const uris = new Set(action.produces.map((output) => output.uri));
+  for (const effect of action.effects) {
+    if (['filesystem.create', 'filesystem.modify', 'filesystem.write', 'artifact.archive'].includes(effect.id)) {
+      for (const match of effect.scope.matchAll(/project:\/\/[A-Za-z0-9_{}/-]+/g)) uris.add(match[0]);
+    }
+  }
+  const roots = new Set();
+  for (const uri of uris) {
+    if (uri.startsWith('project://paper')) roots.add('paper');
+    else if (uri.startsWith('project://deliverables')) roots.add('deliverables');
+    else if (uri.startsWith('project://materials')) roots.add('.');
+    else roots.add('.planning');
+  }
+  return [...roots].sort((left, right) => left.localeCompare(right));
+}
+
+// The Claude write guard arms on the manuscript-writing actions (those that
+// produce `project://paper/...`), confines Write/Edit calls for the rest of that
+// prompt to the roots the action declares, and disarms when the turn stops.
+function claudeWriteGuard(model, availabilityById) {
+  const guarded = model.actions
+    .filter((action) => availabilityById.get(action.id).available)
+    .filter((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))
+    .map((action) => [action.id, actionWriteRoots(action)]);
+  if (guarded.length === 0) throw new Error('no manuscript-writing action is available on Claude');
+  const manifest = stableJson({
+    schema: 'wtfp.claude-write-guard/v1',
+    actions: Object.fromEntries(guarded)
+  });
+  const command = (mode) => `node "\${CLAUDE_PLUGIN_ROOT}/scripts/wtfp-write-guard.js" ${mode}`;
+  const hooks = stableJson({
+    description: 'Confines file writes made during a WTF-P manuscript-writing action to the project roots that action declares.',
+    hooks: {
+      UserPromptExpansion: [{
+        matcher: `^wtfp:(${guarded.map(([id]) => id).join('|')})$`,
+        hooks: [{ type: 'command', command: command('arm'), timeout: 10 }]
+      }],
+      PreToolUse: [{
+        matcher: 'Write|Edit|MultiEdit|NotebookEdit',
+        hooks: [{ type: 'command', command: command('check'), timeout: 10 }]
+      }],
+      Stop: [{
+        hooks: [{ type: 'command', command: command('disarm'), timeout: 10 }]
+      }]
+    }
+  });
+  const script = [
+    generatedScriptBanner('protocol/actions', 'claude-write-guard'),
+    '',
+    "'use strict';",
+    '',
+    '// Claude Code hook handler. `arm` runs on UserPromptExpansion for a guarded',
+    '// /wtfp:<action> command and records the allowed roots for this prompt;',
+    '// `check` runs on PreToolUse for file-editing tools and denies a path outside',
+    '// those roots; `disarm` runs on Stop. Every failure mode fails open: a hook',
+    '// that cannot read its input or marker must not block ordinary work.',
+    '',
+    "const fs = require('fs');",
+    "const os = require('os');",
+    "const path = require('path');",
+    '',
+    "const MODE = process.argv[2];",
+    "const GUARD = JSON.parse(fs.readFileSync(path.join(__dirname, 'write-guard.json'), 'utf8'));",
+    '',
+    'function readInput() {',
+    '  try {',
+    "    const raw = fs.readFileSync(0, 'utf8');",
+    '    return raw.trim() ? JSON.parse(raw) : null;',
+    '  } catch { return null; }',
+    '}',
+    '',
+    'function markerPath(input) {',
+    "  const id = String(input.session_id || '').replace(/[^A-Za-z0-9_-]/g, '');",
+    '  if (!id) return null;',
+    "  const base = typeof input.scratchpad_dir === 'string' && path.isAbsolute(input.scratchpad_dir)",
+    '    ? input.scratchpad_dir',
+    "    : path.join(os.tmpdir(), 'wtfp-write-guard');",
+    '  return path.join(base, `wtfp-write-guard-${id}.json`);',
+    '}',
+    '',
+    'function readMarker(file) {',
+    "  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; }",
+    '}',
+    '',
+    'function removeMarker(file) {',
+    '  try { fs.unlinkSync(file); } catch {}',
+    '}',
+    '',
+    'function within(root, candidate) {',
+    '  const relative = path.relative(root, candidate);',
+    "  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));",
+    '}',
+    '',
+    'function arm(input, file) {',
+    "  const name = String(input.command_name || '').replace(/^wtfp:/, '');",
+    '  const roots = GUARD.actions[name];',
+    '  if (!Array.isArray(roots) || !file) return;',
+    '  const cwd = path.resolve(String(input.cwd || process.cwd()));',
+    '  fs.mkdirSync(path.dirname(file), { recursive: true });',
+    '  fs.writeFileSync(file, JSON.stringify({ action: name, prompt_id: input.prompt_id || null, cwd, roots }));',
+    '  process.stdout.write(JSON.stringify({',
+    '    hookSpecificOutput: {',
+    "      hookEventName: 'UserPromptExpansion',",
+    '      additionalContext: `WTF-P write guard: during /wtfp:${name} file writes are confined to ${roots.map((root) => path.join(cwd, root)).join(", ")}; the Write and Edit tools deny anything else.`',
+    '    }',
+    "  }) + '\\n');",
+    '}',
+    '',
+    'function check(input, file) {',
+    '  const marker = file && readMarker(file);',
+    '  if (!marker || !Array.isArray(marker.roots)) return;',
+    '  if (marker.prompt_id && input.prompt_id && marker.prompt_id !== input.prompt_id) {',
+    '    removeMarker(file);',
+    '    return;',
+    '  }',
+    '  const toolInput = input.tool_input || {};',
+    '  const candidate = toolInput.file_path || toolInput.notebook_path;',
+    "  if (typeof candidate !== 'string' || candidate.length === 0) return;",
+    "  const resolved = path.resolve(marker.cwd, candidate.replace(/\\\\/g, '/'));",
+    '  const allowedRoots = marker.roots.map((root) => path.resolve(marker.cwd, root));',
+    '  if (allowedRoots.some((root) => within(root, resolved))) return;',
+    '  process.stdout.write(JSON.stringify({',
+    '    hookSpecificOutput: {',
+    "      hookEventName: 'PreToolUse',",
+    "      permissionDecision: 'deny',",
+    '      permissionDecisionReason: `WTF-P write guard: /wtfp:${marker.action} may write only under ${allowedRoots.join(", ")}; refused ${resolved}. Record other changes as a handoff instead.`',
+    '    }',
+    "  }) + '\\n');",
+    '}',
+    '',
+    'function main() {',
+    '  const input = readInput();',
+    '  if (!input) return;',
+    '  const file = markerPath(input);',
+    "  if (MODE === 'arm') arm(input, file);",
+    "  else if (MODE === 'check') check(input, file);",
+    "  else if (MODE === 'disarm' && file) removeMarker(file);",
+    '}',
+    '',
+    'try { main(); } catch (error) {',
+    '  process.stderr.write(`wtfp-write-guard: ${error.message}\\n`);',
+    '}',
+    ''
+  ].join('\n');
+  return { manifest, hooks, script };
 }
 
 function geminiManifest(version) {
@@ -1472,6 +1675,12 @@ function compilePlans(options = {}) {
       license: 'MIT'
     }]
   }));
+
+  addFile(claude, 'output-styles/wtfp-academic-writing.md', claudeOutputStyle(model));
+  const writeGuard = claudeWriteGuard(model, availabilityByTarget.get('claude'));
+  addFile(claude, 'hooks/hooks.json', writeGuard.hooks);
+  addFile(claude, 'scripts/write-guard.json', writeGuard.manifest);
+  addFile(claude, 'scripts/wtfp-write-guard.js', writeGuard.script);
 
   const codex = byId.get('codex');
   addFile(codex, '.codex-plugin/plugin.json', codexPluginManifest(model.version));

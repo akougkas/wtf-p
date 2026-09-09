@@ -1,0 +1,40 @@
+{
+  "description": "Confines file writes made during a WTF-P manuscript-writing action to the project roots that action declares.",
+  "hooks": {
+    "UserPromptExpansion": [
+      {
+        "matcher": "^wtfp:(execute-outline|polish-prose|quick|write-section)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/wtfp-write-guard.js\" arm",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/wtfp-write-guard.js\" check",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/wtfp-write-guard.js\" disarm",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

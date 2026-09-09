@@ -1,0 +1,21 @@
+{
+  "schema": "wtfp.claude-write-guard/v1",
+  "actions": {
+    "execute-outline": [
+      ".planning",
+      "paper"
+    ],
+    "polish-prose": [
+      ".planning",
+      "paper"
+    ],
+    "quick": [
+      ".planning",
+      "paper"
+    ],
+    "write-section": [
+      ".planning",
+      "paper"
+    ]
+  }
+}
