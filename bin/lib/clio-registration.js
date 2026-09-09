@@ -36,8 +36,8 @@ function scopeOptions(targetDir, options) {
   return { ...options, cwd, scope: project ? 'project' : 'user' };
 }
 
-function stateSnapshot(targetDir, guard) {
-  const file = resolveOwnedPath(targetDir, 'extensions/state.json', guard);
+function stateSnapshot(targetDir, guard, collection = 'extensions') {
+  const file = resolveOwnedPath(targetDir, `${collection}/state.json`, guard);
   const snapshot = readOwnedRegularSnapshot(targetDir, file, guard, { allowMissing: true });
   const state = snapshot ? JSON.parse(snapshot.bytes.toString('utf8')) : { version: 1, disabled: [], installed: {} };
   if (state.version !== 1 || !Array.isArray(state.disabled) || !state.installed || typeof state.installed !== 'object' || Array.isArray(state.installed)) {
@@ -48,13 +48,15 @@ function stateSnapshot(targetDir, guard) {
 
 function installedEntry(result, targetDir, native, scope) {
   const listing = JSON.parse(result.stdout);
-  if (!Array.isArray(listing.extensions)) throw new Error('Clio list did not return an extensions array');
-  return listing.extensions.find(entry => entry.id === native.id && entry.scope === scope &&
+  const entries = native.kind === 'clio-plugin' ? listing.plugins : listing.extensions;
+  if (!Array.isArray(entries)) throw new Error('Clio list did not return an extensions array');
+  return entries.find(entry => entry.id === native.id && entry.scope === scope &&
     typeof entry.rootPath === 'string' && path.resolve(entry.rootPath) === path.join(targetDir, native.source));
 }
 
 function activateClio(targetDir, native, suppliedOptions) {
   const options = scopeOptions(targetDir, suppliedOptions);
+  const collection = native.kind === 'clio-plugin' ? 'plugins' : 'extensions';
   const { execute, environment } = options;
   const guard = createTargetGuard(targetDir);
   const root = resolveOwnedPath(targetDir, native.source, guard);
@@ -63,12 +65,12 @@ function activateClio(targetDir, native, suppliedOptions) {
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'));
   const expected = new Map(inventory.files.map(file => [file.path, file.sha256]));
   expected.set('.wtfp-generated.json', sha256Buffer(fs.readFileSync(inventoryPath)));
-  if (inventory.schema !== 'wtfp.generated-adapter/v1' || inventory.target !== 'clio' || !sameTree(expected, originalFiles)) {
+  if (inventory.schema !== 'wtfp.generated-adapter/v1' || inventory.target !== (native.kind === 'clio-plugin' ? 'portable-plugin' : 'clio') || !sameTree(expected, originalFiles)) {
     return { status: 'deferred', reason: 'Clio activation requires an intact generated bundle without extra or modified files', results: [] };
   }
-  const previous = stateSnapshot(targetDir, guard);
+  const previous = stateSnapshot(targetDir, guard, collection);
   const results = [];
-  const listArgs = ['extensions', 'list', '--all', '--json'];
+  const listArgs = [collection, 'list', '--all', '--json'];
   const priorList = execute('clio-coder', listArgs, environment, options);
   if (priorList.status === 'unavailable') return { status: 'unavailable', executable: 'clio-coder', results };
   results.push(priorList);
@@ -88,14 +90,14 @@ function activateClio(targetDir, native, suppliedOptions) {
   function rollback() {
     if (finished) return [];
     try {
-      const current = stateSnapshot(targetDir, guard);
+      const current = stateSnapshot(targetDir, guard, collection);
       const record = current.state.installed[native.id];
       const changedRecord = JSON.stringify(record) !== JSON.stringify(previous.state.installed[native.id]);
       if (changedRecord && record?.source !== source) throw new Error('Clio provenance changed concurrently; recovery tree preserved');
       if (fs.existsSync(root)) {
         if (!sameTree(originalFiles, treeFiles(root))) throw new Error('Clio content changed concurrently; recovery tree preserved');
         if (changedRecord) {
-          const removal = execute('clio-coder', ['extensions', 'remove', native.id, `--${options.scope}`], environment, options);
+          const removal = execute('clio-coder', [collection, 'remove', native.id, `--${options.scope}`], environment, options);
           results.push(removal);
           if (removal.status === 'unavailable') throw new Error('Clio became unavailable during rollback');
         } else {
@@ -104,7 +106,7 @@ function activateClio(targetDir, native, suppliedOptions) {
       }
       if (fs.existsSync(root)) throw new Error('Clio rollback did not remove the replacement');
       fs.renameSync(source, root);
-      const after = stateSnapshot(targetDir, guard);
+      const after = stateSnapshot(targetDir, guard, collection);
       if (previous.state.installed[native.id]) after.state.installed[native.id] = previous.state.installed[native.id];
       else delete after.state.installed[native.id];
       after.state.disabled = after.state.disabled.filter(id => id !== native.id);
@@ -120,9 +122,17 @@ function activateClio(targetDir, native, suppliedOptions) {
     }
   }
   try {
-    const installation = execute('clio-coder', ['extensions', 'install', source, `--${options.scope}`], environment, options);
+    const installation = execute('clio-coder', [collection, 'install', source, `--${options.scope}`], environment, options);
     results.push(installation);
     if (installation.status === 'unavailable') throw new Error('Clio became unavailable during installation');
+    // New plugin clients preserve an existing disabled preference on install.
+    // WTF-P installation requests activation; compensate this alongside the
+    // registration if the receipt cannot commit.
+    if (native.kind === 'clio-plugin' && previous.state.disabled.includes(native.id)) {
+      const enabled = execute('clio-coder', [collection, 'enable', native.id, `--${options.scope}`], environment, options);
+      results.push(enabled);
+      if (enabled.status === 'unavailable') throw new Error('Clio became unavailable during activation');
+    }
     const listed = execute('clio-coder', listArgs, environment, options);
     results.push(listed);
     if (listed.status === 'unavailable') throw new Error('Clio became unavailable during verification');
@@ -132,7 +142,7 @@ function activateClio(targetDir, native, suppliedOptions) {
         !sameTree(originalFiles, treeFiles(root))) {
       throw new Error('Clio did not report the exact WTF-P extension as active with zero diagnostics');
     }
-    const registered = stateSnapshot(targetDir, guard).state.installed[native.id];
+    const registered = stateSnapshot(targetDir, guard, collection).state.installed[native.id];
     if (registered?.source !== source || !/^[a-f0-9]{64}$/i.test(registered?.contentDigest || '')) {
       throw new Error('Clio did not persist WTF-P digest and provenance');
     }
@@ -157,17 +167,18 @@ function activateClio(targetDir, native, suppliedOptions) {
 
 function deactivateClio(targetDir, native, suppliedOptions) {
   const options = scopeOptions(targetDir, suppliedOptions);
+  const collection = native.kind === 'clio-plugin' ? 'plugins' : 'extensions';
   const guard = createTargetGuard(targetDir);
-  const previous = stateSnapshot(targetDir, guard);
+  const previous = stateSnapshot(targetDir, guard, collection);
   if (!previous.state.installed[native.id]) return { status: 'not-required', results: [] };
   const root = resolveOwnedPath(targetDir, native.source, guard);
   const ownedFiles = options.ownedFiles;
   if (!ownedFiles || !sameTree(treeFiles(root), ownedFiles)) {
     return { status: 'deferred', reason: 'Clio native removal would include unowned or modified extension files', results: [] };
   }
-  const result = options.execute('clio-coder', ['extensions', 'remove', native.id, `--${options.scope}`], options.environment, options);
+  const result = options.execute('clio-coder', [collection, 'remove', native.id, `--${options.scope}`], options.environment, options);
   if (result.status === 'unavailable') return { status: 'unavailable', executable: 'clio-coder', results: [] };
-  if (fs.existsSync(root) || stateSnapshot(targetDir, guard).state.installed[native.id]) throw new Error('Clio removal did not clear WTF-P content and registration');
+  if (fs.existsSync(root) || stateSnapshot(targetDir, guard, collection).state.installed[native.id]) throw new Error('Clio removal did not clear WTF-P content and registration');
   return { status: 'unregistered', executable: 'clio-coder', results: [result] };
 }
 

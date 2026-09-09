@@ -6,6 +6,7 @@ const {
   ADAPTER_CONTRACT_VERSION,
   GENERATOR_VERSION
 } = require('../lib/adapter-metadata');
+const { selectClioTarget } = require('../lib/clio-target');
 const { activateNativeRegistration } = require('../lib/native-registration');
 const {
   expandTilde,
@@ -260,7 +261,7 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
       if (file.name === 'plugin.json' && file.componentId === 'plugin' && exists) {
         try {
           const existing = JSON.parse(existingSnapshot.bytes.toString('utf8'));
-          if (existing.name && existing.name !== 'wtf-p' && existing.name !== 'write-the-f-paper') {
+          if (existing.name && existing.name !== 'wtfp' && existing.name !== 'wtf-p' && existing.name !== 'write-the-f-paper') {
             out.verbose(`  ${c.yellow('!')} ${c.dim(relDest)} belongs to another plugin — skipped`);
             stats.skipped++;
             continue;
@@ -590,7 +591,7 @@ async function install(runtime, isUpdate, options, pkg) {
 
   // Handle 'claude-local' by mapping to 'claude' vendor config
   const vendorKey = runtime === 'claude-local' ? 'claude' : runtime;
-  const vendorConfig = MANIFEST[vendorKey];
+  let vendorConfig = MANIFEST[vendorKey];
 
   if (!vendorConfig) {
     throw new Error(`Unknown runtime: ${runtime}`);
@@ -601,6 +602,7 @@ async function install(runtime, isUpdate, options, pkg) {
   const targetGuard = options.targetGuard || createTargetGuard(unresolvedTargetDir);
   assertGuardMatchesTarget(unresolvedTargetDir, targetGuard);
   const targetDir = targetGuard.path;
+  if (vendorKey === 'clio') vendorConfig = selectClioTarget(vendorConfig, targetDir, options.nativeRegistrationOptions);
   const isGlobal = runtime !== 'claude-local';
   const locationLabel = getPathLabel(targetDir, isGlobal);
 
@@ -779,7 +781,7 @@ async function install(runtime, isUpdate, options, pkg) {
       if (vendorKey === 'clio') {
         const source = `'${path.join(targetDir, vendorConfig.native.source).replaceAll("'", "'\\''")}'`;
         const scope = targetDir === path.join(process.cwd(), '.clio-coder') ? 'project' : 'user';
-        out.warn(`Activation requires clio-coder extensions install ${source} --${scope} --force in the same Clio configuration profile.`);
+        out.warn(`Activation requires clio-coder ${vendorConfig.native.kind === 'clio-plugin' ? 'plugins' : 'extensions'} install ${source} --${scope} --force in the same Clio configuration profile.`);
       }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);

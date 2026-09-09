@@ -78,6 +78,8 @@ function isolatedEnvironment() {
   const home = path.join(testRoot, 'home');
   return {
     ...process.env,
+    // Native activation has dedicated fake and opt-in real-client suites.
+    PATH: '',
     HOME: home,
     USERPROFILE: home,
     XDG_CONFIG_HOME: path.join(testRoot, 'xdg', 'config'),
@@ -706,7 +708,7 @@ process.exitCode = 91;
 
   record('modern compatibility target flags dispatch without implicit fallback', () => {
     for (const runtime of ALL_TARGETS) {
-      const nonMatchingComponent = runtime === 'clio' ? 'plugin' : 'extension';
+      const nonMatchingComponent = runtime === 'clio' ? 'agents' : 'extension';
       const targetDir = path.join(testRoot, 'compatibility-flags', runtime);
       const result = run(INSTALL, [
         `--${runtime}`,

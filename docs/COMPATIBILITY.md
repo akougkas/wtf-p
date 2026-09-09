@@ -269,3 +269,9 @@ unambiguous `--package … -- wtf-p` form.
 Migration feedback and any coordinated client publication remain separate
 gates; neither installation nor publication upgrades the partial lifecycle
 evidence above into a completed behavioral claim.
+
+## Standard plugin development integration (2026-09-09)
+
+Compiler v5 adds the standard Agent Plugins bundle at `vendors/plugin/` while preserving the legacy Clio extension projection and all peer adapters. Against the coordinator-supplied development build at `dist/cli/index.js` (reported version 0.4.7; entry-file SHA-256 `ea51cba8d661d6573ecf4ad1ace281f19cf5ca0bbb00034676188203cc451848`), isolated user and project native plugin lifecycles passed: standard manifest inspection, exact-file receipt verification, enabled/valid/compatible/effective/loadable discovery, discovery of all eleven agents, both fleet validations, idempotent reinstall, disabled-plugin reactivation, and symmetric removal.
+
+This identifies the entry file, not a full distributed-build digest. The reproducible test is `test/clio-native-integration.test.js`, invoked with an explicit `WTFP_CLIO_ENTRY`. It forwards no credentials and makes no model call. Fleet validation uses an existing disposable Git fixture because native write-boundary enforcement requires a checkout; research actions never initialize one. These observations establish native packaging/lifecycle behavior and do not claim a new model-backed research workflow result. See [AGENT_PLUGIN.md](AGENT_PLUGIN.md) for capability detection and the deliberate legacy migration policy, and [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md) for import constraints.

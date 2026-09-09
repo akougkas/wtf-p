@@ -57,7 +57,7 @@ function clioProbeContext(baseEnvironment = process.env) {
     XDG_STATE_HOME: directory('xdg-state'),
     XDG_CACHE_HOME: directory('xdg-cache'),
     TMPDIR: directory('tmp'),
-    CLIO_CODER_HOME: directory('clio-home'),
+    CLIO_CODER_HOME: root,
     CLIO_CODER_CONFIG_DIR: directory('clio-config'),
     CLIO_CODER_DATA_DIR: directory('clio-data'),
     CLIO_CODER_STATE_DIR: directory('clio-state'),
@@ -345,11 +345,24 @@ function probeClioRegistration(targetDir, native, options = {}) {
   }
 }
 
+// Probe a disposable empty profile, never the operator's registered resources.
+function supportsClioPlugins(options = {}) {
+  const probe = clioProbeContext(options.environment || process.env);
+  try {
+    const result = execute('clio-coder', ['plugins', 'list', '--all', '--json'], probe.environment,
+      { ...options, cwd: probe.environment.HOME });
+    return result.status === 'ok' && Array.isArray(JSON.parse(result.stdout).plugins);
+  } catch { return false; }
+  finally { probe.cleanup(); }
+}
+
 function activateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
   if (runtime === 'clio') {
-    const probe = probeClioRegistration(targetDir, native, options);
-    if (probe.status !== 'compatible') return probe;
+    if (native.kind !== 'clio-plugin') {
+      const probe = probeClioRegistration(targetDir, native, options);
+      if (probe.status !== 'compatible') return probe;
+    }
     return activateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment) });
   }
   const commands = nativeCommands(runtime, targetDir, native);
@@ -598,5 +611,6 @@ module.exports = {
   clioProbeContext,
   deactivateNativeRegistration,
   nativeEnvironment,
-  probeClioRegistration
+  probeClioRegistration,
+  supportsClioPlugins
 };

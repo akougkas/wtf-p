@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Generated Agent Plugins 1.0.0 packaging with conventional skills, a namespaced
+  Clio component graph, and a standard Codex manifest alongside its fallback
+- Capability-detected native Clio plugin installation with exact receipts,
+  compensating rollback, isolated discovery, and a preserved legacy extension path
+- A three-action research handoff guide and opt-in native user/project lifecycle test
+
+### Fixed
+
+- Incremental mapping now declares existing source/evidence reads, updates,
+  and manifest material/manuscript indexing while preserving curated records
+- Outliner word budgets now match the exact total required by outline approval
+- Claude agent definitions use native tools metadata; Clio role reports retain
+  portable needs_input/blocked outcomes and main-agent decoding instructions
+- Clio search metadata fails closed, probe directories satisfy native containment,
+  and native receipts expose installed commands, skills, and agents in status
+- Compiler v5 evaluation definitions bind current source while retained compiler-v4
+  observations keep their original evidence and comparison baseline
+
 ### Documentation
 
 - Reworked the public entry point around the human-guided scientist workflow,
