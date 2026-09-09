@@ -155,13 +155,15 @@ Before claiming first-class support, validate the packed artifact in disposable 
 - Claude: strict marketplace/plugin validation, marketplace add, plugin install/list, and discovery of every catalog command and role agent
 - Codex: marketplace add, plugin add/list, seven skill discovery
 - Copilot: marketplace add, plugin install/list; in-session command/agent/skill discovery when credentials are available
-- Clio: `plugins install`/`inspect`/`remove` on 0.4.7 or newer, recursive
-  `/wtfp:*` prompts, the static `/wtfp:help` card, plugin-bound agents, both
-  fleet `validate`/`graph` paths, and an end-to-end nested-write rollback check
-  using the generated directory boundaries. Treat the fleets as explicit
-  `fleet run` primitives; ordinary `/wtfp:*` prompts do not auto-route through
-  them. Also confirm `plugins inspect` accepts the Claude envelope, since Clio
-  adopts an installed Claude plugin through its root manifest.
+- Clio: `library install`/`inspect`/`remove` on 0.4.7 or newer, package listing
+  via `library list --kind plugin --json`, runtime skill listing via
+  `library skills --all --json`, recursive `/wtfp:*` prompts, the static
+  `/wtfp:help` card, plugin-bound agents, both fleet `validate`/`graph` paths,
+  and an end-to-end nested-write rollback check using the generated directory
+  boundaries. Treat the fleets as explicit `fleet run` primitives; ordinary
+  `/wtfp:*` prompts do not auto-route through them. Also confirm
+  `library inspect` accepts the Claude envelope, since Clio adopts an installed
+  Claude plugin through its root manifest.
 - OpenCode: configured-directory command, skill, and agent discovery
 - Antigravity: plugin validate/install/list
 - Gemini: extension validate/install/list

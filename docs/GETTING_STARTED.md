@@ -10,7 +10,7 @@ The same action set covers the four document types WTF-P scaffolds from `protoco
 
 - Node.js 20 or newer, including `npx`.
 - One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the exact client versions exercised for this candidate.
-- For Clio Coder, version 0.4.7 or newer. WTF-P installs into Clio as a plugin through `clio-coder plugins install`. Clio Coder 0.4.7 is not yet a published Clio release, so today this route needs a Clio build at that version.
+- For Clio Coder, version 0.4.7 or newer. WTF-P installs into Clio as a plugin package through `clio-coder library install`. Clio Coder 0.4.7 is not yet a published Clio release, so today this route needs a Clio build at that version.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
@@ -28,7 +28,7 @@ npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity
 npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini
 ```
 
-Run only the line for the client you intend to use. Each line installs the generated adapter for that client into the client's documented user configuration root and, where the client has a plugin lifecycle, registers it natively (Clio `plugins install`, Claude and Copilot marketplace plus plugin install, Codex marketplace plus plugin add, Antigravity `plugin install`). It does not replace the client or launch an interactive session. For Clio, the installer registers the plugin when `clio-coder` is on PATH; without the binary the bundle is staged and the installer tells you to re-run the same command once the binary is available.
+Run only the line for the client you intend to use. Each line installs the generated adapter for that client into the client's documented user configuration root and, where the client has a plugin lifecycle, registers it natively (Clio `library install`, Claude and Copilot marketplace plus plugin install, Codex marketplace plus plugin add, Antigravity `plugin install`). It does not replace the client or launch an interactive session. For Clio, the installer registers the plugin when `clio-coder` is on PATH; without the binary the bundle is staged and the installer tells you to re-run the same command once the binary is available.
 
 The explicit `--package=wtf-p@0.6.0-rc.4 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.4 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.4`; stop if it reports another version or target.
 
@@ -139,15 +139,17 @@ WTF-P installs into Clio as a plugin at `<config>/plugins/wtfp/`. The installer 
 
 Three behaviors are worth knowing before the first install:
 
-- Registration is verified with `clio-coder plugins inspect wtfp --json`; the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope. It never changes `enabled`: a plugin you disabled stays disabled and the installer names `clio-coder plugins enable wtfp` as the command to run.
-- Do not point `clio-coder plugins install` at `<config>/plugins/wtfp` itself. Clio rejects a source that overlaps its managed destination; re-run the WTF-P installer instead.
+- Registration is verified with `clio-coder library inspect wtfp --user --json` (or `--project` for project scope); the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope (returning the InstalledPlugin record shape). It never changes `enabled`: a package you disabled stays disabled and the installer names `clio-coder library enable wtfp --user` (or `--project`) as the command to run.
+- Do not point `clio-coder library install` at `<config>/plugins/wtfp` itself. Clio rejects a source that overlaps its managed destination; re-run the WTF-P installer instead. Previews can be inspected with `clio-coder library install --dry-run` (no `--yes` flag is accepted or used).
 - If an earlier release candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P uninstaller before installing the plugin. Both register the same prompt names, and this candidate neither reads nor retires the extension location.
 
 After installing, confirm native discovery:
 
 ```bash
 clio-coder --version
-clio-coder plugins inspect wtfp --json
+clio-coder library inspect wtfp --user --json
+clio-coder library list --kind plugin --json
+clio-coder library skills --all --json
 clio-coder agents
 clio-coder fleet list
 clio-coder run '/wtfp:help'
@@ -229,7 +231,7 @@ run_isolated_clio clio-coder --autonomy suggest
 
 ## Verify or remove an installation
 
-The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder plugins inspect wtfp --json`, `clio-coder agents`, and `clio-coder fleet list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
+The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder library inspect wtfp --user --json` (with `clio-coder library skills --all --json`), `clio-coder agents`, and `clio-coder fleet list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
 
 Preview removal before deleting exact receipt-owned files:
 
@@ -238,7 +240,7 @@ npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --dry-run
 npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --yes
 ```
 
-Replace `clio` with the intended target. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data. For Clio, native `plugins remove` runs only when every file below the installed root is unchanged and receipt-owned.
+Replace `clio` with the intended target. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data. For Clio, native `library remove` runs only when every file below the installed root is unchanged and receipt-owned.
 
 ## Boundaries of this candidate
 

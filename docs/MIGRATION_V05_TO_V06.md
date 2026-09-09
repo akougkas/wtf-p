@@ -81,18 +81,19 @@ The deprecated `--global` and `--local` flags remain Claude compatibility aliase
 `status` and `doctor` remain legacy Claude-oriented diagnostics; a modern
 target selector passed to either command is not authoritative. Verify a modern
 adapter with the client's native discovery surface instead. For Clio, check
-`clio-coder --version`, `clio-coder plugins inspect wtfp --json`,
-`clio-coder agents`, and `clio-coder fleet list`, and inspect `/prompts` in
-the TUI; use the equivalent native plugin, extension, or skill listing for
-another client. [GETTING_STARTED.md](GETTING_STARTED.md#verify-or-remove-an-installation)
+`clio-coder --version`, `clio-coder library inspect wtfp --user --json`,
+`clio-coder library skills --all --json`, `clio-coder agents`, and
+`clio-coder fleet list`, and inspect `/prompts` in the TUI; use the equivalent
+native plugin, extension, or skill listing for another client.
+[GETTING_STARTED.md](GETTING_STARTED.md#verify-or-remove-an-installation)
 names the listing command per client. A successful install plus native
 discovery is the verification boundary.
 
-For Clio, WTF-P installs as a plugin and requires Clio Coder 0.4.7 or newer,
-which is not yet a published Clio release. The installer delegates to
-`clio-coder plugins install` and verifies the result with
-`clio-coder plugins inspect wtfp --json`; the full lifecycle is in
-[AGENT_PLUGIN.md](AGENT_PLUGIN.md). If an earlier release candidate left an
+For Clio, WTF-P installs as a plugin package in the library and requires Clio
+Coder 0.4.7 or newer, which is not yet a published Clio release. The installer
+delegates to `clio-coder library install` and verifies the result with
+`clio-coder library inspect wtfp --user|--project --json`; the full lifecycle
+is in [AGENT_PLUGIN.md](AGENT_PLUGIN.md). If an earlier release candidate left an
 extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P
 uninstaller first: both register the same `/wtfp:*` prompt names, and this
 candidate neither reads nor retires the extension location.

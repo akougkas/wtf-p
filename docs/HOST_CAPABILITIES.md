@@ -15,7 +15,7 @@ Evidence was gathered on 2026-09-09 on Linux against the `0.6.0-rc.4` envelope. 
 | Hooks | `hooks/hooks.json` | `hooks/hooks.json` via `extensions.com.openai.hooks` | JS plugins, not markdown | `hooks.json` | `hooks/hooks.json` | unverified | no (harness extensions only) |
 | MCP servers | `.mcp.json` | `mcp.json` | config file | `mcp_config.json` | `gemini-extension.json` `mcpServers` | unverified | preserved, not executed |
 | Rules / always-on context | via skills only | `AGENTS.md` | `AGENTS.md`/instructions | `rules/*.md` | `GEMINI.md` via `contextFileName` | `copilot-instructions.md` | `CLIO-CODER.md` |
-| Marketplace | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` | none | none | gallery only | `marketplace.json` | `plugins/registry.yaml` |
+| Marketplace | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` | none | none | gallery only | `marketplace.json` | `library.yaml` (scoped package index; formerly `plugins/registry.yaml`) |
 | Verified here | yes | yes | yes | yes | yes (agents load without diagnostics; no listing surface) | yes (marketplace add and plugin list; no in-session listing) | yes |
 
 ## What WTF-P projects per host
@@ -64,7 +64,7 @@ claude plugin list --json          # wtfp@wtfp 0.6.0-rc.4, scope user, enabled
 claude plugin marketplace list     # wtfp -> Directory (<tmp>/config/marketplaces/wtfp)
 claude plugin details wtfp@wtfp    # Skills (43) = 36 commands + 7 skills; Agents (11); Hooks (3): UserPromptExpansion, PreToolUse, Stop
 claude plugin uninstall wtfp@wtfp --scope user -y && claude plugin marketplace remove wtfp --scope user   # disposable-profile cleanup
-cp -r vendors/claude <tmp>/staged/wtfp && clio-coder plugins inspect <tmp>/staged/wtfp --json   # valid: true, diagnostics: [] (Clio reads the root plugin.json)
+cp -r vendors/claude <tmp>/staged/wtfp && clio-coder library inspect <tmp>/staged/wtfp --json   # valid: true, diagnostics: [] (Clio reads root plugin.json; historical run used plugins inspect)
 ```
 
 The installer writes 258 files for this envelope. Root manifest: `vendors/claude/plugin.json` is byte-identical to `vendors/plugin/plugin.json`, and the `ai.iowarp.clio/{prompts,agents,fleets}` files its component graph names are carried beside Claude's own `commands/`, `agents/`, `skills/`, `hooks/`, and `output-styles/`. Claude Code reads neither the root manifest nor `ai.iowarp.clio/`; the `plugin details` counts above are unchanged from the envelope without them. The compiler contract `the Claude envelope carries the portable root manifest and component graph Clio adopts` in `test/adapter-compiler.test.js` pins the identity.
@@ -125,7 +125,37 @@ Whether Codex loads the TOML agents at runtime was not observed: there is no CLI
 
 ## Clio Coder 0.4.7 (verified)
 
-Evidence:
+### Current command reference (Clio 0.4.7 unified library CLI)
+
+In Clio 0.4.7, top-level `plugins` and `skills` commands are replaced by `clio-coder library`. The canonical CLI contract for package lifecycle, inspection, listing, and discovery is:
+
+```bash
+clio-coder --help
+clio-coder library --help
+clio-coder library inspect ./staged --json         # manifest candidate: valid: true, diagnostics: []
+clio-coder library install ./staged --user --json  # exit 0; use --dry-run for previews (no --yes flag)
+clio-coder library list --kind plugin --json       # entries containing installed arrays; scope flags filter copies
+clio-coder library inspect wtfp --user --json      # InstalledPlugin shape: valid: true, enabled: true, diagnostics: [] (explicit --user|--project)
+clio-coder library skills --all --json             # runtime skill listing
+clio-coder agents                                  # 11 wtfp-* recipes, each with its bound skill
+clio-coder fleet list                              # wtfp-plan-section and wtfp-draft-review, both valid
+clio-coder run '/wtfp:help'                        # prints the static operator card only, exit 0, no model call
+node bin/install.js install clio --advanced --no-color        # 203 files; staged install
+node bin/install.js uninstall clio --dry-run --no-color       # Dry run: would remove 203 exact file(s)
+node bin/install.js uninstall clio --yes --no-color           # removed; registration dropped through library remove
+```
+
+Lifecycle inspection, drift, and state toggles run through:
+```bash
+clio-coder library drift [wtfp] --user --json      # check package drift against installed manifest
+clio-coder library enable wtfp --user --json       # enable package copy
+clio-coder library disable wtfp --user --json      # disable package copy
+clio-coder library update wtfp --user --json       # update package copy
+```
+
+### Observed historical invocations (Fable verification at SHA 31a0600)
+
+The verification evidence below was gathered by Fable on 2026-09-09 on Linux against the pre-unification Clio CLI surface (which exposed top-level `plugins`):
 
 ```bash
 clio-coder --help
@@ -141,6 +171,8 @@ node bin/install.js install clio --advanced --no-color        # 203 files; the i
 node bin/install.js uninstall clio --dry-run --no-color       # Dry run: would remove 203 exact file(s)
 node bin/install.js uninstall clio --yes --no-color           # removed; registration dropped through plugins remove
 ```
+
+*Note: The recorded invocations above reflect historical execution under Fable at SHA `31a0600`. Fresh observed native verification evidence using the modern `library` commands will be supplied by Astra (wR:p3) once WTF-P installer code and tests are aligned to the `library` contract.*
 
 The `--autonomy read-only|suggest|auto-edit|full-auto` flag is parsed for both the interactive launcher and `clio-coder run` (confirmed in `clio-coder run --help` and `src/cli/args.ts`).
 

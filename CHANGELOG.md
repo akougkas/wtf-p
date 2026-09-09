@@ -25,11 +25,11 @@ migration-feedback gate for stable `0.6.0` remains open.
   `vendors/plugin/` is the one canonical bundle
 - Clio installation delegates to the native plugin lifecycle: publish the
   bundle under the WTF-P receipt, stage it aside, run
-  `clio-coder plugins install <staged-dir> --user|--project`, verify with
-  `clio-coder plugins inspect wtfp --json` (`valid`, zero diagnostics, the
-  expected root and scope), then publish the receipt. Integrity, provenance,
-  drift, and enable/disable belong to Clio. WTF-P no longer re-enables a
-  plugin the operator disabled and keeps only its exact-file receipt
+  `clio-coder library install <staged-dir> --user|--project`, verify with
+  `clio-coder library inspect wtfp --user|--project --json` (`valid`, zero diagnostics, the
+  expected root and scope returning the InstalledPlugin shape), then publish the receipt.
+  Integrity, provenance, drift, and enable/disable belong to Clio. WTF-P no longer re-enables a
+  package the operator disabled and keeps only its exact-file receipt
 - Clio prompt and agent bodies resolve packaged files through `${pluginRoot}`.
   The flat `wtfp-<action>` prompt aliases are gone; every action is invoked as
   `/wtfp:<action>` and nothing else
@@ -99,7 +99,7 @@ migration-feedback gate for stable `0.6.0` remains open.
   The dispatcher now runs only as an entry point
 - The installer's post-install hint told Codex users to run `/wtfp:help`, a
   command Codex does not have; without `clio-coder` on PATH the installer
-  pointed at a `plugins install` source that Clio rejects. Both hints are
+  pointed at a `library install` source that Clio rejects. Both hints are
   corrected
 - Generated `.js` files carry a `//` banner instead of an HTML comment, so
   they also parse as ES modules
@@ -135,12 +135,14 @@ migration-feedback gate for stable `0.6.0` remains open.
   hooks on this envelope; headless Sonnet 5 `/wtfp:help` and `/wtfp:new-paper`
   stopped at the interview gate on the factory-round envelope), Codex 0.153.3
   (marketplace add, plugin list, headless `gpt-5.6-luna` help and new-paper
-  routes), Clio Coder 0.4.7 (`plugins inspect`/`install`/`list`, `agents`,
-  static `/wtfp:help`), OpenCode 1.18.30 (`agent list`, `debug skill`, server
+  routes), Clio Coder 0.4.7 (current `library inspect`/`install`/`list`,
+  runtime skills via `library skills --all --json`, `agents`, static `/wtfp:help`;
+  observed historically via pre-unification `plugins` verbs by Fable at SHA 31a0600),
+  OpenCode 1.18.30 (`agent list`, `debug skill`, server
   API), Antigravity CLI 1.1.28 (`plugin validate`/`install`/`list`, `agents`),
   and Gemini CLI 0.59.0 (`extensions validate`/`install`/`list`,
   `skills list`). GitHub Copilot CLI was not available and is unverified
-- Clio Coder 0.4.7 `plugins inspect` accepts the Claude envelope as a valid
+- Clio Coder 0.4.7 `library inspect` (historically `plugins inspect`) accepts the Claude envelope as a valid
   `wtfp` plugin with zero diagnostics
 
 ### Known limitations
