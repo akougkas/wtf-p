@@ -48,7 +48,15 @@ const probe = clioProbeContext();
 const scratch = probe.environment.HOME;
 const wrapperDir = path.join(scratch, 'bin');
 fs.mkdirSync(wrapperDir);
-fs.writeFileSync(path.join(wrapperDir, 'clio-coder'), `#!${process.execPath}\nrequire(${JSON.stringify(entry)});\n`, { mode: 0o755 });
+fs.writeFileSync(path.join(wrapperDir, 'clio-coder'), `#!${process.execPath}
+const args = process.argv.slice(2);
+if (process.env.WTFP_TEST_INSPECT_FAILURE === '1' && args[0] === 'library' && args[1] === 'inspect') {
+  console.error('injected verification failure after real native installation'); process.exit(1);
+}
+const result = require('child_process').spawnSync(process.execPath, [${JSON.stringify(entry)}, ...args], {stdio:'inherit'});
+if (result.error) throw result.error;
+process.exit(result.status ?? 1);
+`, { mode: 0o755 });
 const env = { ...probe.environment, PATH: `${wrapperDir}${path.delimiter}/usr/bin:/bin` };
 function run(file, args, cwd) {
   const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8', timeout: 60000 });
@@ -65,8 +73,32 @@ function runCombined(file, args, cwd) {
 }
 function native(args, cwd) { return run(entry, args, cwd); }
 function hash(file) { return createHash('sha256').update(fs.readFileSync(file)).digest('hex'); }
+function installedCopies(listing) {
+  assert.ok(Array.isArray(listing.entries), JSON.stringify(listing));
+  assert.deepStrictEqual(listing.diagnostics, []);
+  return listing.entries.flatMap(item => {
+    assert.strictEqual(item.kind, 'plugin');
+    assert.ok(Array.isArray(item.installed));
+    for (const copy of item.installed) {
+      assert.strictEqual(copy.id, item.name);
+      assert.ok(['user', 'project'].includes(copy.scope));
+      assert.ok(path.isAbsolute(copy.rootPath));
+    }
+    return item.installed;
+  });
+}
+const installer = path.join(ROOT, 'bin/install.js');
+const uninstaller = path.join(ROOT, 'bin/uninstall.js');
 try {
   console.log(JSON.stringify({ cli: entry, entrySha256: hash(entry), version: native(['--version'], scratch).trim() }));
+  const help = native(['library', '--help'], scratch);
+  for (const command of ['install', 'inspect', 'list', 'remove', 'enable', 'disable']) {
+    assert.ok(help.includes(`clio-coder library ${command}`), `built CLI does not offer library ${command}`);
+  }
+  assert.match(help, /--dry-run/);
+  const claudeCandidate = JSON.parse(native(['library', 'inspect', path.join(ROOT, 'vendors/claude'), '--user', '--json'], scratch));
+  assert.strictEqual(claudeCandidate.valid, true, JSON.stringify(claudeCandidate));
+  console.log('PASS library contract precheck and Claude-envelope portable manifest inspection');
   for (const project of [false, true]) {
     const cwd = path.join(scratch, project ? 'project-workspace' : 'user-workspace');
     fs.mkdirSync(cwd);
@@ -79,31 +111,42 @@ try {
     const target = project ? path.join(cwd, '.clio-coder') : env.CLIO_CODER_CONFIG_DIR;
     const scope = project ? 'project' : 'user';
     const args = ['install', 'clio', '--config-dir', target, '--advanced', '--force', '--no-color'];
-    const candidate = JSON.parse(native(['plugins', 'inspect', path.join(ROOT, 'vendors/plugin'), '--json'], cwd));
+    const candidate = JSON.parse(native(['library', 'inspect', path.join(ROOT, 'vendors/plugin'), `--${scope}`, '--json'], cwd));
     assert.strictEqual(candidate.valid, true, JSON.stringify(candidate));
+    const preview = JSON.parse(native(['library', 'install', path.join(ROOT, 'vendors/plugin'), `--${scope}`, '--dry-run', '--json'], cwd));
+    assert.strictEqual(preview.confirmed, false, JSON.stringify(preview));
+    assert.ok(!fs.existsSync(path.join(target, 'plugins/wtfp')), 'dry-run installed a package');
     run(path.join(ROOT, 'bin/install.js'), args, cwd);
     const receipt = JSON.parse(fs.readFileSync(path.join(target, '.wtfp-version')));
     assert.ok(receipt.files.every(item => item.path.startsWith('plugins/wtfp/')));
     for (const item of receipt.files) assert.strictEqual(hash(path.join(target, item.path)), item.sha256);
-    const listing = JSON.parse(native(['plugins', 'list', '--all', '--json'], cwd));
-    const plugin = listing.plugins.find(item => item.id === 'wtfp' && item.scope === scope);
+    const listing = JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd));
+    const plugin = installedCopies(listing).find(item => item.id === 'wtfp' && item.scope === scope);
     for (const flag of ['valid', 'enabled', 'compatible', 'effective', 'loadable']) assert.strictEqual(plugin?.[flag], true, JSON.stringify(plugin));
-    const inspected = JSON.parse(native(['plugins', 'inspect', 'wtfp', '--json'], cwd));
+    const inspected = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], cwd));
     assert.strictEqual(inspected.id, 'wtfp');
     assert.strictEqual(inspected.scope, scope);
     assert.strictEqual(path.resolve(inspected.rootPath), path.join(target, 'plugins/wtfp'));
     assert.deepStrictEqual(inspected.diagnostics, []);
     assert.deepStrictEqual(plugin.diagnostics, []);
+    assert.strictEqual(inspected.trust, 'trusted', 'first-party CLI install must not inherit foreign trust');
     const installedRoot = path.join(target, 'plugins/wtfp');
     const agents = native(['agents'], cwd);
     const manifest = JSON.parse(fs.readFileSync(path.join(installedRoot, 'plugin.json')));
     const recipes = manifest.extensions['ai.iowarp.clio'].components.filter(item => item.kind === 'agent');
     const roleCount = fs.readdirSync(path.join(ROOT, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
     assert.strictEqual(recipes.length, roleCount);
+    const skills = JSON.parse(native(['library', 'skills', '--all', '--json'], cwd));
+    const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/catalog.json')));
+    for (const skill of catalog.skills) {
+      assert.ok(skills.skills.some(item => item.name === skill.id), `missing runtime skill ${skill.id}`);
+    }
     for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
     for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) {
       native(['fleet', 'validate', fleet], cwd);
+      native(['fleet', 'graph', fleet], cwd);
     }
+    assert.match(native(['run', '/wtfp:help'], cwd), /wtfp:new-paper/);
 
     // Clio marks a prompt unavailable when any packaged reference in its body
     // fails to resolve inside the installed root, which is how a missing
@@ -152,22 +195,73 @@ try {
       }
     }
     console.log(`  ${scope}: ${resolvedReferences} packaged references resolve inside the installed root`);
+    console.log(JSON.stringify({ scope, rootPath: inspected.rootPath, valid: inspected.valid,
+      enabled: inspected.enabled, trust: inspected.trust, receiptFiles: receipt.files.length,
+      agents: recipes.length, skills: catalog.skills.length, fleets: 2 }));
     const stateFile = path.join(target, 'plugins/state.json');
     const before = fs.readFileSync(stateFile);
     run(path.join(ROOT, 'bin/install.js'), args, cwd);
     assert.ok(before.equals(fs.readFileSync(stateFile)), 'idempotent reinstall changed native registration');
     // Enable/disable is the operator's switch and Clio's state. A reinstall
     // must report it, not silently flip it back on.
-    native(['plugins', 'disable', 'wtfp', `--${scope}`], cwd);
+    native(['library', 'disable', 'wtfp', `--${scope}`, '--json'], cwd);
     const afterDisable = runCombined(path.join(ROOT, 'bin/install.js'), args, cwd);
     assert.match(afterDisable, /installed but disabled/);
-    const stillDisabled = JSON.parse(native(['plugins', 'list', '--all', '--json'], cwd)).plugins.find(item => item.id === 'wtfp' && item.scope === scope);
+    const stillDisabled = installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd))).find(item => item.id === 'wtfp' && item.scope === scope);
     assert.strictEqual(stillDisabled?.enabled, false, 'reinstall re-enabled a plugin the operator disabled');
-    native(['plugins', 'enable', 'wtfp', `--${scope}`], cwd);
+    // A stale native digest forces the registration path again. Clio must
+    // retain the existing preference when replacing that registration.
+    const staleState = JSON.parse(fs.readFileSync(stateFile));
+    staleState.installed.wtfp.contentDigest = '0'.repeat(64);
+    fs.writeFileSync(stateFile, JSON.stringify(staleState));
+    assert.match(runCombined(installer, args, cwd), /installed but disabled/);
+    const repaired = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], cwd));
+    assert.strictEqual(repaired.valid, true);
+    assert.strictEqual(repaired.enabled, false);
+    native(['library', 'enable', 'wtfp', `--${scope}`, '--json'], cwd);
     run(path.join(ROOT, 'bin/uninstall.js'), ['--clio', '--config-dir', target, '--yes', '--no-color'], cwd);
     assert.ok(!fs.existsSync(installedRoot));
     assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
-    assert.ok(!JSON.parse(native(['plugins', 'list', '--all', '--json'], cwd)).plugins.some(item => item.id === 'wtfp' && item.scope === scope));
+    assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd))).some(item => item.id === 'wtfp' && item.scope === scope));
     console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both fleets, idempotence, preserved disable preference, native removal`);
+  }
+  const coexist = path.join(scratch, 'coexist-workspace');
+  fs.mkdirSync(coexist);
+  const projectTarget = path.join(coexist, '.clio-coder');
+  const userTarget = env.CLIO_CODER_CONFIG_DIR;
+  const installArgs = target => ['install', 'clio', '--config-dir', target, '--advanced', '--force', '--no-color'];
+  run(installer, installArgs(projectTarget), coexist);
+  const projectState = fs.readFileSync(path.join(projectTarget, 'plugins/state.json'));
+  run(installer, installArgs(userTarget), coexist);
+  assert.ok(projectState.equals(fs.readFileSync(path.join(projectTarget, 'plugins/state.json'))));
+  const copies = installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], coexist))).filter(item => item.id === 'wtfp');
+  assert.deepStrictEqual(copies.map(item => item.scope).sort(), ['project', 'user']);
+  for (const scope of ['user', 'project']) {
+    const selected = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], coexist));
+    assert.strictEqual(selected.scope, scope);
+    assert.strictEqual(selected.valid, true);
+    assert.strictEqual(selected.rootPath, path.join(scope === 'user' ? userTarget : projectTarget, 'plugins/wtfp'));
+    const filtered = installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', `--${scope}`, '--json'], coexist))).filter(item => item.id === 'wtfp');
+    assert.deepStrictEqual(filtered.map(item => item.scope), [scope]);
+  }
+  run(uninstaller, ['--clio', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(projectState.equals(fs.readFileSync(path.join(projectTarget, 'plugins/state.json'))));
+  assert.strictEqual(JSON.parse(native(['library', 'inspect', 'wtfp', '--project', '--json'], coexist)).valid, true);
+  run(uninstaller, ['--clio', '--config-dir', projectTarget, '--yes', '--no-color'], coexist);
+  console.log('PASS coexistence: both installed copies listed, exact scoped inspect/list, user removal preserves project registration');
+  for (const scope of ['user', 'project']) {
+    const target = scope === 'user' ? userTarget : projectTarget;
+    const failed = spawnSync(process.execPath, [installer, ...installArgs(target)], {
+      cwd: coexist, env: { ...env, WTFP_TEST_INSPECT_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+    });
+    assert.ifError(failed.error);
+    assert.notStrictEqual(failed.status, 0);
+    assert.match(failed.stdout + failed.stderr, /injected verification failure/);
+    assert.doesNotMatch(failed.stdout + failed.stderr, /native rollback also failed/);
+    assert.ok(!fs.existsSync(path.join(target, 'plugins/wtfp')));
+    assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
+    assert.ok(!JSON.parse(fs.readFileSync(path.join(target, 'plugins/state.json'))).installed.wtfp);
+    assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
+    console.log(`PASS ${scope}: real native install/remove compensates injected verification failure; no files, receipt, or registration remain`);
   }
 } finally { probe.cleanup(); }

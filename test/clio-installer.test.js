@@ -38,7 +38,7 @@ function entryFor(selectedScope) {
  if(!fs.existsSync(selectedRoot))return null;
  const s=fs.existsSync(sf)?JSON.parse(fs.readFileSync(sf)):{installed:{},disabled:[]};
  const valid=s.installed.wtfp?.contentDigest===digest(selectedRoot),enabled=!s.disabled.includes('wtfp');
- return {id:'wtfp',kind:'plugin',trust:'local',version:JSON.parse(fs.readFileSync(path.join(selectedRoot,'plugin.json'))).version,scope:selectedScope,rootPath:selectedRoot,valid,enabled,compatible:true,loadable:valid&&enabled,diagnostics:valid?[]:[{type:'error',message:'unregistered/digest mismatch'}]};
+ return {id:'wtfp',kind:'plugin',trust:'trusted',version:JSON.parse(fs.readFileSync(path.join(selectedRoot,'plugin.json'))).version,scope:selectedScope,rootPath:selectedRoot,valid,enabled,compatible:true,loadable:valid&&enabled,diagnostics:valid?[]:[{type:'error',message:'unregistered/digest mismatch'}]};
 }
 if(process.env.FAKE_CLIO_LOG) fs.appendFileSync(process.env.FAKE_CLIO_LOG, JSON.stringify({args,cwd:process.cwd(),config})+'\\n');
 const state=read();
