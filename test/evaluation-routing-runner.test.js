@@ -192,8 +192,8 @@ async function main() {
     }
   });
 
-  await test('routing suite binds capability surfaces, compiler-v4 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'ab6ec763b5001109dfdd82928b2e0b26d4bae88b5f19d3e384f49ef586c41d0b');
+  await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
+    assert.strictEqual(suite.manifest_sha256, 'd60546c1a5145bd8af6f67f235ca42bcbab46323f386be39635e653467503564');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -201,9 +201,9 @@ async function main() {
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      '1e143685a035f3e507cb2ab816484211774009dd3f4ddd25fdc03a76b2f14956');
+      '6be02bf63575e441612b22edbd1ea1bcc5f8b49152f423a07dd5b0e8ac7d0750');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      '6065657e80692f300bcc5ba97c09624eb1eac4a963fc16ab0b0dc7e034e31f15');
+      '997a91c9b0d5ebefd74678b092f789cc84642b50a21123e2db771989307f4219');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -1231,12 +1231,12 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      '93617d24a1fe4438239534a2d4fab067530dc026');
+      'e2dee690f719e830544d3c9f719286fd0c855080');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      'f7bcf1a0e150b4859a86b3edebda77c818a8e0ddf8b0539133202f6d9f558fd2');
+      '9081611b48588aaa442efed5da955fa1e4cba490cd096cd8a151554b2d31c3cd');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
-    assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1573);
+    assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1574);
   });
 
   if (!process.exitCode) process.stdout.write(`1..${passed}\n`);

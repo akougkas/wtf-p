@@ -16,6 +16,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const lifecycle = require('./run-clio-lifecycle');
+const { GENERATOR_VERSION } = require('../../bin/lib/adapter-metadata');
 const {
   canonicalJson,
   diffSnapshots,
@@ -251,8 +252,8 @@ function createRoot(requested) {
 function verifyGeneratedInventory(extension) {
   const envelopeFile = path.join(extension, '.wtfp-generated.json');
   const envelope = readJson(envelopeFile);
-  if (envelope.schema !== 'wtfp.generated-adapter/v1' || envelope.target !== 'clio' || envelope.generatorVersion !== 4) {
-    throw new Error('generated Clio envelope identity is not compiler v4');
+  if (envelope.schema !== 'wtfp.generated-adapter/v1' || envelope.target !== 'clio' || envelope.generatorVersion !== GENERATOR_VERSION) {
+    throw new Error('generated Clio envelope identity does not match the current compiler');
   }
   if (!Array.isArray(envelope.files) || envelope.files.length === 0) {
     throw new Error('generated Clio envelope has no exact inventory');

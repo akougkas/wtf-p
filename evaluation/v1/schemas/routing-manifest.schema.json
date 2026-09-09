@@ -12,7 +12,7 @@
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "const": 1 },
     "project_protocol_version": { "const": 1 },
-    "adapter_compiler_version": { "const": 4 },
+    "adapter_compiler_version": { "enum": [4, 5] },
     "wtfp_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
     "corpora": {
       "type": "array",

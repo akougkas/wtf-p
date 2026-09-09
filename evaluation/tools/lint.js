@@ -242,7 +242,7 @@ function lintFixtureAndBaseline(rubric, expected, baseline, registry) {
   assert.strictEqual(
     baseline.protocol.canonical_source_sha256,
     readJson(path.join(repositoryRoot, 'vendors', 'clio', '.wtfp-generated.json')).sourceHash,
-    'baseline must bind the exact compiler-v4 canonical source hash'
+    'baseline must bind the exact current canonical source hash'
   );
   lintBaselineEvidenceState(baseline, registry);
 

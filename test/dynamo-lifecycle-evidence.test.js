@@ -55,7 +55,7 @@ function test(name, callback) {
 }
 
 test('typed blocked evidence validates and compares as an honest regression', () => {
-  const baseline = path.join(repositoryRoot, 'evaluation', 'v1', 'baselines', 'hpc-checkpointing.json');
+  const baseline = path.join(evidenceRoot, 'baseline.json');
   const result = path.join(evidenceRoot, 'result.json');
   const comparison = spawnSync(process.execPath, [
     'evaluation/tools/compare-results.js', '--json', baseline, result
