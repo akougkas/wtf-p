@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Show project progress
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-manage-project/SKILL.md
-@${extensionRoot}/skills/wtfp-manage-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-manage-project/SKILL.md
+@${pluginRoot}/skills/wtfp-manage-project/references/actions.md
 
 ## Record contract
 
@@ -34,28 +34,28 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/progress.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/checkpoint.schema.json
-@${extensionRoot}/project/templates/checkpoint.json
-@${extensionRoot}/project/schemas/config.schema.json
-@${extensionRoot}/project/templates/config.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/evidence.schema.json
-@${extensionRoot}/project/templates/evidence.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/source.schema.json
-@${extensionRoot}/project/templates/source.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
-@${extensionRoot}/project/schemas/validation.schema.json
-@${extensionRoot}/project/templates/validation.json
+@${pluginRoot}/actions/progress.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/checkpoint.schema.json
+@${pluginRoot}/project/templates/checkpoint.json
+@${pluginRoot}/project/schemas/config.schema.json
+@${pluginRoot}/project/templates/config.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/evidence.schema.json
+@${pluginRoot}/project/templates/evidence.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/source.schema.json
+@${pluginRoot}/project/templates/source.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
+@${pluginRoot}/project/schemas/validation.schema.json
+@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

@@ -95,7 +95,6 @@ for (const relativePath of ['bin/install.js', 'bin/uninstall.js', 'scripts/prefl
 const requiredArtifacts = [
   'protocol/catalog.json',
   'protocol/project/README.md',
-  'vendors/clio/clio-coder-extension.yaml',
   'vendors/plugin/plugin.json',
   'vendors/claude/.claude-plugin/marketplace.json',
   'vendors/codex/.agents/plugins/marketplace.json',
@@ -127,7 +126,6 @@ if (packed.error || packed.status !== 0) {
       'bin/install.js',
       'bin/uninstall.js',
       'protocol/catalog.json',
-      'vendors/clio/clio-coder-extension.yaml',
       'vendors/plugin/plugin.json',
       'vendors/claude/.claude-plugin/marketplace.json',
       'vendors/codex/.agents/plugins/marketplace.json',

@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Review todos
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-manage-project/SKILL.md
-@${extensionRoot}/skills/wtfp-manage-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-manage-project/SKILL.md
+@${pluginRoot}/skills/wtfp-manage-project/references/actions.md
 
 ## Record contract
 
@@ -34,12 +34,12 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/check-todos.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/checkpoint.schema.json
-@${extensionRoot}/project/templates/checkpoint.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
+@${pluginRoot}/actions/check-todos.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/checkpoint.schema.json
+@${pluginRoot}/project/templates/checkpoint.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 

@@ -11,3 +11,23 @@ Only implementations declared by `tools.json` are packaged here. Resolve each lo
 - `wtfp://tools/citation/rank` → `tools/citation/rank.js` (legacy module `citation-ranker.js`)
 - `wtfp://tools/citation/scholar-lookup` → `tools/citation/scholar-lookup.js` (legacy module `scholar-lookup.js`)
 - `wtfp://tools/citation/semantic-scholar` → `tools/citation/semantic-scholar.js` (legacy module `semantic-scholar.js`)
+
+## Executing a bundled tool
+
+A `tool.execute` effect authorises exactly one command, run from the package root that the host resolves for this bundle:
+
+```bash
+node <package-root>/tools/wtfp-tool.js <command> [arguments]
+```
+
+Run it with no argument, or with `list`, to print the declared command set as JSON. Declared commands:
+
+- `bib-index <bib-file> [--key=<citation-key>] [--query=<text>]` → `bibliography.index`
+- `bib-format <bib-file> --key=<citation-key>` → `bibliography.format`
+- `bib-impact <bib-file>` → `bibliography.analyze-impact`
+- `citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>]` → `citation.fetch`
+- `scholar-search --query=<text> [--limit=<1-25>]` → `citation.scholar-lookup`
+- `s2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>]` → `citation.semantic-scholar`
+- `rank <papers.json> [--intent=<seminal|recent|balanced>]` → `citation.rank`
+
+Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters and result limits at 25. `bib-impact`, `citation-search`, `scholar-search`, and `s2-search` perform outbound requests to the declared scholarly indexes; the remaining commands are offline. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.

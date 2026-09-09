@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Make a quick writing change
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-write-section/SKILL.md
-@${extensionRoot}/skills/wtfp-write-section/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-write-section/SKILL.md
+@${pluginRoot}/skills/wtfp-write-section/references/actions.md
 
 ## Record contract
 
@@ -34,16 +34,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/quick.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
+@${pluginRoot}/actions/quick.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 

@@ -21,9 +21,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Confirm audience, dimensions, format, and emphasis.
+1. Confirm audience, dimensions, format, and emphasis, following the confirmation list in `protocol://templates/poster.md`.
+1a. Start from the panel structure and word budgets in `protocol://templates/poster.md`. Delete any panel the manuscript does not support rather than filling it.
 2. Select only claims supported by manuscript and evidence, then design a legible poster with source attribution.
-3. Write deliverable artifacts without changing project records except through a separately declared action. If rendering is requested, invoke only the configured host-provided contained renderer under the declared `tool.execute` effect.
+3. Write the poster source and its assets under the declared deliverable URI without changing project records except through a separately declared action. This action produces poster source, not a rendered image or PDF: WTF-P declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
 
 ## Safety and completion
 

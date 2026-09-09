@@ -123,22 +123,16 @@
     {
       "id": "create-poster",
       "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
+      "unavailableCapabilities": [],
       "unavailableEffects": [
-        "tool.execute",
         "user.gate"
       ]
     },
     {
       "id": "create-slides",
       "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
+      "unavailableCapabilities": [],
       "unavailableEffects": [
-        "tool.execute",
         "user.gate"
       ]
     },

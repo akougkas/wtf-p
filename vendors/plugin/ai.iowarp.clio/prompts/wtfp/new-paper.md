@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Start a new paper
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-start-project/SKILL.md
-@${extensionRoot}/skills/wtfp-start-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-start-project/SKILL.md
+@${pluginRoot}/skills/wtfp-start-project/references/actions.md
 
 ## Record contract
 
@@ -23,7 +23,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Detect existing project://manifest first; stop and offer inspection or repair rather than reinitializing it.
-2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions.
+2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions. Once the document type is known, propose the initial section set from `${pluginRoot}/templates/paper-outline.md`, or from `${pluginRoot}/templates/grant-proposal-outline.md` for `grant-proposal`, which additionally requires a captured solicitation artifact before any section is proposed.
 3. Preview the five v1 JSON records, validate every record and the cross-record
    invariants, then create them atomically. In particular,
    `outline.sections[*].word_target` must sum exactly to
@@ -39,18 +39,18 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/new-paper.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/config.schema.json
-@${extensionRoot}/project/templates/config.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
+@${pluginRoot}/actions/new-paper.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/config.schema.json
+@${pluginRoot}/project/templates/config.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 

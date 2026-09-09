@@ -13,7 +13,6 @@
     "capabilities": [
       "filesystem.read",
       "filesystem.write",
-      "tool.execute",
       "user.interaction"
     ],
     "conditions": [
@@ -46,10 +45,6 @@
     {
       "id": "filesystem.write",
       "scope": "poster source and generated assets"
-    },
-    {
-      "id": "tool.execute",
-      "scope": "the configured portable poster renderer"
     },
     {
       "id": "user.gate",

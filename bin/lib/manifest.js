@@ -41,32 +41,28 @@ const MANIFEST = {
       source: 'marketplaces/wtfp'
     }
   },
+  // Clio consumes the canonical Agent Plugins bundle through its own plugin
+  // lifecycle. There is no second WTF-P packaging for this host.
   clio: {
     name: 'Clio Coder',
     configDirEnv: 'CLIO_CODER_CONFIG_DIR',
     defaultDir: '.config/clio-coder',
     components: [
       {
-        id: 'extension',
-        src: path.join(ROOT, 'vendors', 'clio'),
-        dest: 'extensions/wtfp',
+        id: 'plugin',
+        src: path.join(ROOT, 'vendors', 'plugin'),
+        dest: 'plugins/wtfp',
         type: 'dir'
       }
     ],
     discovery: {
       kind: 'directory',
-      path: 'extensions/wtfp'
+      path: 'plugins/wtfp'
     },
     native: {
-      kind: 'clio-extension',
+      kind: 'clio-plugin',
       id: 'wtfp',
-      source: 'extensions/wtfp',
-      requiredResources: {
-        skills: 'skills',
-        prompts: 'prompts',
-        agents: 'agents',
-        fleets: 'fleets'
-      }
+      source: 'plugins/wtfp'
     }
   },
   codex: {

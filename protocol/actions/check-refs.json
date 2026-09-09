@@ -70,7 +70,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "declared bibliography and citation tools"
+      "scope": "declared bibliography and citation tools through tools/wtfp-tool.js"
     },
     {
       "id": "user.gate",

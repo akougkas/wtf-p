@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Manage project settings
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-manage-project/SKILL.md
-@${extensionRoot}/skills/wtfp-manage-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-manage-project/SKILL.md
+@${pluginRoot}/skills/wtfp-manage-project/references/actions.md
 
 ## Record contract
 
@@ -34,10 +34,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/settings.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/config.schema.json
-@${extensionRoot}/project/templates/config.json
+@${pluginRoot}/actions/settings.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/config.schema.json
+@${pluginRoot}/project/templates/config.json
 
 ## Invocation input
 

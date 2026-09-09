@@ -55,7 +55,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "declared bibliography tools and the configured host-provided LaTeX checker or compiler"
+      "scope": "wtfp://tools/bibliography/** through tools/wtfp-tool.js"
     },
     {
       "id": "user.gate",

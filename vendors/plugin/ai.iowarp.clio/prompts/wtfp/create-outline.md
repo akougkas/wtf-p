@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Create the paper outline
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-start-project/SKILL.md
-@${extensionRoot}/skills/wtfp-start-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-start-project/SKILL.md
+@${pluginRoot}/skills/wtfp-start-project/references/actions.md
 
 ## Record contract
 
@@ -22,10 +22,11 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
+1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves. Take the starting section roles, waves, and budget shares from `${pluginRoot}/templates/paper-outline.md`, or from `${pluginRoot}/templates/grant-proposal-outline.md` when `manifest.document_type` is `grant-proposal`; treat both as defaults the author and the venue override.
 2. Reconcile only choices the author explicitly resolves during the outline interview. Preserve every unrelated decision unchanged. For each explicitly resolved item whose current disposition is `deferred`, preserve the prior item unchanged except for setting its disposition to `superseded`; append a new replacement whose ID is fresh and unique in the ledger, whose authority is `author`, whose disposition is `locked`, and whose `supersedes` field names the prior item. Set the replacement's `recorded_at` to the actual resolution time, increment the decision-record revision, and set the record's `updated_at` to that same actual resolution time. Never supersede a locked choice or treat an agent suggestion or approval of an unrelated outline detail as authority to resolve a decision. If the author resolves no choice, do not rewrite the decision record.
 3. Present the complete outline and decision diffs at the confirm_outline gate. If the proposed outline contradicts a locked decision, preserve that decision as locked and unchanged. If it assumes a choice that was already deferred and the author did not resolve it, preserve that choice as deferred. In either case, record a non-passing validation and stop before downstream planning.
-4. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
+4. Balance the budget before the gate: Every write to `project://structure/outline` must leave `sections[*].word_target` summing exactly to `target_words`. Reallocate across the affected sections and, where the author changed the overall length, restate `target_words` in the same write. Present the reallocation in the approval preview and refuse to publish an outline whose budgets do not balance.
+5. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
 
 ## Safety and completion
 
@@ -35,26 +36,26 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/create-outline.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/config.schema.json
-@${extensionRoot}/project/templates/config.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/evidence.schema.json
-@${extensionRoot}/project/templates/evidence.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/source.schema.json
-@${extensionRoot}/project/templates/source.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
-@${extensionRoot}/project/schemas/validation.schema.json
-@${extensionRoot}/project/templates/validation.json
+@${pluginRoot}/actions/create-outline.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/config.schema.json
+@${pluginRoot}/project/templates/config.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/evidence.schema.json
+@${pluginRoot}/project/templates/evidence.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/source.schema.json
+@${pluginRoot}/project/templates/source.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
+@${pluginRoot}/project/schemas/validation.schema.json
+@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

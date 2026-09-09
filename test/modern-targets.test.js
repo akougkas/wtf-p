@@ -16,18 +16,17 @@ const installLogic = require('../bin/commands/install-logic');
 const uninstallLogic = require('../bin/uninstall');
 const {
   activateNativeRegistration,
-  deactivateNativeRegistration,
-  probeClioRegistration
+  deactivateNativeRegistration
 } = require('../bin/lib/native-registration');
 
 const MODERN_TARGETS = {
   clio: {
     configDirEnv: 'CLIO_CODER_CONFIG_DIR',
     defaultDir: '.config/clio-coder',
-    source: path.join(ROOT, 'vendors', 'clio'),
-    destination: 'extensions/wtfp',
+    source: path.join(ROOT, 'vendors', 'plugin'),
+    destination: 'plugins/wtfp',
     resource: '.',
-    component: 'extension'
+    component: 'plugin'
   },
   codex: {
     configDirEnv: 'CODEX_HOME',
@@ -270,7 +269,7 @@ try {
     const resourceRoots = {
       antigravity: path.join(ROOT, 'vendors', 'antigravity'),
       claude: path.join(ROOT, 'vendors', 'claude'),
-      clio: path.join(ROOT, 'vendors', 'clio'),
+      plugin: path.join(ROOT, 'vendors', 'plugin'),
       codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p'),
       copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p'),
       gemini: path.join(ROOT, 'vendors', 'gemini'),
@@ -352,55 +351,6 @@ try {
       );
       assert.strictEqual(mutationAttempted, false, `${runtime} mutated a colliding marketplace`);
     }
-  });
-
-  record('Clio capability probing is isolated and fails closed on missing resource kinds', () => {
-    const native = MANIFEST.clio.native;
-    const targetDir = path.join(testRoot, 'native-fake', 'clio');
-    const expectedSource = path.join(targetDir, native.source);
-    let observedEnvironment = null;
-    const compatibleRunner = (command, args, options) => {
-      assert.strictEqual(command, 'clio-coder');
-      assert.deepStrictEqual(args, ['extensions', 'discover', expectedSource, '--json']);
-      observedEnvironment = options.env;
-      return {
-        status: 0,
-        stdout: JSON.stringify({
-          candidates: [{
-            valid: true,
-            manifest: { resources: native.requiredResources },
-            diagnostics: []
-          }]
-        }),
-        stderr: ''
-      };
-    };
-    const compatible = probeClioRegistration(targetDir, native, {
-      runner: compatibleRunner,
-      environment: { PATH: process.env.PATH, SECRET_SENTINEL: 'must-not-leak' }
-    });
-    assert.strictEqual(compatible.status, 'compatible');
-    assert.strictEqual(observedEnvironment.SECRET_SENTINEL, undefined);
-    assert.strictEqual(observedEnvironment.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
-    assert.ok(observedEnvironment.CLIO_CODER_STATE_DIR.startsWith(os.tmpdir()));
-    assert.strictEqual(fs.existsSync(observedEnvironment.HOME), false, 'Clio probe home was not removed');
-
-    const incompatible = probeClioRegistration(targetDir, native, {
-      runner: () => ({
-        status: 0,
-        stdout: JSON.stringify({
-          candidates: [{
-            valid: true,
-            manifest: { resources: { skills: 'skills', prompts: 'prompts' } },
-            diagnostics: []
-          }]
-        }),
-        stderr: ''
-      }),
-      environment: { PATH: process.env.PATH }
-    });
-    assert.strictEqual(incompatible.status, 'incompatible');
-    assert.match(incompatible.reason, /resources\.agents/);
   });
 
   record('native registration compensates a partial marketplace transaction', () => {

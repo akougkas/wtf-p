@@ -23,7 +23,17 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Confirm venue template and whether an existing deliverable may be replaced.
 2. Convert manuscript structure, citations, figures, tables, and bibliography without inventing content or metadata.
-3. Write a self-contained LaTeX deliverable and run the declared bibliography tools. If compilation is requested, invoke only the configured host-provided LaTeX checker or compiler under the declared `tool.execute` effect; report compile or portability limitations.
+3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
+
+## Bundled tool execution
+
+The declared `tool.execute` effect authorises exactly one command, run from the package root the host resolves for this bundle:
+
+```bash
+node protocol://tools/wtfp-tool.js <command> [arguments]
+```
+
+Run it with `list` first to read the declared commands, their arguments, and their bounds; `protocol://tools/README.md` carries the same table. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
 
 ## Safety and completion
 

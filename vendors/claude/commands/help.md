@@ -25,8 +25,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the requested topic against the catalog and stable aliases.
-2. Explain prerequisites, reads, outputs, gates, tools, and semantic effects from the action contract.
-3. Do not imply capabilities that the selected adapter does not expose.
+2. Name every action by its stable alias in this host's own invocation syntax, `/wtfp:<action>`. Do not invent a second spelling, a bare `wtfp-<action>` form, or a host-specific prefix.
+3. Explain prerequisites, reads, outputs, gates, tools, and semantic effects from the action contract.
+4. Read `${CLAUDE_PLUGIN_ROOT}/compatibility/action-availability.json` and mark every action it reports as unavailable, naming the capability or effect that blocks it. Do not imply capabilities that the selected adapter does not expose.
 
 ## Safety and completion
 

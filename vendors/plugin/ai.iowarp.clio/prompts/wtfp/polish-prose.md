@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Polish prose
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-review-manuscript/SKILL.md
-@${extensionRoot}/skills/wtfp-review-manuscript/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-review-manuscript/SKILL.md
+@${pluginRoot}/skills/wtfp-review-manuscript/references/actions.md
 
 ## Record contract
 
@@ -34,16 +34,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/polish-prose.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/config.schema.json
-@${extensionRoot}/project/templates/config.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/validation.schema.json
-@${extensionRoot}/project/templates/validation.json
+@${pluginRoot}/actions/polish-prose.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/config.schema.json
+@${pluginRoot}/project/templates/config.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/validation.schema.json
+@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

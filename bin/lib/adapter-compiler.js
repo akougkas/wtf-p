@@ -10,7 +10,6 @@ const PROTOCOL_ROOT = path.join(ROOT, 'protocol');
 const INVENTORY_NAME = '.wtfp-generated.json';
 
 const TARGET_ROOTS = Object.freeze({
-  clio: path.join(ROOT, 'vendors', 'clio'),
   claude: path.join(ROOT, 'vendors', 'claude'),
   codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p'),
   copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p'),
@@ -18,6 +17,12 @@ const TARGET_ROOTS = Object.freeze({
   antigravity: path.join(ROOT, 'vendors', 'antigravity'),
   gemini: path.join(ROOT, 'vendors', 'gemini')
 });
+
+// Clio is a capability policy, not a separate on-disk envelope. Its projection
+// is staged in memory and emitted only inside the canonical `vendors/plugin`
+// bundle under `ai.iowarp.clio/`. `copilot-cloud` is likewise a policy for the
+// repository projection carried by the Copilot marketplace envelope.
+const POLICY_TARGET_IDS = Object.freeze([...Object.keys(TARGET_ROOTS), 'clio', 'copilot-cloud']);
 
 const CAPABILITY_IDS = Object.freeze([
   'agent.delegate',
@@ -62,18 +67,26 @@ const EFFECT_CAPABILITY_BINDINGS = Object.freeze({
 // A null binding is an intentional fail-closed decision, not an omitted map.
 // Binding identifiers are adapter contracts, not claims that every host uses
 // the same native tool spelling.
+//
+// `tool.execute` means one thing only: run a WTF-P-bundled tool declared by
+// `protocol/tools.json` through the single `tools/wtfp-tool.js` dispatcher that
+// every envelope carries. It is never a grant for an arbitrary external
+// toolchain, so a host binds it only when its shell tool name is verified.
+// Clio's `network.search` is bound to the same executor because the only
+// scholarly search WTF-P declares is the bundled Semantic Scholar / Google
+// Scholar client; Clio exposes `web_fetch` but no native web-search tool.
 const TARGET_POLICIES = Object.freeze({
   clio: Object.freeze({ capabilities: Object.freeze({
-    'agent.delegate': 'clio:extension-agent',
+    'agent.delegate': 'clio:plugin-agent',
     'agent.parallel': 'clio:fleet',
     'external.issue': null,
     'filesystem.delete': null,
     'filesystem.read': 'clio:workspace-read',
     'filesystem.write': 'clio:workspace-write',
-    'network.fetch': 'clio:network-fetch',
-    'network.search': null,
+    'network.fetch': 'clio:web_fetch',
+    'network.search': 'clio:bash-bundled-citation-tools',
     'package.update': null,
-    'tool.execute': null,
+    'tool.execute': 'clio:bash',
     'user.interaction': 'clio:ask_user',
     'vcs.branch': null,
     'vcs.commit': null
@@ -88,7 +101,7 @@ const TARGET_POLICIES = Object.freeze({
     'network.fetch': 'claude:WebFetch',
     'network.search': 'claude:WebSearch',
     'package.update': null,
-    'tool.execute': null,
+    'tool.execute': 'claude:Bash',
     'user.interaction': 'claude:AskUserQuestion',
     'vcs.branch': null,
     'vcs.commit': null
@@ -187,7 +200,7 @@ const TARGET_POLICIES = Object.freeze({
 
 // Availability says that a target has a native binding for every required
 // capability and effect. It does not imply that every host can narrow its
-// main-agent tool surface for one prompt. Clio 0.3.8 prompt templates expand
+// main-agent tool surface for one prompt. Clio plugin prompt templates expand
 // into an ordinary user turn and therefore inherit the session tool surface.
 // Keep that limitation machine-readable so an evaluation cannot mistake a
 // semantic binding for action-scoped enforcement.
@@ -306,7 +319,7 @@ function exactKeySet(actual, expected, label) {
 }
 
 function validateTargetPolicies(targetPolicies, effects) {
-  const targetIds = [...Object.keys(TARGET_ROOTS), 'copilot-cloud'];
+  const targetIds = [...POLICY_TARGET_IDS];
   exactKeySet(targetPolicies, targetIds, 'target capability policies');
   const effectIds = effects.map((effect) => effect.id);
   exactKeySet(EFFECT_CAPABILITY_BINDINGS, effectIds, 'effect capability bindings');
@@ -416,9 +429,12 @@ function actionTools(action) {
     ['Write', 'Edit'].forEach((tool) => tools.add(tool));
   }
   // A logical tool.execute capability is not equivalent to an unrestricted
-  // host shell. Hosts without an exact logical-tool binding must report that
-  // capability unavailable instead of receiving Bash implicitly. The same
-  // rule applies to explicit VCS capabilities: metadata is not a shell grant.
+  // host shell. It grants exactly one command, the bundled `tools/wtfp-tool.js`
+  // dispatcher, and only on a host whose shell tool name is verified. Hosts
+  // without an exact logical-tool binding report the capability unavailable
+  // instead of receiving Bash implicitly. The same rule applies to explicit
+  // VCS capabilities: metadata is not a shell grant.
+  if (capabilities.has('tool.execute')) tools.add('Bash');
   if (capabilities.has('user.interaction')) tools.add('AskUserQuestion');
   if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.add('Task');
   if (capabilities.has('network.fetch')) tools.add('WebFetch');
@@ -436,7 +452,7 @@ function nativeWorkflowBody(workflowBody, target) {
   body = body.replaceAll('{{arguments}}', argumentToken);
 
   if (target === 'clio') {
-    body = body.replaceAll('protocol://', '${extensionRoot}/');
+    body = body.replaceAll('protocol://', '${pluginRoot}/');
   } else if (target === 'claude' || target === 'copilot') {
     body = body.replaceAll('protocol://', '${CLAUDE_PLUGIN_ROOT}/');
   } else if (target === 'copilot-cloud') {
@@ -778,24 +794,6 @@ function standardPluginManifest(version, name = 'wtfp', clioExtension) {
   });
 }
 
-function clioManifest(version) {
-  return [
-    'manifestVersion: 1',
-    'id: wtfp',
-    'name: WTF-P',
-    `version: ${version}`,
-    'description: Portable, evidence-grounded academic research and writing workflows.',
-    'resources:',
-    '  skills: skills',
-    '  prompts: prompts',
-    '  agents: agents',
-    '  fleets: fleets',
-    'compatibility:',
-    '  clio: ">=0.3.8"',
-    ''
-  ].join('\n');
-}
-
 function clioFleetWriteBoundary(resource, fleetId) {
   if (/^project:\/\/paper(?:\/|$)/u.test(resource)) return 'paper/';
   if (/^project:\/\//u.test(resource)) return '.planning/';
@@ -1046,9 +1044,184 @@ function toolOutputPath(tool) {
   return `tools/${relativePath}.js`;
 }
 
+// The one command a host is ever asked to run. It resolves a logical tool id
+// through the packaged module map, bounds every argument, and prints JSON on
+// stdout. Nothing here shells out, writes a file, or reads a path the caller
+// did not name.
+const TOOL_COMMANDS = Object.freeze([
+  { command: 'bib-index', tool: 'bibliography.index', usage: 'bib-index <bib-file> [--key=<citation-key>] [--query=<text>]' },
+  { command: 'bib-format', tool: 'bibliography.format', usage: 'bib-format <bib-file> --key=<citation-key>' },
+  { command: 'bib-impact', tool: 'bibliography.analyze-impact', usage: 'bib-impact <bib-file>' },
+  { command: 'citation-search', tool: 'citation.fetch', usage: 'citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>]' },
+  { command: 'scholar-search', tool: 'citation.scholar-lookup', usage: 'scholar-search --query=<text> [--limit=<1-25>]' },
+  { command: 's2-search', tool: 'citation.semantic-scholar', usage: 's2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>]' },
+  { command: 'rank', tool: 'citation.rank', usage: 'rank <papers.json> [--intent=<seminal|recent|balanced>]' }
+]);
+
+function toolDispatcher(modulePaths) {
+  const requirePath = (toolId) => {
+    let relative = path.posix.relative('tools', modulePaths.get(toolId));
+    if (!relative.startsWith('.')) relative = `./${relative}`;
+    return relative;
+  };
+  return `#!/usr/bin/env node
+'use strict';
+
+${generatedBanner('protocol', 'tools.json')}
+
+// Single bounded entry point for every WTF-P bundled tool. Usage:
+//   node <package-root>/tools/wtfp-tool.js <command> [arguments]
+// Every command prints one JSON document on stdout. Failures print
+// {"error": "..."} on stderr and exit 1. No other module in this package is
+// intended to be executed directly.
+
+const fs = require('fs');
+
+const MODULES = {
+${TOOL_COMMANDS.map((entry) => `  ${JSON.stringify(entry.tool)}: ${JSON.stringify(requirePath(entry.tool))}`).join(',\n')}
+};
+
+const COMMANDS = ${JSON.stringify(TOOL_COMMANDS.map(({ command, tool, usage }) => ({ command, tool, usage })), null, 2).split('\n').join('\n')};
+
+const MAX_QUERY = 512;
+const MAX_LIMIT = 25;
+
+function fail(message) {
+  process.stderr.write(\`\${JSON.stringify({ error: message })}\\n\`);
+  process.exit(1);
+}
+
+function emit(value) {
+  process.stdout.write(\`\${JSON.stringify(value, null, 2)}\\n\`);
+}
+
+function parseArguments(argv) {
+  const flags = new Map();
+  const positional = [];
+  for (const argument of argv) {
+    const flag = /^--([a-z][a-z0-9-]*)=([\\s\\S]*)$/.exec(argument);
+    if (flag) {
+      if (flags.has(flag[1])) fail(\`repeated flag: --\${flag[1]}\`);
+      flags.set(flag[1], flag[2]);
+    } else if (argument.startsWith('--')) {
+      fail(\`unsupported flag syntax: \${argument}\`);
+    } else {
+      positional.push(argument);
+    }
+  }
+  return { flags, positional };
+}
+
+function requireText(value, label) {
+  if (typeof value !== 'string' || value.trim().length === 0) fail(\`missing \${label}\`);
+  if (value.length > MAX_QUERY) fail(\`\${label} exceeds \${MAX_QUERY} characters\`);
+  return value;
+}
+
+function readTextFile(candidate) {
+  const file = requireText(candidate, 'file path');
+  let stat;
+  try {
+    stat = fs.lstatSync(file);
+  } catch {
+    fail(\`file not found: \${file}\`);
+  }
+  if (!stat.isFile()) fail(\`not a regular file: \${file}\`);
+  return fs.readFileSync(file, 'utf8');
+}
+
+function limitOf(flags) {
+  if (!flags.has('limit')) return 10;
+  const limit = Number.parseInt(flags.get('limit'), 10);
+  if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) fail(\`--limit must be an integer between 1 and \${MAX_LIMIT}\`);
+  return limit;
+}
+
+function intentOf(flags) {
+  const intent = flags.get('intent') || 'balanced';
+  if (!['seminal', 'recent', 'balanced'].includes(intent)) fail('--intent must be seminal, recent, or balanced');
+  return intent;
+}
+
+function yearOf(flags) {
+  if (!flags.has('year')) return null;
+  const year = flags.get('year');
+  if (!/^\\d{4}$/.test(year)) fail('--year must be a four-digit year');
+  return year;
+}
+
+async function main(argv) {
+  const command = argv[0];
+  if (!command || command === 'list' || command === '--help' || command === '-h') {
+    emit({ tool: 'wtfp-tool', commands: COMMANDS });
+    return;
+  }
+  const declared = COMMANDS.find((entry) => entry.command === command);
+  if (!declared) fail(\`unknown command: \${command}; run \\\`list\\\` for the declared set\`);
+  const { flags, positional } = parseArguments(argv.slice(1));
+  if (positional.length > 1) fail(\`\${command} accepts at most one positional argument: \${declared.usage}\`);
+  const load = () => require(MODULES[declared.tool]);
+
+  if (command === 'bib-index') {
+    const content = readTextFile(positional[0]);
+    const bib = load();
+    if (flags.has('key')) {
+      const key = requireText(flags.get('key'), '--key');
+      const entry = bib.getEntry(content, key);
+      if (entry === null) fail(\`citation key not found: \${key}\`);
+      return emit({ key, entry });
+    }
+    if (flags.has('query')) return emit(JSON.parse(bib.search(content, requireText(flags.get('query'), '--query'))));
+    return emit(JSON.parse(bib.index(content)));
+  }
+  if (command === 'bib-format') {
+    const content = readTextFile(positional[0]);
+    const key = requireText(flags.get('key'), '--key');
+    const entry = require(MODULES['bibliography.index']).getEntry(content, key);
+    if (entry === null) fail(\`citation key not found: \${key}\`);
+    const formatter = load();
+    return emit({ key, formatted: formatter.format(formatter.parse(entry)) });
+  }
+  if (command === 'bib-impact') {
+    const file = requireText(positional[0], 'file path');
+    readTextFile(file);
+    return emit(await load().analyze(file));
+  }
+  if (command === 'citation-search') {
+    const query = requireText(flags.get('query') || positional[0], '--query');
+    const year = yearOf(flags);
+    return emit(await load().search(query, { limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }));
+  }
+  if (command === 'scholar-search') {
+    const query = requireText(flags.get('query') || positional[0], '--query');
+    return emit(await load().search(query, { limit: limitOf(flags) }));
+  }
+  if (command === 's2-search') {
+    const query = requireText(flags.get('query') || positional[0], '--query');
+    const year = yearOf(flags);
+    return emit(await load().search(query, { limit: limitOf(flags), ...(year ? { year } : {}) }));
+  }
+  if (command === 'rank') {
+    const papers = JSON.parse(readTextFile(positional[0]));
+    if (!Array.isArray(papers)) fail('rank expects a JSON array of paper records');
+    return emit(load().rank(papers, intentOf(flags)));
+  }
+  fail(\`unimplemented command: \${command}\`);
+}
+
+main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error)));
+`;
+}
+
 function addToolBundle(plan) {
   const registry = readJson(path.join(PROTOCOL_ROOT, 'tools.json'));
   const byLegacyName = new Map(registry.tools.map((tool) => [tool.legacyName, toolOutputPath(tool)]));
+  const byToolId = new Map(registry.tools.map((tool) => [tool.id, toolOutputPath(tool)]));
+  for (const entry of TOOL_COMMANDS) {
+    if (!byToolId.has(entry.tool)) {
+      throw new Error(`dispatcher command ${entry.command} names an undeclared tool: ${entry.tool}`);
+    }
+  }
   const rows = [];
   for (const tool of registry.tools) {
     const outputPath = toolOutputPath(tool);
@@ -1068,6 +1241,7 @@ function addToolBundle(plan) {
     addFile(plan, outputPath, source);
     rows.push(`- \`${tool.implementation}\` → \`${outputPath}\` (legacy module \`${tool.legacyName}.js\`)`);
   }
+  addFile(plan, 'tools/wtfp-tool.js', toolDispatcher(byToolId));
   addFile(plan, 'tools/README.md', [
     '# WTF-P bundled tools',
     '',
@@ -1076,13 +1250,43 @@ function addToolBundle(plan) {
     'Only implementations declared by `tools.json` are packaged here. Resolve each logical implementation URI through this exact mapping; do not search for or execute undeclared installer/compiler modules.',
     '',
     ...rows,
+    '',
+    '## Executing a bundled tool',
+    '',
+    'A `tool.execute` effect authorises exactly one command, run from the package root that the host resolves for this bundle:',
+    '',
+    '```bash',
+    'node <package-root>/tools/wtfp-tool.js <command> [arguments]',
+    '```',
+    '',
+    'Run it with no argument, or with `list`, to print the declared command set as JSON. Declared commands:',
+    '',
+    ...TOOL_COMMANDS.map((entry) => `- \`${entry.usage}\` → \`${entry.tool}\``),
+    '',
+    'Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters and result limits at 25. `bib-impact`, `citation-search`, `scholar-search`, and `s2-search` perform outbound requests to the declared scholarly indexes; the remaining commands are offline. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.',
     ''
   ].join('\n'));
 }
 
+// Inventories are derived from canonical content, never from a literal count.
+// The invariants that matter are that the catalog, the action directory, the
+// workflow directory, and the role/skill binding table describe the same set.
 function loadModel() {
   const catalog = readJson(path.join(PROTOCOL_ROOT, 'catalog.json'));
-  if (catalog.actions.length !== 36) throw new Error(`adapter compiler expected 36 actions, found ${catalog.actions.length}`);
+  const catalogIds = catalog.actions.map((entry) => entry.id).sort();
+  const actionFileIds = fs.readdirSync(path.join(PROTOCOL_ROOT, 'actions'))
+    .filter((file) => file.endsWith('.json')).map((file) => path.basename(file, '.json')).sort();
+  const workflowFileIds = fs.readdirSync(path.join(PROTOCOL_ROOT, 'workflows'))
+    .filter((file) => file.endsWith('.md')).map((file) => path.basename(file, '.md')).sort();
+  if (JSON.stringify(catalogIds) !== JSON.stringify(actionFileIds)) {
+    throw new Error('catalog actions and protocol/actions do not describe the same set');
+  }
+  if (JSON.stringify(catalogIds) !== JSON.stringify(workflowFileIds)) {
+    throw new Error('catalog actions and protocol/workflows do not describe the same set');
+  }
+  if (catalog.counts && catalog.counts.actions !== catalogIds.length) {
+    throw new Error(`catalog counts.actions is ${catalog.counts.actions} but the catalog lists ${catalogIds.length}`);
+  }
   const actions = catalog.actions.map((entry) => {
     const action = readJson(path.join(PROTOCOL_ROOT, 'actions', `${entry.id}.json`));
     if (action.id !== entry.id) throw new Error(`action identity drift: ${entry.id}`);
@@ -1092,7 +1296,10 @@ function loadModel() {
     return { ...action, workflowBody: workflow.body };
   });
   const roleFiles = fs.readdirSync(path.join(PROTOCOL_ROOT, 'roles')).filter((file) => file.endsWith('.md')).sort();
-  if (roleFiles.length !== 11) throw new Error(`adapter compiler expected 11 roles, found ${roleFiles.length}`);
+  const roleSlugs = roleFiles.map((file) => path.basename(file, '.md'));
+  if (JSON.stringify(roleSlugs) !== JSON.stringify(Object.keys(ROLE_SKILLS).sort())) {
+    throw new Error('protocol/roles and the role/skill binding table do not describe the same set');
+  }
   const roles = roleFiles.map((file) => {
     const slug = path.basename(file, '.md');
     const role = splitFrontmatter(fs.readFileSync(path.join(PROTOCOL_ROOT, 'roles', file), 'utf8'), file);
@@ -1110,15 +1317,16 @@ function compilePlans(options = {}) {
   const targetPolicies = options.targetPolicies === undefined ? TARGET_POLICIES : options.targetPolicies;
   validateTargetPolicies(targetPolicies, model.effects.effects);
   const plans = Object.entries(TARGET_ROOTS).map(([id, root]) => makePlan(id, root));
-  const byId = new Map(plans.map((plan) => [plan.id, plan]));
+  // The Clio projection has no envelope of its own. It is assembled in memory
+  // and relocated wholesale into the canonical plugin bundle below.
+  const clio = makePlan('clio', null);
+  const byId = new Map([...plans, clio].map((plan) => [plan.id, plan]));
   const availabilityByTarget = new Map();
-  for (const plan of plans) {
+  for (const plan of [...plans, clio]) {
     addPortableBundle(plan);
     availabilityByTarget.set(plan.id, addActionAvailability(plan, model, plan.id, targetPolicies));
   }
 
-  const clio = byId.get('clio');
-  addFile(clio, 'clio-coder-extension.yaml', clioManifest(model.version));
   for (const fleetId of ['wtfp-plan-section', 'wtfp-draft-review']) {
     if (!clio.files.delete(`fleets/${fleetId}.json`)) {
       throw new Error(`cannot project missing canonical fleet for Clio: ${fleetId}`);
@@ -1163,7 +1371,6 @@ function compilePlans(options = {}) {
 
   for (const action of model.actions) {
     addFile(clio, `prompts/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
-    addFile(clio, `prompts/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
     addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
     addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
@@ -1184,10 +1391,9 @@ function compilePlans(options = {}) {
     addFile(antigravity, `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, 'antigravity'));
   }
 
-  // Standard domain bundle. Keep legacy extension output independently usable.
+  // The canonical package. Everything Clio consumes ships here and nowhere else.
   const portable = makePlan('portable-plugin', path.join(ROOT, 'vendors', 'plugin'));
   for (const [file, content] of clio.files) {
-    if (file === 'clio-coder-extension.yaml') continue;
     const native = /^(prompts|agents|fleets)\//.test(file);
     addFile(portable, native ? `ai.iowarp.clio/${file}` : file, content);
   }
@@ -1209,7 +1415,7 @@ function compilePlans(options = {}) {
   });
   addFile(portable, 'plugin.json', standardPluginManifest(model.version, 'wtfp', {
     manifestVersion: 1,
-    compatibility: { clio: '>=0.4.6' },
+    compatibility: { clio: '>=0.4.7' },
     resources: { skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents', fleets: 'ai.iowarp.clio/fleets' },
     components
   }));

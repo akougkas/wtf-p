@@ -87,7 +87,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "wtfp://tools/bibliography/**"
+      "scope": "wtfp://tools/bibliography/** through tools/wtfp-tool.js"
     },
     {
       "id": "user.gate",

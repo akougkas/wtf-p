@@ -172,12 +172,7 @@ const markdownCommands = [
   },
   {
     target: 'clio-nested',
-    pathFor: (id) => `vendors/clio/prompts/wtfp/${id}.md`,
-    options: {},
-  },
-  {
-    target: 'clio-flat',
-    pathFor: (id) => `vendors/clio/prompts/wtfp-${id}.md`,
+    pathFor: (id) => `vendors/plugin/ai.iowarp.clio/prompts/wtfp/${id}.md`,
     options: {},
   },
   {
@@ -207,7 +202,7 @@ for (const actionId of actionIds) {
 }
 
 const agentTargets = [
-  { pathFor: (id) => `vendors/clio/agents/wtfp-${id}.md` },
+  { pathFor: (id) => `vendors/plugin/ai.iowarp.clio/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/claude/agents/wtfp/${id}.md` },
   { pathFor: (id) => `vendors/copilot/plugins/wtf-p/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/opencode/agents/wtfp/${id}.md` },

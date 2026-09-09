@@ -86,7 +86,7 @@ function usage() {
     '  --clio-source <path>  coordinated Clio source root (WTFP_CLIO_SOURCE)',
     '',
     'Other options:',
-    '  --extension <path>    generated Clio extension (default: vendors/clio)',
+    '  --plugin <path>       generated Clio plugin bundle (default: vendors/plugin)',
     '  --target <id>         exact target (default: openai-codex)',
     '  --model <id>          exact model (default: gpt-5.6-terra)',
     '  --effort <level>      exact thinking effort (default: xhigh)',

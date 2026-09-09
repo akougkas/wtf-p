@@ -112,7 +112,7 @@ function usage() {
     'Options:',
     `  --binary <path>       exact Clio entry (default: ${EXPECTED_CLIO.binary})`,
     `  --clio-source <path>  exact coordinated source (default: ${EXPECTED_CLIO.source})`,
-    '  --extension <path>    generated extension (default: vendors/clio)',
+    '  --plugin <path>       generated plugin bundle (default: vendors/plugin)',
     `  --timeout-minutes <n> per-fleet timeout (default: ${DEFAULT_TIMEOUT_MINUTES})`,
     `  --budget-usd <n>      stop-before-next-fleet ceiling (default: ${DEFAULT_BUDGET_USD})`,
     '',
@@ -320,7 +320,7 @@ function runtimeBinding() {
 
 function inspectSources(options) {
   if (path.resolve(options.extension) !== generatedExtension) {
-    throw new Error('fleet evaluator is bound to the current generated vendors/clio extension');
+    throw new Error('fleet evaluator is bound to the current generated vendors/plugin bundle');
   }
   const lifecycleOptions = {
     ...options,

@@ -31,7 +31,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Detect existing project://manifest first; stop and offer inspection or repair rather than reinitializing it.
-2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions.
+2. Interview for identity, argument, document type, audience, requirements, exclusions, format, gates, safety, and author decisions. Once the document type is known, propose the initial section set from `${PLUGIN_ROOT}/templates/paper-outline.md`, or from `${PLUGIN_ROOT}/templates/grant-proposal-outline.md` for `grant-proposal`, which additionally requires a captured solicitation artifact before any section is proposed.
 3. Preview the five v1 JSON records, validate every record and the cross-record
    invariants, then create them atomically. In particular,
    `outline.sections[*].word_target` must sum exactly to

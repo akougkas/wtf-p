@@ -12,7 +12,7 @@
     "network.fetch": "claude:WebFetch",
     "network.search": "claude:WebSearch",
     "package.update": null,
-    "tool.execute": null,
+    "tool.execute": "claude:Bash",
     "user.interaction": "claude:AskUserQuestion",
     "vcs.branch": null,
     "vcs.commit": null
@@ -50,33 +50,21 @@
     },
     {
       "id": "analyze-bib",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "audit-milestone",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "check-refs",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "check-todos",
@@ -112,23 +100,15 @@
     },
     {
       "id": "create-poster",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "create-slides",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "discuss-section",
@@ -144,13 +124,9 @@
     },
     {
       "id": "export-latex",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "help",
@@ -256,13 +232,9 @@
     },
     {
       "id": "research-gap",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "resume-writing",

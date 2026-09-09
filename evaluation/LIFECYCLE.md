@@ -24,7 +24,7 @@ node evaluation/tools/run-clio-lifecycle.js --prepare \
   --clio-source /absolute/path/to/matching-clio-source
 ```
 
-`--prepare` creates a mode-0700 root, copies only the three model-visible fixture files, creates one evaluator-owned control commit, and installs the generated `vendors/clio` extension under the contained Clio configuration root. It forwards no credential and makes no model request.
+`--prepare` creates a mode-0700 root, copies only the three model-visible fixture files, creates one evaluator-owned control commit, and installs the generated `vendors/plugin` bundle under the contained Clio configuration root. It forwards no credential and makes no model request.
 
 Preparation captures and gates on:
 

@@ -7,11 +7,11 @@ argument-hint: "[arguments]"
 
 # Show WTF-P help
 
-@${extensionRoot}/project/README.md
+@${pluginRoot}/project/README.md
 
 ## Record contract
 
-Read: `${extensionRoot}/catalog.json`, `${extensionRoot}/actions/{action}.json`.
+Read: `${pluginRoot}/catalog.json`, `${pluginRoot}/actions/{action}.json`.
 Produce: none.
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
@@ -21,8 +21,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the requested topic against the catalog and stable aliases.
-2. Explain prerequisites, reads, outputs, gates, tools, and semantic effects from the action contract.
-3. Do not imply capabilities that the selected adapter does not expose.
+2. Name every action by its stable alias in this host's own invocation syntax, `/wtfp:<action>`. Do not invent a second spelling, a bare `wtfp-<action>` form, or a host-specific prefix.
+3. Explain prerequisites, reads, outputs, gates, tools, and semantic effects from the action contract.
+4. Read `${pluginRoot}/compatibility/action-availability.json` and mark every action it reports as unavailable, naming the capability or effect that blocks it. Do not imply capabilities that the selected adapter does not expose.
 
 ## Safety and completion
 
@@ -32,7 +33,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/help.json
+@${pluginRoot}/actions/help.json
 
 ## Invocation input
 

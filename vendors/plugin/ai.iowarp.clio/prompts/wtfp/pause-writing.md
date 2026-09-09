@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Pause writing
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-manage-project/SKILL.md
-@${extensionRoot}/skills/wtfp-manage-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-manage-project/SKILL.md
+@${pluginRoot}/skills/wtfp-manage-project/references/actions.md
 
 ## Record contract
 
@@ -34,20 +34,20 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/pause-writing.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/checkpoint.schema.json
-@${extensionRoot}/project/templates/checkpoint.json
-@${extensionRoot}/project/schemas/decisions.schema.json
-@${extensionRoot}/project/templates/decisions.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
-@${extensionRoot}/project/schemas/validation.schema.json
-@${extensionRoot}/project/templates/validation.json
+@${pluginRoot}/actions/pause-writing.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/checkpoint.schema.json
+@${pluginRoot}/project/templates/checkpoint.json
+@${pluginRoot}/project/schemas/decisions.schema.json
+@${pluginRoot}/project/templates/decisions.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
+@${pluginRoot}/project/schemas/validation.schema.json
+@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

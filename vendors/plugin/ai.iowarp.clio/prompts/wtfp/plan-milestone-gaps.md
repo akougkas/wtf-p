@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Plan milestone gap fixes
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-review-manuscript/SKILL.md
-@${extensionRoot}/skills/wtfp-review-manuscript/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-review-manuscript/SKILL.md
+@${pluginRoot}/skills/wtfp-review-manuscript/references/actions.md
 
 ## Record contract
 
@@ -34,16 +34,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/plan-milestone-gaps.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/checkpoint.schema.json
-@${extensionRoot}/project/templates/checkpoint.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/validation.schema.json
-@${extensionRoot}/project/templates/validation.json
+@${pluginRoot}/actions/plan-milestone-gaps.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/checkpoint.schema.json
+@${pluginRoot}/project/templates/checkpoint.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/validation.schema.json
+@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

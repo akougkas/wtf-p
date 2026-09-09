@@ -112,23 +112,15 @@
     },
     {
       "id": "create-poster",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "create-slides",
-      "status": "unavailable",
-      "unavailableCapabilities": [
-        "tool.execute"
-      ],
-      "unavailableEffects": [
-        "tool.execute"
-      ]
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
     },
     {
       "id": "discuss-section",

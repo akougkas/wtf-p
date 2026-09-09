@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve exactly one section and refuse removal when dependent sections or manuscript content make the request ambiguous.
-2. Preview deleted artifacts, outline dependency changes, word-budget effects, and current-state transition; require destructive authorization.
+2. Preview deleted artifacts, outline dependency changes, word-budget effects, and current-state transition; require destructive authorization. Every write to `project://structure/outline` must leave `sections[*].word_target` summing exactly to `target_words`. Reallocate across the affected sections and, where the author changed the overall length, restate `target_words` in the same write. Present the reallocation in the approval preview and refuse to publish an outline whose budgets do not balance.
 3. Delete only approved section artifacts, preserve unrelated manuscript text, and atomically reconcile outline and state.
 
 ## Safety and completion

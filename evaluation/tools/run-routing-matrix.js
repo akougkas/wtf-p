@@ -60,13 +60,13 @@ const EXPECTED_SKILLS = Object.freeze([
 const GENERATED_INVENTORY_BINDINGS = Object.freeze([
   ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
   ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'vendors/clio/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
   ['codex', 'vendors/codex/plugins/wtf-p/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
   ['copilot', 'vendors/copilot/plugins/wtf-p/.wtfp-generated.json'],
   ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json']
+  ['opencode', 'vendors/opencode/.wtfp-generated.json'],
+  ['portable-plugin', 'vendors/plugin/.wtfp-generated.json']
 ]);
 
 const GENERATOR_SOURCE_PATHS = Object.freeze([
@@ -116,8 +116,8 @@ const CLIENT_SURFACES = Object.freeze({
     expectedBinarySha256: 'f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162',
     expectedDistTreeSha256: '27472f9b7253dc6608d70fbe623e4953896a9f0899ead00aa5faad1c783acae7',
     versionPattern: /^Clio Coder 0\.3\.8(?:\s|$)/u,
-    envelopeTarget: 'clio',
-    adapterRoot: 'vendors/clio'
+    envelopeTarget: 'portable-plugin',
+    adapterRoot: 'vendors/plugin'
   }
 });
 

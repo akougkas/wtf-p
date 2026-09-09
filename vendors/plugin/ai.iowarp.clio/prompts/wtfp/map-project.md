@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Map an existing project
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-start-project/SKILL.md
-@${extensionRoot}/skills/wtfp-start-project/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-start-project/SKILL.md
+@${pluginRoot}/skills/wtfp-start-project/references/actions.md
 
 ## Record contract
 
@@ -36,16 +36,16 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/map-project.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/evidence.schema.json
-@${extensionRoot}/project/templates/evidence.json
-@${extensionRoot}/project/schemas/manifest.schema.json
-@${extensionRoot}/project/templates/manifest.json
-@${extensionRoot}/project/schemas/source.schema.json
-@${extensionRoot}/project/templates/source.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
+@${pluginRoot}/actions/map-project.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/evidence.schema.json
+@${pluginRoot}/project/templates/evidence.json
+@${pluginRoot}/project/schemas/manifest.schema.json
+@${pluginRoot}/project/templates/manifest.json
+@${pluginRoot}/project/schemas/source.schema.json
+@${pluginRoot}/project/templates/source.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 

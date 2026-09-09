@@ -12,8 +12,8 @@ WTFP_ACTION_UNAVAILABLE
 
 Action: `create-poster`
 Target: `copilot-cloud`
-Unavailable capabilities: `tool.execute`
-Unavailable effects: `tool.execute`, `user.gate`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
 
 No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
 Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
@@ -24,8 +24,8 @@ WTFP_ACTION_UNAVAILABLE
 
 Action: `create-slides`
 Target: `copilot-cloud`
-Unavailable capabilities: `tool.execute`
-Unavailable effects: `tool.execute`, `user.gate`
+Unavailable capabilities: (none)
+Unavailable effects: `user.gate`
 
 No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
 Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.

@@ -121,32 +121,36 @@ check(projectReadme.includes('state-snapshot'), 'project protocol defines portab
 check(!projectReadme.includes('git reset'), 'checkpoint recovery does not depend on destructive Git state');
 
 section('Generated native surfaces');
+// Inventories are derived from canonical content, not asserted as literals.
+const actionCount = json('protocol/catalog.json').actions.length;
+const roleCount = filesAt('protocol/roles', '.md').length;
+const skillCount = recursiveCount('protocol/skills', 'SKILL.md');
 const surfaces = {
   claude: { path: 'vendors/claude/commands', suffix: '.md' },
   copilot: { path: 'vendors/copilot/plugins/wtf-p/commands', suffix: '.md' },
   gemini: { path: 'vendors/gemini/commands/wtfp', suffix: '.toml' },
   opencode: { path: 'vendors/opencode/commands/wtfp', suffix: '.md' },
   antigravity: { path: 'vendors/antigravity/commands', suffix: '.md' },
-  clio: { path: 'vendors/clio/prompts/wtfp', suffix: '.md' }
+  clio: { path: 'vendors/plugin/ai.iowarp.clio/prompts/wtfp', suffix: '.md' }
 };
 for (const [host, spec] of Object.entries(surfaces)) {
-  check(filesAt(spec.path, spec.suffix).length === 36, `${host} exposes all 36 native commands`);
+  check(filesAt(spec.path, spec.suffix).length === actionCount, `${host} exposes all ${actionCount} native commands`);
 }
-check(recursiveCount('vendors/codex/plugins/wtf-p/skills', 'SKILL.md') === 7, 'Codex exposes all 7 native skills');
-check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === 7, 'Copilot exposes all 7 native skills');
-check(recursiveCount('vendors/claude/skills', 'SKILL.md') === 7, 'Claude exposes exactly the 7 inventory-owned native skills');
-check(filesAt('vendors/claude/agents/wtfp', '.md').length === 11, 'Claude exposes all 11 native agents');
-check(filesAt('vendors/antigravity/agents', '.md').length === 11, 'Antigravity exposes all 11 native agents');
+check(recursiveCount('vendors/codex/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claude exposes exactly the ${skillCount} inventory-owned native skills`);
+check(filesAt('vendors/claude/agents/wtfp', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents`);
+check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
 
 section('Clio-native integration');
-check(json('vendors/clio/catalog.json').namespace === 'wtfp', 'Clio extension carries the canonical WTF-P catalog');
-check(filesAt('vendors/clio/prompts', '.md').length === 36, 'Clio emits 36 flat compatibility prompts');
-check(filesAt('vendors/clio/prompts/wtfp', '.md').length === 36, 'Clio emits 36 namespaced prompts');
-check(filesAt('vendors/clio/agents', '.md').length === 11, 'Clio exposes all 11 extension agents');
-check(filesAt('vendors/clio/fleets', '.md').length === 2, 'Clio exposes deterministic planning and writing fleets');
-check(recursiveCount('vendors/clio/skills', 'SKILL.md') === 7, 'Clio discovers all 7 extension skills');
-const clioPrompt = read('vendors/clio/prompts/wtfp/new-paper.md');
-check(clioPrompt.includes('${extensionRoot}'), 'Clio resolves protocol resources through its extension root');
+check(json('vendors/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');
+check(filesAt('vendors/plugin/ai.iowarp.clio/prompts/wtfp', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced Clio prompts`);
+check(filesAt('vendors/plugin/ai.iowarp.clio/prompts', '.md').length === 0, 'the canonical plugin publishes no flat prompt aliases');
+check(filesAt('vendors/plugin/ai.iowarp.clio/agents', '.md').length === roleCount, `the canonical plugin exposes all ${roleCount} Clio agents`);
+check(filesAt('vendors/plugin/ai.iowarp.clio/fleets', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing fleets');
+check(recursiveCount('vendors/plugin/skills', 'SKILL.md') === skillCount, `the canonical plugin discovers all ${skillCount} skills`);
+const clioPrompt = read('vendors/plugin/ai.iowarp.clio/prompts/wtfp/new-paper.md');
+check(clioPrompt.includes('${pluginRoot}'), 'Clio resolves protocol resources through its plugin root');
 check(clioPrompt.includes('$ARGUMENTS'), 'Clio forwards invocation arguments');
 check(clioPrompt.includes('manifest.schema.json'), 'Clio prompt binds the relevant portable schema');
 

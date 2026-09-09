@@ -140,7 +140,7 @@ function planOptions() {
   return {
     binary: '/opt/clio/index.js',
     clioSource: '/opt/clio-source',
-    extension: '/opt/wtfp/vendors/clio',
+    extension: '/opt/wtfp/vendors/plugin',
     target: 'openai-codex',
     model: 'gpt-5.6-terra',
     effort: 'xhigh',

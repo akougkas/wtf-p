@@ -6,30 +6,6 @@ Use exactly one action procedure per invocation. Treat generated formats and arc
 
 This generated `codex` projection is authoritative for the actions below. Do not follow their canonical procedure on this target.
 
-### `create-poster`
-
-WTFP_ACTION_UNAVAILABLE
-
-Action: `create-poster`
-Target: `codex`
-Unavailable capabilities: `tool.execute`
-Unavailable effects: `tool.execute`
-
-No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
-Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
-
-### `create-slides`
-
-WTFP_ACTION_UNAVAILABLE
-
-Action: `create-slides`
-Target: `codex`
-Unavailable capabilities: `tool.execute`
-Unavailable effects: `tool.execute`
-
-No workflow, tool, network request, package operation, external issue, VCS operation, or other effect ran.
-Safe alternative: preserve project state and return a manual, non-executed handoff for the requested operation.
-
 ### `export-latex`
 
 WTFP_ACTION_UNAVAILABLE

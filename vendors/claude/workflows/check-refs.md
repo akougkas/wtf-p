@@ -25,6 +25,16 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 2. Report missing identities, metadata conflicts, uncited entries, unsupported citations, and style defects; search declared metadata providers for candidate records only after the gate names the providers and bounded query set. Treat provider results as candidate audit evidence until independently verified.
 3. Leave the bibliography, manuscript, source records, and evidence records unchanged. When requested, preview and create a separate corrected-bibliography candidate, validate it, and record unresolved issues and exact input revisions in the audit result.
 
+## Bundled tool execution
+
+The declared `tool.execute` effect authorises exactly one command, run from the package root the host resolves for this bundle:
+
+```bash
+node protocol://tools/wtfp-tool.js <command> [arguments]
+```
+
+Run it with `list` first to read the declared commands, their arguments, and their bounds; `protocol://tools/README.md` carries the same table. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
+
 ## Safety and completion
 
 Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. If requested, return a clearly labeled optional handoff for a separately authorized action.

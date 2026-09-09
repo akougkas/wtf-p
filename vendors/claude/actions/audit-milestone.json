@@ -53,7 +53,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "wtfp://tools/bibliography/index"
+      "scope": "wtfp://tools/bibliography/index through tools/wtfp-tool.js"
     },
     {
       "id": "user.gate",

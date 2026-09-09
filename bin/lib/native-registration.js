@@ -44,44 +44,6 @@ function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env) {
   return environment;
 }
 
-function clioProbeContext(baseEnvironment = process.env) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-probe-'));
-  fs.chmodSync(root, 0o700);
-  const directory = (name) => path.join(root, name);
-  const environment = {
-    PATH: baseEnvironment.PATH || '',
-    HOME: root,
-    USERPROFILE: root,
-    XDG_CONFIG_HOME: directory('xdg-config'),
-    XDG_DATA_HOME: directory('xdg-data'),
-    XDG_STATE_HOME: directory('xdg-state'),
-    XDG_CACHE_HOME: directory('xdg-cache'),
-    TMPDIR: directory('tmp'),
-    CLIO_CODER_HOME: root,
-    CLIO_CODER_CONFIG_DIR: directory('clio-config'),
-    CLIO_CODER_DATA_DIR: directory('clio-data'),
-    CLIO_CODER_STATE_DIR: directory('clio-state'),
-    CLIO_CODER_CACHE_DIR: directory('clio-cache'),
-    CLIO_CODER_BIN_DIR: directory('clio-bin'),
-    CLIO_CODER_REQUIRE_HOME_PREFIX: '1',
-    NO_COLOR: '1'
-  };
-  for (const name of ['LANG', 'LC_ALL', 'TERM', 'SystemRoot', 'WINDIR', 'PATHEXT']) {
-    if (baseEnvironment[name]) environment[name] = baseEnvironment[name];
-  }
-  for (const value of Object.values(environment)) {
-    if (typeof value === 'string' && value.startsWith(`${root}${path.sep}`)) {
-      fs.mkdirSync(value, { recursive: true });
-    }
-  }
-  return {
-    environment,
-    cleanup() {
-      fs.rmSync(root, { recursive: true, force: true });
-    }
-  };
-}
-
 function execute(command, args, environment, options = {}) {
   const runner = options.runner || spawnSync;
   const result = runner(command, args, {
@@ -126,16 +88,10 @@ function execute(command, args, environment, options = {}) {
   };
 }
 
+// Clio is handled entirely by clio-registration.js through its plugin
+// lifecycle and never reaches this marketplace-shaped command table.
 function nativeCommands(runtime, targetDir, native) {
   const source = path.join(targetDir, native.source);
-  if (runtime === 'clio') {
-    return {
-      executable: 'clio-coder',
-      install: [],
-      verify: ['extensions', 'discover', source, '--json'],
-      uninstall: []
-    };
-  }
   if (runtime === 'claude') {
     return {
       executable: 'claude',
@@ -267,36 +223,6 @@ function inspectMarketplace(runtime, native, source, result) {
 }
 
 function verifyRegistration(runtime, native, result) {
-  if (runtime === 'clio') {
-    let discovered;
-    try {
-      discovered = JSON.parse(result.stdout);
-    } catch {
-      return { compatible: false, reason: `Clio discovery returned invalid JSON: ${conciseOutput(result)}` };
-    }
-    const candidate = Array.isArray(discovered)
-      ? discovered[0]
-      : (Array.isArray(discovered?.candidates) ? discovered.candidates[0] : discovered);
-    const resources = candidate?.resources || candidate?.manifest?.resources;
-    const diagnostics = Array.isArray(candidate?.diagnostics) ? candidate.diagnostics : [];
-    const errors = diagnostics.filter(diagnostic => diagnostic?.type === 'error');
-    if (!candidate || candidate.valid !== true || errors.length > 0 || !resources) {
-      return {
-        compatible: false,
-        reason: errors[0]?.message || 'Clio did not return a valid normalized extension manifest'
-      };
-    }
-    for (const [kind, expected] of Object.entries(native.requiredResources || {})) {
-      if (resources[kind] !== expected) {
-        return {
-          compatible: false,
-          reason: `Clio does not preserve resources.${kind}=${expected}`
-        };
-      }
-    }
-    return { compatible: true };
-  }
-
   if (runtime === 'claude') {
     let listing;
     try {
@@ -331,48 +257,14 @@ function verifyRegistration(runtime, native, result) {
   return { compatible: true };
 }
 
-function probeClioRegistration(targetDir, native, options = {}) {
-  const probe = clioProbeContext(options.environment || process.env);
-  try {
-    const result = execute('clio-coder', ['extensions', 'discover', path.join(targetDir, native.source), '--json'], probe.environment, options);
-    if (result.status === 'unavailable') return { status: 'unavailable', executable: 'clio-coder', results: [] };
-    const verified = verifyRegistration('clio', native, result);
-    return { status: verified.compatible ? 'compatible' : 'incompatible', reason: verified.reason, results: [result] };
-  } catch (error) {
-    return { status: 'incompatible', reason: error.message, results: [] };
-  } finally {
-    probe.cleanup();
-  }
-}
-
-// Probe a disposable empty profile, never the operator's registered resources.
-function supportsClioPlugins(options = {}) {
-  const probe = clioProbeContext(options.environment || process.env);
-  try {
-    const result = execute('clio-coder', ['plugins', 'list', '--all', '--json'], probe.environment,
-      { ...options, cwd: probe.environment.HOME });
-    return result.status === 'ok' && Array.isArray(JSON.parse(result.stdout).plugins);
-  } catch { return false; }
-  finally { probe.cleanup(); }
-}
-
 function activateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
   if (runtime === 'clio') {
-    if (native.kind !== 'clio-plugin') {
-      const probe = probeClioRegistration(targetDir, native, options);
-      if (probe.status !== 'compatible') return probe;
-    }
     return activateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment) });
   }
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
-  const clioProbe = runtime === 'clio'
-    ? clioProbeContext(options.environment || process.env)
-    : null;
-  const environment = clioProbe
-    ? clioProbe.environment
-    : nativeEnvironment(runtime, targetDir, options.environment);
+  const environment = nativeEnvironment(runtime, targetDir, options.environment);
   if (!environment) {
     return {
       status: 'deferred',
@@ -381,7 +273,7 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
     };
   }
 
-  try {
+  {
     const results = [];
     let installCommands = commands.install;
     let marketplaceAdded = false;
@@ -496,18 +388,7 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
         }
         results.push(result);
       }
-      let verification;
-      try {
-        verification = execute(commands.executable, commands.verify, environment, options);
-      } catch (error) {
-        if (runtime !== 'clio') throw error;
-        return {
-          status: 'incompatible',
-          executable: commands.executable,
-          reason: error.message,
-          results
-        };
-      }
+      const verification = execute(commands.executable, commands.verify, environment, options);
       if (verification.status === 'unavailable') {
         const rollbackFailures = compensate();
         if (rollbackFailures.length > 0) {
@@ -527,7 +408,7 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
           results
         };
       }
-      return activationResult(runtime === 'clio' ? 'compatible' : 'registered');
+      return activationResult('registered');
     } catch (error) {
       const failures = Array.isArray(error.nativeRollbackFailures)
         ? error.nativeRollbackFailures
@@ -538,8 +419,6 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
       }
       throw error;
     }
-  } finally {
-    if (clioProbe) clioProbe.cleanup();
   }
 }
 
@@ -608,9 +487,6 @@ function deactivateNativeRegistration(runtime, targetDir, native, options = {}) 
 module.exports = {
   activateNativeRegistration,
   antigravityHome,
-  clioProbeContext,
   deactivateNativeRegistration,
-  nativeEnvironment,
-  probeClioRegistration,
-  supportsClioPlugins
+  nativeEnvironment
 };

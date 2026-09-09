@@ -98,13 +98,13 @@ function rowByClient(suite, client) {
 const fixtureInventoryBindings = [
   ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
   ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'vendors/clio/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
   ['codex', 'vendors/codex/plugins/wtf-p/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
   ['copilot', 'vendors/copilot/plugins/wtf-p/.wtfp-generated.json'],
   ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json']
+  ['opencode', 'vendors/opencode/.wtfp-generated.json'],
+  ['portable-plugin', 'vendors/plugin/.wtfp-generated.json']
 ];
 
 function fixtureGit(root, argv) {
@@ -1102,7 +1102,7 @@ async function main() {
       ['compiler', 'bin/lib/adapter-compiler.js'],
       ['tool', 'bin/lib/fixture-tool.js'],
       ['generated inventory', 'vendors/claude/.wtfp-generated.json'],
-      ['generated entry', 'vendors/clio/payload.txt']
+      ['generated entry', 'vendors/plugin/payload.txt']
     ];
     for (const [label, relative] of mutations) {
       const fixture = canonicalProjectionFixture();

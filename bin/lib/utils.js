@@ -228,7 +228,7 @@ function detectInstallation(vendorDir) {
       );
       const expectsAnyPath = prefixes => prefixes.some(expectsPath);
       const nativeComponent = relative => {
-        const match = relative.match(/^(?:extensions\/wtfp|plugins\/wtfp)\/(?:ai\.iowarp\.clio\/)?(prompts|workflows|skills|agents|tools)\//);
+        const match = relative.match(/^plugins\/wtfp\/(?:ai\.iowarp\.clio\/)?(prompts|workflows|skills|agents|tools)\//);
         return match ? ({ prompts: 'commands', tools: 'scripts' }[match[1]] || match[1]) : null;
       };
       const componentPaths = component => receiptEntries
@@ -264,24 +264,24 @@ function detectInstallation(vendorDir) {
 
       const expectedHasCommands = expectsAnyPath([
         'commands/wtfp', 'marketplaces/wtfp/commands',
-        'extensions/wtfp/prompts', 'plugins/wtfp/ai.iowarp.clio/prompts', 'extensions/wtfp/commands', 'extensions/wtf-p/commands', 'sources/wtf-p/commands'
+        'plugins/wtfp/ai.iowarp.clio/prompts', 'extensions/wtf-p/commands', 'sources/wtf-p/commands'
       ]);
       const expectedHasWorkflows = expectsAnyPath([
         'write-the-f-paper', 'workflows', 'marketplaces/wtfp/workflows',
-        'plugins/wtfp/workflows', 'extensions/wtfp/workflows', 'extensions/wtf-p/workflows', 'sources/wtf-p/workflows'
+        'plugins/wtfp/workflows', 'extensions/wtf-p/workflows', 'sources/wtf-p/workflows'
       ]);
       const expectedHasSkills = expectsAnyPath([
         'skills/wtfp', 'skills/wtfp-start-project', 'marketplaces/wtfp/skills',
-        'plugins/wtfp/skills', 'extensions/wtfp/skills', 'extensions/wtf-p/skills', 'sources/wtf-p/skills'
+        'plugins/wtfp/skills', 'extensions/wtf-p/skills', 'sources/wtf-p/skills'
       ]);
       const expectedHasAgents = expectsAnyPath([
         'agents/wtfp', 'marketplaces/wtfp/agents',
-        'plugins/wtfp/ai.iowarp.clio/agents', 'extensions/wtfp/agents', 'extensions/wtf-p/agents', 'sources/wtf-p/agents'
+        'plugins/wtfp/ai.iowarp.clio/agents', 'extensions/wtf-p/agents', 'sources/wtf-p/agents'
       ]);
       const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/wtfp/mcp']);
       const expectedHasBin = expectsAnyPath([
         'bin', 'tools', 'marketplaces/wtfp/tools',
-        'plugins/wtfp/tools', 'extensions/wtfp/tools', 'extensions/wtf-p/tools', 'sources/wtf-p/tools'
+        'plugins/wtfp/tools', 'extensions/wtf-p/tools', 'sources/wtf-p/tools'
       ]);
 
       result.partial = Boolean(versionData.partial) ||

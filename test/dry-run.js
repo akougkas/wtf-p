@@ -132,7 +132,7 @@ const hosts = {
   opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
   antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json' },
   gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
-  clio: { dir: path.join(ROOT, 'vendors', 'clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/clio/compatibility/action-availability.json' }
+  clio: { dir: path.join(ROOT, 'vendors', 'plugin', 'ai.iowarp.clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/plugin/compatibility/action-availability.json' }
 };
 
 for (const [host, spec] of Object.entries(hosts)) {

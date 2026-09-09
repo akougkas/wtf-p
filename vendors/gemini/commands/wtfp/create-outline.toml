@@ -213,10 +213,11 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves.
+1. Read existing outline, decision, and state revisions before deriving the thesis, requirements, locked/deferred decisions, source coverage, section goals, dependencies, word budgets, and execution waves. Take the starting section roles, waves, and budget shares from `protocol://templates/paper-outline.md`, or from `protocol://templates/grant-proposal-outline.md` when `manifest.document_type` is `grant-proposal`; treat both as defaults the author and the venue override.
 2. Reconcile only choices the author explicitly resolves during the outline interview. Preserve every unrelated decision unchanged. For each explicitly resolved item whose current disposition is `deferred`, preserve the prior item unchanged except for setting its disposition to `superseded`; append a new replacement whose ID is fresh and unique in the ledger, whose authority is `author`, whose disposition is `locked`, and whose `supersedes` field names the prior item. Set the replacement's `recorded_at` to the actual resolution time, increment the decision-record revision, and set the record's `updated_at` to that same actual resolution time. Never supersede a locked choice or treat an agent suggestion or approval of an unrelated outline detail as authority to resolve a decision. If the author resolves no choice, do not rewrite the decision record.
 3. Present the complete outline and decision diffs at the confirm_outline gate. If the proposed outline contradicts a locked decision, preserve that decision as locked and unchanged. If it assumes a choice that was already deferred and the author did not resolve it, preserve that choice as deferred. In either case, record a non-passing validation and stop before downstream planning.
-4. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
+4. Balance the budget before the gate: Every write to `project://structure/outline` must leave `sections[*].word_target` summing exactly to `target_words`. Reallocate across the affected sections and, where the author changed the overall length, restate `target_words` in the same write. Present the reallocation in the approval preview and refuse to publish an outline whose budgets do not balance.
+5. After approval, atomically publish the decision update when one is required together with the outline, one section record per entry, state update, and validation. Preserve stable record and section IDs and verify the complete approved set after writing.
 
 ## Safety and completion
 
@@ -1316,6 +1317,104 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "effects_applied": [],
   "executed_at": "2026-08-28T12:45:00Z"
 }
+
+</details>
+
+<details data-wtfp-source="protocol://templates/grant-proposal-outline.md" open>
+<summary>Bundled WTF-P protocol resource: templates/grant-proposal-outline.md</summary>
+
+# Grant proposal outline scaffold
+
+Structural starting point for `outline.sections[*]` when `manifest.document_type` is `grant-proposal`. A proposal outline is not derived from IMRaD convention: it is derived from the solicitation the author supplied. Read that document first and let it override every default here.
+
+## Before proposing any section
+
+1. Locate the captured solicitation under `project://materials/{artifact}`. If no solicitation artifact exists, stop and ask for it. Do not outline a proposal from the funder's name, a program acronym, or memory of a past call.
+2. Extract, quoting the solicitation, the required components, the page or word limit for each, the formatting constraints, the review criteria, and the deadline. Record each extraction as a `project://sources/{source}` record with the artifact and location it came from.
+3. Record any component you cannot find in the supplied material as an open item in `project://decisions` with disposition `deferred`. An unfound requirement is unknown, never absent.
+
+## Common component set
+
+Most agency solicitations ask for some subset of these. Keep only the ones the supplied solicitation names, using the solicitation's own component names as `title`.
+
+| Component | `argument_role` | Wave | What it must establish |
+| --- | --- | --- | --- |
+| Overview / summary | `setup` | 3 | The one-paragraph case, written last from the approved narrative |
+| Motivation and significance | `setup` | 2 | Why the problem matters to the program's stated mission |
+| Background and prior work | `background` | 1 | The state of the art and the team's own results that license the plan |
+| Research plan / objectives | `method` | 1 | Concrete aims, each with an approach and a decision point |
+| Preliminary results | `evidence` | 1 | Only measurements that exist; never a projected result stated as data |
+| Evaluation and success criteria | `evidence` | 2 | How the funder will know the aims were met |
+| Broader impacts | `implications` | 2 | Program-specific impact criteria, answered in the program's own terms |
+| Management and timeline | `implications` | 2 | Milestones, responsibilities, and risk mitigation |
+| Results from prior support | `background` | 1 | Only awards and outcomes the author supplied |
+
+Budget, budget justification, biosketches, current and pending support, facilities, and data-management plans are author-owned institutional artifacts. Track them as required components in `manifest.requirements.must_have`, and do not draft personnel effort, cost, or institutional commitments.
+
+## Budget accounting
+
+Proposals are limited by pages, not words. Convert once, record the conversion, and keep using it:
+
+- Set `outline.target_words` to the total word equivalent of the solicitation's page limit for the narrative components only. A common single-spaced 11pt page with one figure runs about 500 to 600 words; state which figure you assumed in the outline `thesis` or a decision record.
+- Give each component a `word_target` derived from its own stated page limit where the solicitation sets one. Components without an individual limit share the remainder in proportion to the review criteria weights.
+- `sections[*].word_target` must sum to `target_words` exactly. Excluded institutional artifacts are not outline sections and carry no share.
+- Where the solicitation's own limits already sum to less than the total, allocate the slack explicitly rather than silently inflating one component.
+
+## Author-reserved decisions
+
+Never resolve these on the author's behalf; record them as `deferred` in `project://decisions` until the author locks them: track or program selection, scope and aims, partner and subaward roles, personnel and effort, budget figures, deployment sites, milestone dates, and any quantitative performance claim. An outline may name the section that will carry such a choice; it may not make the choice.
+
+</details>
+
+<details data-wtfp-source="protocol://templates/paper-outline.md" open>
+<summary>Bundled WTF-P protocol resource: templates/paper-outline.md</summary>
+
+# Manuscript outline scaffold
+
+Structural starting point for `outline.sections[*]` when `manifest.document_type` is `research-article`, `conference-paper`, `review`, `thesis`, `dissertation`, `book-chapter`, or `other`. Every share below is a default to be argued with, not a rule. The author's approved `target_words` and the venue's stated limit always win, and `sections[*].word_target` must sum to `target_words` exactly.
+
+## Section roles
+
+Each row maps to one outline entry. `argument_role` is the enum value the outline schema requires; `wave` is the earliest wave in which the section can be drafted without depending on unwritten text.
+
+| Section | `argument_role` | Wave | Depends on | What it must establish |
+| --- | --- | --- | --- | --- |
+| Introduction | `setup` | 2 | Results, Discussion | The problem, why it is open, the contribution claimed, and the reader's payoff |
+| Background / Related work | `background` | 1 | — | The prior positions this work answers, and the exact gap it occupies |
+| Method / Approach | `method` | 1 | Background | What was built or done, in enough detail to be reproduced |
+| Results / Evaluation | `evidence` | 1 | Method | What was measured, under which conditions, with what uncertainty |
+| Discussion | `synthesis` | 2 | Results | What the evidence supports, what it does not, and the threats to validity |
+| Limitations and future work | `implications` | 2 | Discussion | The boundary of the claim, stated by the authors before a reviewer states it |
+| Conclusion | `conclusion` | 3 | Introduction, Discussion | The contribution restated against the evidence actually produced |
+
+Write Background, Method, and Results first. Introduction and Conclusion are wave-2 and wave-3 because they make claims that only the evidence sections can license.
+
+## Default budget shares
+
+Shares of `target_words`, before the author adjusts them.
+
+| Section | Research article / conference paper | Review | Thesis or dissertation chapter | Book chapter |
+| --- | --- | --- | --- | --- |
+| Introduction | 12% | 10% | 12% | 15% |
+| Background | 15% | 45% | 25% | 25% |
+| Method | 22% | 5% | 20% | 15% |
+| Results | 25% | 15% | 22% | 20% |
+| Discussion | 15% | 15% | 13% | 15% |
+| Limitations | 6% | 5% | 5% | 5% |
+| Conclusion | 5% | 5% | 3% | 5% |
+
+Rounding will not land on `target_words`. Absorb the remainder in the largest evidence section and show the final allocation in the approval preview.
+
+## Adaptations
+
+- A review has no original evidence. Replace Method and Results with a stated selection procedure and a synthesis of the corpus, and keep the `evidence` argument role on the synthesis so claim coverage still has somewhere to attach.
+- A theory or position paper replaces Results with an `evidence` section built from worked examples or formal argument, and says so in the section `goal`.
+- A short paper or extended abstract usually drops Limitations as a separate section and folds it into Discussion. Do not silently drop the content.
+- A thesis chapter inherits the front matter of the thesis. Do not restate the full literature in every chapter; declare the dependency in `depends_on` instead.
+
+## Research flags
+
+Set `research.required` to `true` for any section whose claims are not already covered by an existing `project://sources/{source}` record, and list the open topics in `research.topics`. Background is the usual case; Results should almost never need it.
 
 </details>
 

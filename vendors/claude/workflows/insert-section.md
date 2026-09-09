@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the insertion point and propose a stable new section ID, goal, dependencies, wave, claims, and word budget.
-2. Preview impacts on outline ordering, dependencies, section totals, and current position; require approval.
+2. Preview impacts on outline ordering, dependencies, section totals, and current position; require approval. Every write to `project://structure/outline` must leave `sections[*].word_target` summing exactly to `target_words`. Reallocate across the affected sections and, where the author changed the overall length, restate `target_words` in the same write. Present the reallocation in the approval preview and refuse to publish an outline whose budgets do not balance.
 3. Create the section record and atomically update outline and state. Do not renumber stable IDs or move manuscript files implicitly.
 
 ## Safety and completion

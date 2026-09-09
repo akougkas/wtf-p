@@ -6,7 +6,6 @@ const os = require('os');
 const path = require('path');
 
 const MANIFEST = require('./lib/manifest');
-const { clioTargetForReceipt } = require('./lib/clio-target');
 const { deactivateNativeRegistration } = require('./lib/native-registration');
 const {
   createOutput,
@@ -187,7 +186,7 @@ function showHelp(out) {
     ${c.cyan('-g, --global')}              Claude user installation (legacy alias)
     ${c.cyan('-l, --local')}               Claude installation in ./.claude
     ${c.cyan('--claude')}                  Claude Code user installation
-    ${c.cyan('--clio')}                    Clio Coder plugin or legacy extension installation
+    ${c.cyan('--clio')}                    Clio Coder plugin installation
     ${c.cyan('--codex')}                   Codex plugin installation
     ${c.cyan('--copilot')}                 GitHub Copilot CLI plugin installation
     ${c.cyan('--gemini')}                  Gemini CLI user installation
@@ -687,7 +686,7 @@ function printPlan(plan, out, options) {
 async function uninstall(runtime, options, out) {
   const isLocal = runtime === 'claude-local';
   const vendorKey = isLocal ? 'claude' : runtime;
-  let vendorConfig = MANIFEST[vendorKey];
+  const vendorConfig = MANIFEST[vendorKey];
   if (!vendorConfig) throw new Error(`Unknown runtime: ${runtime}`);
 
   const unresolvedTarget = getVendorDir(runtime, options.explicitConfigDir);
@@ -765,7 +764,6 @@ async function uninstall(runtime, options, out) {
     if (backupDir) out.log(`  ${c.cyan('↻')} Backed up exact candidates to ${c.dim(getPathLabel(backupDir, !isLocal))}\n`);
   }
 
-  if (vendorKey === 'clio') vendorConfig = clioTargetForReceipt(vendorConfig, plan.receipt);
   const canRemoveNativeRegistration = Boolean(
     vendorConfig.native &&
     plan.receipt.runtime === vendorKey &&

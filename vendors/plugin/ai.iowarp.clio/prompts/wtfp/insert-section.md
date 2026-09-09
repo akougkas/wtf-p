@@ -7,9 +7,9 @@ argument-hint: "[arguments]"
 
 # Insert a section
 
-@${extensionRoot}/project/README.md
-@${extensionRoot}/skills/wtfp-plan-section/SKILL.md
-@${extensionRoot}/skills/wtfp-plan-section/references/actions.md
+@${pluginRoot}/project/README.md
+@${pluginRoot}/skills/wtfp-plan-section/SKILL.md
+@${pluginRoot}/skills/wtfp-plan-section/references/actions.md
 
 ## Record contract
 
@@ -23,7 +23,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the insertion point and propose a stable new section ID, goal, dependencies, wave, claims, and word budget.
-2. Preview impacts on outline ordering, dependencies, section totals, and current position; require approval.
+2. Preview impacts on outline ordering, dependencies, section totals, and current position; require approval. Every write to `project://structure/outline` must leave `sections[*].word_target` summing exactly to `target_words`. Reallocate across the affected sections and, where the author changed the overall length, restate `target_words` in the same write. Present the reallocation in the approval preview and refuse to publish an outline whose budgets do not balance.
 3. Create the section record and atomically update outline and state. Do not renumber stable IDs or move manuscript files implicitly.
 
 ## Safety and completion
@@ -34,14 +34,14 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 ## Bound action contract and schemas
 
-@${extensionRoot}/actions/insert-section.json
-@${extensionRoot}/project/schemas/common.schema.json
-@${extensionRoot}/project/schemas/outline.schema.json
-@${extensionRoot}/project/templates/outline.json
-@${extensionRoot}/project/schemas/section.schema.json
-@${extensionRoot}/project/templates/section.json
-@${extensionRoot}/project/schemas/state.schema.json
-@${extensionRoot}/project/templates/state.json
+@${pluginRoot}/actions/insert-section.json
+@${pluginRoot}/project/schemas/common.schema.json
+@${pluginRoot}/project/schemas/outline.schema.json
+@${pluginRoot}/project/templates/outline.json
+@${pluginRoot}/project/schemas/section.schema.json
+@${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 
