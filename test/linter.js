@@ -203,7 +203,7 @@ for (const actionId of actionIds) {
 
 const agentTargets = [
   { pathFor: (id) => `vendors/plugin/ai.iowarp.clio/agents/wtfp-${id}.md` },
-  { pathFor: (id) => `vendors/claude/agents/wtfp/${id}.md` },
+  { pathFor: (id) => `vendors/claude/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/copilot/plugins/wtf-p/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/opencode/agents/wtfp/${id}.md` },
   { pathFor: (id) => `vendors/antigravity/agents/wtfp-${id}.md` },

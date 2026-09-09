@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "5baa631589c1e4e5d05a308b1ceec8319de503f32c2f603b5522202779d2fd40",
+  "sourceHash": "4b90ca190df5937430d9443181f5e24b0e5e5354a180380a5dfa69aea403e250",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -157,47 +157,47 @@
       "sha256": "56b13114f3758e24624767ebc095e9a9d3c39aa96764e53f5460c0ec1d11ff68"
     },
     {
-      "path": "agents/wtfp/argument-verifier.md",
+      "path": "agents/wtfp-argument-verifier.md",
       "sha256": "aa599ef8540838e43f3a1847ac3e9fa971dacc643fd0e8b39693940879762213"
     },
     {
-      "path": "agents/wtfp/citation-expert.md",
+      "path": "agents/wtfp-citation-expert.md",
       "sha256": "d0086b62581804753023b3e7ad49f374ed2147a4852fbd4882aa340170373371"
     },
     {
-      "path": "agents/wtfp/citation-formatter.md",
+      "path": "agents/wtfp-citation-formatter.md",
       "sha256": "8e8e71b3248413fc248c78f507d97964f2afbfb7b5f1aa17551e0057ceb09def"
     },
     {
-      "path": "agents/wtfp/coherence-checker.md",
+      "path": "agents/wtfp-coherence-checker.md",
       "sha256": "82d32fa7efe26cefe4c0651869bd2615052004e013a65499d3c1e68b2e0e838b"
     },
     {
-      "path": "agents/wtfp/outliner.md",
+      "path": "agents/wtfp-outliner.md",
       "sha256": "37b8e1818e80852008d2ad7ef82a3a57d2cdb557803e3d1425535ee0a4e27d57"
     },
     {
-      "path": "agents/wtfp/plan-checker.md",
+      "path": "agents/wtfp-plan-checker.md",
       "sha256": "04844865db180a7cbcf896491e529c7e2cbfb2cd5567bde06a1529e7a4ca957a"
     },
     {
-      "path": "agents/wtfp/prose-polisher.md",
+      "path": "agents/wtfp-prose-polisher.md",
       "sha256": "211cd9af76d4dcf26283d1f5b590057ec7b9def6cba9a15b4f27c35a9bdf3c07"
     },
     {
-      "path": "agents/wtfp/research-synthesizer.md",
+      "path": "agents/wtfp-research-synthesizer.md",
       "sha256": "757cda3a7b0106c44a0d179a7f3eb7125681636fcaca682c02dd1ea764367612"
     },
     {
-      "path": "agents/wtfp/section-planner.md",
+      "path": "agents/wtfp-section-planner.md",
       "sha256": "f25001b7670336258d8d7500374c13e1d49f36fd26254183e41969c5a0d9b0d8"
     },
     {
-      "path": "agents/wtfp/section-reviewer.md",
+      "path": "agents/wtfp-section-reviewer.md",
       "sha256": "861fb7fadd1fe85c09c1f4808b141fdbae32cfda2bf8c6c9f71745f5706178e8"
     },
     {
-      "path": "agents/wtfp/section-writer.md",
+      "path": "agents/wtfp-section-writer.md",
       "sha256": "f1ab5ed5ee0345fd8c8954b37029728ddd68737d3ed92646ba7f10ce6018ed4b"
     },
     {

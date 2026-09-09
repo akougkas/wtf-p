@@ -165,7 +165,7 @@ function commandPaths(target, actionIds) {
 }
 
 function expectedAgentPaths(target) {
-  if (['clio', 'copilot', 'antigravity'].includes(target)) {
+  if (['clio', 'claude', 'copilot', 'antigravity'].includes(target)) {
     return EXPECTED_ROLES.map((role) => `agents/wtfp-${role}.md`);
   }
   return EXPECTED_ROLES.map((role) => `agents/wtfp/${role}.md`);
@@ -1057,7 +1057,7 @@ record('research handoff declares incremental state and preserves native decisio
   }
   assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
   for (const role of EXPECTED_ROLES) {
-    const body = planText(plansById.get('claude'), `agents/wtfp/${role}.md`);
+    const body = planText(plansById.get('claude'), `agents/wtfp-${role}.md`);
     assert.match(body, /^tools:$/m);
     assert.doesNotMatch(body, /^allowed-tools:/m);
   }

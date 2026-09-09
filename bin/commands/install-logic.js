@@ -774,6 +774,7 @@ async function install(runtime, isUpdate, options, pkg) {
   }
 
   if (nativeRequested) {
+    if (nativeActivation.notice && !hasQuiet) out.warn(nativeActivation.notice);
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
       out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
       if (vendorKey === 'clio') {

@@ -139,7 +139,7 @@ for (const [host, spec] of Object.entries(surfaces)) {
 check(recursiveCount('vendors/codex/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
 check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
 check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claude exposes exactly the ${skillCount} inventory-owned native skills`);
-check(filesAt('vendors/claude/agents/wtfp', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents`);
+check(filesAt('vendors/claude/agents', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents at the top level Claude Code discovers`);
 check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
 
 section('Clio-native integration');

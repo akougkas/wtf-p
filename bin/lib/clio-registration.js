@@ -66,9 +66,16 @@ function installedListEntry(stdout, targetDir, native, scope) {
     typeof entry.rootPath === 'string' && path.resolve(entry.rootPath) === path.join(targetDir, native.source));
 }
 
-function active(entry) {
-  return Boolean(entry) && entry.enabled === true && entry.valid === true &&
-    entry.loadable === true && Array.isArray(entry.diagnostics) && entry.diagnostics.length === 0;
+// Registration is what WTF-P is responsible for. Whether the operator has the
+// plugin switched on is Clio's state and their decision, so it is reported,
+// never asserted and never changed.
+function registered(entry) {
+  return Boolean(entry) && entry.valid === true &&
+    Array.isArray(entry.diagnostics) && entry.diagnostics.length === 0;
+}
+
+function disabledNotice(native) {
+  return `Clio reports ${native.id} as installed but disabled. WTF-P does not change that preference; run clio-coder plugins enable ${native.id} to switch it back on.`;
 }
 
 function activateClio(targetDir, native, suppliedOptions) {
@@ -90,8 +97,12 @@ function activateClio(targetDir, native, suppliedOptions) {
   const priorList = execute('clio-coder', ['plugins', 'list', '--all', '--json'], environment, options);
   if (priorList.status === 'unavailable') return { status: 'unavailable', executable: 'clio-coder', results };
   results.push(priorList);
-  if (active(installedListEntry(priorList.stdout, targetDir, native, options.scope))) {
-    return { status: 'registered', executable: 'clio-coder', results };
+  const priorEntry = installedListEntry(priorList.stdout, targetDir, native, options.scope);
+  if (registered(priorEntry)) {
+    return {
+      status: 'registered', executable: 'clio-coder', results,
+      ...(priorEntry.enabled === false ? { notice: disabledNotice(native) } : {})
+    };
   }
 
   // `plugins install` copies a source into the destination it owns, so the
@@ -133,11 +144,12 @@ function activateClio(targetDir, native, suppliedOptions) {
     results.push(inspected);
     if (inspected.status === 'unavailable') throw new Error('Clio became unavailable during verification');
     const entry = verifiedEntry(inspected.stdout, targetDir, native, options.scope);
-    if (!active(entry) || !sameTree(publishedFiles, treeFiles(root))) {
-      throw new Error('Clio did not report the exact WTF-P plugin as active with zero diagnostics');
+    if (!registered(entry) || !sameTree(publishedFiles, treeFiles(root))) {
+      throw new Error('Clio did not report the exact WTF-P plugin as installed and valid with zero diagnostics');
     }
     return {
       status: 'registered', executable: 'clio-coder', results, rollback,
+      ...(entry.enabled === false ? { notice: disabledNotice(native) } : {}),
       commit() {
         // Only the private held copy is removed; Clio owns its installed tree.
         finished = true;
