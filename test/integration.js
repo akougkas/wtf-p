@@ -71,7 +71,7 @@ function claudePluginList(configDir) {
 function assertPortableClaudeBundle(configDir, label) {
   const bundle = path.join(configDir, 'marketplaces', 'wtfp');
   const commandFiles = fs.readdirSync(path.join(bundle, 'commands')).filter(file => file.endsWith('.md'));
-  const agentFiles = fs.readdirSync(path.join(bundle, 'agents', 'wtfp')).filter(file => file.endsWith('.md'));
+  const agentFiles = fs.readdirSync(path.join(bundle, 'agents')).filter(file => file.endsWith('.md'));
   const skillDirectories = fs.readdirSync(path.join(bundle, 'skills'), { withFileTypes: true })
     .filter(entry => entry.isDirectory() && entry.name.startsWith('wtfp-'));
   check(commandFiles.length === 36, `${label} contains 36 canonical commands`);

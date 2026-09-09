@@ -14,7 +14,7 @@ const ROOT = path.resolve(__dirname, '..');
 const ACTION_DIR = path.join(ROOT, 'protocol', 'actions');
 const ROLE_DIR = path.join(ROOT, 'protocol', 'roles');
 const CLAUDE_COMMAND_DIR = path.join(ROOT, 'vendors', 'claude', 'commands');
-const CLAUDE_AGENT_DIR = path.join(ROOT, 'vendors', 'claude', 'agents', 'wtfp');
+const CLAUDE_AGENT_DIR = path.join(ROOT, 'vendors', 'claude', 'agents');
 const UNAVAILABLE_MARKER = 'WTFP_ACTION_UNAVAILABLE';
 
 const COLORS = {
@@ -72,7 +72,7 @@ for (const action of actions) {
 
 for (const role of [...delegatedRoles].sort()) {
   check(fs.existsSync(path.join(ROLE_DIR, `${role}.md`)), `canonical role exists: ${role}`);
-  check(fs.existsSync(path.join(CLAUDE_AGENT_DIR, `${role}.md`)), `Claude projects native agent: ${role}`);
+  check(fs.existsSync(path.join(CLAUDE_AGENT_DIR, `wtfp-${role}.md`)), `Claude projects native agent: ${role}`);
 }
 check(delegatedRoles.size === 11, `resolved all 11 semantic roles (${delegatedRoles.size})`);
 

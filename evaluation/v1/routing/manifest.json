@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "14436051f210fc892b90028c45715c17604a289b",
+  "wtfp_commit": "25595e21138f4fc7692ddf208de61f2d5abe3f65",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -37,8 +37,8 @@
     {
       "target": "claude",
       "path": "vendors/claude/.wtfp-generated.json",
-      "manifest_sha256": "e181037fa19064a6db2ec5d442fa9d89232ef73a845bb38d5c82700e7bf104e8",
-      "source_sha256": "5baa631589c1e4e5d05a308b1ceec8319de503f32c2f603b5522202779d2fd40"
+      "manifest_sha256": "dbbd7c7ebb2ecaabf4cd859ff5ab3036cdb6f2785448ed1a1a29335fbc397423",
+      "source_sha256": "4b90ca190df5937430d9443181f5e24b0e5e5354a180380a5dfa69aea403e250"
     },
     {
       "target": "clio",

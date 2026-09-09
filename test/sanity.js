@@ -115,7 +115,7 @@ check(fs.existsSync(path.join(root, 'vendors/opencode')), 'vendors/opencode exis
 check(fs.existsSync(path.join(root, 'bin/lib/manifest.js')), 'manifest.js exists');
 
 // Agents exist
-const agents = fs.readdirSync(path.join(root, 'vendors/claude/agents/wtfp'));
+const agents = fs.readdirSync(path.join(root, 'vendors/claude/agents'));
 check(agents.length >= 10, `${agents.length} agents found`);
 
 console.log(`\n=== Sanity Results: ${passed} passed, ${failedCount} failed ===\n`);

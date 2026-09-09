@@ -692,7 +692,9 @@ record('supported hosts contain exactly 11 generated native roles', () => {
   for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const expected = expectedAgentPaths(target);
-    const actual = ['clio', 'copilot', 'antigravity'].includes(target)
+    // Claude, Clio, Copilot, and Antigravity discover agents only at the top
+    // level of `agents/` and name them from the file name.
+    const actual = ['clio', 'claude', 'copilot', 'antigravity'].includes(target)
       ? planFiles(plan, /^agents\/wtfp-[^/]+\.md$/)
       : planFiles(plan, /^agents\/wtfp\/[^/]+\.md$/);
     assert.deepStrictEqual(actual, expected, `${target}: native role surface drift`);
