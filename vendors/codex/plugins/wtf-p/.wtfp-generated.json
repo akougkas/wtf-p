@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "eeca50c621761074ab95be2cb1a92323d47316aea63ea47dca398e5ab582813d",
+  "sourceHash": "d289b533a5771c6aacd7269ab935a80cb01f56f3b5d60529568d29c8796d1120",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -153,6 +153,50 @@
       "sha256": "56b13114f3758e24624767ebc095e9a9d3c39aa96764e53f5460c0ec1d11ff68"
     },
     {
+      "path": "agents/wtfp-argument-verifier.toml",
+      "sha256": "c50b09f47628a4e99a2559a7cb68d349e62b12c047dc356e09343cfd1a9b2ea0"
+    },
+    {
+      "path": "agents/wtfp-citation-expert.toml",
+      "sha256": "6a3926790a7524018c5e3660ad1aac9e79141aa9ac9f274b87e5f1b3d35e8ebd"
+    },
+    {
+      "path": "agents/wtfp-citation-formatter.toml",
+      "sha256": "28a2a0f4fff1851676e5fadc60dc2160ef469c63109118eb523cd2089787af93"
+    },
+    {
+      "path": "agents/wtfp-coherence-checker.toml",
+      "sha256": "63d9ad2e89d668628ed3726aecf93bbfa90b35910e059ed1ea2dfac42e8a5d64"
+    },
+    {
+      "path": "agents/wtfp-outliner.toml",
+      "sha256": "8eaf7590ad9c66b0a98fd1a580d31827fa9fb7833846d0a749b5e3da02570b9f"
+    },
+    {
+      "path": "agents/wtfp-plan-checker.toml",
+      "sha256": "ae90f9451fa81c5176dc28fca8988db20ca9bfe70c7142cafead192a83511ea4"
+    },
+    {
+      "path": "agents/wtfp-prose-polisher.toml",
+      "sha256": "1c7021d44ec96207949d687d5e6be83c5f9b580c61c5ef30f44ed2754a9f14ac"
+    },
+    {
+      "path": "agents/wtfp-research-synthesizer.toml",
+      "sha256": "5dcd64229c6f93120771a60f64110285f4c63d5ef39c9cf3925eb9492b3f71b4"
+    },
+    {
+      "path": "agents/wtfp-section-planner.toml",
+      "sha256": "881966fd5cff193993b3b7170892f3e0701cbf51b8162a7021e615a18cf39744"
+    },
+    {
+      "path": "agents/wtfp-section-reviewer.toml",
+      "sha256": "6c08b416fd06acdf5f44c53ccd19a290e63f1e48c61b2ef8c92ea7725e1b1a53"
+    },
+    {
+      "path": "agents/wtfp-section-writer.toml",
+      "sha256": "137502c01553eb45563e6609c0d90b827256aa4c2a7e178db11f2cc4b4d2e962"
+    },
+    {
       "path": "aliases.lock.json",
       "sha256": "3143d880840a25089bd236a41661ab44d866315a844dc671fb926c228db416d6"
     },
@@ -178,7 +222,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "82f665e3e3d77fb0b704e5f80e4f5beb2a15b8f9216b412aa06c7be5eaaf5267"
+      "sha256": "af6834655ad8a2756927cfdf5ea1c06a456568295bca1fd2f209d3df2b49ffad"
     },
     {
       "path": "project/README.md",

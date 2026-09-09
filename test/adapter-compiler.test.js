@@ -705,7 +705,20 @@ record('supported hosts contain exactly 11 generated native roles', () => {
       assert.ok(planText(plan, sourcePath).includes(GENERATED_BANNER), `${target}:${sourcePath}: missing source banner`);
     }
   }
-  assert.deepStrictEqual(planFiles(plansById.get('codex'), /^agents\//), [], 'Codex should expose roles through skills, not an invented agent format');
+  // Codex custom agents are TOML session layers under $CODEX_HOME/agents/.
+  const codexAgents = planFiles(plansById.get('codex'), /^agents\//);
+  assert.deepStrictEqual(codexAgents, EXPECTED_ROLES.map((role) => `agents/wtfp-${role}.toml`));
+  for (const sourcePath of codexAgents) {
+    const source = planText(plansById.get('codex'), sourcePath);
+    const slug = path.basename(sourcePath, '.toml').slice('wtfp-'.length);
+    assert.match(source, new RegExp(`^name = "wtfp-${slug}"$`, 'm'));
+    assert.match(source, /^description = ".+"$/m);
+    assert.match(source, /^developer_instructions = '''$/m);
+    assert.doesNotMatch(source, /^@protocol:\/\//m, `${sourcePath}: unresolved protocol include`);
+    const role = readJson(path.join(ROOT, 'protocol/catalog.json')) && fs.readFileSync(path.join(ROOT, 'protocol/roles', `${slug}.md`), 'utf8');
+    const verifier = /^execution_class: verifier-report$/m.test(role);
+    assert.strictEqual(/^sandbox_mode = "read-only"$/m.test(source), verifier, `${sourcePath}: sandbox must follow the execution class`);
+  }
 });
 
 record('Claude ships the academic output style, the write guard, and skill-bound agents', () => {
@@ -1077,6 +1090,10 @@ record('standard plugin graph resolves and retains portable host boundaries', ()
   const standard = JSON.parse(planText(codex, 'plugin.json'));
   const fallback = JSON.parse(planText(codex, '.codex-plugin/plugin.json'));
   for (const field of ['name', 'version']) assert.strictEqual(standard[field], fallback[field]);
+  assert.deepStrictEqual(validateInstance(standard, registry.get(schemaFile), schemaFile, registry), [], 'Codex root manifest must satisfy Agent Plugins 1.0.0');
+  // Codex reads the inline overlay or the fallback, never a merge, so both
+  // must present the same interface.
+  assert.deepStrictEqual(standard.extensions['com.openai'].interface, fallback.interface);
 });
 
 record('research handoff declares incremental state and preserves native decision returns', () => {

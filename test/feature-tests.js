@@ -70,7 +70,8 @@ check(Object.keys(MANIFEST).sort().join(',') === runtimeIds.slice().sort().join(
 for (const id of runtimeIds) {
   const runtime = MANIFEST[id];
   check(Boolean(runtime && runtime.name && runtime.defaultDir && runtime.configDirEnv), `${id} has a complete runtime definition`);
-  check(runtime.components.length === 1, `${id} installs one generated, self-contained bundle`);
+  // Codex additionally publishes its generated TOML agents to $CODEX_HOME/agents/.
+  check(runtime.components.length === (id === 'codex' ? 2 : 1), `${id} installs one generated, self-contained bundle${id === 'codex' ? ' plus its native agents' : ''}`);
   check(fs.existsSync(runtime.components[0].src), `${id} bundle source exists`);
 }
 const claudeBundle = MANIFEST.claude.components[0];
@@ -142,6 +143,7 @@ check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claud
 check(filesAt('vendors/claude/agents', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents at the top level Claude Code discovers`);
 check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
 check(filesAt('vendors/gemini/agents', '.md').length === roleCount, `Gemini exposes all ${roleCount} native agents at the top level its loader reads`);
+check(filesAt('vendors/codex/plugins/wtf-p/agents', '.toml').length === roleCount, `Codex exposes all ${roleCount} native TOML agents`);
 check(filesAt('vendors/claude/output-styles', '.md').length === 1, 'Claude ships the academic writing output style');
 check(fs.existsSync(path.join(ROOT, 'vendors/claude/hooks/hooks.json')), 'Claude ships the write-guard hooks');
 check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/wtfp-project-state.md')), 'Antigravity ships the project-state rule');

@@ -463,10 +463,11 @@ function nativeWorkflowBody(workflowBody, target) {
     body = body.replaceAll('protocol://', '.github/wtfp/');
   } else if (target === 'antigravity') {
     body = body.replaceAll('protocol://', '${PLUGIN_ROOT}/');
-  } else if (target === 'gemini' || target === 'opencode') {
-    // Neither host exposes a reliable runtime variable for resolving files in
-    // command/agent prompt text. Embed the referenced resources so packaged
-    // commands remain self-contained under custom configuration roots.
+  } else if (target === 'gemini' || target === 'opencode' || target === 'codex') {
+    // None of these hosts exposes a reliable runtime variable for resolving
+    // files in command/agent prompt text. Embed the referenced resources so
+    // packaged commands and agents remain self-contained under custom
+    // configuration roots.
     body = inlineProtocolResources(body);
   }
   return body;
@@ -754,6 +755,29 @@ function renderPortableRole(role, slug, target) {
   return lines.join('\n');
 }
 
+function tomlString(value) {
+  return JSON.stringify(String(value));
+}
+
+// Codex custom agents are TOML configuration layers under
+// $CODEX_HOME/agents/. The three required fields carry the portable role;
+// verifier roles pin a read-only sandbox because the file is a session config.
+function renderCodexAgent(role, slug) {
+  const verifier = role.fields.execution_class === 'verifier-report';
+  const body = nativeWorkflowBody(role.body, 'codex');
+  if (body.includes("'''")) throw new Error(`Codex agent ${slug} contains an unsupported TOML literal delimiter`);
+  return [
+    `# ${generatedScriptBanner('protocol/roles', slug).slice(3)}`,
+    `name = ${tomlString(`wtfp-${slug}`)}`,
+    `description = ${tomlString(roleDescription(role))}`,
+    ...(verifier ? ['sandbox_mode = "read-only"'] : []),
+    "developer_instructions = '''",
+    body,
+    "'''",
+    ''
+  ].join('\n');
+}
+
 function renderCopilotCloudRole(role, slug) {
   const verifier = role.fields.execution_class === 'verifier-report';
   const tools = verifier ? ['read', 'search'] : ['read', 'edit', 'search'];
@@ -938,6 +962,22 @@ function clioFleet(fleetId) {
   ].join('\n');
 }
 
+// Install-surface presentation shared by the portable `extensions["com.openai"]`
+// object and the `.codex-plugin/plugin.json` compatibility overlay. Codex reads
+// one or the other, never a merge, so both must carry the same interface.
+function codexInterface() {
+  return {
+    displayName: 'WTF-P',
+    shortDescription: 'Plan and write evidence-grounded research',
+    longDescription: 'Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.',
+    developerName: 'akougkas',
+    category: 'Productivity',
+    capabilities: ['Research', 'Write'],
+    websiteURL: 'https://github.com/akougkas/wtf-p',
+    defaultPrompt: 'Help me plan and execute an evidence-grounded research paper.'
+  };
+}
+
 function codexPluginManifest(version) {
   return stableJson({
     name: 'wtf-p',
@@ -949,16 +989,7 @@ function codexPluginManifest(version) {
     license: 'MIT',
     keywords: ['academic-writing', 'research', 'citations', 'papers'],
     skills: './skills/',
-    interface: {
-      displayName: 'WTF-P',
-      shortDescription: 'Plan and write evidence-grounded research',
-      longDescription: 'Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.',
-      developerName: 'akougkas',
-      category: 'Productivity',
-      capabilities: ['Research', 'Write'],
-      websiteURL: 'https://github.com/akougkas/wtf-p',
-      defaultPrompt: 'Help me plan and execute an evidence-grounded research paper.'
-    }
+    interface: codexInterface()
   });
 }
 
@@ -1684,7 +1715,13 @@ function compilePlans(options = {}) {
 
   const codex = byId.get('codex');
   addFile(codex, '.codex-plugin/plugin.json', codexPluginManifest(model.version));
-  addFile(codex, 'plugin.json', standardPluginManifest(model.version, 'wtf-p'));
+  // The portable root manifest carries the OpenAI overlay inline; the
+  // `.codex-plugin` copy above is the documented compatibility fallback.
+  addFile(codex, 'plugin.json', JSON.stringify({
+    ...JSON.parse(standardPluginManifest(model.version, 'wtf-p')),
+    keywords: ['academic-writing', 'research', 'citations', 'papers'],
+    extensions: { 'com.openai': { interface: codexInterface() } }
+  }, null, 2) + '\n');
 
   const copilot = byId.get('copilot');
   addFile(copilot, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version));
@@ -1718,6 +1755,9 @@ function compilePlans(options = {}) {
     for (const target of ['claude', 'copilot', 'antigravity', 'gemini']) {
       addFile(byId.get(target), `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, target));
     }
+    // Codex custom agents are TOML session layers; the installer copies this
+    // directory to $CODEX_HOME/agents/ because Codex plugins do not carry agents.
+    addFile(codex, `agents/wtfp-${role.slug}.toml`, renderCodexAgent(role, role.slug));
   }
 
   // The canonical package. Everything Clio consumes ships here and nowhere else.

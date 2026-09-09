@@ -96,10 +96,20 @@ const MANIFEST = {
     name: 'Codex',
     configDirEnv: 'CODEX_HOME',
     defaultDir: '.codex',
-    components: generatedBundle('codex', {}, {
-      '.agents': 'marketplace',
-      plugins: 'plugin'
-    }, 'marketplaces/wtfp'),
+    components: [
+      ...generatedBundle('codex', {}, {
+        '.agents': 'marketplace',
+        plugins: 'plugin'
+      }, 'marketplaces/wtfp'),
+      // Codex discovers custom agents only from $CODEX_HOME/agents/, never from
+      // a plugin, so the generated TOML roles are published there as well.
+      {
+        id: 'agents',
+        src: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p', 'agents'),
+        dest: 'agents',
+        type: 'dir'
+      }
+    ],
     native: {
       kind: 'codex-marketplace',
       marketplace: 'wtfp',

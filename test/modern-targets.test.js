@@ -581,7 +581,13 @@ process.exitCode = 91;
       assert.ok(target, `missing ${runtime} manifest`);
       assert.strictEqual(target.configDirEnv, expected.configDirEnv);
       assert.strictEqual(target.defaultDir, expected.defaultDir);
-      assert.strictEqual(target.components.length, 1);
+      assert.strictEqual(target.components.length, runtime === 'codex' ? 2 : 1);
+      if (runtime === 'codex') {
+        assert.deepStrictEqual(
+          { ...target.components[1] },
+          { id: 'agents', src: path.join(expected.source, 'plugins', 'wtf-p', 'agents'), dest: 'agents', type: 'dir' }
+        );
+      }
       assert.strictEqual(target.components[0].id, expected.component);
       assert.strictEqual(target.components[0].src, expected.source);
       assert.strictEqual(target.components[0].dest, expected.destination);
