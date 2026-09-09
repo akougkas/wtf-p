@@ -21,6 +21,9 @@ async function analyze(filePath, options = {}) {
   if (!Number.isFinite(batchDelayMs) || batchDelayMs < 0) {
     throw new TypeError('batchDelayMs must be a non-negative finite number');
   }
+  // Called after every batch with (completed, total) so a caller can report
+  // progress; the analysis itself never writes to stdout or stderr.
+  const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {};
   // 1. Index/Parse
   let entries = [];
   try {
@@ -84,6 +87,7 @@ async function analyze(filePath, options = {}) {
         results.unknown.push({ key: entry.key, title: entry.title, error: e.message });
       }
     }));
+    onProgress(Math.min(i + BATCH_SIZE, entries.length), entries.length);
     // Small delay between network batches, but never delay after the final batch.
     if (i + BATCH_SIZE < entries.length && batchDelayMs > 0) {
       await new Promise(r => setTimeout(r, batchDelayMs));

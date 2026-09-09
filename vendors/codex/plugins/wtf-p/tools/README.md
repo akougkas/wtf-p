@@ -20,14 +20,14 @@ A `tool.execute` effect authorises exactly one command, run from the package roo
 node <package-root>/tools/wtfp-tool.js [--offline] <command> [arguments]
 ```
 
-Run it with no argument, or with `list`, to print the declared command set as JSON; each entry carries the `effects` the command may apply. Declared commands:
+Run it with no argument, or with `list`, to print the declared command set as JSON; each entry carries the `effects` the command may apply. `<command> --help` prints that one entry and exits 0. Declared commands:
 
 - `bib-index <bib-file> [--key=<citation-key>] [--query=<text>]` → `bibliography.index` (filesystem.read)
-- `bib-format <bib-file> --key=<citation-key>` → `bibliography.format` (filesystem.read)
-- `bib-impact <bib-file>` → `bibliography.analyze-impact` (filesystem.read, network.search)
-- `citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>]` → `citation.fetch` (network.search)
-- `scholar-search --query=<text> [--limit=<1-25>]` → `citation.scholar-lookup` (network.search)
-- `s2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>]` → `citation.semantic-scholar` (network.fetch, network.search)
+- `bib-format <bib-file> --key=<citation-key> [--style=<bibtex|al-folio>]` → `bibliography.format` (filesystem.read)
+- `bib-impact <bib-file> [--timeout=<seconds>]` → `bibliography.analyze-impact` (filesystem.read, network.search)
+- `citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]` → `citation.fetch` (network.search)
+- `scholar-search --query=<text> [--limit=<1-25>] [--timeout=<seconds>]` → `citation.scholar-lookup` (network.search)
+- `s2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>] [--timeout=<seconds>]` → `citation.semantic-scholar` (network.fetch, network.search)
 - `rank <papers.json> [--intent=<seminal|recent|balanced>]` → `citation.rank` (no declared effects)
 
-Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `WTFP_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.
+Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `WTFP_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Each network command has a hard wall clock, `--timeout=<seconds>` (default 20, maximum 600); on expiry it reports `{"error": "<command> timed out after N s"}` on stderr and exits 124. `bib-impact` reports batch progress on stderr. `bib-index` flags repeated keys with `duplicate: true` and lists them under `duplicates`; `--key` refuses an ambiguous key. `bib-format` emits a standard BibTeX entry (`@article`, `@inproceedings`, ...) by default; `--style=al-folio` selects the Jekyll al-folio projection, which is not valid BibTeX. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.

@@ -618,6 +618,26 @@ process.exitCode = 91;
     assert.match(result.output, /deprecated alias/);
   });
 
+  record('uninstall delegates help and maps a positional target to the uninstaller', () => {
+    const help = run(INSTALL, ['uninstall', '--help', '--no-color']);
+    assertSuccess(help, 'uninstall help');
+    assert.match(help.output, /--dry-run/);
+    assert.match(help.output, /--yes/);
+    assert.ok(!/Install Options/.test(help.output), 'uninstall --help must not print the installer help');
+    const installerHelp = run(INSTALL, ['--help', '--no-color']);
+    assert.match(installerHelp.output, /uninstall \[<target>\]/);
+    assert.match(installerHelp.output, /Uninstall Options/);
+    assert.ok(!/extension/i.test(installerHelp.output.split('\n').filter((line) => /clio/i.test(line)).join('\n')),
+      'installer help must not describe Clio as an extension');
+    const emptyRoot = path.join(testRoot, 'uninstall-positional');
+    fs.mkdirSync(emptyRoot, { recursive: true });
+    const positional = run(INSTALL, ['uninstall', 'clio', '--config-dir', emptyRoot, '--dry-run', '--no-color']);
+    assertSuccess(positional, 'positional uninstall target');
+    assert.match(positional.output, /No WTF-P installation receipt found/);
+    const unknown = run(INSTALL, ['uninstall', 'bogus', '--dry-run', '--no-color']);
+    assertFailure(unknown, /Unknown uninstall target: bogus/, 'unknown uninstall target');
+  });
+
   record('noninteractive install still fails closed without explicit intent', () => {
     const noTarget = run(INSTALL, ['--advanced', '--quiet', '--no-color']);
     assertFailure(noTarget, /requires an explicit target or scope/i, 'targetless install');

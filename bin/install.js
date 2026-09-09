@@ -213,7 +213,7 @@ function showHelp() {
     ${c.cyan('status')}                    Show installation status
     ${c.cyan('doctor')}                    Check for installation problems
     ${c.cyan('update')}                    Update to latest version
-    ${c.cyan('uninstall')}                 Remove WTF-P
+    ${c.cyan('uninstall [<target>]')}      Remove WTF-P (see Uninstall Options)
 
   ${c.yellow('Targets:')}
     ${c.cyan('clio')}                      Clio Coder plugin              
@@ -234,6 +234,15 @@ function showHelp() {
     ${c.cyan('-b, --backup-all')}          Backup existing files before overwriting
     ${c.cyan('--only=<type>')}             Install one generated component type
 
+  ${c.yellow('Uninstall Options:')} ${c.dim('(npx wtf-p uninstall --help for the full list)')}
+    ${c.cyan('<target>')} or ${c.cyan('--<target>')}    Client to remove from (clio, claude, ...)
+    ${c.cyan('--all')}                     Every detected user installation
+    ${c.cyan('-c, --config-dir <path>')}   Custom root; requires an explicit target
+    ${c.cyan('-n, --dry-run')}             Classify receipt paths without changing them
+    ${c.cyan('-y, --yes')}                 Confirm removal of unchanged owned files
+    ${c.cyan('-f, --force')}               Also remove modified receipt files
+    ${c.cyan('-b, --backup')}              Copy removal candidates to a backup bundle
+
   ${c.yellow('Output Options:')}
     ${c.cyan('--beginner')}                Show detailed explanations
     ${c.cyan('--advanced')}                Minimal output, skip confirmations
@@ -249,8 +258,12 @@ function showHelp() {
     ${c.dim('# Install with interactive prompts')}
     npx wtf-p
 
-    ${c.dim('# Install the Clio extension without prompts')}
+    ${c.dim('# Install the Clio plugin without prompts')}
     npx wtf-p install clio --advanced
+
+    ${c.dim('# Preview, then remove, the Clio plugin')}
+    npx wtf-p uninstall clio --dry-run
+    npx wtf-p uninstall clio --yes
 
     ${c.dim('# Install a Codex plugin into an isolated home')}
     CODEX_HOME=/tmp/codex-test npx wtf-p install codex --advanced
@@ -266,6 +279,29 @@ async function main() {
   validateArguments();
   if (configDirParseError) {
     throw new Error(configDirParseError);
+  }
+
+  if (subcommand === 'uninstall') {
+    // Delegate to the uninstaller with the remaining arguments, so
+    // `uninstall --help` prints the uninstaller's help and `uninstall <target>`
+    // maps to the uninstaller's `--<target>` selector.
+    const { execFileSync } = require('child_process');
+    const uninstallArgs = process.argv.slice(2).filter(a => a !== 'uninstall');
+    const targetIndex = uninstallArgs.findIndex((argument, index) =>
+      !argument.startsWith('-') && !['--config-dir', '-c'].includes(uninstallArgs[index - 1]));
+    if (targetIndex !== -1) {
+      const target = uninstallArgs[targetIndex];
+      if (!Object.prototype.hasOwnProperty.call(MANIFEST, target)) {
+        throw new Error(`Unknown uninstall target: ${target}. Expected one of ${Object.keys(MANIFEST).join(', ')}`);
+      }
+      uninstallArgs[targetIndex] = `--${target}`;
+    }
+    try {
+      execFileSync(process.execPath, [path.join(__dirname, 'uninstall.js'), ...uninstallArgs], { stdio: 'inherit' });
+    } catch (e) {
+      process.exit(e.status || 1);
+    }
+    return;
   }
 
   if (hasGlobal && hasLocal) {
@@ -353,18 +389,6 @@ async function main() {
   if (subcommand === 'update') {
     if (!hasQuiet) console.log(banner);
     await runUpdate(options, pkg, install);
-    return;
-  }
-
-  if (subcommand === 'uninstall') {
-    // Delegate to uninstall script with remaining args
-    const { execFileSync } = require('child_process');
-    const uninstallArgs = process.argv.slice(2).filter(a => a !== 'uninstall');
-    try {
-      execFileSync(process.execPath, [path.join(__dirname, 'uninstall.js'), ...uninstallArgs], { stdio: 'inherit' });
-    } catch (e) {
-      process.exit(e.status || 1);
-    }
     return;
   }
 

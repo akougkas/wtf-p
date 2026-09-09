@@ -54,6 +54,15 @@ Local release candidate. Not published to a registry and not tagged.
   install once the binary is available
 - Generated `.js` files carry a `//` banner instead of an HTML comment, so they
   also parse as ES modules
+- `npx wtf-p uninstall --help` prints the uninstaller's help, `uninstall <target>`
+  maps to the uninstaller's `--<target>` selector, and the installer help lists
+  the uninstall flags
+- `bib-format` emits standard BibTeX entry types by default (`@article`,
+  `@inproceedings`, ...); the al-folio Jekyll projection is behind
+  `--style=al-folio`. `wtfp_missing` now also reports a missing title or year
+- `bib-index` flags repeated citation keys and refuses an ambiguous `--key`
+- Network dispatcher commands enforce `--timeout=<seconds>` (default 20) with exit
+  124, `bib-impact` reports progress on stderr, and `<command> --help` exits 0
 - Executable bindings for `research-gap`, `analyze-bib`, and `check-refs` through
   that dispatcher; Clio's `network.search` resolves to the bundled scholarly-index
   clients, which are the only search these actions ever declared

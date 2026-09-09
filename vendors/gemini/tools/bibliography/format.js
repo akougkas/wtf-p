@@ -15,9 +15,24 @@ function parseField(text, field) {
   return match ? match[1].trim() : null;
 }
 
+// Standard BibTeX entry types, the only ones the default output emits.
+// `conference` is a bibtex alias for `inproceedings`; the al-folio projection
+// uses `journal` and `conference`, which are folded back here.
+const STANDARD_ENTRY_TYPES = Object.freeze([
+  'article', 'book', 'booklet', 'inbook', 'incollection', 'inproceedings', 'manual',
+  'mastersthesis', 'misc', 'phdthesis', 'proceedings', 'techreport', 'unpublished'
+]);
+const ENTRY_TYPE_ALIASES = Object.freeze({ conference: 'inproceedings', journal: 'article' });
+
+function normalizeEntryType(type) {
+  const lowered = (type || '').toLowerCase();
+  const resolved = ENTRY_TYPE_ALIASES[lowered] || lowered;
+  return STANDARD_ENTRY_TYPES.includes(resolved) ? resolved : 'misc';
+}
+
 function parseEntryType(text) {
   const match = text.match(/@(\w+)\s*{/);
-  return match ? match[1].toLowerCase() : 'misc';
+  return normalizeEntryType(match ? match[1] : 'misc');
 }
 
 function parseKey(text) {
@@ -54,11 +69,11 @@ function parse(rawEntry) {
 
 // --- Formatting Logic ---
 
-function format(data, provenance = {}) {
-  // Determine Status
+// Every placeholder the body can emit is reported in wtfp_missing, so the
+// two never disagree.
+function missingReport(data, provenance) {
   let status = provenance.wtfp_status || 'official';
   const missingFields = [];
-
   if (!data.doi) {
     status = 'incomplete';
     missingFields.push('doi');
@@ -67,13 +82,69 @@ function format(data, provenance = {}) {
     status = 'incomplete';
     missingFields.push('author');
   }
+  if (!data.title || data.title === '{MISSING_TITLE}') {
+    status = 'incomplete';
+    missingFields.push('title');
+  }
   if (!data.booktitle || data.booktitle === '{MISSING_VENUE}') {
-     missingFields.push('venue');
+    missingFields.push('venue');
+  }
+  if (!data.year || data.year === '{????}') {
+    status = 'incomplete';
+    missingFields.push('year');
   }
   if (!data.abstract) {
     if (status !== 'incomplete') status = 'partial';
     missingFields.push('abstract');
   }
+  return { status, missingFields };
+}
+
+// Default output: a standard BibTeX entry that bibtex and biber accept. Only
+// non-empty fields are emitted, apart from the placeholders that
+// wtfp_missing reports. The venue field follows the entry type.
+function formatBibtex(data, provenance = {}) {
+  const { status, missingFields } = missingReport(data, provenance);
+  const entryType = normalizeEntryType(data.entryType);
+  const venueField = entryType === 'article' ? 'journal' : 'booktitle';
+  const fields = [
+    ['author', data.author || '{MISSING_AUTHOR}'],
+    ['title', data.title || '{MISSING_TITLE}'],
+    [venueField, data.booktitle || '{MISSING_VENUE}'],
+    ['year', data.year || '{????}'],
+    ['month', data.month],
+    ['publisher', data.publisher],
+    ['volume', data.volume],
+    ['number', data.number],
+    ['pages', data.pages],
+    ['doi', data.doi],
+    ['url', data.url || (data.doi ? `https://doi.org/${data.doi}` : '')],
+    ['keywords', data.keywords],
+    ['abstract', data.abstract],
+    ['wtfp_status', status],
+    ['wtfp_source', provenance.wtfp_source],
+    ['wtfp_citations', provenance.wtfp_citations],
+    ['wtfp_velocity', provenance.wtfp_velocity],
+    ['wtfp_s2_id', provenance.wtfp_s2_id],
+    ['wtfp_scholar_id', provenance.wtfp_scholar_id],
+    ['wtfp_fetched', provenance.wtfp_fetched || new Date().toISOString().split('T')[0]],
+    ['wtfp_missing', missingFields.join(',')]
+  ].filter(([, value]) => value !== undefined && value !== null && String(value).length > 0);
+  const body = fields.map(([name, value]) => `  ${name} = {${String(value)}}`).join(',\n');
+  return `@${entryType}{${data.key || 'unknown'},\n${body}\n}`;
+}
+
+function format(data, provenance = {}, options = {}) {
+  const style = options.style || 'bibtex';
+  if (style === 'bibtex') return formatBibtex(data, provenance);
+  if (style !== 'al-folio') throw new Error(`unknown bibliography style: ${style}`);
+  return formatAlFolio(data, provenance);
+}
+
+// The al-folio Jekyll projection: `@journal`/`@conference` pseudo-types and
+// site fields. Not valid BibTeX; only for an explicit --style=al-folio.
+function formatAlFolio(data, provenance = {}) {
+  const { status, missingFields } = missingReport(data, provenance);
 
   // Use provided provenance or defaults
   const wtfp_source = provenance.wtfp_source || '';
@@ -83,7 +154,8 @@ function format(data, provenance = {}) {
   const wtfp_scholar_id = provenance.wtfp_scholar_id || '';
   const wtfp_fetched = provenance.wtfp_fetched || new Date().toISOString().split('T')[0];
 
-  const entryType = data.entryType === 'inproceedings' ? 'conference' : (data.entryType === 'article' ? 'journal' : data.entryType || 'misc');
+  const normalized = normalizeEntryType(data.entryType);
+  const entryType = normalized === 'inproceedings' ? 'conference' : (normalized === 'article' ? 'journal' : normalized);
 
   // Clean fields
   const clean = (val, fallback = "") => val || fallback;
@@ -158,4 +230,4 @@ if (require.main === module) {
   console.log(format(parsed));
 }
 
-module.exports = { parse, format };
+module.exports = { parse, format, formatBibtex, formatAlFolio, normalizeEntryType, STANDARD_ENTRY_TYPES };

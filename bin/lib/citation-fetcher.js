@@ -1,5 +1,6 @@
 const https = require('https');
 const querystring = require('querystring');
+const REQUEST_TIMEOUT_MS = 10000;
 const s2 = require('./semantic-scholar');
 const scholar = require('./scholar-lookup');
 const ranker = require('./citation-ranker');
@@ -52,6 +53,8 @@ async function searchCrossRef(query, limit = 5) {
     });
 
     req.on('error', () => resolve([]));
+    req.on('timeout', () => req.destroy(new Error('CrossRef request timed out')));
+    req.setTimeout(REQUEST_TIMEOUT_MS);
     req.end();
   });
 }

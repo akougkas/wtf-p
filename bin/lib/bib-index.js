@@ -32,15 +32,41 @@ function parseEntries(text) {
   return entries;
 }
 
-function index(content) {
-  const entries = parseEntries(content);
-  return JSON.stringify(entries.map(e => ({ key: e.key, title: e.title, year: e.year })), null, 2);
+// A key that appears more than once is flagged on every row that carries it,
+// so an index consumer sees the ambiguity without a second pass.
+function keyCounts(entries) {
+  const counts = new Map();
+  for (const entry of entries) counts.set(entry.key, (counts.get(entry.key) || 0) + 1);
+  return counts;
 }
 
-function getEntry(content, key) {
+function row(entry, counts) {
+  const summary = { key: entry.key, title: entry.title, year: entry.year };
+  if (counts.get(entry.key) > 1) summary.duplicate = true;
+  return summary;
+}
+
+function index(content) {
   const entries = parseEntries(content);
-  const entry = entries.find(e => e.key === key);
-  return entry ? entry.fullText : null;
+  const counts = keyCounts(entries);
+  return JSON.stringify(entries.map(e => row(e, counts)), null, 2);
+}
+
+function duplicateKeys(content) {
+  const counts = keyCounts(parseEntries(content));
+  return [...counts.entries()].filter(([, count]) => count > 1)
+    .map(([key, count]) => ({ key, count }));
+}
+
+function findEntries(content, key) {
+  return parseEntries(content).filter(e => e.key === key).map(e => e.fullText);
+}
+
+// First match, for callers that already know the key is unique. Use
+// findEntries to detect ambiguity.
+function getEntry(content, key) {
+  const matches = findEntries(content, key);
+  return matches.length > 0 ? matches[0] : null;
 }
 
 function search(content, query) {
@@ -51,7 +77,8 @@ function search(content, query) {
     e.key.toLowerCase().includes(q) ||
     e.fullText.toLowerCase().includes(q)
   );
-  return JSON.stringify(results.map(e => ({ key: e.key, title: e.title, year: e.year })), null, 2);
+  const counts = keyCounts(entries);
+  return JSON.stringify(results.map(e => row(e, counts)), null, 2);
 }
 
 // --- CLI Handling ---
@@ -101,4 +128,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { index, getEntry, search, parseEntries };
+module.exports = { index, getEntry, findEntries, duplicateKeys, search, parseEntries };

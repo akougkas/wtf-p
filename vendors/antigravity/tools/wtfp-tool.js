@@ -5,8 +5,10 @@
 
 // Single bounded entry point for every WTF-P bundled tool. Usage:
 //   node <package-root>/tools/wtfp-tool.js [--offline] <command> [arguments]
+//   node <package-root>/tools/wtfp-tool.js <command> --help
 // Every command prints one JSON document on stdout. Failures print
-// {"error": "..."} on stderr and exit 1. Each declared command carries its
+// {"error": "..."} on stderr and exit 1; a network command that exceeds its
+// --timeout (default 20 s) exits 124. Each declared command carries its
 // effects; --offline or WTFP_TOOL_OFFLINE=1 refuses any command whose effects
 // include network.*. No other module in this package is intended to be
 // executed directly.
@@ -35,7 +37,7 @@ const COMMANDS = [
   {
     "command": "bib-format",
     "tool": "bibliography.format",
-    "usage": "bib-format <bib-file> --key=<citation-key>",
+    "usage": "bib-format <bib-file> --key=<citation-key> [--style=<bibtex|al-folio>]",
     "effects": [
       "filesystem.read"
     ]
@@ -43,7 +45,7 @@ const COMMANDS = [
   {
     "command": "bib-impact",
     "tool": "bibliography.analyze-impact",
-    "usage": "bib-impact <bib-file>",
+    "usage": "bib-impact <bib-file> [--timeout=<seconds>]",
     "effects": [
       "filesystem.read",
       "network.search"
@@ -52,7 +54,7 @@ const COMMANDS = [
   {
     "command": "citation-search",
     "tool": "citation.fetch",
-    "usage": "citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>]",
+    "usage": "citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]",
     "effects": [
       "network.search"
     ]
@@ -60,7 +62,7 @@ const COMMANDS = [
   {
     "command": "scholar-search",
     "tool": "citation.scholar-lookup",
-    "usage": "scholar-search --query=<text> [--limit=<1-25>]",
+    "usage": "scholar-search --query=<text> [--limit=<1-25>] [--timeout=<seconds>]",
     "effects": [
       "network.search"
     ]
@@ -68,7 +70,7 @@ const COMMANDS = [
   {
     "command": "s2-search",
     "tool": "citation.semantic-scholar",
-    "usage": "s2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>]",
+    "usage": "s2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>] [--timeout=<seconds>]",
     "effects": [
       "network.fetch",
       "network.search"
@@ -85,6 +87,9 @@ const COMMANDS = [
 const MAX_QUERY = 512;
 const MAX_PATH = 4096;
 const MAX_LIMIT = 25;
+const DEFAULT_TIMEOUT_SECONDS = 20;
+const MAX_TIMEOUT_SECONDS = 600;
+const EXIT_TIMEOUT = 124;
 
 function offlineRequested(argv) {
   const flag = process.env.WTFP_TOOL_OFFLINE;
@@ -146,6 +151,37 @@ function requirePath(candidate) {
   return candidate;
 }
 
+function timeoutOf(flags) {
+  if (!flags.has('timeout')) return DEFAULT_TIMEOUT_SECONDS;
+  const seconds = Number.parseInt(flags.get('timeout'), 10);
+  if (!Number.isInteger(seconds) || seconds < 1 || seconds > MAX_TIMEOUT_SECONDS) {
+    fail(`--timeout must be an integer number of seconds between 1 and ${MAX_TIMEOUT_SECONDS}`);
+  }
+  return seconds;
+}
+
+// Hard wall clock for a network command: report on stderr and exit 124. A
+// hung socket cannot keep the process alive past this point.
+function withTimeout(promise, seconds, command) {
+  const timer = setTimeout(() => {
+    process.stderr.write(`${JSON.stringify({ error: `${command} timed out after ${seconds} s` })}\n`);
+    process.exit(EXIT_TIMEOUT);
+  }, seconds * 1000);
+  return promise.finally(() => clearTimeout(timer));
+}
+
+function progress(message) {
+  process.stderr.write(`${message}\n`);
+}
+
+// A key that appears more than once cannot be selected by name.
+function uniqueEntry(bib, content, key) {
+  const matches = bib.findEntries(content, key);
+  if (matches.length === 0) fail(`citation key not found: ${key}`);
+  if (matches.length > 1) fail(`citation key is ambiguous: ${key} appears ${matches.length} times; deduplicate the file first`);
+  return matches[0];
+}
+
 function limitOf(flags) {
   if (!flags.has('limit')) return 10;
   const limit = Number.parseInt(flags.get('limit'), 10);
@@ -176,6 +212,10 @@ async function main(rawArgv) {
   }
   const declared = COMMANDS.find((entry) => entry.command === command);
   if (!declared) fail(`unknown command: ${command}; run \`list\` for the declared set`);
+  if (argv.slice(1).some((argument) => argument === '--help' || argument === '-h')) {
+    emit(declared);
+    return;
+  }
   const networkEffects = declared.effects.filter((effect) => effect.startsWith('network.'));
   if (offline && networkEffects.length > 0) {
     fail(`${command} is refused in offline mode: it declares ${networkEffects.join(', ')}`);
@@ -189,42 +229,46 @@ async function main(rawArgv) {
     const bib = load();
     if (flags.has('key')) {
       const key = requireText(flags.get('key'), '--key');
-      const entry = bib.getEntry(content, key);
-      if (entry === null) fail(`citation key not found: ${key}`);
-      return emit({ key, entry });
+      return emit({ key, entry: uniqueEntry(bib, content, key) });
     }
     if (flags.has('query')) return emit(JSON.parse(bib.search(content, requireText(flags.get('query'), '--query'))));
-    return emit(JSON.parse(bib.index(content)));
+    return emit({ entries: JSON.parse(bib.index(content)), duplicates: bib.duplicateKeys(content) });
   }
   if (command === 'bib-format') {
     const content = readTextFile(positional[0]);
     const key = requireText(flags.get('key'), '--key');
-    const entry = require(MODULES['bibliography.index']).getEntry(content, key);
-    if (entry === null) fail(`citation key not found: ${key}`);
+    const style = flags.get('style') || 'bibtex';
+    if (!['bibtex', 'al-folio'].includes(style)) fail('--style must be bibtex or al-folio');
+    const entry = uniqueEntry(require(MODULES['bibliography.index']), content, key);
     const formatter = load();
-    return emit({ key, formatted: formatter.format(formatter.parse(entry)) });
+    return emit({ key, style, formatted: formatter.format(formatter.parse(entry), {}, { style }) });
   }
   if (command === 'bib-impact') {
     const file = requirePath(positional[0]);
     readTextFile(file);
-    return emit(await load().analyze(file));
+    const seconds = timeoutOf(flags);
+    const onProgress = (done, total) => progress(`bib-impact: ${done}/${total} entries queried`);
+    return emit(await withTimeout(load().analyze(file, { onProgress }), seconds, command));
   }
   if (command === 'citation-search') {
     if (positional.length > 0) fail(`${command} takes its query through --query: ${declared.usage}`);
     const query = requireText(flags.get('query'), '--query');
     const year = yearOf(flags);
-    return emit(await load().search(query, { limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }));
+    const seconds = timeoutOf(flags);
+    return emit(await withTimeout(load().search(query, { limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
   }
   if (command === 'scholar-search') {
     if (positional.length > 0) fail(`${command} takes its query through --query: ${declared.usage}`);
     const query = requireText(flags.get('query'), '--query');
-    return emit(await load().search(query, { limit: limitOf(flags) }));
+    const seconds = timeoutOf(flags);
+    return emit(await withTimeout(load().search(query, { limit: limitOf(flags) }), seconds, command));
   }
   if (command === 's2-search') {
     if (positional.length > 0) fail(`${command} takes its query through --query: ${declared.usage}`);
     const query = requireText(flags.get('query'), '--query');
     const year = yearOf(flags);
-    return emit(await load().search(query, { limit: limitOf(flags), ...(year ? { year } : {}) }));
+    const seconds = timeoutOf(flags);
+    return emit(await withTimeout(load().search(query, { limit: limitOf(flags), ...(year ? { year } : {}) }), seconds, command));
   }
   if (command === 'rank') {
     const papers = JSON.parse(readTextFile(positional[0]));

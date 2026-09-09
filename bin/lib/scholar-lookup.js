@@ -39,6 +39,8 @@ function isAvailable() {
   return !!getApiKey();
 }
 
+const REQUEST_TIMEOUT_MS = 10000;
+
 function request(params) {
   return new Promise((resolve, reject) => {
     const key = getApiKey();
@@ -79,6 +81,10 @@ function request(params) {
     });
 
     req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy(new Error('SerpAPI request timed out'));
+    });
+    req.setTimeout(REQUEST_TIMEOUT_MS);
     req.end();
   });
 }

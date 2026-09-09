@@ -109,6 +109,66 @@ try {
     assert.match(errorOf(run(['--offline', 'bib-index', bib, `--query=${'q'.repeat(513)}`])), /--query exceeds 512/);
   });
 
+  test('<command> --help prints that command and exits 0', () => {
+    for (const command of ['bib-index', 'bib-impact', 's2-search']) {
+      for (const flag of ['--help', '-h']) {
+        const result = run([command, flag]);
+        assert.strictEqual(result.status, 0, result.stderr);
+        const printed = JSON.parse(result.stdout);
+        assert.strictEqual(printed.command, command);
+        assert.ok(Array.isArray(printed.effects));
+        assert.match(printed.usage, new RegExp(`^${command} `));
+      }
+    }
+    assert.match(errorOf(run(['nonsense', '--help'])), /unknown command/);
+  });
+
+  test('bib-index reports duplicate keys and refuses an ambiguous --key', () => {
+    const dup = path.join(scratch, 'dup.bib');
+    fs.writeFileSync(dup, '@article{k1,\n  title={A},\n  year={2020}\n}\n@article{k1,\n  title={A2},\n  year={2021}\n}\n@misc{k2,\n  title={Only},\n  year={2019}\n}\n');
+    const listing = JSON.parse(run(['--offline', 'bib-index', dup]).stdout);
+    assert.deepStrictEqual(listing.duplicates, [{ key: 'k1', count: 2 }]);
+    assert.deepStrictEqual(listing.entries.map((entry) => entry.duplicate === true), [true, true, false]);
+    assert.match(errorOf(run(['--offline', 'bib-index', dup, '--key=k1'])), /ambiguous: k1 appears 2 times/);
+    assert.match(errorOf(run(['--offline', 'bib-format', dup, '--key=k1'])), /ambiguous/);
+    assert.strictEqual(JSON.parse(run(['--offline', 'bib-index', dup, '--key=k2']).stdout).key, 'k2');
+    assert.match(errorOf(run(['--offline', 'bib-index', dup, '--key=k9'])), /citation key not found/);
+  });
+
+  test('bib-format emits standard BibTeX by default and al-folio only by explicit style', () => {
+    const formatted = JSON.parse(run(['--offline', 'bib-format', bib, '--key=k1']).stdout);
+    assert.strictEqual(formatted.style, 'bibtex');
+    assert.match(formatted.formatted, /^@article\{k1,/);
+    assert.ok(!formatted.formatted.includes('entry_type'));
+    const alFolio = JSON.parse(run(['--offline', 'bib-format', bib, '--key=k1', '--style=al-folio']).stdout);
+    assert.match(alFolio.formatted, /^@journal\{k1,/);
+    assert.match(errorOf(run(['--offline', 'bib-format', bib, '--key=k1', '--style=jekyll'])), /--style must be bibtex or al-folio/);
+  });
+
+  test('network commands enforce a hard --timeout with exit 124 and report progress on stderr', () => {
+    // Copy the packaged tools and stub the impact analyzer so the wall clock,
+    // not the network, decides the outcome.
+    const copy = path.join(scratch, 'tools');
+    fs.cpSync(path.join(ROOT, 'vendors', 'plugin', 'tools'), copy, { recursive: true });
+    const stub = path.join(copy, 'bibliography', 'analyze-impact.js');
+    assert.ok(fs.existsSync(stub));
+    fs.writeFileSync(stub, `module.exports = { analyze: (file, options) => { options.onProgress(5, 10); if (process.env.STUB_RESOLVE) return Promise.resolve({ seminal: [] }); return new Promise(() => {}); } };`);
+    const copied = path.join(copy, 'wtfp-tool.js');
+    const hung = spawnSync(process.execPath, [copied, 'bib-impact', bib, '--timeout=1'], { cwd: scratch, encoding: 'utf8', timeout: 30000 });
+    assert.strictEqual(hung.status, 124, hung.stdout + hung.stderr);
+    assert.strictEqual(hung.stdout, '');
+    const lines = hung.stderr.trim().split('\n');
+    assert.strictEqual(lines[0], 'bib-impact: 5/10 entries queried');
+    assert.deepStrictEqual(JSON.parse(lines[lines.length - 1]), { error: 'bib-impact timed out after 1 s' });
+    const done = spawnSync(process.execPath, [copied, 'bib-impact', bib, '--timeout=5'], { cwd: scratch, encoding: 'utf8', timeout: 30000, env: { ...process.env, STUB_RESOLVE: '1' } });
+    assert.strictEqual(done.status, 0, done.stderr);
+    assert.deepStrictEqual(JSON.parse(done.stdout), { seminal: [] });
+    for (const bad of ['0', '601', 'soon']) {
+      assert.match(errorOf(run(['bib-impact', bib, `--timeout=${bad}`])), /--timeout must be an integer number of seconds between 1 and 600/);
+    }
+    assert.match(errorOf(run(['--offline', 'bib-impact', bib, '--timeout=5'])), /refused in offline mode/);
+  });
+
   test('search commands take their query only through --query', () => {
     for (const command of ['citation-search', 'scholar-search', 's2-search']) {
       assert.match(errorOf(run([command, 'positional query'])), /takes its query through --query/, command);

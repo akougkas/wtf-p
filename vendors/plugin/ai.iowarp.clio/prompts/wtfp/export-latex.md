@@ -24,7 +24,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Confirm venue template and whether an existing deliverable may be replaced.
 2. Convert manuscript structure, citations, figures, tables, and bibliography without inventing content or metadata.
-3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
+3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. Bibliography entries for the deliverable come from `bib-format` in its default `bibtex` style, which emits standard entry types; never pass `--style=al-folio` for a LaTeX export, since that projection does not compile under bibtex or biber. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
 
 ## Bundled tool execution
 

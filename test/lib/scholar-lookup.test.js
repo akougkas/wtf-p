@@ -17,7 +17,7 @@ function mockRequest(responseBody, statusCode = 200) {
       }
     };
     process.nextTick(() => callback(res));
-    return { on: () => {}, end: () => {} };
+    return { on: () => {}, setTimeout: () => {}, end: () => {} };
   };
 }
 

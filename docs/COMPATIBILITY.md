@@ -281,6 +281,24 @@ Compiler v5 added the standard Agent Plugins bundle at `vendors/plugin/`; at the
 
 This identifies the entry file, not a full distributed-build digest. The reproducible test is `test/clio-native-integration.test.js`, invoked with an explicit `WTFP_CLIO_ENTRY`. It forwards no credentials and makes no model call. Fleet validation uses an existing disposable Git fixture because native write-boundary enforcement requires a checkout; research actions never initialize one. These observations establish native packaging/lifecycle behavior and do not claim a new model-backed research workflow result. See [AGENT_PLUGIN.md](AGENT_PLUGIN.md) for the plugin lifecycle the installer follows, and [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md) for import constraints.
 
+## Known limitations (2026-09-09 writing exercise)
+
+Recorded from a headless writing exercise against Clio 0.4.7 and `dynamo/qwen3.8-27b`. None of
+these is a WTF-P packaging defect, and none is changed by the fix rounds that followed.
+
+- Headless `clio-coder run` cannot satisfy a WTF-P `user.gate`. The gate binding accepts only the
+  structured value returned by `ask_user`, which is registered in the TUI and not in headless
+  runs, so the first gated step of every writing workflow ends as a blocked task. That is the
+  intended safety outcome; there is no documented headless path to pre-answer a gate, and the
+  prompt explicitly rejects invocation arguments as a substitute.
+- Local-model latency. One `new-paper` turn on `dynamo/qwen3.8-27b` needed six model calls of
+  roughly 90 s each, driven by a prompt of about 50 KB of inlined schemas, and did not finish in a
+  10-minute budget. The writing workflows are not practical on that target without reducing the
+  inlined schema set.
+- Clio reads `~/.claude/skills` regardless of `CLIO_CODER_*`. That is Clio interop behaviour and out
+  of WTF-P's scope. Isolation claims that rely only on `CLIO_CODER_*` are incomplete; the
+  reproducible WTF-P tests also redirect `HOME`, so their evidence stands.
+
 ## Final portability check (2026-09-09)
 
 Claude Code 2.1.266 accepted the generated marketplace and the explicitly selected `.claude-plugin/plugin.json` in disposable, credential-free staging. An invalid manifest-name control failed as expected. A deliberately invalid agent `tools` value still passed both manifest validation routes: `claude plugin validate` validates manifests and does not establish native agent metadata or tool-enforcement correctness. The directory form selected the marketplace manifest, so the plugin manifest was also validated explicitly. No plugin was installed into the operator profile, no agent was dispatched, and no model call was made.

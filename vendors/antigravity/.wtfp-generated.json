@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "fec46b52f83d30126a841897e9ceb699c971c1cb763335df2f9e24485777e87c",
+  "sourceHash": "3921d88249843d260a0e6e5fd7f869d70c671fdb17548dcbda732b9f7be680a0",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -634,19 +634,19 @@
     },
     {
       "path": "tools/bibliography/analyze-impact.js",
-      "sha256": "89fc1a22ee6387bea31d9b9332378f49416f67a17ef08dd19990b53e57baeb09"
+      "sha256": "be341b28eabe26bf0a4867ee083abbfaaba7869e41e84af526ff9203f4c85d6f"
     },
     {
       "path": "tools/bibliography/format.js",
-      "sha256": "3d7751cb25cc05d2c3493b1e826700e8cabe19e1ae32ded5e4502df7151699ca"
+      "sha256": "c313a4e8eb639e0e270106e4e3e373b3ec36f94e6920e009f50c59c7d55f3fbe"
     },
     {
       "path": "tools/bibliography/index.js",
-      "sha256": "42a50d636734b654c95409294c0d4b16b6fce94fc4bf52258c18d9e329cbafd6"
+      "sha256": "0e17d3b5d84a856e455aec9bce17ef3a7158b1771b54a294617ebff21310dc4d"
     },
     {
       "path": "tools/citation/fetch.js",
-      "sha256": "d3754ea8f0217b14cb1676b3d4f8ceb80ba6b6d3932e31f467de94a56dc54124"
+      "sha256": "56c92d67709d7fc21b8b6e00492ba7e22e60b402c36b4f1d0780a9cf45c56d7b"
     },
     {
       "path": "tools/citation/rank.js",
@@ -654,7 +654,7 @@
     },
     {
       "path": "tools/citation/scholar-lookup.js",
-      "sha256": "8c31c74708d39f8a3fd22a48b4ec815e98fe7a06d45246970e8b43250faf62b0"
+      "sha256": "fb1a32567620780257f25df44bc8ce5a737dd760178a7a450320b686503426a5"
     },
     {
       "path": "tools/citation/semantic-scholar.js",
@@ -662,11 +662,11 @@
     },
     {
       "path": "tools/README.md",
-      "sha256": "78985095088c3712d35fd716126ec0b6ece9382ad921f0ca8ce48eb583ab9745"
+      "sha256": "92e77815dd04a1b1df4606daefd76de5dba88a6351a3c8cd7810a94d70db8e2b"
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "0ae1a5aacb734fd42cf29457945609c766e85d735493ba094b57b7c88277ef74"
+      "sha256": "a5d6a88783187e9d139075a2dae1376ffcfc2369c5c89838ecf4d0de1e70636e"
     },
     {
       "path": "workflows/add-todo.md",
@@ -718,7 +718,7 @@
     },
     {
       "path": "workflows/export-latex.md",
-      "sha256": "6b2353bfdb82082cfb3bab2f712e8e3f1ddb09e2cfb7f9cd48720b16c8a75403"
+      "sha256": "32e03eafa81ca521878c64bc2eed9a13efd063814492cfb8a23b07d7f39aa5d4"
     },
     {
       "path": "workflows/help.md",
