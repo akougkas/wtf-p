@@ -12,230 +12,155 @@ Human-guided research and writing workflows for AI coding agents.
 
 </div>
 
-WTF-P helps a scientist turn a research idea into a defensible paper or
-proposal without handing scientific judgment to the model. It gives your
-coding agent a shared method for interviewing you, mapping evidence, recording
-decisions, building an outline, planning and reviewing sections, and resuming
-work from durable state.
+WTF-P gives your coding agent one portable academic method: interview the
+author, map the evidence, record decisions, build an outline, plan and draft
+one section at a time, review it, and resume later from durable state. You keep
+the scientific judgment. The agent keeps the bookkeeping and does bounded jobs.
 
-The human stays in the loop. You decide the question, evidence, claims, scope,
-and tradeoffs. You approve the outline, section plans, drafts, reviews, and
-delivery checkpoints. WTF-P organizes the work and gives specialist agents
-bounded jobs; it does not become the author, principal investigator, or final
-authority.
+It ships as one canonical [Agent Plugins 1.0.0](https://agent-plugins.org)
+bundle that a deterministic compiler projects into a native package for seven
+coding-agent hosts. Version `0.6.0-rc.4` is a release candidate published
+under the npm `next` tag; `latest` still resolves to the v0.5 line.
 
-`0.6.0-rc.2` is the newest version published to npm under `next`, for Clio
-Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and
-Gemini CLI. `0.6.0-rc.3` is a local candidate: it is neither tagged nor
-published, and it requires Clio Coder 0.4.7 or newer.
+## Install on your agent
 
-## Start a project
+You need Node.js 20 or newer and one supported host. Run one line. The
+installer publishes the generated package into that host's own configuration
+root, records an exact-file receipt, and registers it with the host's native
+plugin lifecycle where one exists.
 
-You need Node.js 20 or newer and one supported coding-agent client. This
-example uses Clio Coder (0.4.7 or newer required; 0.4.6 discovery and help
-smoke and 0.3.8 initialization history retained as prior evidence):
+| Host | Install | Native registration the installer performs | Verified with |
+| --- | --- | --- | --- |
+| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio` | `clio-coder plugins install <staged-bundle> --user`, then `clio-coder plugins inspect wtfp --json` | 0.4.7 |
+| Claude Code | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.267 |
+| Codex | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtf-p@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtf-p@wtfp` | 1.0.83 |
+| OpenCode | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.30 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtf-p` | 1.1.28 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini` | Files under `<root>/extensions/wtf-p`; Gemini discovers the extension by directory | 0.59.0 |
+
+"Verified" means native discovery in a disposable profile on this exact
+envelope, with the commands recorded in
+[Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder 0.4.7 is not yet a
+published Clio release, which is one reason this is a release candidate.
+
+Keep the explicit `--package=wtf-p@<version> -- wtf-p` form. On a workstation
+with WTF-P 0.5 installed globally, the shorter `npx wtf-p@<version>` can run
+the old executable instead. `--package=wtf-p@next` selects the newest
+prerelease; an unqualified `npx wtf-p` selects the v0.5 stable line.
+
+## Sixty-second start
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
 clio-coder --autonomy suggest
 ```
 
-Then ask WTF-P to start the project:
-
 ```text
+/wtfp:help
 /wtfp:new-paper I am preparing a research proposal on reproducible scientific workflows. Interview me before deciding the scope, claims, evaluation, team, budget, or timeline. Use only the evidence I provide and mark unknowns instead of inventing citations.
 ```
 
-Clio will interview you and show the proposed project records before writing
-them. Answer the questions, correct its assumptions, and approve only what you
-actually want. That conversation is the beginning of the workflow—not an
-obstacle to it.
+The agent interviews you, previews the five initial project records, and waits
+for your approval before writing anything. Every host uses the same
+`/wtfp:<action>` names except Codex, which exposes the same actions through
+seven native skills: select `$wtf-p:wtfp-start-project` and ask for the
+`new-paper` action with the same brief.
 
-Use `--package=wtf-p@next` instead of the exact version when you intentionally
-want the newest release candidate.
-
-## Work with WTF-P
-
-A normal project moves through deliberate stages:
+A normal project then moves one action at a time:
 
 ```text
-/wtfp:new-paper <project brief>
-/wtfp:map-project <what to inventory>
-/wtfp:create-outline <venue and structure constraints>
-
-/wtfp:discuss-section <section-id>
-/wtfp:plan-section <section-id>
-/wtfp:write-section <section-id>
-/wtfp:review-section <section-id>
-
-/wtfp:progress
-/wtfp:pause-writing <reason>
-# Quit the client and start a new process later.
-/wtfp:resume-writing
+/wtfp:map-project        inventory the materials you supplied
+/wtfp:create-outline     argument, dependencies, exact word budget, for approval
+/wtfp:discuss-section    capture your intent for one section
+/wtfp:plan-section       one checked, executable plan
+/wtfp:write-section      draft only from the approved plan and evidence
+/wtfp:review-section     independent review, findings recorded, nothing rewritten
+/wtfp:pause-writing      durable handoff; quit the client
+/wtfp:resume-writing     a fresh process picks up from disk
 ```
 
-Run one action at a time. Each action reads the current project, performs one
-bounded job, asks the questions or approvals that job requires, validates what
-it changed, and recommends the next safe action.
+See [Getting started](docs/GETTING_STARTED.md) for each host's launch command,
+Codex skill selectors, isolated evaluation profiles, and troubleshooting.
 
-The section ID comes from the approved outline—for example,
-`project-significance`—and remains stable as the document evolves. It is not a
-section number guessed from the current order.
+## What it writes
 
-For an existing manuscript with no WTF-P project state, start with
-`new-paper`, tell the agent to preserve and initialize around the existing
-material, approve the proposed control records, and then run `map-project`.
+Four document types share the same action set and differ in their scaffold:
 
-## What the human and agents each do
+| Workflow | Scaffold | Entry actions |
+| --- | --- | --- |
+| Paper (article, conference, review, thesis chapter) | `protocol/templates/paper-outline.md` | `new-paper`, `create-outline` |
+| Grant proposal (solicitation-driven) | `protocol/templates/grant-proposal-outline.md` | `new-paper`, `create-outline`; see the [proposal workflow](docs/PROPOSAL_WORKFLOW.md) |
+| Poster | `protocol/templates/poster.md` | `create-poster` |
+| Presentation | `protocol/templates/slides.md` | `create-slides` |
 
-```text
-Scientist
-  → invokes one action and answers the interview
-    → main agent reads durable state and applies the workflow
-      → specialist agents plan, draft, check, or review bounded artifacts
-    → main agent validates the result and reports exactly what changed
-  → scientist approves, revises, defers, or stops
+The catalog has 36 stable actions across seven skills: start a project,
+research the literature, plan a section, write a section, review the
+manuscript, manage the project, and deliver. Availability is decided per host
+by the generated `compatibility/action-availability.json`, and an unavailable
+action returns `WTFP_ACTION_UNAVAILABLE` instead of improvising:
+
+| Host | Available | Fails closed |
+| --- | ---: | --- |
+| Clio Coder, Claude Code | 31 / 36 | `contribute`, `report-bug`, `request-feature` (no `external.issue` binding); `remove-section` (no `filesystem.delete`); `update` (no `package.update`) |
+| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26 / 36 | the five above plus `research-gap`, `analyze-bib`, `check-refs`, `audit-milestone`, `export-latex`, whose `tool.execute` effect is bound only to Clio `bash` and Claude `Bash` |
+| Copilot cloud projection (`.github`) | 5 / 36 | everything that needs an explicit approval gate |
+
+Where the research routes are available, `tool.execute` authorizes exactly one
+command, the bundled `tools/wtfp-tool.js` dispatcher over seven bibliography
+and citation tools. Run it with `--offline` until you approve network use.
+
+## What it will not do
+
+- It does not write without you. Outline, plan, write, review, and delivery
+  gates are on by default, and a gate is crossed only through the host's real
+  interaction tool, never by silence or a model's own recommendation.
+- It does not invent evidence. Sources and evidence are separate records with
+  provenance; a missing citation stays missing.
+- It does not render or compile. `create-poster`, `create-slides`, and
+  `export-latex` emit source and hand you the render or compile command.
+- It does not submit. `submit-milestone` writes a local archive, not a
+  submission to a funder, journal, or service.
+- It does not touch Git or publish. No WTF-P action initializes, commits,
+  branches, pushes, tags, or publishes as a side effect.
+- It does not claim more than it has observed. Native discovery is verified
+  per host; model-backed lifecycle evidence is partial and listed in
+  [Compatibility](docs/COMPATIBILITY.md).
+
+## How it is built
+
+One protocol, one compiler, seven projections. Humans edit `protocol/`; the
+compiler owns every file under `vendors/`, authenticates each envelope with a
+SHA-256 inventory, and fails closed when a host cannot bind a capability an
+action requires.
+
+```mermaid
+flowchart LR
+  P["protocol/<br/>36 action contracts, 36 workflows,<br/>11 roles, 7 skills, .planning v1 schemas,<br/>templates, tools.json"] --> C["adapter compiler<br/>bin/lib/adapter-compiler.js"]
+  C --> B["vendors/plugin<br/>canonical Agent Plugins 1.0.0 bundle<br/>(Clio route)"]
+  C --> H["vendors/claude · codex · copilot ·<br/>opencode · antigravity · gemini<br/>native projections"]
+  B --> I["npx wtf-p install &lt;host&gt;<br/>exact-file receipts, native registration"]
+  H --> I
 ```
 
-The main agent is the orchestrator. It must preserve your locked and deferred
-decisions, call the client's real interaction tool at approval gates, and read
-back every mutation before claiming success. Specialists do not interview you
-or take over project-wide state; they return a plan, draft, review, or verifier
-result to the orchestrator.
-
-If a required interview disappears, the agent resolves a deferred choice on
-its own, or it claims a write that is not on disk, stop. That is a failed
-workflow, not useful autonomy.
-
-## A proposal example
-
-For a funding proposal, first place the authoritative solicitation and your
-trusted material inside the project directory:
-
-```text
-my-proposal/
-├── materials/
-│   ├── solicitation.pdf
-│   ├── author-brief.md
-│   └── prior-work/
-└── …
-```
-
-Then start with a concrete brief. For the NSF 25-531 CICI solicitation, for
-example:
-
-```text
-/wtfp:new-paper NSF 25-531 CICI proposal, TCR track. Working concept: ClioTrust, a reproducibility and provenance layer for agentic scientific workflows built around Clio Coder. Core themes: science workflows, reproducibility, provenance, and agentic reasoning. Interview me before locking scope, team, evaluation, budget, timeline, or claims. Use only evidence under materials/; mark unknowns and do not fabricate citations.
-```
-
-Follow with:
-
-```text
-/wtfp:map-project Inventory materials/ and existing notes. Treat the supplied solicitation as authoritative for program requirements.
-/wtfp:create-outline Derive requirements only from the supplied solicitation. Preserve unresolved author choices as deferred and show the complete section and word budget for approval.
-```
-
-WTF-P does not fetch or certify the solicitation merely because you give it a
-URL. It works from the material the client can actually read inside the project
-boundary. See the full [proposal workflow](docs/PROPOSAL_WORKFLOW.md) for the
-section loop, decision gates, review criteria, and pause/resume checklist.
-
-## Use your client
-
-The same workflow is projected into each client's native interface:
-
-| Client | Start an explicit action | Native package | Verified |
-| --- | --- | --- | --- |
-| Clio Coder (`>=0.4.7`) | `/wtfp:new-paper …` | Agent Plugins 1.0.0 bundle: 36 prompts (`/wtfp:help` prints a static reference), 11 agent recipes, 7 skills, 2 fleets | 0.4.7 |
-| Claude Code | `/wtfp:new-paper …` | Plugin: 36 commands, 11 agents preloading their skills, 7 skills, academic output style, write-guard hooks | 2.1.267 |
-| Codex | Select `$wtf-p:wtfp-start-project`, then request `new-paper` with the exact brief | Plugin: 7 skills, `com.openai` overlay, 11 TOML custom agents in `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `/wtfp:new-paper …` | Claude-compatible plugin plus the `.github` repository projection | not this round |
-| OpenCode | `/wtfp:new-paper …` | 36 commands, 11 subagents, 7 skills under the config root | 1.18.30 |
-| Antigravity CLI | `/wtfp:new-paper …` | Plugin: 36 commands, 11 subagents, 7 skills, one project-state rule | 1.1.28 |
-| Gemini CLI | `/wtfp:new-paper …` | Extension: 36 TOML commands, 11 agents, 7 skills, `GEMINI.md` | 0.59.0 (skills and context listed; agents load silently) |
-
-Install a different client by replacing `clio` in the first command with
-`claude`, `codex`, `copilot`, `opencode`, `antigravity`, or `gemini`. Codex uses
-native Agent Skills rather than the `/wtfp:*` namespace. Every other client
-uses the namespaced `/wtfp:<action>` form and nothing else; the flat
-`/wtfp-<action>` aliases Clio carried in earlier candidates are gone.
-[Host capabilities](docs/HOST_CAPABILITIES.md) records what each host can
-load, the commands that produced each verification, and which projections
-are unverified because the CLI was not available.
-
-See [Getting started](docs/GETTING_STARTED.md) for client launch commands,
-Codex skill selectors, Clio prompt discovery, safe test isolation, and
-troubleshooting.
-
-## Project memory
-
-WTF-P keeps control state in `.planning/` and manuscript artifacts in
-`paper/`:
-
-```text
-.planning/
-├── project.json
-├── config.json
-├── state.json
-├── decisions.json
-├── structure/outline.json
-├── sources/
-├── evidence/
-├── sections/
-├── checkpoints/
-└── validations/
-paper/
-└── … manuscript artifacts …
-```
-
-Sources record provenance. Evidence records what a source supports. Decisions
-record what you locked, deferred, delegated within limits, or superseded.
-Checkpoints let another process—or another supported client—resume without
-guessing from chat history.
-
-WTF-P itself does not initialize, stage, commit, branch, merge, push, publish,
-or submit your work. Those remain separate human-controlled operations.
-
-## Release-candidate boundaries
-
-The catalog exposes 36 stable action names. Availability is per host and is
-recorded in each generated `compatibility/action-availability.json`; that
-mapping does not by itself prove successful model execution. On Clio and
-Claude Code, 31 of 36 are available. The five that fail closed are
-`contribute`, `report-bug`, and `request-feature` (no `external.issue`
-binding), `remove-section` (no `filesystem.delete` binding), and `update` (no
-`package.update` binding). On Codex, Copilot CLI, OpenCode, Antigravity, and
-Gemini, 26 of 36 are available: the same five plus `analyze-bib`,
-`audit-milestone`, `check-refs`, `export-latex`, and `research-gap`, whose
-`tool.execute` effect is bound only where the host's shell tool has been
-verified (Clio `bash`, Claude `Bash`). Where a research route is available it
-runs the bundled `tools/wtfp-tool.js` dispatcher and nothing else;
-`create-poster`, `create-slides`, and `export-latex` emit source and return the
-render or compile step as an author handoff. Unavailable routes return
-`WTFP_ACTION_UNAVAILABLE` rather than pretending a tool or approval mechanism
-exists.
-
-`submit-milestone` creates a local archive. It does not submit to NSF, a
-journal, a conference, or any external service.
-
-RC2 has deterministic protocol tests and real-model evidence for project
-initialization and corrected fresh-process resumption. It does not yet claim a
-completed full proposal, a cross-model writing-quality baseline, or that WTF-P
-produces better prose than an unstructured control. Exact results and limits
-are in [Compatibility](docs/COMPATIBILITY.md).
+Project memory lives in the paper directory: control records under
+`.planning/` (project, config, state, decisions, outline, sources, evidence,
+sections, checkpoints, validations) and manuscript artifacts under `paper/`.
+Another process, or another supported host, resumes from those files rather
+than from chat history.
 
 ## Learn more
 
-- [Getting started for scientists, operators, and agents](docs/GETTING_STARTED.md)
-- [Human-guided proposal workflow](docs/PROPOSAL_WORKFLOW.md)
-- [v0.5 → v0.6 migration](docs/MIGRATION_V05_TO_V06.md)
-- [Compatibility and behavioral evidence](docs/COMPATIBILITY.md)
-- [Agent-platform architecture](docs/agent-platform-modernization.md)
-- [Evaluation methodology](evaluation/README.md)
-- [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md)
-- [Roadmap](ROADMAP.md)
+- [Documentation index](docs/README.md)
+- [Getting started](docs/GETTING_STARTED.md)
+- [Host capabilities and verification commands](docs/HOST_CAPABILITIES.md)
+- [Proposal workflow](docs/PROPOSAL_WORKFLOW.md)
+- [Migrating from v0.5](docs/MIGRATION_V05_TO_V06.md)
+- [Compatibility and evidence](docs/COMPATIBILITY.md)
+- [Packaging and the Clio plugin lifecycle](docs/AGENT_PLUGIN.md)
+- [Building and releasing](docs/BUILD_AND_RELEASE.md)
+- [Changelog](CHANGELOG.md) and [Contributing](CONTRIBUTING.md)
 
 WTF-P was built at the [Gnosis Research Center](https://grc.iit.edu/) at
 Illinois Tech for research teams with papers to publish, grants to win, and no
@@ -246,5 +171,3 @@ time for writer's block.
 **No more excuses. Ship the paper.**
 
 </div>
-
-The working release adds [standard Agent Plugin packaging](docs/AGENT_PLUGIN.md) and a [research-plugin handoff contract](docs/RESEARCH_HANDOFF.md). These describe local source changes; the published RC2 artifact and its historical evidence remain unchanged.
