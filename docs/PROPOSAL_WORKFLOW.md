@@ -1,6 +1,6 @@
 # Scientist-led proposal workflow
 
-This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6.0-rc.2 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state.
+This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6.0-rc.3 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state.
 
 The walkthrough is a process-discipline test, not a claim that WTF-P produces better prose than an unassisted model. RC2 has no matched no-WTF-P control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
 
@@ -43,7 +43,7 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 For Clio Coder 0.3.8:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
 clio-coder --autonomy suggest
 ```

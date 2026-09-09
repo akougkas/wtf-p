@@ -67,38 +67,39 @@ deliberate custom installation destination. It does not, by itself, isolate
 every runtime home, data, state, cache, and temporary path used by the client.
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install gemini
 ```
 
 The deprecated `--global` and `--local` flags remain Claude compatibility aliases during the release-candidate cycle. No targetless noninteractive invocation installs anything.
 
-In RC2, `status` and `doctor` remain legacy Claude-oriented diagnostics; a
-modern target selector passed to either command is not authoritative. Verify a
-modern adapter with the client's native discovery surface instead. For Clio,
-check `clio-coder --version`, `/prompts`, `clio-coder agents`, and
-`clio-coder fleet list`; use the equivalent native command, plugin, or skill
-listing for another client. A successful install plus native discovery is the
-RC2 verification boundary.
+`status` and `doctor` remain legacy Claude-oriented diagnostics; a modern
+target selector passed to either command is not authoritative. Verify a modern
+adapter with the client's native discovery surface instead. For Clio, check
+`clio-coder --version`, `clio-coder plugins inspect wtfp --json`, `/prompts`,
+`clio-coder agents`, and `clio-coder fleet list`; use the equivalent native
+command, plugin, or skill listing for another client. A successful install plus
+native discovery is the verification boundary.
 
-For Clio, the installer also performs an isolated, credential-free capability
-probe. Clio Coder 0.3.8 includes recursive `/wtfp:*` prompts, extension agents,
-and fleets. The manifest's `compatibility.clio` field is advisory in 0.3.8, so
-the probe—not the field—is the authoritative gate. Older builds retain flat
-prompts and skills but can silently load zero extension agents or fleets.
+For Clio, WTF-P installs as a plugin and requires Clio Coder 0.4.7 or newer.
+The installer delegates to `clio-coder plugins install` and verifies the result
+with `clio-coder plugins inspect wtfp --json`. If an earlier release candidate
+left an extension at `<config>/extensions/wtfp`, remove it with that
+candidate's WTF-P uninstaller first: both register the same `/wtfp:*` prompt
+names, and RC3 neither reads nor retires the extension location.
 
-Clio preserves the raw operator prose bound to `$ARGUMENTS` in 0.3.8, including
-quotes, tabs, repeated spaces, and literal `$1`; positional forms such as `$1`,
-`$@`, and `${@:N:L}` retain tokenized semantics. Existing user-level prompts
-may take precedence over an extension prompt. Inspect `/prompts` and its
-reported source before assuming `/wtfp:new-paper` resolves to the newly
-installed extension; preserve or remove an older copy through the user's normal
-backup process rather than letting WTF-P overwrite it.
+Clio preserves the raw operator prose bound to `$ARGUMENTS`, including quotes,
+tabs, repeated spaces, and literal `$1`; positional forms such as `$1`, `$@`,
+and `${@:N:L}` retain tokenized semantics. Existing user-level prompts may take
+precedence over a plugin prompt. Inspect `/prompts` and its reported source
+before assuming `/wtfp:new-paper` resolves to the newly installed plugin;
+preserve or remove an older copy through the user's normal backup process
+rather than letting WTF-P overwrite it.
 
 Codex exposes academic workflows through Agent Skills, not the slash-command
 surface shown below. Use the owning `$wtf-p:<skill>` selector when explicit
@@ -166,13 +167,13 @@ Then preview one bounded write, such as `/wtfp:plan-section`, and confirm that:
 Preview exact removal:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --<target> --dry-run
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --<target> --dry-run
 ```
 
 Then remove unchanged owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --<target> --backup --yes
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --<target> --backup --yes
 ```
 
 Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.

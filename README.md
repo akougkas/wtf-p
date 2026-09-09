@@ -24,16 +24,19 @@ delivery checkpoints. WTF-P organizes the work and gives specialist agents
 bounded jobs; it does not become the author, principal investigator, or final
 authority.
 
-`0.6.0-rc.2` is available on npm under `next` for Clio Coder, Claude Code,
-Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.
+`0.6.0-rc.2` is the newest version published to npm under `next`, for Clio
+Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and
+Gemini CLI. `0.6.0-rc.3` is a local candidate: it is neither tagged nor
+published, and it requires Clio Coder 0.4.7 or newer.
 
 ## Start a project
 
 You need Node.js 20 or newer and one supported coding-agent client. This
-example uses Clio Coder (0.3.8 initialization history; 0.4.6 discovery and help smoke verified):
+example uses Clio Coder (0.4.7 or newer required; 0.4.6 discovery and help
+smoke and 0.3.8 initialization history retained as prior evidence):
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
 clio-coder --autonomy suggest
 ```
@@ -144,7 +147,7 @@ The same workflow is projected into each client's native interface:
 
 | Client | Start an explicit action |
 | --- | --- |
-| Clio Coder (0.4.6 discovery/install/agents/help verified; 0.3.8 history retained) | `/wtfp:new-paper …` |
+| Clio Coder (`>=0.4.7`; 0.4.6 and 0.3.8 evidence retained for the prior extension route) | `/wtfp:new-paper …` |
 | Claude Code | `/wtfp:new-paper …` |
 | GitHub Copilot CLI | `/wtfp:new-paper …` |
 | OpenCode | `/wtfp:new-paper …` |
@@ -154,9 +157,9 @@ The same workflow is projected into each client's native interface:
 
 Install a different client by replacing `clio` in the first command with
 `claude`, `codex`, `copilot`, `opencode`, `antigravity`, or `gemini`. Codex uses
-native Agent Skills rather than the `/wtfp:*` namespace. Clio also provides
-flat `/wtfp-new-paper` compatibility aliases, but the namespaced form is
-preferred.
+native Agent Skills rather than the `/wtfp:*` namespace. Every other client
+uses the namespaced `/wtfp:<action>` form and nothing else; the flat
+`/wtfp-<action>` aliases Clio carried in earlier candidates are gone.
 
 See [Getting started](docs/GETTING_STARTED.md) for client launch commands,
 Codex skill selectors, Clio prompt discovery, safe test isolation, and

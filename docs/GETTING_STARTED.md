@@ -1,4 +1,4 @@
-# Getting started with WTF-P 0.6.0-rc.2
+# Getting started with WTF-P 0.6.0-rc.3
 
 WTF-P installs a portable academic workflow into an agent client you already use. It does not install that client, submit a paper, or run an entire research project in the background. You invoke one bounded action at a time; the agent interviews you where author judgment is required, previews consequential changes, and records approved state under the project root.
 
@@ -19,25 +19,25 @@ For a worked grant-writing example, continue with the [proposal workflow](PROPOS
 Pin the release candidate when reproducibility matters:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install gemini
 ```
 
-Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It does not replace Clio or launch an interactive session. The updated source installer invokes native discovery and extension registration when the binary is available; the published RC2 installer predates that registration alignment.
+Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It does not replace Clio or launch an interactive session. The updated source installer invokes native discovery and extension registration when the binary is available; the published RC2 installer predates that registration alignment.
 
-The explicit `--package=wtf-p@0.6.0-rc.2 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.2 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.2`; stop if it reports another version or target.
+The explicit `--package=wtf-p@0.6.0-rc.3 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.3 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.3`; stop if it reports another version or target.
 
 `npx --yes --package=wtf-p@next -- wtf-p install clio` is a convenient moving prerelease form. It may resolve to a later candidate, so do not use it for a run that must reproduce RC2 exactly. An unqualified `npx wtf-p` follows npm's stable `latest` tag and must not be assumed to mean RC2.
 
 The installer asks before consequential installation choices. Add `--advanced` only for reviewed automation or a disposable profile:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio --advanced
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio --advanced
 ```
 
 That flag changes installer interaction only. It does not enable client Full Auto, answer scientist interviews, or waive a workflow approval.
@@ -135,7 +135,7 @@ The default config enables confirmation gates for outline, plan, write, review, 
 
 ## Clio Coder compatibility notes
 
-On 0.4.6, confirm native registration with `clio-coder extensions list --all --json`; an active entry must have valid content, enabled status and zero diagnostics. Discovery alone does not establish activation. If using the published RC2 installer or a copy made without the native binary, run `clio-coder extensions install /absolute/path/to/vendors/clio --user` in the selected profile before relying on the commands. Use `--force` only after reviewing any existing package replacement. The updated source installer delegates this registration automatically; a target at `<working directory>/.clio-coder` uses project scope.
+WTF-P installs into Clio as a plugin and requires Clio Coder 0.4.7 or newer. Confirm native registration with `clio-coder plugins inspect wtfp --json`; an active entry must report `valid`, `enabled`, and `loadable` with zero diagnostics. Discovery alone does not establish activation. The installer delegates registration automatically; a target at `<working directory>/.clio-coder` uses project scope. If you installed from a copy made without the native binary, run `clio-coder plugins install /absolute/path/to/vendors/plugin --user` in the selected profile before relying on the commands, and use `--force` only after reviewing the package it would replace. If an earlier candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with the matching WTF-P uninstaller before installing the plugin; the two register the same prompts.
 
 After installing, start Clio in the project and inspect native discovery:
 
@@ -145,7 +145,7 @@ clio-coder agents
 clio-coder fleet list
 ```
 
-In the TUI, run `/prompts`. Confirm that `/wtfp:new-paper` reports the WTF-P extension as its source. A pre-existing user-level prompt can take precedence over an extension prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the extension copy to win. WTF-P will not overwrite it silently.
+In the TUI, run `/prompts`. Confirm that `/wtfp:new-paper` reports the WTF-P plugin as its source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
 
 Use supervised `suggest` autonomy for ordinary proposal work:
 
@@ -214,7 +214,7 @@ run_isolated_clio() {
     "$@"
 }
 
-run_isolated_clio npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p install clio --advanced
+run_isolated_clio npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio --advanced
 cd /path/to/disposable-proposal
 run_isolated_clio clio-coder --autonomy suggest
 ```
@@ -233,8 +233,8 @@ RC2's `status` and `doctor` commands remain legacy Claude-oriented. Passing a mo
 Preview removal before deleting exact receipt-owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --clio --dry-run
-npx --yes --package=wtf-p@0.6.0-rc.2 -- wtf-p uninstall --clio --yes
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --clio --dry-run
+npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --clio --yes
 ```
 
 Replace `--clio` with the intended target selector. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data.

@@ -7,23 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0-rc.3] - 2026-09-09
+
+Local release candidate. Not published to a registry and not tagged.
+
+### Changed
+
+- **Breaking for Clio.** WTF-P ships to Clio Coder only as an Agent Plugins 1.0.0
+  package. The `vendors/clio` extension envelope, its `clio-coder-extension.yaml`
+  manifest, the extension route in the installer, and the capability probe that
+  chose between the two routes are removed. `vendors/plugin/` is the one canonical
+  bundle for both Clio and the Claude marketplace projection, and its
+  `compatibility.clio` floor is now `>=0.4.7`
+- Clio installation delegates to the native plugin lifecycle: stage the canonical
+  bundle, `clio-coder plugins install <staged-dir>`, verify with
+  `clio-coder plugins inspect wtfp --json`, then publish the ownership receipt.
+  Integrity, provenance, drift, and enable/disable are Clio's; WTF-P keeps only its
+  exact-file receipt and safe replacement and removal
+- Clio prompt bodies resolve packaged resources through `${pluginRoot}` instead of
+  `${extensionRoot}`, and the flat `wtfp-<action>` prompt aliases are gone. Every
+  action is invoked as `/wtfp:<action>` and nothing else
+- `tool.execute` now means one thing: run a WTF-P-bundled tool through the single
+  `tools/wtfp-tool.js` dispatcher. It is bound for Clio (`bash`) and Claude
+  (`Bash`) and remains fail-closed elsewhere
+- Adapter inventories are derived from canonical content instead of literal
+  action, role, and skill counts
+
 ### Added
 
+- `tools/wtfp-tool.js`, a bounded JSON dispatcher for the seven declared
+  bibliography and citation tools, generated into every envelope and documented in
+  `tools/README.md`
+- Executable bindings for `research-gap`, `analyze-bib`, and `check-refs` through
+  that dispatcher; Clio's `network.search` resolves to the bundled scholarly-index
+  clients, which are the only search these actions ever declared
+- `protocol/templates/` authored-artifact scaffolds for manuscript outlines, grant
+  proposal outlines, conference posters, and conference talks, bound from
+  `new-paper`, `create-outline`, `create-poster`, and `create-slides`
 - Generated Agent Plugins 1.0.0 packaging with conventional skills, a namespaced
   Clio component graph, and a standard Codex manifest alongside its fallback
-- Capability-detected native Clio plugin installation with exact receipts,
-  compensating rollback, isolated discovery, and a preserved legacy extension path
+- Native Clio plugin installation with exact receipts and compensating rollback
 - A three-action research handoff guide and opt-in native user/project lifecycle test
 
 ### Fixed
 
+- `create-outline`, `insert-section`, and `remove-section` now carry the exact
+  outline-budget invariant that only `new-paper` stated, so no outline write can
+  leave `word_target` out of balance with `target_words`
+- `create-poster`, `create-slides`, and `export-latex` no longer claim a rendering
+  or compilation effect they never had. They produce source and hand back an
+  explicit author command, and are consequently available rather than fail-closed
+- `help` names actions in the host's real `/wtfp:<action>` syntax and reports the
+  actions the running adapter cannot execute
 - Incremental mapping now declares existing source/evidence reads, updates,
   and manifest material/manuscript indexing while preserving curated records
 - Outliner word budgets now match the exact total required by outline approval
 - Claude agent definitions use native tools metadata; Clio role reports retain
   portable needs_input/blocked outcomes and main-agent decoding instructions
-- Clio search metadata fails closed, probe directories satisfy native containment,
-  and native receipts expose installed commands, skills, and agents in status
+- Native receipts expose installed commands, skills, and agents in status
 - Compiler v5 evaluation definitions bind current source while retained compiler-v4
   observations keep their original evidence and comparison baseline
 
@@ -219,7 +260,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.3...HEAD
+[0.6.0-rc.3]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0-rc.3
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0
