@@ -1,0 +1,409 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "wtfp",
+  "version": "0.6.0-rc.3",
+  "description": "Portable, evidence-grounded academic research and writing workflows.",
+  "author": {
+    "name": "akougkas"
+  },
+  "homepage": "https://github.com/akougkas/wtf-p",
+  "repository": "https://github.com/akougkas/wtf-p",
+  "license": "MIT",
+  "extensions": {
+    "ai.iowarp.clio": {
+      "manifestVersion": 1,
+      "compatibility": {
+        "clio": ">=0.4.7"
+      },
+      "resources": {
+        "skills": "skills",
+        "prompts": "ai.iowarp.clio/prompts",
+        "agents": "ai.iowarp.clio/agents",
+        "fleets": "ai.iowarp.clio/fleets"
+      },
+      "components": [
+        {
+          "kind": "prompt",
+          "id": "add-todo",
+          "path": "ai.iowarp.clio/prompts/wtfp/add-todo.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "analyze-bib",
+          "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
+          "requires": [
+            "agent:citation-expert"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "audit-milestone",
+          "path": "ai.iowarp.clio/prompts/wtfp/audit-milestone.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "check-refs",
+          "path": "ai.iowarp.clio/prompts/wtfp/check-refs.md",
+          "requires": [
+            "agent:citation-formatter"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "check-todos",
+          "path": "ai.iowarp.clio/prompts/wtfp/check-todos.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "checkpoint",
+          "path": "ai.iowarp.clio/prompts/wtfp/checkpoint.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "contribute",
+          "path": "ai.iowarp.clio/prompts/wtfp/contribute.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "create-outline",
+          "path": "ai.iowarp.clio/prompts/wtfp/create-outline.md",
+          "requires": [
+            "agent:outliner"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "create-poster",
+          "path": "ai.iowarp.clio/prompts/wtfp/create-poster.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "create-slides",
+          "path": "ai.iowarp.clio/prompts/wtfp/create-slides.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "discuss-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/discuss-section.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "execute-outline",
+          "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
+          "requires": [
+            "agent:section-writer",
+            "agent:coherence-checker"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "export-latex",
+          "path": "ai.iowarp.clio/prompts/wtfp/export-latex.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "help",
+          "path": "ai.iowarp.clio/prompts/wtfp/help.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "insert-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "list-assumptions",
+          "path": "ai.iowarp.clio/prompts/wtfp/list-assumptions.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "map-project",
+          "path": "ai.iowarp.clio/prompts/wtfp/map-project.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "new-paper",
+          "path": "ai.iowarp.clio/prompts/wtfp/new-paper.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "pause-writing",
+          "path": "ai.iowarp.clio/prompts/wtfp/pause-writing.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "plan-milestone-gaps",
+          "path": "ai.iowarp.clio/prompts/wtfp/plan-milestone-gaps.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "plan-revision",
+          "path": "ai.iowarp.clio/prompts/wtfp/plan-revision.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "plan-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
+          "requires": [
+            "agent:section-planner",
+            "agent:plan-checker"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "polish-prose",
+          "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
+          "requires": [
+            "agent:prose-polisher"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "progress",
+          "path": "ai.iowarp.clio/prompts/wtfp/progress.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "quick",
+          "path": "ai.iowarp.clio/prompts/wtfp/quick.md",
+          "requires": [
+            "agent:section-writer"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "remove-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/remove-section.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "report-bug",
+          "path": "ai.iowarp.clio/prompts/wtfp/report-bug.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "request-feature",
+          "path": "ai.iowarp.clio/prompts/wtfp/request-feature.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "research-gap",
+          "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
+          "requires": [
+            "agent:research-synthesizer"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "resume-writing",
+          "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "review-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/review-section.md",
+          "requires": [
+            "agent:section-reviewer"
+          ]
+        },
+        {
+          "kind": "prompt",
+          "id": "settings",
+          "path": "ai.iowarp.clio/prompts/wtfp/settings.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "submit-milestone",
+          "path": "ai.iowarp.clio/prompts/wtfp/submit-milestone.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "update",
+          "path": "ai.iowarp.clio/prompts/wtfp/update.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "verify-work",
+          "path": "ai.iowarp.clio/prompts/wtfp/verify-work.md",
+          "requires": []
+        },
+        {
+          "kind": "prompt",
+          "id": "write-section",
+          "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
+          "requires": [
+            "agent:section-writer",
+            "agent:argument-verifier"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "argument-verifier",
+          "path": "ai.iowarp.clio/agents/wtfp-argument-verifier.md",
+          "requires": [
+            "skill:wtfp-review-manuscript"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "citation-expert",
+          "path": "ai.iowarp.clio/agents/wtfp-citation-expert.md",
+          "requires": [
+            "skill:wtfp-research-literature"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "citation-formatter",
+          "path": "ai.iowarp.clio/agents/wtfp-citation-formatter.md",
+          "requires": [
+            "skill:wtfp-research-literature"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "coherence-checker",
+          "path": "ai.iowarp.clio/agents/wtfp-coherence-checker.md",
+          "requires": [
+            "skill:wtfp-review-manuscript"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "outliner",
+          "path": "ai.iowarp.clio/agents/wtfp-outliner.md",
+          "requires": [
+            "skill:wtfp-start-project"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "plan-checker",
+          "path": "ai.iowarp.clio/agents/wtfp-plan-checker.md",
+          "requires": [
+            "skill:wtfp-plan-section"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "prose-polisher",
+          "path": "ai.iowarp.clio/agents/wtfp-prose-polisher.md",
+          "requires": [
+            "skill:wtfp-review-manuscript"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "research-synthesizer",
+          "path": "ai.iowarp.clio/agents/wtfp-research-synthesizer.md",
+          "requires": [
+            "skill:wtfp-research-literature"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "section-planner",
+          "path": "ai.iowarp.clio/agents/wtfp-section-planner.md",
+          "requires": [
+            "skill:wtfp-plan-section"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "section-reviewer",
+          "path": "ai.iowarp.clio/agents/wtfp-section-reviewer.md",
+          "requires": [
+            "skill:wtfp-review-manuscript"
+          ]
+        },
+        {
+          "kind": "agent",
+          "id": "section-writer",
+          "path": "ai.iowarp.clio/agents/wtfp-section-writer.md",
+          "requires": [
+            "skill:wtfp-write-section"
+          ]
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-deliver-research",
+          "path": "skills/wtfp-deliver-research/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-manage-project",
+          "path": "skills/wtfp-manage-project/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-plan-section",
+          "path": "skills/wtfp-plan-section/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-research-literature",
+          "path": "skills/wtfp-research-literature/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-review-manuscript",
+          "path": "skills/wtfp-review-manuscript/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-start-project",
+          "path": "skills/wtfp-start-project/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "skill",
+          "id": "wtfp-write-section",
+          "path": "skills/wtfp-write-section/SKILL.md",
+          "requires": []
+        },
+        {
+          "kind": "fleet",
+          "id": "wtfp-plan-section",
+          "path": "ai.iowarp.clio/fleets/wtfp-plan-section.md",
+          "requires": []
+        },
+        {
+          "kind": "fleet",
+          "id": "wtfp-draft-review",
+          "path": "ai.iowarp.clio/fleets/wtfp-draft-review.md",
+          "requires": []
+        }
+      ]
+    }
+  }
+}

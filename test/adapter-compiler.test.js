@@ -1081,6 +1081,27 @@ record('every bundled native resource reference resolves inside its target envel
   }
 });
 
+record('the Claude envelope carries the portable root manifest and component graph Clio adopts', () => {
+  const claude = plansById.get('claude');
+  const portable = plansById.get('portable-plugin');
+  assert.strictEqual(planText(claude, 'plugin.json'), planText(portable, 'plugin.json'),
+    'Claude root plugin.json must be byte-identical to the canonical bundle manifest');
+  const extension = JSON.parse(planText(claude, 'plugin.json')).extensions['ai.iowarp.clio'];
+  for (const directory of Object.values(extension.resources)) assertDirectory(claude, directory, `Claude-carried Clio ${directory}`);
+  for (const item of extension.components) {
+    assert.ok(claude.files.has(item.path), `Claude envelope lacks Clio component ${item.kind}:${item.id}`);
+    if (item.path.startsWith('ai.iowarp.clio/')) {
+      assert.strictEqual(planText(claude, item.path), planText(portable, item.path),
+        `${item.path} differs between the Claude and canonical bundles`);
+    }
+  }
+  assert.deepStrictEqual(planFiles(claude, /^ai\.iowarp\.clio\/prompts\/[^/]+\.md$/), [],
+    'the Claude-carried Clio graph must publish no flat prompt aliases');
+  // Claude Code keeps reading its own manifest; the root file is for Clio.
+  assert.strictEqual(JSON.parse(planText(claude, '.claude-plugin/plugin.json')).name, 'wtfp');
+  assert.ok(!('extensions' in JSON.parse(planText(claude, '.claude-plugin/plugin.json'))));
+});
+
 record('standard plugin graph resolves and retains portable host boundaries', () => {
   const plan = plansById.get('portable-plugin');
   const manifest = JSON.parse(planText(plan, 'plugin.json'));

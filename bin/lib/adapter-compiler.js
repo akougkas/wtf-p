@@ -1870,13 +1870,25 @@ function compilePlans(options = {}) {
   for (const id of ['wtfp-plan-section', 'wtfp-draft-review']) components.push({
     kind: 'fleet', id, path: `ai.iowarp.clio/fleets/${id}.md`, requires: []
   });
-  addFile(portable, 'plugin.json', standardPluginManifest(model.version, 'wtfp', {
+  const portableManifest = standardPluginManifest(model.version, 'wtfp', {
     manifestVersion: 1,
     compatibility: { clio: '>=0.4.7' },
     resources: { skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents', fleets: 'ai.iowarp.clio/fleets' },
     components
-  }));
+  });
+  addFile(portable, 'plugin.json', portableManifest);
   plans.push(portable);
+
+  // Clio adopts an installed Claude plugin through the same portable root
+  // manifest, and it verifies every declared component path on disk. The
+  // Claude envelope therefore carries the identical `plugin.json` and the
+  // Clio component graph beside Claude's own `.claude-plugin/` surface. Claude
+  // Code reads neither file; its commands, agents, skills, hooks, and output
+  // style stay where its loader looks.
+  for (const [file, content] of clio.files) {
+    if (/^(prompts|agents|fleets)\//.test(file)) addFile(claude, `ai.iowarp.clio/${file}`, content);
+  }
+  addFile(claude, 'plugin.json', portableManifest);
 
   const codexMarketplace = makePlan('codex-marketplace', path.join(ROOT, 'vendors', 'codex'));
   addFile(codexMarketplace, '.agents/plugins/marketplace.json', stableJson({
