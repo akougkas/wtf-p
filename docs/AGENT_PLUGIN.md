@@ -13,6 +13,8 @@ The compiler is a factory: it projects this one bundle into a native package per
 - Gemini CLI: `gemini-extension.json`, `GEMINI.md`, TOML commands under `commands/wtfp/`, and flat `agents/wtfp-<role>.md` with the strict local-agent frontmatter.
 - Copilot CLI: the Claude-compatible plugin and the `.github` repository projection, unchanged.
 
+On Clio, `/wtfp:help` is a display-only prompt: its first fenced block is a static operator reference (start-here sequence, every action with its argument hint and description in workflow order, unavailable actions marked with the blocking capability, and the fleets) that Clio prints without a model call.
+
 Every generated file carries a banner naming its canonical source, and each envelope's `.wtfp-generated.json` authenticates every path. The compiler remains the source of every generated adapter; never hand-edit these bundles.
 
 ## Clio installation and compatibility

@@ -147,13 +147,13 @@ The same workflow is projected into each client's native interface:
 
 | Client | Start an explicit action | Native package | Verified |
 | --- | --- | --- | --- |
-| Clio Coder (`>=0.4.7`) | `/wtfp:new-paper …` | Agent Plugins 1.0.0 bundle: 36 prompts, 11 agent recipes, 7 skills, 2 fleets | 0.4.7 |
+| Clio Coder (`>=0.4.7`) | `/wtfp:new-paper …` | Agent Plugins 1.0.0 bundle: 36 prompts (`/wtfp:help` prints a static reference), 11 agent recipes, 7 skills, 2 fleets | 0.4.7 |
 | Claude Code | `/wtfp:new-paper …` | Plugin: 36 commands, 11 agents preloading their skills, 7 skills, academic output style, write-guard hooks | 2.1.267 |
 | Codex | Select `$wtf-p:wtfp-start-project`, then request `new-paper` with the exact brief | Plugin: 7 skills, `com.openai` overlay, 11 TOML custom agents in `$CODEX_HOME/agents/` | 0.153.3 |
 | GitHub Copilot CLI | `/wtfp:new-paper …` | Claude-compatible plugin plus the `.github` repository projection | not this round |
-| OpenCode | `/wtfp:new-paper …` | 36 commands, 11 subagents, 7 skills under the config root | not this round |
-| Antigravity CLI | `/wtfp:new-paper …` | Plugin: 36 commands, 11 subagents, 7 skills, one project-state rule | not this round |
-| Gemini CLI | `/wtfp:new-paper …` | Extension: 36 TOML commands, 11 agents, 7 skills, `GEMINI.md` | not this round |
+| OpenCode | `/wtfp:new-paper …` | 36 commands, 11 subagents, 7 skills under the config root | 1.18.30 |
+| Antigravity CLI | `/wtfp:new-paper …` | Plugin: 36 commands, 11 subagents, 7 skills, one project-state rule | 1.1.28 |
+| Gemini CLI | `/wtfp:new-paper …` | Extension: 36 TOML commands, 11 agents, 7 skills, `GEMINI.md` | 0.59.0 (skills and context listed; agents load silently) |
 
 Install a different client by replacing `clio` in the first command with
 `claude`, `codex`, `copilot`, `opencode`, `antigravity`, or `gemini`. Codex uses

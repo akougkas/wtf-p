@@ -2,7 +2,7 @@
 
 What each supported host can load from a plugin, how it installs and discovers it, and how the WTF-P adapter compiler projects the canonical `vendors/plugin` bundle into a package that uses those capabilities. Every row names the evidence it rests on. A host that was not installed on the machine that produced this document is marked unverified: its projection follows the vendor's published loader source or documentation, not an observed run.
 
-Evidence was gathered on 2026-09-09 on Linux. Installed CLIs: `claude` 2.1.267, `codex` 0.153.3, `clio-coder` 0.4.7. Not installed: `opencode`, `gemini`, `agy` (Antigravity CLI), `copilot`. Every command below ran against a disposable profile (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `CLIO_CODER_CONFIG_DIR` plus `HOME`/`XDG_CONFIG_HOME` under a temporary root); no operator profile was read for discovery or written.
+Evidence was gathered on 2026-09-09 on Linux. CLIs on PATH: `claude` 2.1.267, `codex` 0.153.3, `clio-coder` 0.4.7, `agy` (Antigravity CLI) 1.1.28. Installed into a temporary npm prefix for the readiness round (`npm install -g --prefix <tmp>/npm @google/gemini-cli opencode-ai`): `gemini` 0.59.0, `opencode` 1.18.30. Not installed: `copilot`. Every command below ran against a disposable profile (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `CLIO_CODER_CONFIG_DIR`, `OPENCODE_CONFIG_DIR`, `GEMINI_CLI_HOME`, `ANTIGRAVITY_HOME` plus `HOME`/`XDG_*` under a temporary root); no operator profile was read for discovery or written.
 
 ## Summary
 
@@ -16,7 +16,7 @@ Evidence was gathered on 2026-09-09 on Linux. Installed CLIs: `claude` 2.1.267, 
 | MCP servers | `.mcp.json` | `mcp.json` | config file | `mcp_config.json` | `gemini-extension.json` `mcpServers` | unverified | preserved, not executed |
 | Rules / always-on context | via skills only | `AGENTS.md` | `AGENTS.md`/instructions | `rules/*.md` | `GEMINI.md` via `contextFileName` | `copilot-instructions.md` | `CLIO-CODER.md` |
 | Marketplace | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` | none | none | gallery only | `marketplace.json` | `plugins/registry.yaml` |
-| Verified here | yes | yes | no | no | no | no | yes |
+| Verified here | yes | yes | yes | yes | yes (agents load without diagnostics; no listing surface) | no | yes |
 
 ## What WTF-P projects per host
 
@@ -28,7 +28,7 @@ Evidence was gathered on 2026-09-09 on Linux. Installed CLIs: `claude` 2.1.267, 
 | Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json`, 36 commands, 11 agents (`subagent: true`), 7 skills, `rules/wtfp-project-state.md` |
 | Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 36 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
 | Copilot CLI | `vendors/copilot` | Claude-compatible plugin plus the `.github` repository projection; unchanged in this round |
-| Clio Coder | `vendors/plugin` | the canonical bundle itself: 36 prompts (help is `display-only`), 11 recipes, 7 skills, 2 fleets |
+| Clio Coder | `vendors/plugin` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 fleets |
 
 No projection declares an MCP server: the repository contains no MCP server implementation (the untracked `vendors/claude/mcp/research-server/` directory holds empty directories and is excluded from the package).
 
@@ -114,27 +114,62 @@ clio-coder plugins install ./staged --user --json  # exit 0
 clio-coder plugins list --all --json               # wtfp, scope user, valid, enabled
 clio-coder plugins inspect wtfp --json             # valid: true, diagnostics: []
 clio-coder agents                                  # 11 wtfp-* recipes, each with its bound skill
+clio-coder run '/wtfp:help'                        # prints the static operator card only, exit 0, no model call
 ```
 
-Format facts, from `docs/guide/authoring-plugins.md` and `src/domains/resources/prompts/loader.ts` in the 0.4.7 source: prompts are discovered recursively beneath the declared prompts root and named by path (`/wtfp:<action>`); the prompt loader reads `description` and `argument-hint` and ignores other frontmatter keys, so the new `display-only: true` on the help prompt is inert until Clio adds the key. Component kinds are `skill`, `prompt`, `agent`, `fleet`, `script`, `resource`, `tool`; MCP files are preserved but not executed; hooks are a harness-extension concern, not a plugin one.
+Format facts, from `docs/guide/authoring-plugins.md` and `src/domains/resources/prompts/loader.ts` in the 0.4.7 source: prompts are discovered recursively beneath the declared prompts root and named by path (`/wtfp:<action>`); the prompt loader reads `description`, `argument-hint`, and `display-only`; a display-only template is answered by `clio-coder run` and the TUI with its first fenced block and no provider, session, or model. The help prompt is that card. Component kinds are `skill`, `prompt`, `agent`, `fleet`, `script`, `resource`, `tool`; MCP files are preserved but not executed; hooks are a harness-extension concern, not a plugin one.
 
-## OpenCode (unverified: CLI not installed)
+## OpenCode 1.18.30 (verified)
+
+Evidence (temporary npm prefix, `OPENCODE_CONFIG_DIR=<tmp>/config`, `HOME` and `XDG_*` under `<tmp>/home`):
+
+```bash
+node bin/install.js install opencode --config-dir <tmp>/config --force --advanced --no-color   # 203 files
+opencode debug paths                       # data/config/cache/state roots all under the disposable home
+opencode agent list                        # 11 wtfp-* (subagent) beside the built-ins
+opencode debug agent wtfp-argument-verifier   # mode: subagent; permission edit: deny, bash: deny
+opencode debug skill                       # 7 wtfp-* skills beside the built-in customize-opencode
+opencode serve --port 47312; curl http://127.0.0.1:47312/command   # 46 commands, 36 named wtfp:<action>
+curl http://127.0.0.1:47312/agent          # 18 agents, 11 wtfp-*, wtfp-argument-verifier mode subagent
+```
+
+Defect found and fixed during this run: OpenCode's tool registry imports every `{tool,tools}/*.{js,ts}` below the config root as a custom-tool module (`packages/opencode/src/tool/registry.ts`). The generated `tools/wtfp-tool.js` ran `main(process.argv)` on import, so `opencode debug agent` (and any session that initialised tools) printed `{"error":"unknown command: debug; ..."}` and exited 1. The dispatcher now runs `main` only under `require.main === module`; after regenerating, the commands above pass.
 
 Source read at `anomalyco/opencode@dev`: `packages/opencode/src/config/agent.ts` scans `{agent,agents}/**/*.md` and builds `{ name: <path-derived>, ...frontmatter }`, so a frontmatter `name` wins; `config/command.ts` does the same for `{command,commands}/**/*.md`; `config/entry-name.ts` derives the fallback name from the path relative to `agents/` or `commands/` (a nested file would be `wtfp/<role>`). Documentation (`docs/agents.mdx`, `docs/commands.mdx`, `docs/skills.mdx`, `docs/plugins.mdx`): agents and commands are Markdown under `~/.config/opencode/{agents,commands}/`, skills under `~/.config/opencode/skills/<name>/SKILL.md`, `mode: subagent` and a `permission` block are agent frontmatter, and "plugins" are JavaScript modules.
 
-Projection: unchanged layout (`commands/wtfp/<action>.md`, `agents/wtfp/<role>.md`, both with explicit `name`), plus `mode: subagent` on every role and `permission: {edit: deny, bash: deny}` on verifier roles. The last observed run was OpenCode 1.18.16 on the earlier layout (`docs/COMPATIBILITY.md`).
+Projection: unchanged layout (`commands/wtfp/<action>.md`, `agents/wtfp/<role>.md`, both with explicit `name`), plus `mode: subagent` on every role and `permission: {edit: deny, bash: deny}` on verifier roles. The server API confirms the frontmatter `name` is what registers: every command is `wtfp:<action>` and every agent `wtfp-<role>`.
 
-## Antigravity CLI (unverified: `agy` not installed)
+## Antigravity CLI 1.1.28 (verified)
 
-Documentation at antigravity.google/docs/cli/plugins/ and /docs/cli/subagents/: a plugin is `plugin.json` plus optional `mcp_config.json`, `hooks.json`, `skills/`, `agents/`, `rules/`. The published manifest schema (`https://antigravity.google/schemas/v1/plugin.json`) permits exactly `name` and `description` with `additionalProperties: false`. Skills become slash commands. Custom agents are Markdown with YAML frontmatter under `.agents/agents/` or `~/.gemini/config/agents/`, and `subagent: true` makes an agent callable through `invoke_subagent`. Install: `agy plugin install <path>`, `agy plugin list`, `enable`/`disable`/`uninstall`.
+Evidence (`ANTIGRAVITY_HOME=<tmp>/home/.gemini/config`, `HOME=<tmp>/home`):
 
-Projection: the manifest now carries only `$schema`, `name`, `description` (the previous `version`, `author`, `commands`, `agents`, `skills` keys violate the schema); `commands/` is kept because Antigravity CLI 1.1.22 loaded it in the last observed run; agents gain `subagent: true`; `rules/wtfp-project-state.md` projects the project protocol as an always-on rule. Re-validate with `agy plugin install` before claiming support for 1.1.25.
+```bash
+agy --version                                   # 1.1.28
+agy plugin validate vendors/antigravity         # [ok] skills: 7 processed, agents: 11 processed, commands: 36 processed (converted to skills), mcpServers/hooks skipped (not found)
+node bin/install.js install antigravity --config-dir <tmp>/home/.gemini/config --force --advanced --no-color   # 204 files, agy plugin install
+agy plugin list                                 # {"imports":[{"name":"wtf-p","source":"antigravity","components":["skills","agents","commands"]}]}
+agy agents                                      # the 11 wtfp-* agents
+```
 
-## Gemini CLI (unverified: `gemini` not installed)
+The schema-conformant manifest (`$schema`, `name`, `description`) validates, and the `commands/` directory is accepted: 1.1.28 converts each command into a skill, which is how it becomes a slash command. Documentation at antigravity.google/docs/cli/plugins/ and /docs/cli/subagents/: a plugin is `plugin.json` plus optional `mcp_config.json`, `hooks.json`, `skills/`, `agents/`, `rules/`. The published manifest schema (`https://antigravity.google/schemas/v1/plugin.json`) permits exactly `name` and `description` with `additionalProperties: false`. Skills become slash commands. Custom agents are Markdown with YAML frontmatter under `.agents/agents/` or `~/.gemini/config/agents/`, and `subagent: true` makes an agent callable through `invoke_subagent`. Install: `agy plugin install <path>`, `agy plugin list`, `enable`/`disable`/`uninstall`.
 
-Source read at `google-gemini/gemini-cli@main`: `packages/cli/src/config/extension-manager.ts` calls `loadAgentsFromDirectory(path.join(extensionPath, 'agents'))`, and `packages/core/src/agents/agentLoader.ts` lists only regular `.md` files in that one directory. The local agent frontmatter schema is strict: `name`, `description`, optional `kind: local`, `display_name`, `tools`, `mcp_servers`, `model`, `temperature`, `max_turns`, `timeout_mins`; unknown keys fail validation. Documentation (`docs/extensions/reference.md`, `docs/cli/custom-commands.md`): `gemini-extension.json` carries `name`, `version`, `description`, `mcpServers`, `contextFileName`, `excludeTools`, `settings`; commands are TOML under `commands/`, with a subdirectory becoming the `/<dir>:<name>` namespace; `gemini extensions install <path>` / `link` / `list`.
+Projection: the manifest carries only `$schema`, `name`, `description` (the previous `version`, `author`, `commands`, `agents`, `skills` keys violate the schema); `commands/` is kept because `agy plugin validate` converts it to skills; agents carry `subagent: true`; `rules/wtfp-project-state.md` projects the project protocol as an always-on rule. `agy plugin validate` reports `hooks: skipped` and `mcpServers: skipped`, confirming those are the only other component kinds it looks for.
 
-Projection: agents moved from `agents/wtfp/<role>.md` (zero loaded) to `agents/wtfp-<role>.md` with `kind: local` and no other keys. The last observed run was Gemini CLI 0.57.0 (`docs/COMPATIBILITY.md`), which reported skills and context but not agents; that is consistent with the nested layout having loaded nothing.
+## Gemini CLI 0.59.0 (verified)
+
+Evidence (temporary npm prefix, `GEMINI_CLI_HOME=<tmp>/home`, `HOME=<tmp>/home`):
+
+```bash
+node bin/install.js install gemini --config-dir <tmp>/home/.gemini --force --advanced --no-color   # 204 files into extensions/wtf-p
+gemini extensions validate <tmp>/home/.gemini/extensions/wtf-p   # "has been successfully validated"
+gemini extensions list                                           # wtf-p (0.6.0-rc.3), enabled user+workspace, context file GEMINI.md, 7 agent skills
+gemini skills list --all                                         # "Loading extension: wtf-p"; 7 wtfp-* skills [Enabled] at the extension path
+gemini --list-extensions                                         # exit 41: requires an auth method (no Gemini credential in the disposable profile)
+```
+
+Gemini has no CLI listing for agents or commands. The extension loaded with no diagnostics, and its 36 TOML commands and 11 flat agents are on disk at the paths the loader reads; a headless prompt would need `GEMINI_API_KEY` or OAuth, which this machine does not hold. Source read at `google-gemini/gemini-cli@main`: `packages/cli/src/config/extension-manager.ts` calls `loadAgentsFromDirectory(path.join(extensionPath, 'agents'))`, and `packages/core/src/agents/agentLoader.ts` lists only regular `.md` files in that one directory. The local agent frontmatter schema is strict: `name`, `description`, optional `kind: local`, `display_name`, `tools`, `mcp_servers`, `model`, `temperature`, `max_turns`, `timeout_mins`; unknown keys fail validation. Documentation (`docs/extensions/reference.md`, `docs/cli/custom-commands.md`): `gemini-extension.json` carries `name`, `version`, `description`, `mcpServers`, `contextFileName`, `excludeTools`, `settings`; commands are TOML under `commands/`, with a subdirectory becoming the `/<dir>:<name>` namespace; `gemini extensions install <path>` / `link` / `list`.
+
+Projection: agents moved from `agents/wtfp/<role>.md` (zero loaded) to `agents/wtfp-<role>.md` with `kind: local` and no other keys.
 
 ## GitHub Copilot CLI (unverified: `copilot` not installed)
 

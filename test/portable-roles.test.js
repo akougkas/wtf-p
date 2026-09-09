@@ -129,7 +129,7 @@ function main() {
     .filter(file => file.endsWith('.md'))
     .sort();
 
-  assert.strictEqual(files.length, 11, 'canonical role set must contain exactly 11 Markdown contracts');
+  assert.strictEqual(files.length, expected.size, 'canonical role set must contain exactly the expected Markdown contracts');
   assert.deepStrictEqual(
     files.map(file => path.basename(file, '.md')).sort(),
     [...expected.keys()].sort(),
@@ -153,8 +153,8 @@ function main() {
   assert.match(reviewer, /Keep the structured result compact/);
   assert.match(reviewer, /return only the result object required by the host contract/);
 
-  assert.strictEqual(ids.size, 11, 'all canonical role ids must be unique');
-  console.log('\n11 portable role contracts passed.');
+  assert.strictEqual(ids.size, files.length, 'all canonical role ids must be unique');
+  console.log(`\n${files.length} portable role contracts passed.`);
 }
 
 try {

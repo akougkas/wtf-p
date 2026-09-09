@@ -47,6 +47,10 @@ Local release candidate. Not published to a registry and not tagged.
   agents, and a project-state rule. Gemini agents move to the flat `agents/`
   layout its loader reads, with the strict `kind: local` frontmatter. The Clio
   help prompt carries `display-only: true`
+- On Clio, `/wtfp:help` is a display-only operator card: one fenced block with
+  a start-here sequence, every action grouped in workflow order with its
+  argument hint and description, unavailable actions marked with the blocking
+  capability, and the two fleets. Clio prints it without a model call
 - `docs/HOST_CAPABILITIES.md`, the per-host capability matrix with the exact
   commands used as evidence and an explicit unverified mark for hosts whose CLI
   was not available
@@ -67,6 +71,10 @@ Local release candidate. Not published to a registry and not tagged.
   and `skills` keys that the published v1 plugin schema rejects
   (`additionalProperties: false`), and the Gemini extension shipped agents under
   `agents/wtfp/`, a directory its loader never reads
+- The generated `tools/wtfp-tool.js` ran its dispatcher on import. OpenCode
+  imports every `tools/*.js` below its config root as a custom tool, so any
+  session that initialised its tool registry printed a dispatcher error and
+  exited. The dispatcher now runs only as an entry point
 - The installer's post-install hint told Codex users to run `/wtfp:help`, a
   command Codex does not have; it now names the skill selector
 - Without `clio-coder` on PATH the installer told the operator to run
