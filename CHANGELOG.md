@@ -7,130 +7,154 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.0-rc.3] - 2026-09-09
+## [0.6.0-rc.4] - 2026-09-09
 
-Local release candidate. Not published to a registry and not tagged.
+Fourth release candidate on the agent-platform modernization line. It absorbs
+the unpublished `0.6.0-rc.3` working candidate, which was never tagged or
+published, and is intended for the npm `next` tag rather than `latest`:
+GitHub Copilot CLI is unverified on this envelope, the Clio route requires a
+Clio Coder release (`>=0.4.7`) that is not yet published, and the
+migration-feedback gate for stable `0.6.0` remains open.
 
 ### Changed
 
-- **Breaking for Clio.** WTF-P ships to Clio Coder only as an Agent Plugins 1.0.0
-  package. The `vendors/clio` extension envelope, its `clio-coder-extension.yaml`
-  manifest, the extension route in the installer, and the capability probe that
-  chose between the two routes are removed. `vendors/plugin/` is the one canonical
-  bundle for both Clio and the Claude marketplace projection, and its
-  `compatibility.clio` floor is now `>=0.4.7`
-- Clio installation delegates to the native plugin lifecycle: stage the canonical
-  bundle, `clio-coder plugins install <staged-dir>`, verify with
-  `clio-coder plugins inspect wtfp --json`, then publish the ownership receipt.
-  Integrity, provenance, drift, and enable/disable are Clio's; WTF-P keeps only its
-  exact-file receipt and safe replacement and removal
-- Clio prompt bodies resolve packaged resources through `${pluginRoot}` instead of
-  `${extensionRoot}`, and the flat `wtfp-<action>` prompt aliases are gone. Every
-  action is invoked as `/wtfp:<action>` and nothing else
-- `tool.execute` now means one thing: run a WTF-P-bundled tool through the single
-  `tools/wtfp-tool.js` dispatcher. It is bound for Clio (`bash`) and Claude
-  (`Bash`) and remains fail-closed elsewhere
-- Adapter inventories are derived from canonical content instead of literal
-  action, role, and skill counts
+- **Breaking for Clio Coder.** WTF-P ships to Clio only as an Agent Plugins
+  1.0.0 package and requires Clio Coder 0.4.7 or newer. The `vendors/clio`
+  extension envelope, its `clio-coder-extension.yaml`, the extension install
+  route, and the capability probe that chose between two routes are removed.
+  `vendors/plugin/` is the one canonical bundle
+- Clio installation delegates to the native plugin lifecycle: publish the
+  bundle under the WTF-P receipt, stage it aside, run
+  `clio-coder plugins install <staged-dir> --user|--project`, verify with
+  `clio-coder plugins inspect wtfp --json` (`valid`, zero diagnostics, the
+  expected root and scope), then publish the receipt. Integrity, provenance,
+  drift, and enable/disable belong to Clio. WTF-P no longer re-enables a
+  plugin the operator disabled and keeps only its exact-file receipt
+- Clio prompt and agent bodies resolve packaged files through `${pluginRoot}`.
+  The flat `wtfp-<action>` prompt aliases are gone; every action is invoked as
+  `/wtfp:<action>` and nothing else
+- `tool.execute` means exactly one thing: run the bundled `tools/wtfp-tool.js`
+  dispatcher. It is bound on Clio (`bash`) and Claude Code (`Bash`) and fails
+  closed on every other host. `research-gap`, `analyze-bib`, `check-refs`,
+  `audit-milestone`, and `export-latex` are therefore available on Clio and
+  Claude Code (31 of 36 actions) and unavailable elsewhere (26 of 36); the
+  previous candidates projected 24 of 36 everywhere
+- `create-poster`, `create-slides`, and `export-latex` no longer claim a
+  rendering or compilation effect. They emit source and hand back an explicit
+  author command, and are available rather than fail-closed
+- The adapter compiler is a per-host factory. Claude Code gets a selectable
+  academic output style, a write-guard hook set that confines `Write`/`Edit`
+  during `write-section`, `execute-outline`, `quick`, and `polish-prose` to
+  `.planning/` and `paper/`, and agents that preload their bound plugin skill.
+  Codex gets a portable root manifest with the `com.openai` overlay and eleven
+  TOML custom agents that the installer publishes to `$CODEX_HOME/agents/`.
+  OpenCode roles declare `mode: subagent` with verifier permissions.
+  Antigravity gets a schema-conformant manifest, `subagent: true` agents, and
+  a project-state rule. Gemini agents move to the flat `agents/` layout its
+  loader reads
+- Adapter inventories and test expectations derive from canonical content
+  instead of literal action, role, and skill counts
 
 ### Added
 
-- The adapter compiler is a per-host factory. Claude Code gets an academic
-  output style (`output-styles/wtfp-academic-writing.md`, selectable), a
-  write-guard hook set (`hooks/hooks.json` plus `scripts/wtfp-write-guard.js`)
-  that confines `Write`/`Edit` during `write-section`, `execute-outline`,
-  `quick`, and `polish-prose` to `.planning/` and `paper/`, and agents that
-  preload their bound plugin skill. Codex gets a portable root manifest with the
-  `com.openai` overlay and eleven TOML custom agents that the installer publishes
-  to `$CODEX_HOME/agents/`. OpenCode roles declare `mode: subagent` with verifier
-  permissions. Antigravity gets a schema-conformant manifest, `subagent: true`
-  agents, and a project-state rule. Gemini agents move to the flat `agents/`
-  layout its loader reads, with the strict `kind: local` frontmatter. The Clio
-  help prompt carries `display-only: true`
-- On Clio, `/wtfp:help` is a display-only operator card: one fenced block with
-  a start-here sequence, every action grouped in workflow order with its
-  argument hint and description, unavailable actions marked with the blocking
-  capability, and the two fleets. Clio prints it without a model call
-- `docs/HOST_CAPABILITIES.md`, the per-host capability matrix with the exact
-  commands used as evidence and an explicit unverified mark for hosts whose CLI
-  was not available
+- The Claude envelope carries the byte-identical Agent Plugins 1.0.0 root
+  `plugin.json` from `vendors/plugin`, including `extensions["ai.iowarp.clio"]`,
+  together with the `ai.iowarp.clio/` prompts, agents, and fleets that graph
+  names, so Clio can adopt an installed Claude plugin as `wtfp`. Claude Code
+  keeps reading `.claude-plugin/plugin.json`
 - `tools/wtfp-tool.js`, a bounded JSON dispatcher for the seven declared
-  bibliography and citation tools, generated into every envelope and documented in
-  `tools/README.md`. `list` prints each command's declared effects, and
-  `--offline` or `WTFP_TOOL_OFFLINE=1` refuses any command whose effects include
-  `network.*`. Symlinked bibliography files are read through their resolved
-  target; file paths and queries carry separate caps; search queries are accepted
-  only through `--query`
+  bibliography and citation tools, generated into every envelope and
+  documented in `tools/README.md`. `list` prints each command's declared
+  effects; `--offline` or `WTFP_TOOL_OFFLINE=1` refuses any command whose
+  effects include `network.*`; network commands enforce `--timeout=<seconds>`
+  (default 20, exit 124); `<command> --help` exits 0
+- On Clio, `/wtfp:help` is a display-only operator card: one fenced block with
+  a start-here sequence, every action in workflow order with its argument
+  hint and description, unavailable actions marked with the blocking
+  capability, and the two fleets. Clio prints it without a model call
+- `protocol/templates/` scaffolds for manuscript outlines, grant-proposal
+  outlines, conference posters, and conference talks, bound from `new-paper`,
+  `create-outline`, `create-poster`, and `create-slides`
+- `docs/HOST_CAPABILITIES.md`, the per-host capability matrix with the exact
+  commands used as evidence, and `docs/README.md`, an index of the
+  documentation set
 - The Clio installer resolves the configuration profile the way Clio does:
   `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then the platform
   default (`${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux)
+- Native Clio plugin installation with exact receipts and compensating
+  rollback, a three-action research handoff guide, and an opt-in native Clio
+  lifecycle test (`test/clio-native-integration.test.js`)
 
 ### Fixed
 
+- Claude Code loads agents only from the top level of `agents/`, so the
+  nested `agents/wtfp/<role>.md` layout loaded none of the eleven roles.
+  Gemini CLI reads the same single directory. Both now use flat
+  `agents/wtfp-<role>.md`
 - The Antigravity manifest carried `version`, `author`, `commands`, `agents`,
   and `skills` keys that the published v1 plugin schema rejects
-  (`additionalProperties: false`), and the Gemini extension shipped agents under
-  `agents/wtfp/`, a directory its loader never reads
 - The generated `tools/wtfp-tool.js` ran its dispatcher on import. OpenCode
   imports every `tools/*.js` below its config root as a custom tool, so any
-  session that initialised its tool registry printed a dispatcher error and
-  exited. The dispatcher now runs only as an entry point
+  session that initialised its tool registry exited with a dispatcher error.
+  The dispatcher now runs only as an entry point
 - The installer's post-install hint told Codex users to run `/wtfp:help`, a
-  command Codex does not have; it now names the skill selector
-- Without `clio-coder` on PATH the installer told the operator to run
-  `clio-coder plugins install` against the managed `plugins/wtfp` root, which Clio
-  rejects as a source overlapping its destination. It now says to re-run the
-  install once the binary is available
-- Generated `.js` files carry a `//` banner instead of an HTML comment, so they
-  also parse as ES modules
-- `npx wtf-p uninstall --help` prints the uninstaller's help, `uninstall <target>`
-  maps to the uninstaller's `--<target>` selector, and the installer help lists
-  the uninstall flags
-- `bib-format` emits standard BibTeX entry types by default (`@article`,
-  `@inproceedings`, ...); the al-folio Jekyll projection is behind
-  `--style=al-folio`. `wtfp_missing` now also reports a missing title or year
-- `bib-index` flags repeated citation keys and refuses an ambiguous `--key`
-- Network dispatcher commands enforce `--timeout=<seconds>` (default 20) with exit
-  124, `bib-impact` reports progress on stderr, and `<command> --help` exits 0
-- Executable bindings for `research-gap`, `analyze-bib`, and `check-refs` through
-  that dispatcher; Clio's `network.search` resolves to the bundled scholarly-index
-  clients, which are the only search these actions ever declared
-- `protocol/templates/` authored-artifact scaffolds for manuscript outlines, grant
-  proposal outlines, conference posters, and conference talks, bound from
-  `new-paper`, `create-outline`, `create-poster`, and `create-slides`
-- Generated Agent Plugins 1.0.0 packaging with conventional skills, a namespaced
-  Clio component graph, and a standard Codex manifest alongside its fallback
-- Native Clio plugin installation with exact receipts and compensating rollback
-- A three-action research handoff guide and opt-in native user/project lifecycle test
-
-### Fixed
-
-- `create-outline`, `insert-section`, and `remove-section` now carry the exact
-  outline-budget invariant that only `new-paper` stated, so no outline write can
-  leave `word_target` out of balance with `target_words`
-- `create-poster`, `create-slides`, and `export-latex` no longer claim a rendering
-  or compilation effect they never had. They produce source and hand back an
-  explicit author command, and are consequently available rather than fail-closed
-- `help` names actions in the host's real `/wtfp:<action>` syntax and reports the
-  actions the running adapter cannot execute
-- Incremental mapping now declares existing source/evidence reads, updates,
-  and manifest material/manuscript indexing while preserving curated records
-- Outliner word budgets now match the exact total required by outline approval
-- Claude agent definitions use native tools metadata; Clio role reports retain
-  portable needs_input/blocked outcomes and main-agent decoding instructions
-- Native receipts expose installed commands, skills, and agents in status
-- Compiler v5 evaluation definitions bind current source while retained compiler-v4
-  observations keep their original evidence and comparison baseline
+  command Codex does not have; without `clio-coder` on PATH the installer
+  pointed at a `plugins install` source that Clio rejects. Both hints are
+  corrected
+- Generated `.js` files carry a `//` banner instead of an HTML comment, so
+  they also parse as ES modules
+- `npx wtf-p uninstall --help` prints the uninstaller's help,
+  `uninstall <target>` maps to the uninstaller's `--<target>` selector, and the
+  installer help lists the uninstall flags
+- `bib-format` emits standard BibTeX entry types by default; the al-folio
+  Jekyll projection is behind `--style=al-folio`. `wtfp_missing` also reports
+  a missing title or year. `bib-index` flags repeated citation keys and
+  refuses an ambiguous `--key`. `bib-impact` reports progress on stderr
+- `create-outline`, `insert-section`, and `remove-section` carry the exact
+  outline-budget invariant that only `new-paper` stated
+- `help` names actions in the host's real `/wtfp:<action>` syntax and reports
+  the actions the running adapter cannot execute
+- Incremental mapping declares existing source/evidence reads and preserves
+  curated records; outliner word budgets match the approved total; native
+  receipts expose installed commands, skills, and agents in status
 
 ### Documentation
 
-- Reworked the public entry point around the human-guided scientist workflow,
-  exact client invocation, durable pause/resume, and RC2's observed limits
-- Added practical getting-started and proposal guides for operators and agents,
-  including a supplied-material NSF 25-531 walkthrough
-- Made prerelease management commands select the package explicitly so an
-  installed v0.5 executable cannot shadow RC2, and corrected migration,
-  native-discovery, existing-project, and release-status guidance
+- README, `docs/`, and this changelog describe the shipped product: one
+  canonical plugin, six verified hosts and Copilot unverified, per-host
+  availability derived from the generated `compatibility/action-availability.json`,
+  the four writing workflows, the evidence stance, and the protocol → compiler →
+  projections architecture. Stale RC2 boundaries, 24/36 counts, Clio extension
+  and flat-alias references, and MCP claims are removed. Historical evaluation
+  evidence is retained and labelled as historical
+
+### Validated
+
+- Disposable-profile native discovery: Claude Code 2.1.267 (strict
+  validation, install, `plugin details` reporting 43 skills, 11 agents, and 3
+  hooks on this envelope; headless Sonnet 5 `/wtfp:help` and `/wtfp:new-paper`
+  stopped at the interview gate on the factory-round envelope), Codex 0.153.3
+  (marketplace add, plugin list, headless `gpt-5.6-luna` help and new-paper
+  routes), Clio Coder 0.4.7 (`plugins inspect`/`install`/`list`, `agents`,
+  static `/wtfp:help`), OpenCode 1.18.30 (`agent list`, `debug skill`, server
+  API), Antigravity CLI 1.1.28 (`plugin validate`/`install`/`list`, `agents`),
+  and Gemini CLI 0.59.0 (`extensions validate`/`install`/`list`,
+  `skills list`). GitHub Copilot CLI was not available and is unverified
+- Clio Coder 0.4.7 `plugins inspect` accepts the Claude envelope as a valid
+  `wtfp` plugin with zero diagnostics
+
+### Known limitations
+
+- Headless `clio-coder run` cannot satisfy a WTF-P `user.gate`; `ask_user` is
+  registered in the TUI only
+- Codex loads the TOML custom agents by published file format; runtime
+  discovery was not observed
+- Gemini exposes no listing surface for extension agents or commands, so their
+  discovery is inferred from a clean extension load and loader source
+- The Claude write guard was exercised with synthetic hook input, not a live
+  `/wtfp:write-section` session
+- Writing turns on the local `dynamo/qwen3.8-27b` target are impractically
+  slow with the inlined schema set
 
 ## [0.6.0-rc.2] - 2026-08-29
 
@@ -314,8 +338,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.3...HEAD
-[0.6.0-rc.3]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0-rc.3
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.4...HEAD
+[0.6.0-rc.4]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0-rc.4
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0

@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "b448174587bf1d5942facfa2f694dae3d5f118d2287e9ef9a82345c7c1b592dc",
+  "sourceHash": "447f3df927c35574a6b53f7c836acb45a599c198d7331a447c365ba979ae28fa",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "88bacb5ab22fcb7dc1b1bae9be4f7e8b02ce17310a22def843e7f6dfd3fc062b"
+      "sha256": "3cde9a61a85944950aaa287a5886c27290262db2fec246ad76e2596afd6371da"
     },
     {
       "path": "actions/add-todo.json",
