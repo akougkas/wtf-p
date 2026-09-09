@@ -1,11 +1,5 @@
 {
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "wtf-p",
-  "version": "0.6.0-rc.3",
-  "description": "Portable academic research and writing workflows.",
-  "author": {
-    "name": "akougkas"
-  },
-  "commands": "./commands",
-  "agents": "./agents",
-  "skills": "./skills"
+  "description": "Portable academic research and writing workflows (WTF-P 0.6.0-rc.3)."
 }

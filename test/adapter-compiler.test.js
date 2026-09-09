@@ -949,9 +949,14 @@ record('Codex, Claude, Copilot, Antigravity, Gemini, and plugin manifests resolv
   assert.strictEqual(claudeMarketplace.plugins[0].source, './');
 
   const antigravity = plansById.get('antigravity');
+  // Antigravity's published manifest schema allows exactly name and
+  // description; components are discovered from fixed directories.
   const antigravityManifest = JSON.parse(planText(antigravity, 'plugin.json'));
-  assert.strictEqual(antigravityManifest.version, PACKAGE_VERSION);
-  for (const key of ['commands', 'agents', 'skills']) assertManifestDirectory(antigravity, antigravityManifest[key], `Antigravity ${key}`);
+  assert.deepStrictEqual(sorted(Object.keys(antigravityManifest)), ['$schema', 'description', 'name']);
+  assert.strictEqual(antigravityManifest.name, 'wtf-p');
+  assert.ok(antigravityManifest.description.includes(PACKAGE_VERSION));
+  for (const resource of ['commands', 'agents', 'skills', 'rules']) assertDirectory(antigravity, resource, `Antigravity ${resource}`);
+  assert.ok(planText(antigravity, 'rules/wtfp-project-state.md').includes('project://manifest'));
 
   const gemini = plansById.get('gemini');
   const geminiManifest = JSON.parse(planText(gemini, 'gemini-extension.json'));

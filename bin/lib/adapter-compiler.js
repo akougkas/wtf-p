@@ -737,6 +737,11 @@ function renderPortableRole(role, slug, target) {
     lines.push('mode: subagent');
     if (verifier) lines.push('permission:', '  edit: deny', '  bash: deny');
   }
+  if (target === 'antigravity') {
+    // Antigravity CLI invokes a custom agent through invoke_subagent only when
+    // the frontmatter opts in.
+    lines.push('subagent: true');
+  }
   if (target === 'gemini') {
     lines.push('kind: local');
   }
@@ -964,16 +969,33 @@ function claudeCompatibleManifest(version, name = 'wtf-p') {
   });
 }
 
+// The published Antigravity CLI manifest schema
+// (https://antigravity.google/schemas/v1/plugin.json) allows exactly `name`
+// and `description` with additionalProperties false; components are found by
+// their fixed directories (skills/, agents/, rules/, hooks.json, mcp_config.json).
 function antigravityManifest(version) {
   return stableJson({
+    $schema: 'https://antigravity.google/schemas/v1/plugin.json',
     name: 'wtf-p',
-    version,
-    description: 'Portable academic research and writing workflows.',
-    author: { name: 'akougkas' },
-    commands: './commands',
-    agents: './agents',
-    skills: './skills'
+    description: `Portable academic research and writing workflows (WTF-P ${version}).`
   });
+}
+
+// Antigravity rules are always-on constraints. Project the portable project
+// protocol so the agent knows what `.planning/` and `paper/` are before any
+// skill is selected.
+function antigravityRule() {
+  const readme = fs.readFileSync(path.join(PROTOCOL_ROOT, 'project', 'README.md'), 'utf8').trim();
+  return [
+    generatedBanner('protocol/project', 'README.md'),
+    '',
+    '# WTF-P project state rules',
+    '',
+    'When a workspace contains `.planning/` or `paper/`, treat it as a WTF-P research project. Route academic requests through the `wtfp-*` skills, invoke actions as `/wtfp:<action>`, never fabricate citations, results, or evidence, and never run Git or publish operations as a side effect.',
+    '',
+    readme,
+    ''
+  ].join('\n');
 }
 
 function geminiManifest(version) {
@@ -1460,6 +1482,7 @@ function compilePlans(options = {}) {
 
   const antigravity = byId.get('antigravity');
   addFile(antigravity, 'plugin.json', antigravityManifest(model.version));
+  addFile(antigravity, 'rules/wtfp-project-state.md', antigravityRule());
 
   const gemini = byId.get('gemini');
   addFile(gemini, 'gemini-extension.json', geminiManifest(model.version));
