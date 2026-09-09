@@ -159,16 +159,30 @@ Before claiming first-class support, validate the packed artifact in disposable 
   via `library list --kind plugin --json`, runtime skill listing via
   `library skills --all --json`, recursive `/wtfp:*` prompts, the static
   `/wtfp:help` card, plugin-bound agents, both fleet `validate`/`graph` paths,
-  and an end-to-end nested-write rollback check using the generated directory
-  boundaries. Treat the fleets as explicit `fleet run` primitives; ordinary
-  `/wtfp:*` prompts do not auto-route through them. Also confirm
-  `library inspect` accepts the Claude envelope, since Clio adopts an installed
-  Claude plugin through its root manifest.
+  packaged reference containment, scope coexistence, idempotence, disable
+  preference retention across repair, and real native install/remove compensating
+  rollback on verification failure. Treat the fleets as explicit `fleet run`
+  primitives; ordinary `/wtfp:*` prompts do not auto-route through them. Also
+  confirm `library inspect` accepts the Claude envelope, since Clio adopts an
+  installed Claude plugin through its root manifest.
 - OpenCode: configured-directory command, skill, and agent discovery
 - Antigravity: plugin validate/install/list
 - Gemini: extension validate/install/list
 
 Record the exact commands and their output in `docs/HOST_CAPABILITIES.md`, and mark a projection unverified when its CLI was not available for the run.
+
+### Native Clio test recipe and snapshot evidence boundaries
+
+The reproducible native Clio integration suite is run with an explicit `WTFP_CLIO_ENTRY`:
+
+```bash
+TMPDIR=<disposable-tmp> WTFP_CLIO_ENTRY=/path/to/built/clio-coder/dist/cli/index.js node test/clio-native-integration.test.js
+```
+
+Evidence requirements and boundaries:
+- **Explicit entry and disposable isolation**: The test requires `WTFP_CLIO_ENTRY` pointing to an absolute built CLI file and isolates all profiles, data, state, cache, and scratch directories under disposable roots. It forwards no credentials and makes no model or network calls.
+- **Interim frozen snapshot labeling**: Current native verification rests on an interim frozen Clio 0.4.7 built snapshot (entry SHA-256 `97c11656520161dcec48600786ecc128f1ae2cde660e7fb99a6d9f347e3a9f39`, dist digest `13b913e506a34e0532119c2cb27b8d7d38dd52431ca8d3e2ba0805f7313003dc`, source HEAD `b7d9e591` plus uncommitted changes recorded at snapshot creation). This is explicitly **not** a final clean release SHA or final packed-consumer proof from an npm registry build.
+- **Status of release gates**: Native integration tests pass with exit 0 (`test/clio-native-integration.test.js` at commit `6f95279`, production installer at `3d9387f`). Final release gates remain open pending settled documentation, final preflight checks, and publication of Clio 0.4.7.
 
 At least one harmless academic fixture must also exercise real Claude, Codex,
 and Clio execution without touching normal client state. Keep static lint,

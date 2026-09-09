@@ -135,8 +135,10 @@ migration-feedback gate for stable `0.6.0` remains open.
   hooks on this envelope; headless Sonnet 5 `/wtfp:help` and `/wtfp:new-paper`
   stopped at the interview gate on the factory-round envelope), Codex 0.153.3
   (marketplace add, plugin list, headless `gpt-5.6-luna` help and new-paper
-  routes), Clio Coder 0.4.7 (current `library inspect`/`install`/`list`,
-  runtime skills via `library skills --all --json`, `agents`, static `/wtfp:help`;
+  routes), Clio Coder 0.4.7 (native verification exit 0 against frozen interim snapshot
+  in user and project profiles: 203 receipt files, `trust: "trusted"`, 7 skills,
+  11 recipes, both fleets validate+graph, 508 contained references, library dry-run,
+  scope coexistence, idempotence, preserved disable preference, and compensating rollback;
   observed historically via pre-unification `plugins` verbs by Fable at SHA 31a0600),
   OpenCode 1.18.30 (`agent list`, `debug skill`, server
   API), Antigravity CLI 1.1.28 (`plugin validate`/`install`/`list`, `agents`),

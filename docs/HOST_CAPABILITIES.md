@@ -147,11 +147,53 @@ node bin/install.js uninstall clio --yes --no-color           # removed; registr
 
 Lifecycle inspection, drift, and state toggles run through:
 ```bash
-clio-coder library drift [wtfp] --user --json      # check package drift against installed manifest
+clio-coder library drift wtfp --user --json       # check package drift against installed manifest
 clio-coder library enable wtfp --user --json       # enable package copy
 clio-coder library disable wtfp --user --json      # disable package copy
 clio-coder library update wtfp --user --json       # update package copy
 ```
+
+*(Note on CLI contract scope: while `clio-coder library inventory --json` and `clio-coder library drift wtfp --user --json` are documented CLI contract commands, runtime observation is claimed only for the lifecycle, discovery, inspection, dry-run, coexistence, and rollback commands exercised in the native test suite below; no runtime observation is claimed for library inventory or drift.)*
+
+### Observed native verification (Clio 0.4.7 frozen interim snapshot)
+
+Native verification was executed by Astra (wR:p3) via `test/clio-native-integration.test.js` (native test commit `6f95279de1737ce162a71d06da48f44d3851eb56`, with production installer commit `3d9387f`), completing with exit code 0.
+
+#### Provenance and evidence boundaries
+
+- **Runtime version**: Clio Coder 0.4.7 built CLI.
+- **Interim snapshot provenance**:
+  - Entry point SHA-256: `97c11656520161dcec48600786ecc128f1ae2cde660e7fb99a6d9f347e3a9f39`
+  - Built `dist/` tree digest: `13b913e506a34e0532119c2cb27b8d7d38dd52431ca8d3e2ba0805f7313003dc`
+  - Archive SHA-256: `fa068fdcd7091b2357293b8f8509c5c6550baaf6d0c1e98daee2c24c8755ca9e`
+  - Source HEAD: `b7d9e591eb259553660889046e55393143692b79` (with uncommitted working-tree changes recorded in snapshot metadata). Entry digest matched before and after the test run.
+- **Accurate evidence labeling**: This is a **frozen interim built Clio snapshot**, NOT a final clean release SHA or final packed-consumer proof from an npm release. Final WTF-P release gates do not pass yet; Clio 0.4.7 remains an unpublished external dependency blocking promotion to stable `0.6.0`, and WTF-P remains on npm `next` as `0.6.0-rc.4`.
+- **Test execution recipe**:
+  ```bash
+  TMPDIR=<disposable-tmp> WTFP_CLIO_ENTRY=/path/to/clio-coder/dist/cli/index.js node test/clio-native-integration.test.js
+  ```
+  The test requires an explicit `WTFP_CLIO_ENTRY` naming an absolute built CLI file. All configuration, data, state, cache, temporary files, and workspaces were isolated under disposable directories (`HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_STATE_HOME`, `XDG_CACHE_HOME`, `CLIO_CODER_*`, `TMPDIR`, mode 0700) and removed in `finally` cleanup. A temporary Git checkout was created solely for native fleet write-boundary validation (WTF-P never creates a Git checkout as a side effect). No ambient operator profiles were read or modified; no Claude sessions, model calls, or fleet executions (`fleet run`) occurred.
+
+#### Observed results in both user and project scopes
+
+The native suite exercised and verified the following behaviors across **both** disposable user (`--user`) and project (`--project`) scopes:
+
+1. **CLI contract precheck**: `clio-coder library --help` exposes the final commands (`install`, `inspect`, `list`, `remove`, `enable`, `disable`) and `--dry-run`.
+2. **Claude envelope adoption**: `clio-coder library inspect <vendors/claude> --user --json` returns `valid: true` with zero diagnostics, confirming Clio adopts the portable manifest candidate without running Claude.
+3. **Candidate inspection & install preview**: `clio-coder library inspect <vendors/plugin> --<scope> --json` validates the candidate manifest (`valid: true`). `clio-coder library install <vendors/plugin> --<scope> --dry-run --json` returns `confirmed: false` and creates no files or directories under the target root.
+4. **Installer delegation & exact receipt**: `node bin/install.js install clio --config-dir <target> --advanced --force --no-color` delegates to `clio-coder library install <staged-dir> --<scope> --json` (passing no `--yes` or `--force` to Clio). The WTF-P `.wtfp-version` receipt records exactly 203 SHA-256-authenticated files, all under `plugins/wtfp/`, and excludes native state.
+5. **Native package listing**: `clio-coder library list --kind plugin --json` returns `{ entries: [{ kind: "plugin", name: "wtfp", installed: [...] }], diagnostics: [] }`. The target copy is verified as `valid: true`, `enabled: true`, `compatible: true`, `effective: true`, and `loadable: true` with zero diagnostics.
+6. **Installed package inspection**: `clio-coder library inspect wtfp --<scope> --json` returns the exact `id: "wtfp"`, scope, expected `rootPath`, `valid: true`, `enabled: true`, and `trust: "trusted"` (confirming first-party CLI installation does not inherit foreign trust), with zero diagnostics.
+7. **Runtime skills discovery**: `clio-coder library skills --all --json` discovers all 7 `wtfp-*` runtime catalog skills.
+8. **Agent recipes discovery**: `clio-coder agents` lists all 11 `wtfp-*` role recipes.
+9. **Fleet contract validation & graph**: `clio-coder fleet validate` and `clio-coder fleet graph` succeed for both `wtfp-plan-section` and `wtfp-draft-review`. (Validation and dependency graphing only; not `fleet run` execution evidence).
+10. **Display-only help prompt**: `clio-coder run '/wtfp:help'` outputs the static operator card containing `wtfp:new-paper` with exit code 0 and no model call.
+11. **Packaged reference containment**: All 508 packaged `${pluginRoot}` references across installed prompt, agent, and fleet bodies resolve strictly within the installed root with zero escaping or missing paths. The four advertised document routes (`new-paper`, `create-outline`, `create-poster`, `create-slides`) bind existing packaged templates (`templates/paper-outline.md`, `templates/grant-proposal-outline.md`, `templates/poster.md`, `templates/slides.md`).
+12. **Idempotence**: Re-running the installer preserves exact native state bytes (`plugins/state.json`).
+13. **Preserved disable preference & state repair**: Disabling the plugin via `clio-coder library disable wtfp --<scope> --json` followed by re-installation preserves `enabled: false` and emits a scope-correct `clio-coder library enable` hint. An intentionally corrupted/stale content digest in `plugins/state.json` forces re-registration and continues to preserve `enabled: false`. Explicit `clio-coder library enable wtfp --<scope> --json` restores `enabled: true`.
+14. **Clean removal**: `node bin/uninstall.js --clio --config-dir <target> --yes --no-color` invokes scoped `clio-coder library remove`; the package root, receipt, and installed-list entry are cleanly removed.
+15. **Scope coexistence**: A project installation in `<workspace>/.clio-coder` followed by a user installation in `CLIO_CODER_CONFIG_DIR` from the same workspace cleanly coexist. Unscoped `library list` lists both installed copies; scoped `inspect` and `list` select the exact requested root. Removing the user copy preserves project `plugins/state.json` byte-for-byte and leaves the project copy valid; subsequent project removal succeeds cleanly.
+16. **Injected verification-failure compensating rollback**: For each scope, the test wrapper injected a verification-command failure (`WTFP_TEST_INSPECT_FAILURE=1` on `library inspect`) *after real native installation*. Actual Clio `library remove` compensates the failed installation. No package files, receipt, or native registration remain in `plugins/state.json` or `library list`, and no incomplete rollback diagnostic occurs. (This is native installer rollback compensation evidence, not a model or fleet rollback test).
 
 ### Observed historical invocations (Fable verification at SHA 31a0600)
 
@@ -172,7 +214,7 @@ node bin/install.js uninstall clio --dry-run --no-color       # Dry run: would r
 node bin/install.js uninstall clio --yes --no-color           # removed; registration dropped through plugins remove
 ```
 
-*Note: The recorded invocations above reflect historical execution under Fable at SHA `31a0600`. Fresh observed native verification evidence using the modern `library` commands will be supplied by Astra (wR:p3) once WTF-P installer code and tests are aligned to the `library` contract.*
+*Note: The recorded invocations above reflect historical execution under Fable at SHA `31a0600`. The 203-file uninstall dry-run count belongs to this inherited Fable run (the modern native suite validates library-install dry-run, not WTF-P uninstall dry-run).*
 
 The `--autonomy read-only|suggest|auto-edit|full-auto` flag is parsed for both the interactive launcher and `clio-coder run` (confirmed in `clio-coder run --help` and `src/cli/args.ts`).
 
