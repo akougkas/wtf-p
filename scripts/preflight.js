@@ -111,7 +111,10 @@ else fail('native envelope entry points are missing', missingArtifacts.join(', '
 
 section('Determinism and regression suite');
 commandPassed('npm', ['run', 'check:adapters'], 'generated adapters exactly match canonical sources');
-commandPassed('npm', ['run', 'test:all'], 'unit, ownership, compatibility, and integration suites pass', { timeout: 300000 });
+// The full safety suite includes isolated installer subprocesses for every
+// target and adversarial Clio lifecycle cases; allow it to finish on disk-backed
+// disposable profiles while retaining a bounded gate timeout.
+commandPassed('npm', ['run', 'test:all'], 'unit, ownership, compatibility, and integration suites pass', { timeout: 600000 });
 
 section('Publish archive');
 const packed = run('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { timeout: 120000 });
