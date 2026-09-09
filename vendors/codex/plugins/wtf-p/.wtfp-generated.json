@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "d289b533a5771c6aacd7269ab935a80cb01f56f3b5d60529568d29c8796d1120",
+  "sourceHash": "a34c242bdcb0c17383e645f59ccae1244af3e107b3fdceaf9d33e18ceb4b1063",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -526,7 +526,7 @@
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "a5d6a88783187e9d139075a2dae1376ffcfc2369c5c89838ecf4d0de1e70636e"
+      "sha256": "4eb713f525eb0b2c13ccc5b1126611039654927fdecfd76c5aa62dc232fcb8c6"
     },
     {
       "path": "workflows/add-todo.md",

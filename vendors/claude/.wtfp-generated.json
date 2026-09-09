@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "c6004da42cc62260dba075dba160fb7919f3f06109b1fc6365d6d7116f70203b",
+  "sourceHash": "a453cb7df513d76b0c1658d57af62ad653b76cd7d110f2dd1724eeba0d458638",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -686,7 +686,7 @@
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "a5d6a88783187e9d139075a2dae1376ffcfc2369c5c89838ecf4d0de1e70636e"
+      "sha256": "4eb713f525eb0b2c13ccc5b1126611039654927fdecfd76c5aa62dc232fcb8c6"
     },
     {
       "path": "workflows/add-todo.md",

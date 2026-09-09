@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "d2b3eb91cf116e121f1bfb3f9cec6def00ca514368da13c3fa4f6e0529015927",
+  "sourceHash": "b448174587bf1d5942facfa2f694dae3d5f118d2287e9ef9a82345c7c1b592dc",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -666,7 +666,7 @@
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "a5d6a88783187e9d139075a2dae1376ffcfc2369c5c89838ecf4d0de1e70636e"
+      "sha256": "4eb713f525eb0b2c13ccc5b1126611039654927fdecfd76c5aa62dc232fcb8c6"
     },
     {
       "path": "workflows/add-todo.md",

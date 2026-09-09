@@ -1641,7 +1641,12 @@ async function main(rawArgv) {
   fail(\`unimplemented command: \${command}\`);
 }
 
-main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error)));
+// Run only as an entry point. OpenCode imports every \`tools/*.js\` below its
+// config root as a custom-tool module; an unconditional main() printed a
+// dispatcher error and exited the host process at session start.
+if (require.main === module) {
+  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error)));
+}
 `;
 }
 
