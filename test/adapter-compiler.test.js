@@ -557,6 +557,22 @@ record('every command-capable host exposes the same stable aliases', () => {
         }
         continue;
       }
+      if (target === 'clio' && actionIds[index] === 'help') {
+        // Clio prints a display-only prompt's first fenced block to the operator
+        // without a model call, so the card must be self-contained.
+        assert.match(source, /^display-only: true$/m, `${sourcePath}: help must be display-only on Clio`);
+        const card = source.match(/^```text\n([\s\S]*?)\n```$/m)?.[1];
+        assert.ok(card, `${sourcePath}: help card must be one fenced text block`);
+        assert.doesNotMatch(source, /\$\{pluginRoot\}|\$ARGUMENTS|^## (?:Procedure|Record contract|Invocation input)$/m,
+          `${sourcePath}: help card must carry no includes, arguments, or model procedure`);
+        for (const id of actionIds) assert.ok(card.includes(`/wtfp:${id} `), `${sourcePath}: help card omits /wtfp:${id}`);
+        for (const id of expectedBlockedActions('clio')) {
+          assert.ok(new RegExp(`/wtfp:${id} [^\\n]*\\n[^\\n]*\\[unavailable on clio: `).test(card), `${sourcePath}: help card does not mark /wtfp:${id} unavailable`);
+        }
+        for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) assert.ok(card.includes(`  ${fleet}\n`), `${sourcePath}: help card omits fleet ${fleet}`);
+        assert.match(card, /^Start here$/m);
+        continue;
+      }
       assert.match(source, /^## Invocation input$/m, `${target}:${sourcePath}: invocation input is not forwarded`);
       assert.match(source, /^## Bound action contract and schemas$/m, `${target}:${sourcePath}: action contract binding is missing`);
       assert.ok(source.includes(`actions/${actionIds[index]}.json`), `${target}:${sourcePath}: exact action contract is not bound`);

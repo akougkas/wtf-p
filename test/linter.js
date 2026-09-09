@@ -84,6 +84,14 @@ function validateMarkdownCommand(filePath, actionId, options) {
     passed++;
     return;
   }
+  if (parsed.fields['display-only'] === 'true') {
+    // A display-only prompt is printed to the operator, never sent to a model.
+    check(/^```text\n[\s\S]+?\n```$/m.test(parsed.body), filePath, 'display-only card must be one fenced text block');
+    check(!/\$\{pluginRoot\}|@protocol:\/\/|\$ARGUMENTS/.test(parsed.body), filePath, 'display-only card must be self-contained');
+    check(!/^## (?:Procedure|Record contract|Invocation input)$/m.test(parsed.body), filePath, 'display-only card must carry no model procedure');
+    passed++;
+    return;
+  }
   check(/^## Record contract$/m.test(parsed.body), filePath, 'portable record contract is missing');
   check(/^## Procedure$/m.test(parsed.body), filePath, 'action procedure is missing');
   check(/^## Safety and completion$/m.test(parsed.body), filePath, 'safety/completion contract is missing');

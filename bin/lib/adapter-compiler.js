@@ -603,6 +603,91 @@ function clioUserGateBody(action) {
   ].join('\n');
 }
 
+// Workflow order for the operator-facing reference. Group membership comes from
+// the catalog; only the reading order of the groups is fixed here.
+const HELP_GROUP_ORDER = Object.freeze([
+  ['wtfp-start-project', 'Start a project'],
+  ['wtfp-research-literature', 'Research the literature'],
+  ['wtfp-plan-section', 'Plan a section'],
+  ['wtfp-write-section', 'Write a section'],
+  ['wtfp-review-manuscript', 'Review the manuscript'],
+  ['wtfp-manage-project', 'Manage the project'],
+  ['wtfp-deliver-research', 'Deliver the research']
+]);
+
+const HELP_START_SEQUENCE = Object.freeze([
+  'new-paper', 'map-project', 'create-outline', 'discuss-section', 'plan-section',
+  'write-section', 'review-section', 'progress', 'pause-writing', 'resume-writing'
+]);
+
+// The argument a human types after the action, derived from the contract's
+// preconditions: an action whose condition names a target or selected section
+// takes a section id; a selected prose target or milestone id likewise.
+function helpArgumentHint(action) {
+  const conditions = action.requirements.conditions.join(' ');
+  if (/\b(?:target|selected) section\b/iu.test(conditions)) return '<section>';
+  if (/\bselected prose target\b/iu.test(conditions)) return '<target>';
+  if (/\bmilestone identifier\b/iu.test(conditions)) return '<milestone>';
+  return '[input]';
+}
+
+// Clio renders a display-only prompt by printing its first fenced block to the
+// operator without a model call. The block is a self-contained reference:
+// no includes, no procedure, only what a human needs to pick the next action.
+function clioHelpCard(model, availabilityById) {
+  const byId = new Map(model.actions.map((action) => [action.id, action]));
+  const line = (id) => {
+    const action = byId.get(id);
+    if (!action) throw new Error(`help card names an unknown action: ${id}`);
+    const availability = availabilityById.get(id);
+    const blocked = availability.available
+      ? ''
+      : `  [unavailable on clio: ${[...new Set([...availability.unavailableCapabilities, ...availability.unavailableEffects])].join(', ')}]`;
+    return `  /wtfp:${id} ${helpArgumentHint(action)}\n      ${action.description}${blocked}`;
+  };
+  const groupIds = new Set(HELP_GROUP_ORDER.map(([id]) => id));
+  for (const skill of model.catalog.skills) {
+    if (!groupIds.has(skill.id)) throw new Error(`help card has no group order for skill ${skill.id}`);
+  }
+  for (const id of HELP_START_SEQUENCE) if (!byId.has(id)) throw new Error(`help card start sequence names an unknown action: ${id}`);
+  const fleets = fs.readdirSync(path.join(PROTOCOL_ROOT, 'fleets'))
+    .filter((file) => file.endsWith('.json')).sort()
+    .map((file) => readJson(path.join(PROTOCOL_ROOT, 'fleets', file)));
+  const card = [
+    `WTF-P ${model.version} on Clio Coder: evidence-grounded academic writing`,
+    '',
+    'Start here',
+    ...HELP_START_SEQUENCE.map((id) => `  /wtfp:${id} ${helpArgumentHint(byId.get(id))}`),
+    '',
+    ...HELP_GROUP_ORDER.flatMap(([skillId, title]) => {
+      const skill = model.catalog.skills.find((entry) => entry.id === skillId);
+      return [`${title} (skill ${skillId})`, ...skill.actions.map(line), ''];
+    }),
+    'Product operations',
+    ...model.catalog.operations.actions.map(line),
+    '',
+    'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)',
+    ...fleets.map((fleet) => `  ${fleet.id}\n      ${fleet.description}`),
+    '',
+    'Each action reads .planning/ records and paper/ artifacts, asks before any gated write, and never runs Git or publishes.',
+    'An unavailable action fails closed with WTFP_ACTION_UNAVAILABLE and returns a manual handoff instead.'
+  ].join('\n');
+  if (card.includes('```')) throw new Error('help card contains a fence delimiter');
+  return [
+    '---',
+    `description: ${yamlScalar(byId.get('help').description)}`,
+    'display-only: true',
+    '---',
+    '',
+    generatedBanner('protocol/actions', 'help'),
+    '',
+    '```text',
+    card,
+    '```',
+    ''
+  ].join('\n');
+}
+
 function renderMarkdownCommand(action, workflowBody, target, availability) {
   const lines = ['---'];
   // Claude derives the stable command name from the plugin id and flat file
@@ -610,10 +695,6 @@ function renderMarkdownCommand(action, workflowBody, target, availability) {
   // /wtfp:wtfp:new-paper in current Claude Code releases.
   if (target !== 'clio' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
-  // Clio renders a display-only prompt for the human without a model call. The
-  // help route is pure catalog rendering, so it is the one prompt that opts in.
-  // Clio ignores frontmatter keys it does not read, so older builds are unaffected.
-  if (target === 'clio' && action.id === 'help') lines.push('display-only: true');
   if (!availability.available) {
     if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
       lines.push('allowed-tools: []');
@@ -1735,7 +1816,9 @@ function compilePlans(options = {}) {
   addFile(gemini, 'GEMINI.md', '# WTF-P\n\nUse the bundled Agent Skills and portable protocol for evidence-grounded academic work.\n');
 
   for (const action of model.actions) {
-    addFile(clio, `prompts/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
+    addFile(clio, `prompts/wtfp/${action.id}.md`, action.id === 'help'
+      ? clioHelpCard(model, availabilityByTarget.get('clio'))
+      : renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
     addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
     addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));

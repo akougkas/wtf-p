@@ -142,6 +142,8 @@ for (const [host, spec] of Object.entries(hosts)) {
   check(allExist, `${host} exposes all 36 stable commands`);
   check(allExist && files.every(({ action, file }) => {
     const source = fs.readFileSync(file, 'utf8');
+    // A display-only prompt is rendered to the operator and takes no arguments.
+    if (/^display-only: true$/m.test(source)) return !source.includes(spec.args);
     return availability.get(action.id) === 'available'
       ? source.includes(spec.args) && !source.includes(UNAVAILABLE_MARKER)
       : !source.includes(spec.args) && source.includes(UNAVAILABLE_MARKER);
