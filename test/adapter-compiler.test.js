@@ -709,7 +709,7 @@ record('every envelope exposes only declared tools plus the bounded dispatcher',
   }
 });
 
-record('supported hosts contain exactly 11 generated native roles', () => {
+record('supported hosts contain exactly the canonical native roles', () => {
   for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const expected = expectedAgentPaths(target);
@@ -956,8 +956,8 @@ record('Copilot carries a committed cloud-safe repository projection', () => {
   const prompts = planFiles(plan, /^project\/\.github\/prompts\/wtfp-[^/]+\.prompt\.md$/);
   const agents = planFiles(plan, /^project\/\.github\/agents\/wtfp-[^/]+\.agent\.md$/);
   const skills = planFiles(plan, /^project\/\.github\/skills\/[^/]+\/SKILL\.md$/);
-  assert.strictEqual(prompts.length, 36);
-  assert.strictEqual(agents.length, 11);
+  assert.strictEqual(prompts.length, actionIds.length);
+  assert.strictEqual(agents.length, EXPECTED_ROLES.length);
   assert.deepStrictEqual(
     skills,
     EXPECTED_SKILLS.map((skill) => `project/.github/skills/${skill}/SKILL.md`)

@@ -97,10 +97,10 @@ const forbiddenSyntax = [
 
 const catalog = readJson(path.join(protocolRoot, 'catalog.json'));
 assert.strictEqual(catalog.schema, 'wtfp.catalog/v1', 'catalog schema drift');
-assert.strictEqual(catalog.actions.length, 36, 'the canonical catalog must contain exactly 36 actions');
+assert.strictEqual(catalog.actions.length, catalog.counts.actions, 'the canonical catalog must match its declared action count');
 
 const actionIds = catalog.actions.map((entry) => entry.id);
-assert.strictEqual(new Set(actionIds).size, 36, 'catalog action IDs must be unique');
+assert.strictEqual(new Set(actionIds).size, actionIds.length, 'catalog action IDs must be unique');
 assert.deepStrictEqual(actionIds, sorted(actionIds), 'catalog actions must stay deterministically sorted');
 
 const owningSkillByAction = new Map();
@@ -322,4 +322,4 @@ for (const catalogEntry of catalog.actions) {
   assert.strictEqual(workflowPath, path.join(workflowsRoot, `${catalogEntry.id}.md`));
 }
 
-console.log('canonical workflow contracts passed (36 workflows)');
+console.log(`canonical workflow contracts passed (${actionIds.length} workflows)`);

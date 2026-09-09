@@ -44,14 +44,17 @@ const workflowIds = sorted(
 const catalogIds = catalog.actions.map((action) => action.id);
 
 assert.strictEqual(catalog.schema, 'wtfp.catalog/v1');
+// The one literal inventory lock. Every other test derives its expected counts
+// from protocol content; change this block deliberately when the public
+// action surface changes.
 assert.deepStrictEqual(catalog.counts, {
   actions: 36,
   domainActions: 31,
   operations: 5,
   skills: 7,
 });
-assert.strictEqual(workflowIds.length, 36, 'canonical workflow baseline changed; migrate the catalog deliberately');
-assert.deepStrictEqual(catalogIds, workflowIds, 'catalog IDs must exactly preserve the 36 stable workflow IDs');
+assert.strictEqual(workflowIds.length, catalog.counts.actions, 'canonical workflow baseline changed; migrate the catalog deliberately');
+assert.deepStrictEqual(catalogIds, workflowIds, 'catalog IDs must exactly preserve the stable workflow IDs');
 assertSorted(catalogIds, 'catalog actions');
 assertUnique(catalogIds, 'catalog actions');
 
@@ -94,12 +97,12 @@ for (const action of catalog.operations.actions) {
   assert.ok(!owners.has(action), `${action} has more than one owner`);
   owners.set(action, { kind: 'operations', id: catalog.operations.id });
 }
-assert.strictEqual(owners.size, 36, 'every action must have exactly one surface owner');
-assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'skill').length, 31);
-assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'operations').length, 5);
+assert.strictEqual(owners.size, catalog.counts.actions, 'every action must have exactly one surface owner');
+assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'skill').length, catalog.counts.domainActions);
+assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'operations').length, catalog.counts.operations);
 
 assert.strictEqual(aliases.schema, 'wtfp.aliases/v1');
-assert.strictEqual(aliases.aliases.length, 36);
+assert.strictEqual(aliases.aliases.length, catalog.counts.actions);
 const aliasIds = aliases.aliases.map((entry) => entry.action);
 assert.deepStrictEqual(aliasIds, catalogIds);
 assertSorted(aliasIds, 'alias actions');
@@ -708,4 +711,4 @@ for (const file of ownedJsonFiles) {
   }
 }
 
-console.log('protocol catalog: 36 stable actions, 7 skills, 5 operations, and all references valid');
+console.log(`protocol catalog: ${catalog.counts.actions} stable actions, ${catalog.counts.skills} skills, ${catalog.counts.operations} operations, and all references valid`);

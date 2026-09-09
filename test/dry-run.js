@@ -63,7 +63,8 @@ const claudeAvailability = new Map(
 console.log('=== Portable Workflow Dry-Run Tests ===');
 
 section('Canonical action and role resolution');
-check(actions.length === 36, `loaded all 36 canonical actions (${actions.length})`);
+const catalog = readJson(path.join(ROOT, 'protocol', 'catalog.json'));
+check(actions.length === catalog.actions.length, `loaded all ${catalog.actions.length} canonical actions (${actions.length})`);
 
 const delegatedRoles = new Set();
 for (const action of actions) {
@@ -74,7 +75,8 @@ for (const role of [...delegatedRoles].sort()) {
   check(fs.existsSync(path.join(ROLE_DIR, `${role}.md`)), `canonical role exists: ${role}`);
   check(fs.existsSync(path.join(CLAUDE_AGENT_DIR, `wtfp-${role}.md`)), `Claude projects native agent: ${role}`);
 }
-check(delegatedRoles.size === 11, `resolved all 11 semantic roles (${delegatedRoles.size})`);
+const roleFiles = fs.readdirSync(ROLE_DIR).filter((file) => file.endsWith('.md'));
+check(delegatedRoles.size === roleFiles.length, `resolved all ${roleFiles.length} semantic roles (${delegatedRoles.size})`);
 
 section('Canonical-to-Claude command projection');
 for (const action of actions) {
@@ -139,7 +141,7 @@ for (const [host, spec] of Object.entries(hosts)) {
   const availability = new Map(readJson(path.join(ROOT, spec.availability)).actions.map((entry) => [entry.id, entry.status]));
   const files = actions.map((action) => ({ action, file: path.join(spec.dir, spec.file(action.id)) }));
   const allExist = files.every((entry) => fs.existsSync(entry.file));
-  check(allExist, `${host} exposes all 36 stable commands`);
+  check(allExist, `${host} exposes all ${actions.length} stable commands`);
   check(allExist && files.every(({ action, file }) => {
     const source = fs.readFileSync(file, 'utf8');
     // A display-only prompt is rendered to the operator and takes no arguments.

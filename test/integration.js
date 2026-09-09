@@ -74,9 +74,11 @@ function assertPortableClaudeBundle(configDir, label) {
   const agentFiles = fs.readdirSync(path.join(bundle, 'agents')).filter(file => file.endsWith('.md'));
   const skillDirectories = fs.readdirSync(path.join(bundle, 'skills'), { withFileTypes: true })
     .filter(entry => entry.isDirectory() && entry.name.startsWith('wtfp-'));
-  check(commandFiles.length === 36, `${label} contains 36 canonical commands`);
-  check(agentFiles.length === 11, `${label} contains 11 portable agents`);
-  check(skillDirectories.length === 7, `${label} contains 7 portable skills`);
+  const catalog = JSON.parse(fs.readFileSync(path.join(root, 'protocol', 'catalog.json'), 'utf8'));
+  const roleCount = fs.readdirSync(path.join(root, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
+  check(commandFiles.length === catalog.actions.length, `${label} contains all ${catalog.actions.length} canonical commands`);
+  check(agentFiles.length === roleCount, `${label} contains all ${roleCount} portable agents`);
+  check(skillDirectories.length === catalog.skills.length, `${label} contains all ${catalog.skills.length} portable skills`);
   check(!fs.existsSync(path.join(configDir, 'commands')), `${label} does not activate duplicate direct commands`);
   return bundle;
 }

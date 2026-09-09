@@ -101,14 +101,17 @@ section('Canonical protocol');
 const catalog = json('protocol/catalog.json');
 const tools = json('protocol/tools.json');
 check(catalog.schema === 'wtfp.catalog/v1', 'catalog is explicitly versioned');
-check(catalog.actions.length === 36, 'catalog exposes 36 stable actions');
-check(catalog.skills.length === 7, 'catalog exposes 7 Agent Skills');
-check(catalog.operations.actions.length === 5, 'catalog exposes 5 lifecycle operations');
-check(tools.tools.length === 7, 'tool registry exposes only 7 declared portable tools');
-check(filesAt('protocol/actions', '.json').length === 36, 'every action has a machine-readable contract');
-check(filesAt('protocol/workflows', '.md').length === 36, 'every action has a canonical workflow');
-check(filesAt('protocol/roles', '.md').length === 11, 'protocol defines 11 semantic specialist roles');
-check(recursiveCount('protocol/skills', 'SKILL.md') === 7, 'protocol contains 7 standard Agent Skills');
+// Counts derive from the catalog's own declaration and cross-check the
+// protocol tree; the literal lock lives in test/protocol-catalog.test.js.
+check(catalog.actions.length === catalog.counts.actions, `catalog exposes its declared ${catalog.counts.actions} stable actions`);
+check(catalog.skills.length === catalog.counts.skills, `catalog exposes its declared ${catalog.counts.skills} Agent Skills`);
+check(catalog.operations.actions.length === catalog.counts.operations, `catalog exposes its declared ${catalog.counts.operations} lifecycle operations`);
+check(tools.tools.every((tool) => fs.existsSync(path.join(ROOT, 'bin', 'lib', `${tool.legacyName}.js`))), 'every declared portable tool has an implementation');
+check(filesAt('protocol/actions', '.json').length === catalog.actions.length, 'every action has a machine-readable contract');
+check(filesAt('protocol/workflows', '.md').length === catalog.actions.length, 'every action has a canonical workflow');
+const delegatedRoleIds = new Set(catalog.actions.flatMap((entry) => json(`protocol/actions/${entry.id}.json`).delegation.map((item) => item.role)));
+check(filesAt('protocol/roles', '.md').length === delegatedRoleIds.size, `protocol defines exactly the ${delegatedRoleIds.size} roles that actions delegate to`);
+check(recursiveCount('protocol/skills', 'SKILL.md') === catalog.skills.length, `protocol contains the ${catalog.skills.length} catalogued Agent Skills`);
 
 section('Portable project state');
 const schemaFiles = filesAt('protocol/project/schemas', '.schema.json');

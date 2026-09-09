@@ -98,7 +98,8 @@ try {
     const agents = native(['agents'], cwd);
     const manifest = JSON.parse(fs.readFileSync(path.join(installedRoot, 'plugin.json')));
     const recipes = manifest.extensions['ai.iowarp.clio'].components.filter(item => item.kind === 'agent');
-    assert.strictEqual(recipes.length, 11);
+    const roleCount = fs.readdirSync(path.join(ROOT, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
+    assert.strictEqual(recipes.length, roleCount);
     for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
     for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) {
       native(['fleet', 'validate', fleet], cwd);

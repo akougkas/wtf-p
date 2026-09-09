@@ -148,9 +148,11 @@ function assertPortableContract(root, context) {
   const skills = files.filter(file => /^skills\/wtfp-[^/]+\/SKILL\.md$/.test(file));
   const commands = files.filter(file => /^actions\/[^/]+\.json$/.test(file));
   const agents = files.filter(file => /^roles\/[^/]+\.md$/.test(file));
-  assert.strictEqual(skills.length, 7, `${context} must contain exactly seven portable skills`);
-  assert.strictEqual(commands.length, 36, `${context} must contain exactly 36 canonical actions`);
-  assert.strictEqual(agents.length, 11, `${context} must contain exactly 11 portable roles`);
+  const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'catalog.json'), 'utf8'));
+  const roleCount = fs.readdirSync(path.join(ROOT, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
+  assert.strictEqual(skills.length, catalog.skills.length, `${context} must contain every portable skill`);
+  assert.strictEqual(commands.length, catalog.actions.length, `${context} must contain every canonical action`);
+  assert.strictEqual(agents.length, roleCount, `${context} must contain every portable role`);
 }
 
 function withEnvironment(changes, test) {
