@@ -1,6 +1,32 @@
+const os = require('os');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '../..');
+
+// Mirror of Clio's own resolution (clio-coder src/core/xdg.ts): the explicit
+// CLIO_CODER_CONFIG_DIR wins, then CLIO_CODER_HOME/config, then the platform
+// default. On Linux that default is ${XDG_CONFIG_HOME:-~/.config}/clio-coder.
+// Publishing anywhere else registers the plugin in a profile the operator's
+// normal Clio never reads.
+function clioConfigRoot(env = process.env, platform = process.platform, home = os.homedir()) {
+  const value = (key) => {
+    const raw = env[key];
+    return typeof raw === 'string' && raw.trim().length > 0 ? raw.trim() : null;
+  };
+  const explicit = value('CLIO_CODER_CONFIG_DIR');
+  if (explicit) return explicit;
+  const clioHome = value('CLIO_CODER_HOME');
+  if (clioHome) return path.join(clioHome, 'config');
+  if (platform === 'win32') {
+    const appData = value('APPDATA') || path.join(home, 'AppData', 'Roaming');
+    return path.join(appData, 'clio-coder', 'config');
+  }
+  if (platform === 'darwin') {
+    return path.join(home, 'Library', 'Application Support', 'clio-coder', 'config');
+  }
+  const xdgConfig = value('XDG_CONFIG_HOME') || path.join(home, '.config');
+  return path.join(xdgConfig, 'clio-coder');
+}
 
 function generatedBundle(target, selectionRoots = {}, componentIds = {}, dest = '.') {
   return [{
@@ -47,6 +73,7 @@ const MANIFEST = {
     name: 'Clio Coder',
     configDirEnv: 'CLIO_CODER_CONFIG_DIR',
     defaultDir: '.config/clio-coder',
+    resolveConfigRoot: clioConfigRoot,
     components: [
       {
         id: 'plugin',

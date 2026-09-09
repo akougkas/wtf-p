@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "76376a5da23ca928a47c4dfd223e9fe725ac5e25e2975b579849f2ea96e447a1",
+  "sourceHash": "b92cea7dc5d6d43625b179c37ffdd264258ac5a94e831b89b64426627d1bb93c",
   "files": [
     {
       "path": "marketplace.json",
@@ -722,15 +722,15 @@
     },
     {
       "path": "project/.github/wtfp/workflows/analyze-bib.md",
-      "sha256": "09fd8503becae58a99212c68d405565a503fb4b4298993b92ac6aff88ab524bd"
+      "sha256": "04e19d6faef9827f8c6b37bb896c0192e4a50bf9c82fa0db9c064b40668c3aa0"
     },
     {
       "path": "project/.github/wtfp/workflows/audit-milestone.md",
-      "sha256": "3de2705874fd7483f17f78a58328ec85b254b8234ff62c4819a8e79724dad297"
+      "sha256": "043b3de128dc6fe153b25e5e8838db4ed0199456b2059a909f39fe3ba33539c0"
     },
     {
       "path": "project/.github/wtfp/workflows/check-refs.md",
-      "sha256": "42dac17c7a65ecc7a9a7c738c66a573a00c56d9c5680b800afaeb052b86563b0"
+      "sha256": "625c6b4ee42e86e2ddbcb7ca5bf20f5b962cf8de19e945efa6c4e12bea968590"
     },
     {
       "path": "project/.github/wtfp/workflows/check-todos.md",
@@ -766,7 +766,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/export-latex.md",
-      "sha256": "cd8775e8cdfdb7e11824e06e8afd271ebbb32881be12b08b0e9a3612da352b5c"
+      "sha256": "6b2353bfdb82082cfb3bab2f712e8e3f1ddb09e2cfb7f9cd48720b16c8a75403"
     },
     {
       "path": "project/.github/wtfp/workflows/help.md",
@@ -830,7 +830,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/research-gap.md",
-      "sha256": "a3876414dbc6569c40b2c5e13937645e92bdb4e7add895e0779fb86ca7b9591e"
+      "sha256": "c98eb74ae970713affa435e79ba780703694cd1eca0c141bf840ebe67adc3983"
     },
     {
       "path": "project/.github/wtfp/workflows/resume-writing.md",

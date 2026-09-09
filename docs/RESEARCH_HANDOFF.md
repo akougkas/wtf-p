@@ -43,6 +43,6 @@ Use the mapped evidence to propose [structure and word target].
 Keep [locked choice]; ask me to resolve [open choice]. Preview the full diff.
 ```
 
-Structured bibliography parsing requires an exact declared parser binding. The current `map-project` action has no such binding and reports that structured parsing as unavailable; do not substitute shell execution or fabricate missing identity fields. Author-provided narrative source metadata remains usable. `research-gap`, `analyze-bib`, and `check-refs` remain unavailable on the local host adapters until exact tool execution bindings exist.
+Structured bibliography parsing requires an exact declared parser binding. The current `map-project` action has no such binding and reports that structured parsing as unavailable; do not substitute shell execution or fabricate missing identity fields. Author-provided narrative source metadata remains usable. `research-gap`, `analyze-bib`, and `check-refs` are available on Clio and Claude Code, where `tool.execute` is bound to the bundled `tools/wtfp-tool.js` dispatcher, and remain unavailable on Codex, Copilot, OpenCode, Antigravity, and Gemini until their shell tools are verified and bound.
 
 No bridge initializes Git, commits research, creates Git-tag checkpoints, or writes legacy `.planning/PROJECT.md`. Research checkpoint archives and task completion do not substitute for WTF-P author gates or readback.

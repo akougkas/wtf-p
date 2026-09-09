@@ -216,7 +216,7 @@ function showHelp() {
     ${c.cyan('uninstall')}                 Remove WTF-P
 
   ${c.yellow('Targets:')}
-    ${c.cyan('clio')}                      Clio Coder plugin or legacy extension
+    ${c.cyan('clio')}                      Clio Coder plugin              
     ${c.cyan('claude')}                    Claude Code plugin
     ${c.cyan('codex')}                     Codex plugin
     ${c.cyan('copilot')}                   GitHub Copilot CLI plugin

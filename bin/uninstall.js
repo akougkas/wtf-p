@@ -160,6 +160,9 @@ function getVendorDir(runtime, explicitConfigDir, cwd = process.cwd()) {
       ? path.join(resolvedEnvironmentRoot, vendorConfig.envSubdir)
       : resolvedEnvironmentRoot;
   }
+  if (typeof vendorConfig.resolveConfigRoot === 'function') {
+    return expandTilde(vendorConfig.resolveConfigRoot(process.env));
+  }
   return path.join(os.homedir(), vendorConfig.defaultDir);
 }
 

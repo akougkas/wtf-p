@@ -37,7 +37,23 @@ Local release candidate. Not published to a registry and not tagged.
 
 - `tools/wtfp-tool.js`, a bounded JSON dispatcher for the seven declared
   bibliography and citation tools, generated into every envelope and documented in
-  `tools/README.md`
+  `tools/README.md`. `list` prints each command's declared effects, and
+  `--offline` or `WTFP_TOOL_OFFLINE=1` refuses any command whose effects include
+  `network.*`. Symlinked bibliography files are read through their resolved
+  target; file paths and queries carry separate caps; search queries are accepted
+  only through `--query`
+- The Clio installer resolves the configuration profile the way Clio does:
+  `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then the platform
+  default (`${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux)
+
+### Fixed
+
+- Without `clio-coder` on PATH the installer told the operator to run
+  `clio-coder plugins install` against the managed `plugins/wtfp` root, which Clio
+  rejects as a source overlapping its destination. It now says to re-run the
+  install once the binary is available
+- Generated `.js` files carry a `//` banner instead of an HTML comment, so they
+  also parse as ES modules
 - Executable bindings for `research-gap`, `analyze-bib`, and `check-refs` through
   that dispatcher; Clio's `network.search` resolves to the bundled scholarly-index
   clients, which are the only search these actions ever declared

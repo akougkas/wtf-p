@@ -10,7 +10,7 @@ For a worked grant-writing example, continue with the [proposal workflow](PROPOS
 
 - Node.js 20 or newer, including `npx`.
 - One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI.
-- Clio Coder 0.3.8 introduced the required namespaced prompts, extension agents and fleets. Clio 0.4.6 has verified native discovery, user installation/listing, all 11 agent recipes and a completed headless `/wtfp:help` smoke on `dynamo/qwen3.8-27b`; this does not establish initialization or lifecycle behavior on 0.4.6. The installer retains its credential-free discovery probe. See [compatibility evidence](COMPATIBILITY.md) for the 0.3.8 history and exact 0.4.6 usage totals.
+- Clio Coder 0.4.7 or newer. WTF-P installs into Clio as a plugin through `clio-coder plugins install`; the 0.3.8 and 0.4.6 observations in [compatibility evidence](COMPATIBILITY.md) belong to the removed extension route and are retained as history only.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
@@ -28,7 +28,7 @@ npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install antigravity
 npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install gemini
 ```
 
-Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio` installs the WTF-P extension into the selected Clio profile. It does not replace Clio or launch an interactive session. The updated source installer invokes native discovery and extension registration when the binary is available; the published RC2 installer predates that registration alignment.
+Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio` installs the WTF-P plugin into the selected Clio profile. It does not replace Clio or launch an interactive session. The installer publishes the bundle and registers it through `clio-coder plugins install` when the binary is available; without the binary the bundle is staged and the installer tells you to re-run it once `clio-coder` is on PATH.
 
 The explicit `--package=wtf-p@0.6.0-rc.3 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.3 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.3`; stop if it reports another version or target.
 
@@ -135,7 +135,7 @@ The default config enables confirmation gates for outline, plan, write, review, 
 
 ## Clio Coder compatibility notes
 
-WTF-P installs into Clio as a plugin and requires Clio Coder 0.4.7 or newer. Confirm native registration with `clio-coder plugins inspect wtfp --json`; an active entry must report `valid`, `enabled`, and `loadable` with zero diagnostics. Discovery alone does not establish activation. The installer delegates registration automatically; a target at `<working directory>/.clio-coder` uses project scope. If you installed from a copy made without the native binary, run `clio-coder plugins install /absolute/path/to/vendors/plugin --user` in the selected profile before relying on the commands, and use `--force` only after reviewing the package it would replace. If an earlier candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with the matching WTF-P uninstaller before installing the plugin; the two register the same prompts.
+WTF-P installs into Clio as a plugin and requires Clio Coder 0.4.7 or newer. The installer resolves the Clio profile the way Clio does: `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then `${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux; pass `--config-dir` to override. Confirm native registration with `clio-coder plugins inspect wtfp --json`; the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope. It does not change `enabled`: a plugin you disabled stays disabled and the installer reports `clio-coder plugins enable wtfp` as the command to run. Discovery alone does not establish activation. A target at `<working directory>/.clio-coder` uses project scope. If the installer ran without `clio-coder` on PATH, the bundle is staged but not registered; re-run the same install command once the binary is available. Do not point `clio-coder plugins install` at `<config>/plugins/wtfp` itself: Clio rejects a source that overlaps its managed destination. If an earlier candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with the matching WTF-P uninstaller before installing the plugin; the two register the same prompts.
 
 After installing, start Clio in the project and inspect native discovery:
 
@@ -239,17 +239,24 @@ npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --clio --yes
 
 Replace `--clio` with the intended target selector. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data.
 
-## Current RC2 boundaries
+## Current release-candidate boundaries
 
-The seven full adapters discover 36 stable action routes and mark 24 as
-adapter-available. Availability establishes complete adapter mappings, not a
-successful model run. The following 12 routes return deterministic
-`WTFP_ACTION_UNAVAILABLE` results because RC2 lacks an exact target binding for
-at least one required capability or effect: `analyze-bib`, `audit-milestone`,
-`check-refs`, `contribute`, `create-poster`, `create-slides`, `export-latex`,
-`remove-section`, `report-bug`, `request-feature`, `research-gap`, and `update`.
+All seven host adapters discover the same 36 stable action routes. Availability
+establishes a complete adapter mapping, not a successful model run, and is
+recorded per host in the generated `compatibility/action-availability.json`:
 
-That means RC2 can organize and reason over sources you supply, but it must not pretend that unavailable literature-search or citation routes performed research. The available `submit-milestone` action creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
+| Host | Available | Returns `WTFP_ACTION_UNAVAILABLE` |
+| --- | ---: | --- |
+| Clio Coder, Claude Code | 31/36 | `contribute`, `report-bug`, `request-feature` (`external.issue`); `remove-section` (`filesystem.delete`); `update` (`package.update`) |
+| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26/36 | the five above plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, `research-gap` (`tool.execute` is bound only to Clio `bash` and Claude `Bash`) |
+
+Where a research route is available, `tool.execute` authorises exactly one
+command, the bundled `tools/wtfp-tool.js` dispatcher; run it with `--offline`
+until network use has been approved for the session. `create-poster`,
+`create-slides`, and `export-latex` emit source and return the render or
+compile step as an author handoff; none of them runs a renderer or LaTeX.
+
+The available `submit-milestone` action creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
 
 If an action returns `WTFP_ACTION_UNAVAILABLE`, do not ask the model to improvise around the refusal. If a project has materials but no portable manifest, initialize it with `new-paper` before `map-project`. If records disagree, stop, preserve them, and use `progress` or `verify-work` to inspect the mismatch before approving a repair. Deny and stop an unexpected shell, network, Git, broad-filesystem, or external-service request.
 

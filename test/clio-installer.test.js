@@ -8,6 +8,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { sha256Buffer } = require('../bin/lib/ownership');
 const { detectInstallation } = require('../bin/lib/utils');
+const MANIFEST = require('../bin/lib/manifest');
 const ROOT = path.resolve(__dirname, '..');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-installer-'));
 const fakeBin = path.join(scratch, 'bin');
@@ -91,9 +92,35 @@ function verifyReceipt(ctx) {
  return receipt;
 }
 try {
+ test('clio config root follows Clio: CLIO_CODER_CONFIG_DIR, then CLIO_CODER_HOME/config, then the platform default',()=>{
+  const resolve=MANIFEST.clio.resolveConfigRoot;
+  assert.strictEqual(resolve({CLIO_CODER_CONFIG_DIR:'/explicit',CLIO_CODER_HOME:'/home-root',XDG_CONFIG_HOME:'/xdg'},'linux','/h'),'/explicit');
+  assert.strictEqual(resolve({CLIO_CODER_CONFIG_DIR:'  ',CLIO_CODER_HOME:'/home-root',XDG_CONFIG_HOME:'/xdg'},'linux','/h'),path.join('/home-root','config'));
+  assert.strictEqual(resolve({XDG_CONFIG_HOME:'/xdg'},'linux','/h'),path.join('/xdg','clio-coder'));
+  assert.strictEqual(resolve({},'linux','/h'),path.join('/h','.config','clio-coder'));
+  assert.strictEqual(resolve({XDG_CONFIG_HOME:'/xdg'},'darwin','/h'),path.join('/h','Library','Application Support','clio-coder','config'));
+  assert.strictEqual(resolve({APPDATA:'/appdata'},'win32','/h'),path.join('/appdata','clio-coder','config'));
+ });
+ test('XDG_CONFIG_HOME without CLIO_CODER_CONFIG_DIR installs into the profile Clio reads',()=>{
+  const cwd=path.join(scratch,'xdg');fs.mkdirSync(cwd);
+  const xdg=path.join(cwd,'xdg-config');const target=path.join(xdg,'clio-coder');
+  const env={...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,XDG_CONFIG_HOME:xdg,FAKE_CLIO_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'};
+  delete env.CLIO_CODER_CONFIG_DIR;delete env.CLIO_CODER_HOME;
+  const result=spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','clio','--advanced','--force'],{cwd,env,encoding:'utf8',timeout:30000});
+  ok(result);
+  assert.ok(fs.existsSync(path.join(target,'plugins/wtfp/plugin.json')),'bundle must land under $XDG_CONFIG_HOME/clio-coder');
+  assert.ok(!fs.existsSync(path.join(cwd,'.config')),'must not fall back to ~/.config when XDG_CONFIG_HOME is set');
+  const ctx={cwd,target,env};
+  assert.strictEqual(verifyReceipt(ctx).scope,'user');
+  for(const call of calls(ctx)) assert.strictEqual(call.config,target,'native CLI must be pointed at the same profile');
+  const removal=spawnSync(process.execPath,[path.join(ROOT,'bin','uninstall.js'),'--clio','--yes'],{cwd,env,encoding:'utf8',timeout:30000});ok(removal);
+  assert.ok(!fs.existsSync(path.join(target,'plugins/wtfp')));
+ });
  test('missing binary stages the canonical plugin with a v2 receipt and explicit activation instructions',()=>{
-  const ctx=context('fallback');const result=install(ctx,{PATH:''});ok(result);
-  assert.match(result.stdout+result.stderr,/Activation requires clio-coder plugins install/i);
+  const ctx=context('pending');const result=install(ctx,{PATH:''});ok(result);
+  const pendingText=result.stdout+result.stderr;
+  assert.match(pendingText,/Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio --config-dir '.*' from this directory to register the user-scope plugin/);
+  assert.ok(!/plugins install/.test(pendingText),'must not tell the operator to run plugins install against the managed root');
   assert.ok(fs.existsSync(path.join(ctx.target,'plugins/wtfp/plugin.json')));
   assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/state.json')));verifyReceipt(ctx);
@@ -130,7 +157,7 @@ try {
  test('existing plugin retains its receipt path when the native binary disappears',()=>{
   const ctx=context('plugin-offline');ok(install(ctx));const original=state(ctx);
   const pending=install(ctx,{PATH:''});ok(pending);
-  assert.match(pending.stdout+pending.stderr,/Activation requires clio-coder plugins install/);
+  assert.match(pending.stdout+pending.stderr,/Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio/);
   assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));verifyReceipt(ctx);
   ok(run(ctx,'uninstall.js',['--clio','--config-dir',ctx.target,'--yes'],{PATH:''}));
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));assert.deepStrictEqual(state(ctx),original);

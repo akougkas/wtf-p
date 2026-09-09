@@ -48,12 +48,25 @@ function generatedBundle(root) {
   return expected;
 }
 
+// Compare roots by their real path so a symlinked config directory still
+// matches whether Clio reports the lexical or the canonical root.
+function sameRoot(reported, expected) {
+  const canonical = (candidate) => {
+    try {
+      return fs.realpathSync(candidate);
+    } catch {
+      return path.resolve(candidate);
+    }
+  };
+  return path.resolve(reported) === path.resolve(expected) || canonical(reported) === canonical(expected);
+}
+
 // The one entry WTF-P is allowed to act on: our id, our scope, our path.
 function verifiedEntry(stdout, targetDir, native, scope) {
   const entry = JSON.parse(stdout);
   if (!entry || entry.id !== native.id || entry.scope !== scope ||
       typeof entry.rootPath !== 'string' ||
-      path.resolve(entry.rootPath) !== path.join(targetDir, native.source)) {
+      !sameRoot(entry.rootPath, path.join(targetDir, native.source))) {
     return null;
   }
   return entry;
@@ -63,7 +76,7 @@ function installedListEntry(stdout, targetDir, native, scope) {
   const listing = JSON.parse(stdout);
   if (!Array.isArray(listing.plugins)) throw new Error('Clio plugins list did not return a plugins array');
   return listing.plugins.find(entry => entry.id === native.id && entry.scope === scope &&
-    typeof entry.rootPath === 'string' && path.resolve(entry.rootPath) === path.join(targetDir, native.source));
+    typeof entry.rootPath === 'string' && sameRoot(entry.rootPath, path.join(targetDir, native.source)));
 }
 
 // Registration is what WTF-P is responsible for. Whether the operator has the

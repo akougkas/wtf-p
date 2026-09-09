@@ -147,7 +147,7 @@ The same workflow is projected into each client's native interface:
 
 | Client | Start an explicit action |
 | --- | --- |
-| Clio Coder (`>=0.4.7`; 0.4.6 and 0.3.8 evidence retained for the prior extension route) | `/wtfp:new-paper …` |
+| Clio Coder (`>=0.4.7`, installed as a plugin) | `/wtfp:new-paper …` |
 | Claude Code | `/wtfp:new-paper …` |
 | GitHub Copilot CLI | `/wtfp:new-paper …` |
 | OpenCode | `/wtfp:new-paper …` |
@@ -194,15 +194,24 @@ guessing from chat history.
 WTF-P itself does not initialize, stage, commit, branch, merge, push, publish,
 or submit your work. Those remain separate human-controlled operations.
 
-## RC2 boundaries
+## Release-candidate boundaries
 
-RC2 exposes 36 stable action names. The full local adapters mark 24 as
-adapter-available; that mapping does not by itself prove successful model
-execution. The other 12 fail closed rather than pretending an unsupported tool
-or approval mechanism exists. Automated literature search, bibliography
-analysis, reference checking, LaTeX export, posters, and slides are among the
-deferred routes. Supply vetted sources inside the project and use
-`map-project` in this release candidate.
+The catalog exposes 36 stable action names. Availability is per host and is
+recorded in each generated `compatibility/action-availability.json`; that
+mapping does not by itself prove successful model execution. On Clio and
+Claude Code, 31 of 36 are available. The five that fail closed are
+`contribute`, `report-bug`, and `request-feature` (no `external.issue`
+binding), `remove-section` (no `filesystem.delete` binding), and `update` (no
+`package.update` binding). On Codex, Copilot CLI, OpenCode, Antigravity, and
+Gemini, 26 of 36 are available: the same five plus `analyze-bib`,
+`audit-milestone`, `check-refs`, `export-latex`, and `research-gap`, whose
+`tool.execute` effect is bound only where the host's shell tool has been
+verified (Clio `bash`, Claude `Bash`). Where a research route is available it
+runs the bundled `tools/wtfp-tool.js` dispatcher and nothing else;
+`create-poster`, `create-slides`, and `export-latex` emit source and return the
+render or compile step as an author handoff. Unavailable routes return
+`WTFP_ACTION_UNAVAILABLE` rather than pretending a tool or approval mechanism
+exists.
 
 `submit-milestone` creates a local archive. It does not submit to NSF, a
 journal, a conference, or any external service.

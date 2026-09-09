@@ -12,7 +12,7 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | --- | ---: | --- |
 | Claude Code | 2.1.251 | Strict marketplace validation; native marketplace add/install/list; 36 commands and 11 agents loaded with zero plugin errors; `/wtfp:new-paper` confirmed through TUI autocomplete |
 | Codex CLI | 0.144.1 | Native local marketplace and `wtf-p@wtfp` plugin install/list; seven Agent Skills discovered |
-| GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered, 24 adapter-available. Cloud: 36 prompts projected, five adapter-available. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
+| GitHub Copilot CLI and cloud projection | 1.0.80 (CLI) | Native marketplace install/list and Claude-compatible plugin discovery. CLI: 36 routes discovered; 26 adapter-available in the current generated data (24 at the time of this observation). Cloud: 36 prompts projected, five adapter-available. The committed `.github` projection also contains 11 agents, seven skills, instructions, and portable resources. |
 | Clio Coder | 0.3.8, merged source `9b7b80cc` | Prior extension route, retained as history. Effective package discovery: 72 prompts (36 nested + 36 flat), 11 same-extension-bound agents, seven skills, two fleets, and zero diagnostics. The release gate passed 5,030/5,030 Clio tests. |
 | Clio Coder | 0.4.6 | Prior extension route, retained as history. Native discover: valid, zero diagnostics. Native user install/list: enabled `wtfp@0.6.0-rc.2`, zero diagnostics; 36 nested + 36 flat prompts on disk; all 11 `wtfp-*` agent recipes list their bound skills. Headless `/wtfp:help` completed on `dynamo/qwen3.8-27b`. |
 | Clio Coder | 0.4.7 (dist) | Plugin route. Isolated user and project `plugins install`/`inspect`/`remove` lifecycle with exact receipts; see `docs/AGENT_PLUGIN.md` for the command and its scope. |
@@ -21,10 +21,14 @@ First-class support in WTF-P means more than accepting a manifest. The generated
 | Gemini CLI | 0.57.0 | Extension validate/install/list; seven skills and extension context discovered |
 
 Native discovery counts routes that the client can locate, including
-fail-closed compatibility stubs; it is not an executable-support count. Claude,
-Clio, Codex, Copilot CLI, OpenCode, Antigravity, and Gemini currently project
-24/36 canonical actions as adapter-available. The Copilot cloud projection
-marks 5/36 as adapter-available.
+fail-closed compatibility stubs; it is not an executable-support count. Per the
+generated `compatibility/action-availability.json` files, Clio and Claude Code
+project 31/36 canonical actions as adapter-available (`contribute`,
+`report-bug`, `request-feature`, `remove-section`, and `update` fail closed).
+Codex, Copilot CLI, OpenCode, Antigravity, and Gemini project 26/36: the same
+five plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, and
+`research-gap`, whose `tool.execute` effect is bound only on Clio and Claude.
+The Copilot cloud projection marks 5/36 as adapter-available.
 Unsupported routes return `WTFP_ACTION_UNAVAILABLE` without receiving the
 normal workflow, invocation arguments, or tool policy. Exact action-level
 reasons are recorded in each generated
@@ -273,12 +277,12 @@ evidence above into a completed behavioral claim.
 
 ## Standard plugin development integration (2026-09-09)
 
-Compiler v5 adds the standard Agent Plugins bundle at `vendors/plugin/` while preserving the legacy Clio extension projection and all peer adapters. Against the coordinator-supplied development build at `dist/cli/index.js` (reported version 0.4.7; entry-file SHA-256 `ea51cba8d661d6573ecf4ad1ace281f19cf5ca0bbb00034676188203cc451848`), isolated user and project native plugin lifecycles passed: standard manifest inspection, exact-file receipt verification, enabled/valid/compatible/effective/loadable discovery, discovery of all eleven agents, both fleet validations, idempotent reinstall, disabled-plugin reactivation, and symmetric removal.
+Compiler v5 added the standard Agent Plugins bundle at `vendors/plugin/`; at the time of this observation the Clio extension projection still existed alongside it, and it has since been removed so that the plugin is the only Clio route. Against the coordinator-supplied development build at `dist/cli/index.js` (reported version 0.4.7; entry-file SHA-256 `ea51cba8d661d6573ecf4ad1ace281f19cf5ca0bbb00034676188203cc451848`), isolated user and project native plugin lifecycles passed: standard manifest inspection, exact-file receipt verification, enabled/valid/compatible/effective/loadable discovery, discovery of all eleven agents, both fleet validations, idempotent reinstall, disabled-plugin reactivation, and symmetric removal.
 
-This identifies the entry file, not a full distributed-build digest. The reproducible test is `test/clio-native-integration.test.js`, invoked with an explicit `WTFP_CLIO_ENTRY`. It forwards no credentials and makes no model call. Fleet validation uses an existing disposable Git fixture because native write-boundary enforcement requires a checkout; research actions never initialize one. These observations establish native packaging/lifecycle behavior and do not claim a new model-backed research workflow result. See [AGENT_PLUGIN.md](AGENT_PLUGIN.md) for capability detection and the deliberate legacy migration policy, and [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md) for import constraints.
+This identifies the entry file, not a full distributed-build digest. The reproducible test is `test/clio-native-integration.test.js`, invoked with an explicit `WTFP_CLIO_ENTRY`. It forwards no credentials and makes no model call. Fleet validation uses an existing disposable Git fixture because native write-boundary enforcement requires a checkout; research actions never initialize one. These observations establish native packaging/lifecycle behavior and do not claim a new model-backed research workflow result. See [AGENT_PLUGIN.md](AGENT_PLUGIN.md) for the plugin lifecycle the installer follows, and [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md) for import constraints.
 
 ## Final portability check (2026-09-09)
 
 Claude Code 2.1.266 accepted the generated marketplace and the explicitly selected `.claude-plugin/plugin.json` in disposable, credential-free staging. An invalid manifest-name control failed as expected. A deliberately invalid agent `tools` value still passed both manifest validation routes: `claude plugin validate` validates manifests and does not establish native agent metadata or tool-enforcement correctness. The directory form selected the marketplace manifest, so the plugin manifest was also validated explicitly. No plugin was installed into the operator profile, no agent was dispatched, and no model call was made.
 
-The compiler contracts separately check Claude's `tools` field and all eleven generated role definitions. An independent comparison confirmed canonical handoff actions, mapping workflow, and outliner content across all seven local host bundles plus the standard bundle. All 312 relative skill links in those bundles resolved inside their package. All three handoff actions remain adapter-available; `research-gap`, `analyze-bib`, and `check-refs` remain unavailable because exact tool execution is unbound. These static checks do not replace host execution evidence. Exact Clio, Claude, Codex, and Gemini entry-point spelling is documented in [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md).
+The compiler contracts separately check Claude's `tools` field and all eleven generated role definitions. An independent comparison confirmed canonical handoff actions, mapping workflow, and outliner content across all seven local host bundles plus the standard bundle. All 312 relative skill links in those bundles resolved inside their package. All three handoff actions remain adapter-available. At the time of this check `research-gap`, `analyze-bib`, and `check-refs` were unavailable because exact tool execution was unbound; they are now bound on Clio and Claude through the bundled dispatcher and remain unavailable on the other five hosts (see the availability paragraph above). These static checks do not replace host execution evidence. Exact Clio, Claude, Codex, and Gemini entry-point spelling is documented in [RESEARCH_HANDOFF.md](RESEARCH_HANDOFF.md).

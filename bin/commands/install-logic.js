@@ -56,6 +56,10 @@ function getVendorDir(runtime, explicitConfigDir) {
       : resolvedEnvironmentRoot;
   }
 
+  if (typeof vendorConfig.resolveConfigRoot === 'function') {
+    return expandTilde(vendorConfig.resolveConfigRoot(process.env));
+  }
+
   return path.join(os.homedir(), vendorConfig.defaultDir);
 }
 
@@ -604,8 +608,10 @@ async function install(runtime, isUpdate, options, pkg) {
   const isGlobal = runtime !== 'claude-local';
   const locationLabel = getPathLabel(targetDir, isGlobal);
 
-  const configuredByEnvironment = typeof process.env[vendorConfig.configDirEnv] === 'string' &&
-    process.env[vendorConfig.configDirEnv].trim().length > 0;
+  const configuredByEnvironment = (typeof process.env[vendorConfig.configDirEnv] === 'string' &&
+    process.env[vendorConfig.configDirEnv].trim().length > 0) ||
+    (typeof vendorConfig.resolveConfigRoot === 'function' &&
+      path.resolve(expandTilde(vendorConfig.resolveConfigRoot(process.env))) !== path.join(os.homedir(), vendorConfig.defaultDir));
   const pathPrefix = isGlobal
     ? ((explicitConfigDir || configuredByEnvironment)
       ? `${targetDir}${path.sep}`
@@ -778,9 +784,12 @@ async function install(runtime, isUpdate, options, pkg) {
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
       out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
       if (vendorKey === 'clio') {
-        const source = `'${path.join(targetDir, vendorConfig.native.source).replaceAll("'", "'\\''")}'`;
+        // Clio refuses a source that overlaps its managed destination, so the
+        // published tree itself can never be the install source. Re-running
+        // the installer stages a distinct copy and registers it.
         const scope = targetDir === path.join(process.cwd(), '.clio-coder') ? 'project' : 'user';
-        out.warn(`Activation requires clio-coder plugins install ${source} --${scope} --force in the same Clio configuration profile.`);
+        const configFlag = explicitConfigDir ? ` --config-dir '${targetDir.replaceAll("'", "'\\''")}'` : '';
+        out.warn(`Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio${configFlag} from this directory to register the ${scope}-scope plugin.`);
       }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);

@@ -41,10 +41,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 The declared `tool.execute` effect authorises exactly one command, run from the package root the host resolves for this bundle:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/tools/wtfp-tool.js <command> [arguments]
+node ${CLAUDE_PLUGIN_ROOT}/tools/wtfp-tool.js [--offline] <command> [arguments]
 ```
 
-Run it with `list` first to read the declared commands, their arguments, and their bounds; `${CLAUDE_PLUGIN_ROOT}/tools/README.md` carries the same table. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
+Run it with `list` first to read the declared commands, their arguments, their bounds, and the effects each one applies; `${CLAUDE_PLUGIN_ROOT}/tools/README.md` carries the same table. A command whose effects include `network.*` performs outbound requests. Until network use has been approved for this run, pass `--offline` (or set `WTFP_TOOL_OFFLINE=1`), which makes the dispatcher refuse those commands instead of relying on prose restraint. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
 
 ## Safety and completion
 
