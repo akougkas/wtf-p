@@ -731,6 +731,12 @@ function renderPortableRole(role, slug, target) {
     lines.push(target === 'claude' ? 'tools:' : 'allowed-tools:');
     for (const tool of tools) lines.push(`  - ${tool}`);
   }
+  if (target === 'opencode') {
+    // OpenCode agent Markdown: `mode: subagent` keeps the role out of the
+    // primary-agent picker; verifier roles are denied edit and bash.
+    lines.push('mode: subagent');
+    if (verifier) lines.push('permission:', '  edit: deny', '  bash: deny');
+  }
   if (target === 'gemini') {
     lines.push('kind: local');
   }
