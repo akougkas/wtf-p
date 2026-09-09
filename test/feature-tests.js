@@ -141,6 +141,7 @@ check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === ski
 check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claude exposes exactly the ${skillCount} inventory-owned native skills`);
 check(filesAt('vendors/claude/agents', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents at the top level Claude Code discovers`);
 check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
+check(filesAt('vendors/gemini/agents', '.md').length === roleCount, `Gemini exposes all ${roleCount} native agents at the top level its loader reads`);
 
 section('Clio-native integration');
 check(json('vendors/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');

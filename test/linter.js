@@ -207,7 +207,7 @@ const agentTargets = [
   { pathFor: (id) => `vendors/copilot/plugins/wtf-p/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/opencode/agents/wtfp/${id}.md` },
   { pathFor: (id) => `vendors/antigravity/agents/wtfp-${id}.md` },
-  { pathFor: (id) => `vendors/gemini/agents/wtfp/${id}.md` },
+  { pathFor: (id) => `vendors/gemini/agents/wtfp-${id}.md` },
 ];
 for (const agentTarget of agentTargets) {
   for (const roleId of roleIds) validateAgent(path.join(ROOT, agentTarget.pathFor(roleId)), roleId);

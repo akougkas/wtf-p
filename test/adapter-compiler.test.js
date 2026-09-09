@@ -164,7 +164,10 @@ function commandPaths(target, actionIds) {
   return actionIds.map((id) => `commands/wtfp/${id}.md`);
 }
 
-const FLAT_AGENT_TARGETS = Object.freeze(['clio', 'claude', 'copilot', 'antigravity']);
+// Every host except OpenCode reads only the top level of `agents/`. OpenCode
+// scans recursively and registers the frontmatter name, so its namespace
+// directory is kept.
+const FLAT_AGENT_TARGETS = Object.freeze(['clio', 'claude', 'copilot', 'antigravity', 'gemini']);
 
 function expectedAgentPaths(target) {
   if (FLAT_AGENT_TARGETS.includes(target)) {

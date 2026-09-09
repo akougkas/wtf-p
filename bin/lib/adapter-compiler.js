@@ -731,6 +731,9 @@ function renderPortableRole(role, slug, target) {
     lines.push(target === 'claude' ? 'tools:' : 'allowed-tools:');
     for (const tool of tools) lines.push(`  - ${tool}`);
   }
+  if (target === 'gemini') {
+    lines.push('kind: local');
+  }
   lines.push('---', '', generatedBanner('protocol/roles', slug), '', nativeWorkflowBody(role.body, target), '');
   return lines.join('\n');
 }
@@ -1467,18 +1470,14 @@ function compilePlans(options = {}) {
 
   for (const role of model.roles) {
     addFile(clio, `agents/wtfp-${role.slug}.md`, renderClioRole(role, role.slug));
-    for (const target of ['opencode', 'gemini']) {
-      addFile(
-        byId.get(target),
-        `agents/wtfp/${role.slug}.md`,
-        renderPortableRole(role, role.slug, target)
-      );
-    }
-    // Claude Code discovers agents only at the top level of `agents/`, and it
-    // derives the agent name from the file name rather than the frontmatter.
-    // A nested `agents/wtfp/<role>.md` layout loads zero agents, and a flat
-    // `<role>.md` would claim unprefixed names such as `section-writer`.
-    for (const target of ['claude', 'copilot', 'antigravity']) {
+    // OpenCode scans `agents/**/*.md` and takes the registered name from the
+    // frontmatter, so the nested namespace directory is safe there. Claude Code
+    // and Gemini CLI (loadAgentsFromDirectory) read only the top level of
+    // `agents/`, and Claude derives the name from the file name: a nested
+    // `agents/wtfp/<role>.md` loads zero agents on both, and a flat `<role>.md`
+    // would claim unprefixed names such as `section-writer`.
+    addFile(byId.get('opencode'), `agents/wtfp/${role.slug}.md`, renderPortableRole(role, role.slug, 'opencode'));
+    for (const target of ['claude', 'copilot', 'antigravity', 'gemini']) {
       addFile(byId.get(target), `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, target));
     }
   }
