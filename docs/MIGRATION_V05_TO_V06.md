@@ -6,11 +6,11 @@ WTF-P v0.6 preserves the familiar 36 `wtfp:*` actions, but replaces copied clien
 
 | v0.5 | v0.6 |
 | --- | --- |
-| Claude, Gemini, and OpenCode command trees maintained separately | One `protocol/` source generates seven client envelopes |
+| Claude, Gemini, and OpenCode command trees maintained separately | One `protocol/` source generates native envelopes for seven clients |
 | Markdown files such as `.planning/STATE.md`, `PROJECT.md`, and `ROADMAP.md` act as control state | Versioned JSON records under `.planning/` are the interoperable source of truth |
 | Checkpoints may rely on Git commits or tags | Checkpoints use portable records and immutable SHA-256 state archives |
 | Client-specific agent paths and model tables appear in workflows | Semantic roles and capabilities are mapped by the active host |
-| Broad copied helper directories | Exactly seven registered portable bibliography/citation tools |
+| Broad copied helper directories | Exactly seven registered portable bibliography/citation tools behind one bounded dispatcher |
 | Uninstall infers paths from package layout | A v2 receipt owns exact files and hashes |
 
 Authored manuscripts, section context, research notes, plans, reviews, summaries, bibliographies, and deliverables remain in their existing formats. The v1 protocol links those artifacts; it does not rewrite prose into JSON.
@@ -67,13 +67,13 @@ deliberate custom installation destination. It does not, by itself, isolate
 every runtime home, data, state, cache, and temporary path used by the client.
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini
 ```
 
 The deprecated `--global` and `--local` flags remain Claude compatibility aliases during the release-candidate cycle. No targetless noninteractive invocation installs anything.
@@ -81,17 +81,21 @@ The deprecated `--global` and `--local` flags remain Claude compatibility aliase
 `status` and `doctor` remain legacy Claude-oriented diagnostics; a modern
 target selector passed to either command is not authoritative. Verify a modern
 adapter with the client's native discovery surface instead. For Clio, check
-`clio-coder --version`, `clio-coder plugins inspect wtfp --json`, `/prompts`,
-`clio-coder agents`, and `clio-coder fleet list`; use the equivalent native
-command, plugin, or skill listing for another client. A successful install plus
-native discovery is the verification boundary.
+`clio-coder --version`, `clio-coder plugins inspect wtfp --json`,
+`clio-coder agents`, and `clio-coder fleet list`, and inspect `/prompts` in
+the TUI; use the equivalent native plugin, extension, or skill listing for
+another client. [GETTING_STARTED.md](GETTING_STARTED.md#verify-or-remove-an-installation)
+names the listing command per client. A successful install plus native
+discovery is the verification boundary.
 
-For Clio, WTF-P installs as a plugin and requires Clio Coder 0.4.7 or newer.
-The installer delegates to `clio-coder plugins install` and verifies the result
-with `clio-coder plugins inspect wtfp --json`. If an earlier release candidate
-left an extension at `<config>/extensions/wtfp`, remove it with that
-candidate's WTF-P uninstaller first: both register the same `/wtfp:*` prompt
-names, and RC3 neither reads nor retires the extension location.
+For Clio, WTF-P installs as a plugin and requires Clio Coder 0.4.7 or newer,
+which is not yet a published Clio release. The installer delegates to
+`clio-coder plugins install` and verifies the result with
+`clio-coder plugins inspect wtfp --json`; the full lifecycle is in
+[AGENT_PLUGIN.md](AGENT_PLUGIN.md). If an earlier release candidate left an
+extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P
+uninstaller first: both register the same `/wtfp:*` prompt names, and this
+candidate neither reads nor retires the extension location.
 
 Clio preserves the raw operator prose bound to `$ARGUMENTS`, including quotes,
 tabs, repeated spaces, and literal `$1`; positional forms such as `$1`, `$@`,
@@ -167,20 +171,20 @@ Then preview one bounded write, such as `/wtfp:plan-section`, and confirm that:
 Preview exact removal:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --<target> --dry-run
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall <target> --dry-run
 ```
 
 Then remove unchanged owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --<target> --backup --yes
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall <target> --yes
 ```
 
-Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.
+Add `--backup` to copy removal candidates to a backup bundle first. Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.
 
 ## Compatibility boundary
 
-The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell: a client without an exact contained logical-tool binding must report `tool.execute` unavailable.
+The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell. Clio and Claude Code bind `tool.execute` to the bundled `tools/wtfp-tool.js` dispatcher and nothing else; a client without such a binding reports `tool.execute` unavailable, which is why the research routes fail closed on the other five hosts. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the per-host availability.
 
 See [GETTING_STARTED.md](GETTING_STARTED.md) for client invocation, full runtime
 isolation, and troubleshooting; [COMPATIBILITY.md](COMPATIBILITY.md) for exact

@@ -1,6 +1,6 @@
 # ADR 0001: Keep transforms local and defer network MCP exposure
 
-- Status: Accepted for the `0.6` release-candidate series; optional MCP implementation deferred
+- Status: Accepted for the `0.6` line; amended 2026-09-09 (see the amendment at the end); optional MCP implementation deferred
 - Date: 2026-08-29
 - Decision owners: WTF-P protocol and adapter maintainers
 - Scope: the seven logical tools in `protocol/tools.json`
@@ -168,3 +168,30 @@ All web sources were accessed 2026-08-29.
 - [Gemini CLI extension authoring](https://geminicli.com/docs/extensions/writing-extensions)
 - [OpenCode MCP servers](https://opencode.ai/docs/mcp-servers)
 - Clio Coder source evidence: `docs/prompt-envelope-and-tools.md`, `docs/acp.md`, and branch `v0.3.8` at `9b7b80cc`
+
+## Amendment 2026-09-09: the bounded dispatcher
+
+The decision above stands: no MCP server ships, and the seven logical tools
+remain local Node.js modules. What changed since it was written:
+
+- The "closed logical-tool launcher" that the original text withheld now
+  exists. The compiler generates `tools/wtfp-tool.js` into every envelope. It
+  resolves a logical tool id from `protocol/tools.json`, exposes seven
+  subcommands, bounds every argument (one positional, capped query and path
+  lengths, limits 1 to 25, regular files only), prints JSON, refuses
+  `network.*` commands under `--offline` or `WTFP_TOOL_OFFLINE=1`, enforces
+  `--timeout=<seconds>` on network commands with exit 124, and runs only as an
+  entry point so a host that imports `tools/*.js` sees no side effect.
+- `tool.execute` therefore has an exact binding on two hosts: Clio `bash` and
+  Claude Code `Bash`, each authorizing that dispatcher and nothing else. It
+  stays `null`, and the five actions that need it stay `WTFP_ACTION_UNAVAILABLE`,
+  on Codex, Copilot, OpenCode, Antigravity, and Gemini until their shell tools
+  are verified and bound the same way.
+- Clio has no native web-search tool, so its `network.search` binding is the
+  same dispatcher running the bundled Semantic Scholar and Google Scholar
+  clients, which are the only scholarly search these actions ever declared.
+
+The activation gates for a future network MCP server are unchanged. The
+generated availability files under `compatibility/` are the record of which
+host binds what.
+

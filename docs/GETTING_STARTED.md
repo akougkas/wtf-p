@@ -1,16 +1,16 @@
-# Getting started with WTF-P 0.6.0-rc.3
+# Getting started with WTF-P 0.6.0-rc.4
 
 WTF-P installs a portable academic workflow into an agent client you already use. It does not install that client, submit a paper, or run an entire research project in the background. You invoke one bounded action at a time; the agent interviews you where author judgment is required, previews consequential changes, and records approved state under the project root.
 
-> **The scientist stays in the loop.** WTF-P does not autonomously run a proposal from idea to submission. You invoke each bounded action. The agent interviews you, previews consequential changes, and waits at the gates recorded in `.planning/config.json` (outline, plan, write, review, and delivery are enabled by default). Author decisions are stored separately from model inference. `--advanced` skips WTF-P installer confirmations; it does not disable project interviews or approval gates.
+> **The scientist stays in the loop.** WTF-P does not autonomously run a paper or proposal from idea to submission. You invoke each bounded action. The agent interviews you, previews consequential changes, and waits at the gates recorded in `.planning/config.json` (outline, plan, write, review, and delivery are enabled by default). Author decisions are stored separately from model inference. `--advanced` skips WTF-P installer confirmations; it does not disable project interviews or approval gates.
 
-For a worked grant-writing example, continue with the [proposal workflow](PROPOSAL_WORKFLOW.md).
+The same action set covers the four document types WTF-P scaffolds from `protocol/templates/`: a paper, a grant proposal, a conference poster, and a talk. For a worked grant-writing example, continue with the [proposal workflow](PROPOSAL_WORKFLOW.md). The full documentation set is indexed in [docs/README.md](README.md).
 
 ## Requirements
 
 - Node.js 20 or newer, including `npx`.
-- One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI.
-- Clio Coder 0.4.7 or newer. WTF-P installs into Clio as a plugin through `clio-coder plugins install`; the 0.3.8 and 0.4.6 observations in [compatibility evidence](COMPATIBILITY.md) belong to the removed extension route and are retained as history only.
+- One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the exact client versions exercised for this candidate.
+- For Clio Coder, version 0.4.7 or newer. WTF-P installs into Clio as a plugin through `clio-coder plugins install`. Clio Coder 0.4.7 is not yet a published Clio release, so today this route needs a Clio build at that version.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
@@ -19,25 +19,25 @@ For a worked grant-writing example, continue with the [proposal workflow](PROPOS
 Pin the release candidate when reproducibility matters:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini
 ```
 
-Run only the line for the client you intend to use. For example, if Clio Coder is already installed globally, `npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio` installs the WTF-P plugin into the selected Clio profile. It does not replace Clio or launch an interactive session. The installer publishes the bundle and registers it through `clio-coder plugins install` when the binary is available; without the binary the bundle is staged and the installer tells you to re-run it once `clio-coder` is on PATH.
+Run only the line for the client you intend to use. Each line installs the generated adapter for that client into the client's documented user configuration root and, where the client has a plugin lifecycle, registers it natively (Clio `plugins install`, Claude and Copilot marketplace plus plugin install, Codex marketplace plus plugin add, Antigravity `plugin install`). It does not replace the client or launch an interactive session. For Clio, the installer registers the plugin when `clio-coder` is on PATH; without the binary the bundle is staged and the installer tells you to re-run the same command once the binary is available.
 
-The explicit `--package=wtf-p@0.6.0-rc.3 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.3 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.3`; stop if it reports another version or target.
+The explicit `--package=wtf-p@0.6.0-rc.4 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.4 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.4`; stop if it reports another version or target.
 
-`npx --yes --package=wtf-p@next -- wtf-p install clio` is a convenient moving prerelease form. It may resolve to a later candidate, so do not use it for a run that must reproduce RC2 exactly. An unqualified `npx wtf-p` follows npm's stable `latest` tag and must not be assumed to mean RC2.
+`npx --yes --package=wtf-p@next -- wtf-p install clio` is a convenient moving prerelease form. It resolves to whatever candidate the npm `next` tag currently names, so do not use it for a run that must reproduce this candidate exactly. An unqualified `npx wtf-p` follows npm's stable `latest` tag, which is still the v0.5 line.
 
 The installer asks before consequential installation choices. Add `--advanced` only for reviewed automation or a disposable profile:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio --advanced
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio --advanced
 ```
 
 That flag changes installer interaction only. It does not enable client Full Auto, answer scientist interviews, or waive a workflow approval.
@@ -64,7 +64,7 @@ GitHub Copilot cloud is a separate, deliberately narrower surface. A CLI install
 
 WTF-P uses `.planning/project.json` to distinguish an initialized v1 project.
 
-- If `.planning/project.json` does **not** exist, invoke `new-paper` first—even when the directory already contains a manuscript. The action inspects existing materials, interviews you, and previews five initial records: `project.json`, `config.json`, `state.json`, `decisions.json`, and `structure/outline.json`.
+- If `.planning/project.json` does **not** exist, invoke `new-paper` first, even when the directory already contains a manuscript. The action inspects existing materials, interviews you, and previews five initial records: `project.json`, `config.json`, `state.json`, `decisions.json`, and `structure/outline.json`.
 - If valid v1 state already exists, use `progress` to inspect it and `map-project` to inventory newly supplied materials.
 
 `map-project` reads an existing manifest and state record; it is not a replacement initializer. Do not rename legacy `.planning/*.md` control files to JSON. The v1 records have different schemas and meanings.
@@ -135,26 +135,34 @@ The default config enables confirmation gates for outline, plan, write, review, 
 
 ## Clio Coder compatibility notes
 
-WTF-P installs into Clio as a plugin and requires Clio Coder 0.4.7 or newer. The installer resolves the Clio profile the way Clio does: `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then `${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux; pass `--config-dir` to override. Confirm native registration with `clio-coder plugins inspect wtfp --json`; the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope. It does not change `enabled`: a plugin you disabled stays disabled and the installer reports `clio-coder plugins enable wtfp` as the command to run. Discovery alone does not establish activation. A target at `<working directory>/.clio-coder` uses project scope. If the installer ran without `clio-coder` on PATH, the bundle is staged but not registered; re-run the same install command once the binary is available. Do not point `clio-coder plugins install` at `<config>/plugins/wtfp` itself: Clio rejects a source that overlaps its managed destination. If an earlier candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with the matching WTF-P uninstaller before installing the plugin; the two register the same prompts.
+WTF-P installs into Clio as a plugin at `<config>/plugins/wtfp/`. The installer resolves the Clio profile the way Clio does: `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then `${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux; pass `--config-dir` to override. A target at `<working directory>/.clio-coder` uses project scope. The lifecycle the installer follows, and what Clio owns afterwards, is described in [AGENT_PLUGIN.md](AGENT_PLUGIN.md).
 
-After installing, start Clio in the project and inspect native discovery:
+Three behaviors are worth knowing before the first install:
+
+- Registration is verified with `clio-coder plugins inspect wtfp --json`; the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope. It never changes `enabled`: a plugin you disabled stays disabled and the installer names `clio-coder plugins enable wtfp` as the command to run.
+- Do not point `clio-coder plugins install` at `<config>/plugins/wtfp` itself. Clio rejects a source that overlaps its managed destination; re-run the WTF-P installer instead.
+- If an earlier release candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P uninstaller before installing the plugin. Both register the same prompt names, and this candidate neither reads nor retires the extension location.
+
+After installing, confirm native discovery:
 
 ```bash
 clio-coder --version
+clio-coder plugins inspect wtfp --json
 clio-coder agents
 clio-coder fleet list
+clio-coder run '/wtfp:help'
 ```
 
-In the TUI, run `/prompts`. Confirm that `/wtfp:new-paper` reports the WTF-P plugin as its source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
+`clio-coder run '/wtfp:help'` prints a static operator card without a model call: the start-here sequence, every action in workflow order with its argument hint, the actions this adapter cannot execute, and the two fleets. In the TUI, `/prompts` reports each prompt's source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
 
-Use supervised `suggest` autonomy for ordinary proposal work:
+Use supervised `suggest` autonomy for ordinary work:
 
 ```bash
 cd /path/to/proposal
 clio-coder --autonomy suggest
 ```
 
-Clio 0.3.8 slash prompts inherit the session's host tool surface; their tool policy is not narrowed per action by the host. Deny and stop any shell, network, filesystem, or delegation call outside the displayed WTF-P action contract. Read-only mode is appropriate for previews. A Full Auto run can be useful for exploratory model testing, but it is non-certifying and does not remove the action's interviews or author gates.
+Clio slash prompts inherit the session's tool surface; the host does not narrow tools per action. Deny and stop any shell, network, filesystem, or delegation call outside the displayed WTF-P action contract. Read-only mode is appropriate for previews. A Full Auto run can be useful for exploratory model testing, but it is non-certifying and does not remove the action's interviews or author gates.
 
 ### Optional Clio fleets
 
@@ -163,11 +171,9 @@ The two generated fleets are advanced, operator-invoked Clio primitives. Ordinar
 ```bash
 clio-coder fleet validate wtfp-plan-section
 clio-coder fleet validate wtfp-draft-review
-clio-coder fleet run wtfp-plan-section --var section=<section-id>
-clio-coder fleet run wtfp-draft-review --var section=<section-id>
 ```
 
-Use a fleet only after the slash orchestrator has established the required approved outline or section plan. The plan fleet runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft fleet runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
+Run a fleet with `clio-coder fleet run <fleet> --var section=<section-id>` (a model-backed run; this candidate's evidence covers `fleet validate` and `fleet list` only), and only after the slash orchestrator has established the required approved outline or section plan. The plan fleet runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft fleet runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
 
 Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The fleets declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
 
@@ -176,7 +182,7 @@ Clio's fleet write-boundary enforcement requires a Git worktree in which `.plann
 Setting only `CLIO_CODER_CONFIG_DIR` changes one destination; it does not isolate Clio's home, XDG, state, cache, data, binary, and temporary roots. For a disposable evaluation, put all of them beneath one mode-0700 root and run both the installer and Clio through the same environment. The config, data, state, cache, and binary directories below are descendants of `CLIO_CODER_HOME`, as the prefix guard requires:
 
 ```bash
-WTFP_CLIO_SANDBOX="$(mktemp -d /tmp/wtfp-clio-rc2.XXXXXX)"
+WTFP_CLIO_SANDBOX="$(mktemp -d /tmp/wtfp-clio.XXXXXX)"
 chmod 700 "$WTFP_CLIO_SANDBOX"
 mkdir -p \
   "$WTFP_CLIO_SANDBOX/home/tmp" \
@@ -214,50 +220,32 @@ run_isolated_clio() {
     "$@"
 }
 
-run_isolated_clio npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio --advanced
+run_isolated_clio npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio --advanced
 cd /path/to/disposable-proposal
 run_isolated_clio clio-coder --autonomy suggest
 ```
 
-`env -i` prevents ambient provider keys, npm credentials, and unrelated client
-variables from leaking into the run. The empty profile therefore has no model
-credentials unless you deliberately configure a Clio-supported isolated
-credential mechanism. Never copy, print, or embed credentials in a fixture or
-evidence trace. Remove the disposable root after preserving any non-secret
-evidence you need.
+`env -i` prevents ambient provider keys, npm credentials, and unrelated client variables from leaking into the run. The empty profile therefore has no model credentials unless you deliberately configure a Clio-supported isolated credential mechanism. Never copy, print, or embed credentials in a fixture or evidence trace. Remove the disposable root after preserving any non-secret evidence you need.
 
 ## Verify or remove an installation
 
-RC2's `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `/prompts`, `clio-coder agents`, and `clio-coder fleet list` for Clio; command discovery or autocomplete for other slash clients; and skill discovery for Codex.
+The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder plugins inspect wtfp --json`, `clio-coder agents`, and `clio-coder fleet list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
 
 Preview removal before deleting exact receipt-owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --clio --dry-run
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p uninstall --clio --yes
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --dry-run
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --yes
 ```
 
-Replace `--clio` with the intended target selector. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data.
+Replace `clio` with the intended target. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data. For Clio, native `plugins remove` runs only when every file below the installed root is unchanged and receipt-owned.
 
-## Current release-candidate boundaries
+## Boundaries of this candidate
 
-All seven host adapters discover the same 36 stable action routes. Availability
-establishes a complete adapter mapping, not a successful model run, and is
-recorded per host in the generated `compatibility/action-availability.json`:
+All seven host adapters discover the same 36 stable action routes. Availability is a complete adapter mapping, not a successful model run, and is recorded per host in each generated `compatibility/action-availability.json`. Clio Coder and Claude Code project 31 of 36 actions as available; Codex, Copilot CLI, OpenCode, Antigravity, and Gemini project 26 of 36. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) lists which actions fail closed on which host and why.
 
-| Host | Available | Returns `WTFP_ACTION_UNAVAILABLE` |
-| --- | ---: | --- |
-| Clio Coder, Claude Code | 31/36 | `contribute`, `report-bug`, `request-feature` (`external.issue`); `remove-section` (`filesystem.delete`); `update` (`package.update`) |
-| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26/36 | the five above plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, `research-gap` (`tool.execute` is bound only to Clio `bash` and Claude `Bash`) |
-
-Where a research route is available, `tool.execute` authorises exactly one
-command, the bundled `tools/wtfp-tool.js` dispatcher; run it with `--offline`
-until network use has been approved for the session. `create-poster`,
-`create-slides`, and `export-latex` emit source and return the render or
-compile step as an author handoff; none of them runs a renderer or LaTeX.
-
-The available `submit-milestone` action creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
+Where a research route is available, `tool.execute` authorises exactly one command, the bundled `tools/wtfp-tool.js` dispatcher; run it with `--offline` until network use has been approved for the session. `create-poster`, `create-slides`, and `export-latex` emit source and return the render or compile step as an author handoff; none of them runs a renderer or LaTeX. `submit-milestone` creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
 
 If an action returns `WTFP_ACTION_UNAVAILABLE`, do not ask the model to improvise around the refusal. If a project has materials but no portable manifest, initialize it with `new-paper` before `map-project`. If records disagree, stop, preserve them, and use `progress` or `verify-work` to inspect the mismatch before approving a repair. Deny and stop an unexpected shell, network, Git, broad-filesystem, or external-service request.
 
-See [compatibility evidence](COMPATIBILITY.md) for exact client/model observations and limitations, and the [portable project protocol](../protocol/project/README.md) for record-level invariants.
+See [COMPATIBILITY.md](COMPATIBILITY.md) for exact client and model observations and their limits, and the [portable project protocol](../protocol/project/README.md) for record-level invariants.

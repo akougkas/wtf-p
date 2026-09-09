@@ -1,10 +1,30 @@
 # WTF-P Agent Platform Modernization
 
-Status: architecture implemented; RC1 and RC2 published; stable-release evidence gates remain open
+> **Historical design record.** This is the modernization contract as it stood
+> at `0.6.0-rc.2` (2026-08-29). It is kept unchanged below the banner because
+> it explains why the 0.6 line is shaped the way it is. Where it disagrees with
+> the current tree, the current documentation wins:
+>
+> - The Clio "self-contained extension" and the flat `/wtfp-<action>` aliases
+>   are gone. Clio installs the canonical Agent Plugins 1.0.0 bundle through
+>   `clio-coder plugins install` and requires Clio Coder 0.4.7 or newer. See
+>   [AGENT_PLUGIN.md](AGENT_PLUGIN.md).
+> - The Claude envelope also carries that root manifest and the Clio component
+>   graph, so Clio can adopt an installed Claude plugin.
+> - `tool.execute` is bound on Clio and Claude Code through the bundled
+>   `tools/wtfp-tool.js` dispatcher; see the amendment in
+>   [ADR 0001](adr/0001-hybrid-tool-execution.md).
+> - Native discovery is verified for all seven hosts on `0.6.0-rc.4`; see
+>   [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Copilot cloud remains a
+>   deliberately narrow projection.
+> - The current release status and the remaining gates for stable `0.6.0` are
+>   in [CHANGELOG.md](../CHANGELOG.md) and [COMPATIBILITY.md](COMPATIBILITY.md).
 
-Released candidate: `0.6.0-rc.2`; next release target: stable `0.6.0`
+Status at the time of writing: architecture implemented; RC1 and RC2 published; stable-release evidence gates remain open
 
-Last updated: 2026-08-29
+Released candidate at the time of writing: `0.6.0-rc.2`; next release target: stable `0.6.0`
+
+Last updated: 2026-08-29 (banner added 2026-09-09)
 
 Release line: `main` (modernization originated on `feat/agent-platform-modernization`; RC2 corrections were prepared on `fix/create-outline-decision-fidelity`)
 

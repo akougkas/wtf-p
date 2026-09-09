@@ -1,8 +1,8 @@
 # Scientist-led proposal workflow
 
-This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6.0-rc.3 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state.
+This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6.0-rc.4 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state. The proposal scaffold the agent works from is `protocol/templates/grant-proposal-outline.md`, which requires a captured solicitation before any section is proposed and lists the decisions it may not make for you.
 
-The walkthrough is a process-discipline test, not a claim that WTF-P produces better prose than an unassisted model. RC2 has no matched no-WTF-P control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
+The walkthrough is a process-discipline test, not a claim that WTF-P produces better prose than an unassisted model. This candidate has no matched no-WTF-P control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
 
 ## 1. Supply the authoritative materials
 
@@ -38,23 +38,23 @@ In `materials/author-brief.md`, distinguish known facts from choices that still 
 
 Add only real prior work, measurements, citations, collaborator statements, and institutional facts. Do not put secrets or export-controlled material into a model-accessible project unless the selected client and model are authorized for it.
 
-## 2. Install RC2 and start the client
+## 2. Install this candidate and start the client
 
-For Clio Coder 0.3.8:
+For Clio Coder 0.4.7 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.3 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
 clio-coder --autonomy suggest
 ```
 
-Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P extension as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as RC2 evidence.
+Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
 
-The slash commands below also apply to Claude, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtf-p:<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated Clio profile recipe.
+The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtf-p:<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated Clio profile recipe.
 
 ## 3. Initialize through an interview
 
-Paste a concrete brief rather than asking the model to invent the project. Clio 0.3.8 preserves quotes, tabs, repeated spaces, and multiline `$ARGUMENTS`; the following is one invocation payload:
+Paste a concrete brief rather than asking the model to invent the project. Clio preserves quotes, tabs, repeated spaces, and multiline `$ARGUMENTS`; the following is one invocation payload:
 
 ```text
 /wtfp:new-paper NSF 25-531 CICI proposal.
@@ -96,7 +96,7 @@ Review the resulting state rather than counting files as progress:
 - A source record identifies the solicitation, paper, data set, prior system, or other supplied artifact.
 - An evidence record says exactly what that source supports, contradicts, or contextualizes.
 - An unsupported aspiration is a decision or planned claim, not evidence.
-- A missing citation remains missing. RC2's `research-gap`, `analyze-bib`, and `check-refs` routes are deliberately unavailable until they have exact local-tool bindings.
+- A missing citation remains missing. On Clio Coder and Claude Code, `research-gap`, `analyze-bib`, and `check-refs` run only the bundled `tools/wtfp-tool.js` dispatcher, and the agent should start it with `--offline` until you approve network use for the session. On the other hosts those routes return `WTFP_ACTION_UNAVAILABLE`; see [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md).
 
 Use `progress` for a read-oriented reconciliation before outlining:
 
@@ -187,7 +187,7 @@ The fresh process must not rely on hidden conversational memory. Verify that it 
 
 Repeat `discuss-section` → `plan-section` → `write-section` → `review-section` for each dependency-ready section. Use `progress` between stages to surface blockers and reconcile cross-record status. Do not let parallel specialist work bypass the author gates or the plan/reviewer boundaries.
 
-The native Clio fleets can run a bounded plan/check or draft/review worker pair, but they are optional advanced primitives—not the implementation behind the slash commands. If used, the slash orchestrator still owns prior approval and subsequent schema, checkpoint, section, and project-state reconciliation. Do not run the draft fleet without an approved plan. See [Optional Clio fleets](GETTING_STARTED.md#optional-clio-fleets).
+The native Clio fleets can run a bounded plan/check or draft/review worker pair, but they are optional advanced primitives, not the implementation behind the slash commands. If used, the slash orchestrator still owns prior approval and subsequent schema, checkpoint, section, and project-state reconciliation. Do not run the draft fleet without an approved plan. See [Optional Clio fleets](GETTING_STARTED.md#optional-clio-fleets).
 
 When a local milestone is internally ready:
 
@@ -195,7 +195,7 @@ When a local milestone is internally ready:
 /wtfp:submit-milestone nsf25-531-internal-review-1 Preview and archive the selected proposal artifacts, portable project state, validations, and statistics for my confirmation.
 ```
 
-`submit-milestone` creates a reproducible local archive. It does **not** upload to Research.gov, submit to NSF, contact collaborators, publish a repository, or make an institutional commitment. Final compliance review and external submission remain human and institutional actions.
+`submit-milestone` creates a reproducible local archive. It does **not** upload to Research.gov, submit to NSF, contact collaborators, publish a repository, or make an institutional commitment. Final compliance review and external submission remain human and institutional actions. Likewise, `export-latex` produces LaTeX source and hands the compile command back to you; it does not run a LaTeX toolchain.
 
 ## Scientist's finish checklist
 
