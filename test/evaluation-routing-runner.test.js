@@ -98,13 +98,13 @@ function rowByClient(suite, client) {
 const fixtureInventoryBindings = [
   ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
   ['claude', 'vendors/claude/.wtfp-generated.json'],
+  ['clio', 'vendors/plugin/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
   ['codex', 'vendors/codex/plugins/wtf-p/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
   ['copilot', 'vendors/copilot/plugins/wtf-p/.wtfp-generated.json'],
   ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json'],
-  ['portable-plugin', 'vendors/plugin/.wtfp-generated.json']
+  ['opencode', 'vendors/opencode/.wtfp-generated.json']
 ];
 
 function fixtureGit(root, argv) {
@@ -193,7 +193,7 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'd60546c1a5145bd8af6f67f235ca42bcbab46323f386be39635e653467503564');
+    assert.strictEqual(suite.manifest_sha256, '82e0d3552189e59d674b5522aae05386d01aa48648f2b8143b7d382b5cc60317');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -201,9 +201,9 @@ async function main() {
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      '6be02bf63575e441612b22edbd1ea1bcc5f8b49152f423a07dd5b0e8ac7d0750');
+      'b640d6ce6f5ebc03ded66281dcfd59f007536cb6d635ae54d17d4c402100effe');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      '997a91c9b0d5ebefd74678b092f789cc84642b50a21123e2db771989307f4219');
+      'c5e375df643cf2e82aa48396af04603d2ad3054055251cdba61c36f3ba5241d0');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -1231,12 +1231,12 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      'e2dee690f719e830544d3c9f719286fd0c855080');
+      '14436051f210fc892b90028c45715c17604a289b');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      '9081611b48588aaa442efed5da955fa1e4cba490cd096cd8a151554b2d31c3cd');
+      'fc96fc9c98ff9a2af8509b9bfc8fbd2365c44588e86fbcfdbf47609d3c00e709');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
-    assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1574);
+    assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1585);
   });
 
   if (!process.exitCode) process.stdout.write(`1..${passed}\n`);

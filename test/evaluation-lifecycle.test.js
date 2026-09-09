@@ -751,7 +751,7 @@ function testFleetBoundaryProbe(root) {
   ].join('\n');
   fs.writeFileSync(moduleFile, boundaryModule);
   for (const fleet of ['wtfp-plan-section.md', 'wtfp-draft-review.md']) {
-    fs.copyFileSync(path.join(repositoryRoot, 'vendors', 'clio', 'fleets', fleet), path.join(installed, 'fleets', fleet));
+    fs.copyFileSync(path.join(repositoryRoot, 'vendors', 'plugin', 'ai.iowarp.clio', 'fleets', fleet), path.join(installed, 'fleets', fleet));
   }
   const valid = fleetBoundaryProbe(clioSource, installed);
   assert.strictEqual(valid.valid, true, JSON.stringify(valid, null, 2));

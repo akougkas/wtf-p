@@ -1490,6 +1490,9 @@ function compilePlans(options = {}) {
   ].join('\n'));
   plans.push(copilotMarketplace);
 
+  // The Clio plan carries no envelope root; it is returned so the compiled model
+  // stays observable, and `compileAdapters` writes only rooted plans.
+  plans.push(clio);
   return plans;
 }
 
@@ -1595,6 +1598,7 @@ function compileAdapters(options = {}) {
   const plans = compilePlans({ targetPolicies: options.targetPolicies });
   const changed = [];
   for (const plan of plans) {
+    if (!plan.root) continue;
     const differences = buildPlan(plan, checkOnly);
     if (differences.length > 0) changed.push({ target: plan.id, files: differences });
   }
@@ -1602,7 +1606,7 @@ function compileAdapters(options = {}) {
     const summary = changed.map((entry) => `${entry.target}: ${entry.files.slice(0, 8).join(', ')}${entry.files.length > 8 ? ` (+${entry.files.length - 8})` : ''}`);
     throw new Error(`generated adapters are stale\n${summary.join('\n')}`);
   }
-  return { targets: plans.map((plan) => plan.id), changed };
+  return { targets: plans.filter((plan) => plan.root).map((plan) => plan.id), changed };
 }
 
 module.exports = {

@@ -435,13 +435,13 @@ function lintRoutingManifest(manifest) {
   const expectedEnvelopePaths = [
     'vendors/antigravity/.wtfp-generated.json',
     'vendors/claude/.wtfp-generated.json',
+    'vendors/plugin/.wtfp-generated.json',
     'vendors/codex/.wtfp-generated.json',
     'vendors/codex/plugins/wtf-p/.wtfp-generated.json',
     'vendors/copilot/.wtfp-generated.json',
     'vendors/copilot/plugins/wtf-p/.wtfp-generated.json',
     'vendors/gemini/.wtfp-generated.json',
-    'vendors/opencode/.wtfp-generated.json',
-    'vendors/plugin/.wtfp-generated.json'
+    'vendors/opencode/.wtfp-generated.json'
   ];
   assert.deepStrictEqual(manifest.generated_envelopes.map(item => item.path), expectedEnvelopePaths,
     'routing manifest must bind all nine generated envelopes');
