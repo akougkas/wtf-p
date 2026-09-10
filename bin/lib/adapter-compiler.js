@@ -880,7 +880,7 @@ function renderClioRole(role, slug) {
   const verifier = role.fields.execution_class === 'verifier-report';
   const required = verifier
     ? '[verify, context]'
-    : '[read, context, {anyOf: [write, edit]}]';
+    : '[read, context, limitation, {anyOf: [write, edit]}]';
   const optional = verifier
     ? '[read, grep, find, ls, ledger]'
     : '[grep, find, ls, ledger]';
@@ -912,6 +912,10 @@ function renderClioRole(role, slug) {
     '',
     nativeResult,
     '',
+    ...(!verifier ? [
+      'File readback establishes inspection, not executed validation. If this role changes files but cannot run the relevant checks with its admitted tools and approved scope, call limitation before returning. Name the exact output paths and checks left unrun, using the applicable reason: no-runner, blocked, out-of-scope, environment, or other. A prose disclaimer is not a limitation receipt. Do not add shell access or run a token command to satisfy the finish gate. Run available authorized checks when required; a limitation never turns an absent or failed check into a pass. Preserve unmeasured validation quality and leave the outstanding checks to the interactive caller.',
+      ''
+    ] : []),
     'Embedded portable result schema: ' + JSON.stringify(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json'))),
     '',
     'Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string must be serialized JSON conforming to schemas/role-result.schema.json: schema wtfp.role-result/v1, role, action, status, summary, artifacts, issues, next_actions, effects_applied. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.',

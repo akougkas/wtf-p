@@ -2,7 +2,7 @@
 version: 1
 name: "Citation Formatter"
 description: "Audit bibliography integrity and produce deterministic corrections without touching the primary bibliography. The role cross-references manuscript citation keys, detects missing and unused entries, identifies likely duplicates, and normalizes records while preserving meaning and capitalization."
-tools: {required: [read, context, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
+tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
 skills: [wtfp-research-literature]
 audience: custom
 category: research
@@ -59,6 +59,8 @@ Audit bibliography integrity and produce deterministic corrections without touch
 ## Clio result contract
 
 Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.
+
+File readback establishes inspection, not executed validation. If this role changes files but cannot run the relevant checks with its admitted tools and approved scope, call limitation before returning. Name the exact output paths and checks left unrun, using the applicable reason: no-runner, blocked, out-of-scope, environment, or other. A prose disclaimer is not a limitation receipt. Do not add shell access or run a token command to satisfy the finish gate. Run available authorized checks when required; a limitation never turns an absent or failed check into a pass. Preserve unmeasured validation quality and leave the outstanding checks to the interactive caller.
 
 Embedded portable result schema: {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"wtfp.role-result/v1","title":"WTF-P portable specialist result","type":"object","additionalProperties":false,"required":["schema","role","action","status","summary","artifacts","issues","next_actions","effects_applied"],"properties":{"schema":{"const":"wtfp.role-result/v1"},"role":{"type":"string","minLength":1},"action":{"type":"string","minLength":1},"status":{"enum":["completed","needs_input","blocked","failed"]},"summary":{"type":"string","minLength":1},"artifacts":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["uri","description"],"properties":{"uri":{"type":"string","minLength":1},"description":{"type":"string","minLength":1}}}},"issues":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["severity","summary"],"properties":{"severity":{"enum":["info","warning","error","blocker"]},"summary":{"type":"string","minLength":1},"evidence":{"type":"string"}}}},"next_actions":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["action","reason"],"properties":{"action":{"type":"string","minLength":1},"reason":{"type":"string","minLength":1}}}},"effects_applied":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","scope"],"properties":{"id":{"type":"string","minLength":1},"scope":{"type":"string","minLength":1}}}}}}
 
