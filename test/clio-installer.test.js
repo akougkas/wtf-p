@@ -9,6 +9,7 @@ const { spawnSync } = require('child_process');
 const { sha256Buffer } = require('../bin/lib/ownership');
 const { detectInstallation } = require('../bin/lib/utils');
 const MANIFEST = require('../bin/lib/manifest');
+const { nativeEnvironment } = require('../bin/lib/native-registration');
 const ROOT = path.resolve(__dirname, '..');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-installer-'));
 const fakeBin = path.join(scratch, 'bin');
@@ -81,7 +82,7 @@ function test(name, fn) { fn(); passed++; console.log(`✓ ${name}`); }
 function context(name, project = false) {
  const cwd = path.join(scratch,name);fs.mkdirSync(cwd);
  const target = path.join(cwd, project ? '.clio-coder' : 'config');
- return { cwd,target,env:{...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,CLIO_CODER_CONFIG_DIR:target,FAKE_CLIO_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'} };
+ return { cwd,target,env:{...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,CLIO_CODER_CONFIG_DIR:project?path.join(cwd,'user-profile'):target,FAKE_CLIO_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'} };
 }
 function run(ctx, entry, args, env={}) {
  return spawnSync(process.execPath,[path.join(ROOT,'bin',entry),...args],{cwd:ctx.cwd,env:{...ctx.env,...env},encoding:'utf8',timeout:30000});
@@ -103,6 +104,17 @@ function verifyReceipt(ctx) {
  return receipt;
 }
 try {
+ test('project native registration preserves the independent user configuration root',()=>{
+  const userRoot=path.join(scratch,'user-profile');
+  const projectRoot=path.join(scratch,'project-environment');
+  const base={CLIO_CODER_CONFIG_DIR:userRoot,CLIO_CODER_HOME:path.join(scratch,'profile')};
+  const projected=nativeEnvironment('clio',path.join(projectRoot,'.clio-coder'),base,{cwd:projectRoot,scope:'project'});
+  assert.strictEqual(projected.CLIO_CODER_CONFIG_DIR,userRoot,'project scope must not alias the user installation lock/state');
+  assert.deepStrictEqual(base,{CLIO_CODER_CONFIG_DIR:userRoot,CLIO_CODER_HOME:path.join(scratch,'profile')});
+  const defaultRoot=nativeEnvironment('clio',path.join(projectRoot,'.clio-coder'),{CLIO_CODER_HOME:path.join(scratch,'profile')},{cwd:projectRoot});
+  assert.strictEqual(defaultRoot.CLIO_CODER_CONFIG_DIR,undefined,'preserve Clio default profile resolution');
+  assert.strictEqual(nativeEnvironment('clio',userRoot,base,{cwd:projectRoot,scope:'user'}).CLIO_CODER_CONFIG_DIR,userRoot);
+ });
  test('clio config root follows Clio: CLIO_CODER_CONFIG_DIR, then CLIO_CODER_HOME/config, then the platform default',()=>{
   const resolve=MANIFEST.clio.resolveConfigRoot;
   assert.strictEqual(resolve({CLIO_CODER_CONFIG_DIR:'/explicit',CLIO_CODER_HOME:'/home-root',XDG_CONFIG_HOME:'/xdg'},'linux','/h'),'/explicit');

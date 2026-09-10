@@ -25,10 +25,14 @@ function antigravityHome(targetDir) {
   return path.dirname(path.dirname(resolved));
 }
 
-function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env) {
+function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env, options = {}) {
   const environment = { ...baseEnvironment };
   if (runtime === 'clio') {
-    environment.CLIO_CODER_CONFIG_DIR = targetDir;
+    // Project destinations are selected by cwd and --project. Repointing the
+    // user config there aliases the two Library scopes, including their locks
+    // and state files. Preserve the caller's independent user profile.
+    const project = path.resolve(targetDir) === path.join(path.resolve(options.cwd || process.cwd()), '.clio-coder');
+    if (!project) environment.CLIO_CODER_CONFIG_DIR = targetDir;
   } else if (runtime === 'claude') {
     environment.CLAUDE_CONFIG_DIR = targetDir;
   } else if (runtime === 'codex') {
@@ -260,7 +264,7 @@ function verifyRegistration(runtime, native, result) {
 function activateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
   if (runtime === 'clio') {
-    return activateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment) });
+    return activateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
   }
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
@@ -429,7 +433,7 @@ function isAlreadyAbsent(result) {
 
 function deactivateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
-  if (runtime === 'clio') return deactivateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment) });
+  if (runtime === 'clio') return deactivateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
   const environment = nativeEnvironment(runtime, targetDir, options.environment);
