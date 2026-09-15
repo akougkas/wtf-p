@@ -182,6 +182,23 @@ check(read('scripts/release.js').includes('--publish'), 'publishing requires an 
 check(packageJson.engines.node.startsWith('>=20'), 'package requires a maintained Node.js runtime');
 check(packageJson.scripts.prepack === 'npm run check:adapters', 'package creation refuses stale generated adapters');
 
+section('Repository-root marketplaces');
+const rootMarketplaces = {
+  '.claude-plugin/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source, target: 'vendors/claude/.claude-plugin/plugin.json' },
+  '.agents/plugins/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source.path, target: 'vendors/codex/plugins/wtfp/plugin.json' },
+  '.github/plugin/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source, target: 'vendors/copilot/plugins/wtfp/.claude-plugin/plugin.json' }
+};
+for (const [file, expected] of Object.entries(rootMarketplaces)) {
+  const marketplace = json(file);
+  check(marketplace.name === 'wtf-p', `${file} is the wtf-p marketplace`);
+  const entry = (marketplace.plugins || []).find((plugin) => plugin.name === expected.plugin);
+  check(Boolean(entry), `${file} lists the ${expected.plugin} plugin`);
+  const source = entry ? expected.source(entry) : '';
+  check(typeof source === 'string' && source.startsWith('./') && !source.includes('..'), `${file} uses a contained relative source`);
+  check(Boolean(source) && fs.existsSync(path.join(ROOT, source)) && fs.existsSync(path.join(ROOT, expected.target)), `${file} points at a committed envelope with a manifest`);
+  check(!entry || !('version' in entry), `${file} does not pin a version that the envelope manifest already carries`);
+}
+
 section('Compatibility without legacy control state');
 check(!fs.existsSync(path.join(ROOT, 'core')), 'no v0.5 core tree remains in the package');
 const generatedCommands = filesAt('vendors/claude/commands', '.md')

@@ -1,0 +1,16 @@
+{
+  "name": "wtf-p",
+  "owner": {
+    "name": "akougkas"
+  },
+  "metadata": {
+    "description": "WTF-P: evidence-grounded academic research and writing workflows for coding agents."
+  },
+  "plugins": [
+    {
+      "name": "wtfp",
+      "source": "./vendors/copilot/plugins/wtfp",
+      "description": "Portable academic research and writing workflows."
+    }
+  ]
+}

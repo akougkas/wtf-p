@@ -19,40 +19,57 @@ the scientific judgment. The agent keeps the bookkeeping and does bounded jobs.
 
 It ships as one canonical [Agent Plugins 1.0.0](https://agent-plugins.org)
 bundle that a deterministic compiler projects into a native package for seven
-coding-agent hosts. Version `0.6.0-rc.4` is a release candidate published
-under the npm `next` tag; `latest` still resolves to the v0.5 line.
+coding-agent hosts. Version `0.6.0` is the first stable release of that
+design and is what npm `latest` resolves to; v0.5 remains installable by
+explicit version.
 
 ## Install on your agent
 
-You need Node.js 20 or newer and one supported host. Run one line. The
-installer publishes the generated package into that host's own configuration
-root, records an exact-file receipt, and registers it with the host's native
-plugin lifecycle where one exists.
+Two routes. Pick one per host; both register the same plugin, so do not use
+both on the same profile.
+
+**From this repository, with the host's own plugin manager.** Claude Code,
+Codex, and Copilot CLI read a marketplace straight from the Git repository and
+load the committed envelope, so no installer runs:
+
+```bash
+claude plugin marketplace add akougkas/wtf-p && claude plugin install wtfp@wtf-p
+codex plugin marketplace add akougkas/wtf-p && codex plugin add wtfp@wtf-p
+copilot plugin marketplace add akougkas/wtf-p && copilot plugin install wtfp@wtf-p
+```
+
+Codex still needs the eleven role agents copied to `$CODEX_HOME/agents/`,
+because Codex plugins do not carry agents; the npm installer does that for
+you, the Git route does not.
+
+**From npm, with the WTF-P installer.** You need Node.js 20 or newer and one
+supported host. Run one line. The installer publishes the generated package
+into that host's own configuration root, records an exact-file receipt, and
+registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.7 |
-| Claude Code | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.267 |
-| Codex | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtf-p@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtf-p@wtfp` | 1.0.83 |
-| OpenCode | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.30 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtf-p` | 1.1.28 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini` | Files under `<root>/extensions/wtf-p`; Gemini discovers the extension by directory | 0.59.0 |
+| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.8 |
+| Claude Code | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.271 |
+| Codex | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.83 |
+| OpenCode | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.30 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.2 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.59.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in
-[Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder 0.4.7 is not yet a
-published Clio release, which is one reason this is a release candidate.
+[Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder is published as
+`@iowarp/clio-coder`; 0.4.7 and newer carry the plugin engine WTF-P uses.
 
 Keep the explicit `--package=wtf-p@<version> -- wtf-p` form. On a workstation
 with WTF-P 0.5 installed globally, the shorter `npx wtf-p@<version>` can run
-the old executable instead. `--package=wtf-p@next` selects the newest
-prerelease; an unqualified `npx wtf-p` selects the v0.5 stable line.
+the old executable instead.
 
 ## Sixty-second start
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
 clio-coder --autonomy suggest
 ```
@@ -65,7 +82,7 @@ clio-coder --autonomy suggest
 The agent interviews you, previews the five initial project records, and waits
 for your approval before writing anything. Every host uses the same
 `/wtfp:<action>` names except Codex, which exposes the same actions through
-seven native skills: select `$wtf-p:wtfp-start-project` and ask for the
+seven native skills: mention `$wtfp-start-project` and ask for the
 `new-paper` action with the same brief.
 
 A normal project then moves one action at a time:

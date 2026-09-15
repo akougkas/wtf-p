@@ -14,10 +14,10 @@ Use these entry points for the generated host adapters. Append the corresponding
 | --- | --- | --- | --- |
 | Clio Coder | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
 | Claude Code | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
-| Codex | `$wtf-p:wtfp-start-project Run the new-paper action.` | `$wtf-p:wtfp-start-project Run the map-project action.` | `$wtf-p:wtfp-start-project Run the create-outline action.` |
+| Codex | `$wtfp-start-project Run the new-paper action.` | `$wtfp-start-project Run the map-project action.` | `$wtfp-start-project Run the create-outline action.` |
 | GitHub Copilot CLI, OpenCode, Antigravity CLI, Gemini CLI | `/wtfp:new-paper` | `/wtfp:map-project` | `/wtfp:create-outline` |
 
-Codex's generated marketplace package is named `wtf-p`; all three actions belong to its `wtfp-start-project` skill. Codex does not expose these actions as slash commands. If the standard bundle named `wtfp` is installed directly in another compatible host, use that host's discovered skill qualifier rather than assuming the generated Codex package name. Every slash-command host exposes the `/wtfp:<action>` form and nothing else.
+On Codex the plugin is `wtfp` and all three actions belong to its `wtfp-start-project` skill, mentioned as `$wtfp-start-project`. Codex does not expose these actions as slash commands. If the canonical bundle is installed directly in another Agent Plugins host, use that host's discovered skill qualifier. Every slash-command host exposes the `/wtfp:<action>` form and nothing else.
 
 A handoff should contain three paste-ready payloads, each usable separately. For example:
 

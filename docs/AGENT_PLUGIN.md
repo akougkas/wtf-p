@@ -38,7 +38,7 @@ The temporary staging directory is not a durable update origin. Update through W
 
 An earlier candidate could leave a WTF-P extension at `<config>/extensions/wtfp`. Remove it with that candidate's WTF-P uninstaller before installing the plugin, since both register the same prompt names. WTF-P no longer reads, migrates, or retires that location.
 
-Clio Coder 0.4.7 is not yet a published Clio release. The installer and the opt-in native test were exercised against a local 0.4.7 build; see [COMPATIBILITY.md](COMPATIBILITY.md).
+Clio Coder 0.4.7 (2026-09-11) and 0.4.8 (2026-09-12) are published as `@iowarp/clio-coder`. The installer and the opt-in native test were exercised against a 0.4.7 build; the 0.6.0 envelope was re-verified with the published 0.4.8; see [COMPATIBILITY.md](COMPATIBILITY.md).
 
 ## Research execution boundaries
 

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "4efdba535ce238a3e73f9a955d8ac07af1eee88943abef9bcef3072419a75951",
+  "sourceHash": "a189e7094e5c62db7ff8da9c4c6146c6c131ea5cbd9345ff3c4031d3a9e9a371",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "b912d464e26defd4c51c0aa24979ad62220fb85aa9e011f7e60978bc70cdca07"
+      "sha256": "c025a56dccbfb22881924e0b776161423b030944bea4ada3b3cf473e25a97035"
     },
     {
       "path": "project/README.md",
@@ -454,7 +454,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "937ef44780c19f8deea8bce713a0c40b67fbfd64f3eb1d7d2fd746866be08894"
+      "sha256": "bcd8d3ace1c24f4c4b223015959f2ab5f0c1a7498f1e3a3ff5f8d52754a8f2a2"
     },
     {
       "path": "roles/argument-verifier.md",

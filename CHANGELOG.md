@@ -7,14 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.6.0-rc.4] - 2026-09-09
+## [0.6.0] - 2026-09-14
 
-Fourth release candidate on the agent-platform modernization line. It absorbs
-the unpublished `0.6.0-rc.3` working candidate, which was never tagged or
-published, and is intended for the npm `next` tag rather than `latest`:
-GitHub Copilot CLI is unverified on this envelope, the Clio route requires a
-Clio Coder release (`>=0.4.7`) that is not yet published, and the
-migration-feedback gate for stable `0.6.0` remains open.
+First stable release of the agent-plugin line. WTF-P is one canonical
+[Agent Plugins 1.0.0](https://agent-plugins.org) bundle compiled into a
+native package for Clio Coder, Claude Code, Codex, GitHub Copilot CLI,
+OpenCode, Antigravity CLI, and Gemini CLI. This entry absorbs the unpublished
+`0.6.0-rc.3` and `0.6.0-rc.4` candidates, which were prepared but never
+tagged or published; everything listed below ships here for the first time
+after `0.6.0-rc.2`. npm `latest` now resolves to this line.
+
+### Added in 0.6.0
+
+- Repository-root marketplaces (`.claude-plugin/marketplace.json`,
+  `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`), so
+  Claude Code, Codex, and Copilot CLI install the committed envelope straight
+  from Git with `<cli> plugin marketplace add akougkas/wtf-p` and
+  `wtfp@wtf-p`, with no npm and no installer. The Codex route does not copy
+  the role agents to `$CODEX_HOME/agents/`; the installer still does
+
+### Changed in 0.6.0
+
+- The plugin is named `wtfp` on every host. Codex, Copilot, Antigravity, and
+  Gemini previously published it as `wtf-p`, so the selector was
+  `wtf-p@wtfp` on some hosts and `wtfp@wtfp` on others. Generated envelopes
+  move to `vendors/codex/plugins/wtfp` and `vendors/copilot/plugins/wtfp`;
+  the Gemini extension installs to `extensions/wtfp` and the Antigravity
+  source to `sources/wtfp`. The npm package stays `wtf-p`
+- Codex documentation and the installer hint name the skill mention Codex
+  actually resolves, `$wtfp-start-project`, instead of the
+  `$wtf-p:wtfp-start-project` form, which Codex never parsed as a selector
+- Clio Coder 0.4.7 and 0.4.8 are published as `@iowarp/clio-coder`; the
+  documentation no longer describes the Clio route as needing a local build
+
+### Removed in 0.6.0
+
+- The v0.5 `core/write-the-f-paper` tree, the WCN workflow compressor under
+  `tools/wcn`, the `tests/e2e` fixtures, and the unused `bin/lib` context
+  primer, Git checkpoint helper, and WCN compiler. None of them was read by
+  the 0.6 installer; they added 447 KB to the tarball. `wtf-p@0.5.0` remains
+  installable by explicit version for anyone who needs them
+
+The remainder of this entry is the release-candidate history since
+`0.6.0-rc.2`.
 
 ### Changed
 
@@ -342,8 +377,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.4...HEAD
-[0.6.0-rc.4]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0-rc.4
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
 [0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0

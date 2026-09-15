@@ -27,7 +27,7 @@ npm run build:adapters       # Regenerate all native envelopes
 npm run check:adapters       # Fail if generated output is stale
 npm run test:protocol        # Catalog, workflows, roles, schemas, skills, compiler
 npm run test:installer       # Import safety, containment, ownership, races, targets
-npm run test:compatibility   # Retained v0.5 behavior and v0.6 product structure
+npm run test:compatibility   # Package structure, content lint, dry-run wiring, feature checks
 npm run test:integration     # Isolated install/uninstall lifecycle
 npm run test:all             # Complete regression suite
 npm run preflight            # Complete suite plus release-archive inspection
@@ -54,6 +54,10 @@ bin/
   lib/native-registration.js native marketplace/plugin lifecycle drivers
   commands/install-logic.js  transactional installation
 
+.claude-plugin/, .agents/, .github/plugin/
+                            repository-root marketplaces so Claude Code, Codex, and
+                            Copilot CLI can install the committed envelopes from Git
+
 vendors/                    generated client resources; do not hand-edit
   plugin/                   canonical Agent Plugins 1.0.0 bundle; Clio installs this one
   claude/                   Claude Code plugin and marketplace, carrying the same root manifest
@@ -63,7 +67,6 @@ vendors/                    generated client resources; do not hand-edit
   antigravity/              Antigravity CLI plugin
   gemini/                   Gemini CLI extension
 
-core/write-the-f-paper/     retained v0.5 compatibility and migration material
 test/                       contract, regression, adversarial, and integration tests
 ```
 

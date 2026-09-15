@@ -11,7 +11,7 @@ WTF-P will ship no MCP server in `0.6.0-rc.2`.
 
 Bibliography transforms remain local Node.js modules. Network research remains behind the canonical action capability, effect, and approval contracts and uses the existing local implementations for now. A future, optional MCP process boundary is permitted only for the network-dependent portion of the canonical tools, after every activation gate in this ADR passes. The local index, format, and rank transforms—and workflow-level degraded paths that explicitly report unavailable enrichment—remain the offline fallback; the network-tool implementations themselves are not claimed to work offline.
 
-The release candidate deliberately does **not** translate logical
+The 0.6 release deliberately does **not** translate logical
 `tool.execute` into an unrestricted Claude `Bash` or Copilot `execute` grant.
 The seven modules are packaged and inventory-authenticated, but WTF-P does not
 yet ship a closed logical-tool launcher or native Clio binding. A host must bind

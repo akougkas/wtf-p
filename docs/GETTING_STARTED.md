@@ -1,4 +1,4 @@
-# Getting started with WTF-P 0.6.0-rc.4
+# Getting started with WTF-P 0.6.0
 
 WTF-P installs a portable academic workflow into an agent client you already use. It does not install that client, submit a paper, or run an entire research project in the background. You invoke one bounded action at a time; the agent interviews you where author judgment is required, previews consequential changes, and records approved state under the project root.
 
@@ -10,34 +10,44 @@ The same action set covers the four document types WTF-P scaffolds from `protoco
 
 - Node.js 20 or newer, including `npx`.
 - One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the exact client versions exercised for this candidate.
-- For Clio Coder, version 0.4.7 or newer. WTF-P installs into Clio as a plugin package through `clio-coder library install`. Clio Coder 0.4.7 is not yet a published Clio release, so today this route needs a Clio build at that version.
+- For Clio Coder, version 0.4.7 or newer (`npm install -g @iowarp/clio-coder`). WTF-P installs into Clio as a plugin package through `clio-coder library install`.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
 ## Install exactly one client adapter
 
-Pin the release candidate when reproducibility matters:
+Claude Code, Codex, and GitHub Copilot CLI can install WTF-P straight from the Git repository with their own plugin managers; the repository root carries a marketplace for each:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini
+claude plugin marketplace add akougkas/wtf-p && claude plugin install wtfp@wtf-p
+codex plugin marketplace add akougkas/wtf-p && codex plugin add wtfp@wtf-p
+copilot plugin marketplace add akougkas/wtf-p && copilot plugin install wtfp@wtf-p
+```
+
+That route loads the committed envelope and runs no WTF-P code. It does not copy the eleven Codex role agents into `$CODEX_HOME/agents/`; use the npm installer below for Codex when you want subagents. Do not combine both routes on one profile: they register the same `wtfp` plugin and the host keeps only one.
+
+The npm installer covers every host. Pin the version when reproducibility matters:
+
+```bash
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install gemini
 ```
 
 Run only the line for the client you intend to use. Each line installs the generated adapter for that client into the client's documented user configuration root and, where the client has a plugin lifecycle, registers it natively (Clio `library install`, Claude and Copilot marketplace plus plugin install, Codex marketplace plus plugin add, Antigravity `plugin install`). It does not replace the client or launch an interactive session. For Clio, the installer registers the plugin when `clio-coder` is on PATH; without the binary the bundle is staged and the installer tells you to re-run the same command once the binary is available.
 
-The explicit `--package=wtf-p@0.6.0-rc.4 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0-rc.4 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0-rc.4`; stop if it reports another version or target.
+The explicit `--package=wtf-p@0.6.0 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0`; stop if it reports another version or target.
 
-`npx --yes --package=wtf-p@next -- wtf-p install clio` is a convenient moving prerelease form. It resolves to whatever candidate the npm `next` tag currently names, so do not use it for a run that must reproduce this candidate exactly. An unqualified `npx wtf-p` follows npm's stable `latest` tag, which is still the v0.5 line.
+An unqualified `npx wtf-p` follows npm's stable `latest` tag, which is the 0.6 line from this release on. A v0.5 installation is reached only by naming that version explicitly.
 
 The installer asks before consequential installation choices. Add `--advanced` only for reviewed automation or a disposable profile:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio --advanced
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio --advanced
 ```
 
 That flag changes installer interaction only. It does not enable client Full Auto, answer scientist interviews, or waive a workflow approval.
@@ -50,7 +60,7 @@ Start the client from the project directory after installation:
 | --- | --- | --- |
 | Clio Coder | `clio-coder --autonomy suggest` | `/wtfp:new-paper <exact brief>` |
 | Claude Code | `claude` | `/wtfp:new-paper <exact brief>` |
-| Codex | `codex` | `$wtf-p:wtfp-start-project Run the new-paper action. <exact brief>` |
+| Codex | `codex` | `$wtfp-start-project Run the new-paper action. <exact brief>` |
 | GitHub Copilot CLI | `copilot` | `/wtfp:new-paper <exact brief>` |
 | OpenCode | `opencode` | `/wtfp:new-paper <exact brief>` |
 | Antigravity CLI | `agy` | `/wtfp:new-paper <exact brief>` |
@@ -141,7 +151,7 @@ Three behaviors are worth knowing before the first install:
 
 - Registration is verified with `clio-coder library inspect wtfp --user --json` (or `--project` for project scope); the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope (returning the InstalledPlugin record shape). It never changes `enabled`: a package you disabled stays disabled and the installer names `clio-coder library enable wtfp --user` (or `--project`) as the command to run.
 - Do not point `clio-coder library install` at `<config>/plugins/wtfp` itself. Clio rejects a source that overlaps its managed destination; re-run the WTF-P installer instead. Previews can be inspected with `clio-coder library install --dry-run` (no `--yes` flag is accepted or used).
-- If an earlier release candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P uninstaller before installing the plugin. Both register the same prompt names, and this candidate neither reads nor retires the extension location.
+- If a 0.6 release candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P uninstaller before installing the plugin. Both register the same prompt names, and the release neither reads nor retires the extension location.
 
 After installing, confirm native discovery:
 
@@ -222,7 +232,7 @@ run_isolated_clio() {
     "$@"
 }
 
-run_isolated_clio npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio --advanced
+run_isolated_clio npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio --advanced
 cd /path/to/disposable-proposal
 run_isolated_clio clio-coder --autonomy suggest
 ```
@@ -236,8 +246,8 @@ The `status` and `doctor` commands remain legacy Claude-oriented. Passing a mode
 Preview removal before deleting exact receipt-owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --dry-run
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall clio --yes
+npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall clio --dry-run
+npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall clio --yes
 ```
 
 Replace `clio` with the intended target. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data. For Clio, native `library remove` runs only when every file below the installed root is unchanged and receipt-owned.

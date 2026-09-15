@@ -35,7 +35,7 @@ npm run test:protocol        # Canonical contracts, skills, roles, schemas, comp
 npm run test:tools           # Seven bounded bibliography/citation implementations
 npm run test:evaluation      # Routing, semantic-baseline, and lifecycle contracts
 npm run test:installer       # Paths, receipts, races, native registration, lifecycle
-npm run test:compatibility   # v0.5 behavior that remains intentionally supported
+npm run test:compatibility   # Package structure, content lint, dry-run wiring, feature checks
 npm run test:integration     # Isolated end-to-end installer scenarios
 npm run test:all             # Everything required before release
 ```

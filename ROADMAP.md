@@ -83,7 +83,7 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 
 ---
 
-## Current: v0.6.0 release candidate
+## Completed: v0.6.0
 
 **Focus:** Portable Agent Protocol + Native Client Adapters
 
@@ -124,9 +124,13 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Publish `0.6.0-rc.1` under the npm `next` tag
 - [x] Publish `0.6.0-rc.2` under the npm `next` tag
 - [x] Verify a fresh Clio install and native discovery from the published `0.6.0-rc.2` registry artifact in a disposable client home
-- [ ] Gather v0.5-to-v0.6 migration feedback before stable `0.6.0`
+- [x] Publish `0.6.0` under the npm `latest` tag with repository-root marketplaces for Claude Code, Codex, and Copilot CLI
+- [ ] Gather v0.5-to-v0.6 migration feedback for `0.6.1`
 
-### Deferred beyond the release candidate
+### Deferred beyond 0.6.0
+
+- [ ] Project a spec-native Copilot envelope (root `plugin.json` plus `com.github.copilot/`) instead of the Claude-compatible fallback
+- [ ] Ship a `claude plugin eval` suite for the entry workflow
 
 - [x] Evaluate MCP versus deterministic local tools and accept the local-first hybrid ADR
 - [ ] Reconsider an optional network-only MCP server when the ADR activation gates and a Clio gateway exist

@@ -1,6 +1,6 @@
 # Scientist-led proposal workflow
 
-This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6.0-rc.4 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state. The proposal scaffold the agent works from is `protocol/templates/grant-proposal-outline.md`, which requires a captured solicitation before any section is proposed and lists the decisions it may not make for you.
+This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.6 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state. The proposal scaffold the agent works from is `protocol/templates/grant-proposal-outline.md`, which requires a captured solicitation before any section is proposed and lists the decisions it may not make for you.
 
 The walkthrough is a process-discipline test, not a claim that WTF-P produces better prose than an unassisted model. This candidate has no matched no-WTF-P control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
 
@@ -43,14 +43,14 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 For Clio Coder 0.4.7 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
 clio-coder --autonomy suggest
 ```
 
 Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
 
-The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtf-p:<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated Clio profile recipe.
+The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtfp-<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated Clio profile recipe.
 
 ## 3. Initialize through an interview
 

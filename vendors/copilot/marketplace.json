@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "WTF-P research workflow plugins",
-    "version": "0.6.0-rc.4"
+    "version": "0.6.0"
   },
   "plugins": [
     {
       "name": "wtfp",
       "source": "./plugins/wtfp",
       "description": "Portable academic research and writing workflows.",
-      "version": "0.6.0-rc.4",
+      "version": "0.6.0",
       "author": {
         "name": "akougkas"
       },

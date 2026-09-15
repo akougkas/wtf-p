@@ -49,34 +49,35 @@ An earlier development build may have copied the obsolete unregistered
 `vendors/claude/mcp/research-server` prototype. An in-place v0.6 installation
 does not guess that those files are disposable or terminate a process started
 outside WTF-P. Use the receipt-backed dry run and uninstall above before
-installing the release candidate; if the prototype is not receipt-owned, review
-and remove that exact legacy copy yourself. The release-candidate archive and
-generated inventories contain no MCP server or registration.
+installing v0.6; if the prototype is not receipt-owned, review and remove that
+exact legacy copy yourself. The v0.6 archive and generated inventories contain
+no MCP server or registration.
 
 Avoid activating both the old direct Claude commands and the v0.6 Claude plugin at once; duplicate command names are confusing even when the files themselves are safe.
 
 ## 3. Install one explicit v0.6 target
 
 Each modern target maps to that client's documented native user configuration
-root. The examples below pin the immutable release candidate; changing the
-package selector to `--package=wtf-p@next` instead selects the newest moving
-prerelease. Keep the explicit `--package … -- wtf-p` form so an older globally
-installed executable cannot shadow the requested package. An unqualified
-`npx wtf-p` still selects the v0.5 stable line. Use `--config-dir` for a
+root. The examples below pin the immutable release. Keep the explicit
+`--package … -- wtf-p` form so an older globally installed executable cannot
+shadow the requested package. Claude Code, Codex, and Copilot CLI can instead
+add the repository as a marketplace (`<cli> plugin marketplace add
+akougkas/wtf-p`) and install `wtfp@wtf-p` natively; see
+[GETTING_STARTED.md](GETTING_STARTED.md). Use `--config-dir` for a
 deliberate custom installation destination. It does not, by itself, isolate
 every runtime home, data, state, cache, and temporary path used by the client.
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install claude
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install codex
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.6.0 -- wtf-p install gemini
 ```
 
-The deprecated `--global` and `--local` flags remain Claude compatibility aliases during the release-candidate cycle. No targetless noninteractive invocation installs anything.
+The deprecated `--global` and `--local` flags remain Claude compatibility aliases in 0.6. No targetless noninteractive invocation installs anything.
 
 `status` and `doctor` remain legacy Claude-oriented diagnostics; a modern
 target selector passed to either command is not authoritative. Verify a modern
@@ -90,13 +91,13 @@ names the listing command per client. A successful install plus native
 discovery is the verification boundary.
 
 For Clio, WTF-P installs as a plugin package in the library and requires Clio
-Coder 0.4.7 or newer, which is not yet a published Clio release. The installer
+Coder 0.4.7 or newer (`@iowarp/clio-coder` on npm). The installer
 delegates to `clio-coder library install` and verifies the result with
 `clio-coder library inspect wtfp --user|--project --json`; the full lifecycle
-is in [AGENT_PLUGIN.md](AGENT_PLUGIN.md). If an earlier release candidate left an
+is in [AGENT_PLUGIN.md](AGENT_PLUGIN.md). If a 0.6 release candidate left an
 extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P
-uninstaller first: both register the same `/wtfp:*` prompt names, and this
-candidate neither reads nor retires the extension location.
+uninstaller first: both register the same `/wtfp:*` prompt names, and the
+release neither reads nor retires the extension location.
 
 Clio preserves the raw operator prose bound to `$ARGUMENTS`, including quotes,
 tabs, repeated spaces, and literal `$1`; positional forms such as `$1`, `$@`,
@@ -107,7 +108,7 @@ preserve or remove an older copy through the user's normal backup process
 rather than letting WTF-P overwrite it.
 
 Codex exposes academic workflows through Agent Skills, not the slash-command
-surface shown below. Use the owning `$wtf-p:<skill>` selector when explicit
+surface shown below. Use the owning `$wtfp-<skill>` selector when explicit
 routing is required.
 
 For a GitHub-hosted Copilot coding agent, the user-level CLI installation is not enough: review and copy `vendors/copilot/project/.github/` from the release archive into the academic repository and commit it through the repository's normal review process. WTF-P does not silently merge or overwrite a project's existing `.github` instructions.
@@ -136,8 +137,8 @@ not create those initialization records by itself.
 
 An already initialized portable-v1 project can begin with `/wtfp:progress`,
 `/wtfp:map-project`, or `/wtfp:resume-writing`, depending on its durable state.
-Keep legacy planning files during the release-candidate cycle as historical
-input, but v0.6 workflows must not treat them as current control state.
+Keep legacy planning files as historical input if you want them, but v0.6
+workflows must not treat them as current control state.
 
 Key distinctions to verify during review:
 
@@ -172,20 +173,20 @@ Then preview one bounded write, such as `/wtfp:plan-section`, and confirm that:
 Preview exact removal:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall <target> --dry-run
+npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall <target> --dry-run
 ```
 
 Then remove unchanged owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0-rc.4 -- wtf-p uninstall <target> --yes
+npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall <target> --yes
 ```
 
 Add `--backup` to copy removal candidates to a backup bundle first. Modified files and unowned siblings are preserved by default. A client-install rollback does not delete or downgrade `.planning/` records in an academic project; restore project data only from an independently verified project backup or a v0.6 recovery archive.
 
 ## Compatibility boundary
 
-The `core/write-the-f-paper/` tree remains in the npm package for v0.5 compatibility and archaeological reference, but v0.6 native adapters do not install or execute it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell. Clio and Claude Code bind `tool.execute` to the bundled `tools/wtfp-tool.js` dispatcher and nothing else; a client without such a binding reports `tool.execute` unavailable, which is why the research routes fail closed on the other five hosts. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the per-host availability.
+The v0.5 `core/write-the-f-paper/` tree is no longer shipped; install `wtf-p@0.5.0` explicitly if you need it. Generated v0.6 workflows use only the canonical protocol, standard skills, semantic roles, the seven-entry logical tool registry, and portable project records. The registry is a package/provenance allowlist, not permission to invoke a general shell. Clio and Claude Code bind `tool.execute` to the bundled `tools/wtfp-tool.js` dispatcher and nothing else; a client without such a binding reports `tool.execute` unavailable, which is why the research routes fail closed on the other five hosts. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the per-host availability.
 
 See [GETTING_STARTED.md](GETTING_STARTED.md) for client invocation, full runtime
 isolation, and troubleshooting; [COMPATIBILITY.md](COMPATIBILITY.md) for exact

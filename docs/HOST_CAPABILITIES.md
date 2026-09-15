@@ -2,7 +2,7 @@
 
 What each supported host can load from a plugin, how it installs and discovers it, and how the WTF-P adapter compiler projects the canonical `vendors/plugin` bundle into a package that uses those capabilities. Every row names the evidence it rests on. A host that was not installed on the machine that produced this document is marked unverified: its projection follows the vendor's published loader source or documentation, not an observed run.
 
-Evidence was gathered on 2026-09-09 on Linux against the `0.6.0-rc.4` envelope. CLIs on PATH: `claude` 2.1.267, `codex` 0.153.3, `clio-coder` 0.4.7 (a local build; 0.4.7 is not yet a published Clio release), `agy` (Antigravity CLI) 1.1.28. Installed into temporary npm prefixes for this run: `gemini` 0.59.0 and `opencode` 1.18.30 (`npm install -g --prefix <tmp>/npm @google/gemini-cli opencode-ai`) and `copilot` 1.0.83 (`npm install -g --prefix <tmp>/npm @github/copilot`). Every command below ran against a disposable profile (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `CLIO_CODER_CONFIG_DIR`, `COPILOT_HOME`, `OPENCODE_CONFIG_DIR`, `GEMINI_CLI_HOME`, `ANTIGRAVITY_HOME` plus `HOME`/`XDG_*` under a temporary root); no operator profile was read for discovery or written. The two model-backed headless runs recorded under Claude Code and Codex were made earlier the same day on the factory-round envelope, before the version bump and the Claude root manifest; they are labelled as such.
+Evidence was gathered in two rounds on Linux. The full round ran on 2026-09-09 against the `0.6.0-rc.4` envelope with `claude` 2.1.267, `codex` 0.153.3, a local `clio-coder` 0.4.7 build, `agy` 1.1.28, and temporary-prefix installs of `gemini` 0.59.0, `opencode` 1.18.30, and `copilot` 1.0.83. The release round ran on 2026-09-14 against the `0.6.0` envelope, which differs from rc.4 only by the plugin name `wtfp` on every host, the removed v0.5 tree, and the repository-root marketplaces: `claude` 2.1.271, `codex` 0.153.3, the published `@iowarp/clio-coder` 0.4.8, `agy` 1.2.2, and temporary-prefix `gemini` 0.59.0, `opencode` 1.18.31, and `copilot` 1.0.83 each re-ran the installer route in a disposable profile (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `CLIO_CODER_CONFIG_DIR`, `COPILOT_HOME`, `OPENCODE_CONFIG_DIR`, `GEMINI_CLI_HOME`, `ANTIGRAVITY_HOME` plus `HOME`/`XDG_*` under a temporary root) and reproduced the file counts and the listings noted per host below with the new name. Claude Code, Codex, and Copilot CLI additionally installed `wtfp@wtf-p` straight from the repository checkout through their own `plugin marketplace add` commands. The two model-backed headless runs recorded under Claude Code and Codex were made on 2026-09-09 on the factory-round envelope, before the version bump and the Claude root manifest; they are labelled as such.
 
 ## Summary
 
@@ -46,10 +46,10 @@ Derived from each envelope's generated `compatibility/action-availability.json` 
 `tool.execute` is bound to `clio:bash` and `claude:Bash`, in both cases authorizing only the generated `tools/wtfp-tool.js` dispatcher. `network.search` is `clio:bash-bundled-citation-tools` on Clio (the same dispatcher running the bundled scholarly clients) and the host's own web search elsewhere. To regenerate this table:
 
 ```bash
-node -e 'for (const [t,f] of Object.entries({clio:"vendors/plugin",claude:"vendors/claude",codex:"vendors/codex/plugins/wtf-p",copilot:"vendors/copilot/plugins/wtf-p","copilot-cloud":"vendors/copilot/project/.github/wtfp",opencode:"vendors/opencode",antigravity:"vendors/antigravity",gemini:"vendors/gemini"})){const j=require("./"+f+"/compatibility/action-availability.json");console.log(t,j.actions.filter(a=>a.status==="available").length+"/"+j.actions.length,j.actions.filter(a=>a.status!=="available").map(a=>a.id+"("+a.unavailableCapabilities.join(",")+")").join(" "))}'
+node -e 'for (const [t,f] of Object.entries({clio:"vendors/plugin",claude:"vendors/claude",codex:"vendors/codex/plugins/wtfp",copilot:"vendors/copilot/plugins/wtfp","copilot-cloud":"vendors/copilot/project/.github/wtfp",opencode:"vendors/opencode",antigravity:"vendors/antigravity",gemini:"vendors/gemini"})){const j=require("./"+f+"/compatibility/action-availability.json");console.log(t,j.actions.filter(a=>a.status==="available").length+"/"+j.actions.length,j.actions.filter(a=>a.status!=="available").map(a=>a.id+"("+a.unavailableCapabilities.join(",")+")").join(" "))}'
 ```
 
-## Claude Code 2.1.267 (verified)
+## Claude Code 2.1.267 and 2.1.271 (verified)
 
 Evidence:
 
@@ -60,7 +60,8 @@ claude plugin install --help
 claude plugin validate --strict vendors/claude                       # marketplace manifest: passed
 claude plugin validate --strict --json <install>/.claude-plugin/plugin.json   # success: true, strict: true
 node bin/install.js install claude --config-dir <tmp>/config --force --advanced --no-color
-claude plugin list --json          # wtfp@wtfp 0.6.0-rc.4, scope user, enabled
+claude plugin list --json          # wtfp@wtfp, scope user, enabled (0.6.0-rc.4 on 2.1.267; 0.6.0 on 2.1.271)
+claude plugin marketplace add <repo-root> && claude plugin install wtfp@wtf-p --scope user -y   # 2.1.271: repository-root marketplace, same 43 skills, 11 agents, 3 hooks
 claude plugin marketplace list     # wtfp -> Directory (<tmp>/config/marketplaces/wtfp)
 claude plugin details wtfp@wtfp    # Skills (43) = 36 commands + 7 skills; Agents (11); Hooks (3): UserPromptExpansion, PreToolUse, Stop
 claude plugin uninstall wtfp@wtfp --scope user -y && claude plugin marketplace remove wtfp --scope user   # disposable-profile cleanup
@@ -102,14 +103,15 @@ codex exec --help
 codex features list                       # plugins: stable, default false; multi_agent: stable, default true; hooks: stable
 node bin/install.js install codex --config-dir <tmp>/home --force --advanced --no-color
 codex plugin marketplace list             # wtfp -> <tmp>/home/marketplaces/wtfp
-codex plugin list --json                  # wtf-p@wtfp 0.6.0-rc.4 installed, enabled, source local; $CODEX_HOME/agents holds the 11 wtfp-*.toml roles
+codex plugin list --json                  # wtfp@wtfp installed, enabled, source local (named wtf-p@wtfp on the rc.4 envelope); $CODEX_HOME/agents holds the 11 wtfp-*.toml roles
+codex plugin marketplace add <repo-root> && codex plugin add wtfp@wtf-p   # repository-root .agents/plugins/marketplace.json; plugin root cached under plugins/cache/wtf-p/wtfp/<version>
 ```
 
 Format facts, from developers.openai.com/codex/plugins/build.md and developers.openai.com/codex/subagents.md:
 
 - A portable plugin is root `plugin.json` (Agent Plugins 1.0.0), `skills/`, optional `mcp.json`, and OpenAI-specific `extensions["com.openai"]` carrying `interface`, `apps`, and `hooks`. `.codex-plugin/plugin.json` is the compatibility fallback and is used only when the inline object is absent; the two are never merged.
 - `skills`/`mcpServers` keys inside the overlay do not add or remove components of a portable package; `skills/` is discovered by position.
-- Codex plugins carry no agents and no slash prompts. Custom agents are TOML files under `~/.codex/agents/` or `.codex/agents/` with required `name`, `description`, `developer_instructions`, plus optional config keys such as `sandbox_mode`. The installer therefore publishes `vendors/codex/plugins/wtf-p/agents/*.toml` to `$CODEX_HOME/agents/` as a second manifest component.
+- Codex plugins carry no agents and no slash prompts. Custom agents are TOML files under `~/.codex/agents/` or `.codex/agents/` with required `name`, `description`, `developer_instructions`, plus optional config keys such as `sandbox_mode`. The installer therefore publishes `vendors/codex/plugins/wtfp/agents/*.toml` to `$CODEX_HOME/agents/` as a second manifest component.
 - The disposable profile needed `[features] plugins = true`; the operator's own config has it off.
 
 Headless runs (factory-round envelope; `gpt-5.6-luna`, `model_reasoning_effort="xhigh"`, `--skip-git-repo-check`, 10-minute cap):
@@ -123,7 +125,9 @@ codex exec -s workspace-write -m gpt-5.6-luna -c 'model_reasoning_effort="xhigh"
 
 Whether Codex loads the TOML agents at runtime was not observed: there is no CLI listing for custom agents, and neither headless run needed a subagent.
 
-## Clio Coder 0.4.7 (verified)
+## Clio Coder 0.4.7 and 0.4.8 (verified)
+
+On 2026-09-14 the published `@iowarp/clio-coder` 0.4.8 (`npm install -g @iowarp/clio-coder`) validated `vendors/plugin` and `vendors/claude` with `library validate --json` (`valid: true`, zero diagnostics, seven skill resources), and the installer route in a disposable `CLIO_CODER_CONFIG_DIR` wrote 203 files, after which `library inspect wtfp --user --json` returned `valid: true`, `enabled: true`, `trust: "trusted"`, zero diagnostics at the expected root, and `library skills --all --json` listed the seven `wtfp-*` skills. Everything below was observed on 0.4.7.
 
 ### Current command reference (Clio 0.4.7 unified library CLI)
 
@@ -220,12 +224,12 @@ The `--autonomy read-only|suggest|auto-edit|full-auto` flag is parsed for both t
 
 Format facts, from `docs/guide/authoring-plugins.md` and `src/domains/resources/prompts/loader.ts` in the 0.4.7 source: prompts are discovered recursively beneath the declared prompts root and named by path (`/wtfp:<action>`); the prompt loader reads `description`, `argument-hint`, and `display-only`; a display-only template is answered by `clio-coder run` and the TUI with its first fenced block and no provider, session, or model. The help prompt is that card. Component kinds are `skill`, `prompt`, `agent`, `fleet`, `script`, `resource`, `tool`; MCP files are preserved but not executed; hooks are a harness-extension concern, not a plugin one.
 
-## OpenCode 1.18.30 (verified)
+## OpenCode 1.18.30 and 1.18.31 (verified)
 
 Evidence (temporary npm prefix, `OPENCODE_CONFIG_DIR=<tmp>/config`, `HOME` and `XDG_*` under `<tmp>/home`):
 
 ```bash
-node bin/install.js install opencode --config-dir <tmp>/config --force --advanced --no-color   # 203 files (re-run on 0.6.0-rc.4)
+node bin/install.js install opencode --config-dir <tmp>/config --force --advanced --no-color   # 203 files (re-run on 0.6.0-rc.4 and, with 1.18.31, on 0.6.0: debug skill lists the 7 wtfp-* skills)
 opencode debug paths                       # data/config/cache/state roots all under the disposable home
 opencode agent list                        # 11 wtfp-* (subagent) beside the built-ins
 opencode debug agent wtfp-argument-verifier   # mode: subagent; permission entries edit: deny, bash: deny (below OpenCode's own allow-all default)
@@ -240,15 +244,15 @@ Source read at `anomalyco/opencode@dev`: `packages/opencode/src/config/agent.ts`
 
 Projection: unchanged layout (`commands/wtfp/<action>.md`, `agents/wtfp/<role>.md`, both with explicit `name`), plus `mode: subagent` on every role and `permission: {edit: deny, bash: deny}` on verifier roles. The server API confirms the frontmatter `name` is what registers: every command is `wtfp:<action>` and every agent `wtfp-<role>`.
 
-## Antigravity CLI 1.1.28 (verified)
+## Antigravity CLI 1.1.28 and 1.2.2 (verified)
 
 Evidence (`ANTIGRAVITY_HOME=<tmp>/home/.gemini/config`, `HOME=<tmp>/home`):
 
 ```bash
-agy --version                                   # 1.1.28 (commands below re-run on 0.6.0-rc.4)
+agy --version                                   # 1.1.28 (commands below re-run on 0.6.0-rc.4); 1.2.2 re-ran validate, install, list, and agents on 0.6.0 with the plugin named wtfp
 agy plugin validate vendors/antigravity         # [ok] skills: 7 processed, agents: 11 processed, commands: 36 processed (converted to skills), mcpServers/hooks skipped (not found)
 node bin/install.js install antigravity --config-dir <tmp>/home/.gemini/config --force --advanced --no-color   # 204 files, agy plugin install
-agy plugin list                                 # {"imports":[{"name":"wtf-p","source":"antigravity","components":["skills","agents","commands"]}]}
+agy plugin list                                 # {"imports":[{"name":"wtfp","source":"antigravity","components":["skills","agents","commands"]}]} (named wtf-p on rc.4)
 agy agents                                      # the 11 wtfp-* agents
 ```
 
@@ -261,10 +265,10 @@ Projection: the manifest carries only `$schema`, `name`, `description` (the prev
 Evidence (temporary npm prefix, `GEMINI_CLI_HOME=<tmp>/home`, `HOME=<tmp>/home`):
 
 ```bash
-node bin/install.js install gemini --config-dir <tmp>/home/.gemini --force --advanced --no-color   # 204 files into extensions/wtf-p
-gemini extensions validate <tmp>/home/.gemini/extensions/wtf-p   # "has been successfully validated"
-gemini extensions list                                           # wtf-p enabled user+workspace, context file GEMINI.md, 7 agent skills (re-run on 0.6.0-rc.4)
-gemini skills list --all                                         # "Loading extension: wtf-p"; 7 wtfp-* skills [Enabled] at the extension path
+node bin/install.js install gemini --config-dir <tmp>/home/.gemini --force --advanced --no-color   # 204 files into extensions/wtfp (extensions/wtf-p on rc.4)
+gemini extensions validate <tmp>/home/.gemini/extensions/wtfp   # "has been successfully validated"
+gemini extensions list                                           # wtfp enabled user+workspace, context file GEMINI.md, 7 agent skills (re-run on 0.6.0-rc.4 and 0.6.0)
+gemini skills list --all                                         # "Loading extension: wtfp"; 7 wtfp-* skills [Enabled] at the extension path
 gemini --list-extensions                                         # exit 41: requires an auth method (no Gemini credential in the disposable profile)
 ```
 
@@ -281,10 +285,11 @@ npm install -g --prefix <tmp>/npm @github/copilot && copilot --version   # GitHu
 copilot plugin --help                       # install <source>, list, marketplace; plugins carry skills, agents, hooks, MCP and LSP servers
 node bin/install.js install copilot --config-dir <tmp>/home/.copilot --force --advanced --no-color   # 419 files; marketplace add + plugin install
 copilot plugin marketplace list             # Registered marketplaces: wtfp (Local: <tmp>/home/.copilot/marketplaces/wtfp)
-copilot plugin list                         # Live Plugins: wtf-p@wtfp (v0.6.0-rc.4) (enabled), loaded from the local marketplace directory, never copied
+copilot plugin list                         # Live Plugins: wtfp@wtfp (enabled), loaded from the local marketplace directory, never copied (wtf-p@wtfp on rc.4)
+copilot plugin marketplace add <repo-root> && copilot plugin install wtfp@wtf-p   # repository-root .github/plugin/marketplace.json: "installed 7 skills", live from vendors/copilot/plugins/wtfp
 ```
 
-`copilot plugin list` has no verbose or component listing, and a session needs GitHub credentials, so in-session command, agent, and skill discovery was not observed. The projection is the Claude-compatible plugin (`.claude-plugin/plugin.json`, `commands/wtfp-<action>.md`, flat `agents/wtfp-<role>.md`, `skills/`) inside a local marketplace, plus the copyable `.github` repository projection for the cloud coding agent.
+`copilot plugin list` has no verbose or component listing, and a session needs GitHub credentials, so in-session command, agent, and skill discovery was not observed. Adding both the repository marketplace and the installer's local marketplace to one profile leaves Copilot with a single `wtfp` entry; use one route per profile. The projection is the Claude-compatible plugin (`.claude-plugin/plugin.json`, `commands/wtfp-<action>.md`, flat `agents/wtfp-<role>.md`, `skills/`) inside a local marketplace, plus the copyable `.github` repository projection for the cloud coding agent.
 
 ## Spec compliance
 

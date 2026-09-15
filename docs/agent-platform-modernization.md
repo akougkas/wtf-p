@@ -7,14 +7,14 @@
 >
 > - The Clio "self-contained extension" and the flat `/wtfp-<action>` aliases
 >   are gone. Clio installs the canonical Agent Plugins 1.0.0 bundle through
->   `clio-coder plugins install` and requires Clio Coder 0.4.7 or newer. See
+>   `clio-coder library install` and requires Clio Coder 0.4.7 or newer. See
 >   [AGENT_PLUGIN.md](AGENT_PLUGIN.md).
 > - The Claude envelope also carries that root manifest and the Clio component
 >   graph, so Clio can adopt an installed Claude plugin.
 > - `tool.execute` is bound on Clio and Claude Code through the bundled
 >   `tools/wtfp-tool.js` dispatcher; see the amendment in
 >   [ADR 0001](adr/0001-hybrid-tool-execution.md).
-> - Native discovery is verified for all seven hosts on `0.6.0-rc.4`; see
+> - Native discovery is verified for all seven hosts on `0.6.0`; see
 >   [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Copilot cloud remains a
 >   deliberately narrow projection.
 > - The current release status and the remaining gates for stable `0.6.0` are
