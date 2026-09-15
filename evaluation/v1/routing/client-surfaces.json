@@ -47,7 +47,7 @@
       "explicit": {
         "academic": {
           "selector_kind": "skill-mention",
-          "template": "$wtf-p:{skill} {action}{separator}{arguments}",
+          "template": "${skill} {action}{separator}{arguments}",
           "granularity": "skill",
           "arguments": "ordinary-prose"
         },

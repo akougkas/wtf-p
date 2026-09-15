@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "wtf-p",
-      "source": "./plugins/wtf-p",
+      "name": "wtfp",
+      "source": "./plugins/wtfp",
       "description": "Portable academic research and writing workflows.",
       "version": "0.6.0-rc.4",
       "author": {

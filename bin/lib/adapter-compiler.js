@@ -11,8 +11,8 @@ const INVENTORY_NAME = '.wtfp-generated.json';
 
 const TARGET_ROOTS = Object.freeze({
   claude: path.join(ROOT, 'vendors', 'claude'),
-  codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p'),
-  copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p'),
+  codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp'),
+  copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp'),
   opencode: path.join(ROOT, 'vendors', 'opencode'),
   antigravity: path.join(ROOT, 'vendors', 'antigravity'),
   gemini: path.join(ROOT, 'vendors', 'gemini')
@@ -1065,7 +1065,7 @@ function codexInterface() {
 
 function codexPluginManifest(version) {
   return stableJson({
-    name: 'wtf-p',
+    name: 'wtfp',
     version,
     description: 'Evidence-grounded academic research, planning, writing, review, and delivery workflows.',
     author: { name: 'akougkas', url: 'https://github.com/akougkas' },
@@ -1078,7 +1078,7 @@ function codexPluginManifest(version) {
   });
 }
 
-function claudeCompatibleManifest(version, name = 'wtf-p') {
+function claudeCompatibleManifest(version, name = 'wtfp') {
   return stableJson({
     name,
     version,
@@ -1097,7 +1097,7 @@ function claudeCompatibleManifest(version, name = 'wtf-p') {
 function antigravityManifest(version) {
   return stableJson({
     $schema: 'https://antigravity.google/schemas/v1/plugin.json',
-    name: 'wtf-p',
+    name: 'wtfp',
     description: `Portable academic research and writing workflows (WTF-P ${version}).`
   });
 }
@@ -1319,7 +1319,7 @@ function claudeWriteGuard(model, availabilityById) {
 
 function geminiManifest(version) {
   return stableJson({
-    name: 'wtf-p',
+    name: 'wtfp',
     version,
     description: 'Portable academic research and writing workflows for Gemini CLI.',
     contextFileName: 'GEMINI.md'
@@ -1808,7 +1808,7 @@ function compilePlans(options = {}) {
   // The portable root manifest carries the OpenAI overlay inline; the
   // `.codex-plugin` copy above is the documented compatibility fallback.
   addFile(codex, 'plugin.json', JSON.stringify({
-    ...JSON.parse(standardPluginManifest(model.version, 'wtf-p')),
+    ...JSON.parse(standardPluginManifest(model.version, 'wtfp')),
     keywords: ['academic-writing', 'research', 'citations', 'papers'],
     extensions: { 'com.openai': { interface: codexInterface() } }
   }, null, 2) + '\n');
@@ -1899,8 +1899,8 @@ function compilePlans(options = {}) {
     name: 'wtfp',
     interface: { displayName: 'WTF-P' },
     plugins: [{
-      name: 'wtf-p',
-      source: { source: 'local', path: './plugins/wtf-p' },
+      name: 'wtfp',
+      source: { source: 'local', path: './plugins/wtfp' },
       policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' },
       category: 'Productivity'
     }]
@@ -1913,8 +1913,8 @@ function compilePlans(options = {}) {
     owner: { name: 'akougkas' },
     metadata: { description: 'WTF-P research workflow plugins', version: model.version },
     plugins: [{
-      name: 'wtf-p',
-      source: './plugins/wtf-p',
+      name: 'wtfp',
+      source: './plugins/wtfp',
       description: 'Portable academic research and writing workflows.',
       version: model.version,
       author: { name: 'akougkas' },

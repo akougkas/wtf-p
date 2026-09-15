@@ -105,7 +105,7 @@ const MANIFEST = {
       // a plugin, so the generated TOML roles are published there as well.
       {
         id: 'agents',
-        src: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p', 'agents'),
+        src: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp', 'agents'),
         dest: 'agents',
         type: 'dir'
       }
@@ -113,8 +113,8 @@ const MANIFEST = {
     native: {
       kind: 'codex-marketplace',
       marketplace: 'wtfp',
-      plugin: 'wtf-p',
-      selector: 'wtf-p@wtfp',
+      plugin: 'wtfp',
+      selector: 'wtfp@wtfp',
       source: 'marketplaces/wtfp'
     }
   },
@@ -129,8 +129,8 @@ const MANIFEST = {
     native: {
       kind: 'copilot-marketplace',
       marketplace: 'wtfp',
-      plugin: 'wtf-p',
-      selector: 'wtf-p@wtfp',
+      plugin: 'wtfp',
+      selector: 'wtfp@wtfp',
       source: 'marketplaces/wtfp'
     }
   },
@@ -151,10 +151,10 @@ const MANIFEST = {
       agents: 'agents',
       workflows: 'workflows',
       tools: 'scripts'
-    }, 'extensions/wtf-p'),
+    }, 'extensions/wtfp'),
     discovery: {
       kind: 'directory',
-      path: 'extensions/wtf-p'
+      path: 'extensions/wtfp'
     }
   },
   opencode: {
@@ -187,11 +187,11 @@ const MANIFEST = {
       commands: 'commands',
       skills: 'skills',
       agents: 'agents'
-    }, 'sources/wtf-p'),
+    }, 'sources/wtfp'),
     native: {
       kind: 'antigravity-plugin',
-      plugin: 'wtf-p',
-      source: 'sources/wtf-p'
+      plugin: 'wtfp',
+      source: 'sources/wtfp'
     }
   }
 };

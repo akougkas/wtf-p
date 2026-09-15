@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "d4cf133b323e40a786550c77affb378c03429ff654f3030d5bf0368baf6d445a",
+  "sourceHash": "4efdba535ce238a3e73f9a955d8ac07af1eee88943abef9bcef3072419a75951",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "b6eb8da2c7c8aa21c8d60ed55cd07f7f6d11d816900636dbdfab367c44df5778"
+      "sha256": "b912d464e26defd4c51c0aa24979ad62220fb85aa9e011f7e60978bc70cdca07"
     },
     {
       "path": "project/README.md",

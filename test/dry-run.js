@@ -130,7 +130,7 @@ check(projected.includes('on approval'), 'would cross the declared user gate bef
 section('Cross-host invocation and command shape');
 const hosts = {
   claude: { dir: path.join(ROOT, 'vendors', 'claude', 'commands'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/claude/compatibility/action-availability.json' },
-  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/wtf-p/compatibility/action-availability.json' },
+  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/wtfp/compatibility/action-availability.json' },
   opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
   antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json' },
   gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },

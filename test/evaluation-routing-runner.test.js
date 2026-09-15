@@ -100,9 +100,9 @@ const fixtureInventoryBindings = [
   ['claude', 'vendors/claude/.wtfp-generated.json'],
   ['clio', 'vendors/plugin/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
-  ['codex', 'vendors/codex/plugins/wtf-p/.wtfp-generated.json'],
+  ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
-  ['copilot', 'vendors/copilot/plugins/wtf-p/.wtfp-generated.json'],
+  ['copilot', 'vendors/copilot/plugins/wtfp/.wtfp-generated.json'],
   ['gemini', 'vendors/gemini/.wtfp-generated.json'],
   ['opencode', 'vendors/opencode/.wtfp-generated.json']
 ];
@@ -219,7 +219,7 @@ async function main() {
     assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 172);
     assert.strictEqual(sha256(Buffer.from(codex.input)),
       '1ab063ce39749f1b07ef1a4bb507c33f9294cda86a4566743b40fab866055599');
-    assert.ok(codex.input.startsWith('$wtf-p:wtfp-start-project new-paper  '));
+    assert.ok(codex.input.startsWith('$wtfp-start-project new-paper  '));
     for (const projected of [claude, codex, clio]) {
       assert.ok(projected.input.endsWith(semantic.arguments));
       assert.strictEqual((projected.input.match(/"/gu) || []).length, 2);
@@ -232,7 +232,7 @@ async function main() {
     const catalog = definitionCatalog(null, null, 'codex');
     assert.strictEqual(catalog.get('explicit-help').input, null);
     assert.strictEqual(catalog.get('explicit-help').input_supported, false);
-    assert.match(catalog.get('explicit-plan-section').input, /^\$wtf-p:wtfp-plan-section plan-section /u);
+    assert.match(catalog.get('explicit-plan-section').input, /^\$wtfp-plan-section plan-section /u);
     assert.strictEqual(CAPABILITY_SURFACES.codex.explicit.operations.selector_kind, 'unsupported');
   });
 

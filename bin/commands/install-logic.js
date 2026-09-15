@@ -809,7 +809,7 @@ async function install(runtime, isUpdate, options, pkg) {
   ${c.green('Done!')} ${c.dim(`[${vendorConfig.name}]`)} Installed: ${stats.installed}, Skipped: ${stats.skipped}, Backed up: ${stats.backed}
 
   ${vendorKey === 'codex'
-    ? `Select ${c.cyan('$wtf-p:wtfp-start-project')} in ${vendorConfig.name} and request the new-paper action to get started.`
+    ? `Select ${c.cyan('$wtfp-start-project')} in ${vendorConfig.name} and request the new-paper action to get started.`
     : `Run ${c.cyan('/wtfp:help')} in ${vendorConfig.name} to get started.`}
 `);
     }
@@ -818,8 +818,8 @@ async function install(runtime, isUpdate, options, pkg) {
       out.log(`  ${c.yellow('Get started:')}`);
       if (vendorKey === 'codex') {
         // Codex exposes skills, not slash commands.
-        out.log(`    ${c.cyan('$wtf-p:wtfp-start-project')}   Define your paper's vision and structure (request new-paper)`);
-        out.log(`    ${c.cyan('$wtf-p:wtfp-manage-project')}  See where you are and what's next (request progress)\n`);
+        out.log(`    ${c.cyan('$wtfp-start-project')}   Define your paper's vision and structure (request new-paper)`);
+        out.log(`    ${c.cyan('$wtfp-manage-project')}  See where you are and what's next (request progress)\n`);
       } else {
         out.log(`    ${c.cyan('/wtfp:new-paper')}      Define your paper's vision and structure`);
         out.log(`    ${c.cyan('/wtfp:progress')}       See where you are and what's next`);

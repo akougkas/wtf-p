@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "wtf-p",
+      "name": "wtfp",
       "source": {
         "source": "local",
-        "path": "./plugins/wtf-p"
+        "path": "./plugins/wtfp"
       },
       "policy": {
         "installation": "AVAILABLE",

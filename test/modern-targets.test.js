@@ -33,7 +33,7 @@ const MODERN_TARGETS = {
     defaultDir: '.codex',
     source: path.join(ROOT, 'vendors', 'codex'),
     destination: 'marketplaces/wtfp',
-    resource: 'plugins/wtf-p',
+    resource: 'plugins/wtfp',
     component: 'bundle'
   },
   copilot: {
@@ -41,14 +41,14 @@ const MODERN_TARGETS = {
     defaultDir: '.copilot',
     source: path.join(ROOT, 'vendors', 'copilot'),
     destination: 'marketplaces/wtfp',
-    resource: 'plugins/wtf-p',
+    resource: 'plugins/wtfp',
     component: 'bundle'
   },
   antigravity: {
     configDirEnv: 'ANTIGRAVITY_HOME',
     defaultDir: '.gemini/config',
     source: path.join(ROOT, 'vendors', 'antigravity'),
-    destination: 'sources/wtf-p',
+    destination: 'sources/wtfp',
     resource: '.',
     component: 'bundle'
   }
@@ -255,7 +255,7 @@ try {
     assert.strictEqual(MANIFEST.gemini.defaultDir, '.gemini');
     assert.deepStrictEqual(MANIFEST.gemini.discovery, {
       kind: 'directory',
-      path: 'extensions/wtf-p'
+      path: 'extensions/wtfp'
     });
     assert.strictEqual(MANIFEST.opencode.defaultDir, '.config/opencode');
 
@@ -272,8 +272,8 @@ try {
       antigravity: path.join(ROOT, 'vendors', 'antigravity'),
       claude: path.join(ROOT, 'vendors', 'claude'),
       plugin: path.join(ROOT, 'vendors', 'plugin'),
-      codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtf-p'),
-      copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtf-p'),
+      codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp'),
+      copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp'),
       gemini: path.join(ROOT, 'vendors', 'gemini'),
       opencode: path.join(ROOT, 'vendors', 'opencode')
     };
@@ -560,7 +560,7 @@ process.exitCode = 91;
   record('Claude, Gemini, and OpenCode full installs include their generated adapter roots', () => {
     const installedRoots = {
       claude: 'marketplaces/wtfp',
-      gemini: 'extensions/wtf-p',
+      gemini: 'extensions/wtfp',
       opencode: '.'
     };
     for (const [runtime, generatedRoot] of Object.entries(installedRoots)) {
@@ -587,7 +587,7 @@ process.exitCode = 91;
       if (runtime === 'codex') {
         assert.deepStrictEqual(
           { ...target.components[1] },
-          { id: 'agents', src: path.join(expected.source, 'plugins', 'wtf-p', 'agents'), dest: 'agents', type: 'dir' }
+          { id: 'agents', src: path.join(expected.source, 'plugins', 'wtfp', 'agents'), dest: 'agents', type: 'dir' }
         );
       }
       assert.strictEqual(target.components[0].id, expected.component);

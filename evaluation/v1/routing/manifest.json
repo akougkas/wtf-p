@@ -54,7 +54,7 @@
     },
     {
       "target": "codex",
-      "path": "vendors/codex/plugins/wtf-p/.wtfp-generated.json",
+      "path": "vendors/codex/plugins/wtfp/.wtfp-generated.json",
       "manifest_sha256": "7ecabec1f2d18ec4ac6c81d0ad6253625965c60ee01ed5bdb48daf906fd6a2a4",
       "source_sha256": "eb521c90908c3374f6e6d8fa443ae5167c4c5967f5e636acbfa07db22db292ee"
     },
@@ -66,7 +66,7 @@
     },
     {
       "target": "copilot",
-      "path": "vendors/copilot/plugins/wtf-p/.wtfp-generated.json",
+      "path": "vendors/copilot/plugins/wtfp/.wtfp-generated.json",
       "manifest_sha256": "c8f818044a3007335efd9ff613e702ad7bbf91cade38b3d8d4ddb8b5a7e9c2a8",
       "source_sha256": "09d09caa2c80548b226257e0f7a05e67f001220409e2ba9f1880f98baa31382e"
     },

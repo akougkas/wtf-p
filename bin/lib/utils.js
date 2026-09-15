@@ -264,24 +264,24 @@ function detectInstallation(vendorDir) {
 
       const expectedHasCommands = expectsAnyPath([
         'commands/wtfp', 'marketplaces/wtfp/commands',
-        'plugins/wtfp/ai.iowarp.clio/prompts', 'extensions/wtf-p/commands', 'sources/wtf-p/commands'
+        'plugins/wtfp/ai.iowarp.clio/prompts', 'extensions/wtfp/commands', 'sources/wtfp/commands'
       ]);
       const expectedHasWorkflows = expectsAnyPath([
         'write-the-f-paper', 'workflows', 'marketplaces/wtfp/workflows',
-        'plugins/wtfp/workflows', 'extensions/wtf-p/workflows', 'sources/wtf-p/workflows'
+        'plugins/wtfp/workflows', 'extensions/wtfp/workflows', 'sources/wtfp/workflows'
       ]);
       const expectedHasSkills = expectsAnyPath([
         'skills/wtfp', 'skills/wtfp-start-project', 'marketplaces/wtfp/skills',
-        'plugins/wtfp/skills', 'extensions/wtf-p/skills', 'sources/wtf-p/skills'
+        'plugins/wtfp/skills', 'extensions/wtfp/skills', 'sources/wtfp/skills'
       ]);
       const expectedHasAgents = expectsAnyPath([
         'agents/wtfp', 'marketplaces/wtfp/agents',
-        'plugins/wtfp/ai.iowarp.clio/agents', 'extensions/wtf-p/agents', 'sources/wtf-p/agents'
+        'plugins/wtfp/ai.iowarp.clio/agents', 'extensions/wtfp/agents', 'sources/wtfp/agents'
       ]);
       const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/wtfp/mcp']);
       const expectedHasBin = expectsAnyPath([
         'bin', 'tools', 'marketplaces/wtfp/tools',
-        'plugins/wtfp/tools', 'extensions/wtf-p/tools', 'sources/wtf-p/tools'
+        'plugins/wtfp/tools', 'extensions/wtfp/tools', 'sources/wtfp/tools'
       ]);
 
       result.partial = Boolean(versionData.partial) ||

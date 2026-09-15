@@ -156,7 +156,7 @@ function marketplaceListArguments(runtime) {
 }
 
 function antigravityPluginState(targetDir) {
-  const pluginDirectory = path.join(targetDir, 'plugins', 'wtf-p');
+  const pluginDirectory = path.join(targetDir, 'plugins', 'wtfp');
   if (!fs.existsSync(pluginDirectory)) return 'missing';
   const stat = fs.lstatSync(pluginDirectory);
   if (stat.isSymbolicLink() || !stat.isDirectory()) return 'foreign';
@@ -360,7 +360,7 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
         }
       } else if (runtime === 'antigravity') {
         if (antigravityPluginState(targetDir) === 'foreign') {
-          throw new Error('Antigravity already has a non-WTF-P plugin named wtf-p; native registration was not changed');
+          throw new Error('Antigravity already has a non-WTF-P plugin named wtfp; native registration was not changed');
         }
         const priorVerification = execute(commands.executable, commands.verify, environment, options);
         if (priorVerification.status === 'unavailable') return activationResult('unavailable');
@@ -463,7 +463,7 @@ function deactivateNativeRegistration(runtime, targetDir, native, options = {}) 
   } else if (runtime === 'antigravity') {
     const pluginState = antigravityPluginState(targetDir);
     if (pluginState === 'foreign') {
-      throw new Error('Antigravity plugin wtf-p is not marked as a generated WTF-P adapter; native registration was preserved');
+      throw new Error('Antigravity plugin wtfp is not marked as a generated WTF-P adapter; native registration was preserved');
     }
     if (pluginState === 'missing') {
       return {
