@@ -31,7 +31,7 @@ function check(condition, msg) {
 check(fs.existsSync(path.join(root, 'bin/install.js')), 'bin/install.js exists');
 check(fs.existsSync(path.join(root, 'bin/uninstall.js')), 'bin/uninstall.js exists');
 check(fs.existsSync(path.join(root, 'vendors/claude/commands')), 'vendors/claude/commands exists');
-check(fs.existsSync(path.join(root, 'core/write-the-f-paper')), 'core/write-the-f-paper exists');
+check(!fs.existsSync(path.join(root, 'core')), 'no v0.5 core tree is packaged');
 check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
 
 // Package.json fields
@@ -105,9 +105,9 @@ check(commands.includes('help.md'), 'help.md command exists');
 check(commands.includes('new-paper.md'), 'new-paper.md command exists');
 check(commands.length >= 10, `${commands.length} commands found`);
 
-// Workflows exist
-const workflows = fs.readdirSync(path.join(root, 'core/write-the-f-paper/workflows'));
-check(workflows.length >= 5, `${workflows.length} workflows found`);
+// Canonical workflows exist
+const workflows = fs.readdirSync(path.join(root, 'protocol/workflows'));
+check(workflows.length >= 30, `${workflows.length} canonical workflows found`);
 
 // Multi-runtime support
 check(fs.existsSync(path.join(root, 'vendors/gemini')), 'vendors/gemini exists');

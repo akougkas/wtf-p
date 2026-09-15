@@ -131,7 +131,7 @@ const roleCount = filesAt('protocol/roles', '.md').length;
 const skillCount = recursiveCount('protocol/skills', 'SKILL.md');
 const surfaces = {
   claude: { path: 'vendors/claude/commands', suffix: '.md' },
-  copilot: { path: 'vendors/copilot/plugins/wtf-p/commands', suffix: '.md' },
+  copilot: { path: 'vendors/copilot/plugins/wtfp/commands', suffix: '.md' },
   gemini: { path: 'vendors/gemini/commands/wtfp', suffix: '.toml' },
   opencode: { path: 'vendors/opencode/commands/wtfp', suffix: '.md' },
   antigravity: { path: 'vendors/antigravity/commands', suffix: '.md' },
@@ -140,13 +140,13 @@ const surfaces = {
 for (const [host, spec] of Object.entries(surfaces)) {
   check(filesAt(spec.path, spec.suffix).length === actionCount, `${host} exposes all ${actionCount} native commands`);
 }
-check(recursiveCount('vendors/codex/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
-check(recursiveCount('vendors/copilot/plugins/wtf-p/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/codex/plugins/wtfp/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/copilot/plugins/wtfp/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
 check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claude exposes exactly the ${skillCount} inventory-owned native skills`);
 check(filesAt('vendors/claude/agents', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents at the top level Claude Code discovers`);
 check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
 check(filesAt('vendors/gemini/agents', '.md').length === roleCount, `Gemini exposes all ${roleCount} native agents at the top level its loader reads`);
-check(filesAt('vendors/codex/plugins/wtf-p/agents', '.toml').length === roleCount, `Codex exposes all ${roleCount} native TOML agents`);
+check(filesAt('vendors/codex/plugins/wtfp/agents', '.toml').length === roleCount, `Codex exposes all ${roleCount} native TOML agents`);
 check(filesAt('vendors/claude/output-styles', '.md').length === 1, 'Claude ships the academic writing output style');
 check(fs.existsSync(path.join(ROOT, 'vendors/claude/hooks/hooks.json')), 'Claude ships the write-guard hooks');
 check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/wtfp-project-state.md')), 'Antigravity ships the project-state rule');
@@ -167,7 +167,7 @@ section('Marketplaces and lifecycle metadata');
 check(json('vendors/claude/.claude-plugin/marketplace.json').name === 'wtfp', 'Claude marketplace is native and namespaced');
 check(json('vendors/codex/.agents/plugins/marketplace.json').name === 'wtfp', 'Codex marketplace is native and namespaced');
 check(json('vendors/copilot/marketplace.json').name === 'wtfp', 'Copilot marketplace is native and namespaced');
-check(json('vendors/antigravity/plugin.json').name === 'wtf-p', 'Antigravity plugin metadata is native and namespaced');
+check(json('vendors/antigravity/plugin.json').name === 'wtfp', 'Antigravity plugin metadata is native and namespaced');
 
 section('Safe installation and release posture');
 const installer = read('bin/install.js');
@@ -183,7 +183,7 @@ check(packageJson.engines.node.startsWith('>=20'), 'package requires a maintaine
 check(packageJson.scripts.prepack === 'npm run check:adapters', 'package creation refuses stale generated adapters');
 
 section('Compatibility without legacy control state');
-check(fs.existsSync(path.join(ROOT, 'core', 'write-the-f-paper')), 'v0.5 core remains packaged for migration compatibility');
+check(!fs.existsSync(path.join(ROOT, 'core')), 'no v0.5 core tree remains in the package');
 const generatedCommands = filesAt('vendors/claude/commands', '.md')
   .map((name) => read(`vendors/claude/commands/${name}`))
   .join('\n');

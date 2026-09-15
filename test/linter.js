@@ -156,15 +156,6 @@ function validateAgent(filePath, roleId) {
   passed++;
 }
 
-function validateLegacyWorkflow(filePath) {
-  const content = fs.readFileSync(filePath, 'utf8');
-  check(content.trim().length > 0, filePath, 'legacy compatibility workflow is empty');
-  const openSteps = (content.match(/<step(?:\s|>)/g) || []).length;
-  const closeSteps = (content.match(/<\/step>/g) || []).length;
-  check(openSteps === closeSteps, filePath, `mismatched step tags (${openSteps} open, ${closeSteps} closed)`);
-  passed++;
-}
-
 const aliases = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'aliases.lock.json'), 'utf8')).aliases;
 const actionIds = aliases.map((entry) => entry.action);
 const roleIds = fs.readdirSync(path.join(ROOT, 'protocol', 'roles'))
@@ -185,7 +176,7 @@ const markdownCommands = [
   },
   {
     target: 'copilot',
-    pathFor: (id) => `vendors/copilot/plugins/wtf-p/commands/wtfp-${id}.md`,
+    pathFor: (id) => `vendors/copilot/plugins/wtfp/commands/wtfp-${id}.md`,
     options: { frontmatterName: true },
   },
   {
@@ -212,18 +203,13 @@ for (const actionId of actionIds) {
 const agentTargets = [
   { pathFor: (id) => `vendors/plugin/ai.iowarp.clio/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/claude/agents/wtfp-${id}.md` },
-  { pathFor: (id) => `vendors/copilot/plugins/wtf-p/agents/wtfp-${id}.md` },
+  { pathFor: (id) => `vendors/copilot/plugins/wtfp/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/opencode/agents/wtfp/${id}.md` },
   { pathFor: (id) => `vendors/antigravity/agents/wtfp-${id}.md` },
   { pathFor: (id) => `vendors/gemini/agents/wtfp-${id}.md` },
 ];
 for (const agentTarget of agentTargets) {
   for (const roleId of roleIds) validateAgent(path.join(ROOT, agentTarget.pathFor(roleId)), roleId);
-}
-
-const legacyWorkflowRoot = path.join(ROOT, 'core', 'write-the-f-paper', 'workflows');
-for (const file of fs.readdirSync(legacyWorkflowRoot).sort()) {
-  if (file.endsWith('.md') && !file.endsWith('.wcn.md')) validateLegacyWorkflow(path.join(legacyWorkflowRoot, file));
 }
 
 if (failures.length > 0) {
