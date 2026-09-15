@@ -437,9 +437,9 @@ function lintRoutingManifest(manifest) {
     'vendors/claude/.wtfp-generated.json',
     'vendors/plugin/.wtfp-generated.json',
     'vendors/codex/.wtfp-generated.json',
-    'vendors/codex/plugins/wtf-p/.wtfp-generated.json',
+    'vendors/codex/plugins/wtfp/.wtfp-generated.json',
     'vendors/copilot/.wtfp-generated.json',
-    'vendors/copilot/plugins/wtf-p/.wtfp-generated.json',
+    'vendors/copilot/plugins/wtfp/.wtfp-generated.json',
     'vendors/gemini/.wtfp-generated.json',
     'vendors/opencode/.wtfp-generated.json'
   ];

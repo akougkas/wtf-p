@@ -193,7 +193,7 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'cd93cb3026e66fa04263a28de98719c4c11fb154a198b02f9286aece57ade52e');
+    assert.strictEqual(suite.manifest_sha256, 'e17d2d6d23fdc616b0504047b9d5decd96710c21ef2fde41487103a2f2050d21');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -201,9 +201,9 @@ async function main() {
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      '67857aa230b2044c43c02218174321ab3079e26d9875f3ed4827c981ccc964c2');
+      'bf633f24c230fad095516ec8092cfea84c231b3d83328739ef4c89e5f93aa32f');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      'c63c9c83091b230ebe41330ab525bf74f7da2e453376542de4f316e97e35d94f');
+      '34b8f57312f290a539f3e6a1db79757d4d490c75ae7e8ae39bbf172265c6b997');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -219,7 +219,7 @@ async function main() {
     assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 172);
     assert.strictEqual(sha256(Buffer.from(codex.input)),
       '1ab063ce39749f1b07ef1a4bb507c33f9294cda86a4566743b40fab866055599');
-    assert.ok(codex.input.startsWith('$wtfp-start-project new-paper  '));
+    assert.ok(codex.input.startsWith('$wtf-p:wtfp-start-project new-paper  '));
     for (const projected of [claude, codex, clio]) {
       assert.ok(projected.input.endsWith(semantic.arguments));
       assert.strictEqual((projected.input.match(/"/gu) || []).length, 2);
@@ -232,7 +232,7 @@ async function main() {
     const catalog = definitionCatalog(null, null, 'codex');
     assert.strictEqual(catalog.get('explicit-help').input, null);
     assert.strictEqual(catalog.get('explicit-help').input_supported, false);
-    assert.match(catalog.get('explicit-plan-section').input, /^\$wtfp-plan-section plan-section /u);
+    assert.match(catalog.get('explicit-plan-section').input, /^\$wtf-p:wtfp-plan-section plan-section /u);
     assert.strictEqual(CAPABILITY_SURFACES.codex.explicit.operations.selector_kind, 'unsupported');
   });
 
@@ -1231,10 +1231,10 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      'ec1aec473b73b5d44e13aba856d08b07cac37e10');
+      '390928a92f9c564082baeec134e8dbacc68bc9f8');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      'ebd5b54e38dbf965276e5963b4935f8ba202e8f41f84de4ea87a249c63ec3afb');
+      'dd1d7368f2c924814201484fa00225387e9ffd016bd3821bb4a4227f28ccb3c1');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
     assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1651);
   });

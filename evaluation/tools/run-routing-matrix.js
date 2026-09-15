@@ -62,9 +62,9 @@ const GENERATED_INVENTORY_BINDINGS = Object.freeze([
   ['claude', 'vendors/claude/.wtfp-generated.json'],
   ['clio', 'vendors/plugin/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
-  ['codex', 'vendors/codex/plugins/wtf-p/.wtfp-generated.json'],
+  ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
-  ['copilot', 'vendors/copilot/plugins/wtf-p/.wtfp-generated.json'],
+  ['copilot', 'vendors/copilot/plugins/wtfp/.wtfp-generated.json'],
   ['gemini', 'vendors/gemini/.wtfp-generated.json'],
   ['opencode', 'vendors/opencode/.wtfp-generated.json']
 ]);
@@ -107,7 +107,7 @@ const CLIENT_SURFACES = Object.freeze({
     expectedBinarySha256: 'a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902',
     versionPattern: /^codex-cli 0\.144\.1(?:\s|$)/u,
     envelopeTarget: 'codex',
-    adapterRoot: 'vendors/codex/plugins/wtf-p'
+    adapterRoot: 'vendors/codex/plugins/wtfp'
   },
   clio: {
     clientName: 'Clio Coder',
@@ -1040,7 +1040,7 @@ function nativeCommands(client, binary, caseLayout) {
     return [
       ['version', binary.path, ['--version']],
       ['marketplace-add', binary.path, ['plugin', 'marketplace', 'add', marketplace, '--json']],
-      ['plugin-add', binary.path, ['plugin', 'add', 'wtf-p@wtfp', '--json']],
+      ['plugin-add', binary.path, ['plugin', 'add', 'wtfp@wtfp', '--json']],
       ['plugin-list', binary.path, ['plugin', 'list', '--json']],
       ['prompt-input', binary.path, [
         'debug', 'prompt-input', '-c', 'web_search="disabled"', '-c', 'memories.use_memories=false',
@@ -1088,7 +1088,7 @@ function validateNativePreflight(client, outputs, row) {
   } else if (client === 'codex') {
     const inventory = text('plugin-list');
     const promptInput = text('prompt-input');
-    if (!inventory.includes('wtf-p') || !inventory.includes('wtfp')) errors.push('Codex plugin is not installed and enabled');
+    if (!inventory.includes('wtfp@wtfp') && !inventory.includes('"wtfp"')) errors.push('Codex plugin is not installed and enabled');
     for (const skill of EXPECTED_SKILLS) {
       if (!promptInput.includes(`wtf-p:${skill}`)) errors.push(`Codex prompt input omitted wtf-p:${skill}`);
     }
