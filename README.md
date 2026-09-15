@@ -53,7 +53,7 @@ registers it with the host's native plugin lifecycle where one exists.
 | Claude Code | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.271 |
 | Codex | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
 | GitHub Copilot CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.83 |
-| OpenCode | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.30 |
+| OpenCode | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
 | Antigravity CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.2 |
 | Gemini CLI | `npx --yes --package=wtf-p@0.6.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.59.0 |
 
