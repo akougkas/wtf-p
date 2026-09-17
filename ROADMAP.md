@@ -213,7 +213,8 @@ These will NOT be built, even if they seem useful:
 |---------|---------|-------|
 | v0.6.0-rc.2 | Aug 2026 | Decision fidelity, lifecycle guardrails, and bounded NSF proposal UAT |
 | v0.6.0-rc.1 | Aug 2026 | Portable protocol, seven native adapters, Clio reference integration, safe transactional installer |
-| v0.6.0 | Planned | Stable release after isolated client/model evaluation and migration feedback |
+| v0.7.0 | Sep 2026 | Optional CiteNexus MCP research backend for `citation.fetch` |
+| v0.6.0 | Sep 2026 | Stable agent-plugin release with repository-root marketplaces and one plugin name |
 | v0.5.0 | Feb 2026 | Multi-runtime parity, GSD architecture, agents, quality loops |
 | v0.4.0 | Jan 2026 | Citation Expert v2, tiered API, provenance tracking |
 | v0.3.0 | Jan 2026 | 4 P's, skills, multi-vendor restructure |

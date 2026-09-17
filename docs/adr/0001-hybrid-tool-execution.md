@@ -219,5 +219,5 @@ the other five hosts keep their existing blockers. Offline checks run before the
 companion is loaded, and failures never fall back to a different provider. Unit
 contracts cover malicious/malformed output, credential isolation, unavailable and
 hanging companions. The companion repository supplies the real MCP stdio fixture
-check. This is local preparation, not a new native-host compatibility certificate
-or a released integration. See [setup and limits](../CITE_NEXUS.md).
+check. The backend first shipped in `0.7.0`; it is not a new native-host compatibility
+certificate. See [setup and limits](../CITE_NEXUS.md).

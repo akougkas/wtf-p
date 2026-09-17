@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "08d5eafcc24473fc0491df2fc7f7677a2b475cb9c72e59ebd9c23bcc3441ee2e",
+  "sourceHash": "fb0e0c70f716d19f84fceebd8e5c89cbde166e47d37bf3a5f027a0751847e714",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "c025a56dccbfb22881924e0b776161423b030944bea4ada3b3cf473e25a97035"
+      "sha256": "6aa9f7fe47e0d9ba7ad7c68bcf2e26396f7b41821c0ba637e140d326d587d52d"
     },
     {
       "path": "project/README.md",
@@ -670,7 +670,7 @@
     },
     {
       "path": "tools/support/cite-nexus-client.js",
-      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
+      "sha256": "9a7a9a548477b14cadda2be40ed95e579d809956e63ccf19092edde8de46d2dc"
     },
     {
       "path": "tools/wtfp-tool.js",

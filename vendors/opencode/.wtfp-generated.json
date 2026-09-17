@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "opencode",
-  "sourceHash": "30e78894aa50e2dd94b1e0580031318eef9ba87bc7497f166ba3c605be059f1b",
+  "sourceHash": "4baad48deab35b546fd92cbe69d8ac854c3f039615b0b0dee5bf3fc80d922615",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -662,7 +662,7 @@
     },
     {
       "path": "tools/support/cite-nexus-client.js",
-      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
+      "sha256": "9a7a9a548477b14cadda2be40ed95e579d809956e63ccf19092edde8de46d2dc"
     },
     {
       "path": "tools/wtfp-tool.js",

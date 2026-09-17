@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "9292cd0b59cef488130b709e92b07fc622ea507fce5b577072877c9f18cff0fb",
+  "sourceHash": "2b0ea9aaa4487f9140a19b1e6ded42f64090f66e6236dc521f0d50c5aa185d86",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "f2ed39a5dc1b3b74bb93282b23ce6ef7b65bf48b4cf86c9da3ad3e659a745e50"
+      "sha256": "fc086f351e7ee52ea8351bd9558e3d9ee3777089bba4e2454fbd9b7d01aaaabf"
     },
     {
       "path": "actions/add-todo.json",
@@ -222,7 +222,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "624aa214ff9220749bf626ec005f8ff6418f63c9b47113cf804c68c704508df8"
+      "sha256": "dcb433dc571768d0b8f22918ef348cd9dcee424e5b0f543ca041a1678e681fb9"
     },
     {
       "path": "project/README.md",
@@ -526,7 +526,7 @@
     },
     {
       "path": "tools/support/cite-nexus-client.js",
-      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
+      "sha256": "9a7a9a548477b14cadda2be40ed95e579d809956e63ccf19092edde8de46d2dc"
     },
     {
       "path": "tools/wtfp-tool.js",

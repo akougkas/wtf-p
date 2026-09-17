@@ -98,7 +98,7 @@ async function search(query, options = {}) {
     process.once('SIGTERM', onSignal);
     process.once('SIGINT', onSignal);
     if (options.signal) options.signal.addEventListener('abort', cancel, { once: true });
-    child.on('error', () => finish(new Error('CiteNexus companion unavailable; install the prepared CiteNexus checkout and run cite-nexus-wtfp --check')));
+    child.on('error', () => finish(new Error('CiteNexus companion unavailable; install cite-nexus-mcp 0.2.0 separately and run cite-nexus-wtfp --check')));
     child.stdin.on('error', () => finish(new Error('CiteNexus companion closed its input')));
     child.stdout.on('data', (chunk) => {
       bytes += chunk.length;

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "e58c9839f0df760178d22a7a49afaf07481722c20facee49d8eaa76d831d6ca8",
+  "sourceHash": "78f55a94fd2b6fc7e0fea1adc8ae8ca5a92e7c58ae19abf26dc725f85decbbbf",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -254,7 +254,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
-      "sha256": "60d67874a2d4a9ccd95297a081b4f8d8b5f086a1b477d9b4ac1a97b4dfa024b0"
+      "sha256": "4ccbb32b87f085aafa7449c9808b4c6862dff54db37eac9d60a27bbc2d51e194"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "85d2e6b3553557bb0797ea787f2a205084c41438c23fa31c6a68929847998c15"
+      "sha256": "3d409e5688c0eeda0edeb460494ca2943a7d1a70375eafe873df1bbb3528505d"
     },
     {
       "path": "project/README.md",
@@ -666,7 +666,7 @@
     },
     {
       "path": "tools/support/cite-nexus-client.js",
-      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
+      "sha256": "9a7a9a548477b14cadda2be40ed95e579d809956e63ccf19092edde8de46d2dc"
     },
     {
       "path": "tools/wtfp-tool.js",

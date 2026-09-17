@@ -1,6 +1,6 @@
 # WTF-P documentation
 
-Version `0.6.0`. Start with the [README](../README.md) for the two-screen
+Version `0.7.0`. Start with the [README](../README.md) for the two-screen
 overview, then use the guide that matches your role.
 
 ## For scientists and operators
@@ -10,6 +10,7 @@ overview, then use the guide that matches your role.
 | [Getting started](GETTING_STARTED.md) | You want to install WTF-P into one host, launch it, run the first actions, or remove it |
 | [Proposal workflow](PROPOSAL_WORKFLOW.md) | You are writing a solicitation-driven grant proposal and want the full interview, outline, section, review, and pause/resume loop |
 | [Migrating from v0.5](MIGRATION_V05_TO_V06.md) | You have a v0.5 installation or project and need the conservative upgrade path |
+| [CiteNexus companion](CITE_NEXUS.md) | You want source-backed scholarly search through the optional, separately installed CiteNexus backend, its provider choices, and its limits |
 | [Research handoff](RESEARCH_HANDOFF.md) | Another tool or plugin produced research artifacts and you want WTF-P to initialize, map, and outline from them |
 
 ## For people integrating or verifying a host
@@ -28,7 +29,7 @@ overview, then use the guide that matches your role.
 | --- | --- |
 | [Building and releasing](BUILD_AND_RELEASE.md) | Source and generated boundaries, development commands, the routing-matrix reseal, preflight, version preparation, tagging, and publication |
 | [Contributing](../CONTRIBUTING.md) | Repository layout, how to change an action, project state, skills, roles, the compiler, and installer safety invariants |
-| [ADR 0001: tool execution](adr/0001-hybrid-tool-execution.md) | Why bibliography transforms stay local, why no MCP server ships, and the gates for any future network service, with its 2026-09-09 amendment |
+| [ADR 0001: tool execution](adr/0001-hybrid-tool-execution.md) | Why bibliography transforms stay local, why no MCP server ships, and the gates for any future network service, with its 2026-09-09 dispatcher and 2026-09-16 CiteNexus amendments |
 | [Agent-platform modernization](agent-platform-modernization.md) | The original design contract for the 0.6 line, kept as a historical record with a status banner |
 | [Evaluation methodology](../evaluation/README.md) | Routing corpus, rubrics, fixtures, sealed manifests, and the retained evidence packs |
 | [Changelog](../CHANGELOG.md) | Release notes per version |

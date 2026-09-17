@@ -7,15 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Add the optional CiteNexus MCP backend to `citation.fetch` through
-  `citation-search --backend=cite-nexus`, with free default sources, explicit vendor
-  selection, source provenance, deterministic candidate BibTeX and visible provider errors.
-- Package an authenticated private companion client in every generated envelope;
-  retain the existing host capability matrix and seven logical tools. No server
-  registration, package installation or provider fallback occurs during a call.
-- Bound companion input/output, credentials, timeout and cancellation; preserve the
-  offline gate. Reject unknown dispatcher flags and partially numeric limits/timeouts.
-- Document companion setup, verification boundaries and release preparation.
+## [0.7.0] - 2026-09-17
+
+Adds an optional CiteNexus scholarly research backend to the existing
+`citation.fetch` logical tool. CiteNexus is a separate Python package
+(`cite-nexus-mcp` 0.2.0) that the operator installs; WTF-P never installs,
+registers or updates it. The seven-tool registry, declared effects and host
+capability matrix are unchanged.
+
+### Added in 0.7.0
+
+- `citation-search --backend=cite-nexus` runs the installed `cite-nexus-wtfp`
+  companion, which calls the CiteNexus `search-papers` tool through the
+  official MCP client over a per-call stdio server. Default providers are
+  Crossref, DataCite and Europe PMC with no mandatory keys; `--providers`
+  explicitly selects arXiv, Semantic Scholar, OpenAlex, SerpAPI, Scopus or
+  Web of Science. `WTFP_CITE_NEXUS_COMMAND` may name an absolute companion
+  executable
+- Results stay `verification: candidate` and carry `citeNexus` source URLs,
+  retrieval times, field attribution, per-provider metrics and warnings,
+  candidate BibTeX without an inferred `wtfp_status=official`, and partial
+  provider failures in `metadata.errors`. Citation counts are never combined
+- A private companion client, `tools/support/cite-nexus-client.js`, is
+  compiled into and inventory-authenticated in all nine envelopes. It has no
+  independent execution grant
+- `docs/CITE_NEXUS.md` covers installation, provider choice and cost,
+  the result contract, verification and removal
+
+### Changed in 0.7.0
+
+- The bundled dispatcher rejects unknown flags per command and rejects
+  partially numeric `--limit` and `--timeout` values such as `2junk`, which
+  were previously truncated to integers
+- A backend deadline now exits with status 124 like the dispatcher's own
+  wall clock
+
+### Security and limits
+
+- Only `PATH`, locale and temporary-directory variables plus the credentials
+  of explicitly selected providers reach the companion. `.env` files,
+  unrelated secrets and `CITE_NEXUS_DEFAULT_PROVIDERS` are ignored; proxy and
+  CA-bundle variables are not forwarded
+- Queries are capped at 512 characters, responses at 2 MiB and JSON nesting
+  at 32 levels. Malformed, incompatible, crashing, hanging and oversized
+  companions fail explicitly with no fallback to another backend, and child
+  stderr is drained without being relayed
+- `--offline` and `WTFP_TOOL_OFFLINE=1` refuse the backend before process
+  launch. Deadlines and cancellation stop the companion, which closes its MCP
+  server process group
+- Only `--intent=balanced` is accepted for this backend. `--limit` caps the
+  displayed total; `metadata.total` counts the fetched, deduplicated provider
+  page
+- Research actions reach the backend on Clio Coder and Claude Code, the two
+  hosts with the established dispatcher binding. Codex, Copilot, OpenCode,
+  Antigravity and Gemini keep their `tool.execute` blockers. Companion process
+  behavior is qualified on Linux only
 
 ## [0.6.0] - 2026-09-14
 
@@ -387,7 +433,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
 [0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
