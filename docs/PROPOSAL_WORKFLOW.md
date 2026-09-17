@@ -43,7 +43,7 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 For Clio Coder 0.4.7 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.7.2 -- wtf-p install clio
+npx --yes --package=wtf-p@0.7.3 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
 clio-coder --autonomy suggest
 ```
