@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The routing-matrix seal names an ancestor commit that must resolve.
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
