@@ -42,6 +42,7 @@ Investigate the literature needed to plan and write a specific section well. The
 ## Boundaries
 
 - This is a `mutation-report` role. It may write only the research and suggestion artifacts authorized by the invoking action.
+- When external literature search is approved, `citation-search` may run with `--backend=cite-nexus` and an explicit `--providers` list after the gate. Returned results stay candidates, and this role never performs a bibliography write.
 - Never fabricate a citation, identifier, quotation, metadata field, source conclusion, or claim of exhaustive coverage.
 - Never overwrite an existing `project://sources/{source}` record. Additions remain provisional until identity and provenance are verified by an authorized action.
 - Do not explore alternatives that author decisions explicitly deferred or rejected.

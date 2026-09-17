@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "7dd8faa838b3daea55443365532a761a68b3800a7270e46ec564c452b63ed95f",
+  "sourceHash": "b24530a66abee36a6f2ca0dcaad6417c964cddd6a6a5f3f013c35e369742af49",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "1f77fce4cb2bdb2ec25d7dd8a8fa4fb65d7f58beab887e657b73f6d9fcf44d44"
+      "sha256": "737a8818dc1ef220429a477c9226664c5c924fcc42da54c421fc36d6b6fcbc37"
     },
     {
       "path": "actions/add-todo.json",
@@ -122,7 +122,7 @@
     },
     {
       "path": "actions/research-gap.json",
-      "sha256": "61bb44bf5a5dbbaa5e296f69515b65c21a1ce15022f2bafcb4d22df82f0d690c"
+      "sha256": "80659531e18fb60dd46620c8b35aa27ce0f966c467f0d3073ae8c6519084153e"
     },
     {
       "path": "actions/resume-writing.json",
@@ -182,7 +182,7 @@
     },
     {
       "path": "agents/wtfp-research-synthesizer.md",
-      "sha256": "d4ffefcddd233061e6c3bbdc8684d67df8d1f1306bddaa5a1eeadaf0e910d33d"
+      "sha256": "b631ecae2387a30998d738a39a1c5c2ef8cdeb09b3774d66710d35363bd43e7c"
     },
     {
       "path": "agents/wtfp-section-planner.md",
@@ -486,7 +486,7 @@
     },
     {
       "path": "roles/research-synthesizer.md",
-      "sha256": "d04ba72d66f693202b9327aaef82dd47637f1d99349d190149ef82ec43c8be83"
+      "sha256": "011feaa1fdb967c267713f4fa4b0c45b27e66a62f71d1f24c4f44360442aef57"
     },
     {
       "path": "roles/section-planner.md",
@@ -566,7 +566,7 @@
     },
     {
       "path": "skills/wtfp-research-literature/references/actions.md",
-      "sha256": "22e5e92acad39e4b8785f5664aa2a797aa94d3f7f0aee96b6c954e14649a7921"
+      "sha256": "b3281420d2f6d0abb0d53e93e54f7b56f3c07470808e1de9fbd738499bee1348"
     },
     {
       "path": "skills/wtfp-research-literature/SKILL.md",
@@ -786,7 +786,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "c98eb74ae970713affa435e79ba780703694cd1eca0c141bf840ebe67adc3983"
+      "sha256": "a1736edb7e739708a92e5ef11c2d7c7a87fe8e6e4d6586e8ce9b1db3ae5bb428"
     },
     {
       "path": "workflows/resume-writing.md",

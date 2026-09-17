@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "fd300ebe88a80d19a91efd0d8e22700782eceec0728584e5d1004a54794804a7",
+  "sourceHash": "23ee519da7229238b594ff551727214e995b56a308c65b3088716b97b02c0b35",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -118,7 +118,7 @@
     },
     {
       "path": "actions/research-gap.json",
-      "sha256": "61bb44bf5a5dbbaa5e296f69515b65c21a1ce15022f2bafcb4d22df82f0d690c"
+      "sha256": "80659531e18fb60dd46620c8b35aa27ce0f966c467f0d3073ae8c6519084153e"
     },
     {
       "path": "actions/resume-writing.json",
@@ -178,7 +178,7 @@
     },
     {
       "path": "agents/wtfp-research-synthesizer.md",
-      "sha256": "b4871282113a1ee3c44c42369fe19aaaae3f188a26182a1bc53052592e02c45a"
+      "sha256": "2adec7aab0cad7e9cc66312b14f8ee8824d269ad499319ad47094cfe4936f04a"
     },
     {
       "path": "agents/wtfp-section-planner.md",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "1017fe85464c00f4d1f2ad8ac23c1aace4f2edfccccd264b7ba6580568dc42bf"
+      "sha256": "62088bf28c24e8a00012b1d3fd0ec67468fd935aed314a1a6ae1916ef5d23637"
     },
     {
       "path": "project/README.md",
@@ -486,7 +486,7 @@
     },
     {
       "path": "roles/research-synthesizer.md",
-      "sha256": "d04ba72d66f693202b9327aaef82dd47637f1d99349d190149ef82ec43c8be83"
+      "sha256": "011feaa1fdb967c267713f4fa4b0c45b27e66a62f71d1f24c4f44360442aef57"
     },
     {
       "path": "roles/section-planner.md",
@@ -570,7 +570,7 @@
     },
     {
       "path": "skills/wtfp-research-literature/references/actions.md",
-      "sha256": "511439009eebb56a79e88d2ad3851c8d0bad9ba89f7ae564834709bf47163597"
+      "sha256": "83cb1dbc27563a02bb35fbb995fe54d37e5afe523821b5cb5b6c3baf2fa72d50"
     },
     {
       "path": "skills/wtfp-research-literature/SKILL.md",
@@ -790,7 +790,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "c98eb74ae970713affa435e79ba780703694cd1eca0c141bf840ebe67adc3983"
+      "sha256": "a1736edb7e739708a92e5ef11c2d7c7a87fe8e6e4d6586e8ce9b1db3ae5bb428"
     },
     {
       "path": "workflows/resume-writing.md",

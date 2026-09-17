@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-17
+
+Lets `research-gap` reach the CiteNexus backend that 0.7.0 added to
+`check-refs`, and corrects documentation still pinned to the 0.6 line.
+
+### Added in 0.7.2
+
+- `research-gap` declares the logical tool `citation.fetch`, so it can run
+  `citation-search --backend=cite-nexus` with an explicit `--providers` list.
+  Its author gate now names the external providers and the bounded query set
+  before any query runs. Results stay candidates, and the action never writes
+  to the project bibliography. The workflow, the `research-synthesizer` role
+  and the `wtfp-research-literature` action reference state the same boundary
+- `docs/CITE_NEXUS.md` and the getting-started guide show how to reach
+  CiteNexus in a session through `research-gap` and `check-refs`
+
+### Fixed in 0.7.2
+
+- The getting-started guide told users to confirm a `WTF-P v0.6.0` installer
+  banner; it now names the banner the installer prints,
+  `Write The F***ing Paper v0.7.2`
+- The getting-started, proposal, compatibility and build guides still
+  described themselves as 0.6 documentation, and the guide said npm `latest`
+  resolved to the 0.6 line
+- README and the getting-started guide now state that Clio Coder requires
+  Node.js 22.19 or newer, above WTF-P's own Node.js 20 floor
+
 ## [0.7.1] - 2026-09-17
 
 Documentation patch from installing the published 0.7.0 on a real Clio
@@ -457,7 +484,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/akougkas/wtf-p/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/akougkas/wtf-p/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0

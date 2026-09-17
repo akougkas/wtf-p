@@ -40,6 +40,20 @@ or native MCP lifecycle. The helper is packaged in all nine envelopes, but packa
 is not a host binding, and an operator's manual CLI check does not change that
 compatibility matrix.
 
+## Invoking CiteNexus in a session
+
+On Clio Coder and Claude Code, two actions reach the backend. Both declare the logical tool `citation.fetch`, which the dispatcher exposes as `citation-search` in `tools/wtfp-tool.js`.
+
+1. `research-gap` maps related literature and positions a section against it. Search results stay candidates in research and evidence records, and the action never writes to the project bibliography.
+2. `check-refs` verifies and audits existing bibliography references against scholarly registries.
+
+To select CiteNexus, ask for `--backend=cite-nexus` with an explicit `--providers` list. The action's author gate must name those providers and the bounded query set before any external query runs:
+
+```text
+/wtfp:research-gap related-work Find related work with --backend=cite-nexus --providers=crossref,datacite,europe_pmc
+/wtfp:check-refs Audit references with --backend=cite-nexus --providers=crossref,datacite,europe_pmc
+```
+
 ## Provider choice and costs
 
 The backend defaults to `crossref,datacite,europe_pmc`, with no mandatory keys.

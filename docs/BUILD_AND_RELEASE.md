@@ -1,6 +1,6 @@
 # Building and releasing WTF-P
 
-WTF-P `0.6` has a source layer and a generated layer. It does not transpile JavaScript, but it is no longer a zero-build package: every native client envelope is compiled deterministically from the portable protocol before testing or publishing.
+WTF-P has a source layer and a generated layer. It does not transpile JavaScript, but it is no longer a zero-build package: every native client envelope is compiled deterministically from the portable protocol before testing or publishing.
 
 ## Source and generated boundaries
 

@@ -34,7 +34,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the research question and section scope against locked/deferred decisions; agree on depth and source constraints.
-2. Search declared scholarly services, verify source identity and inspection depth, and separate source records from claim-level evidence.
+2. Search declared scholarly services only after the gate names the providers and bounded query set. When using the bundled dispatcher, `citation-search` may run with `--backend=cite-nexus` and an explicit `--providers` list after this gate. Returned results stay candidates, and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
 3. Synthesize supported, conflicting, and missing evidence into a Markdown research artifact; link new records and disclose limitations.
 
 ## Bundled tool execution

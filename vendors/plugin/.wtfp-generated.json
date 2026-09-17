@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "3bc489b8c1fc8d09991d3e8b17a5549b6664741ed1ed88b15b5f483daaae3976",
+  "sourceHash": "2fec5e7f932658a17a6f8188ddcfaf4525c6c37a5d3b297334668d160bccd683",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -118,7 +118,7 @@
     },
     {
       "path": "actions/research-gap.json",
-      "sha256": "61bb44bf5a5dbbaa5e296f69515b65c21a1ce15022f2bafcb4d22df82f0d690c"
+      "sha256": "80659531e18fb60dd46620c8b35aa27ce0f966c467f0d3073ae8c6519084153e"
     },
     {
       "path": "actions/resume-writing.json",
@@ -178,7 +178,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-research-synthesizer.md",
-      "sha256": "0458f59e99dc04e36e6e8430ecd9d06a6a115af31bab087069f768e9d767034c"
+      "sha256": "18cfbac40fe49413797ed8bd12779df158eacb0155620dd34c966e061f2d5182"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-planner.md",
@@ -254,7 +254,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
-      "sha256": "f7d0a9479be53c68cc07c9f33522d8484326b5267aa1790a2825d71caba57112"
+      "sha256": "dc549d5ea17cd14f945bc1a4cbc8bc95d67488bc61ea82e40dfa2f24bb839877"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
@@ -314,7 +314,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
-      "sha256": "f59efde01a3a461c2fef4219774eb32795324960649980da5e390c99d57774f3"
+      "sha256": "9a08d66ac0f23ec846aa054ce50a76ebe1d5b19a922389a96b99c8cbe1e88665"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "de4f7583a5c4d9d1a04deeb20f1f74d8a3cc718c3d4dbbc82c07c4b8605b28f0"
+      "sha256": "9ca54a9c1ac8c20bd741650ec5e8556db9168a55d7b150d8ab03e3c97b64c81f"
     },
     {
       "path": "project/README.md",
@@ -486,7 +486,7 @@
     },
     {
       "path": "roles/research-synthesizer.md",
-      "sha256": "d04ba72d66f693202b9327aaef82dd47637f1d99349d190149ef82ec43c8be83"
+      "sha256": "011feaa1fdb967c267713f4fa4b0c45b27e66a62f71d1f24c4f44360442aef57"
     },
     {
       "path": "roles/section-planner.md",
@@ -566,7 +566,7 @@
     },
     {
       "path": "skills/wtfp-research-literature/references/actions.md",
-      "sha256": "04768c3c0e0817ae3c3158c59c7075e838ad7c63b70d5a06a719ea0ef9f399b6"
+      "sha256": "83ad7126edc5f2012bc4bdbd3486a3eaf6b6453a0d575416b8ca4633c97fff24"
     },
     {
       "path": "skills/wtfp-research-literature/SKILL.md",
@@ -786,7 +786,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "c98eb74ae970713affa435e79ba780703694cd1eca0c141bf840ebe67adc3983"
+      "sha256": "a1736edb7e739708a92e5ef11c2d7c7a87fe8e6e4d6586e8ce9b1db3ae5bb428"
     },
     {
       "path": "workflows/resume-writing.md",

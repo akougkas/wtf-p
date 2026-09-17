@@ -1,6 +1,6 @@
 {
   "name": "wtfp",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Portable academic research and writing workflows for Gemini CLI.",
   "contextFileName": "GEMINI.md"
 }

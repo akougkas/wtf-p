@@ -60,6 +60,7 @@
   ],
   "tools": [
     "bibliography.index",
+    "citation.fetch",
     "citation.rank",
     "citation.scholar-lookup",
     "citation.semantic-scholar"
@@ -95,7 +96,7 @@
     },
     {
       "id": "user.gate",
-      "scope": "research scope and depth"
+      "scope": "the external providers, bounded query set, and research scope and depth"
     }
   ]
 }

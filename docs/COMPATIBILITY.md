@@ -1,4 +1,4 @@
-# WTF-P 0.6 compatibility evidence
+# WTF-P compatibility evidence
 
 "Verified" here means that the generated envelope passed the host's own native discovery path inside a disposable profile, preserved the canonical action, skill, and agent surface that host supports, and wrote nothing into the operator's normal client state. Model-execution evidence is a separate level; it is recorded under [Historical evidence](#historical-evidence) with the candidate it belongs to and is never implied by a discovery row.
 
