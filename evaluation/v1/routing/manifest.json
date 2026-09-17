@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "144c1191e6532536a8ca3b290c1c27ad2b77b8a6",
+  "wtfp_commit": "a983c1e55c9f12a46777e0096d2778c934155e32",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -31,20 +31,20 @@
     {
       "target": "antigravity",
       "path": "vendors/antigravity/.wtfp-generated.json",
-      "manifest_sha256": "bcb744799506c8b58d73b8420bb93df3193a8a4f8a2c09cc615d8d4497836cce",
-      "source_sha256": "23ee519da7229238b594ff551727214e995b56a308c65b3088716b97b02c0b35"
+      "manifest_sha256": "2423070072a7bd149942ee89bcbebe46fb4656f769efcdf11ab257c4d0ca3c37",
+      "source_sha256": "49a306062c6bf20fca6ad491eea8e9b44107339e7c74d72e99f953268223324b"
     },
     {
       "target": "claude",
       "path": "vendors/claude/.wtfp-generated.json",
-      "manifest_sha256": "ef75c7b9a5fb2fbc5845afe131067a24c553403d96c5fe1cde1a2d46a17438fa",
-      "source_sha256": "37a8fd8b02f436188b91203393eae686c24749034028203907202226f2aae4d2"
+      "manifest_sha256": "a34c052e4c32e9057eacca6ee281da07b12fc02774ec0d05d63d7e8f715cf80a",
+      "source_sha256": "8740bace44e2052296056817ff17c3150a5dbb317c3088fa6afa0cdb3e127ea6"
     },
     {
       "target": "clio",
       "path": "vendors/plugin/.wtfp-generated.json",
-      "manifest_sha256": "f768ee97dd67272ca7355e114ee45ff6c45b7b8f98cd9aeb6c9af242a90d9fed",
-      "source_sha256": "2fec5e7f932658a17a6f8188ddcfaf4525c6c37a5d3b297334668d160bccd683"
+      "manifest_sha256": "d7426c65dc77d301fac0f91efa24008872ce96df8f553e192fe2c188acd83896",
+      "source_sha256": "82dccab727758f1745c2dd5b0542c4ad1cd3a7150e96102258bebc906deaa9aa"
     },
     {
       "target": "codex-marketplace",
@@ -55,32 +55,32 @@
     {
       "target": "codex",
       "path": "vendors/codex/plugins/wtfp/.wtfp-generated.json",
-      "manifest_sha256": "7b6005e183542552bcd3aaad78d4a3038167f82a9a536e8305bafa3794dcddda",
-      "source_sha256": "2f0b9bbd18cb05ce2b6638ac631d8be9b8d04b56a102fd4d55b95cec86b06447"
+      "manifest_sha256": "6461480768108e278766ddf7ac98bc9cffca04c9347540d99c5750aea98da570",
+      "source_sha256": "356a2783ca7e4c9c162a4d2eace5f5a0a60de3f9e7aeefff95469f99f9e1deb5"
     },
     {
       "target": "copilot-marketplace",
       "path": "vendors/copilot/.wtfp-generated.json",
-      "manifest_sha256": "029eaa7aa241e213810c728117f2e64165b1971123db7b3f6884c17e0a4d286a",
-      "source_sha256": "4f20cee07923c03cc2317d1fe6331aa5ed6ba0cc45109c79cb52ed9678c6d2bf"
+      "manifest_sha256": "1b006a23a409b5f98ecf1498cd9b5fa4bb2e80fcfb4b2264e4c862d4a005afce",
+      "source_sha256": "dd4b295462205b1e572b9fd10d6849dbc50559e9f1500a6bbbec660ca17f6dee"
     },
     {
       "target": "copilot",
       "path": "vendors/copilot/plugins/wtfp/.wtfp-generated.json",
-      "manifest_sha256": "c4b6910eafc1ae4993fe0400b969d8e5ddfe752efcb2855d5769de1702b673d3",
-      "source_sha256": "b24530a66abee36a6f2ca0dcaad6417c964cddd6a6a5f3f013c35e369742af49"
+      "manifest_sha256": "7135d3d76b12e731c22327cfae6c8009dde000fffd1e8b60ec935ce7a7b20b99",
+      "source_sha256": "f81d1c2d5fc341a03ba56c1903f5d10a536b665a8592d4c772787f651a1bba73"
     },
     {
       "target": "gemini",
       "path": "vendors/gemini/.wtfp-generated.json",
-      "manifest_sha256": "6094433eadb64ca8799a6b1ffa4c99fbc87af0b61f24fd062db900da8ae315c5",
-      "source_sha256": "839a3f065feecb9be6f892239227ce8540c42f0237ea6b80068290a297b3fbb7"
+      "manifest_sha256": "80cec536f4f8ede5d2ef171ee0328a05c09ccb5621ca7d5d4a042a0d4da64256",
+      "source_sha256": "4c0980d5e7b6f57b9b7ca94af65785aa04d54d4c4513c1647a716a21471a5e02"
     },
     {
       "target": "opencode",
       "path": "vendors/opencode/.wtfp-generated.json",
-      "manifest_sha256": "dc2be1f5727821061a16902fad0a2a9311eb441bc4de19af4c1f4c212afbf7d9",
-      "source_sha256": "421eb85c954ef0b7dbe38ad33c3379bf331e605b2f6fc657973dbb51c91ca062"
+      "manifest_sha256": "a191e3252b95309498279c97af3ec076504c2deaab616c5bc07791bc0ac1547b",
+      "source_sha256": "65bebd0311978db810467a6ee777df2c91770e8ab2dcdb16714107a2a3e8df53"
     }
   ]
 }
