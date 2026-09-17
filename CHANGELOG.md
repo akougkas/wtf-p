@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add the optional CiteNexus MCP backend to `citation.fetch` through
+  `citation-search --backend=cite-nexus`, with free default sources, explicit vendor
+  selection, source provenance, deterministic candidate BibTeX and visible provider errors.
+- Package an authenticated private companion client in every generated envelope;
+  retain the existing host capability matrix and seven logical tools. No server
+  registration, package installation or provider fallback occurs during a call.
+- Bound companion input/output, credentials, timeout and cancellation; preserve the
+  offline gate. Reject unknown dispatcher flags and partially numeric limits/timeouts.
+- Document companion setup, verification boundaries and release preparation.
+
 ## [0.6.0] - 2026-09-14
 
 First stable release of the agent-plugin line. WTF-P is one canonical

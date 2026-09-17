@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "a189e7094e5c62db7ff8da9c4c6146c6c131ea5cbd9345ff3c4031d3a9e9a371",
+  "sourceHash": "08d5eafcc24473fc0491df2fc7f7677a2b475cb9c72e59ebd9c23bcc3441ee2e",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -650,7 +650,7 @@
     },
     {
       "path": "tools/citation/fetch.js",
-      "sha256": "56c92d67709d7fc21b8b6e00492ba7e22e60b402c36b4f1d0780a9cf45c56d7b"
+      "sha256": "fa24cc676bdad1699c1ef3ca56ac358268ec516a1aa1305ffe0760941ec8d756"
     },
     {
       "path": "tools/citation/rank.js",
@@ -666,11 +666,15 @@
     },
     {
       "path": "tools/README.md",
-      "sha256": "92e77815dd04a1b1df4606daefd76de5dba88a6351a3c8cd7810a94d70db8e2b"
+      "sha256": "997889703a61599a3d6267b1ddbd571ac354b55e7fe3a9dc2ebbf00b6c6d2106"
+    },
+    {
+      "path": "tools/support/cite-nexus-client.js",
+      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "4eb713f525eb0b2c13ccc5b1126611039654927fdecfd76c5aa62dc232fcb8c6"
+      "sha256": "d7fe8278161d5a18f33be87a41c374e2a9c90657ac2315c24a1697793f750e19"
     },
     {
       "path": "workflows/add-todo.md",

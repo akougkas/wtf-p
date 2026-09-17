@@ -23,6 +23,11 @@ coding-agent hosts. Version `0.6.0` is the first stable release of that
 design and is what npm `latest` resolves to; v0.5 remains installable by
 explicit version.
 
+**In this checkout, unreleased:** the optional [CiteNexus research backend](docs/CITE_NEXUS.md)
+connects the citation-search command to free scholarly sources and explicitly selected academic
+APIs through MCP. It preserves source evidence and keeps search matches as candidates. Install
+the companion separately; the published `0.6.0` package does not contain this integration.
+
 ## Install on your agent
 
 Two routes. Pick one per host; both register the same plugin, so do not use

@@ -160,6 +160,9 @@ function deduplicatePapers(papers) {
 // --- Main Search Logic ---
 
 async function search(query, options = {}) {
+  if (options.backend === 'cite-nexus') return require('./cite-nexus-client').search(query, options);
+  if (options.backend && options.backend !== 'legacy') throw new Error('Unknown citation backend');
+  if (options.providers) throw new Error('Provider selection requires --backend=cite-nexus');
   const limit = options.limit || 10;
   const intent = options.intent || 'balanced';
 

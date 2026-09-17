@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "de13c4e935dbcd02650338f2897395374f624300d84cfde3920061064e9748d1",
+  "sourceHash": "65ee42952eae9d96a6c8d3991f24208cb81d6b343cc725d196c30b891666e943",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -650,7 +650,7 @@
     },
     {
       "path": "tools/citation/fetch.js",
-      "sha256": "56c92d67709d7fc21b8b6e00492ba7e22e60b402c36b4f1d0780a9cf45c56d7b"
+      "sha256": "fa24cc676bdad1699c1ef3ca56ac358268ec516a1aa1305ffe0760941ec8d756"
     },
     {
       "path": "tools/citation/rank.js",
@@ -666,11 +666,15 @@
     },
     {
       "path": "tools/README.md",
-      "sha256": "92e77815dd04a1b1df4606daefd76de5dba88a6351a3c8cd7810a94d70db8e2b"
+      "sha256": "997889703a61599a3d6267b1ddbd571ac354b55e7fe3a9dc2ebbf00b6c6d2106"
+    },
+    {
+      "path": "tools/support/cite-nexus-client.js",
+      "sha256": "40714bc22d093375ae316fedbb251bf6de5fa62b9702dc8d8dee5db1d744de97"
     },
     {
       "path": "tools/wtfp-tool.js",
-      "sha256": "4eb713f525eb0b2c13ccc5b1126611039654927fdecfd76c5aa62dc232fcb8c6"
+      "sha256": "d7fe8278161d5a18f33be87a41c374e2a9c90657ac2315c24a1697793f750e19"
     },
     {
       "path": "workflows/add-todo.md",

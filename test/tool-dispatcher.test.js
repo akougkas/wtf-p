@@ -132,6 +132,16 @@ try {
     assert.match(errorOf(run(['nonsense', '--help'])), /unknown command/);
   });
 
+  test('search flags fail closed before provider execution', () => {
+    for (const flag of ['--limit=2junk', '--limit=1.5', '--timeout=3junk', '--timeout=0']) {
+      assert.match(errorOf(run(['citation-search', '--query=topic', flag])), /must be an integer/);
+    }
+    assert.match(errorOf(run(['citation-search', '--query=topic', '--backend=unknown'])), /--backend/);
+    assert.match(errorOf(run(['citation-search', '--query=topic', '--providers=crossref'])), /requires/);
+    assert.match(errorOf(run(['citation-search', '--query=topic', '--provider=crossref'])), /unknown --provider/);
+    assert.match(errorOf(run(['citation-search', '--query=topic', '--backend=cite-nexus', '--intent=seminal'])), /provider ordering/);
+  });
+
   test('bib-index reports duplicate keys and refuses an ambiguous --key', () => {
     const dup = path.join(scratch, 'dup.bib');
     fs.writeFileSync(dup, '@article{k1,\n  title={A},\n  year={2020}\n}\n@article{k1,\n  title={A2},\n  year={2021}\n}\n@misc{k2,\n  title={Only},\n  year={2019}\n}\n');

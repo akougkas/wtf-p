@@ -690,7 +690,8 @@ record('every target publishes exact action availability and skill-route blocker
 record('every envelope exposes only declared tools plus the bounded dispatcher', () => {
   const expected = [
     ...toolsRegistry.map((tool) => `tools/${tool.implementation.slice('wtfp://tools/'.length)}.js`),
-    'tools/wtfp-tool.js'
+    'tools/wtfp-tool.js',
+    'tools/support/cite-nexus-client.js'
   ].sort((left, right) => left.localeCompare(right));
   for (const target of [...Object.keys(EXPECTED_ROOTS), 'clio']) {
     const plan = plansById.get(target);

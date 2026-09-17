@@ -1410,13 +1410,13 @@ function toolOutputPath(tool) {
 
 // The one command a host is ever asked to run. It resolves a logical tool id
 // through the packaged module map, bounds every argument, and prints JSON on
-// stdout. Nothing here shells out, writes a file, or reads a path the caller
-// did not name.
+// stdout. The explicit CiteNexus backend launches only its installed companion
+// without a shell. No tool writes a file or reads a path the caller did not name.
 const TOOL_COMMANDS = Object.freeze([
   { command: 'bib-index', tool: 'bibliography.index', usage: 'bib-index <bib-file> [--key=<citation-key>] [--query=<text>]' },
   { command: 'bib-format', tool: 'bibliography.format', usage: 'bib-format <bib-file> --key=<citation-key> [--style=<bibtex|al-folio>]' },
   { command: 'bib-impact', tool: 'bibliography.analyze-impact', usage: 'bib-impact <bib-file> [--timeout=<seconds>]' },
-  { command: 'citation-search', tool: 'citation.fetch', usage: 'citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]' },
+  { command: 'citation-search', tool: 'citation.fetch', usage: 'citation-search --query=<text> [--backend=<legacy|cite-nexus>] [--providers=<comma-separated-IDs>] [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]' },
   { command: 'scholar-search', tool: 'citation.scholar-lookup', usage: 'scholar-search --query=<text> [--limit=<1-25>] [--timeout=<seconds>]' },
   { command: 's2-search', tool: 'citation.semantic-scholar', usage: 's2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>] [--timeout=<seconds>]' },
   { command: 'rank', tool: 'citation.rank', usage: 'rank <papers.json> [--intent=<seminal|recent|balanced>]' }
@@ -1463,9 +1463,9 @@ function offlineRequested(argv) {
   return argv.includes('--offline') || flag === '1' || flag === 'true';
 }
 
-function fail(message) {
+function fail(message, status = 1) {
   process.stderr.write(\`\${JSON.stringify({ error: message })}\\n\`);
-  process.exit(1);
+  process.exit(status);
 }
 
 function emit(value) {
@@ -1520,7 +1520,7 @@ function requirePath(candidate) {
 
 function timeoutOf(flags) {
   if (!flags.has('timeout')) return DEFAULT_TIMEOUT_SECONDS;
-  const seconds = Number.parseInt(flags.get('timeout'), 10);
+  const seconds = /^\\d+$/.test(flags.get('timeout')) ? Number(flags.get('timeout')) : NaN;
   if (!Number.isInteger(seconds) || seconds < 1 || seconds > MAX_TIMEOUT_SECONDS) {
     fail(\`--timeout must be an integer number of seconds between 1 and \${MAX_TIMEOUT_SECONDS}\`);
   }
@@ -1551,7 +1551,7 @@ function uniqueEntry(bib, content, key) {
 
 function limitOf(flags) {
   if (!flags.has('limit')) return 10;
-  const limit = Number.parseInt(flags.get('limit'), 10);
+  const limit = /^\\d+$/.test(flags.get('limit')) ? Number(flags.get('limit')) : NaN;
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) fail(\`--limit must be an integer between 1 and \${MAX_LIMIT}\`);
   return limit;
 }
@@ -1588,6 +1588,13 @@ async function main(rawArgv) {
     fail(\`\${command} is refused in offline mode: it declares \${networkEffects.join(', ')}\`);
   }
   const { flags, positional } = parseArguments(argv.slice(1));
+  const allowedFlags = {
+    'bib-index': ['key', 'query'], 'bib-format': ['key', 'style'],
+    'bib-impact': ['timeout'], 'citation-search': ['query', 'backend', 'providers', 'limit', 'intent', 'year', 'timeout'],
+    'scholar-search': ['query', 'limit', 'timeout'], 's2-search': ['query', 'limit', 'year', 'timeout'],
+    'rank': ['intent']
+  };
+  for (const key of flags.keys()) if (!allowedFlags[command].includes(key)) fail(\`unknown --\${key} for \${command}\`);
   if (positional.length > 1) fail(\`\${command} accepts at most one positional argument: \${declared.usage}\`);
   const load = () => require(MODULES[declared.tool]);
 
@@ -1622,7 +1629,11 @@ async function main(rawArgv) {
     const query = requireText(flags.get('query'), '--query');
     const year = yearOf(flags);
     const seconds = timeoutOf(flags);
-    return emit(await withTimeout(load().search(query, { limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
+    const backend = flags.get('backend') || 'legacy';
+    if (!['legacy', 'cite-nexus'].includes(backend)) fail('--backend must be legacy or cite-nexus');
+    const providers = flags.has('providers') ? flags.get('providers').split(',').map((p) => p.trim()) : undefined;
+    if (providers && backend !== 'cite-nexus') fail('--providers requires --backend=cite-nexus');
+    return emit(await withTimeout(load().search(query, { backend, providers, timeoutSeconds: seconds, limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
   }
   if (command === 'scholar-search') {
     if (positional.length > 0) fail(\`\${command} takes its query through --query: \${declared.usage}\`);
@@ -1649,7 +1660,7 @@ async function main(rawArgv) {
 // config root as a custom-tool module; an unconditional main() printed a
 // dispatcher error and exited the host process at session start.
 if (require.main === module) {
-  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error)));
+  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error), error && error.code === 'WTFP_TIMEOUT' ? EXIT_TIMEOUT : 1));
 }
 `;
 }
@@ -1657,6 +1668,10 @@ if (require.main === module) {
 function addToolBundle(plan) {
   const registry = readJson(path.join(PROTOCOL_ROOT, 'tools.json'));
   const byLegacyName = new Map(registry.tools.map((tool) => [tool.legacyName, toolOutputPath(tool)]));
+  // One private companion dependency, owned and hashed with every envelope.
+  // It is not a logical tool and receives no independent execution grant.
+  byLegacyName.set('cite-nexus-client', 'tools/support/cite-nexus-client.js');
+  addFile(plan, 'tools/support/cite-nexus-client.js', fs.readFileSync(path.join(ROOT, 'bin', 'lib', 'cite-nexus-client.js'), 'utf8'));
   const byToolId = new Map(registry.tools.map((tool) => [tool.id, toolOutputPath(tool)]));
   const effectsByToolId = new Map(registry.tools.map((tool) => [tool.id, [...tool.effects]]));
   for (const entry of TOOL_COMMANDS) {
@@ -1689,9 +1704,10 @@ function addToolBundle(plan) {
     '',
     generatedBanner('protocol', 'tools.json'),
     '',
-    'Only implementations declared by `tools.json` are packaged here. Resolve each logical implementation URI through this exact mapping; do not search for or execute undeclared installer/compiler modules.',
+    'Only implementations declared by `tools.json`, the dispatcher, and its private CiteNexus companion dependency are packaged here. Resolve each logical implementation URI through this exact mapping; do not search for or execute undeclared installer/compiler modules.',
     '',
     ...rows,
+    '- Private dependency: `tools/support/cite-nexus-client.js`; reached only through `citation.fetch`, never executed directly.',
     '',
     '## Executing a bundled tool',
     '',
@@ -1704,6 +1720,8 @@ function addToolBundle(plan) {
     'Run it with no argument, or with `list`, to print the declared command set as JSON; each entry carries the `effects` the command may apply. `<command> --help` prints that one entry and exits 0. Declared commands:',
     '',
     ...TOOL_COMMANDS.map((entry) => `- \`${entry.usage}\` → \`${entry.tool}\` (${effectsByToolId.get(entry.tool).length > 0 ? effectsByToolId.get(entry.tool).join(', ') : 'no declared effects'})`),
+    '',
+    'For approved scholarly discovery, `citation-search --backend=cite-nexus --query="<topic>"` uses the separately installed `cite-nexus-wtfp` companion and its real MCP stdio server. Defaults are Crossref, DataCite and Europe PMC. Select optional vendors explicitly with `--providers`; include selected providers and query scope in the action approval. CiteNexus supports only balanced provider ordering, so omit `--intent` or use `--intent=balanced`. Results remain candidates: retain `citeNexus.sources`, field attribution, metrics, warnings and `metadata.errors`; do not infer verification or combine citation counts. The result limit is a displayed total; `metadata.total` counts the fetched deduplicated page, not the full corpus. Unavailable enrichment fails explicitly without falling back to another vendor. `WTFP_CITE_NEXUS_COMMAND` may name an absolute installed companion executable; it is operator configuration, never source content. No package is installed, server registered, or user profile changed by a tool call. Offline mode refuses this backend before process launch. Host capability blockers still apply.',
     '',
     'Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `WTFP_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Each network command has a hard wall clock, `--timeout=<seconds>` (default 20, maximum 600); on expiry it reports `{"error": "<command> timed out after N s"}` on stderr and exits 124. `bib-impact` reports batch progress on stderr. `bib-index` flags repeated keys with `duplicate: true` and lists them under `duplicates`; `--key` refuses an ambiguous key. `bib-format` emits a standard BibTeX entry (`@article`, `@inproceedings`, ...) by default; `--style=al-folio` selects the Jekyll al-folio projection, which is not valid BibTeX. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.',
     ''

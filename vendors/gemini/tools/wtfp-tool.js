@@ -54,7 +54,7 @@ const COMMANDS = [
   {
     "command": "citation-search",
     "tool": "citation.fetch",
-    "usage": "citation-search --query=<text> [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]",
+    "usage": "citation-search --query=<text> [--backend=<legacy|cite-nexus>] [--providers=<comma-separated-IDs>] [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]",
     "effects": [
       "network.search"
     ]
@@ -96,9 +96,9 @@ function offlineRequested(argv) {
   return argv.includes('--offline') || flag === '1' || flag === 'true';
 }
 
-function fail(message) {
+function fail(message, status = 1) {
   process.stderr.write(`${JSON.stringify({ error: message })}\n`);
-  process.exit(1);
+  process.exit(status);
 }
 
 function emit(value) {
@@ -153,7 +153,7 @@ function requirePath(candidate) {
 
 function timeoutOf(flags) {
   if (!flags.has('timeout')) return DEFAULT_TIMEOUT_SECONDS;
-  const seconds = Number.parseInt(flags.get('timeout'), 10);
+  const seconds = /^\d+$/.test(flags.get('timeout')) ? Number(flags.get('timeout')) : NaN;
   if (!Number.isInteger(seconds) || seconds < 1 || seconds > MAX_TIMEOUT_SECONDS) {
     fail(`--timeout must be an integer number of seconds between 1 and ${MAX_TIMEOUT_SECONDS}`);
   }
@@ -184,7 +184,7 @@ function uniqueEntry(bib, content, key) {
 
 function limitOf(flags) {
   if (!flags.has('limit')) return 10;
-  const limit = Number.parseInt(flags.get('limit'), 10);
+  const limit = /^\d+$/.test(flags.get('limit')) ? Number(flags.get('limit')) : NaN;
   if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) fail(`--limit must be an integer between 1 and ${MAX_LIMIT}`);
   return limit;
 }
@@ -221,6 +221,13 @@ async function main(rawArgv) {
     fail(`${command} is refused in offline mode: it declares ${networkEffects.join(', ')}`);
   }
   const { flags, positional } = parseArguments(argv.slice(1));
+  const allowedFlags = {
+    'bib-index': ['key', 'query'], 'bib-format': ['key', 'style'],
+    'bib-impact': ['timeout'], 'citation-search': ['query', 'backend', 'providers', 'limit', 'intent', 'year', 'timeout'],
+    'scholar-search': ['query', 'limit', 'timeout'], 's2-search': ['query', 'limit', 'year', 'timeout'],
+    'rank': ['intent']
+  };
+  for (const key of flags.keys()) if (!allowedFlags[command].includes(key)) fail(`unknown --${key} for ${command}`);
   if (positional.length > 1) fail(`${command} accepts at most one positional argument: ${declared.usage}`);
   const load = () => require(MODULES[declared.tool]);
 
@@ -255,7 +262,11 @@ async function main(rawArgv) {
     const query = requireText(flags.get('query'), '--query');
     const year = yearOf(flags);
     const seconds = timeoutOf(flags);
-    return emit(await withTimeout(load().search(query, { limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
+    const backend = flags.get('backend') || 'legacy';
+    if (!['legacy', 'cite-nexus'].includes(backend)) fail('--backend must be legacy or cite-nexus');
+    const providers = flags.has('providers') ? flags.get('providers').split(',').map((p) => p.trim()) : undefined;
+    if (providers && backend !== 'cite-nexus') fail('--providers requires --backend=cite-nexus');
+    return emit(await withTimeout(load().search(query, { backend, providers, timeoutSeconds: seconds, limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
   }
   if (command === 'scholar-search') {
     if (positional.length > 0) fail(`${command} takes its query through --query: ${declared.usage}`);
@@ -282,5 +293,5 @@ async function main(rawArgv) {
 // config root as a custom-tool module; an unconditional main() printed a
 // dispatcher error and exited the host process at session start.
 if (require.main === module) {
-  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error)));
+  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error), error && error.code === 'WTFP_TIMEOUT' ? EXIT_TIMEOUT : 1));
 }

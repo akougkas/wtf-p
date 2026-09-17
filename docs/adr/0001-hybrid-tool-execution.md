@@ -1,6 +1,6 @@
 # ADR 0001: Keep transforms local and defer network MCP exposure
 
-- Status: Accepted for the `0.6` line; amended 2026-09-09 (see the amendment at the end); optional MCP implementation deferred
+- Status: Accepted for the `0.6` line; amended 2026-09-09 and 2026-09-16 (see below)
 - Date: 2026-08-29
 - Decision owners: WTF-P protocol and adapter maintainers
 - Scope: the seven logical tools in `protocol/tools.json`
@@ -195,3 +195,29 @@ The activation gates for a future network MCP server are unchanged. The
 generated availability files under `compatibility/` are the record of which
 host binds what.
 
+## Amendment 2026-09-16: optional CiteNexus companion
+
+`citation.fetch` now has an explicit `cite-nexus` backend, reached only through the
+existing bounded dispatcher. The separately installed Python companion launches
+CiteNexus using the official MCP client and a per-call stdio lifecycle. It calls
+only `search-papers`; the `network.search` effect and provider/query approval gate
+remain accurate. Bibliography transforms stay local, seven logical tools remain,
+and no client manifest declares an MCP server. The native lifecycle activation
+gates above therefore remain requirements for any future manifest-owned server.
+
+The new boundary has executable query/provider/limit validation, a closed versioned
+request, credential allowlisting by selected provider, no arbitrary executable in
+tool arguments, 2 MiB output and 32-level nesting caps, bounded deadlines and
+cancellation. It preserves raw normalized source records, provider errors, request
+IDs, latency and candidate status. It does not fabricate a cross-provider count or
+upgrade candidates to verified evidence. Per-call startup sacrifices cross-call
+caching for a predictable lifetime; cache hits are not claimed in telemetry.
+
+The compiler owns the private companion dependency in every envelope. It grants no
+new tool or capability. Clio and Claude retain their exact dispatcher binding;
+the other five hosts keep their existing blockers. Offline checks run before the
+companion is loaded, and failures never fall back to a different provider. Unit
+contracts cover malicious/malformed output, credential isolation, unavailable and
+hanging companions. The companion repository supplies the real MCP stdio fixture
+check. This is local preparation, not a new native-host compatibility certificate
+or a released integration. See [setup and limits](../CITE_NEXUS.md).
