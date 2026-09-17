@@ -232,6 +232,50 @@ try {
     assert.deepStrictEqual(fs.readFileSync(receiptPath), before);
   });
 
+  test('upgrade replaces unmodified receipt-owned files and preserves modified ones', () => {
+    const upgradeTarget = path.join(targets, 'claude-upgrade');
+    const install = () => spawnNode([
+      INSTALL,
+      '--global',
+      '--config-dir', upgradeTarget,
+      '--quiet',
+      '--no-color'
+    ], { cwd: project, env: isolatedEnv });
+    assertSuccess(install(), 'baseline install');
+
+    // Rewrite two owned files and their receipt entries as an older release
+    // would have left them, then edit one of them as an operator would.
+    const receiptPath = path.join(upgradeTarget, '.wtfp-version');
+    const receipt = readJson(receiptPath);
+    const [owned, edited] = receipt.files.filter(file => file.path.endsWith('.md')).slice(0, 2);
+    const ownedPath = path.join(upgradeTarget, ...owned.path.split('/'));
+    const editedPath = path.join(upgradeTarget, ...edited.path.split('/'));
+    const currentOwnedHash = owned.sha256;
+    for (const [entry, filePath] of [[owned, ownedPath], [edited, editedPath]]) {
+      fs.writeFileSync(filePath, `older release bytes for ${entry.path}\n`);
+      entry.sha256 = sha256File(filePath);
+      entry.sourceVersion = '0.0.1';
+    }
+    receipt.version = '0.0.1';
+    fs.writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + '\n');
+    fs.appendFileSync(editedPath, 'operator edit\n');
+    const editedBytes = fs.readFileSync(editedPath);
+
+    assertSuccess(install(), 'non-forced upgrade');
+    const upgraded = readJson(receiptPath);
+    assert.strictEqual(sha256File(ownedPath), currentOwnedHash, 'unmodified owned file was not upgraded');
+    assert.deepStrictEqual(fs.readFileSync(editedPath), editedBytes, 'modified owned file was overwritten');
+    assert.strictEqual(upgraded.version, require('../package.json').version);
+    assert.strictEqual(upgraded.partial, true, 'a preserved modification must keep the receipt partial');
+    assert.strictEqual(upgraded.files.find(file => file.path === owned.path).sourceVersion, upgraded.version);
+
+    fs.writeFileSync(editedPath, `older release bytes for ${edited.path}\n`);
+    assertSuccess(install(), 'upgrade after reverting the operator edit');
+    const complete = readJson(receiptPath);
+    assert.strictEqual(complete.partial, false);
+    assert.ok(complete.files.every(file => file.sourceVersion === complete.version));
+  });
+
   test('nested destination symlink aborts before any package write', () => {
     const symlinkTarget = mkdir(path.join(targets, 'symlink-target'));
     const escapedMarketplace = mkdir(path.join(outside, 'escaped-marketplace'));

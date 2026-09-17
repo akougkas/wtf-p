@@ -24,8 +24,11 @@ const {
   atomicWriteFile,
   createOwnedDirectory,
   createTargetGuard,
+  isTrustedReceipt,
   materializeTargetGuard,
   readOwnedRegularSnapshot,
+  readReceipt,
+  relativeOwnedPath,
   removeCreatedDirectories,
   sha256Buffer
 } = require('../lib/ownership');
@@ -221,8 +224,9 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
   const c = out.colors;
   let rl = null;
   let globalChoice = null;
-  const stats = { installed: 0, skipped: 0, backed: 0 };
+  const stats = { installed: 0, skipped: 0, backed: 0, unchanged: 0 };
   const plan = [];
+  const retained = [];
   const targetGuard = options.targetGuard || createTargetGuard(targetDir);
 
   assertTargetGuard(targetGuard);
@@ -230,9 +234,21 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
     assertOwnedAbsolutePath(targetDir, file.dest, targetGuard);
   }
 
-  const existingFiles = files.filter(file => Boolean(
-    readOwnedRegularSnapshot(targetDir, file.dest, targetGuard, { allowMissing: true })
-  ));
+  // A trusted receipt proves which existing files this package wrote. A file
+  // whose bytes still match its receipt hash is unmodified package output, so
+  // an upgrade replaces it without treating it as an operator conflict.
+  const { receipt } = readReceipt(targetDir, targetGuard);
+  const ownedHashes = new Map();
+  if (isTrustedReceipt(receipt, targetDir, targetGuard)) {
+    for (const entry of receipt.files) ownedHashes.set(entry.path, entry.sha256);
+  }
+  const ownedUnmodified = (file, snapshot) => Boolean(snapshot) &&
+    ownedHashes.get(relativeOwnedPath(targetDir, file.dest, targetGuard)) === snapshot.sha256;
+
+  const existingFiles = files.filter(file => {
+    const snapshot = readOwnedRegularSnapshot(targetDir, file.dest, targetGuard, { allowMissing: true });
+    return Boolean(snapshot) && !ownedUnmodified(file, snapshot);
+  });
 
   if (existingFiles.length > 0 && !hasForce && !hasBackupAll && isInteractive) {
     const relPath = getPathLabel(targetDir, true);
@@ -275,8 +291,19 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
         }
       }
 
+      const source = readSourceSnapshot(file);
+      const processed = processContent(file.src, pathPrefix, source.bytes);
+      const content = processed === null ? source.bytes : Buffer.from(processed, 'utf8');
+
       let choice = exists ? 'skip' : 'create';
-      if (exists && hasBackupAll) {
+      if (exists && !hasForce && !hasBackupAll && ownedUnmodified(file, existingSnapshot)) {
+        if (sha256Buffer(content) === existingSnapshot.sha256) {
+          stats.unchanged++;
+          retained.push({ dest: file.dest, componentId: file.componentId, action: 'retained', backupPath: null });
+          continue;
+        }
+        choice = 'overwrite';
+      } else if (exists && hasBackupAll) {
         choice = 'backup';
       } else if (exists && hasForce) {
         choice = 'overwrite';
@@ -307,9 +334,6 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
         continue;
       }
 
-      const source = readSourceSnapshot(file);
-      const processed = processContent(file.src, pathPrefix, source.bytes);
-      const content = processed === null ? source.bytes : Buffer.from(processed, 'utf8');
       plan.push({
         ...file,
         exists,
@@ -563,7 +587,10 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
 
   return {
     ...stats,
-    writtenFiles: applied.map(({
+    // Retained files already hold this version's bytes. They join the receipt
+    // at the new version only when the transaction wrote something, so a
+    // no-op reinstall leaves the receipt untouched.
+    writtenFiles: applied.length === 0 ? [] : [...applied.map(({
       previousContent,
       previousMode,
       existed,
@@ -573,7 +600,7 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
       backupHash,
       backupIdentity,
       ...record
-    }) => record),
+    }) => record), ...retained],
     rollback,
     commit() {
       rolledBack = true;
