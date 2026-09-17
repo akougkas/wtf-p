@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "dbd8254b255c90d5cc97303f49e1f2392b3a8da6ad443c036d6b95b8af51b524",
+  "sourceHash": "4c0980d5e7b6f57b9b7ca94af65785aa04d54d4c4513c1647a716a21471a5e02",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -202,147 +202,147 @@
     },
     {
       "path": "commands/wtfp/add-todo.toml",
-      "sha256": "a9645d20b32c132dac2ecba669865afc7b1ff1b5410b353be215f9d2f377d34e"
+      "sha256": "b7f0ab1b4626eac0f12c2f872dad68b59c3f9df2ec6a441f9ee51166f72daf61"
     },
     {
       "path": "commands/wtfp/analyze-bib.toml",
-      "sha256": "636f8fc446f4325b2efa70c00af36d78934c3d410531611e1da61900353f8210"
+      "sha256": "f44aedaca9fda0b350b82252c52ca3480f4a0c01e2422391c0acbf67499e85e2"
     },
     {
       "path": "commands/wtfp/audit-milestone.toml",
-      "sha256": "d29a1071d09a6df7d47975c354861f4f4f2c5fc9df6dc317cdfb6f0bd86a1154"
+      "sha256": "72ac9b22b59c25cae1faac01299ae46ed8561ca7d91213bdfc1980069c78ab24"
     },
     {
       "path": "commands/wtfp/check-refs.toml",
-      "sha256": "509532a2be09f64c011dc072177264f953fa0bd17acbdfcabc51729681b1a9cb"
+      "sha256": "b60a37dbf108899581de4e40b716bd6de2883ae3596cf6a6ecd7f38781ecd9a0"
     },
     {
       "path": "commands/wtfp/check-todos.toml",
-      "sha256": "26eea5c7f075b073fed31cb5ee34782afe63a5c9b3e7476f7b925e95845682d7"
+      "sha256": "6643f7ce1d55634eb30d99a4dffbd9d2db547bc00bc05c68e61cf8ec1fefef8a"
     },
     {
       "path": "commands/wtfp/checkpoint.toml",
-      "sha256": "e4740724d2116932e4e55433ba61d74658f0858c2a98e62e4351e5c4c2d15595"
+      "sha256": "a0d9f26cf6b44994d8ee37d2e084f0a42428cd69e138c69c32d4be8a0d16d142"
     },
     {
       "path": "commands/wtfp/contribute.toml",
-      "sha256": "0c727fbe9378641e5a9506de6163d2c40a658ae0765bd4b6253e1d1134b44258"
+      "sha256": "b49a0b1ded4297ed60d57e5e969858e041cb492c514ea8c0daaa90d47a2856ee"
     },
     {
       "path": "commands/wtfp/create-outline.toml",
-      "sha256": "018519dee8071067f6555bdbd9f7bd2e9d32738efcb565b18622edb550125f14"
+      "sha256": "6904f25420df40bf276f61693ae6f509d31c96640339d68301263040323d831e"
     },
     {
       "path": "commands/wtfp/create-poster.toml",
-      "sha256": "265e2c99c577034e9c5ae4269fa08cb1bf9dba1e4905005329d31fa94040bb00"
+      "sha256": "83b08ece22378ef772ca27d2a199da3188cf33e47f807c25dfef57e4a812ba50"
     },
     {
       "path": "commands/wtfp/create-slides.toml",
-      "sha256": "6b3633ceb26c09644ec05df7b24f94b392efeb26755cc79cdd693bb684150b8e"
+      "sha256": "9ebaca86770bd8956c09be012a5a05464268bbf3d5bd534365e2df0ae8d878b4"
     },
     {
       "path": "commands/wtfp/discuss-section.toml",
-      "sha256": "61d087abed39a0cb98fb7b23020a61ba82c8d39641c9a907a79696da9dfe3644"
+      "sha256": "3004110082745277d3afbb67f602a5295dc59142711e59758ec99b2e10a85135"
     },
     {
       "path": "commands/wtfp/execute-outline.toml",
-      "sha256": "0ae889861b8b5707d3953d66ba3f730f99e1bac7f7364064fce28dcbbce53cf7"
+      "sha256": "2e9e1223921a12fd93cd4eb5dc73143287be6bddc9b48cd3b99f95b021accc5e"
     },
     {
       "path": "commands/wtfp/export-latex.toml",
-      "sha256": "4ab94389627242f51cc8813a5ebe8c94f208b110582836f5b5c4ac546f02e583"
+      "sha256": "08b345d0ff2da952c60476f63efe9cf2a5f5a729631c9749c7b8f41a55dba271"
     },
     {
       "path": "commands/wtfp/help.toml",
-      "sha256": "2040f0d9ac370af3c784ade61fade9040c832b6a1fbcbf3ad03d185196dcb3b5"
+      "sha256": "96a550e097e2e86a5fe288e34428357096e327527dbad3d052c1c8a450831f82"
     },
     {
       "path": "commands/wtfp/insert-section.toml",
-      "sha256": "db87e5b90f7c526e389482f44a2781aea8ecc86afa5913692e117b8e1ac6d706"
+      "sha256": "4b239a45d51121e49f167a49d354d5829e0e2043f355f14a707c7e52746724b6"
     },
     {
       "path": "commands/wtfp/list-assumptions.toml",
-      "sha256": "bdd68a95bd9f9da3fbc9a6c693ef0b47c4ddb2847c0bd8a5b978152726b5f17d"
+      "sha256": "08705388c3940de8f3f2c7f26cdfefb57216ea1ac19dc25b0768b45816cdacd8"
     },
     {
       "path": "commands/wtfp/map-project.toml",
-      "sha256": "da7b6bb3037fab78ddd5bcd6d494a74470a77674d618145890f43243a55e01a4"
+      "sha256": "72de22e262c7838aedf2c56f67ab40a390998fc0dee05ca99a0a65ce796dad6b"
     },
     {
       "path": "commands/wtfp/new-paper.toml",
-      "sha256": "1d256ba41931e8d20f925e96ba284448ba55ad7632631d3c0a66383a803c6ec7"
+      "sha256": "1535f4b67635f686f5786549a0e8e88a5789ff3194a717f46f48f6f1372c5ef8"
     },
     {
       "path": "commands/wtfp/pause-writing.toml",
-      "sha256": "8200c1815e628c4e81bf612f7aedcf810474788fd3819883196c2d5c3a60a3e1"
+      "sha256": "2038ccaa07932c8516c047ff72f57e9de7d419cdac98111661581b593aaaff8f"
     },
     {
       "path": "commands/wtfp/plan-milestone-gaps.toml",
-      "sha256": "74d295fbea82adf98e6c9559583738079fed27c002528388c14ed6639c5c7cfd"
+      "sha256": "b1ca19c275430025f264d45c7a7b5054d13803fa44c975152fc30071c5da3dcd"
     },
     {
       "path": "commands/wtfp/plan-revision.toml",
-      "sha256": "7a5bd0fe768fbbdcb3892bbc0715ad4288260d060295b698b285c9f9787967e3"
+      "sha256": "1e4e189d576978a3c55361131d279f35985da9d14c14ee4bf088dd1adfd4747a"
     },
     {
       "path": "commands/wtfp/plan-section.toml",
-      "sha256": "8eedb7edbbb041ec8f0c196823f7d84f022aed6e7051df8c3e9f4f313af38fe9"
+      "sha256": "d86d6427e86775de73c0bc8e52cddbebeb68802b4c218d31f48c549294f66bb2"
     },
     {
       "path": "commands/wtfp/polish-prose.toml",
-      "sha256": "ae2b8db44f12424075db4c1c83208a9fa0e82b12ffafd19b0356f5b73099b622"
+      "sha256": "b3ba3aa4e4b7f68bd29360a43cf6b1509a406dad0aa7a8176a832eb98c275902"
     },
     {
       "path": "commands/wtfp/progress.toml",
-      "sha256": "ed98a055d5d50a3fd094290148075d91455d43bd27162d15530498a9617fce1d"
+      "sha256": "91872af326301e52e081f592560a7c3ccb8306414147602a75fa8a1ae453c7e2"
     },
     {
       "path": "commands/wtfp/quick.toml",
-      "sha256": "b3499a578adf8a7766b78a5cab59a522c0351e54cbe80db3c135e3435a36b98d"
+      "sha256": "2befb3884139d122efcf9eda21d0e536534be094934baae65c84387f66c2b73d"
     },
     {
       "path": "commands/wtfp/remove-section.toml",
-      "sha256": "209c3b4d07fac46612796ad784b09cc00e4adadc5fb94db7da5d1dfd22f3a477"
+      "sha256": "3dea823a56691c6cfd9cb9211110defeda9630408aa29af854164faebd9faa4f"
     },
     {
       "path": "commands/wtfp/report-bug.toml",
-      "sha256": "d2b3d6571da8fb837ee27c2bce028ede11415c1e9942cd90da4fa6f546973d76"
+      "sha256": "a19a32f8138ae57e18395229ebbb8d3ba73ea432a98adec720a7baaa4af8a71a"
     },
     {
       "path": "commands/wtfp/request-feature.toml",
-      "sha256": "825f6cedcfffd0202d87fa7d923369cee7bc17b78219e9abf4e81f877182ec3f"
+      "sha256": "1ebc402cf5fb98a6db27e2dad657867f20c49a052bc7e76e2892e388ae30866d"
     },
     {
       "path": "commands/wtfp/research-gap.toml",
-      "sha256": "8d7601b5e683dab4dae3b58aa87109b6cb1c1e5c9deeeb619a23b58a992ebf47"
+      "sha256": "33ca181a04d08351799379ce5bb896fc5448dca893b9bf030dab443ae172db4b"
     },
     {
       "path": "commands/wtfp/resume-writing.toml",
-      "sha256": "67d4ad221dba0fef3c4e6578fdbf0f271230730beec4804065fa90b7c1e9b6a8"
+      "sha256": "c8d40f801772307df436f90f20482b1f68fa871f950830edc4952acd2d3ac584"
     },
     {
       "path": "commands/wtfp/review-section.toml",
-      "sha256": "0bf45054c42c858067fbc51bd5a4f5d538177cf20222989188df90d2c2215507"
+      "sha256": "f7a57c70e9481d17132227227c253bc17b070da0e69f4c5b91afad9ecf3e876f"
     },
     {
       "path": "commands/wtfp/settings.toml",
-      "sha256": "0eb77f8f2d2f1a7096076db744185771da9169115d075a18a428259b1bc57b38"
+      "sha256": "8e62693ae3b46fdfe8df08b8344036c1e5b184bb4bdf52a3dd360b3c0d25d4ee"
     },
     {
       "path": "commands/wtfp/submit-milestone.toml",
-      "sha256": "66a4785f01108c69cd0f58232c1d2df7370362035dd3d3e283b720f1ec7df065"
+      "sha256": "68871c5abebd80aef745566a380dd565e397b647da2346a7d36508f72edb0f48"
     },
     {
       "path": "commands/wtfp/update.toml",
-      "sha256": "db78a354a1e0ea1621f41dbef2115778ce6fb4441bcbbd8776855a3bef1f1902"
+      "sha256": "8babcff702b8a8f19a2fd7deae46b76b952682ddc9abcd4c937360f52418b49d"
     },
     {
       "path": "commands/wtfp/verify-work.toml",
-      "sha256": "e7b4b3e6aacef078624e9ee001be0bcd0d605f7f0d6a6623e5f15057a2c8b345"
+      "sha256": "55031b1d1c17e25614b60c1e7958d375e2bb5e4aa953bb3783b0db9f14131483"
     },
     {
       "path": "commands/wtfp/write-section.toml",
-      "sha256": "a286748ae18f735507278a965fbeba3c72bf12902289018ed5e71cb184761e14"
+      "sha256": "e689ad2f75a810031d5fcdacc7a57d72e96ba63bca3edddd631a376ac41a80e9"
     },
     {
       "path": "compatibility/action-availability.json",
