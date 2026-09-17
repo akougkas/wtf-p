@@ -3,7 +3,7 @@
 CiteNexus supplies source-backed scholarly discovery to WTF-P. WTF-P owns the writing
 workflow, approval gates and durable project state; CiteNexus owns provider queries,
 metadata normalization, provenance and deterministic citation export. The integration
-ships in `wtf-p@0.7.0` as an optional backend. CiteNexus itself is a separate Python
+has shipped since `wtf-p@0.7.0` as an optional backend. CiteNexus itself is a separate Python
 package that WTF-P never installs, registers or updates.
 
 ## Install the companion

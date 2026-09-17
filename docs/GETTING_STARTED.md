@@ -29,25 +29,25 @@ That route loads the committed envelope and runs no WTF-P code. It does not copy
 The npm installer covers every host. Pin the version when reproducibility matters:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install claude
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install codex
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install copilot
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install opencode
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install antigravity
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install gemini
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install clio
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install claude
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install codex
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install copilot
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install opencode
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install antigravity
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install gemini
 ```
 
 Run only the line for the client you intend to use. Each line installs the generated adapter for that client into the client's documented user configuration root and, where the client has a plugin lifecycle, registers it natively (Clio `library install`, Claude and Copilot marketplace plus plugin install, Codex marketplace plus plugin add, Antigravity `plugin install`). It does not replace the client or launch an interactive session. For Clio, the installer registers the plugin when `clio-coder` is on PATH; without the binary the bundle is staged and the installer tells you to re-run the same command once the binary is available.
 
-The explicit `--package=wtf-p@0.6.0 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.6.0 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0`; stop if it reports another version or target.
+The explicit `--package=wtf-p@0.7.1 -- wtf-p` split is intentional. It makes npm select the requested package before resolving its executable. On a workstation with WTF-P 0.5 installed globally, the shorter `npx wtf-p@0.7.1 ...` form can dispatch the old global executable instead. The leading `npx --yes` permits npm to acquire that exact package without a separate download prompt; because it appears before `--`, it is not a WTF-P workflow approval. Confirm that the installer banner reports `WTF-P v0.6.0`; stop if it reports another version or target.
 
 An unqualified `npx wtf-p` follows npm's stable `latest` tag, which is the 0.6 line from this release on. A v0.5 installation is reached only by naming that version explicitly.
 
 The installer asks before consequential installation choices. Add `--advanced` only for reviewed automation or a disposable profile:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio --advanced
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install clio --advanced
 ```
 
 That flag changes installer interaction only. It does not enable client Full Auto, answer scientist interviews, or waive a workflow approval.
@@ -189,6 +189,8 @@ Run a fleet with `clio-coder fleet run <fleet> --var section=<section-id>` (a mo
 
 Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The fleets declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
 
+On Clio 0.4.9, a project whose `.gitignore` excludes either directory fails `fleet validate` with `write boundary: '.planning/' is ignored by .gitignore`. Run `git check-ignore -v .planning paper` to find the rule, and remove it if you use the fleets. The ordinary `/wtfp:*` actions do not need these directories tracked.
+
 ### Isolated Clio evaluation
 
 Setting only `CLIO_CODER_CONFIG_DIR` changes one destination; it does not isolate Clio's home, XDG, state, cache, data, binary, and temporary roots. For a disposable evaluation, put all of them beneath one mode-0700 root and run both the installer and Clio through the same environment. The config, data, state, cache, and binary directories below are descendants of `CLIO_CODER_HOME`, as the prefix guard requires:
@@ -232,7 +234,7 @@ run_isolated_clio() {
     "$@"
 }
 
-run_isolated_clio npx --yes --package=wtf-p@0.6.0 -- wtf-p install clio --advanced
+run_isolated_clio npx --yes --package=wtf-p@0.7.1 -- wtf-p install clio --advanced
 cd /path/to/disposable-proposal
 run_isolated_clio clio-coder --autonomy suggest
 ```
@@ -246,11 +248,13 @@ The `status` and `doctor` commands remain legacy Claude-oriented. Passing a mode
 Preview removal before deleting exact receipt-owned files:
 
 ```bash
-npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall clio --dry-run
-npx --yes --package=wtf-p@0.6.0 -- wtf-p uninstall clio --yes
+npx --yes --package=wtf-p@0.7.1 -- wtf-p uninstall clio --dry-run
+npx --yes --package=wtf-p@0.7.1 -- wtf-p uninstall clio --yes
 ```
 
 Replace `clio` with the intended target. Uninstall preserves modified files and unrelated siblings by default. It removes client resources, not the academic project's `.planning/` or `paper/` data. For Clio, native `library remove` runs only when every file below the installed root is unchanged and receipt-owned.
+
+Remove WTF-P from Clio with the WTF-P uninstaller rather than `clio-coder library remove wtfp` alone. The native command deletes the plugin files and registration but leaves WTF-P's `.wtfp-version` receipt in the Clio config directory. If that has already happened, `wtf-p uninstall clio --yes` reports the 204 files as already missing and removes the leftover receipt.
 
 ## Boundaries of this candidate
 

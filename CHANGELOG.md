@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-17
+
+Documentation patch from installing the published 0.7.0 on a real Clio
+Coder 0.4.9 profile. Generated envelopes change only by version string.
+
+### Fixed in 0.7.1
+
+- The getting-started and proposal guides installed and uninstalled
+  `wtf-p@0.6.0`; every user-facing command now names `wtf-p@0.7.1`
+- Document that `clio-coder library remove wtfp` leaves WTF-P's
+  `.wtfp-version` receipt behind, and that `wtf-p uninstall clio --yes`
+  removes it
+- Document the Clio 0.4.9 `fleet validate` error for projects that
+  gitignore `.planning/` or `paper/`, and how to find the ignore rule
+- Document that `library list` shows the removed staging directory as the
+  package source, and that `library import` cannot adopt WTF-P from a
+  GitHub URL
+- Maintainers: post-publish `npx` checks must run outside the checkout,
+  and CI now fetches full history so the evaluation seal can resolve its
+  sealed commit
+
 ## [0.7.0] - 2026-09-17
 
 Adds an optional CiteNexus scholarly research backend to the existing
@@ -436,7 +457,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/akougkas/wtf-p/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0
 [0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2

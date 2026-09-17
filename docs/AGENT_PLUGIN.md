@@ -34,7 +34,9 @@ An unchanged active installation is idempotent: a prior `clio-coder library list
 
 Clio owns integrity, provenance, drift, and enable/disable for the installed package (managed natively via `clio-coder library drift [wtfp] --user|--project --json` and `clio-coder library enable|disable wtfp --user|--project`). WTF-P does not re-implement any of them and does not read or write native library state (such as `library.yaml` or `plugins/state.json`). The WTF-P receipt owns exactly one thing: the bytes it published. Uninstall follows that receipt and runs `clio-coder library remove wtfp --<scope>` only when every file below the installed root is unchanged and receipt-owned; modified or unowned files defer native removal and preserve the registration. Registration and file publication are compensated if installation, verification, or receipt publication fails, and a concurrent edit preserves a recovery tree with an explicit diagnostic.
 
-The temporary staging directory is not a durable update origin. Update through WTF-P with the selected distribution or source rather than reusing a removed staging path.
+The temporary staging directory is not a durable update origin. Update through WTF-P with the selected distribution or source rather than reusing a removed staging path. `clio-coder library list --kind plugin` still displays that removed `.wtfp-staged-*` path as the package source; the label is cosmetic, and `library drift` and `library update --dry-run` continue to work on the installed copy.
+
+`clio-coder library import` cannot adopt WTF-P from a GitHub tree URL. Import accepts data-only packages, and Clio blocks this one because its skills reference packaged action files and the bundled dispatcher. Install it from npm or a local checkout instead.
 
 An earlier candidate could leave a WTF-P extension at `<config>/extensions/wtfp`. Remove it with that candidate's WTF-P uninstaller before installing the plugin, since both register the same prompt names. WTF-P no longer reads, migrates, or retires that location.
 

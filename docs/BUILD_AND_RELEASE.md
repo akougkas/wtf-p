@@ -148,6 +148,8 @@ npm publish --tag next       # prerelease
 
 Separating preparation, tagging, pushing, and registry publication keeps each externally visible mutation inspectable and independently authorized.
 
+Run post-publish `npx --package=wtf-p@<version> -- wtf-p ...` checks outside this checkout. When the working directory's own `package.json` already satisfies the requested version, npx skips the download and fails with `sh: 1: wtf-p: not found`. The registry may also take a few minutes to serve a newly accepted version.
+
 ## Native validation matrix
 
 Before claiming first-class support, validate the packed artifact in disposable client homes with the currently supported CLIs:

@@ -1,5 +1,5 @@
 {
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "wtfp",
-  "description": "Portable academic research and writing workflows (WTF-P 0.7.0)."
+  "description": "Portable academic research and writing workflows (WTF-P 0.7.1)."
 }

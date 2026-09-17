@@ -19,10 +19,10 @@ the scientific judgment. The agent keeps the bookkeeping and does bounded jobs.
 
 It ships as one canonical [Agent Plugins 1.0.0](https://agent-plugins.org)
 bundle that a deterministic compiler projects into a native package for seven
-coding-agent hosts. Version `0.7.0` is the current stable release and is
+coding-agent hosts. Version `0.7.1` is the current stable release and is
 what npm `latest` resolves to; v0.5 remains installable by explicit version.
 
-**Optional CiteNexus research backend (0.7.0):** `citation-search --backend=cite-nexus`
+**Optional CiteNexus research backend (since 0.7.0):** `citation-search --backend=cite-nexus`
 queries Crossref, DataCite and Europe PMC by default, plus explicitly selected academic
 APIs, through the [CiteNexus](docs/CITE_NEXUS.md) MCP server. Results keep their source
 evidence and stay candidates. CiteNexus is a separate Python package
@@ -56,13 +56,13 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
-| Claude Code | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
-| Codex | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
-| OpenCode | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
+| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
+| Claude Code | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
+| Codex | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
+| OpenCode | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.7.1 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in
@@ -76,7 +76,7 @@ the old executable instead.
 ## Sixty-second start
 
 ```bash
-npx --yes --package=wtf-p@0.7.0 -- wtf-p install clio
+npx --yes --package=wtf-p@0.7.1 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
 clio-coder --autonomy suggest
 ```
