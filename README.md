@@ -56,13 +56,13 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.8 |
-| Claude Code | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.271 |
+| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
+| Claude Code | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
 | Codex | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.83 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
 | OpenCode | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.2 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.59.0 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.7.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in

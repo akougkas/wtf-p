@@ -2,7 +2,7 @@
 
 "Verified" here means that the generated envelope passed the host's own native discovery path inside a disposable profile, preserved the canonical action, skill, and agent surface that host supports, and wrote nothing into the operator's normal client state. Model-execution evidence is a separate level; it is recorded under [Historical evidence](#historical-evidence) with the candidate it belongs to and is never implied by a discovery row.
 
-Last exercised: 2026-09-14 on the `0.6.0` envelope, which differs from `0.6.0-rc.4` only by the unified plugin name `wtfp`, the removed v0.5 tree, and the repository-root marketplaces; the full rc.4 round of 2026-09-09 is the basis for every count below and the release round reproduced them. The exact commands per host are in [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Upgrading an existing client or paper? Follow the [v0.5 to v0.6 migration guide](MIGRATION_V05_TO_V06.md) before replacing legacy files.
+Last exercised: 2026-09-17 on the `0.7.0` envelope, whose installer route, native listing, and uninstall passed on all seven hosts as recorded in [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Before that, 2026-09-14 on the `0.6.0` envelope, which differs from `0.6.0-rc.4` only by the unified plugin name `wtfp`, the removed v0.5 tree, and the repository-root marketplaces; the full rc.4 round of 2026-09-09 is the basis for every count below and the release round reproduced them. The exact commands per host are in [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Upgrading an existing client or paper? Follow the [v0.5 to v0.6 migration guide](MIGRATION_V05_TO_V06.md) before replacing legacy files.
 
 ## Current native discovery (0.6.0)
 
