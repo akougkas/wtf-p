@@ -6,7 +6,11 @@ Copy the body below, replace every bracketed placeholder from the manuscript and
 
 ## Confirm before writing
 
-Talk length, audience, venue format, whether questions are inside or outside the slot, and the single thing the audience should remember.
+Talk length, audience, venue format, whether questions are inside or outside the slot, the single thing the audience should remember, and the exact speaker name, affiliation, and venue line. Ask for any of these the manifest does not record.
+
+## Evidence gate
+
+Before writing, build a claim ledger with one row per claim, number, comparison, or figure, each naming its support as a manuscript passage, a `project://sources/{source}` record, a `project://evidence/{evidence}` record, or a named project file path. Cut any row without support; statements about other systems or prior work need a cited source record, never general knowledge. Never invent speaker names, affiliations, emails, funding, venue, or dates; leave a visible placeholder such as `[AFFILIATION NEEDED]` and report it as unresolved. When the subject is software, derive every diagram from named source files or documentation, state those paths on the slide, and leave a labeled placeholder rather than an invented architecture.
 
 ## Budgets
 
@@ -25,7 +29,7 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## [Title slide]
 
-[Title] · [Speaker] · [Affiliation] · [Venue and date]
+[Title] · [Speaker or SPEAKER NEEDED] · [Affiliation or AFFILIATION NEEDED] · [Venue and date or VENUE NEEDED]
 
 ## [The problem, in one image or one sentence]
 
@@ -42,7 +46,7 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## [Approach]
 
-[One diagram. Speaker note: walk it left to right; do not read the labels aloud.]
+[One diagram derived from named source files or documents. Source: [paths]. Speaker note: walk it left to right; do not read the labels aloud.]
 
 ## [Key design decision]
 
@@ -80,4 +84,4 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## Attribution rules
 
-Every number and figure must trace to a manuscript passage or an evidence record. Reused figures carry their original attribution on the slide. Speaker notes are part of the deliverable and follow the same evidence rule as the slides: do not put a claim in a note that the records do not support.
+Every number, figure, and claim must trace to a row in the claim ledger. Reused figures carry their original attribution on the slide. Speaker notes are part of the deliverable and follow the same evidence rule as the slides: do not put a claim in a note that the records do not support.

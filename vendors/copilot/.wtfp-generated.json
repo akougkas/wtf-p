@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "4f20cee07923c03cc2317d1fe6331aa5ed6ba0cc45109c79cb52ed9678c6d2bf",
+  "sourceHash": "8193a5fa2561381405ac6f8452e1ac35a1b601de05b5a4ef2a24247872e880ed",
   "files": [
     {
       "path": "marketplace.json",
@@ -206,7 +206,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-deliver-research/references/actions.md",
-      "sha256": "557de19dbcc758739499c4652931db6cb558e1c7c2ff867ea5c62a8cd3789ea4"
+      "sha256": "ce1ece8fbd9769ac62049290d7941c06c0aa20701b7e88a95b469a1acd0f28dc"
     },
     {
       "path": "project/.github/skills/wtfp-deliver-research/SKILL.md",
@@ -614,7 +614,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-deliver-research/references/actions.md",
-      "sha256": "b49bc64487d5cec8ee06958d7a07913c1317ec439ccc911ea83e5c04caddb2b1"
+      "sha256": "c47a292eed774e7d6f163b1318c9c176ea3f881ae306d8887cabdb7c6408b730"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-deliver-research/SKILL.md",
@@ -702,7 +702,7 @@
     },
     {
       "path": "project/.github/wtfp/templates/poster.md",
-      "sha256": "c4dfd10bcd4ba7664d99adc0ed3574b6f6f52c99648a8b7465f467cc5a27ca07"
+      "sha256": "5bbabf0adfc6de8f54cc839548f81b35045a7c8ffcc7117ea4008de7946c51d2"
     },
     {
       "path": "project/.github/wtfp/templates/README.md",
@@ -710,7 +710,7 @@
     },
     {
       "path": "project/.github/wtfp/templates/slides.md",
-      "sha256": "32068d09f1523b0eb5ac3ce5cbf964624117082ffbaa538907bac0db116326f5"
+      "sha256": "fd88d13f02b79a8e69e23dc8a72913cfd1ecb18aaea9013f6a2f2e080f301035"
     },
     {
       "path": "project/.github/wtfp/tools.json",
@@ -750,11 +750,11 @@
     },
     {
       "path": "project/.github/wtfp/workflows/create-poster.md",
-      "sha256": "142d8d332909f6a1828b769eea40d8caa7985d8f17fb932f2d025fe6d8e34b6d"
+      "sha256": "b0fe98c72709b53a0553bb5d9343e112ef042cf2a950fa064108ac66f59d1f14"
     },
     {
       "path": "project/.github/wtfp/workflows/create-slides.md",
-      "sha256": "275996a358528cfd35abc096e1041c189de9a36ec163c5d063de8dc82f0fe36d"
+      "sha256": "8ad4189076a7460fb0ec55d2aab4d4898b906c1adfbe9810b293b46192a5622e"
     },
     {
       "path": "project/.github/wtfp/workflows/discuss-section.md",

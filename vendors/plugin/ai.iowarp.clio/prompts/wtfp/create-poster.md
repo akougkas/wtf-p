@@ -22,10 +22,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Confirm audience, dimensions, format, and emphasis, following the confirmation list in `${pluginRoot}/templates/poster.md`.
-1a. Start from the panel structure and word budgets in `${pluginRoot}/templates/poster.md`. Delete any panel the manuscript does not support rather than filling it.
-2. Select only claims supported by manuscript and evidence, then design a legible poster with source attribution.
-3. Write the poster source and its assets under the declared deliverable URI without changing project records except through a separately declared action. This action produces poster source, not a rendered image or PDF: WTF-P declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
+1. Confirm audience, dimensions, format, emphasis, and the exact author, affiliation, contact, funding, and venue metadata, following the confirmation list in `${pluginRoot}/templates/poster.md`. Never invent missing metadata; leave the visible placeholder the template names.
+1a. Start from the layout, panel structure, and word budgets in `${pluginRoot}/templates/poster.md`. Delete any panel the manuscript does not support rather than filling it.
+2. Run the evidence gate in `${pluginRoot}/templates/poster.md`: build the claim ledger and refuse every statement, comparison, or figure without a cited source record, manuscript passage, or named project file. Derive each diagram from named source files or documents and state their paths beneath it.
+3. Write the poster as laid-out source (the template's HTML skeleton, or the venue's mandated template carrying the same grid and type scale) plus its assets and claim ledger under the declared deliverable URI, without changing project records except through a separately declared action. This action produces poster source, not a rendered image or PDF: WTF-P declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
 
 ## Safety and completion
 

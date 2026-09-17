@@ -179,7 +179,7 @@ Contract: [protocol/actions/create-slides.json](../../../actions/create-slides.j
 1. Require project identity and enough manuscript or verified results to support a presentation.
 2. Ask for duration, expected slide count, audience, occasion, delivery format, visual style, and desired emphasis.
 3. Derive a timed narrative: audience problem, thesis, minimum background, method, strongest evidence, limitations, implications, and closing takeaway. Allocate time and slides before writing.
-4. Use verified project claims and cite source or manuscript locations in speaker notes or a references slide. Do not introduce novel results to make the story cleaner.
+4. Use verified project claims and cite source or manuscript locations in speaker notes or a references slide. Do not introduce novel results to make the story cleaner. Refuse any claim without a ledger row, never invent speaker or venue metadata, and derive diagrams only from named source files or documents with stated paths.
 5. Prefer one communicative purpose per slide. Use concise text, readable type, high contrast, descriptive titles, accessible color, and alt text or equivalent descriptions for meaningful visuals.
 6. Use existing figures only when provenance and interpretation are known. Mark placeholders and data needs explicitly; never fabricate a chart.
 7. Generate editable slide source and a delivery manifest under `project://deliverables/slides/{artifact}`.
@@ -192,11 +192,11 @@ Completion requires an audience-appropriate editable deck with an honest render 
 
 Contract: [protocol/actions/create-poster.json](../../../actions/create-poster.json)
 
-1. Require project identity and verified manuscript findings. Ask for dimensions, orientation, venue rules, audience viewing distance, title, authors, affiliations, contact details, output format, and available visuals.
+1. Require project identity and verified manuscript findings. Ask for dimensions, orientation, venue rules, audience viewing distance, title, authors, affiliations, contact details, output format, and available visuals. Never invent missing metadata; leave a visible placeholder and report it.
 2. Define a non-linear reading hierarchy: one-sentence takeaway, motivation, minimal method, principal evidence, limitations, conclusion, and contact or artifact link.
 3. Budget physical space before writing. Prioritize the title, takeaway, and strongest figure; avoid shrinking prose to preserve excess content.
-4. Use verified claims, values, citations, and figures. Record provenance and include accessible descriptions. Mark missing visuals as placeholders rather than generating false evidence.
-5. Generate editable poster source and a delivery manifest under `project://deliverables/poster/{artifact}`.
+4. Use verified claims, values, citations, and figures, recorded in the claim ledger from `protocol://templates/poster.md`; refuse any statement without a source record, manuscript passage, or named project file. Derive diagrams only from named source files or documents and state their paths. Record provenance and include accessible descriptions. Mark missing visuals as placeholders rather than generating false evidence.
+5. Generate editable, laid-out poster source (the template's HTML grid or the venue's mandated template) and a delivery manifest with the claim ledger under `project://deliverables/poster/{artifact}`.
 6. Check dimensions, orientation, margins, font sizes at final scale, column flow, contrast, image resolution, citation legibility, link or code targets, and overflow.
 7. Render only when requested and a configured host-provided local renderer exists; invoke it under the action's declared `tool.execute` effect and verify the actual artifact dimensions. Distinguish source validity from render success.
 8. Report source and rendered paths, validation results, print-service considerations, and unresolved manual steps.
@@ -215,9 +215,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Confirm audience, duration, format, and speaking goal, following the confirmation list in `protocol://templates/slides.md`.
+1. Confirm audience, duration, format, speaking goal, and the exact speaker, affiliation, and venue metadata, following the confirmation list in `protocol://templates/slides.md`. Never invent missing metadata; leave a visible placeholder.
 1a. Derive the slide count from the confirmed duration using the budget table in `protocol://templates/slides.md`, not from the manuscript's section count.
-2. Build a narrative arc from supported manuscript claims and include citations or attribution where needed.
+2. Build a narrative arc from supported manuscript claims only, running the evidence gate in `protocol://templates/slides.md`: refuse every statement, comparison, or figure without a cited source record, manuscript passage, or named project file, and derive each diagram from named source files or documents with their paths stated on the slide.
 3. Write slide source and assets under the declared deliverable URI; preview before replacing an existing deliverable. This action produces slide source, not a rendered deck: WTF-P declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
 
 ## Safety and completion
@@ -594,7 +594,11 @@ Copy the body below, replace every bracketed placeholder from the manuscript and
 
 ## Confirm before writing
 
-Talk length, audience, venue format, whether questions are inside or outside the slot, and the single thing the audience should remember.
+Talk length, audience, venue format, whether questions are inside or outside the slot, the single thing the audience should remember, and the exact speaker name, affiliation, and venue line. Ask for any of these the manifest does not record.
+
+## Evidence gate
+
+Before writing, build a claim ledger with one row per claim, number, comparison, or figure, each naming its support as a manuscript passage, a `project://sources/{source}` record, a `project://evidence/{evidence}` record, or a named project file path. Cut any row without support; statements about other systems or prior work need a cited source record, never general knowledge. Never invent speaker names, affiliations, emails, funding, venue, or dates; leave a visible placeholder such as `[AFFILIATION NEEDED]` and report it as unresolved. When the subject is software, derive every diagram from named source files or documentation, state those paths on the slide, and leave a labeled placeholder rather than an invented architecture.
 
 ## Budgets
 
@@ -613,7 +617,7 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## [Title slide]
 
-[Title] · [Speaker] · [Affiliation] · [Venue and date]
+[Title] · [Speaker or SPEAKER NEEDED] · [Affiliation or AFFILIATION NEEDED] · [Venue and date or VENUE NEEDED]
 
 ## [The problem, in one image or one sentence]
 
@@ -630,7 +634,7 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## [Approach]
 
-[One diagram. Speaker note: walk it left to right; do not read the labels aloud.]
+[One diagram derived from named source files or documents. Source: [paths]. Speaker note: walk it left to right; do not read the labels aloud.]
 
 ## [Key design decision]
 
@@ -668,7 +672,7 @@ Backup slides sit after the closing slide and answer the questions the work invi
 
 ## Attribution rules
 
-Every number and figure must trace to a manuscript passage or an evidence record. Reused figures carry their original attribution on the slide. Speaker notes are part of the deliverable and follow the same evidence rule as the slides: do not put a claim in a note that the records do not support.
+Every number, figure, and claim must trace to a row in the claim ledger. Reused figures carry their original attribution on the slide. Speaker notes are part of the deliverable and follow the same evidence rule as the slides: do not put a claim in a note that the records do not support.
 
 </details>
 

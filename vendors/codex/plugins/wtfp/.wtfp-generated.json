@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "2f0b9bbd18cb05ce2b6638ac631d8be9b8d04b56a102fd4d55b95cec86b06447",
+  "sourceHash": "356a2783ca7e4c9c162a4d2eace5f5a0a60de3f9e7aeefff95469f99f9e1deb5",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -390,7 +390,7 @@
     },
     {
       "path": "skills/wtfp-deliver-research/references/actions.md",
-      "sha256": "61c8fe11aa3a6cef5d496e6b2c5b21bb39ebbd9715dc0d62d7abe23c8900305d"
+      "sha256": "39d3531cf7e5f06bcdc9c7d0d3ba354229ad938600558c73220491d7529ad53f"
     },
     {
       "path": "skills/wtfp-deliver-research/SKILL.md",
@@ -478,7 +478,7 @@
     },
     {
       "path": "templates/poster.md",
-      "sha256": "c4dfd10bcd4ba7664d99adc0ed3574b6f6f52c99648a8b7465f467cc5a27ca07"
+      "sha256": "5bbabf0adfc6de8f54cc839548f81b35045a7c8ffcc7117ea4008de7946c51d2"
     },
     {
       "path": "templates/README.md",
@@ -486,7 +486,7 @@
     },
     {
       "path": "templates/slides.md",
-      "sha256": "32068d09f1523b0eb5ac3ce5cbf964624117082ffbaa538907bac0db116326f5"
+      "sha256": "fd88d13f02b79a8e69e23dc8a72913cfd1ecb18aaea9013f6a2f2e080f301035"
     },
     {
       "path": "tools.json",
@@ -566,11 +566,11 @@
     },
     {
       "path": "workflows/create-poster.md",
-      "sha256": "142d8d332909f6a1828b769eea40d8caa7985d8f17fb932f2d025fe6d8e34b6d"
+      "sha256": "b0fe98c72709b53a0553bb5d9343e112ef042cf2a950fa064108ac66f59d1f14"
     },
     {
       "path": "workflows/create-slides.md",
-      "sha256": "275996a358528cfd35abc096e1041c189de9a36ec163c5d063de8dc82f0fe36d"
+      "sha256": "8ad4189076a7460fb0ec55d2aab4d4898b906c1adfbe9810b293b46192a5622e"
     },
     {
       "path": "workflows/discuss-section.md",

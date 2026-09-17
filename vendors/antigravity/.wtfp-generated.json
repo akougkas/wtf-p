@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "23ee519da7229238b594ff551727214e995b56a308c65b3088716b97b02c0b35",
+  "sourceHash": "e941c49e5c446d7cfeb46ffb32b69524729c9e1f81037167d032dba76c2b2a8a",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -234,11 +234,11 @@
     },
     {
       "path": "commands/wtfp-create-poster.md",
-      "sha256": "371b1908544a2a5155c8bb15e509a7676f64583c9c17d64bc20d41a79f8568d6"
+      "sha256": "43cc9935a1225455f4361d1a46b6b27c881e14d1f4c56fac8ab39ecdb586fb74"
     },
     {
       "path": "commands/wtfp-create-slides.md",
-      "sha256": "e2071260a5e34d12ab874128f6f6a548c5437bdd7da90441670b11f9b04e024f"
+      "sha256": "e5ea26155c3f32558801f7551b05c96ee1f077dd385fce9d9f4c6b385cf8c8d4"
     },
     {
       "path": "commands/wtfp-discuss-section.md",
@@ -534,7 +534,7 @@
     },
     {
       "path": "skills/wtfp-deliver-research/references/actions.md",
-      "sha256": "fb2381ed333df14f0cd27cc5112ea4ba53c1558ad2380d0bb347691a5faa07b6"
+      "sha256": "4d0afb720c0e2fdc0113ff415f7bd3b116c527d89def17f3131a838adbc7aac7"
     },
     {
       "path": "skills/wtfp-deliver-research/SKILL.md",
@@ -622,7 +622,7 @@
     },
     {
       "path": "templates/poster.md",
-      "sha256": "c4dfd10bcd4ba7664d99adc0ed3574b6f6f52c99648a8b7465f467cc5a27ca07"
+      "sha256": "5bbabf0adfc6de8f54cc839548f81b35045a7c8ffcc7117ea4008de7946c51d2"
     },
     {
       "path": "templates/README.md",
@@ -630,7 +630,7 @@
     },
     {
       "path": "templates/slides.md",
-      "sha256": "32068d09f1523b0eb5ac3ce5cbf964624117082ffbaa538907bac0db116326f5"
+      "sha256": "fd88d13f02b79a8e69e23dc8a72913cfd1ecb18aaea9013f6a2f2e080f301035"
     },
     {
       "path": "tools.json",
@@ -710,11 +710,11 @@
     },
     {
       "path": "workflows/create-poster.md",
-      "sha256": "142d8d332909f6a1828b769eea40d8caa7985d8f17fb932f2d025fe6d8e34b6d"
+      "sha256": "b0fe98c72709b53a0553bb5d9343e112ef042cf2a950fa064108ac66f59d1f14"
     },
     {
       "path": "workflows/create-slides.md",
-      "sha256": "275996a358528cfd35abc096e1041c189de9a36ec163c5d063de8dc82f0fe36d"
+      "sha256": "8ad4189076a7460fb0ec55d2aab4d4898b906c1adfbe9810b293b46192a5622e"
     },
     {
       "path": "workflows/discuss-section.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "839a3f065feecb9be6f892239227ce8540c42f0237ea6b80068290a297b3fbb7",
+  "sourceHash": "dbd8254b255c90d5cc97303f49e1f2392b3a8da6ad443c036d6b95b8af51b524",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -234,11 +234,11 @@
     },
     {
       "path": "commands/wtfp/create-poster.toml",
-      "sha256": "f087cde6e0ced8cf2518b91fadc21e871441af1d47220373fc242495e0d87f68"
+      "sha256": "265e2c99c577034e9c5ae4269fa08cb1bf9dba1e4905005329d31fa94040bb00"
     },
     {
       "path": "commands/wtfp/create-slides.toml",
-      "sha256": "a71cb374d694edf103cc2980e64daf81b8809bc5a57b82746cd12bc3a263c958"
+      "sha256": "6b3633ceb26c09644ec05df7b24f94b392efeb26755cc79cdd693bb684150b8e"
     },
     {
       "path": "commands/wtfp/discuss-section.toml",
@@ -330,7 +330,7 @@
     },
     {
       "path": "commands/wtfp/submit-milestone.toml",
-      "sha256": "aac379dea996894c63b89519530d6fd7b5927886da87a393211b0d40a028a4a5"
+      "sha256": "66a4785f01108c69cd0f58232c1d2df7370362035dd3d3e283b720f1ec7df065"
     },
     {
       "path": "commands/wtfp/update.toml",
@@ -534,7 +534,7 @@
     },
     {
       "path": "skills/wtfp-deliver-research/references/actions.md",
-      "sha256": "d2799a85f0d13f583aac5232c280bb9872ed37897e89a074ae4cb11e9746556a"
+      "sha256": "f9b03701e05c29f42050a0ba88b3595db2840bdd6ce4f1bbb9057c912ef70eb8"
     },
     {
       "path": "skills/wtfp-deliver-research/SKILL.md",
@@ -622,7 +622,7 @@
     },
     {
       "path": "templates/poster.md",
-      "sha256": "c4dfd10bcd4ba7664d99adc0ed3574b6f6f52c99648a8b7465f467cc5a27ca07"
+      "sha256": "5bbabf0adfc6de8f54cc839548f81b35045a7c8ffcc7117ea4008de7946c51d2"
     },
     {
       "path": "templates/README.md",
@@ -630,7 +630,7 @@
     },
     {
       "path": "templates/slides.md",
-      "sha256": "32068d09f1523b0eb5ac3ce5cbf964624117082ffbaa538907bac0db116326f5"
+      "sha256": "fd88d13f02b79a8e69e23dc8a72913cfd1ecb18aaea9013f6a2f2e080f301035"
     },
     {
       "path": "tools.json",
@@ -710,11 +710,11 @@
     },
     {
       "path": "workflows/create-poster.md",
-      "sha256": "142d8d332909f6a1828b769eea40d8caa7985d8f17fb932f2d025fe6d8e34b6d"
+      "sha256": "b0fe98c72709b53a0553bb5d9343e112ef042cf2a950fa064108ac66f59d1f14"
     },
     {
       "path": "workflows/create-slides.md",
-      "sha256": "275996a358528cfd35abc096e1041c189de9a36ec163c5d063de8dc82f0fe36d"
+      "sha256": "8ad4189076a7460fb0ec55d2aab4d4898b906c1adfbe9810b293b46192a5622e"
     },
     {
       "path": "workflows/discuss-section.md",

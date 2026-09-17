@@ -30,9 +30,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Confirm audience, duration, format, and speaking goal, following the confirmation list in `${CLAUDE_PLUGIN_ROOT}/templates/slides.md`.
+1. Confirm audience, duration, format, speaking goal, and the exact speaker, affiliation, and venue metadata, following the confirmation list in `${CLAUDE_PLUGIN_ROOT}/templates/slides.md`. Never invent missing metadata; leave a visible placeholder.
 1a. Derive the slide count from the confirmed duration using the budget table in `${CLAUDE_PLUGIN_ROOT}/templates/slides.md`, not from the manuscript's section count.
-2. Build a narrative arc from supported manuscript claims and include citations or attribution where needed.
+2. Build a narrative arc from supported manuscript claims only, running the evidence gate in `${CLAUDE_PLUGIN_ROOT}/templates/slides.md`: refuse every statement, comparison, or figure without a cited source record, manuscript passage, or named project file, and derive each diagram from named source files or documents with their paths stated on the slide.
 3. Write slide source and assets under the declared deliverable URI; preview before replacing an existing deliverable. This action produces slide source, not a rendered deck: WTF-P declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
 
 ## Safety and completion
