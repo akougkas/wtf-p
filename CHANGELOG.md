@@ -41,6 +41,9 @@ capability matrix are unchanged.
   were previously truncated to integers
 - A backend deadline now exits with status 124 like the dispatcher's own
   wall clock
+- `npm run release` gives its preflight run a 20-minute budget instead of the
+  300 s spawn default, which the full suite exceeds, so `--dry-run` and `--tag`
+  no longer abort with `ETIMEDOUT`
 
 ### Security and limits
 

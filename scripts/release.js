@@ -87,7 +87,9 @@ try {
   }
 
   process.stdout.write(`Finalizing WTF-P ${version}\n`);
-  run('npm', ['run', 'preflight'], { inherit: true });
+  // Preflight bounds its own steps (the full suite alone may take 600 s), so
+  // the outer budget must exceed their sum rather than the 300 s default.
+  run('npm', ['run', 'preflight'], { inherit: true, timeout: 1200000 });
 
   const branch = output('git', ['branch', '--show-current']);
   const status = output('git', ['status', '--porcelain']);
