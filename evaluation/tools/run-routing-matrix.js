@@ -76,12 +76,9 @@ const GENERATOR_SOURCE_PATHS = Object.freeze([
   'scripts/build-adapters.js'
 ]);
 
-// OpenCode creates this local ignore file in its client cache projection. It is
-// neither tracked nor authenticated by the adapter inventory and is not loaded
-// as extension content. No other protocol/vendor file is exempted.
-const SOURCE_PROJECTION_EXCLUSIONS = Object.freeze(new Set([
-  'vendors/opencode/.gitignore'
-]));
+// The OpenCode ignore file is now tracked because its exception keeps the
+// generated CommonJS package boundary present in the canonical source tree.
+const SOURCE_PROJECTION_EXCLUSIONS = Object.freeze(new Set());
 
 const KNOWN_DEFAULTS = Object.freeze({
   claude: '/home/akougkas/.local/share/claude/versions/2.1.251',
