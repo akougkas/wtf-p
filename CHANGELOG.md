@@ -14,13 +14,13 @@ planning and drafting.
 
 ### Fixed in 0.7.4
 
-- `research-gap` can use an operator-configured, trusted read-class CiteNexus
-  MCP connection in Clio full-auto for bounded public scholarly metadata
-  searches without asking again for every provider/query set. The main agent
-  discovers and calls the connection through `gateway`, then passes candidate
-  records and provenance to the research specialist. Unapproved connections,
-  paid or credentialed providers, and the separately launched dispatcher still
-  require an explicit network gate. Search results remain unverified candidates
+- `research-gap` in Clio full-auto can search bounded public scholarly metadata
+  through the bundled CiteNexus dispatcher using free no-key indexes without
+  asking again for every provider/query set. A configured trusted read-class
+  CiteNexus MCP connection is preferred where Clio supports it; the main agent
+  calls it through `gateway` and passes candidates to the research specialist.
+  Other providers, non-full-auto runs, and refused routes retain their gate.
+  Search results remain unverified candidates
 - Literature-heavy `plan-section` and `write-section` routes now require a
   section research artifact and resolvable source/evidence coverage before
   planning or drafting. Missing coverage routes to `research-gap` and then a

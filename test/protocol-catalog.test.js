@@ -560,8 +560,10 @@ assert.ok(
   'research-gap gates routes without prior host authorization and paid providers',
 );
 const researchWorkflow = fs.readFileSync(path.join(__dirname, '..', 'protocol/workflows/research-gap.md'), 'utf8');
-assert.match(researchWorkflow, /preauthorized route needs no second per-query author gate/u);
-assert.match(researchWorkflow, /bundled dispatcher, first obtain explicit author approval/u);
+assert.match(researchWorkflow, /without a second per-query author gate/u);
+assert.match(researchWorkflow, /bundled CiteNexus dispatcher may also search the free no-key public indexes/u);
+assert.match(researchWorkflow, /For any other route, first obtain explicit author approval/u);
+assert.match(researchWorkflow, /never override an operator-set offline flag or a host refusal/u);
 const checkRefsMutableInputs = new Set([
   'project://sources/{source}',
   'project://evidence/{evidence}',

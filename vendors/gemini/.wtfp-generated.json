@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "61db6914bc2e4d9556fe28b374471d18665dc0ea5704becd275676af34c0307d",
+  "sourceHash": "acac03d8c3f845113c74322cf08a094e7782102c73597f0012cbd7ee1433eae8",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -178,7 +178,7 @@
     },
     {
       "path": "agents/wtfp-research-synthesizer.md",
-      "sha256": "8c584453e4716346c3635b3747b8a45fe89891cff86452cb95f942f557dccdfc"
+      "sha256": "76177a1a132c47eba4054631803c04d81d8c71d86161d1709dd0f29803e58b56"
     },
     {
       "path": "agents/wtfp-section-planner.md",
@@ -490,7 +490,7 @@
     },
     {
       "path": "roles/research-synthesizer.md",
-      "sha256": "e2027aab698b5ae17246973af606d81aa4242ea56eb20ed7a776332497e1d62b"
+      "sha256": "7aa6922f5f819918374b1a87dbda5c12fa6d424be64fc13b4019c380e011306c"
     },
     {
       "path": "roles/section-planner.md",
@@ -570,7 +570,7 @@
     },
     {
       "path": "skills/wtfp-research-literature/references/actions.md",
-      "sha256": "2f9f2f3d0bac75cf8d449c83184afacde230771b06efad30adce6218ce5c7233"
+      "sha256": "b2693b5f70715fc5ee3d029bee8c050e60c46e82d348970ef3d7d72effd7e2c9"
     },
     {
       "path": "skills/wtfp-research-literature/SKILL.md",
@@ -670,7 +670,7 @@
     },
     {
       "path": "tools/README.md",
-      "sha256": "997889703a61599a3d6267b1ddbd571ac354b55e7fe3a9dc2ebbf00b6c6d2106"
+      "sha256": "eb99d2ef30209b409e8c0dbfccaabdf301b6bc50f17013cd8fa381c3c1d69ae2"
     },
     {
       "path": "tools/support/cite-nexus-client.js",
@@ -794,7 +794,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "ccf9580530f3e73d530227c2bb19bef4c72d83a358ca62640130b85458d12e27"
+      "sha256": "02ffe236ba7de12e4b3abbac308c0e1cfc409147147d509616b95baec3fef012"
     },
     {
       "path": "workflows/resume-writing.md",

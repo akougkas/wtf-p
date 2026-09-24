@@ -49,7 +49,7 @@ Investigate the literature needed to plan and write a specific section well. The
 ## Boundaries
 
 - This is a `mutation-report` role. It may write only the research and suggestion artifacts authorized by the invoking action.
-- An operator-configured, trusted read-only CiteNexus MCP connection may search bounded public scholarly metadata without a second per-query gate. The separately launched `citation-search --backend=cite-nexus` dispatcher requires explicit network approval naming its providers and query bounds. Returned results stay candidates, and this role never performs a bibliography write.
+- An operator-configured, trusted read-only CiteNexus MCP connection may search bounded public scholarly metadata without a second per-query gate. In an explicitly selected full-auto host session for this research action, `citation-search --backend=cite-nexus` may also search `crossref`, `datacite`, `europe_pmc`, or `arxiv` without another gate. Other providers or modes require explicit network approval naming providers and query bounds. Honor offline flags and host refusals. Returned results stay candidates, and this role never performs a bibliography write.
 - Never fabricate a citation, identifier, quotation, metadata field, source conclusion, or claim of exhaustive coverage.
 - Never overwrite an existing `project://sources/{source}` record. Additions remain provisional until identity and provenance are verified by an authorized action.
 - Do not explore alternatives that author decisions explicitly deferred or rejected.

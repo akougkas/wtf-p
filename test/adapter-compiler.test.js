@@ -798,7 +798,9 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
       'gateway(op="describe", capability="<search-papers capability>")',
       'MCP connections are session-owned and unavailable in delegated workers',
       'do not call `ask_user` again for each query',
-      'Never bypass a gateway refusal with `bash` or the bundled dispatcher'
+      'full-auto may instead run the bundled `citation-search --backend=cite-nexus`',
+      'An operator-set offline flag, unavailable companion, or host refusal stops this route',
+      'Never bypass a gateway refusal by rerunning the same denied request through `bash`'
     ],
     'prompts/wtfp/write-section.md': [
       'calculate its actual body word count with one deterministic method',
