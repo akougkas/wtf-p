@@ -21,7 +21,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Require one approved plan and resolve all linked context, research, source/evidence records, decisions, prior summary, existing target, and necessary neighboring prose before choosing create or update.
-2. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions.
+2. Before drafting a literature-heavy section, verify that its linked research artifact and source/evidence records cover the plan's factual claims. If coverage is missing, use the declared research workflow and pause at a checkpoint until verified records exist. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions. A plausible bibliography entry, search candidate, or model memory is not a verified citation.
 3. Read the persisted manuscript text back and calculate its actual body word count with one deterministic method; never copy a worker self-report, plan target, or summary count into project records. Validate the persisted draft against its plan and word budget.
 4. Create or update the required Markdown summary with that measured count, then read back both manuscript and summary. Missing, empty, or inconsistent output is a failed completion condition, not permission to link a path that does not exist.
 5. Persist the validation, synchronize the manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records only after manuscript, summary, and validation readback succeeds. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.
@@ -70,6 +70,8 @@ $ARGUMENTS
 Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
 
 ## Clio role-result binding
+
+Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-section-writer`, `wtfp-argument-verifier`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
 
 Read the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.
 

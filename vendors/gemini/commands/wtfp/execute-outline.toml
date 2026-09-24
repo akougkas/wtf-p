@@ -128,7 +128,7 @@ Contract: [protocol/actions/write-section.json](../../../actions/write-section.j
 
 1. Require an exact `project://sections/{section}/plans/{plan}` artifact linked from `project://sections/{section}` and verify its declared inputs, outputs, dependencies, validation, and approval state.
 2. If a corresponding summary or manuscript output exists, show the overwrite or merge impact and require explicit re-execution approval.
-3. Read the plan, `project://manifest`, `project://state`, `project://decisions`, `project://structure/outline`, section context and research, relevant source/evidence records, and enough neighboring prose to maintain continuity.
+3. Read the plan, `project://manifest`, `project://state`, `project://decisions`, `project://structure/outline`, section context and research, relevant source/evidence records, and enough neighboring prose to maintain continuity. For a literature-heavy section, require research and verified source/evidence coverage of the plan's factual claims before drafting. Route missing coverage through `research-gap` and a checkpoint; do not substitute model memory or search candidates for source records.
 4. Present the plan objective, output path, target words, evidence obligations, and checkpoints at the configured writing gate.
 5. Execute tasks in order against the exact `project://paper/{artifact}` output. For each task:
    - establish the paragraph or subsection's rhetorical job;

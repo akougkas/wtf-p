@@ -71,6 +71,21 @@ try {
     assert.strictEqual(JSON.parse(result.stdout).tool, 'wtfp-tool');
   });
 
+  test('dispatcher works beneath a host package marked as ESM', () => {
+    const host = path.join(scratch, 'esm-host');
+    const plugin = path.join(host, 'plugins', 'wtfp');
+    fs.mkdirSync(path.join(plugin, 'tools'), { recursive: true });
+    fs.writeFileSync(path.join(host, 'package.json'), '{"type":"module"}\n');
+    fs.cpSync(path.join(ROOT, 'vendors', 'plugin', 'tools'), path.join(plugin, 'tools'), { recursive: true, force: true });
+    const result = spawnSync(process.execPath, [path.join(plugin, 'tools', 'wtfp-tool.js'), 'list'], {
+      cwd: host,
+      encoding: 'utf8',
+      timeout: 30000
+    });
+    assert.strictEqual(result.status, 0, result.stderr);
+    assert.strictEqual(JSON.parse(result.stdout).commands.length, registry.tools.length);
+  });
+
   test('list projects the declared effects of every command from protocol/tools.json', () => {
     const result = run(['list']);
     assert.strictEqual(result.status, 0, result.stderr);

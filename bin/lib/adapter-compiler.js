@@ -713,7 +713,8 @@ function renderMarkdownCommand(action, workflowBody, target, availability) {
     }
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target);
-  const userGateBody = target === 'clio' ? [clioUserGateBody(action), action.delegation.length ? '## Clio role-result binding\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.' : ''].filter(Boolean).join('\n\n') : '';
+  const clioRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
+  const userGateBody = target === 'clio' ? [clioUserGateBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -1701,6 +1702,7 @@ function addToolBundle(plan) {
     rows.push(`- \`${tool.implementation}\` → \`${outputPath}\` (legacy module \`${tool.legacyName}.js\`)`);
   }
   addFile(plan, 'tools/wtfp-tool.js', toolDispatcher(byToolId, effectsByToolId));
+  addFile(plan, 'tools/package.json', '{"type":"commonjs"}\n');
   addFile(plan, 'tools/README.md', [
     '# WTF-P bundled tools',
     '',

@@ -131,7 +131,7 @@ Contract: [protocol/actions/write-section.json](../../../actions/write-section.j
 
 1. Require an exact `project://sections/{section}/plans/{plan}` artifact linked from `project://sections/{section}` and verify its declared inputs, outputs, dependencies, validation, and approval state.
 2. If a corresponding summary or manuscript output exists, show the overwrite or merge impact and require explicit re-execution approval.
-3. Read the plan, `project://manifest`, `project://state`, `project://decisions`, `project://structure/outline`, section context and research, relevant source/evidence records, and enough neighboring prose to maintain continuity.
+3. Read the plan, `project://manifest`, `project://state`, `project://decisions`, `project://structure/outline`, section context and research, relevant source/evidence records, and enough neighboring prose to maintain continuity. For a literature-heavy section, require research and verified source/evidence coverage of the plan's factual claims before drafting. Route missing coverage through `research-gap` and a checkpoint; do not substitute model memory or search candidates for source records.
 4. Present the plan objective, output path, target words, evidence obligations, and checkpoints at the configured writing gate.
 5. Execute tasks in order against the exact `project://paper/{artifact}` output. For each task:
    - establish the paragraph or subsection's rhetorical job;
@@ -204,7 +204,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Require one approved plan and resolve all linked context, research, source/evidence records, decisions, prior summary, existing target, and necessary neighboring prose before choosing create or update.
-2. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions.
+2. Before drafting a literature-heavy section, verify that its linked research artifact and source/evidence records cover the plan's factual claims. If coverage is missing, use the declared research workflow and pause at a checkpoint until verified records exist. Draft only the declared manuscript artifact; cite only resolvable sources, preserve author constraints, and stop at blocking decisions. A plausible bibliography entry, search candidate, or model memory is not a verified citation.
 3. Read the persisted manuscript text back and calculate its actual body word count with one deterministic method; never copy a worker self-report, plan target, or summary count into project records. Validate the persisted draft against its plan and word budget.
 4. Create or update the required Markdown summary with that measured count, then read back both manuscript and summary. Missing, empty, or inconsistent output is a failed completion condition, not permission to link a path that does not exist.
 5. Persist the validation, synchronize the manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records only after manuscript, summary, and validation readback succeeds. If blocked, create the declared checkpoint and stop; do not commit or merge automatically.

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "e64fea8c8b1f4ca1e2b3767800022d744fd82b68085042560331c9d13afee556",
+  "sourceHash": "db0297a7f530389e5e80e0ded2b3bb6c90da9a01dbfa1106958303e009f9213f",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -242,11 +242,11 @@
     },
     {
       "path": "commands/wtfp/discuss-section.toml",
-      "sha256": "3004110082745277d3afbb67f602a5295dc59142711e59758ec99b2e10a85135"
+      "sha256": "1263bf9a2059860027485aa8fd3dddd97fc02377f676f1f88b6a23a179002524"
     },
     {
       "path": "commands/wtfp/execute-outline.toml",
-      "sha256": "2e9e1223921a12fd93cd4eb5dc73143287be6bddc9b48cd3b99f95b021accc5e"
+      "sha256": "27616f3505b9b697529f61f3f9364540e4fb59484307a8109b37a89a51e4974f"
     },
     {
       "path": "commands/wtfp/export-latex.toml",
@@ -258,11 +258,11 @@
     },
     {
       "path": "commands/wtfp/insert-section.toml",
-      "sha256": "4b239a45d51121e49f167a49d354d5829e0e2043f355f14a707c7e52746724b6"
+      "sha256": "5f183b01353044195f6492ef3af8adb3312a2bba111c46c60d78611abc189e42"
     },
     {
       "path": "commands/wtfp/list-assumptions.toml",
-      "sha256": "08705388c3940de8f3f2c7f26cdfefb57216ea1ac19dc25b0768b45816cdacd8"
+      "sha256": "e6b3f135e9655c0489b41bb3d804292c17c5f3159267c1286546445382b1057e"
     },
     {
       "path": "commands/wtfp/map-project.toml",
@@ -282,11 +282,11 @@
     },
     {
       "path": "commands/wtfp/plan-revision.toml",
-      "sha256": "1e4e189d576978a3c55361131d279f35985da9d14c14ee4bf088dd1adfd4747a"
+      "sha256": "7fd09d856d2c9f0304b30b949fd1070d596d8bf7311cdca85122d309de6051ee"
     },
     {
       "path": "commands/wtfp/plan-section.toml",
-      "sha256": "d86d6427e86775de73c0bc8e52cddbebeb68802b4c218d31f48c549294f66bb2"
+      "sha256": "3e27778ed1081f52f57b46e81f7a026ccf4f0a644688e2d96a57d07e1871d07c"
     },
     {
       "path": "commands/wtfp/polish-prose.toml",
@@ -298,7 +298,7 @@
     },
     {
       "path": "commands/wtfp/quick.toml",
-      "sha256": "2befb3884139d122efcf9eda21d0e536534be094934baae65c84387f66c2b73d"
+      "sha256": "9bccf0bed639ce472cf7ef5a2050073ffe71e806b37e993263fdb303ceb2420b"
     },
     {
       "path": "commands/wtfp/remove-section.toml",
@@ -342,7 +342,7 @@
     },
     {
       "path": "commands/wtfp/write-section.toml",
-      "sha256": "e689ad2f75a810031d5fcdacc7a57d72e96ba63bca3edddd631a376ac41a80e9"
+      "sha256": "afb9d609cc21eda15675801c15390ebfbc508d1808d28efbcaa5efc31a282848"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -558,7 +558,7 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "4d54c568591c9d0b5742f038db8919f47bf1927189dae4461be86ba7131cf3a6"
+      "sha256": "61f80a6e02b19d60fb302f32925552f3c7efe0f5df73322941b2f6047fc37179"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
@@ -606,7 +606,7 @@
     },
     {
       "path": "skills/wtfp-write-section/references/actions.md",
-      "sha256": "367b9144ce76b4e6116d9a2566c02070e80bbb57325a43bf5aa22447e6cb83f5"
+      "sha256": "1fe6f8d50a1abd7a0b338772560317404942874ddd67be458ca24182ea20f7a4"
     },
     {
       "path": "skills/wtfp-write-section/SKILL.md",
@@ -663,6 +663,10 @@
     {
       "path": "tools/citation/semantic-scholar.js",
       "sha256": "df4c1f3d69a28e06dd5285ba46c116bb2731aa940e16b9438c822846f38646f5"
+    },
+    {
+      "path": "tools/package.json",
+      "sha256": "dbf8353f77358bc12169b7bb7301e1978d5b503e002ee927229a8993672818fc"
     },
     {
       "path": "tools/README.md",
@@ -762,7 +766,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "02311226aa784dea4a6a5219ef59fcea6c904f92566318e3327aa4e883228446"
+      "sha256": "831c20c8afd147a8ba149a46f54591b6f07732983ee916a56c66701c8c701aa2"
     },
     {
       "path": "workflows/polish-prose.md",
@@ -818,7 +822,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "cfb3a0f9c61830d62cebdf8be5dacd17cef996d99cbab1df18267313ca05aacc"
+      "sha256": "5a2f0efcd11d7f41d941f54b80798ad481773820907fee68bea47f28b7af7bc3"
     }
   ]
 }

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "opencode",
-  "sourceHash": "65bebd0311978db810467a6ee777df2c91770e8ab2dcdb16714107a2a3e8df53",
+  "sourceHash": "fe6bf11fe591e96da8dfd4c148d93eb7877b73a548a0524640bbe475faac5ad0",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -242,11 +242,11 @@
     },
     {
       "path": "commands/wtfp/discuss-section.md",
-      "sha256": "8dea1e8c77578eda07df8791b60ec705525017658128fecd5b0e9b220ddce701"
+      "sha256": "a09545263a592269938bd08a22f9bf57eace44b426d6cd0c214eb545b26e5299"
     },
     {
       "path": "commands/wtfp/execute-outline.md",
-      "sha256": "ba871cd9bccb5c43e734fa99bf796ed08c1dbdf176e1802261ec2a1748819954"
+      "sha256": "eeac5d1fc2f103562ed54eedb493f129fb34af076aefa63a76f16cbed20689b1"
     },
     {
       "path": "commands/wtfp/export-latex.md",
@@ -258,11 +258,11 @@
     },
     {
       "path": "commands/wtfp/insert-section.md",
-      "sha256": "00fda18dc2e457cd0f33ba3bb5d67e23fc8cd5f7bd4b0ea01d18250466888bab"
+      "sha256": "573bc5eee9cc0f7e7ac8ae4c64d407d35b48e7488dfec94bc112a1a689409a3b"
     },
     {
       "path": "commands/wtfp/list-assumptions.md",
-      "sha256": "14819e3a3126d3c069142e6ed2e6320a36c353b54b6506da5edf1558633eb3aa"
+      "sha256": "fa52b0242206b6eb48fc90da0fa5f9027a2406afadec421f31d7eaf0fdf5af8a"
     },
     {
       "path": "commands/wtfp/map-project.md",
@@ -282,11 +282,11 @@
     },
     {
       "path": "commands/wtfp/plan-revision.md",
-      "sha256": "f38a02759d8457e535145f463117db3b631012efdfc3eef3559e9e4b82226b4b"
+      "sha256": "555138157af0ae51850e883ac15953402b0ede8785246079f09f20387a547bb1"
     },
     {
       "path": "commands/wtfp/plan-section.md",
-      "sha256": "8d57631cd0f40a3374c61865f29e6804f0d294eb511f520ace552db5ccf25e27"
+      "sha256": "3c11e88eba43b1b970068dfbdb60d76c4fb8d041a0768c535bfbd760d4d3d8ec"
     },
     {
       "path": "commands/wtfp/polish-prose.md",
@@ -298,7 +298,7 @@
     },
     {
       "path": "commands/wtfp/quick.md",
-      "sha256": "9fd0409372abaa8074c1464475103d02477460962b69e3c4a707fce79350db2f"
+      "sha256": "c2d93c2504dbba2aebbcafa2311c628b9173e7c207b2a0133d8323cf8fbe2d2e"
     },
     {
       "path": "commands/wtfp/remove-section.md",
@@ -342,7 +342,7 @@
     },
     {
       "path": "commands/wtfp/write-section.md",
-      "sha256": "4990768332e7b713cecabc96e2f4fc0f1579b2cf45bda5912834f601900602e8"
+      "sha256": "3e204fe76ce2a3faaf0eac37ad5895a3b1fee1d28247a2e32ccab1dca14b9f9a"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -550,7 +550,7 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "02a9e560970091cde2053fbcd765e68046a828b08bdf8abda2c0e72b0330ad2b"
+      "sha256": "bda6fee21d51a21c0e33d6c149ac5b34ea1569a270d576655953630c750996c0"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
@@ -598,7 +598,7 @@
     },
     {
       "path": "skills/wtfp-write-section/references/actions.md",
-      "sha256": "367b9144ce76b4e6116d9a2566c02070e80bbb57325a43bf5aa22447e6cb83f5"
+      "sha256": "1fe6f8d50a1abd7a0b338772560317404942874ddd67be458ca24182ea20f7a4"
     },
     {
       "path": "skills/wtfp-write-section/SKILL.md",
@@ -655,6 +655,10 @@
     {
       "path": "tools/citation/semantic-scholar.js",
       "sha256": "df4c1f3d69a28e06dd5285ba46c116bb2731aa940e16b9438c822846f38646f5"
+    },
+    {
+      "path": "tools/package.json",
+      "sha256": "dbf8353f77358bc12169b7bb7301e1978d5b503e002ee927229a8993672818fc"
     },
     {
       "path": "tools/README.md",
@@ -754,7 +758,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "02311226aa784dea4a6a5219ef59fcea6c904f92566318e3327aa4e883228446"
+      "sha256": "831c20c8afd147a8ba149a46f54591b6f07732983ee916a56c66701c8c701aa2"
     },
     {
       "path": "workflows/polish-prose.md",
@@ -810,7 +814,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "cfb3a0f9c61830d62cebdf8be5dacd17cef996d99cbab1df18267313ca05aacc"
+      "sha256": "5a2f0efcd11d7f41d941f54b80798ad481773820907fee68bea47f28b7af7bc3"
     }
   ]
 }

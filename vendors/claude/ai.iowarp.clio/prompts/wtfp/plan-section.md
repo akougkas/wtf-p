@@ -23,8 +23,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 1. Resolve one section record, load its linked context, research, evidence, decisions, and outline constraints, and enumerate the bounded `project://validations/*` collection before any specialist dispatch.
 2. Filter those records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
 3. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
-4. Only after those prerequisites pass, delegate a bounded plan to `section-planner`, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity.
-5. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
+4. For a literature-heavy section, first require a section-specific research artifact plus resolvable source/evidence records that cover the planned claims. If they are absent or insufficient, run `research-gap` with the configured CiteNexus backend when available, verify candidate metadata against the returned records, and stop planning with an explicit research checkpoint if evidence remains insufficient. Never invent citations or treat search candidates as verified sources.
+5. Only after those prerequisites pass, delegate a bounded plan to `section-planner`, then require a fresh `plan-checker` pass over claim coverage, dependencies, file scope, citations, and decision fidelity. Dispatch the exact WTF-P specialist roles; generic coder and verifier roles do not satisfy this workflow.
+6. At confirm_plan, preview the plan and validation; on approval link the plan, update section status to planned, and reconcile state. Create a checkpoint for unresolved judgment instead of bypassing the required checker.
 
 ## Safety and completion
 
@@ -70,6 +71,8 @@ $ARGUMENTS
 Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
 
 ## Clio role-result binding
+
+Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-section-planner`, `wtfp-plan-checker`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
 
 Read the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.
 

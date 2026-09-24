@@ -79,7 +79,7 @@ the old executable instead.
 ```bash
 npx --yes --package=wtf-p@0.7.3 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
-clio-coder --autonomy suggest
+clio-coder --autonomy full-auto
 ```
 
 ```text

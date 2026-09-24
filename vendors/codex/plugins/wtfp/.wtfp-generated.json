@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "e5c1a4a36f1aaa3ea734cd0d3fea35ce9f3e5ae8d0405ce6202e1fb324322de8",
+  "sourceHash": "5b332512e3de067be5b9c63b3cef43c554507aa459e3f2ed0d7ae27f25c8b4a2",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -414,7 +414,7 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "9b4c10fbebedd1c67ccfc50d9e1e7e008dd5449e318857347bf17dea80a7e80b"
+      "sha256": "1aa4c7e21f0ea03c7e27c94baf61b93c6daf3ac01daff8ccff31bd61de1e9e68"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
@@ -462,7 +462,7 @@
     },
     {
       "path": "skills/wtfp-write-section/references/actions.md",
-      "sha256": "367b9144ce76b4e6116d9a2566c02070e80bbb57325a43bf5aa22447e6cb83f5"
+      "sha256": "1fe6f8d50a1abd7a0b338772560317404942874ddd67be458ca24182ea20f7a4"
     },
     {
       "path": "skills/wtfp-write-section/SKILL.md",
@@ -519,6 +519,10 @@
     {
       "path": "tools/citation/semantic-scholar.js",
       "sha256": "df4c1f3d69a28e06dd5285ba46c116bb2731aa940e16b9438c822846f38646f5"
+    },
+    {
+      "path": "tools/package.json",
+      "sha256": "dbf8353f77358bc12169b7bb7301e1978d5b503e002ee927229a8993672818fc"
     },
     {
       "path": "tools/README.md",
@@ -618,7 +622,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "02311226aa784dea4a6a5219ef59fcea6c904f92566318e3327aa4e883228446"
+      "sha256": "831c20c8afd147a8ba149a46f54591b6f07732983ee916a56c66701c8c701aa2"
     },
     {
       "path": "workflows/polish-prose.md",
@@ -674,7 +678,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "cfb3a0f9c61830d62cebdf8be5dacd17cef996d99cbab1df18267313ca05aacc"
+      "sha256": "5a2f0efcd11d7f41d941f54b80798ad481773820907fee68bea47f28b7af7bc3"
     }
   ]
 }
