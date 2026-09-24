@@ -554,6 +554,14 @@ assert.deepStrictEqual(
 );
 
 const checkRefs = load('protocol/actions/check-refs.json');
+const researchGap = load('protocol/actions/research-gap.json');
+assert.ok(
+  researchGap.effects.some((effect) => effect.id === 'user.gate' && effect.scope.includes('unapproved or paid external providers')),
+  'research-gap gates routes without prior host authorization and paid providers',
+);
+const researchWorkflow = fs.readFileSync(path.join(__dirname, '..', 'protocol/workflows/research-gap.md'), 'utf8');
+assert.match(researchWorkflow, /preauthorized route needs no second per-query author gate/u);
+assert.match(researchWorkflow, /bundled dispatcher, first obtain explicit author approval/u);
 const checkRefsMutableInputs = new Set([
   'project://sources/{source}',
   'project://evidence/{evidence}',

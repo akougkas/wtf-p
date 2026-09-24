@@ -605,6 +605,15 @@ function clioUserGateBody(action) {
   ].join('\n');
 }
 
+function clioResearchConnectionBody(action) {
+  if (action.id !== 'research-gap') return '';
+  return [
+    '## Clio CiteNexus binding',
+    '',
+    'In full-auto, the main agent first calls `gateway(op="find", query="cite-nexus")`. If a CiteNexus server is present and its tools are admitted as read-class through the operator\'s user configuration, call `gateway(op="describe", capability="<search-papers capability>")`, then `gateway(op="call", capability="<search-papers capability>", args={...})` with bounded public metadata queries. Use the capability name and argument schema returned by the gateway, not a guessed name. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. If it is absent, untrusted, or requires approval, follow the declared user gate before searching. Never bypass a gateway refusal with `bash` or the bundled dispatcher. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
+  ].join('\n');
+}
+
 // Workflow order for the operator-facing reference. Group membership comes from
 // the catalog; only the reading order of the groups is fixed here.
 const HELP_GROUP_ORDER = Object.freeze([
@@ -714,7 +723,7 @@ function renderMarkdownCommand(action, workflowBody, target, availability) {
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target);
   const clioRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
-  const userGateBody = target === 'clio' ? [clioUserGateBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
+  const userGateBody = target === 'clio' ? [clioUserGateBody(action), clioResearchConnectionBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',

@@ -47,12 +47,14 @@ On Clio Coder and Claude Code, two actions reach the backend. Both declare the l
 1. `research-gap` maps related literature and positions a section against it. Search results stay candidates in research and evidence records, and the action never writes to the project bibliography.
 2. `check-refs` verifies and audits existing bibliography references against scholarly registries.
 
-To select CiteNexus, ask for `--backend=cite-nexus` with an explicit `--providers` list. The action's author gate must name those providers and the bounded query set before any external query runs:
+For the bundled dispatcher, ask for `--backend=cite-nexus` with an explicit `--providers` list. That separate network route still needs an author gate naming the providers and bounded query set:
 
 ```text
 /wtfp:research-gap related-work Find related work with --backend=cite-nexus --providers=crossref,datacite,europe_pmc
 /wtfp:check-refs Audit references with --backend=cite-nexus --providers=crossref,datacite,europe_pmc
 ```
+
+For `research-gap` on Clio full-auto, an operator can instead register CiteNexus as a trusted, read-class **user** MCP connection. The generated Clio workflow discovers `search-papers` through `gateway`, reads its schema, and uses that already authorized connection for bounded public metadata searches without a second approval for each query. It records the provider IDs, queries, date, limits, and provenance. Generic full-auto alone does not authorize a connection; a missing or untrusted connection still reaches the author gate. The workflow never sends unpublished manuscript text or private notes as search terms. This path requires a Clio build that supports the user MCP `actionClass: read` declaration.
 
 ## Provider choice and costs
 
@@ -61,7 +63,7 @@ Use `--providers=crossref,arxiv` for a focused preprint search, or explicitly se
 `semantic_scholar`, `openalex`, `serpapi`, `scopus` or `wos`. Optional or required
 credentials use the names documented in the
 [CiteNexus 0.2.0 provider guide](https://github.com/akougkas/cite-nexus-mcp/blob/v0.2.0/docs/providers.md).
-Declare the chosen providers and query scope in the workflow's network approval.
+Declare the chosen providers and query scope in the workflow's network approval when using the bundled dispatcher or a provider that has not already been authorized through the host. A preauthorized read-class MCP route still records that scope in the research artifact.
 Commercial/institutional APIs may incur cost or require an entitlement.
 
 Only runtime essentials (`PATH`, locale and temporary-directory variables) and

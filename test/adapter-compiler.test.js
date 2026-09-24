@@ -792,6 +792,14 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     'flat prompt aliases would publish a second public command surface');
 
   const lifecycleGuards = {
+    'prompts/wtfp/research-gap.md': [
+      '## Clio CiteNexus binding',
+      'gateway(op="find", query="cite-nexus")',
+      'gateway(op="describe", capability="<search-papers capability>")',
+      'MCP connections are session-owned and unavailable in delegated workers',
+      'do not call `ask_user` again for each query',
+      'Never bypass a gateway refusal with `bash` or the bundled dispatcher'
+    ],
     'prompts/wtfp/write-section.md': [
       'calculate its actual body word count with one deterministic method',
       'Missing, empty, or inconsistent output is a failed completion condition'

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-09-23
+
+This release repairs the Clio research path used by literature-heavy section
+planning and drafting.
+
+### Fixed in 0.7.4
+
+- `research-gap` can use an operator-configured, trusted read-class CiteNexus
+  MCP connection in Clio full-auto for bounded public scholarly metadata
+  searches without asking again for every provider/query set. The main agent
+  discovers and calls the connection through `gateway`, then passes candidate
+  records and provenance to the research specialist. Unapproved connections,
+  paid or credentialed providers, and the separately launched dispatcher still
+  require an explicit network gate. Search results remain unverified candidates
+- Literature-heavy `plan-section` and `write-section` routes now require a
+  section research artifact and resolvable source/evidence coverage before
+  planning or drafting. Missing coverage routes to `research-gap` and then a
+  checkpoint; it cannot be replaced with invented citations
+- The Clio plugin names the exact WTF-P planning, checking and research roles,
+  so generic coding agents cannot silently stand in for specialists
+- The generated Clio tool dispatcher carries a CommonJS package boundary and
+  runs under Clio's ESM plugin host
+- The evaluation routing baseline and generated adapter inventories are
+  resealed against the source that ships in this release
+
 ## [0.7.3] - 2026-09-17
 
 Fixes `create-poster` output that was unusable on local models: a text
@@ -519,7 +544,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.3...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.4...HEAD
+[0.7.4]: https://github.com/akougkas/wtf-p/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/akougkas/wtf-p/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/akougkas/wtf-p/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/akougkas/wtf-p/compare/v0.7.0...v0.7.1

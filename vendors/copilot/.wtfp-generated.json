@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "3ecabc7faa71451a23bf76b5bb102477433ea78a0451eeae7b59c4fb97c05b67",
+  "sourceHash": "ba3645edd433135597db193a519c1a47ccde893bee486da9403b5c5587d527a3",
   "files": [
     {
       "path": "marketplace.json",
-      "sha256": "729010aa446f4dea2a932819bb22b90fe64f2b951f139efeafe1c708f5797b5f"
+      "sha256": "acd3e2b5ba33f28881681519ef9f38a800fedf35d8dc5876c9a5d9dd935eaef1"
     },
     {
       "path": "project/.github/agents/wtfp-argument-verifier.agent.md",
@@ -38,7 +38,7 @@
     },
     {
       "path": "project/.github/agents/wtfp-research-synthesizer.agent.md",
-      "sha256": "5a3fdba1f9c0524cae51569141087aa98c05d59be01dd4b66f0a91717fa4b6bb"
+      "sha256": "5ea89d8517d838d9e182246bb11a96ffa624f6ae08a577d9f130db43a96c44d6"
     },
     {
       "path": "project/.github/agents/wtfp-section-planner.agent.md",
@@ -242,7 +242,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-research-literature/references/actions.md",
-      "sha256": "964ec6eb72c222bd7e7ac4eaef8d3b7b3ca51c3e54d6e45c3b1b6e2ebcf939b7"
+      "sha256": "67aef0b59f380785aae9fc15b896272a2dc12ade71a34c40d60cb6f4b1e12e92"
     },
     {
       "path": "project/.github/skills/wtfp-research-literature/SKILL.md",
@@ -398,7 +398,7 @@
     },
     {
       "path": "project/.github/wtfp/actions/research-gap.json",
-      "sha256": "80659531e18fb60dd46620c8b35aa27ce0f966c467f0d3073ae8c6519084153e"
+      "sha256": "0c26fa663f1d2526cbefcc9750b0a176ddf1ca538a46585a1de48c763fbb1a13"
     },
     {
       "path": "project/.github/wtfp/actions/resume-writing.json",
@@ -570,7 +570,7 @@
     },
     {
       "path": "project/.github/wtfp/roles/research-synthesizer.md",
-      "sha256": "011feaa1fdb967c267713f4fa4b0c45b27e66a62f71d1f24c4f44360442aef57"
+      "sha256": "e2027aab698b5ae17246973af606d81aa4242ea56eb20ed7a776332497e1d62b"
     },
     {
       "path": "project/.github/wtfp/roles/section-planner.md",
@@ -650,7 +650,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-research-literature/references/actions.md",
-      "sha256": "83ad7126edc5f2012bc4bdbd3486a3eaf6b6453a0d575416b8ca4633c97fff24"
+      "sha256": "14fb931d2f9b0ae554ae57a301f8270d0338c3476cf9f691e7eda5a29bcaf086"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-research-literature/SKILL.md",
@@ -830,7 +830,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/research-gap.md",
-      "sha256": "a1736edb7e739708a92e5ef11c2d7c7a87fe8e6e4d6586e8ce9b1db3ae5bb428"
+      "sha256": "ccf9580530f3e73d530227c2bb19bef4c72d83a358ca62640130b85458d12e27"
     },
     {
       "path": "project/.github/wtfp/workflows/resume-writing.md",

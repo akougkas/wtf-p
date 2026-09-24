@@ -32,7 +32,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the research question and section scope against locked/deferred decisions; agree on depth and source constraints.
-2. Search declared scholarly services only after the gate names the providers and bounded query set. When using the bundled dispatcher, `citation-search` may run with `--backend=cite-nexus` and an explicit `--providers` list after this gate. Returned results stay candidates, and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
+2. Prefer an operator-configured, trusted read-only CiteNexus MCP connection for bounded public metadata searches when the host has already authorized it. Record provider IDs, queries, date, and result limits; never send unpublished manuscript text or private notes as search terms. This preauthorized route needs no second per-query author gate. Generic full-auto alone does not authorize network use. For an unapproved connection, a paid or credentialed provider, or the bundled dispatcher, first obtain explicit author approval naming the providers and bounded query set. The dispatcher may then run `citation-search --backend=cite-nexus` with an explicit `--providers` list. Results remain candidates and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
 3. Synthesize supported, conflicting, and missing evidence into a Markdown research artifact; link new records and disclose limitations.
 
 ## Bundled tool execution

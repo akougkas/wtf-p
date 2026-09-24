@@ -96,7 +96,7 @@
     },
     {
       "id": "user.gate",
-      "scope": "the external providers, bounded query set, and research scope and depth"
+      "scope": "unapproved or paid external providers and bounded query set, plus author-owned research scope and depth decisions"
     }
   ]
 }
