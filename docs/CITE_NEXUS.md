@@ -56,6 +56,19 @@ For the bundled dispatcher, ask for `--backend=cite-nexus` with an explicit `--p
 
 For `research-gap` on Clio full-auto, an operator can instead register CiteNexus as a trusted, read-class **user** MCP connection. The generated Clio workflow discovers `search-papers` through `gateway`, reads its schema, and uses that already authorized connection for bounded public metadata searches without a second approval for each query. It records the provider IDs, queries, date, limits, and provenance. Generic full-auto alone does not authorize a connection; a missing or untrusted connection still reaches the author gate. The workflow never sends unpublished manuscript text or private notes as search terms. This path requires a Clio build that supports the user MCP `actionClass: read` declaration.
 
+After installing CiteNexus, add this server to Clio's **user** `mcp.yaml`, using the absolute path reported by `command -v cite-nexus-mcp`:
+
+```yaml
+version: 1
+servers:
+  - id: cite-nexus
+    command: /absolute/path/to/cite-nexus-mcp
+    args: [--transport, stdio, --no-env-file]
+    actionClass: read
+```
+
+Restart Clio after changing the MCP declaration. Project MCP declarations cannot set `actionClass`; the operator's user declaration is the authorization boundary for this route.
+
 ## Provider choice and costs
 
 The backend defaults to `crossref,datacite,europe_pmc`, with no mandatory keys.

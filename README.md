@@ -135,6 +135,10 @@ action returns `WTFP_ACTION_UNAVAILABLE` instead of improvising:
 Where the research routes are available, `tool.execute` authorizes exactly one
 command, the bundled `tools/wtfp-tool.js` dispatcher over seven bibliography
 and citation tools. Run it with `--offline` until you approve network use.
+On a Clio build with user MCP `actionClass: read` support, `research-gap` can
+instead use an operator-configured CiteNexus connection through `gateway` for
+bounded public metadata searches without another approval for each query;
+see [CiteNexus setup](docs/CITE_NEXUS.md).
 
 ## What it will not do
 
