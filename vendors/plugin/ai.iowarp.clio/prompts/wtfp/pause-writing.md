@@ -5,18 +5,16 @@ argument-hint: "[arguments]"
 
 # Pause writing
 
-@${pluginRoot}/project/README.md
 @${pluginRoot}/skills/wtfp-manage-project/SKILL.md
-@${pluginRoot}/skills/wtfp-manage-project/references/actions.md
 
 ## Record contract
 
 Read: `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://validations/{validation}`, `project://paper/{artifact}`.
 Produce: `project://sections/{section}/handoff` (create), `project://sections/{section}/handoff` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
-Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+Use `extension_wtfp__record` for each declared JSON record write: pass its logical `uri`, complete `record`, and the revision read as `expect_revision` for revisioned updates. It validates, bumps revisions/timestamps, replaces atomically and reads back; preserve stable IDs and author decisions.
 
-Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
 ## Procedure
 
@@ -30,22 +28,12 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+If desk tools are absent, follow `${pluginRoot}/workflows/pause-writing.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
+
+## Bound action contract
 
 @${pluginRoot}/actions/pause-writing.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/checkpoint.schema.json
-@${pluginRoot}/project/templates/checkpoint.json
-@${pluginRoot}/project/schemas/decisions.schema.json
-@${pluginRoot}/project/templates/decisions.json
-@${pluginRoot}/project/schemas/outline.schema.json
-@${pluginRoot}/project/templates/outline.json
-@${pluginRoot}/project/schemas/section.schema.json
-@${pluginRoot}/project/templates/section.json
-@${pluginRoot}/project/schemas/state.schema.json
-@${pluginRoot}/project/templates/state.json
-@${pluginRoot}/project/schemas/validation.schema.json
-@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

@@ -5,18 +5,16 @@ argument-hint: "[arguments]"
 
 # Polish prose
 
-@${pluginRoot}/project/README.md
 @${pluginRoot}/skills/wtfp-review-manuscript/SKILL.md
-@${pluginRoot}/skills/wtfp-review-manuscript/references/actions.md
 
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://decisions`, `project://paper/{artifact}`.
 Produce: `project://paper/{artifact}` (update), `project://validations/{validation}` (create).
 
-Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+Use `extension_wtfp__record` for each declared JSON record write: pass its logical `uri`, complete `record`, and the revision read as `expect_revision` for revisioned updates. It validates, bumps revisions/timestamps, replaces atomically and reads back; preserve stable IDs and author decisions.
 
-Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
 ## Procedure
 
@@ -30,18 +28,13 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+After changing a linked section manuscript, call `extension_wtfp__measure_section` with that section ID; it persists the desk's body-word count in the section and state.
+If desk tools are absent, follow `${pluginRoot}/workflows/polish-prose.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
+
+## Bound action contract
 
 @${pluginRoot}/actions/polish-prose.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/config.schema.json
-@${pluginRoot}/project/templates/config.json
-@${pluginRoot}/project/schemas/decisions.schema.json
-@${pluginRoot}/project/templates/decisions.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
-@${pluginRoot}/project/schemas/validation.schema.json
-@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 
@@ -53,7 +46,7 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, retained or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author` yourself or infer approval from invocation text, prose or silence. Read back a persisted resolution before applying its gated mutation.
 
 ## Clio role-result binding
 

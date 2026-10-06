@@ -291,5 +291,20 @@
       "unavailableCapabilities": [],
       "unavailableEffects": []
     }
-  ]
+  ],
+  "runtimeBindings": {
+    "plugin": "wtfp",
+    "extension": "wtfp",
+    "capabilities": {
+      "user.interaction": "clio:extension-interview"
+    },
+    "approvals": {
+      "explicit": "clio:extension-interview"
+    },
+    "tools": {
+      "record": "extension_wtfp__record",
+      "measure_section": "extension_wtfp__measure_section",
+      "gate": "extension_wtfp__gate"
+    }
+  }
 }

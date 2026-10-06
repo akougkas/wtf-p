@@ -10,7 +10,7 @@
  * the actions' own workflows.
  */
 import { randomUUID } from "node:crypto";
-import { existsSync, lstatSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -765,6 +765,7 @@ function writeRecord(workspace: string, relative: string, value: Json): void {
 	if (errors.length > 0) throw new Error(`${relative} would not validate: ${errors[0]}`);
 	const file = path.resolve(workspace, relative);
 	if (!inside(path.join(workspace, ".planning"), file)) throw new Error(`refusing to write outside .planning: ${relative}`);
+	mkdirSync(path.dirname(file), { recursive: true });
 	const staging = `${file}.${randomUUID()}.partial`;
 	try {
 		writeFileSync(staging, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
