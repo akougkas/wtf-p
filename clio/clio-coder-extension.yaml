@@ -1,0 +1,40 @@
+# Human-edited source of the Clio runtime facet. The adapter compiler stamps
+# the protocol version, relocates the entrypoint and skin under
+# ai.iowarp.clio/, and emits the result at vendors/plugin/.
+id: wtfp
+name: WTF-P
+version: 0.0.0
+description: "The WTF-P writing desk for Clio Coder; paper state, gates and the write guard run in code."
+runtime:
+  api: 2
+  entrypoint: ai.iowarp.clio/runtime/extension.ts
+  commands:
+    - { name: desk, description: "Enter the WTF-P writing desk." }
+    - { name: progress, description: "Paper progress and the next action, computed locally.", replaces: prompt }
+    - { name: help, description: "The WTF-P action reference, rendered locally.", replaces: prompt }
+    - { name: check-todos, description: "Answer pending gates and author tasks.", replaces: prompt }
+    - { name: checkpoints, description: "List interaction gates and state snapshots." }
+    - { name: validate, description: "Validate every planning record against its schema." }
+  events: [session_open, dispatch_started, dispatch_completed, dispatch_failed, fs_changed, workspace_enter]
+  watch: [".planning/**", "paper/**"]
+  hooks:
+    - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
+    - { on: before_tool, tools: [write, edit], timeoutMs: 1000, onTimeout: block, onError: block }
+  ui: [status, band, card, toast, interview]
+  workspaces:
+    - id: desk
+      title: WTF-P writing desk
+      regions: [header, board, islands, rail, footer]
+      board: band
+      skin: ai.iowarp.clio/skins/wtfp.json
+      keys:
+        - { key: f, action: next, label: "Fill the next writing action" }
+        - { key: c, action: gates, label: "Answer the pending gate" }
+        - { key: v, action: validate, label: "Validate planning records" }
+        - { key: h, action: help, label: "WTF-P action reference" }
+  access: [prompt, tool-args]
+  permissions:
+    fs: { read: [".planning", "paper"], write: [".planning"] }
+    exec: false
+    net: false
+  state: { session: true, store: false }

@@ -1,0 +1,20 @@
+{
+	"palette": {
+		"cyanStrong": { "dark": "#f07ce4", "light": "#8c1d82" },
+		"cyanFocal": { "dark": "#ec8a74", "light": "#a63c25" }
+	},
+	"glyphs": { "brand": "✎" },
+	"agents": {
+		"wtfp-outliner": { "label": "Outliner", "glyph": "☰" },
+		"wtfp-section-planner": { "label": "Section planner", "glyph": "◇" },
+		"wtfp-plan-checker": { "label": "Plan checker", "glyph": "◈" },
+		"wtfp-research-synthesizer": { "label": "Research synthesizer", "glyph": "≋" },
+		"wtfp-section-writer": { "label": "Section writer", "glyph": "✎" },
+		"wtfp-section-reviewer": { "label": "Section reviewer", "glyph": "◎" },
+		"wtfp-argument-verifier": { "label": "Argument verifier", "glyph": "∴" },
+		"wtfp-coherence-checker": { "label": "Coherence checker", "glyph": "⇄" },
+		"wtfp-prose-polisher": { "label": "Prose polisher", "glyph": "✦" },
+		"wtfp-citation-expert": { "label": "Citation expert", "glyph": "❝" },
+		"wtfp-citation-formatter": { "label": "Citation formatter", "glyph": "¶" }
+	}
+}
