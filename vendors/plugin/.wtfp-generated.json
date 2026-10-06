@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "daca3d9002687a8c268423709227052698511d77c79b0bd9933a5bc8446a0cd3",
+  "sourceHash": "6a86c7a9b9d0eba71d851d5fcc3a74136ababe8ff0f2fed236e6ddb1bb4e9edc",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -346,7 +346,7 @@
     },
     {
       "path": "ai.iowarp.clio/runtime/extension.ts",
-      "sha256": "8f61fa5da9d6ff8217b1b6f56e1e53b7a4854eb418a6f945ff75f5042cc08421"
+      "sha256": "e14a85b9665a68600cae4e50515cbf166bc4f195079c84d7fea6abc242ad8c88"
     },
     {
       "path": "ai.iowarp.clio/runtime/json-schema.cjs",
@@ -374,7 +374,7 @@
     },
     {
       "path": "clio-coder-extension.yaml",
-      "sha256": "d26175cb7b0612d432b20a021c13a7b65ca234f6db9372c40deb61d8b01a56e5"
+      "sha256": "cd7a84db62d50078db5ce5213fbe3d5cbe7303ba28396b9d6734ddbf5c691d44"
     },
     {
       "path": "compatibility/action-availability.json",

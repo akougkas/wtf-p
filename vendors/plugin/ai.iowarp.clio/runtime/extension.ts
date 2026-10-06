@@ -826,6 +826,79 @@ async function startGates(ctx: ExtensionContextV2): Promise<ExtensionOutputV2> {
 	};
 }
 
+// --- runtime tools -----------------------------------------------------------
+
+const IDENTIFIER = "[a-z][a-z0-9]*(?:-[a-z0-9]+)*";
+/** The adapter mapping of project/README.md: logical URI to record type and project-relative file. */
+const RECORD_URIS: ReadonlyArray<{ pattern: RegExp; type: string; file: (id: string) => string }> = [
+	{ pattern: /^project:\/\/manifest$/u, type: "manifest", file: () => ".planning/project.json" },
+	{ pattern: /^project:\/\/config$/u, type: "config", file: () => ".planning/config.json" },
+	{ pattern: /^project:\/\/state$/u, type: "state", file: () => ".planning/state.json" },
+	{ pattern: /^project:\/\/decisions$/u, type: "decisions", file: () => ".planning/decisions.json" },
+	{ pattern: /^project:\/\/structure\/outline$/u, type: "outline", file: () => ".planning/structure/outline.json" },
+	{ pattern: new RegExp(`^project://sections/(${IDENTIFIER})$`, "u"), type: "section", file: (id) => `.planning/sections/${id}/section.json` },
+	{ pattern: new RegExp(`^project://sources/(${IDENTIFIER})$`, "u"), type: "source", file: (id) => `.planning/sources/${id}.json` },
+	{ pattern: new RegExp(`^project://evidence/(${IDENTIFIER})$`, "u"), type: "evidence", file: (id) => `.planning/evidence/${id}.json` },
+	{ pattern: new RegExp(`^project://checkpoints/(${IDENTIFIER})$`, "u"), type: "checkpoint", file: (id) => `.planning/checkpoints/${id}.json` },
+	{ pattern: new RegExp(`^project://validations/(${IDENTIFIER})$`, "u"), type: "validation", file: (id) => `.planning/validations/${id}.json` },
+];
+const REVISIONED = new Set(["state", "outline", "decisions"]);
+const STAMPED = new Set(["state", "outline", "decisions", "manifest", "section"]);
+
+function timestamp(): string {
+	return new Date().toISOString().replace(/\.\d{3}Z$/u, "Z");
+}
+
+/**
+ * The one writer of a portable record: the type and identifier must match the
+ * URI, the revision the caller read must still be current, and the record must
+ * validate before it replaces the file. The caller never chooses a revision or
+ * a timestamp; both follow from the write.
+ */
+function writePortableRecord(workspace: string, uri: string, input: Json, expectRevision?: number): { file: string; revision: number | null } {
+	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
+	if (!route) throw new Error(`${uri} is not a logical record URI this adapter maps`);
+	const id = route.pattern.exec(uri)?.[1] ?? "";
+	if (input.schema !== `wtfp.project.${route.type}/v1`) throw new Error(`${uri} holds wtfp.project.${route.type}/v1 records`);
+	if (id && input.id !== id) throw new Error(`${uri} must hold the record whose id is ${id}`);
+	const file = route.file(id);
+	const manifest = readRecord(workspace, ".planning/project.json");
+	const projectId = route.type === "manifest" ? input.id : input.project_id;
+	if (manifest && typeof manifest.id === "string" && projectId !== manifest.id)
+		throw new Error(`${uri} belongs to project ${String(projectId)}, not ${manifest.id}`);
+	const existing = readRecord(workspace, file);
+	const record: Json = { ...input };
+	let revision: number | null = null;
+	if (REVISIONED.has(route.type)) {
+		const current = typeof existing?.revision === "number" ? existing.revision : null;
+		if (current !== null && expectRevision !== undefined && expectRevision !== current)
+			throw new Error(`${uri} is at revision ${current}, not ${expectRevision}; read it again before writing`);
+		revision = current === null ? (typeof input.revision === "number" ? input.revision : 0) : current + 1;
+		record.revision = revision;
+	}
+	if (STAMPED.has(route.type)) record.updated_at = timestamp();
+	writeRecord(workspace, file, record);
+	return { file, revision };
+}
+
+function measureSection(workspace: string, sectionId: string): { words: number; target: number; file: string | null; total: number } {
+	const desk = loadDesk(workspace);
+	const section = desk.sections.find((entry) => entry.id === sectionId);
+	if (!section) throw new Error(`no section ${sectionId} in the outline`);
+	const sectionFile = `.planning/sections/${sectionId}/section.json`;
+	const record = readRecord(workspace, sectionFile);
+	if (!record) throw new Error(`${sectionFile} does not exist yet`);
+	writePortableRecord(workspace, `project://sections/${sectionId}`, { ...record, word_count: section.words });
+	const total = totalWords(desk);
+	const state = readRecord(workspace, ".planning/state.json");
+	if (state && typeof state.progress === "object" && state.progress !== null)
+		writePortableRecord(workspace, "project://state", {
+			...state,
+			progress: { ...(state.progress as Json), word_count: total },
+		});
+	return { words: section.words, target: section.target, file: section.manuscript, total };
+}
+
 // --- commands ----------------------------------------------------------------
 
 function progressCard(desk: Desk): View {
@@ -1077,6 +1150,48 @@ export default function extension(api: ExtensionApiV2): void {
 		};
 	});
 
+	api.tool("record", async (input, ctx) => {
+		const { uri, record, expect_revision } = input as { uri: string; record: Json; expect_revision?: number };
+		try {
+			const written = writePortableRecord(ctx.snapshot.workspace, uri, record, expect_revision);
+			return {
+				text: `Wrote ${uri}${written.revision === null ? "" : ` at revision ${written.revision}`}; it validated and read back.`,
+				data: { uri, file: written.file, revision: written.revision },
+			};
+		} catch (error) {
+			return { text: `Not written: ${error instanceof Error ? error.message : String(error)}`, isError: true };
+		}
+	});
+	api.tool("measure_section", async (input, ctx) => {
+		try {
+			const measured = measureSection(ctx.snapshot.workspace, (input as { section: string }).section);
+			const share = measured.target > 0 ? Math.round((measured.words / measured.target) * 100) : null;
+			return {
+				text: `${measured.file ?? "the manuscript"} has ${measured.words} body words${share === null ? "" : ` (${share}% of ${measured.target}; within 15% counts as on target)`}. Recorded in the section and state records; the paper totals ${measured.total}. ${WORD_METHOD}`,
+				data: measured,
+			};
+		} catch (error) {
+			return { text: `Not measured: ${error instanceof Error ? error.message : String(error)}`, isError: true };
+		}
+	});
+	api.tool("gate", async (input, ctx) => {
+		const id = (input as { checkpoint: string }).checkpoint;
+		const checkpoint = loadDesk(ctx.snapshot.workspace).checkpoints.find((entry) => entry.id === id);
+		if (!checkpoint) return { text: `No checkpoint ${id}.`, isError: true };
+		if (checkpoint.status !== "pending") return { text: `${id} is already ${checkpoint.status}.` };
+		return { text: `Asking the author: ${checkpoint.request}`, interview: { id: "gate-one", title: "WTF-P gate", total: 1, step: gateStep(checkpoint) } };
+	});
+	api.interview("gate-one", async (answer, ctx) => {
+		if (answer.nav === "cancel") return { done: true, text: "The author did not answer; the gate stays pending." };
+		const checkpoint = loadDesk(ctx.snapshot.workspace).checkpoints.find((entry) => entry.id === answer.step);
+		const choice = answer.answers.choice;
+		const picked = Array.isArray(choice) ? choice[0] : choice;
+		if (!checkpoint || checkpoint.status !== "pending" || typeof picked !== "string")
+			return { done: true, text: "The gate changed while it was asked; nothing was recorded." };
+		if (picked === KEEP) return { done: true, text: `The author kept ${checkpoint.id} pending.` };
+		const recorded = resolveGate(ctx.snapshot.workspace, checkpoint, picked);
+		return { done: true, text: `Recorded the author's answer: ${recorded}.`, ...(await picture(ctx)) };
+	});
 	api.interview("gate", async (answer, ctx) => {
 		if (answer.nav === "cancel")
 			return { done: true, text: "Gates left as they were.", toast: { text: "WTF-P gates unchanged" }, ...(await picture(ctx)) };

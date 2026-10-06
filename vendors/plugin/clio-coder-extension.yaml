@@ -18,6 +18,19 @@ runtime:
   hooks:
     - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
     - { on: before_tool, tools: [write, edit], timeoutMs: 1000, onTimeout: block, onError: block }
+  tools:
+    - name: record
+      description: "Write one .planning record at its logical URI, validated against its canonical schema, its revision bumped, replaced atomically and read back."
+      actionClass: execute
+      inputSchema: { type: object, properties: { uri: { type: string }, record: { type: object }, expect_revision: { type: integer } }, required: [uri, record], additionalProperties: false }
+    - name: measure_section
+      description: "Count a section's manuscript body words by the desk's one method and record the count in the section and state records."
+      actionClass: execute
+      inputSchema: { type: object, properties: { section: { type: string } }, required: [section], additionalProperties: false }
+    - name: gate
+      description: "Ask the author a pending checkpoint as an interview; only the author's answer resolves it, and that answer is the result."
+      actionClass: execute
+      inputSchema: { type: object, properties: { checkpoint: { type: string } }, required: [checkpoint], additionalProperties: false }
   ui: [status, band, card, toast, interview]
   workspaces:
     - id: desk
