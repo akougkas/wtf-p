@@ -74,7 +74,7 @@ Preparation performs no model call and reads no credential. It:
 - creates one evaluator-owned Git control commit so later VCS effects are measurable;
 - writes sealed minimal local-only settings;
 - installs the exact generated `vendors/plugin` bundle into the isolated Clio home;
-- runs native version, config inspection, extension discovery/install/list, agent discovery, fleet list/status, and both `fleet validate` and `fleet graph` commands;
+- runs native version, config inspection, extension discovery/install/list, agent discovery, `playbook list`, `fleet status`, and both `playbook validate` and `playbook graph` commands;
 - verifies all eleven extension agents and both two-step fleets;
 - probes Clio's own `writeBoundaryCovers` implementation for positive nested paths and negative out-of-bound paths;
 - verifies exact `.planning/` and `paper/` boundaries, no project or Git-control mutation, no normal-profile change, no receipt, and no retained credential placeholder;

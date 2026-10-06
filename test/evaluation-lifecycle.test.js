@@ -42,7 +42,7 @@ const {
   collectReceipts,
   createRoot,
   eventToolAudit,
-  fleetBoundaryProbe,
+  playbookBoundaryProbe,
   gitControlEqual,
   gitControlSnapshot,
   initializeFixture,
@@ -725,51 +725,51 @@ function testToolAudit(root, project) {
   assert(aggregate.tool_audit.errors.some(error => error.includes('web_fetch')));
 }
 
-function testFleetBoundaryProbe(root) {
-  const clioSource = path.join(root, 'fleet-probe-clio');
+function testPlaybookBoundaryProbe(root) {
+  const clioSource = path.join(root, 'playbook-probe-clio');
   const dist = path.join(clioSource, 'dist');
-  const installed = path.join(root, 'fleet-probe-extension');
+  const installed = path.join(root, 'playbook-probe-extension');
   fs.mkdirSync(dist, { recursive: true });
-  fs.mkdirSync(path.join(installed, 'fleets'), { recursive: true });
+  fs.mkdirSync(path.join(installed, 'playbooks'), { recursive: true });
   fs.writeFileSync(path.join(clioSource, 'package.json'), '{"type":"module"}\n');
   const moduleFile = path.join(dist, 'chunk-TEST.js');
   const boundaryModule = [
-    'function parseFleetContract(raw) {',
+    'function parsePlaybook(raw) {',
     '  const name = raw.match(/^name:\\s*(.+)$/m)?.[1];',
     '  const id = name === "wtfp-plan-section" ? "plan" : "draft";',
     '  const match = raw.match(/writes:\\s*\\[([^\\]]+)\\]/);',
     '  const writes = match ? match[1].split(",").map(value => value.trim()) : [];',
     '  return { name, steps: [{ id, writes }] };',
     '}',
-    'function fleetStepBoundaries(contract) {',
+    'function playbookStepBoundaries(contract) {',
     '  return contract.steps.map(step => ({ id: step.id, scope: "workspace", writes: [...step.writes].sort() }));',
     '}',
     'function writeBoundaryCovers(boundary, candidate) {',
     '  return boundary.some(entry => entry.endsWith("/") ? candidate.startsWith(entry) : candidate === entry);',
     '}',
-    'export { parseFleetContract, fleetStepBoundaries, writeBoundaryCovers, };'
+    'export { parsePlaybook, playbookStepBoundaries, writeBoundaryCovers, };'
   ].join('\n');
   fs.writeFileSync(moduleFile, boundaryModule);
-  for (const fleet of ['wtfp-plan-section.md', 'wtfp-draft-review.md']) {
-    fs.copyFileSync(path.join(repositoryRoot, 'vendors', 'plugin', 'ai.iowarp.clio', 'playbooks', fleet), path.join(installed, 'fleets', fleet));
+  for (const playbook of ['wtfp-plan-section.md', 'wtfp-draft-review.md']) {
+    fs.copyFileSync(path.join(repositoryRoot, 'vendors', 'plugin', 'ai.iowarp.clio', 'playbooks', playbook), path.join(installed, 'playbooks', playbook));
   }
-  const valid = fleetBoundaryProbe(clioSource, installed);
+  const valid = playbookBoundaryProbe(clioSource, installed);
   assert.strictEqual(valid.valid, true, JSON.stringify(valid, null, 2));
   assert.strictEqual(valid.checks.plan_covers_nested_plan, true);
   assert.strictEqual(valid.checks.draft_covers_manuscript, true);
 
-  const planFile = path.join(installed, 'fleets', 'wtfp-plan-section.md');
+  const planFile = path.join(installed, 'playbooks', 'wtfp-plan-section.md');
   fs.writeFileSync(planFile, fs.readFileSync(planFile, 'utf8').replace('writes: [.planning/]', 'writes: [.planning]'));
-  const unsafe = fleetBoundaryProbe(clioSource, installed);
+  const unsafe = playbookBoundaryProbe(clioSource, installed);
   assert.strictEqual(unsafe.valid, false);
   assert.strictEqual(unsafe.checks.plan_exact_boundary, false);
   assert.strictEqual(unsafe.checks.plan_covers_nested_plan, false);
 
   fs.writeFileSync(moduleFile, boundaryModule.replace(
-    'export { parseFleetContract, fleetStepBoundaries, writeBoundaryCovers, };',
-    'export { parseFleetContract, writeBoundaryCovers, };'
+    'export { parsePlaybook, playbookStepBoundaries, writeBoundaryCovers, };',
+    'export { parsePlaybook, writeBoundaryCovers, };'
   ));
-  assert.throws(() => fleetBoundaryProbe(clioSource, installed), /canonical fleet-boundary probe returned malformed JSON/);
+  assert.throws(() => playbookBoundaryProbe(clioSource, installed), /canonical playbook-boundary probe returned malformed JSON/);
 }
 
 function testCredentialHandling(root) {
@@ -1765,7 +1765,7 @@ async function main() {
     const project = testFixtureAndGit(root);
     testPlanningAndMutation(project);
     testToolAudit(root, project);
-    testFleetBoundaryProbe(root);
+    testPlaybookBoundaryProbe(root);
     testCredentialHandling(root);
     testCalendarAwareSchemaFormats(root);
     testFailClosed(root);

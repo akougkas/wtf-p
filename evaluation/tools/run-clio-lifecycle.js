@@ -101,7 +101,7 @@ function usage() {
     '',
     '--dry-run performs read-only source inspection and prints the exact command plan.',
     '--prepare creates a mode-0700 root, committed fixture, isolated Clio directories,',
-    'extension installation, and credential-free native discovery/fleet evidence.',
+    'extension installation, and credential-free native discovery/playbook evidence.',
     '--execute is the only mode that calls a paid model and refuses an unprepared root.'
   ].join('\n');
 }
@@ -360,8 +360,8 @@ function buildPlan(options, sources, root = '<disposable-root>') {
       install_scope: 'isolated-user',
       native_checks: [
         'extensions discover', 'extensions install', 'extensions list', 'agents --all',
-        'fleet list', 'fleet validate wtfp-plan-section', 'fleet graph wtfp-plan-section',
-        'fleet validate wtfp-draft-review', 'fleet graph wtfp-draft-review', 'fleet status'
+        'playbook list', 'playbook validate wtfp-plan-section', 'playbook graph wtfp-plan-section',
+        'playbook validate wtfp-draft-review', 'playbook graph wtfp-draft-review', 'fleet status'
       ]
     },
     sessions: {
@@ -707,32 +707,32 @@ function nativeCommand({ name, binary, args, cwd, env, evidenceRoot }) {
   };
 }
 
-function fleetBoundaryProbe(clioSource, installedExtension) {
+function playbookBoundaryProbe(clioSource, installedExtension) {
   const dist = path.join(clioSource, 'dist');
   assertDirectory(dist, 'Clio dist root');
   const moduleName = fs.readdirSync(dist).filter(name => /^chunk-[A-Z0-9]+\.js$/u.test(name)).sort()
     .find(name => {
       const source = fs.readFileSync(path.join(dist, name), 'utf8');
       return source.includes('function writeBoundaryCovers(') &&
-        source.includes('parseFleetContract') && source.includes('writeBoundaryCovers,');
+        source.includes('parsePlaybook') && source.includes('writeBoundaryCovers,');
     });
-  if (!moduleName) throw new Error('matching Clio build does not expose canonical fleet-boundary helpers');
+  if (!moduleName) throw new Error('matching Clio build does not expose canonical playbook-boundary helpers');
   const moduleFile = path.join(dist, moduleName);
-  const fleetFiles = {
-    plan: path.join(installedExtension, 'fleets', 'wtfp-plan-section.md'),
-    draft: path.join(installedExtension, 'fleets', 'wtfp-draft-review.md')
+  const playbookFiles = {
+    plan: path.join(installedExtension, 'playbooks', 'wtfp-plan-section.md'),
+    draft: path.join(installedExtension, 'playbooks', 'wtfp-draft-review.md')
   };
-  for (const [name, file] of Object.entries(fleetFiles)) assertRegularFile(file, `installed ${name} fleet`);
+  for (const [name, file] of Object.entries(playbookFiles)) assertRegularFile(file, `installed ${name} playbook`);
   const probeSource = [
     'import fs from "node:fs";',
     'import { pathToFileURL } from "node:url";',
     'const moduleFile = process.argv[1];',
-    'const fleetFiles = JSON.parse(process.argv[2]);',
+    'const playbookFiles = JSON.parse(process.argv[2]);',
     'const api = await import(pathToFileURL(moduleFile).href);',
-    'const read = file => api.parseFleetContract(fs.readFileSync(file, "utf8"), file);',
-    'const plan = read(fleetFiles.plan);',
-    'const draft = read(fleetFiles.draft);',
-    'const boundary = (contract, id) => api.fleetStepBoundaries(contract).find(item => item.id === id)?.writes;',
+    'const read = file => api.parsePlaybook(fs.readFileSync(file, "utf8"), file);',
+    'const plan = read(playbookFiles.plan);',
+    'const draft = read(playbookFiles.draft);',
+    'const boundary = (contract, id) => api.playbookStepBoundaries(contract).find(item => item.id === id)?.writes;',
     'const planWrites = boundary(plan, "plan");',
     'const draftWrites = boundary(draft, "draft");',
     'const checks = {',
@@ -748,13 +748,13 @@ function fleetBoundaryProbe(clioSource, installedExtension) {
     'process.stdout.write(JSON.stringify({ plan: { name: plan.name, writes: planWrites }, draft: { name: draft.name, writes: draftWrites }, checks, valid: Object.values(checks).every(Boolean) }));'
   ].join('\n');
   const result = commandResult(process.execPath, [
-    '--input-type=module', '--eval', probeSource, moduleFile, JSON.stringify(fleetFiles)
+    '--input-type=module', '--eval', probeSource, moduleFile, JSON.stringify(playbookFiles)
   ], { cwd: installedExtension, allowFailure: true });
   let probe;
   try {
     probe = JSON.parse(result.stdout);
   } catch (error) {
-    throw new Error(`canonical fleet-boundary probe returned malformed JSON (${error.message})`);
+    throw new Error(`canonical playbook-boundary probe returned malformed JSON (${error.message})`);
   }
   return {
     ...probe,
@@ -763,7 +763,7 @@ function fleetBoundaryProbe(clioSource, installedExtension) {
     implementation: {
       module: path.relative(clioSource, moduleFile).split(path.sep).join('/'),
       sha256: sha256(fs.readFileSync(moduleFile)),
-      helpers: ['parseFleetContract', 'fleetStepBoundaries', 'writeBoundaryCovers']
+      helpers: ['parsePlaybook', 'playbookStepBoundaries', 'writeBoundaryCovers']
     }
   };
 }
@@ -778,11 +778,11 @@ function runNativePreflight(options, root, env) {
     ['extension-install', ['extensions', 'install', options.extension, '--user', '--json']],
     ['extension-list', ['extensions', 'list', '--all', '--user', '--json']],
     ['agents-all', ['agents', '--json', '--all']],
-    ['fleet-list', ['fleet', 'list']],
-    ['fleet-plan-validate', ['fleet', 'validate', 'wtfp-plan-section', '--json']],
-    ['fleet-plan-graph', ['fleet', 'graph', 'wtfp-plan-section', '--json']],
-    ['fleet-draft-validate', ['fleet', 'validate', 'wtfp-draft-review', '--json']],
-    ['fleet-draft-graph', ['fleet', 'graph', 'wtfp-draft-review', '--json']],
+    ['playbook-list', ['playbook', 'list']],
+    ['playbook-plan-validate', ['playbook', 'validate', 'wtfp-plan-section', '--json']],
+    ['playbook-plan-graph', ['playbook', 'graph', 'wtfp-plan-section', '--json']],
+    ['playbook-draft-validate', ['playbook', 'validate', 'wtfp-draft-review', '--json']],
+    ['playbook-draft-graph', ['playbook', 'graph', 'wtfp-draft-review', '--json']],
     ['fleet-status', ['fleet', 'status', '--json']]
   ];
   const results = [];
@@ -853,28 +853,28 @@ function runNativePreflight(options, root, env) {
   if (!extension?.enabled || !extension?.effective || (extension.diagnostics || []).length > 0) {
     errors.push('extension-list: WTF-P is not enabled, effective, and diagnostic-free');
   }
-  for (const name of ['fleet-plan-validate', 'fleet-draft-validate']) {
+  for (const name of ['playbook-plan-validate', 'playbook-draft-validate']) {
     const validation = parseJson(name);
     if (validation?.valid !== true) {
       errors.push(`${name}: ${validation?.diagnostics?.join('; ') || 'valid was not true'}`);
     }
   }
-  const fleetList = stdout('fleet-list');
+  const playbookList = stdout('playbook-list');
   for (const name of ['wtfp-plan-section', 'wtfp-draft-review']) {
-    if (!fleetList.includes(`${name}  extension  valid`)) errors.push(`fleet-list: ${name} is not extension/valid`);
+    if (!playbookList.includes(`${name}  extension  valid`)) errors.push(`playbook-list: ${name} is not extension/valid`);
   }
-  let fleetBoundaries = null;
+  let playbookBoundaries = null;
   try {
-    if (containmentFailure) throw new Error('config-root containment failed before fleet-boundary probing');
-    fleetBoundaries = fleetBoundaryProbe(
+    if (containmentFailure) throw new Error('config-root containment failed before playbook-boundary probing');
+    playbookBoundaries = playbookBoundaryProbe(
       options.clioSource,
       path.join(root, 'clio', 'config', 'extensions', 'wtfp')
     );
-    if (fleetBoundaries.exit_code !== 0 || fleetBoundaries.valid !== true) {
-      errors.push('canonical fleet-boundary probe did not prove corrected directory-root coverage');
+    if (playbookBoundaries.exit_code !== 0 || playbookBoundaries.valid !== true) {
+      errors.push('canonical playbook-boundary probe did not prove corrected directory-root coverage');
     }
   } catch (error) {
-    errors.push(`canonical fleet-boundary probe failed: ${error.message}`);
+    errors.push(`canonical playbook-boundary probe failed: ${error.message}`);
   }
   return {
     schema: 'wtfp.evaluation.clio-native-preflight/v1',
@@ -887,17 +887,17 @@ function runNativePreflight(options, root, env) {
       expected_extension_agents: expectedAgents.length,
       observed_extension_agents: expectedAgents.filter(id => observedAgents.has(id)).length,
       extension_effective: Boolean(extension?.enabled && extension?.effective),
-      fleet_list_declares_valid: ['wtfp-plan-section', 'wtfp-draft-review']
-        .every(name => fleetList.includes(`${name}  extension  valid`)),
-      fleet_validate_compiles_agents: ['fleet-plan-validate', 'fleet-draft-validate']
+      playbook_list_declares_valid: ['wtfp-plan-section', 'wtfp-draft-review']
+        .every(name => playbookList.includes(`${name}  extension  valid`)),
+      playbook_validate_compiles_agents: ['playbook-plan-validate', 'playbook-draft-validate']
         .every(name => {
           try { return JSON.parse(stdout(name)).valid === true; } catch { return false; }
         }),
-      fleet_graph_exit_zero: ['fleet-plan-graph', 'fleet-draft-graph']
+      playbook_graph_exit_zero: ['playbook-plan-graph', 'playbook-draft-graph']
         .every(name => byName.get(name)?.exit_code === 0),
-      fleet_directory_write_boundaries: fleetBoundaries?.valid === true
+      playbook_directory_write_boundaries: playbookBoundaries?.valid === true
     },
-    fleet_boundaries: fleetBoundaries,
+    playbook_boundaries: playbookBoundaries,
     errors,
     commands: results
   };
@@ -3470,7 +3470,7 @@ async function execute(options, sources) {
     fleet_activity: {
       paid_fleet_runs: 0,
       native_contract_evidence: 'evidence/native-preflight.json',
-      note: 'Lifecycle actions may dispatch extension agents; fleet contracts are validated and graphed but are not substituted for canonical state transitions.'
+      note: 'Lifecycle actions may dispatch extension agents; playbooks are validated and graphed but are not substituted for canonical state transitions.'
     },
     steering: { required: false, events: [], note: 'No steering channel is configured; any future intervention must be recorded explicitly.' },
     final_schema_validation: finalSchema,
@@ -3570,7 +3570,7 @@ module.exports = {
   createRoot,
   eventToolAudit,
   execute,
-  fleetBoundaryProbe,
+  playbookBoundaryProbe,
   gitControlEqual,
   gitControlSnapshot,
   initializeFixture,

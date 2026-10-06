@@ -1059,10 +1059,10 @@ function nativeCommands(client, binary, caseLayout) {
       ['extension-list', node, [...prefix, 'extensions', 'list', '--all', '--json'], caseLayout.project],
       ['skills-list', node, [...prefix, 'skills', 'list', '--all', '--json'], caseLayout.project],
       ['agents-list', node, [...prefix, 'agents', '--all', '--json'], caseLayout.project],
-      ['fleet-plan-validate', node, [...prefix, 'fleet', 'validate', 'wtfp-plan-section', '--json'], controlProject],
-      ['fleet-plan-graph', node, [...prefix, 'fleet', 'graph', 'wtfp-plan-section', '--json'], controlProject],
-      ['fleet-draft-validate', node, [...prefix, 'fleet', 'validate', 'wtfp-draft-review', '--json'], controlProject],
-      ['fleet-draft-graph', node, [...prefix, 'fleet', 'graph', 'wtfp-draft-review', '--json'], controlProject]
+      ['playbook-plan-validate', node, [...prefix, 'playbook', 'validate', 'wtfp-plan-section', '--json'], controlProject],
+      ['playbook-plan-graph', node, [...prefix, 'playbook', 'graph', 'wtfp-plan-section', '--json'], controlProject],
+      ['playbook-draft-validate', node, [...prefix, 'playbook', 'validate', 'wtfp-draft-review', '--json'], controlProject],
+      ['playbook-draft-graph', node, [...prefix, 'playbook', 'graph', 'wtfp-draft-review', '--json'], controlProject]
     ];
   }
   throw new Error(`unsupported client ${client}`);
@@ -1099,10 +1099,10 @@ function validateNativePreflight(client, outputs, row) {
     for (const skill of EXPECTED_SKILLS) {
       if (!text('skills-list').includes(skill)) errors.push(`Clio skill list omitted ${skill}`);
     }
-    for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) {
-      if (!text(`fleet-${fleet === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid":true') &&
-          !text(`fleet-${fleet === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid": true')) {
-        errors.push(`Clio fleet validation did not prove ${fleet} valid`);
+    for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
+      if (!text(`playbook-${playbook === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid":true') &&
+          !text(`playbook-${playbook === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid": true')) {
+        errors.push(`Clio playbook validation did not prove ${playbook} valid`);
       }
     }
   }
