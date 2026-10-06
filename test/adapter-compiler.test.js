@@ -339,6 +339,7 @@ record('compiler plans and target roots are exact and deterministic', () => {
       ['antigravity', EXPECTED_ROOTS.antigravity],
       ['gemini', EXPECTED_ROOTS.gemini],
       ['portable-plugin', path.join(ROOT, 'vendors', 'plugin')],
+      ['clio-extension', path.join(ROOT, 'vendors', 'clio-extension')],
       ['codex-marketplace', path.join(ROOT, 'vendors', 'codex')],
       ['copilot-marketplace', path.join(ROOT, 'vendors', 'copilot')],
       ['clio', null]
@@ -1099,13 +1100,25 @@ record('every bundled native resource reference resolves inside its target envel
 record('the Claude envelope carries the portable root manifest and component graph Clio adopts', () => {
   const claude = plansById.get('claude');
   const portable = plansById.get('portable-plugin');
+  const phase1 = plansById.get('clio');
   assert.strictEqual(planText(claude, 'plugin.json'), planText(portable, 'plugin.json'),
     'Claude root plugin.json must be byte-identical to the canonical bundle manifest');
   const extension = JSON.parse(planText(claude, 'plugin.json')).extensions['ai.iowarp.clio'];
   for (const directory of Object.values(extension.resources)) assertDirectory(claude, directory, `Claude-carried Clio ${directory}`);
   for (const item of extension.components) {
     assert.ok(claude.files.has(item.path), `Claude envelope lacks Clio component ${item.kind}:${item.id}`);
-    if (item.path.startsWith('ai.iowarp.clio/')) {
+    if (item.kind === 'prompt') {
+      const carried = planText(claude, item.path);
+      assert.strictEqual(carried, planText(phase1, item.path.replace(/^ai\.iowarp\.clio\//, '')),
+        `${item.path} must retain the phase 1 Clio prompt in Claude`);
+      assert.doesNotMatch(carried, /extension_wtfp__(?:record|measure_section|gate)/,
+        `${item.path} must not call desk tools outside the canonical plugin`);
+      const canonical = planText(portable, item.path);
+      if (canonical !== carried) {
+        assert.match(canonical, /extension_wtfp__record/, `${item.path} must bind the desk record tool`);
+        assert.match(canonical, /If desk tools are absent, follow/, `${item.path} must retain its absence fallback`);
+      }
+    } else if (item.path.startsWith('ai.iowarp.clio/')) {
       assert.strictEqual(planText(claude, item.path), planText(portable, item.path),
         `${item.path} differs between the Claude and canonical bundles`);
     }
