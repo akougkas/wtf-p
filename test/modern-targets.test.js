@@ -583,7 +583,13 @@ process.exitCode = 91;
       assert.ok(target, `missing ${runtime} manifest`);
       assert.strictEqual(target.configDirEnv, expected.configDirEnv);
       assert.strictEqual(target.defaultDir, expected.defaultDir);
-      assert.strictEqual(target.components.length, runtime === 'codex' ? 2 : 1);
+      assert.strictEqual(target.components.length, runtime === 'codex' || runtime === 'clio' ? 2 : 1);
+      if (runtime === 'clio') {
+        assert.deepStrictEqual(
+          { ...target.components[1] },
+          { id: 'extension', src: path.join(path.dirname(expected.source), 'clio-extension'), dest: 'extensions/wtfp', type: 'dir' }
+        );
+      }
       if (runtime === 'codex') {
         assert.deepStrictEqual(
           { ...target.components[1] },
