@@ -84,7 +84,7 @@ target selector passed to either command is not authoritative. Verify a modern
 adapter with the client's native discovery surface instead. For Clio, check
 `clio-coder --version`, `clio-coder library inspect wtfp --user --json`,
 `clio-coder library skills --all --json`, `clio-coder agents`, and
-`clio-coder fleet list`, and inspect `/prompts` in the TUI; use the equivalent
+`clio-coder playbook list`, and inspect `/prompts` in the TUI; use the equivalent
 native plugin, extension, or skill listing for another client.
 [GETTING_STARTED.md](GETTING_STARTED.md#verify-or-remove-an-installation)
 names the listing command per client. A successful install plus native

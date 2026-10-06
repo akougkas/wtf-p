@@ -63,6 +63,10 @@ only in their version.
   key and component kind in `ai.iowarp.clio/playbooks/`, and the
   `/wtfp:help` card lists them for `clio-coder fleet run <playbook>`. Their
   bodies are unchanged
+- The Clio documentation, native integration test and evaluation runners
+  check the playbooks with `clio-coder playbook list`, `playbook validate`
+  and `playbook graph`, where Clio 0.6.2 moved playbook authoring.
+  `clio-coder fleet run` still runs them
 - The Claude envelope keeps its older Clio copy: a root `plugin.json`, the
   phase 1 prompts and `ai.iowarp.clio/fleets/`. Clio no longer adopts it and
   points to the canonical plugin instead

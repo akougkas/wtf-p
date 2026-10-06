@@ -161,7 +161,7 @@ clio-coder library inspect wtfp --user --json
 clio-coder library list --kind plugin --json
 clio-coder library skills --all --json
 clio-coder agents
-clio-coder fleet list
+clio-coder playbook list
 clio-coder run '/wtfp:help'
 ```
 
@@ -181,11 +181,11 @@ Clio slash prompts inherit the session's tool surface; the host does not narrow 
 The two generated playbooks are advanced, operator-invoked Clio primitives that the fleet runs. Ordinary `/wtfp:*` actions do not invoke them implicitly:
 
 ```bash
-clio-coder fleet validate wtfp-plan-section
-clio-coder fleet validate wtfp-draft-review
+clio-coder playbook validate wtfp-plan-section
+clio-coder playbook validate wtfp-draft-review
 ```
 
-Run a playbook with `clio-coder fleet run <playbook> --var section=<section-id>` (a model-backed run; this candidate's evidence covers `fleet validate` and `fleet list` only), and only after the slash orchestrator has established the required approved outline or section plan. The plan playbook runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft playbook runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
+Run a playbook with `clio-coder fleet run <playbook> --var section=<section-id>` (a model-backed run; this candidate's evidence covers `playbook validate`, `playbook graph` and `playbook list` only), and only after the slash orchestrator has established the required approved outline or section plan. The plan playbook runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft playbook runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
 
 Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The playbooks declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
 
@@ -243,7 +243,7 @@ run_isolated_clio clio-coder --autonomy suggest
 
 ## Verify or remove an installation
 
-The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder library inspect wtfp --user --json` (with `clio-coder library skills --all --json`), `clio-coder agents`, and `clio-coder fleet list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
+The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder library inspect wtfp --user --json` (with `clio-coder library skills --all --json`), `clio-coder agents`, and `clio-coder playbook list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
 
 Preview removal before deleting exact receipt-owned files:
 
