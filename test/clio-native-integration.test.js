@@ -151,8 +151,8 @@ try {
     }
     for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
     for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
-      native(['fleet', 'validate', playbook], cwd);
-      native(['fleet', 'graph', playbook], cwd);
+      native(['playbook', 'validate', playbook], cwd);
+      native(['playbook', 'graph', playbook], cwd);
     }
     assert.match(native(['run', '/wtfp:help'], cwd), /wtfp:new-paper/);
 
