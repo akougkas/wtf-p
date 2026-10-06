@@ -17,12 +17,14 @@ Install the content plugin from `vendors/plugin/` and the extension separately.
 The extension's `plugin: wtfp` link allows its declared commands to take over
 the plugin's matching prompts while that plugin is installed and enabled.
 The plugin alone runs no Clio extension code and retains prompt fallbacks.
+Without the plugin, the desk names only its own `/ext:wtfp:*` commands and
+says which steps need the plugin; it never offers a `/wtfp:*` prompt.
 
 The desk reads `.planning` and `paper/`, draws the workspace, gates manuscript
 writes, and writes validated records, measured word counts and author gate
 answers under `.planning/`. `clio-coder extensions test vendors/clio-extension`
-runs its package tests: one per runtime tool, the write guard, and entering
-and leaving the desk. All package resources come from its own install
+runs its package tests: one per runtime tool, the write guard, entering and
+leaving the desk, and the desk without its plugin. All package resources come from its own install
 root. The manifest names emitted paths, so it does not load from this source
 directory. The other six host projections remain unchanged.
 

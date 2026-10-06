@@ -102,9 +102,32 @@ interface Desk {
 	invalid: Array<{ file: string; errors: string[] }>;
 	targetWords: number;
 	paperExists: boolean;
+	/** The WTF-P plugin while Clio serves it; null when it is not installed and enabled. */
+	served: ServedPlugin;
 }
 
 type Json = Record<string, unknown>;
+type ServedPlugin = ExtensionContextV2["snapshot"]["plugin"];
+
+/** Actions the desk answers itself; they stay reachable as `/ext:wtfp:<name>` without the plugin. */
+const DESK_COMMANDS = new Set(["progress", "help", "check-todos"]);
+
+/**
+ * How the desk names an action: the plugin's `/wtfp:` prompt while the plugin
+ * serves it, else the desk's own `/ext:wtfp:` command, else null because only
+ * the plugin can run it.
+ */
+function commandFor(served: ServedPlugin, action: string, args = ""): string | null {
+	const tail = args ? ` ${args}` : "";
+	if (served?.prompts.includes(`wtfp:${action}`)) return `/wtfp:${action}${tail}`;
+	if (DESK_COMMANDS.has(action)) return `/ext:wtfp:${action}${tail}`;
+	return null;
+}
+
+/** An action's command, or its bare name where no command runs it here. */
+function actionName(served: ServedPlugin, action: string): string {
+	return commandFor(served, action) ?? action;
+}
 
 function inside(root: string, candidate: string): boolean {
 	const relative = path.relative(root, candidate);
@@ -336,6 +359,7 @@ function loadDesk(workspace: string): Desk {
 						? target.word_limit
 						: sections.reduce((sum, section) => sum + section.target, 0),
 		paperExists: existsSync(path.join(workspace, "paper")),
+		served: null,
 	};
 }
 
@@ -346,45 +370,52 @@ interface Next {
 	reason: string;
 }
 
+/** One rung of the ladder; a step only the absent plugin can run says so instead of naming it. */
+function step(served: ServedPlugin, action: string, args: string, reason: string): Next {
+	const command = commandFor(served, action, args);
+	return command ? { command, reason } : { command: null, reason: `${reason} Its next step, ${action}, needs the WTF-P plugin.` };
+}
+
 function nextAction(desk: Desk): Next {
+	const served = desk.served;
 	if (!desk.present)
 		return desk.paperExists
-			? { command: "/wtfp:map-project", reason: "A manuscript exists but no WTF-P project records do." }
-			: { command: "/wtfp:new-paper", reason: "Start a project: brief, decisions and outline." };
+			? step(served, "map-project", "", "A manuscript exists but no WTF-P project records do.")
+			: step(served, "new-paper", "", "Start a project: brief, decisions and outline.");
 	const gate = desk.checkpoints.find((checkpoint) => checkpoint.status === "pending" && checkpoint.blocking);
-	if (gate) return { command: "/wtfp:check-todos", reason: `Gate waiting on you: ${gate.request}` };
-	if (desk.sections.length === 0) return { command: "/wtfp:create-outline", reason: "No outline yet." };
+	if (gate) return step(served, "check-todos", "", `Gate waiting on you: ${gate.request}`);
+	if (desk.sections.length === 0) return step(served, "create-outline", "", "No outline yet.");
 	const complete = new Set(desk.sections.filter((section) => section.status === "complete").map((section) => section.id));
 	const ordered = [...desk.sections].sort((a, b) => a.wave - b.wave);
 	for (const section of ordered) {
 		if (section.status === "complete") continue;
 		if (!section.dependsOn.every((dep) => complete.has(dep)) && section.status === "not-started") continue;
-		return sectionNext(section);
+		return sectionNext(served, section);
 	}
 	if (desk.phase === "delivered") return { command: null, reason: "Delivered." };
-	if (desk.phase === "ready") return { command: "/wtfp:submit-milestone", reason: "Every section is complete and audited." };
-	return { command: "/wtfp:audit-milestone", reason: "Every section is complete; audit before delivery." };
+	if (desk.phase === "ready") return step(served, "submit-milestone", "", "Every section is complete and audited.");
+	return step(served, "audit-milestone", "", "Every section is complete; audit before delivery.");
 }
 
 /** The next step for one section, by the same ladder the band follows. */
-function sectionNext(section: SectionRow): Next {
+function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 	const id = section.id;
-	if (section.gates.length > 0) return { command: "/wtfp:check-todos", reason: `${section.title} waits on a gate.` };
+	if (section.gates.length > 0) return step(served, "check-todos", "", `${section.title} waits on a gate.`);
 	switch (section.status) {
 		case "complete":
-			return { command: `/wtfp:review-section ${id}`, reason: `${section.title} is complete; review it again if it changed.` };
+			return step(served, "review-section", id, `${section.title} is complete; review it again if it changed.`);
 		case "blocked":
-			return { command: "/wtfp:check-todos", reason: `${section.title} is blocked.` };
+			return step(served, "check-todos", "", `${section.title} is blocked.`);
 		case "reviewing":
-			return { command: `/wtfp:review-section ${id}`, reason: `${section.title} is drafted and waits for review.` };
+			return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
 		case "writing":
 		case "planned":
-			return { command: `/wtfp:write-section ${id}`, reason: `${section.title} has an approved plan.` };
+			return step(served, "write-section", id, `${section.title} has an approved plan.`);
 		default:
-			if (!section.stages.discuss) return { command: `/wtfp:discuss-section ${id}`, reason: `Settle what ${section.title} must argue.` };
+			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
 			if (section.research.required && !section.research.present)
-				return { command: `/wtfp:research-gap ${id}`, reason: `${section.title} needs verified evidence first.` };
-			return { command: `/wtfp:plan-section ${id}`, reason: `${section.title} is ready to plan.` };
+				return step(served, "research-gap", id, `${section.title} needs verified evidence first.`);
+			return step(served, "plan-section", id, `${section.title} is ready to plan.`);
 	}
 }
 
@@ -610,7 +641,14 @@ function islands(desk: Desk, running: Record<string, { agentId: string; at: numb
 }
 
 function footer(desk: Desk): View {
-	if (!desk.present) return { t: "text", text: "WTF-P · no .planning here · /wtfp:new-paper starts one", tone: "muted" };
+	if (!desk.present) {
+		const start = commandFor(desk.served, "new-paper");
+		return {
+			t: "text",
+			text: `WTF-P · no .planning here · ${start ? `${start} starts one` : "the WTF-P plugin's new-paper starts one"}`,
+			tone: "muted",
+		};
+	}
 	const complete = desk.sections.filter((section) => section.status === "complete").length;
 	const issues = (["blocker", "error", "warning"] as const)
 		.filter((severity) => desk.issues[severity] > 0)
@@ -668,6 +706,7 @@ async function running(ctx: ExtensionContextV2): Promise<Running> {
 async function deskFor(ctx: ExtensionContextV2): Promise<Desk> {
 	const desk = loadDesk(ctx.snapshot.workspace);
 	desk.invalid = (await ctx.state.get<Desk["invalid"]>("invalid")).value ?? [];
+	desk.served = ctx.snapshot.plugin ?? null;
 	return desk;
 }
 
@@ -953,17 +992,17 @@ function progressCard(desk: Desk): View {
 }
 
 function progressText(desk: Desk): string {
-	if (!desk.present) return `No WTF-P project here. ${nextAction(desk).command}`;
 	const next = nextAction(desk);
+	if (!desk.present) return `No WTF-P project here. ${next.command ?? next.reason}`;
 	return [
 		`${desk.title} · ${desk.phase}`,
 		`${totalWords(desk)}/${desk.targetWords} words; ${desk.sections.filter((section) => section.status === "complete").length}/${desk.sections.length} sections complete`,
 		...desk.sections.map((section) => `  w${section.wave} ${section.id}: ${section.status} ${stageStrip(section)} ${section.words}/${section.target}w`),
-		`Next: ${next.command ?? "nothing"} (${next.reason})`,
+		next.command ? `Next: ${next.command} (${next.reason})` : `Next: ${next.reason}`,
 	].join("\n");
 }
 
-function helpCard(): { text: string; card: View } {
+function helpCard(served: ServedPlugin): { text: string; card: View } {
 	const availability = JSON.parse(
 		readFileSync(path.join(PACKAGE_ROOT, "compatibility", "action-availability.json"), "utf8"),
 	) as { actions: Array<{ id: string; status: string; unavailableCapabilities: string[] }> };
@@ -972,11 +1011,12 @@ function helpCard(): { text: string; card: View } {
 			description?: string;
 		};
 		return [
-			`/wtfp:${entry.id}`,
+			actionName(served, entry.id),
 			entry.status === "available" ? text(contract.description) : `unavailable: ${entry.unavailableCapabilities.join(", ")}`,
 		];
 	});
-	const guarded = Object.keys(GUARD.actions).map((id) => `/wtfp:${id}`);
+	const guarded = Object.keys(GUARD.actions).map((id) => actionName(served, id));
+	const local = [...DESK_COMMANDS].map((id) => actionName(served, id));
 	return {
 		text: rows.map((row) => `${row[0]}  ${row[1]}`).join("\n"),
 		card: {
@@ -991,7 +1031,7 @@ function helpCard(): { text: string; card: View } {
 					t: "text",
 					wrap: "wrap",
 					tone: "muted",
-					text: `Answered locally with no model: /wtfp:progress, /wtfp:help, /wtfp:check-todos, /ext:wtfp:checkpoints, /ext:wtfp:validate. Write guard: ${guarded.join(", ")} may write only under the roots each declares. A manuscript write waits for its section's blocking gates and approved plan. ${WORD_METHOD}`,
+					text: `${served ? "" : "The WTF-P plugin is not installed and enabled, so the actions above are not commands here; install and enable it to run them. "}Answered locally with no model: ${local.join(", ")}, /ext:wtfp:checkpoints, /ext:wtfp:validate. Write guard: ${guarded.join(", ")} may write only under the roots each declares. A manuscript write waits for its section's blocking gates and approved plan. ${WORD_METHOD}`,
 				},
 			],
 		},
@@ -1072,6 +1112,7 @@ async function guard(ctx: ExtensionContextV2, args: unknown): Promise<ExtensionH
 	const target = args !== null && typeof args === "object" ? (args as Json).path : undefined;
 	if (typeof target !== "string" || target.length === 0) return {};
 	const workspace = ctx.snapshot.workspace;
+	const served = ctx.snapshot.plugin ?? null;
 	const absolute = path.resolve(workspace, target);
 	const armed = (await ctx.state.get<Armed>("armed")).value;
 	if (armed) {
@@ -1081,7 +1122,7 @@ async function guard(ctx: ExtensionContextV2, args: unknown): Promise<ExtensionH
 				effects: [
 					{
 						kind: "block_tool",
-						reason: `WTF-P write guard: /wtfp:${armed.action} may write only under ${armed.roots.join(", ")}; refused ${path.relative(workspace, absolute)}. Record other changes as a handoff instead.`,
+						reason: `WTF-P write guard: ${actionName(served, armed.action)} may write only under ${armed.roots.join(", ")}; refused ${path.relative(workspace, absolute)}. Record other changes as a handoff instead.`,
 					},
 				],
 			};
@@ -1097,7 +1138,7 @@ async function guard(ctx: ExtensionContextV2, args: unknown): Promise<ExtensionH
 			effects: [
 				{
 					kind: "block_tool",
-					reason: `WTF-P gate: ${section.title} waits on the author's answer to "${gate.request}" (${gate.id}). Answer it with /wtfp:check-todos before writing ${section.manuscript}.`,
+					reason: `WTF-P gate: ${section.title} waits on the author's answer to "${gate.request}" (${gate.id}). Answer it with ${actionName(served, "check-todos")} before writing ${section.manuscript}.`,
 				},
 			],
 		};
@@ -1106,7 +1147,11 @@ async function guard(ctx: ExtensionContextV2, args: unknown): Promise<ExtensionH
 			effects: [
 				{
 					kind: "block_tool",
-					reason: `WTF-P gate: ${section.title} has no approved plan, and confirm_plan is on. Run /wtfp:plan-section ${section.id} and approve it before writing ${section.manuscript}.`,
+					reason: `WTF-P gate: ${section.title} has no approved plan, and confirm_plan is on. ${
+						commandFor(served, "plan-section", section.id) !== null
+							? `Run ${commandFor(served, "plan-section", section.id)} and approve it`
+							: "Planning it needs the WTF-P plugin; approve a plan"
+					} before writing ${section.manuscript}.`,
 				},
 			],
 		};
@@ -1124,7 +1169,7 @@ export default function extension(api: ExtensionApiV2): void {
 		const desk = await deskFor(ctx);
 		return { text: progressText(desk), card: progressCard(desk), ...(await picture(ctx, desk)) };
 	});
-	api.handle("help", async () => helpCard());
+	api.handle("help", async (_args, ctx) => helpCard(ctx.snapshot.plugin ?? null));
 	api.handle("check-todos", async (_args, ctx) => startGates(ctx));
 	api.handle("checkpoints", async (_args, ctx) => {
 		const desk = await deskFor(ctx);
@@ -1141,12 +1186,12 @@ export default function extension(api: ExtensionApiV2): void {
 	});
 	api.action("gates", async (_event, ctx) => startGates(ctx));
 	api.action("validate", async (_event, ctx) => validateAll(ctx));
-	api.action("help", async () => helpCard());
+	api.action("help", async (_event, ctx) => helpCard(ctx.snapshot.plugin ?? null));
 	api.action("section", async (event, ctx) => {
 		const desk = await deskFor(ctx);
 		const section = desk.sections.find((entry) => entry.id === event.key);
 		if (!section) return { text: "Unknown section." };
-		const next = sectionNext(section);
+		const next = sectionNext(desk.served, section);
 		return {
 			text: `${section.title}: ${next.reason}`,
 			toast: { text: `${section.title}: ${next.reason}` },
@@ -1238,7 +1283,7 @@ export default function extension(api: ExtensionApiV2): void {
 				{
 					kind: "notify_operator",
 					key: "wtfp-guard",
-					message: `WTF-P write guard armed for /wtfp:${match[1]}: write and edit stay under ${roots.join(", ")}.`,
+					message: `WTF-P write guard armed for ${actionName(ctx.snapshot.plugin ?? null, match[1] as string)}: write and edit stay under ${roots.join(", ")}.`,
 				},
 			],
 		};
