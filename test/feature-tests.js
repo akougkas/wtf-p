@@ -70,8 +70,10 @@ check(Object.keys(MANIFEST).sort().join(',') === runtimeIds.slice().sort().join(
 for (const id of runtimeIds) {
   const runtime = MANIFEST[id];
   check(Boolean(runtime && runtime.name && runtime.defaultDir && runtime.configDirEnv), `${id} has a complete runtime definition`);
-  // Codex additionally publishes its generated TOML agents to $CODEX_HOME/agents/.
-  check(runtime.components.length === (id === 'codex' ? 2 : 1), `${id} installs one generated, self-contained bundle${id === 'codex' ? ' plus its native agents' : ''}`);
+  // Codex additionally publishes its generated TOML agents to $CODEX_HOME/agents/,
+  // and Clio its desk extension beside the plugin.
+  const second = { codex: ' plus its native agents', clio: ' plus its desk extension' }[id];
+  check(runtime.components.length === (second ? 2 : 1), `${id} installs one generated, self-contained bundle${second || ''}`);
   check(fs.existsSync(runtime.components[0].src), `${id} bundle source exists`);
 }
 const claudeBundle = MANIFEST.claude.components[0];
