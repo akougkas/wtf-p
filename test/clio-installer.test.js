@@ -14,15 +14,16 @@ const ROOT = path.resolve(__dirname, '..');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-installer-'));
 const fakeBin = path.join(scratch, 'bin');
 fs.mkdirSync(fakeBin);
-// Emulate Clio's library lifecycle, not merely a successful exit code: the
-// destination tree is owned and replaced by the client, `state.json` records
-// the content digest, and `inspect` reports the installed entry.
+// Emulate Clio's library and extension lifecycles, not merely a successful
+// exit code: each destination tree is owned and replaced by the client,
+// `state.json` records the content digest, and `inspect` or `extensions list`
+// reports the installed entry.
 fs.writeFileSync(path.join(fakeBin, 'clio-coder'), `#!${process.execPath}
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const args = process.argv.slice(2), command = args[1];
-if (args[0] !== 'library' || args.includes('--yes')) { console.error('unsupported library command'); process.exit(2); }
-if(command==='list' && JSON.stringify(args)!==JSON.stringify(['library','list','--kind','plugin','--json']))throw Error('incorrect list contract');
-if(command!=='list' && (!args.includes('--json') || (!args.includes('--user') && !args.includes('--project'))))throw Error('explicit scope and JSON required');
+if (!['library', 'extensions'].includes(args[0]) || args.includes('--yes')) { console.error('unsupported clio-coder command'); process.exit(2); }
+if(args[0]==='library' && command==='list' && JSON.stringify(args)!==JSON.stringify(['library','list','--kind','plugin','--json']))throw Error('incorrect list contract');
+if((args[0]==='extensions' || command!=='list') && (!args.includes('--json') || (!args.includes('--user') && !args.includes('--project'))))throw Error('explicit scope and JSON required');
 const scope = args.includes('--project') ? 'project' : 'user';
 const config = scope === 'project' ? path.join(process.cwd(), '.clio-coder') : process.env.CLIO_CODER_CONFIG_DIR;
 const base = path.join(config, 'plugins'), root = path.join(base, 'wtfp'), stateFile = path.join(base, 'state.json');
@@ -42,6 +43,26 @@ function entryFor(selectedScope) {
  return {id:'wtfp',kind:'plugin',trust:'trusted',version:JSON.parse(fs.readFileSync(path.join(selectedRoot,'plugin.json'))).version,scope:selectedScope,rootPath:selectedRoot,valid,enabled,compatible:true,loadable:valid&&enabled,diagnostics:valid?[]:[{type:'error',message:'unregistered/digest mismatch'}]};
 }
 if(process.env.FAKE_CLIO_LOG) fs.appendFileSync(process.env.FAKE_CLIO_LOG, JSON.stringify({args,cwd:process.cwd(),config})+'\\n');
+if(args[0]==='extensions') {
+ const ebase=path.join(config,'extensions'), eroot=path.join(ebase,'wtfp'), efile=path.join(ebase,'state.json');
+ const es=fs.existsSync(efile)?JSON.parse(fs.readFileSync(efile)):{installed:{},disabled:[]};
+ const esave=()=>{fs.mkdirSync(ebase,{recursive:true});fs.writeFileSync(efile,JSON.stringify(es));};
+ if(command==='install') {
+  if(fs.existsSync(eroot))throw Error('extension destination already exists: '+eroot);
+  fs.cpSync(args[2],eroot,{recursive:true});es.installed.wtfp={contentDigest:digest(eroot)};esave();
+  if(process.env.FAKE_EXTENSION_FAILURE)process.exit(1);
+  console.log(JSON.stringify({extension:{id:'wtfp',scope,rootPath:eroot},diagnostics:[]}));
+ } else if(command==='list') {
+  if(process.env.FAKE_EXTENSIONS_JSON){console.log(process.env.FAKE_EXTENSIONS_JSON);process.exit(0);}
+  const valid=fs.existsSync(eroot)&&es.installed.wtfp?.contentDigest===digest(eroot);
+  console.log(JSON.stringify({extensions:fs.existsSync(eroot)?[{id:'wtfp',plugin:'wtfp',scope,rootPath:eroot,valid,enabled:!es.disabled.includes('wtfp'),diagnostics:valid?[]:[{type:'error',message:'digest mismatch'}]}]:[]}));
+ } else if(command==='remove') {
+  if(!fs.existsSync(eroot)){console.log(JSON.stringify({diagnostics:[{type:'error',message:'extension wtfp is not installed'}]}));process.exit(1);}
+  fs.rmSync(eroot,{recursive:true,force:true});delete es.installed.wtfp;esave();
+  console.log(JSON.stringify({removed:{id:'wtfp',scope,path:eroot},diagnostics:[]}));
+ } else throw Error('unexpected extensions command '+args.join(' '));
+ process.exit(0);
+}
 const state=read();
 if(command==='install') {
  if(fs.existsSync(root)&&!args.includes('--force'))throw Error('library destination already exists: '+root);
@@ -92,15 +113,18 @@ function uninstall(ctx) { return run(ctx,'uninstall.js',['--clio','--config-dir'
 function ok(result) { assert.ifError(result.error);assert.strictEqual(result.status,0,result.stdout+'\n'+result.stderr); }
 function state(ctx) { return JSON.parse(fs.readFileSync(path.join(ctx.target,'plugins/state.json'))); }
 function calls(ctx) { return fs.readFileSync(ctx.env.FAKE_CLIO_LOG,'utf8').trim().split('\n').map(JSON.parse); }
+function library(ctx) { return calls(ctx).filter(c=>c.args[0]==='library'); }
+function extensions(ctx) { return calls(ctx).filter(c=>c.args[0]==='extensions'); }
 function verifyReceipt(ctx) {
  const receipt=JSON.parse(fs.readFileSync(path.join(ctx.target,'.wtfp-version')));
  assert.strictEqual(receipt.schemaVersion,2);assert.strictEqual(receipt.runtime,'clio');
  assert.ok(receipt.files.length>0);
+ for(const root of ['plugins/wtfp/','extensions/wtfp/']) assert.ok(receipt.files.some(f=>f.path.startsWith(root)),`receipt owns nothing under ${root}`);
  for(const item of receipt.files) {
-  assert.ok(item.path.startsWith('plugins/wtfp/'));
+  assert.ok(item.path.startsWith('plugins/wtfp/')||item.path.startsWith('extensions/wtfp/'));
   assert.strictEqual(sha256Buffer(fs.readFileSync(path.join(ctx.target,item.path))),item.sha256);
  }
- assert.ok(!receipt.files.some(f=>f.path==='plugins/state.json'));
+ assert.ok(!receipt.files.some(f=>f.path==='plugins/state.json'||f.path==='extensions/state.json'));
  return receipt;
 }
 try {
@@ -145,10 +169,12 @@ try {
   assert.match(pendingText,/Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio --config-dir '.*' from this directory to register the user-scope plugin/);
   assert.ok(!/(?:plugins|library) install/.test(pendingText),'must not tell the operator to run library install against the managed root');
   assert.ok(fs.existsSync(path.join(ctx.target,'plugins/wtfp/plugin.json')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/state.json')));verifyReceipt(ctx);
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/clio-coder-extension.yaml')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/state.json')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/state.json')));verifyReceipt(ctx);
   ok(run(ctx,'uninstall.js',['--clio','--config-dir',ctx.target,'--yes'],{PATH:''}));
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
  });
  for(const project of [false,true]) test(`native ${project?'project':'user'} install/inspect/remove preserves other registrations`,()=>{
   const ctx=context(project?'project':'user',project);fs.mkdirSync(path.join(ctx.target,'plugins'),{recursive:true});
@@ -159,12 +185,19 @@ try {
   const detected=detectInstallation(ctx.target);
   assert.strictEqual(detected.partial,false);
   assert.strictEqual(detected.hasCommands,true);assert.strictEqual(detected.hasSkills,true);assert.strictEqual(detected.hasAgents,true);
-  const nativeInstall=calls(ctx).find(c=>c.args[1]==='install');
+  const nativeInstall=library(ctx).find(c=>c.args[1]==='install');
   assert.ok(nativeInstall.args.includes(project?'--project':'--user'));assert.ok(!nativeInstall.args.includes('--force'));
   assert.ok(calls(ctx).some(c=>JSON.stringify(c.args)===JSON.stringify(['library','inspect','wtfp',project?'--project':'--user','--json'])));
-  ok(install(ctx));assert.strictEqual(calls(ctx).filter(c=>c.args[1]==='install').length,1,'unchanged active install must be idempotent');
+  // The desk is a second, separate Clio install that follows the plugin's.
+  const desk=extensions(ctx).find(c=>c.args[1]==='install');
+  const log=calls(ctx);assert.ok(log.findIndex(c=>c.args[0]==='extensions')>log.findIndex(c=>c.args[0]==='library'&&c.args[1]==='install'));
+  assert.ok(desk.args.includes(project?'--project':'--user'));assert.ok(!desk.args.includes('--force'));
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/clio-coder-extension.yaml')));
+  ok(install(ctx));assert.strictEqual(library(ctx).filter(c=>c.args[1]==='install').length,1,'unchanged active install must be idempotent');
+  assert.strictEqual(extensions(ctx).filter(c=>c.args[1]==='install').length,1,'unchanged active extension must be idempotent');
   ok(uninstall(project?{...ctx,cwd:scratch}:ctx));assert.ok(!state(ctx).installed.wtfp);assert.deepStrictEqual(state(ctx).installed.other,other);
-  assert.deepStrictEqual(state(ctx).disabled,['other']);assert.ok(calls(ctx).some(c=>c.args[1]==='remove'));
+  assert.deepStrictEqual(state(ctx).disabled,['other']);assert.ok(library(ctx).some(c=>c.args[1]==='remove'));
+  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
   assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
  });
  test('user registration and removal select the user copy while a project copy coexists',()=>{
@@ -192,7 +225,7 @@ try {
   const repaired=install(ctx);ok(repaired);
   assert.match(repaired.stdout+repaired.stderr,/installed but disabled/);
   assert.ok(state(ctx).disabled.includes('wtfp'));verifyReceipt(ctx);
-  assert.strictEqual(calls(ctx).filter(c=>c.args[1]==='install').length,2);
+  assert.strictEqual(library(ctx).filter(c=>c.args[1]==='install').length,2);
   ok(uninstall(ctx));
  });
  test('available catalog entries and installed copies of other kinds never count as registration',()=>{
@@ -200,7 +233,7 @@ try {
   const copy={id:'wtfp',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[]};
   const listing={entries:[{kind:'plugin',name:'wtfp',...copy,installed:[]},{kind:'skill',name:'wtfp',installed:[copy]}],diagnostics:[]};
   ok(install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)}));
-  assert.strictEqual(calls(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);
+  assert.strictEqual(library(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);
   ok(uninstall(ctx));
  });
  for(const coordinate of ['id','scope','rootPath']) test(`installed copy with a different ${coordinate} does not authorize registration`,()=>{
@@ -209,7 +242,7 @@ try {
   copy[coordinate]=coordinate==='id'?'other':coordinate==='scope'?'project':path.join(ctx.cwd,'foreign','wtfp');
   const listing={entries:[{kind:'plugin',name:copy.id,installed:[copy]}],diagnostics:[]};
   ok(install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)}));
-  assert.strictEqual(calls(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);ok(uninstall(ctx));
+  assert.strictEqual(library(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);ok(uninstall(ctx));
  });
  const malformedListings=[null,{}, {plugins:[]},{entries:[],diagnostics:null},
   {entries:[null],diagnostics:[]},{entries:[{kind:'plugin',name:'wtfp'}],diagnostics:[]},
@@ -254,7 +287,7 @@ try {
   const ctx=context('plugin-offline');ok(install(ctx));const original=state(ctx);
   const pending=install(ctx,{PATH:''});ok(pending);
   assert.match(pending.stdout+pending.stderr,/Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio/);
-  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));verifyReceipt(ctx);
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/clio-coder-extension.yaml')));verifyReceipt(ctx);
   ok(run(ctx,'uninstall.js',['--clio','--config-dir',ctx.target,'--yes'],{PATH:''}));
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));assert.deepStrictEqual(state(ctx),original);
  });
@@ -278,7 +311,17 @@ try {
  test('uninstall preserves unowned siblings instead of allowing recursive native removal',()=>{
   const ctx=context('unowned');ok(install(ctx));const extra=path.join(ctx.target,'plugins/wtfp/author-note.txt');fs.writeFileSync(extra,'keep');
   ok(uninstall(ctx));assert.strictEqual(fs.readFileSync(extra,'utf8'),'keep');
-  assert.ok(!calls(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.wtfp);
+  assert.ok(!library(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.wtfp);
+  // The extension's own tree is owned and unchanged, so its removal proceeds.
+  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
+ });
+ test('an extension install failure compensates the extension and then the plugin',()=>{
+  const ctx=context('extension-failure');const result=install(ctx,{FAKE_EXTENSION_FAILURE:'1'});
+  assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/extensions install .* failed/);
+  const order=calls(ctx).filter(c=>c.args[1]==='remove').map(c=>c.args[0]);
+  assert.deepStrictEqual(order,['extensions','library'],'compensate in reverse install order');
+  for(const root of ['plugins/wtfp','extensions/wtfp','.wtfp-version'])assert.ok(!fs.existsSync(path.join(ctx.target,root)),root);
+  assert.ok(!state(ctx).installed.wtfp);
  });
  test('modified owned files preserve native registration during partial uninstall',()=>{
   const ctx=context('modified');ok(install(ctx));const file=path.join(ctx.target,'plugins/wtfp/ai.iowarp.clio/prompts/wtfp/new-paper.md');fs.appendFileSync(file,'\nlocal edit\n');

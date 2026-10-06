@@ -780,9 +780,10 @@ async function uninstall(runtime, options, out) {
       vendorConfig.native,
       { ...(vendorKey === 'clio' && plan.receipt.scope === 'project'
         ? { scope: 'project', cwd: path.dirname(targetDir) } : {}),
+      // Receipt paths below the target; Clio checks each package root against them.
       ownedFiles: new Map(plan.items
-        .filter(item => item.path.startsWith(`${vendorConfig.native.source}/`) && item.state === 'unchanged')
-        .map(item => [item.path.slice(vendorConfig.native.source.length + 1), item.entry.sha256])) }
+        .filter(item => item.state === 'unchanged')
+        .map(item => [item.path, item.entry.sha256])) }
     );
     if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
       out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);

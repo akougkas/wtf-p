@@ -116,7 +116,10 @@ try {
     assert.ok(!fs.existsSync(path.join(target, 'plugins/wtfp')), 'dry-run installed a package');
     run(path.join(ROOT, 'bin/install.js'), args, cwd);
     const receipt = JSON.parse(fs.readFileSync(path.join(target, '.wtfp-version')));
-    assert.ok(receipt.files.every(item => item.path.startsWith('plugins/wtfp/')));
+    for (const root of ['plugins/wtfp/', 'extensions/wtfp/']) {
+      assert.ok(receipt.files.some(item => item.path.startsWith(root)), `receipt owns nothing under ${root}`);
+    }
+    assert.ok(receipt.files.every(item => item.path.startsWith('plugins/wtfp/') || item.path.startsWith('extensions/wtfp/')));
     for (const item of receipt.files) assert.strictEqual(hash(path.join(target, item.path)), item.sha256);
     const listing = JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd));
     const plugin = installedCopies(listing).find(item => item.id === 'wtfp' && item.scope === scope);
@@ -128,6 +131,13 @@ try {
     assert.deepStrictEqual(inspected.diagnostics, []);
     assert.deepStrictEqual(plugin.diagnostics, []);
     assert.strictEqual(inspected.trust, 'trusted', 'first-party CLI install must not inherit foreign trust');
+    // The desk is the second, separate Clio install, linked to the plugin it serves.
+    const deskEntry = () => JSON.parse(native(['extensions', 'list', `--${scope}`, '--json'], cwd)).extensions.find(item => item.id === 'wtfp');
+    const desk = deskEntry();
+    for (const flag of ['valid', 'enabled', 'loadable']) assert.strictEqual(desk?.[flag], true, JSON.stringify(desk));
+    assert.deepStrictEqual(desk.diagnostics, []);
+    assert.strictEqual(path.resolve(desk.rootPath), path.join(target, 'extensions/wtfp'));
+    assert.strictEqual(desk.plugin, 'wtfp');
     const installedRoot = path.join(target, 'plugins/wtfp');
     const agents = native(['agents'], cwd);
     const manifest = JSON.parse(fs.readFileSync(path.join(installedRoot, 'plugin.json')));
@@ -221,7 +231,9 @@ try {
     assert.ok(!fs.existsSync(installedRoot));
     assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
     assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd))).some(item => item.id === 'wtfp' && item.scope === scope));
-    console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both playbooks, idempotence, preserved disable preference, native removal`);
+    assert.strictEqual(deskEntry(), undefined, 'uninstall left the desk extension registered');
+    assert.ok(!fs.existsSync(path.join(target, 'extensions/wtfp')));
+    console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both playbooks, the desk extension, idempotence, preserved disable preference, native removal`);
   }
   const coexist = path.join(scratch, 'coexist-workspace');
   fs.mkdirSync(coexist);

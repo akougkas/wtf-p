@@ -32,7 +32,7 @@ The same round exercised the CiteNexus backend by invoking the dispatcher from t
 | Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json`, 36 commands, 11 agents (`subagent: true`), 7 skills, `rules/wtfp-project-state.md` |
 | Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 36 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
 | Copilot CLI | `vendors/copilot` | Claude-compatible plugin (`.claude-plugin/plugin.json`, 36 commands, 11 agents, 7 skills) in a local marketplace, plus the copyable `.github` repository projection |
-| Clio Coder | `vendors/plugin` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks |
+| Clio Coder | `vendors/plugin`, `vendors/clio-extension` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks; and the desk extension, installed separately |
 
 No projection declares an MCP server: the repository contains no MCP server implementation (the untracked `vendors/claude/mcp/research-server/` directory holds empty directories and is excluded from the package).
 

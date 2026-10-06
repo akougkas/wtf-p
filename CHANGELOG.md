@@ -21,13 +21,14 @@ only in their version.
   human-edited `clio/` source. It carries every file it executes or reads:
   the runtime, its skin, the generated write-guard roots, the schema
   validator, the project schemas, the action contracts and the Clio action
-  availability. Install it separately with `clio-coder extensions install`;
-  `wtf-p install clio` still installs the plugin only
+  availability
 - The desk workspace, entered with `/ext:wtfp:desk`, draws the project from
   `.planning/` and `paper/`: the phase track, sections by wave with stage
   strips and one word count, pending gates, the evidence ledger and running
   roles. Pressing a section card fills that section's next action. Leaving
-  the desk in a folder with no project clears its status, band and islands
+  the desk in a folder with no project clears its status, band and islands.
+  Without the plugin, the desk names only its own `/ext:wtfp:*` commands and
+  says which steps need the plugin
 - While the plugin is installed and enabled, the extension answers
   `/wtfp:progress`, `/wtfp:help` and `/wtfp:check-todos` in code with no
   model call. `/ext:wtfp:checkpoints` lists gates and snapshots, and
@@ -42,11 +43,16 @@ only in their version.
   its declared roots, and a write into a section's manuscript waits for the
   section's blocking gates and an approved plan
 - Package tests that `clio-coder extensions test vendors/clio-extension`
-  runs: one per runtime tool, the write guard, and entering and leaving the
-  desk
+  runs: one per runtime tool, the write guard, entering and leaving the
+  desk, and the desk without its plugin
 
 ### Changed in 0.8.0
 
+- `wtf-p install clio` installs the plugin and then the desk extension as
+  two separate Clio installs, `clio-coder library install` and
+  `clio-coder extensions install`, under one receipt. It verifies each, a
+  failed extension install compensates both, and uninstall removes each only
+  when its files are unchanged and receipt-owned
 - The 24 Clio prompts that write records, count words or ask a gate call the
   desk's runtime tools. Each keeps one line that falls back to its workflow
   with native tools and `ask_user` gates when the desk is absent, and the

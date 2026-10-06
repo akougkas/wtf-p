@@ -816,7 +816,7 @@ async function install(runtime, isUpdate, options, pkg) {
         // the installer stages a distinct copy and registers it.
         const scope = targetDir === path.join(process.cwd(), '.clio-coder') ? 'project' : 'user';
         const configFlag = explicitConfigDir ? ` --config-dir '${targetDir.replaceAll("'", "'\\''")}'` : '';
-        out.warn(`Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio${configFlag} from this directory to register the ${scope}-scope plugin.`);
+        out.warn(`Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio${configFlag} from this directory to register the ${scope}-scope plugin and extension.`);
       }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);

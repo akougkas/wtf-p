@@ -56,7 +56,7 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.6.2 or newer) | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
+| Clio Coder (0.6.2 or newer) | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | 0.6.2-dev (local build `89ea1b4`) |
 | Claude Code | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
 | Codex | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
 | GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
