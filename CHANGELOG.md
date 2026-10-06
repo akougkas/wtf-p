@@ -60,8 +60,8 @@ only in their version.
 - The Claude envelope keeps its older Clio copy: a root `plugin.json`, the
   phase 1 prompts and `ai.iowarp.clio/fleets/`. Clio no longer adopts it and
   points to the canonical plugin instead
-- Both Clio packages need a Clio Coder build newer than 0.6.1. That release
-  has no extension runtime API 2 and rejects the plugin's `playbooks` key
+- Both Clio packages declare `compatibility.clio: >=0.6.2`. Clio 0.6.1 has
+  no extension runtime API 2 and rejects the plugin's `playbooks` key
 
 ## [0.7.4] - 2026-09-23
 

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "7c6d66a73a8ab57ab5bf11aae774954798de3836cfe7bc516b15d2e99abe89b7",
+  "sourceHash": "b9f5585d873d30c0359174a7085216a46fba6e8299cfd95bfd4da42a587ac5e2",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "83476164ce5a5cc774243501d537fb9c791571c4a756bafb125c16c588374ed3"
+      "sha256": "4ba24c372ede7e4708e54fb9baf803f4d79fe0ea2b227596fbff7601ac947a67"
     },
     {
       "path": "project/README.md",

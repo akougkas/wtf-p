@@ -96,9 +96,7 @@ try {
     assert.ok(help.includes(`clio-coder library ${command}`), `built CLI does not offer library ${command}`);
   }
   assert.match(help, /--dry-run/);
-  const claudeCandidate = JSON.parse(native(['library', 'inspect', path.join(ROOT, 'vendors/claude'), '--user', '--json'], scratch));
-  assert.strictEqual(claudeCandidate.valid, true, JSON.stringify(claudeCandidate));
-  console.log('PASS library contract precheck and Claude-envelope portable manifest inspection');
+  console.log('PASS library contract precheck');
   for (const project of [false, true]) {
     const cwd = path.join(scratch, project ? 'project-workspace' : 'user-workspace');
     fs.mkdirSync(cwd);

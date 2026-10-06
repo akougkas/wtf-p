@@ -5,6 +5,7 @@ plugin: wtfp
 name: WTF-P
 version: 0.0.0
 description: "The WTF-P writing desk for Clio Coder; paper state, gates and the write guard run in code."
+compatibility: { clio: ">=0.6.2" }
 runtime:
   api: 2
   entrypoint: runtime/extension.ts

@@ -2,7 +2,7 @@
 
 The generated `vendors/plugin/` directory is WTF-P's Agent Plugins 1.0.0 bundle. Its root `plugin.json` uses the official schema at https://agent-plugins.org/schemas/1.0.0/plugin.schema.json, standard metadata, the stable package name `wtfp`, and conventional `skills/`. The npm distribution remains `wtf-p`.
 
-Clio resource roots and the component graph live under `extensions["ai.iowarp.clio"]`, with `compatibility.clio` set to `>=0.4.7`. Native prompts, agents, and playbooks are under `ai.iowarp.clio/`, with the playbooks in `ai.iowarp.clio/playbooks/` under the `playbooks` resource key; shared protocol records, schemas, templates, tools, and skills keep their contained paths. Prompts live at `ai.iowarp.clio/prompts/wtfp/<action>.md`, so every action is invoked as `/wtfp:<action>` and nothing else, and prompt and agent bodies resolve packaged files through `${pluginRoot}`. The bundle registers no harness tools and declares no MCP server.
+Clio resource roots and the component graph live under `extensions["ai.iowarp.clio"]`, with `compatibility.clio` set to `>=0.6.2`. Native prompts, agents, and playbooks are under `ai.iowarp.clio/`, with the playbooks in `ai.iowarp.clio/playbooks/` under the `playbooks` resource key; shared protocol records, schemas, templates, tools, and skills keep their contained paths. Prompts live at `ai.iowarp.clio/prompts/wtfp/<action>.md`, so every action is invoked as `/wtfp:<action>` and nothing else, and prompt and agent bodies resolve packaged files through `${pluginRoot}`. The bundle registers no harness tools and declares no MCP server.
 
 ## One bundle, seven projections
 
@@ -21,7 +21,7 @@ Every generated file carries a banner naming its canonical source, and each enve
 
 ## Clio installation and compatibility
 
-WTF-P ships to Clio only as this plugin and requires Clio Coder `>=0.4.7`. There is no extension envelope, no capability probe that chooses between two routes, and no fallback. The installer:
+WTF-P ships to Clio only as this plugin and requires Clio Coder `>=0.6.2`. There is no extension envelope, no capability probe that chooses between two routes, and no fallback. The installer:
 
 1. Publishes the canonical bundle to `<config>/plugins/wtfp/` under the WTF-P v2 ownership receipt, with the installer's usual conflict, backup, and rollback handling. The config root is resolved the way Clio resolves it: `CLIO_CODER_CONFIG_DIR`, then `CLIO_CODER_HOME/config`, then the platform default (`${XDG_CONFIG_HOME:-~/.config}/clio-coder` on Linux). A target at `<working directory>/.clio-coder` uses project scope.
 2. Verifies that the published tree matches `.wtfp-generated.json` exactly. An extra or modified file defers activation rather than handing unaudited content to Clio under WTF-P's name.

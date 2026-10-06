@@ -56,7 +56,7 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.4.7 or newer) | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
+| Clio Coder (0.6.2 or newer) | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user`, then `clio-coder library inspect wtfp --user --json` | 0.4.9 (local build) |
 | Claude Code | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
 | Codex | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
 | GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
@@ -67,7 +67,7 @@ registers it with the host's native plugin lifecycle where one exists.
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in
 [Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder is published as
-`@iowarp/clio-coder`; 0.4.7 and newer carry the plugin engine WTF-P uses.
+`@iowarp/clio-coder`; 0.6.2 and newer carry the plugin and extension engine WTF-P uses.
 Clio Coder itself requires Node.js 22.19 or newer.
 
 Keep the explicit `--package=wtf-p@<version> -- wtf-p` form. On a workstation

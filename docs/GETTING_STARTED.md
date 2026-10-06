@@ -10,7 +10,7 @@ The same action set covers the four document types WTF-P scaffolds from `protoco
 
 - Node.js 20 or newer, including `npx`.
 - One supported client installed and working: Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, or Gemini CLI. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) records the exact client versions exercised for this candidate.
-- For Clio Coder, version 0.4.7 or newer (`npm install -g @iowarp/clio-coder`), which itself requires Node.js 22.19 or newer. WTF-P installs into Clio as a plugin package through `clio-coder library install`.
+- For Clio Coder, version 0.6.2 or newer (`npm install -g @iowarp/clio-coder`), which itself requires Node.js 22.19 or newer. WTF-P installs into Clio as a plugin package through `clio-coder library install`.
 - A real paper or proposal directory. Start the client from that directory so the project root and allowed resources are unambiguous.
 - Source material you are authorized to use. Put solicitations, papers, notes, data descriptions, and existing drafts inside the project before asking WTF-P to map them.
 
