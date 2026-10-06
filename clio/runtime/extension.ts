@@ -358,25 +358,33 @@ function nextAction(desk: Desk): Next {
 	for (const section of ordered) {
 		if (section.status === "complete") continue;
 		if (!section.dependsOn.every((dep) => complete.has(dep)) && section.status === "not-started") continue;
-		const id = section.id;
-		switch (section.status) {
-			case "blocked":
-				return { command: "/wtfp:check-todos", reason: `${section.title} is blocked.` };
-			case "reviewing":
-				return { command: `/wtfp:review-section ${id}`, reason: `${section.title} is drafted and waits for review.` };
-			case "writing":
-			case "planned":
-				return { command: `/wtfp:write-section ${id}`, reason: `${section.title} has an approved plan.` };
-			default:
-				if (!section.stages.discuss) return { command: `/wtfp:discuss-section ${id}`, reason: `Settle what ${section.title} must argue.` };
-				if (section.research.required && !section.research.present)
-					return { command: `/wtfp:research-gap ${id}`, reason: `${section.title} needs verified evidence first.` };
-				return { command: `/wtfp:plan-section ${id}`, reason: `${section.title} is ready to plan.` };
-		}
+		return sectionNext(section);
 	}
 	if (desk.phase === "delivered") return { command: null, reason: "Delivered." };
 	if (desk.phase === "ready") return { command: "/wtfp:submit-milestone", reason: "Every section is complete and audited." };
 	return { command: "/wtfp:audit-milestone", reason: "Every section is complete; audit before delivery." };
+}
+
+/** The next step for one section, by the same ladder the band follows. */
+function sectionNext(section: SectionRow): Next {
+	const id = section.id;
+	if (section.gates.length > 0) return { command: "/wtfp:check-todos", reason: `${section.title} waits on a gate.` };
+	switch (section.status) {
+		case "complete":
+			return { command: `/wtfp:review-section ${id}`, reason: `${section.title} is complete; review it again if it changed.` };
+		case "blocked":
+			return { command: "/wtfp:check-todos", reason: `${section.title} is blocked.` };
+		case "reviewing":
+			return { command: `/wtfp:review-section ${id}`, reason: `${section.title} is drafted and waits for review.` };
+		case "writing":
+		case "planned":
+			return { command: `/wtfp:write-section ${id}`, reason: `${section.title} has an approved plan.` };
+		default:
+			if (!section.stages.discuss) return { command: `/wtfp:discuss-section ${id}`, reason: `Settle what ${section.title} must argue.` };
+			if (section.research.required && !section.research.present)
+				return { command: `/wtfp:research-gap ${id}`, reason: `${section.title} needs verified evidence first.` };
+			return { command: `/wtfp:plan-section ${id}`, reason: `${section.title} is ready to plan.` };
+	}
 }
 
 // --- views -------------------------------------------------------------------
@@ -1059,9 +1067,13 @@ export default function extension(api: ExtensionApiV2): void {
 	api.action("section", async (event, ctx) => {
 		const desk = await deskFor(ctx);
 		const section = desk.sections.find((entry) => entry.id === event.key);
-		return section
-			? { text: `${section.title}: ${section.status}`, prompt: { fill: `/wtfp:progress` } }
-			: { text: "Unknown section." };
+		if (!section) return { text: "Unknown section." };
+		const next = sectionNext(section);
+		return {
+			text: `${section.title}: ${next.reason}`,
+			toast: { text: `${section.title}: ${next.reason}` },
+			...(next.command ? { prompt: { fill: next.command } } : {}),
+		};
 	});
 
 	api.interview("gate", async (answer, ctx) => {
