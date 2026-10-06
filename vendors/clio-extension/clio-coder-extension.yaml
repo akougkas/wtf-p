@@ -2,7 +2,7 @@
 id: wtfp
 plugin: wtfp
 name: WTF-P
-version: 0.7.4
+version: 0.8.0
 description: "The WTF-P writing desk for Clio Coder; paper state, gates and the write guard run in code."
 runtime:
   api: 2

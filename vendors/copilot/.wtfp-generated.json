@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "b8909d5801b39fe2b366b20559d6c788e777651746cb9568d1c5f4191161d559",
+  "sourceHash": "4ca961caeec3dca222a55ef4e91b298694563f8baea8d24fe4c0a4634c07f868",
   "files": [
     {
       "path": "marketplace.json",
-      "sha256": "acd3e2b5ba33f28881681519ef9f38a800fedf35d8dc5876c9a5d9dd935eaef1"
+      "sha256": "dc1062489823e8ab8561221e13836878333cc7ad3082c08a04316048b7514813"
     },
     {
       "path": "project/.github/agents/wtfp-argument-verifier.agent.md",

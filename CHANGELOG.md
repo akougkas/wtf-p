@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-06
+
+Adds the WTF-P writing desk for Clio Coder as its own Clio extension beside
+the content plugin, and ships the two Clio fleet contracts as playbooks. The
+Claude, Codex, Copilot, OpenCode, Antigravity and Gemini projections change
+only in their version.
+
+### Added in 0.8.0
+
+- `vendors/clio-extension/` is a standalone Clio extension, `id: wtfp`,
+  linked to the plugin it serves with `plugin: wtfp` and compiled from the
+  human-edited `clio/` source. It carries every file it executes or reads:
+  the runtime, its skin, the generated write-guard roots, the schema
+  validator, the project schemas, the action contracts and the Clio action
+  availability. Install it separately with `clio-coder extensions install`;
+  `wtf-p install clio` still installs the plugin only
+- The desk workspace, entered with `/ext:wtfp:desk`, draws the project from
+  `.planning/` and `paper/`: the phase track, sections by wave with stage
+  strips and one word count, pending gates, the evidence ledger and running
+  roles. Pressing a section card fills that section's next action. Leaving
+  the desk in a folder with no project clears its status, band and islands
+- While the plugin is installed and enabled, the extension answers
+  `/wtfp:progress`, `/wtfp:help` and `/wtfp:check-todos` in code with no
+  model call. `/ext:wtfp:checkpoints` lists gates and snapshots, and
+  `/ext:wtfp:validate` checks every planning record against its schema
+- Three runtime tools. `record` writes one `.planning` record at its logical
+  URI after checking its type, identifier, revision and canonical schema,
+  then replaces it atomically and reads it back. `measure_section` counts a
+  manuscript's body words by the desk's one method and records the count.
+  `gate` asks the author a pending checkpoint as an interview and records
+  only the author's answer
+- A write guard. A manuscript-writing action confines `write` and `edit` to
+  its declared roots, and a write into a section's manuscript waits for the
+  section's blocking gates and an approved plan
+- Package tests that `clio-coder extensions test vendors/clio-extension`
+  runs: one per runtime tool, the write guard, and entering and leaving the
+  desk
+
+### Changed in 0.8.0
+
+- The 24 Clio prompts that write records, count words or ask a gate call the
+  desk's runtime tools. Each keeps one line that falls back to its workflow
+  with native tools and `ask_user` gates when the desk is absent, and the
+  plugin's `compatibility/action-availability.json` names the preferred
+  bindings under `runtimeBindings`
+- Clio runs fleet contracts as playbooks. The canonical plugin declares
+  `wtfp-plan-section` and `wtfp-draft-review` under the `playbooks` resource
+  key and component kind in `ai.iowarp.clio/playbooks/`, and the
+  `/wtfp:help` card lists them for `clio-coder fleet run <playbook>`. Their
+  bodies are unchanged
+- The Claude envelope keeps its older Clio copy: a root `plugin.json`, the
+  phase 1 prompts and `ai.iowarp.clio/fleets/`. Clio no longer adopts it and
+  points to the canonical plugin instead
+- Both Clio packages need a Clio Coder build newer than 0.6.1. That release
+  has no extension runtime API 2 and rejects the plugin's `playbooks` key
+
 ## [0.7.4] - 2026-09-23
 
 This release repairs the Clio research path used by literature-heavy section
@@ -544,7 +600,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.7.4...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/akougkas/wtf-p/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/akougkas/wtf-p/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/akougkas/wtf-p/compare/v0.7.2...v0.7.3
 [0.7.2]: https://github.com/akougkas/wtf-p/compare/v0.7.1...v0.7.2
