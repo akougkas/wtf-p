@@ -1426,6 +1426,8 @@ function addClioRuntime(plan, model, availabilityById) {
     manifest.replace(/^version: .*$/m, `version: ${model.version}`)
   ].join('\n'));
   addFile(plan, 'runtime/extension.ts', `${generatedScriptBanner('clio', 'runtime/extension.ts')}\n${source('runtime/extension.ts')}`);
+  // `clio-coder extensions test vendors/clio-extension` runs the package tests from here.
+  addFile(plan, 'runtime/extension.test.ts', `${generatedScriptBanner('clio', 'runtime/extension.test.ts')}\n${source('runtime/extension.test.ts')}`);
   addFile(plan, 'runtime/package.json', source('runtime/package.json'));
   addFile(plan, 'runtime/json-schema.cjs', `${generatedScriptBanner('evaluation', 'lib/json-schema.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'json-schema.js'), 'utf8')}`);
   addFile(plan, 'runtime/write-guard.json', stableJson({
