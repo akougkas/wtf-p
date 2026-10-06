@@ -574,7 +574,9 @@ record('every command-capable host exposes the same stable aliases', () => {
         for (const id of expectedBlockedActions('clio')) {
           assert.ok(new RegExp(`/wtfp:${id} [^\\n]*\\n[^\\n]*\\[unavailable on clio: `).test(card), `${sourcePath}: help card does not mark /wtfp:${id} unavailable`);
         }
-        for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) assert.ok(card.includes(`  ${fleet}\n`), `${sourcePath}: help card omits fleet ${fleet}`);
+        for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) assert.ok(card.includes(`  ${playbook}\n`), `${sourcePath}: help card omits playbook ${playbook}`);
+        assert.match(card, /^Playbooks \(clio-coder fleet run <playbook> /m, `${sourcePath}: help card must name playbooks`);
+        assert.doesNotMatch(card, /\bfleets?\b(?! run)/i, `${sourcePath}: help card must not call a playbook a fleet`);
         assert.match(card, /^Start here$/m);
         continue;
       }
@@ -787,7 +789,7 @@ record('Claude ships the academic output style, the write guard, and skill-bound
   }
 });
 
-record('Clio emits one namespaced prompt per action, strict agents, and two agent-only fleets', () => {
+record('Clio emits one namespaced prompt per action, strict agents, and two agent-only playbooks', () => {
   const plan = plansById.get('clio');
   const nested = actionIds.map((id) => `prompts/wtfp/${id}.md`);
   assert.deepStrictEqual(planFiles(plan, /^prompts\/wtfp\/[^/]+\.md$/), sorted(nested));
@@ -850,37 +852,38 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     }
   }
 
-  const fleetPaths = planFiles(plan, /^fleets\/[^/]+\.md$/);
-  assert.deepStrictEqual(fleetPaths, ['fleets/wtfp-draft-review.md', 'fleets/wtfp-plan-section.md']);
+  assert.deepStrictEqual(planFiles(plan, /^fleets\//), [], 'Clio reads fleet contracts only as playbooks');
+  const fleetPaths = planFiles(plan, /^playbooks\/[^/]+\.md$/);
+  assert.deepStrictEqual(fleetPaths, ['playbooks/wtfp-draft-review.md', 'playbooks/wtfp-plan-section.md']);
   const canonicalFleetPaths = fs.readdirSync(path.join(ROOT, 'protocol', 'fleets'))
     .filter((file) => file.endsWith('.json')).sort();
   assert.deepStrictEqual(canonicalFleetPaths, ['wtfp-draft-review.json', 'wtfp-plan-section.json']);
   const expectedFleetAgents = {
-    'fleets/wtfp-draft-review.md': ['wtfp-section-writer', 'wtfp-section-reviewer'],
-    'fleets/wtfp-plan-section.md': ['wtfp-section-planner', 'wtfp-plan-checker']
+    'playbooks/wtfp-draft-review.md': ['wtfp-section-writer', 'wtfp-section-reviewer'],
+    'playbooks/wtfp-plan-section.md': ['wtfp-section-planner', 'wtfp-plan-checker']
   };
   const expectedFleetWrites = {
-    'fleets/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
-    'fleets/wtfp-plan-section.md': 'writes: [.planning/]'
+    'playbooks/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
+    'playbooks/wtfp-plan-section.md': 'writes: [.planning/]'
   };
   const expectedCanonicalStepWrites = {
-    'fleets/wtfp-draft-review.md': [
+    'playbooks/wtfp-draft-review.md': [
       ['project://paper/{artifact}', 'project://sections/{section}/summary'],
       []
     ],
-    'fleets/wtfp-plan-section.md': [
+    'playbooks/wtfp-plan-section.md': [
       ['project://sections/{section}/plans/{plan}'],
       []
     ]
   };
   const expectedFleetInstructions = {
-    'fleets/wtfp-draft-review.md': [
+    'playbooks/wtfp-draft-review.md': [
       'update only its declared portable Markdown summary',
       'independently review',
       'resolve logical `project://paper/...` artifacts under the project-root `paper/` directory',
       'never under `.planning/paper/`'
     ],
-    'fleets/wtfp-plan-section.md': ['support for every required claim', 'independently review']
+    'playbooks/wtfp-plan-section.md': ['support for every required claim', 'independently review']
   };
   for (const sourcePath of fleetPaths) {
     const source = planText(plan, sourcePath);
@@ -1060,7 +1063,7 @@ record('Codex, Claude, Copilot, Antigravity, Gemini, and plugin manifests resolv
     skills: 'skills',
     prompts: 'ai.iowarp.clio/prompts',
     agents: 'ai.iowarp.clio/agents',
-    fleets: 'ai.iowarp.clio/fleets'
+    playbooks: 'ai.iowarp.clio/playbooks'
   });
   for (const directory of Object.values(clioExtension.resources)) {
     assertDirectory(pluginPlan, directory, `Clio ${directory}`);
@@ -1097,27 +1100,42 @@ record('every bundled native resource reference resolves inside its target envel
   }
 });
 
-record('the Claude envelope carries the portable root manifest and component graph Clio adopts', () => {
+record('the Claude envelope keeps its pre-playbook Clio namespace under the legacy fleet names', () => {
   const claude = plansById.get('claude');
   const portable = plansById.get('portable-plugin');
   const phase1 = plansById.get('clio');
-  assert.strictEqual(planText(claude, 'plugin.json'), planText(portable, 'plugin.json'),
-    'Claude root plugin.json must be byte-identical to the canonical bundle manifest');
+  // Clio no longer adopts a Claude-installed WTF-P, so the carried copy stays
+  // frozen: the canonical manifest with only the playbook names reverted.
+  const legacyManifest = planText(portable, 'plugin.json')
+    .replace('"playbooks": "ai.iowarp.clio/playbooks"', '"fleets": "ai.iowarp.clio/fleets"')
+    .replaceAll('"kind": "playbook"', '"kind": "fleet"')
+    .replaceAll('"path": "ai.iowarp.clio/playbooks/', '"path": "ai.iowarp.clio/fleets/');
+  assert.strictEqual(planText(claude, 'plugin.json'), legacyManifest,
+    'Claude root plugin.json must differ from the canonical manifest only in the legacy fleet names');
+  assert.deepStrictEqual(planFiles(claude, /^ai\.iowarp\.clio\/playbooks\//), []);
   const extension = JSON.parse(planText(claude, 'plugin.json')).extensions['ai.iowarp.clio'];
   for (const directory of Object.values(extension.resources)) assertDirectory(claude, directory, `Claude-carried Clio ${directory}`);
   for (const item of extension.components) {
     assert.ok(claude.files.has(item.path), `Claude envelope lacks Clio component ${item.kind}:${item.id}`);
     if (item.kind === 'prompt') {
       const carried = planText(claude, item.path);
-      assert.strictEqual(carried, planText(phase1, item.path.replace(/^ai\.iowarp\.clio\//, '')),
-        `${item.path} must retain the phase 1 Clio prompt in Claude`);
+      const phase1Prompt = planText(phase1, item.path.replace(/^ai\.iowarp\.clio\//, ''));
+      assert.strictEqual(carried, item.id === 'help'
+        ? phase1Prompt.replace(
+          'Playbooks (clio-coder fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
+          'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)')
+        : phase1Prompt,
+      `${item.path} must retain the phase 1 Clio prompt in Claude`);
       assert.doesNotMatch(carried, /extension_wtfp__(?:record|measure_section|gate)/,
         `${item.path} must not call desk tools outside the canonical plugin`);
       const canonical = planText(portable, item.path);
-      if (canonical !== carried) {
+      if (canonical !== carried && item.id !== 'help') {
         assert.match(canonical, /extension_wtfp__record/, `${item.path} must bind the desk record tool`);
         assert.match(canonical, /If desk tools are absent, follow/, `${item.path} must retain its absence fallback`);
       }
+    } else if (item.kind === 'fleet') {
+      assert.strictEqual(planText(claude, item.path), planText(portable, item.path.replace('/fleets/', '/playbooks/')),
+        `${item.path} differs from the canonical playbook`);
     } else if (item.path.startsWith('ai.iowarp.clio/')) {
       assert.strictEqual(planText(claude, item.path), planText(portable, item.path),
         `${item.path} differs between the Claude and canonical bundles`);
@@ -1147,7 +1165,7 @@ record('standard plugin graph resolves and retains portable host boundaries', ()
   for (const [ref, item] of components) {
     assert.ok(plan.files.has(item.path), `${ref} has no packaged file`);
     for (const dependency of item.requires) assert.ok(components.has(dependency), `${ref}: missing ${dependency}`);
-    if (['agent', 'fleet', 'prompt'].includes(item.kind)) assert.ok(item.path.startsWith('ai.iowarp.clio/'));
+    if (['agent', 'playbook', 'prompt'].includes(item.kind)) assert.ok(item.path.startsWith('ai.iowarp.clio/'));
   }
   assertSkillLinksResolve(plan);
   for (const directory of Object.values(extension.resources)) assert.ok([...plan.files.keys()].some(file => file.startsWith(directory + '/')));

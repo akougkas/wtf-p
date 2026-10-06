@@ -187,7 +187,7 @@ The fresh process must not rely on hidden conversational memory. Verify that it 
 
 Repeat `discuss-section` → `plan-section` → `write-section` → `review-section` for each dependency-ready section. Use `progress` between stages to surface blockers and reconcile cross-record status. Do not let parallel specialist work bypass the author gates or the plan/reviewer boundaries.
 
-The native Clio fleets can run a bounded plan/check or draft/review worker pair, but they are optional advanced primitives, not the implementation behind the slash commands. If used, the slash orchestrator still owns prior approval and subsequent schema, checkpoint, section, and project-state reconciliation. Do not run the draft fleet without an approved plan. See [Optional Clio fleets](GETTING_STARTED.md#optional-clio-fleets).
+The native Clio playbooks can run a bounded plan/check or draft/review worker pair, but they are optional advanced primitives, not the implementation behind the slash commands. If used, the slash orchestrator still owns prior approval and subsequent schema, checkpoint, section, and project-state reconciliation. Do not run the draft playbook without an approved plan. See [Optional Clio playbooks](GETTING_STARTED.md#optional-clio-playbooks).
 
 When a local milestone is internally ready:
 

@@ -106,7 +106,7 @@ Product operations
   /wtfp:update [input]
       Check for a newer compatible package or plugin release and install it only after approval.  [unavailable on clio: package.update]
 
-Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)
+Playbooks (clio-coder fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)
   wtfp-draft-review
       Draft one approved section and independently review its argument and evidence.
   wtfp-plan-section

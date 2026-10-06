@@ -156,7 +156,7 @@ check(json('vendors/plugin/catalog.json').namespace === 'wtfp', 'the canonical p
 check(filesAt('vendors/plugin/ai.iowarp.clio/prompts/wtfp', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced Clio prompts`);
 check(filesAt('vendors/plugin/ai.iowarp.clio/prompts', '.md').length === 0, 'the canonical plugin publishes no flat prompt aliases');
 check(filesAt('vendors/plugin/ai.iowarp.clio/agents', '.md').length === roleCount, `the canonical plugin exposes all ${roleCount} Clio agents`);
-check(filesAt('vendors/plugin/ai.iowarp.clio/fleets', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing fleets');
+check(filesAt('vendors/plugin/ai.iowarp.clio/playbooks', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing playbooks');
 check(recursiveCount('vendors/plugin/skills', 'SKILL.md') === skillCount, `the canonical plugin discovers all ${skillCount} skills`);
 const clioPrompt = read('vendors/plugin/ai.iowarp.clio/prompts/wtfp/new-paper.md');
 check(clioPrompt.includes('${pluginRoot}'), 'Clio resolves protocol resources through its plugin root');

@@ -165,7 +165,7 @@ clio-coder fleet list
 clio-coder run '/wtfp:help'
 ```
 
-`clio-coder run '/wtfp:help'` prints a static operator card without a model call: the start-here sequence, every action in workflow order with its argument hint, the actions this adapter cannot execute, and the two fleets. In the TUI, `/prompts` reports each prompt's source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
+`clio-coder run '/wtfp:help'` prints a static operator card without a model call: the start-here sequence, every action in workflow order with its argument hint, the actions this adapter cannot execute, and the two playbooks. In the TUI, `/prompts` reports each prompt's source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
 
 Use supervised `suggest` autonomy for ordinary work:
 
@@ -176,20 +176,20 @@ clio-coder --autonomy suggest
 
 Clio slash prompts inherit the session's tool surface; the host does not narrow tools per action. Deny and stop any shell, network, filesystem, or delegation call outside the displayed WTF-P action contract. Read-only mode is appropriate for previews. A Full Auto run can be useful for exploratory model testing, but it is non-certifying and does not remove the action's interviews or author gates.
 
-### Optional Clio fleets
+### Optional Clio playbooks
 
-The two generated fleets are advanced, operator-invoked Clio primitives. Ordinary `/wtfp:*` actions do not invoke them implicitly:
+The two generated playbooks are advanced, operator-invoked Clio primitives that the fleet runs. Ordinary `/wtfp:*` actions do not invoke them implicitly:
 
 ```bash
 clio-coder fleet validate wtfp-plan-section
 clio-coder fleet validate wtfp-draft-review
 ```
 
-Run a fleet with `clio-coder fleet run <fleet> --var section=<section-id>` (a model-backed run; this candidate's evidence covers `fleet validate` and `fleet list` only), and only after the slash orchestrator has established the required approved outline or section plan. The plan fleet runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft fleet runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
+Run a playbook with `clio-coder fleet run <playbook> --var section=<section-id>` (a model-backed run; this candidate's evidence covers `fleet validate` and `fleet list` only), and only after the slash orchestrator has established the required approved outline or section plan. The plan playbook runs `wtfp-section-planner` and then the read-only `wtfp-plan-checker`; the draft playbook runs `wtfp-section-writer` and then the read-only `wtfp-section-reviewer`. The workers create bounded artifacts, while the slash orchestrator remains responsible for approval, schemas, checkpoints, and state reconciliation.
 
-Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The fleets declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
+Clio's fleet write-boundary enforcement requires a Git worktree in which `.planning/` and `paper/` are observable and not ignored. The playbooks declare those directories with trailing slashes. If preflight cannot observe the boundaries, it should fail rather than broaden access or initialize a repository for you.
 
-On Clio 0.4.9, a project whose `.gitignore` excludes either directory fails `fleet validate` with `write boundary: '.planning/' is ignored by .gitignore`. Run `git check-ignore -v .planning paper` to find the rule, and remove it if you use the fleets. The ordinary `/wtfp:*` actions do not need these directories tracked.
+On Clio 0.4.9, a project whose `.gitignore` excludes either directory fails `fleet validate` with `write boundary: '.planning/' is ignored by .gitignore`. Run `git check-ignore -v .planning paper` to find the rule, and remove it if you use the playbooks. The ordinary `/wtfp:*` actions do not need these directories tracked.
 
 ### Isolated Clio evaluation
 

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "e4830c54d33c5c79d7c14afc535fe41eb16bb24ff40dfb4d557523c217b5bf06",
+  "sourceHash": "b15dcfe5dd952bf5d83da599518b8be815fe487567439e9ac3b163dafcbe6639",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -193,11 +193,11 @@
       "sha256": "244c1113f62261628265bb2c2c210e0837865a44077a1362db8e9f77b01dea4b"
     },
     {
-      "path": "ai.iowarp.clio/fleets/wtfp-draft-review.md",
+      "path": "ai.iowarp.clio/playbooks/wtfp-draft-review.md",
       "sha256": "5b1d3f9bb4d39ccaa60837decfdbf58e6fd5fd9fb8267fb01d09784c33467426"
     },
     {
-      "path": "ai.iowarp.clio/fleets/wtfp-plan-section.md",
+      "path": "ai.iowarp.clio/playbooks/wtfp-plan-section.md",
       "sha256": "d4dd9c14e4e07098083141e44f8ed4ce0907ae39ba715d149cf82f5192ae38b9"
     },
     {
@@ -254,7 +254,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
-      "sha256": "54b10ac95db9428017fc9511c753dcc9820c701fbeb8e2b1557e0559692d9727"
+      "sha256": "606c53da6e094250e37d730d96d5b5881b550fdff3897a8620727a73f5c1ea01"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
@@ -362,7 +362,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "b5427e46af32758733b35fafc5757a4ec5dbdd6d03d48a0489187907907b9bf8"
+      "sha256": "bcd182dd23d83de5f1b43ff419fe4adccb24e787d67852b60a82cc26fca107f8"
     },
     {
       "path": "project/README.md",

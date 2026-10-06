@@ -26,13 +26,13 @@ The same round exercised the CiteNexus backend by invoking the dispatcher from t
 
 | Host | Projection (`vendors/...`) | What is native there |
 | --- | --- | --- |
-| Claude Code | `vendors/claude` | 36 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus the Agent Plugins 1.0.0 root `plugin.json` byte-identical to `vendors/plugin` and the `ai.iowarp.clio/` prompts, agents, and fleets it names, so Clio can adopt an installed Claude plugin as `wtfp` |
+| Claude Code | `vendors/claude` | 36 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus an older Clio namespace (root `plugin.json` and the `ai.iowarp.clio/` prompts, agents, and fleets it names) that Clio no longer adopts |
 | Codex | `vendors/codex` | root `plugin.json` with `extensions["com.openai"]`, `.codex-plugin/plugin.json` fallback, 7 skills, 11 TOML custom agents (installed to `$CODEX_HOME/agents/`), local marketplace |
 | OpenCode | `vendors/opencode` | 36 commands (`name: wtfp:<action>`), 11 subagents (`mode: subagent`, verifier roles deny edit/bash), 7 skills |
 | Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json`, 36 commands, 11 agents (`subagent: true`), 7 skills, `rules/wtfp-project-state.md` |
 | Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 36 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
 | Copilot CLI | `vendors/copilot` | Claude-compatible plugin (`.claude-plugin/plugin.json`, 36 commands, 11 agents, 7 skills) in a local marketplace, plus the copyable `.github` repository projection |
-| Clio Coder | `vendors/plugin` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 fleets |
+| Clio Coder | `vendors/plugin` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks |
 
 No projection declares an MCP server: the repository contains no MCP server implementation (the untracked `vendors/claude/mcp/research-server/` directory holds empty directories and is excluded from the package).
 
@@ -72,7 +72,7 @@ claude plugin uninstall wtfp@wtfp --scope user -y && claude plugin marketplace r
 cp -r vendors/claude <tmp>/staged/wtfp && clio-coder library inspect <tmp>/staged/wtfp --json   # valid: true, diagnostics: [] (Clio reads root plugin.json; historical run used plugins inspect)
 ```
 
-The installer writes 258 files for this envelope. Root manifest: `vendors/claude/plugin.json` is byte-identical to `vendors/plugin/plugin.json`, and the `ai.iowarp.clio/{prompts,agents,fleets}` files its component graph names are carried beside Claude's own `commands/`, `agents/`, `skills/`, `hooks/`, and `output-styles/`. Claude Code reads neither the root manifest nor `ai.iowarp.clio/`; the `plugin details` counts above are unchanged from the envelope without them. The compiler contract `the Claude envelope carries the portable root manifest and component graph Clio adopts` in `test/adapter-compiler.test.js` pins the identity.
+The installer writes 258 files for this envelope. Root manifest: `vendors/claude/plugin.json` is the canonical manifest with fleet contracts under their pre-playbook `fleets` names, and the `ai.iowarp.clio/{prompts,agents,fleets}` files its component graph names are carried beside Claude's own `commands/`, `agents/`, `skills/`, `hooks/`, and `output-styles/`. Claude Code reads neither the root manifest nor `ai.iowarp.clio/`; the `plugin details` counts above are unchanged from the envelope without them. Clio no longer adopts this copy. The compiler contract `the Claude envelope keeps its pre-playbook Clio namespace under the legacy fleet names` in `test/adapter-compiler.test.js` pins it.
 
 Format facts, from the plugin reference at code.claude.com/docs/en/plugins-reference and confirmed by `plugin details`:
 

@@ -19,7 +19,7 @@
         "skills": "skills",
         "prompts": "ai.iowarp.clio/prompts",
         "agents": "ai.iowarp.clio/agents",
-        "fleets": "ai.iowarp.clio/fleets"
+        "playbooks": "ai.iowarp.clio/playbooks"
       },
       "components": [
         {
@@ -392,15 +392,15 @@
           "requires": []
         },
         {
-          "kind": "fleet",
+          "kind": "playbook",
           "id": "wtfp-plan-section",
-          "path": "ai.iowarp.clio/fleets/wtfp-plan-section.md",
+          "path": "ai.iowarp.clio/playbooks/wtfp-plan-section.md",
           "requires": []
         },
         {
-          "kind": "fleet",
+          "kind": "playbook",
           "id": "wtfp-draft-review",
-          "path": "ai.iowarp.clio/fleets/wtfp-draft-review.md",
+          "path": "ai.iowarp.clio/playbooks/wtfp-draft-review.md",
           "requires": []
         }
       ]

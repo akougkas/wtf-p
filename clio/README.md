@@ -24,5 +24,7 @@ answers under `.planning/`. All package resources come from its own install
 root. The manifest names emitted paths, so it does not load from this source
 directory. The other six host projections remain unchanged.
 
-Playbook content still uses the legacy `fleets` resource key and paths for
-Clio's one-release compatibility window.
+The plugin's Clio namespace carries the two playbooks under the `playbooks`
+resource key in `ai.iowarp.clio/playbooks/`. The Claude envelope keeps its
+older Clio copy under `fleets`; Clio no longer adopts it and points to
+`vendors/plugin` instead.

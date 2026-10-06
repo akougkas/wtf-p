@@ -142,9 +142,9 @@ try {
       assert.ok(skills.skills.some(item => item.name === skill.id), `missing runtime skill ${skill.id}`);
     }
     for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
-    for (const fleet of ['wtfp-plan-section', 'wtfp-draft-review']) {
-      native(['fleet', 'validate', fleet], cwd);
-      native(['fleet', 'graph', fleet], cwd);
+    for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
+      native(['fleet', 'validate', playbook], cwd);
+      native(['fleet', 'graph', playbook], cwd);
     }
     assert.match(native(['run', '/wtfp:help'], cwd), /wtfp:new-paper/);
 
@@ -174,7 +174,7 @@ try {
         else if (entry.name.endsWith('.md')) assertReferencesResolve(file);
       }
     }
-    for (const kind of ['prompts', 'agents', 'fleets']) {
+    for (const kind of ['prompts', 'agents', 'playbooks']) {
       walk(path.join(installedRoot, 'ai.iowarp.clio', kind));
     }
     assert.ok(resolvedReferences > 0, 'no packaged references were checked');
@@ -197,7 +197,7 @@ try {
     console.log(`  ${scope}: ${resolvedReferences} packaged references resolve inside the installed root`);
     console.log(JSON.stringify({ scope, rootPath: inspected.rootPath, valid: inspected.valid,
       enabled: inspected.enabled, trust: inspected.trust, receiptFiles: receipt.files.length,
-      agents: recipes.length, skills: catalog.skills.length, fleets: 2 }));
+      agents: recipes.length, skills: catalog.skills.length, playbooks: 2 }));
     const stateFile = path.join(target, 'plugins/state.json');
     const before = fs.readFileSync(stateFile);
     run(path.join(ROOT, 'bin/install.js'), args, cwd);
@@ -223,7 +223,7 @@ try {
     assert.ok(!fs.existsSync(installedRoot));
     assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
     assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd))).some(item => item.id === 'wtfp' && item.scope === scope));
-    console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both fleets, idempotence, preserved disable preference, native removal`);
+    console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both playbooks, idempotence, preserved disable preference, native removal`);
   }
   const coexist = path.join(scratch, 'coexist-workspace');
   fs.mkdirSync(coexist);

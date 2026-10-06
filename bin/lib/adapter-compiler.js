@@ -676,7 +676,8 @@ function helpArgumentHint(action) {
 // Clio renders a display-only prompt by printing its first fenced block to the
 // operator without a model call. The block is a self-contained reference:
 // no includes, no procedure, only what a human needs to pick the next action.
-function clioHelpCard(model, availabilityById) {
+// `legacyFleetNames` renders the pre-playbook wording the Claude envelope keeps.
+function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
   const byId = new Map(model.actions.map((action) => [action.id, action]));
   const line = (id) => {
     const action = byId.get(id);
@@ -692,7 +693,7 @@ function clioHelpCard(model, availabilityById) {
     if (!groupIds.has(skill.id)) throw new Error(`help card has no group order for skill ${skill.id}`);
   }
   for (const id of HELP_START_SEQUENCE) if (!byId.has(id)) throw new Error(`help card start sequence names an unknown action: ${id}`);
-  const fleets = fs.readdirSync(path.join(PROTOCOL_ROOT, 'fleets'))
+  const playbooks = fs.readdirSync(path.join(PROTOCOL_ROOT, 'fleets'))
     .filter((file) => file.endsWith('.json')).sort()
     .map((file) => readJson(path.join(PROTOCOL_ROOT, 'fleets', file)));
   const card = [
@@ -708,8 +709,10 @@ function clioHelpCard(model, availabilityById) {
     'Product operations',
     ...model.catalog.operations.actions.map(line),
     '',
-    'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)',
-    ...fleets.map((fleet) => `  ${fleet.id}\n      ${fleet.description}`),
+    legacyFleetNames
+      ? 'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)'
+      : 'Playbooks (clio-coder fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
+    ...playbooks.map((playbook) => `  ${playbook.id}\n      ${playbook.description}`),
     '',
     'Each action reads .planning/ records and paper/ artifacts, asks before any gated write, and never runs Git or publishes.',
     'An unavailable action fails closed with WTFP_ACTION_UNAVAILABLE and returns a manual handoff instead.'
@@ -976,6 +979,40 @@ function standardPluginManifest(version, name = 'wtfp', clioExtension) {
     repository: 'https://github.com/akougkas/wtf-p',
     license: 'MIT',
     ...(clioExtension ? { extensions: { 'ai.iowarp.clio': clioExtension } } : {})
+  });
+}
+
+const CLIO_PLAYBOOKS = ['wtfp-plan-section', 'wtfp-draft-review'];
+
+// The root manifest with the Clio namespace. Clio runs fleet contracts as
+// playbooks. `legacyFleetNames` keeps the pre-playbook `fleets` key, kind and
+// directory for the Claude envelope, whose Clio copy Clio no longer adopts.
+function clioPluginManifest(model, legacyFleetNames = false) {
+  const playbookRoot = `ai.iowarp.clio/${legacyFleetNames ? 'fleets' : 'playbooks'}`;
+  const components = [];
+  for (const action of model.actions) components.push({
+    kind: 'prompt', id: action.id,
+    path: `ai.iowarp.clio/prompts/wtfp/${action.id}.md`,
+    requires: action.delegation.map(item => `agent:${item.role}`)
+  });
+  for (const role of model.roles) components.push({
+    kind: 'agent', id: role.slug, path: `ai.iowarp.clio/agents/wtfp-${role.slug}.md`,
+    requires: [`skill:${ROLE_SKILLS[role.slug]}`]
+  });
+  for (const skill of model.catalog.skills) components.push({
+    kind: 'skill', id: skill.id, path: `skills/${skill.id}/SKILL.md`, requires: []
+  });
+  for (const id of CLIO_PLAYBOOKS) components.push({
+    kind: legacyFleetNames ? 'fleet' : 'playbook', id, path: `${playbookRoot}/${id}.md`, requires: []
+  });
+  return standardPluginManifest(model.version, 'wtfp', {
+    manifestVersion: 1,
+    compatibility: { clio: '>=0.4.7' },
+    resources: {
+      skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents',
+      [legacyFleetNames ? 'fleets' : 'playbooks']: playbookRoot
+    },
+    components
   });
 }
 
@@ -1862,11 +1899,11 @@ function compilePlans(options = {}) {
     availabilityByTarget.set(plan.id, addActionAvailability(plan, model, plan.id, targetPolicies));
   }
 
-  for (const fleetId of ['wtfp-plan-section', 'wtfp-draft-review']) {
+  for (const fleetId of CLIO_PLAYBOOKS) {
     if (!clio.files.delete(`fleets/${fleetId}.json`)) {
       throw new Error(`cannot project missing canonical fleet for Clio: ${fleetId}`);
     }
-    addFile(clio, `fleets/${fleetId}.md`, clioFleet(fleetId));
+    addFile(clio, `playbooks/${fleetId}.md`, clioFleet(fleetId));
   }
 
   const claude = byId.get('claude');
@@ -1948,7 +1985,7 @@ function compilePlans(options = {}) {
   // The canonical content-only plugin. Its prompts also work without the desk.
   const portable = makePlan('portable-plugin', path.join(ROOT, 'vendors', 'plugin'));
   for (const [file, content] of clio.files) {
-    const native = /^(prompts|agents|fleets)\//.test(file);
+    const native = /^(prompts|agents|playbooks)\//.test(file);
     const actionId = /^prompts\/wtfp\/([a-z-]+)\.md$/.exec(file)?.[1];
     const action = actionId && model.actions.find((entry) => entry.id === actionId);
     const usesRecords = action && action.produces.some((output) =>
@@ -1958,29 +1995,7 @@ function compilePlans(options = {}) {
       : content;
     addFile(portable, native ? `ai.iowarp.clio/${file}` : file, projected);
   }
-  const components = [];
-  for (const action of model.actions) components.push({
-    kind: 'prompt', id: action.id,
-    path: `ai.iowarp.clio/prompts/wtfp/${action.id}.md`,
-    requires: action.delegation.map(item => `agent:${item.role}`)
-  });
-  for (const role of model.roles) components.push({
-    kind: 'agent', id: role.slug, path: `ai.iowarp.clio/agents/wtfp-${role.slug}.md`,
-    requires: [`skill:${ROLE_SKILLS[role.slug]}`]
-  });
-  for (const skill of model.catalog.skills) components.push({
-    kind: 'skill', id: skill.id, path: `skills/${skill.id}/SKILL.md`, requires: []
-  });
-  for (const id of ['wtfp-plan-section', 'wtfp-draft-review']) components.push({
-    kind: 'fleet', id, path: `ai.iowarp.clio/fleets/${id}.md`, requires: []
-  });
-  const portableManifest = standardPluginManifest(model.version, 'wtfp', {
-    manifestVersion: 1,
-    compatibility: { clio: '>=0.4.7' },
-    resources: { skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents', fleets: 'ai.iowarp.clio/fleets' },
-    components
-  });
-  addFile(portable, 'plugin.json', portableManifest);
+  addFile(portable, 'plugin.json', clioPluginManifest(model));
   const availability = JSON.parse(portable.files.get('compatibility/action-availability.json'));
   // Base bindings remain usable with the content plugin alone. The separately
   // installed desk supplies these preferred bindings when its tools are live.
@@ -1998,16 +2013,22 @@ function compilePlans(options = {}) {
   addFile(extension, 'compatibility/action-availability.json', clio.files.get('compatibility/action-availability.json'));
   plans.push(extension);
 
-  // Clio adopts an installed Claude plugin through the same portable root
-  // manifest, and it verifies every declared component path on disk. The
-  // Claude envelope therefore carries the identical `plugin.json` and the
-  // Clio component graph beside Claude's own `.claude-plugin/` surface. Claude
-  // Code reads neither file; its commands, agents, skills, hooks, and output
-  // style stay where its loader looks.
+  // The Claude envelope keeps its pre-playbook Clio namespace: a root `plugin.json`
+  // and the phase 1 prompts, agents and fleets it names, beside Claude's own
+  // `.claude-plugin/` surface. Clio no longer adopts a Claude-installed WTF-P;
+  // it labels the copy older and points to `vendors/plugin`. Claude Code reads
+  // neither file; its commands, agents, skills, hooks, and output style stay
+  // where its loader looks.
   for (const [file, content] of clio.files) {
-    if (/^(prompts|agents|fleets)\//.test(file)) addFile(claude, `ai.iowarp.clio/${file}`, content);
+    if (file === 'prompts/wtfp/help.md') {
+      addFile(claude, `ai.iowarp.clio/${file}`, clioHelpCard(model, availabilityByTarget.get('clio'), true));
+    } else if (/^(prompts|agents)\//.test(file)) {
+      addFile(claude, `ai.iowarp.clio/${file}`, content);
+    } else if (file.startsWith('playbooks/')) {
+      addFile(claude, `ai.iowarp.clio/fleets/${file.slice('playbooks/'.length)}`, content);
+    }
   }
-  addFile(claude, 'plugin.json', portableManifest);
+  addFile(claude, 'plugin.json', clioPluginManifest(model, true));
 
   const codexMarketplace = makePlan('codex-marketplace', path.join(ROOT, 'vendors', 'codex'));
   addFile(codexMarketplace, '.agents/plugins/marketplace.json', stableJson({
