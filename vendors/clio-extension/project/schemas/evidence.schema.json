@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/evidence/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "source_uri",
+    "claim_id",
+    "relation",
+    "statement",
+    "locator",
+    "interpretation",
+    "confidence",
+    "inspection_depth",
+    "verified_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.evidence/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "source_uri": { "type": "string", "pattern": "^project://sources/[A-Za-z0-9._~-]+$" },
+    "claim_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "relation": { "enum": ["supports", "contradicts", "contextualizes", "method-precedent"] },
+    "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "enum": ["page", "section", "figure", "table", "timestamp", "record", "abstract"] },
+        "value": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+      }
+    },
+    "quote": { "type": "string", "minLength": 1 },
+    "interpretation": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "limitations": {
+      "type": "array",
+      "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+      "uniqueItems": true
+    },
+    "confidence": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/confidence" },
+    "inspection_depth": { "enum": ["metadata", "abstract", "full-text", "primary-data"] },
+    "verified_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}

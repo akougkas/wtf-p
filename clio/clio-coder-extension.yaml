@@ -1,13 +1,13 @@
-# Human-edited source of the Clio runtime facet. The adapter compiler stamps
-# the protocol version, relocates the entrypoint and skin under
-# ai.iowarp.clio/, and emits the result at vendors/plugin/.
+# Human-edited source of the Clio extension. The adapter compiler stamps
+# the protocol version and emits the standalone package at vendors/clio-extension/.
 id: wtfp
+plugin: wtfp
 name: WTF-P
 version: 0.0.0
 description: "The WTF-P writing desk for Clio Coder; paper state, gates and the write guard run in code."
 runtime:
   api: 2
-  entrypoint: ai.iowarp.clio/runtime/extension.ts
+  entrypoint: runtime/extension.ts
   commands:
     - { name: desk, description: "Enter the WTF-P writing desk." }
     - { name: progress, description: "Paper progress and the next action, computed locally.", replaces: prompt }
@@ -39,7 +39,7 @@ runtime:
       title: WTF-P writing desk
       regions: [header, board, islands, rail, footer]
       board: band
-      skin: ai.iowarp.clio/skins/wtfp.json
+      skin: skins/wtfp.json
       keys:
         - { key: f, action: next, label: "Fill the next writing action" }
         - { key: c, action: gates, label: "Answer the pending gate" }

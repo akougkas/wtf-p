@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "6a86c7a9b9d0eba71d851d5fcc3a74136ababe8ff0f2fed236e6ddb1bb4e9edc",
+  "sourceHash": "6484d98974b96d256b8ab2ab4a2e2d03d1f4eafcf664443d48ced1f720e6e467",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -345,36 +345,12 @@
       "sha256": "cc2677583db730db189468d48d02341ecf12f06ffd8e1d61122476f77c9b5520"
     },
     {
-      "path": "ai.iowarp.clio/runtime/extension.ts",
-      "sha256": "e14a85b9665a68600cae4e50515cbf166bc4f195079c84d7fea6abc242ad8c88"
-    },
-    {
-      "path": "ai.iowarp.clio/runtime/json-schema.cjs",
-      "sha256": "d17bd79edd0b63a933613f23e1b41d0dbaeb8b398dba7ed1f004156055243846"
-    },
-    {
-      "path": "ai.iowarp.clio/runtime/package.json",
-      "sha256": "963a031a8894fbafdec216af462209fd74eba0e1a53a933d5021131fdaa64455"
-    },
-    {
-      "path": "ai.iowarp.clio/runtime/write-guard.json",
-      "sha256": "67637036292b1d003e72a823cfd764c4e0996553b0cf55ec0a700a09518a3ffd"
-    },
-    {
-      "path": "ai.iowarp.clio/skins/wtfp.json",
-      "sha256": "d0ddaefeb2b5f1479ad360e45adecf455e042e935b7ae971e74f776c853ade5c"
-    },
-    {
       "path": "aliases.lock.json",
       "sha256": "3143d880840a25089bd236a41661ab44d866315a844dc671fb926c228db416d6"
     },
     {
       "path": "catalog.json",
       "sha256": "0ca4841d8666358c326e31bfc5c290a16d2950c2df159a44e9a99d45e6d080c5"
-    },
-    {
-      "path": "clio-coder-extension.yaml",
-      "sha256": "cd7a84db62d50078db5ce5213fbe3d5cbe7303ba28396b9d6734ddbf5c691d44"
     },
     {
       "path": "compatibility/action-availability.json",

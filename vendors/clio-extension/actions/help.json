@@ -1,0 +1,30 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "help",
+  "title": "Show WTF-P help",
+  "description": "Render the stable WTF-P action reference from the canonical catalog.",
+  "alias": "wtfp:help",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "filesystem.read"
+    ],
+    "conditions": []
+  },
+  "reads": [
+    "protocol://catalog.json",
+    "protocol://actions/{action}.json"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "protocol://catalog.json, protocol://actions/{action}.json"
+    }
+  ]
+}

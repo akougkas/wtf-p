@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/checkpoint/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "state-snapshot" } }
+      },
+      "then": {
+        "required": ["snapshot"],
+        "properties": {
+          "status": { "enum": ["available", "restored", "expired"] },
+          "blocking": { "const": false }
+        }
+      },
+      "else": {
+        "not": { "required": ["snapshot"] },
+        "properties": {
+          "status": { "enum": ["pending", "resolved", "waived", "expired"] }
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "kind",
+    "status",
+    "blocking",
+    "scope_uri",
+    "request",
+    "options",
+    "resume_action",
+    "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.checkpoint/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "kind": { "enum": ["human-verify", "decision", "human-action", "safety-authorization", "state-snapshot"] },
+    "status": { "enum": ["pending", "resolved", "waived", "expired", "available", "restored"] },
+    "blocking": { "type": "boolean" },
+    "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "request": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "context": { "type": "string" },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "implication"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "label": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "implication": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "resume_action": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archive_uri", "resources"],
+      "properties": {
+        "archive_uri": {
+          "type": "string",
+          "pattern": "^project://archives/checkpoints/[A-Za-z0-9._~-]+$"
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["uri", "sha256"],
+            "properties": {
+              "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+              "revision": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolved_by", "summary", "resolved_at"],
+      "properties": {
+        "resolved_by": { "enum": ["author", "policy"] },
+        "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "resolved_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    }
+  }
+}

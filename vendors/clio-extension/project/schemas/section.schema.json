@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/section/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "outline_uri",
+    "title",
+    "goal",
+    "status",
+    "word_target",
+    "word_count",
+    "wave",
+    "depends_on",
+    "claims",
+    "artifacts",
+    "checkpoint_uris",
+    "validation_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.section/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "outline_uri": { "const": "project://structure/outline" },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "goal": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "status": {
+      "enum": ["not-started", "researching", "planned", "writing", "reviewing", "complete", "blocked"]
+    },
+    "word_target": { "type": "integer", "minimum": 1 },
+    "word_count": { "type": "integer", "minimum": 0 },
+    "wave": { "type": "integer", "minimum": 1 },
+    "depends_on": {
+      "type": "array",
+      "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+      "uniqueItems": true
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "status", "evidence_required", "evidence_uris"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "status": { "enum": ["planned", "drafted", "verified", "rejected"] },
+          "evidence_required": { "type": "boolean" },
+          "evidence_uris": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^project://evidence/[A-Za-z0-9._~-]+$" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plans", "reviews"],
+      "properties": {
+        "context": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "research": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "plans": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "reviews": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "manuscript": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "handoff": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" }
+      }
+    },
+    "checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "validation_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://validations/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}

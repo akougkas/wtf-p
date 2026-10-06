@@ -1,0 +1,47 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "report-bug",
+  "title": "Report a WTF-P bug",
+  "description": "Collect a reproducible bug report and publish it only after explicit user approval.",
+  "alias": "wtfp:report-bug",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "external.issue",
+      "filesystem.read",
+      "network.fetch",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The user explicitly requested a bug report"
+    ]
+  },
+  "reads": [
+    "package://metadata",
+    "project://state"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "external.issue",
+      "scope": "the configured WTF-P issue tracker"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "package://metadata, project://state"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "issue template and duplicate metadata"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the exact issue body before publication"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "insert-section",
+  "title": "Insert a section",
+  "description": "Insert a newly discovered section while preserving established numbering and dependencies.",
+  "alias": "wtfp:insert-section",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-plan-section"
+  },
+  "workflow": "wtfp://workflows/insert-section",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The insertion point exists in project://structure/outline"
+    ]
+  },
+  "reads": [
+    "project://structure/outline",
+    "project://state",
+    "project://sections/{section}"
+  ],
+  "produces": [
+    {
+      "uri": "project://structure/outline",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://structure/outline, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://structure/outline, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://structure/outline, project://state, project://sections/{section}"
+    },
+    {
+      "id": "user.gate",
+      "scope": "section insertion and renumbering"
+    }
+  ]
+}

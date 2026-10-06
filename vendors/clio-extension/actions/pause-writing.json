@@ -1,0 +1,71 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "pause-writing",
+  "title": "Pause writing",
+  "description": "Record an exact context handoff so another session can resume without reconstructing intent.",
+  "alias": "wtfp:pause-writing",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/pause-writing",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/summary",
+    "project://sections/{section}/handoff",
+    "project://validations/{validation}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://sections/{section}/handoff",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/handoff",
+      "mode": "update"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/handoff, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}/handoff, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://sections/{section}/handoff, project://validations/{validation}, project://paper/{artifact}"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/common/v1",
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "logicalUri": {
+      "type": "string",
+      "pattern": "^project://(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$"
+    },
+    "protocolUri": {
+      "type": "string",
+      "pattern": "^protocol://(?!\\.{1,2}(?:/|$))(?!.*\\/\\.{1,2}(?:/|$))[A-Za-z0-9._~-]+(?:/[A-Za-z0-9._~-]+)*$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "confidence": {
+      "enum": ["high", "medium", "low", "unknown"]
+    }
+  }
+}

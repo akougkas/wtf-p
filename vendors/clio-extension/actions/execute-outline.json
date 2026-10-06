@@ -1,0 +1,116 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "execute-outline",
+  "title": "Execute the outline",
+  "description": "Draft independent section waves in parallel and verify cross-section coherence.",
+  "alias": "wtfp:execute-outline",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-write-section"
+  },
+  "workflow": "wtfp://workflows/execute-outline",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "agent.parallel",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "project://structure/outline defines executable section waves",
+      "Each scheduled section has an approved plan"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/summary",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://checkpoints/{checkpoint}",
+    "project://paper/{artifact}"
+  ],
+  "produces": [
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "update"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "section-writer",
+      "mode": "parallel",
+      "purpose": "Draft independent sections within each declared execution wave"
+    },
+    {
+      "role": "coherence-checker",
+      "mode": "required",
+      "purpose": "Check terminology, transitions, argument flow, and duplication after drafting"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://coherence-checker"
+    },
+    {
+      "id": "agent.parallel",
+      "scope": "role://section-writer per outline wave"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/summary, project://sources/{source}, project://evidence/{evidence}, project://checkpoints/{checkpoint}, project://paper/{artifact}"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "declared manuscript, summary, checkpoint, validation, section, and state resources"
+    },
+    {
+      "id": "user.gate",
+      "scope": "blocking checkpoints between execution waves"
+    }
+  ]
+}

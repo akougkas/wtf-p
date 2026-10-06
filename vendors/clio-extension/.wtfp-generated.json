@@ -1,0 +1,224 @@
+{
+  "schema": "wtfp.generated-adapter/v1",
+  "generatorVersion": 5,
+  "target": "clio-extension",
+  "sourceHash": "62aea12b7de037fbf0ead136f312d3d4391b5afe08b8c1afb8f12e22309a5e29",
+  "files": [
+    {
+      "path": "actions/add-todo.json",
+      "sha256": "ab5c1b0fcc9c7957f367af18f66378cf21bdab1d66cfd1da1afaff853715d8ac"
+    },
+    {
+      "path": "actions/analyze-bib.json",
+      "sha256": "b4600e5183e66cb1155f26b7d0c51c540e38f7e775c63d50d7b6ed56de083cd5"
+    },
+    {
+      "path": "actions/audit-milestone.json",
+      "sha256": "350dc1624d227c86286938b63feccd33c3234e7cdf308fb7b1ae94005a29a88f"
+    },
+    {
+      "path": "actions/check-refs.json",
+      "sha256": "3708747c28f4dd9941168a8abf48c3290c666891afcadce9679afebb965f05d5"
+    },
+    {
+      "path": "actions/check-todos.json",
+      "sha256": "9330a438ff0b316c8144caca756ce9d6025364bcbdd60be8c9790601584f024a"
+    },
+    {
+      "path": "actions/checkpoint.json",
+      "sha256": "e0bb5900cffcd9a98cc84da9197f3d2ecc0d320856e03c4a895f6d023289fbd9"
+    },
+    {
+      "path": "actions/contribute.json",
+      "sha256": "763a5834e0612858fc9f840936d6d24b754695a2cb278386312bb6cfcb74d53d"
+    },
+    {
+      "path": "actions/create-outline.json",
+      "sha256": "6e3b1d5778855f7b3eda92bb7c2d6775ab1963da793cb4e30c3dd226a59eabb7"
+    },
+    {
+      "path": "actions/create-poster.json",
+      "sha256": "bacfb4b378ddc15bbc79f45116e1c3aa39c58589dbcd47c700299b4e980c5572"
+    },
+    {
+      "path": "actions/create-slides.json",
+      "sha256": "93d64620ff0cced70fa9deadc9bc91d2d62e12677c604bfaa023699499276977"
+    },
+    {
+      "path": "actions/discuss-section.json",
+      "sha256": "21e29c961984fbce3dd3a196507cb975d8774441f5fa2c3d5e9fac493b3288dc"
+    },
+    {
+      "path": "actions/execute-outline.json",
+      "sha256": "a565763ea822144cdb4ab10b0a887787398a5f2d8b15edf4dcdc73da6f984e86"
+    },
+    {
+      "path": "actions/export-latex.json",
+      "sha256": "eeea52127f94fd6d055ce4b7aba4c7a9ca47c9954b21e1bbc2d38f192b0adb5f"
+    },
+    {
+      "path": "actions/help.json",
+      "sha256": "5faa429310fd1b3f670b4e9e54100841dbcc02984ce1942287b67d2d0c2fa538"
+    },
+    {
+      "path": "actions/insert-section.json",
+      "sha256": "ba2763d79dbfd7cdcfea16b6560ef75943039838d92276c0640b85ae33b1759d"
+    },
+    {
+      "path": "actions/list-assumptions.json",
+      "sha256": "bcae021890f1fb925e4915f8ad01fd98f6123777fadca1e23be1ea174841805f"
+    },
+    {
+      "path": "actions/map-project.json",
+      "sha256": "b08f4b3b6d3a6c663b6e960a38b91708f8fe3f5be54f8730e9f70b0c44755de2"
+    },
+    {
+      "path": "actions/new-paper.json",
+      "sha256": "24db0bd84c2494aef771d8945a61ce2f1a28fd66d8d63500618aa7ff314a9b71"
+    },
+    {
+      "path": "actions/pause-writing.json",
+      "sha256": "e4b19a5ded382fd1c9d5c0ec15ac9a24ffd0a3fcf33f90ea3ff30c7fc29242c4"
+    },
+    {
+      "path": "actions/plan-milestone-gaps.json",
+      "sha256": "1c08efa6498ef8824b58d4d99a85a39f40d10520a91d683538077c2e2d167c33"
+    },
+    {
+      "path": "actions/plan-revision.json",
+      "sha256": "07c1d196cc3a0c3788cbfab65b43eaf362b393a547ae895e074b7a5503462701"
+    },
+    {
+      "path": "actions/plan-section.json",
+      "sha256": "30401c1ef1afef9b0179cc5a2964ab6801cb2459f5a6d5a2ea60392fe0d45a98"
+    },
+    {
+      "path": "actions/polish-prose.json",
+      "sha256": "be96bfdc9fb38d7116ba9e44bc404429f5476d628115186b77edc9ca4e4624ed"
+    },
+    {
+      "path": "actions/progress.json",
+      "sha256": "396907ac606003e887db8ead64ebc448a99fb235af2cfbdbf09bfe6095d7cfaa"
+    },
+    {
+      "path": "actions/quick.json",
+      "sha256": "b8330fe8beb1c1ccc05de68101da7259e3aaa3d48cecbf6eb0c8c683a1343d06"
+    },
+    {
+      "path": "actions/remove-section.json",
+      "sha256": "a557d18985e10157b95f2405bc570b67dc85eb57c632b76fc1a6c3b4dd473074"
+    },
+    {
+      "path": "actions/report-bug.json",
+      "sha256": "60076ddd61a483f439e6ed71c7473050e2aaf80dda014337bdd9779dc3efca8e"
+    },
+    {
+      "path": "actions/request-feature.json",
+      "sha256": "3d266481e28af794ea1b4630ceaa23286760487a351bd2fdf30f5960740dfa15"
+    },
+    {
+      "path": "actions/research-gap.json",
+      "sha256": "0c26fa663f1d2526cbefcc9750b0a176ddf1ca538a46585a1de48c763fbb1a13"
+    },
+    {
+      "path": "actions/resume-writing.json",
+      "sha256": "ebdd19235c2201a19ebecbf7eabec4011652bd41e7fc66abe88510f7c67869a9"
+    },
+    {
+      "path": "actions/review-section.json",
+      "sha256": "9b07db1520abcc0374d595bcddcd841dd1f9b87c85d4724b264c0413bcb14aef"
+    },
+    {
+      "path": "actions/settings.json",
+      "sha256": "ede7fabe1e511921031e31e2f290a747d5d270ccfed25528741e870bba8b0d7a"
+    },
+    {
+      "path": "actions/submit-milestone.json",
+      "sha256": "5b5b102b9c68777a74504ae14c0e8193e691fdb80bb33408c7bd5c7a56802a76"
+    },
+    {
+      "path": "actions/update.json",
+      "sha256": "3d5be74efd9688398d3a6ceccf63883b65787f02b60e1380bf8ee4a93d70c75e"
+    },
+    {
+      "path": "actions/verify-work.json",
+      "sha256": "8a2f05e116dbe4032f95d4efd617bce3911b8231443a54afafc75678e5998065"
+    },
+    {
+      "path": "actions/write-section.json",
+      "sha256": "56b13114f3758e24624767ebc095e9a9d3c39aa96764e53f5460c0ec1d11ff68"
+    },
+    {
+      "path": "clio-coder-extension.yaml",
+      "sha256": "71cfad81dd4818d4c49574f4c69e35c52247dbc8bcecabe59345bdd049fc854b"
+    },
+    {
+      "path": "compatibility/action-availability.json",
+      "sha256": "b410e8921f8dd0657b71025c5aaf6b09999ec80b401cee9b47acdbc3d8844bce"
+    },
+    {
+      "path": "project/schemas/checkpoint.schema.json",
+      "sha256": "1dfa2192aa3fadad2ba6e62a16df2db51aa01a458735ef2077aa1eed18fb5937"
+    },
+    {
+      "path": "project/schemas/common.schema.json",
+      "sha256": "d389f3831039598b8e3d6904d4ef6df13437ef9df9bf566c86ccb344f48f3bb0"
+    },
+    {
+      "path": "project/schemas/config.schema.json",
+      "sha256": "ab41328730134974cfdc955c4def019765fdb76d7e373c0ff5dc52dbf9f09366"
+    },
+    {
+      "path": "project/schemas/decisions.schema.json",
+      "sha256": "0a97f739d3f62621cbc1750c83b4c0c50e5f52cf35aafc9b8b61f4e6208437d0"
+    },
+    {
+      "path": "project/schemas/evidence.schema.json",
+      "sha256": "e7e7d9934d192bbeb788d7669bfb7298fe48b6ab78ad6709d44b8413190a38e2"
+    },
+    {
+      "path": "project/schemas/manifest.schema.json",
+      "sha256": "6098eb621afce830c8ab20764114e8d7854efe5805453cbb3192e7eb3eae66f2"
+    },
+    {
+      "path": "project/schemas/outline.schema.json",
+      "sha256": "6f6696578ca275c79a468cfc07588ce10ce813f7cd93a4f1c3b009ab5ec994f7"
+    },
+    {
+      "path": "project/schemas/section.schema.json",
+      "sha256": "61bf54595635e12fa11f2a93ab91269b69d187757a318f181a96fd8f64981bac"
+    },
+    {
+      "path": "project/schemas/source.schema.json",
+      "sha256": "4a6d49a49ad65efcf113c94911184f189a1f9e93bdcfbdad5c6ad82082c3dffc"
+    },
+    {
+      "path": "project/schemas/state.schema.json",
+      "sha256": "4ebcb32f63eeb142443a3c588a41acf6f7fdf8bf276542be93dcfa4e0f56c845"
+    },
+    {
+      "path": "project/schemas/validation.schema.json",
+      "sha256": "89e8bdc850474d557e816a4db5e5e46cf401fb73b98863a1e49a42af33689fa1"
+    },
+    {
+      "path": "runtime/extension.ts",
+      "sha256": "8eb4ccefb1e120faa27210734e0b4191e374ca37e1b2d6351026631ac20999f0"
+    },
+    {
+      "path": "runtime/json-schema.cjs",
+      "sha256": "d17bd79edd0b63a933613f23e1b41d0dbaeb8b398dba7ed1f004156055243846"
+    },
+    {
+      "path": "runtime/package.json",
+      "sha256": "963a031a8894fbafdec216af462209fd74eba0e1a53a933d5021131fdaa64455"
+    },
+    {
+      "path": "runtime/write-guard.json",
+      "sha256": "67637036292b1d003e72a823cfd764c4e0996553b0cf55ec0a700a09518a3ffd"
+    },
+    {
+      "path": "skins/wtfp.json",
+      "sha256": "d0ddaefeb2b5f1479ad360e45adecf455e042e935b7ae971e74f776c853ade5c"
+    }
+  ]
+}
