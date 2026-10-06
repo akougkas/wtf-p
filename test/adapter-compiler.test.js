@@ -226,7 +226,9 @@ function runCheck(cwd, environment) {
 function copyCompilerFixture(destination) {
   const copies = [
     ['bin/lib', 'bin/lib'],
-    ['protocol', 'protocol']
+    ['protocol', 'protocol'],
+    ['clio', 'clio'],
+    ['evaluation/lib/json-schema.js', 'evaluation/lib/json-schema.js']
   ];
   for (const [source, target] of copies) {
     fs.cpSync(path.join(ROOT, source), path.join(destination, target), { recursive: true });
