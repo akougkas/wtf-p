@@ -671,9 +671,13 @@ async function deskFor(ctx: ExtensionContextV2): Promise<Desk> {
 	return desk;
 }
 
-async function picture(ctx: ExtensionContextV2, desk?: Desk): Promise<Omit<ExtensionOutputV2, "text">> {
+async function picture(
+	ctx: ExtensionContextV2,
+	desk?: Desk,
+	active: string | null = ctx.snapshot.activeWorkspace,
+): Promise<Omit<ExtensionOutputV2, "text">> {
 	const current = desk ?? (await deskFor(ctx));
-	if (!current.present && !current.paperExists && ctx.snapshot.activeWorkspace === null) return { status: null, band: null };
+	if (!current.present && !current.paperExists && active === null) return { status: null, band: null, islands: null };
 	return {
 		status: current.present
 			? {
@@ -1112,11 +1116,10 @@ async function guard(ctx: ExtensionContextV2, args: unknown): Promise<ExtensionH
 // --- registration ------------------------------------------------------------
 
 export default function extension(api: ExtensionApiV2): void {
-	api.handle("desk", async (_args, ctx) => ({
-		text: progressText(await deskFor(ctx)),
-		workspace: { enter: "desk" },
-		...(await picture(ctx)),
-	}));
+	api.handle("desk", async (_args, ctx) => {
+		const desk = await deskFor(ctx);
+		return { text: progressText(desk), workspace: { enter: "desk" }, ...(await picture(ctx, desk, "desk")) };
+	});
 	api.handle("progress", async (_args, ctx) => {
 		const desk = await deskFor(ctx);
 		return { text: progressText(desk), card: progressCard(desk), ...(await picture(ctx, desk)) };
@@ -1246,6 +1249,8 @@ export default function extension(api: ExtensionApiV2): void {
 
 	api.on("session_open", async (_event, ctx) => ({ text: "", ...(await picture(ctx)) }));
 	api.on("workspace_enter", async (_event, ctx) => ({ text: "", ...(await picture(ctx)) }));
+	// Leaving means the desk no longer holds the screen, whatever the snapshot says yet.
+	api.on("workspace_leave", async (_event, ctx) => ({ text: "", ...(await picture(ctx, undefined, null)) }));
 	api.on("fs_changed", async (event, ctx) => {
 		if (event.event !== "fs_changed") return undefined;
 		const records = event.paths.filter((file) => file.startsWith(".planning/") && file.endsWith(".json") && !file.includes("/archives/"));
