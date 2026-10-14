@@ -52,9 +52,10 @@ manuscript or rewritten plan history, wait for the author at the desk.
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
 when they name the desk's own records; Clio's default autonomy asks the
 operator before running an unrecognized command, but runs recognized test
-runners, which execute files the model wrote, after one consent per attended
-session and without asking in a headless run. Code run that way is beyond the
-desk's hooks, which is the limit of every guarantee above.
+runners, which execute files the model wrote. It asks for that at most once in
+an attended session, and only after the session itself has written or edited a
+file or was resumed; a headless run never asks. Code run that way is beyond
+the desk's hooks, which is the limit of every guarantee above.
 
 `clio-coder extensions test vendors/clio-extension` runs the package tests: the
 record contract, symbolic-link containment, each gate scenario, plan approval,

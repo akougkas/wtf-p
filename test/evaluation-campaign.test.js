@@ -564,6 +564,11 @@ process.exit(0);`);
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    headers: {\n      "X-A": "{",\n      X-Custom: custom-secret-123456789\n    }\n  model: claude-opus-model-2026\n'),
       ['custom-secret-123456789'], 'a bracket inside a quoted string is text, and the model id after the map stays evidence');
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    headers:\n      apiKeyRef: header-value-123456789\n'), ['header-value-123456789'], 'a reference name is a reference only directly under auth');
+    assert.deepStrictEqual(runner.settingsSecrets('targets:\n  - id: a\n    wireModels: [\n      claude-opus-4-1, # pinned [see notes\n      claude-sonnet-4\n    ]\n    auth:\n      headers:\n        X-Key: comment-secret-123456789\nurl: https://api.example.com/v1\n'),
+      ['comment-secret-123456789'], 'a comment inside a multi-line flow collection is not structure');
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers: { "X-Note": "see #1 {", X-Custom: quoted-hash-123456789 }\n  model: claude-opus-model-2026\n'), ['quoted-hash-123456789'], 'a # inside quotes is not a comment');
+    assert.deepStrictEqual(runner.settingsSecrets('fleet:\n  profiles:\n    authoring:\n      target: anthropic\n      model: claude-opus-4-1-20250805\n'), [], 'a key that merely contains auth is not a secret');
+    assert.deepStrictEqual(runner.settingsSecrets('integrations:\n  externalAgents:\n    env: { OPENAI_KEY: sk-openai-secret-123456, OPENAI_BASE_URL: https://example.invalid/v1 }\n'), ['sk-openai-secret-123456'], 'a NAME_KEY variable holds a secret; a URL does not');
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers:\n    - { Authorization: sequence-flow-1234 }\n  models:\n    - { id: long-model-identifier }\n'), ['sequence-flow-1234']);
     assert.deepStrictEqual(runner.credentialSecrets('anthropic:\n  type: api_key\n  key: sk-ant-secret-1234\n  updatedAt: 2026-10-14T12:00:00Z\nopenrouter:\n  type: oauth\n  access: access-token-1234\n  refresh: refresh-token-1234\n  expires: 1760000000000\n'),
       ['sk-ant-secret-1234', 'access-token-1234', 'refresh-token-1234'], 'provider names, types and timestamps stay in the evidence');

@@ -774,7 +774,28 @@ function secretTokens(text, minimum = 8) {
   return [...new Set(text.match(new RegExp(`[A-Za-z0-9_\\-+/=.]{${minimum},}`, 'gu')) || [])];
 }
 
-const SECRET_KEY = /auth|header|token|secret|passw|api[-_]?key|bearer|cookie|credential/iu;
+// Words that mark a key as holding a secret; a key is split into words at case changes and punctuation.
+const SECRET_WORDS = new Set(['auth', 'authorization', 'header', 'headers', 'token', 'tokens', 'secret', 'secrets', 'password', 'passwd', 'bearer', 'cookie', 'cookies', 'credential', 'credentials', 'apikey']);
+
+/** Whether a settings key holds a secret: `GITHUB_AUTH`, `authToken`, `OPENAI_KEY` and `x-api-key` do; `authoring` does not. */
+function secretKey(key) {
+  const words = String(key).replace(/([a-z0-9])([A-Z])/gu, '$1 $2').toLowerCase().split(/[^a-z0-9]+/u).filter(Boolean);
+  return words.some(word => SECRET_WORDS.has(word)) || (words.length > 1 && ['key', 'keys'].includes(words[words.length - 1]));
+}
+
+/** Text with a `#` comment removed, where `#` starts a comment only outside quotes and after whitespace or at the start. */
+function stripComment(text) {
+  let quote = null;
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (quote) {
+      if (char === '\\' && quote === '"') index += 1;
+      else if (char === quote) quote = null;
+    } else if (char === '"' || char === "'") quote = char;
+    else if (char === '#' && (index === 0 || /\s/u.test(text[index - 1]))) return text.slice(0, index).trimEnd();
+  }
+  return text;
+}
 // Clio's TargetAuth fields that name a secret rather than hold one (src/domains/providers/types/target-descriptor.ts).
 const SETTINGS_REFERENCES = new Set(['apiKeyEnvVar', 'apiKeyRef', 'oauthProfile']);
 // Fields of Clio's credential records that are not secret (src/domains/providers/auth/storage.ts).
@@ -853,11 +874,11 @@ function yamlScalars(text) {
     const pair = /^("[^"]*"|'[^']*'|[^:{}[\],#][^:#]*?)\s*:(?:\s+(.*))?$/u.exec(body);
     if (!pair) {
       if (body.startsWith('{') || body.startsWith('[')) flowScalars(body, keys, out);
-      else if (body) out.push({ path: keys, value: unquote(body.replace(/\s+#.*$/u, '')) });
+      else if (body) out.push({ path: keys, value: unquote(stripComment(body)) });
       continue;
     }
     const key = unquote(pair[1]);
-    const value = (pair[2] ?? '').replace(/\s+#.*$/u, '').trim();
+    const value = stripComment(pair[2] ?? '').trim();
     const here = [...keys, key];
     if (/^[|>][+-]?[0-9]?$/u.test(value)) {
       const block = [];
@@ -873,7 +894,7 @@ function yamlScalars(text) {
       const depth = (text) => [...text.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/gu, '')].reduce((sum, char) => sum + ('{['.includes(char) ? 1 : '}]'.includes(char) ? -1 : 0), 0);
       while (depth(flow) > 0 && index + 1 < lines.length) {
         index += 1;
-        flow += ` ${lines[index].trim()}`;
+        flow += ` ${stripComment(lines[index].trim())}`;
       }
       flowScalars(flow, here, out);
     } else if (value) {
@@ -893,7 +914,7 @@ function yamlScalars(text) {
 function settingsSecrets(text) {
   return yamlScalars(text)
     // A TargetAuth reference names a secret only as a direct field of `auth`; anywhere else the same name is just a key.
-    .filter(entry => entry.path.length > 0 && entry.path.some(key => SECRET_KEY.test(key)) &&
+    .filter(entry => entry.path.length > 0 && entry.path.some(secretKey) &&
       !(entry.path.length >= 2 && entry.path[entry.path.length - 2] === 'auth' && SETTINGS_REFERENCES.has(entry.path[entry.path.length - 1])))
     .flatMap(entry => secretTokens(entry.value));
 }
