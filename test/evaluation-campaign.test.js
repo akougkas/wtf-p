@@ -244,6 +244,26 @@ setTimeout(() => {}, 60000);`);
     assert.ok(report.evidence_levels.includes('observed-author'));
   });
 
+  await test('the comparative study stays a draft until every owner decision is made, and its rules are enforced', async () => {
+    const { loadStudy } = require('../evaluation/lib/study');
+    const file = path.join(ROOT, 'evaluation/v2/studies/clio-reliability-comparison.json');
+    const { study, pending } = loadStudy(file);
+    assert.strictEqual(study.status, 'draft');
+    assert.deepStrictEqual(pending.sort(), ['analysis.thresholds', 'assessment.assessors', 'comparators', 'execution.budget_per_run_usd', 'execution.models', 'execution.repetitions', 'tasks.count']);
+    const variant = (name, change) => {
+      const target = path.join(scratch, `${name}.json`);
+      fs.writeFileSync(target, JSON.stringify(change(JSON.parse(JSON.stringify(study)))));
+      return target;
+    };
+    assert.throws(() => loadStudy(variant('frozen-early', value => ({ ...value, status: 'frozen' }))), /cannot be frozen while decisions are pending/);
+    assert.throws(() => loadStudy(variant('gateless', value => ({ ...value, ablations: [{ ...value.ablations[0], keeps_production_author_gates: false }] }))), /not a valid study/);
+    assert.throws(() => loadStudy(variant('self-judging', value => ({ ...value, assessment: { ...value.assessment, model_judges: 'allowed' } }))), /not a valid study/);
+    assert.throws(() => loadStudy(variant('hidden-null', value => ({ ...value, analysis: { ...value.analysis, null_results: 'omitted' } }))), /not a valid study/);
+    assert.throws(() => loadStudy(variant('no-baseline', value => ({ ...value, conditions: value.conditions.map(condition => (condition.wtfp === 'none' ? { ...condition, wtfp: 'plugin-only' } : condition)) }))), /baseline without WTF-P/);
+    assert.throws(() => loadStudy(variant('secondary-primary', value => ({ ...value, hypotheses: [{ ...value.hypotheses[0], primary_outcome: 'latency' }] }))), /declared primary outcome/);
+    assert.throws(() => loadStudy(variant('unknown-host', value => ({ ...value, conditions: value.conditions.map(condition => ({ ...condition, host: 'clio-9.9.9' })) }))), /unknown campaign/);
+  });
+
   fs.rmSync(scratch, { recursive: true, force: true });
   console.log(`\n${passed} campaign runner checks passed.`);
 }

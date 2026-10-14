@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/evaluation/study/v2",
+  "title": "A pre-registered comparative study: conditions, tasks, outcomes and analysis fixed before any comparative result is collected.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "status", "question", "hypotheses", "conditions", "ablations", "tasks", "execution", "outcomes", "assessment", "analysis", "comparators", "decisions"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.study/v2" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": {
+      "description": "draft while any decision is pending; frozen once the owner accepts it and before data collection; a frozen study changes only by a new version.",
+      "enum": ["draft", "frozen", "collecting", "reported"]
+    },
+    "question": { "type": "string", "minLength": 1 },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "primary_outcome", "direction"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^H[0-9]+$" },
+          "statement": { "type": "string", "minLength": 1 },
+          "primary_outcome": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "direction": { "enum": ["lower-is-better", "higher-is-better"] }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role", "description", "host", "wtfp", "author_gates"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "role": { "enum": ["treatment", "baseline"] },
+          "description": { "type": "string", "minLength": 1 },
+          "host": { "type": "string", "minLength": 1 },
+          "wtfp": { "enum": ["plugin-and-desk", "plugin-only", "none"] },
+          "author_gates": { "enum": ["desk-attested", "host-prompted", "author-instructed"] }
+        }
+      }
+    },
+    "ablations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "of", "removes", "keeps_production_author_gates", "isolates"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "of": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "removes": { "type": "string", "minLength": 1 },
+          "keeps_production_author_gates": { "const": true },
+          "isolates": { "enum": ["durable-state", "evidence-checks", "reviewer-separation", "runtime-enforcement"] }
+        }
+      }
+    },
+    "tasks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample", "count", "materials", "seeded_hazards", "order"],
+      "properties": {
+        "sample": { "type": "string", "minLength": 1 },
+        "count": { "type": ["integer", "string"] },
+        "materials": { "type": "string", "minLength": 1 },
+        "seeded_hazards": {
+          "type": "array",
+          "items": { "enum": ["candidate-citation", "metadata-only-source", "contradicting-evidence", "retracted-source", "unsupported-author-request", "mid-run-interruption", "changed-plan-after-approval"] }
+        },
+        "order": { "enum": ["randomized", "counterbalanced"] }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["models", "repetitions", "budget_per_run_usd", "evidence_access", "instructions", "assistance", "failure_treatment"],
+      "properties": {
+        "models": { "type": ["array", "string"], "items": { "type": "string" } },
+        "repetitions": { "type": ["integer", "string"] },
+        "budget_per_run_usd": { "type": ["number", "string"] },
+        "evidence_access": { "const": "identical-across-conditions" },
+        "instructions": { "const": "identical-task-statement-across-conditions" },
+        "assistance": { "const": "identical-or-recorded" },
+        "failure_treatment": { "const": "failed-and-blocked-runs-count-in-their-condition" }
+      }
+    },
+    "outcomes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "tier", "measure", "measured_by"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "tier": { "enum": ["primary", "secondary"] },
+          "measure": { "type": "string", "minLength": 1 },
+          "measured_by": { "enum": ["structural-checker", "blinded-human-assessor", "run-record", "author-log"] }
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["human_ratings", "model_judges", "assessors", "agreement"],
+      "properties": {
+        "human_ratings": { "const": "blinded-to-condition" },
+        "model_judges": { "const": "never-rate-their-own-condition-and-never-sole-judge" },
+        "assessors": { "type": ["integer", "string"] },
+        "agreement": { "type": "string", "minLength": 1 }
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparisons", "thresholds", "null_results", "post_hoc_changes"],
+      "properties": {
+        "comparisons": { "type": "string", "minLength": 1 },
+        "thresholds": { "type": ["object", "string"] },
+        "null_results": { "const": "reported" },
+        "post_hoc_changes": { "const": "new-version-and-labelled-exploratory" }
+      }
+    },
+    "comparators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["system", "overlapping_task", "comparison"],
+        "properties": {
+          "system": { "type": "string", "minLength": 1 },
+          "overlapping_task": { "type": "string", "minLength": 1 },
+          "comparison": { "enum": ["on-overlapping-task-only", "not-compared"] }
+        }
+      }
+    },
+    "decisions": {
+      "description": "Every choice the study owner still has to make, by field.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "owner", "status"],
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pending", "decided"] }
+        }
+      }
+    }
+  }
+}

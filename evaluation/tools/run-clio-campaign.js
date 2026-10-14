@@ -259,6 +259,9 @@ function prepare(campaign, options) {
   const extensions = native(['extensions', 'list', '--user', '--json'], workspace);
   const desk = extensions.status === 0 ? JSON.parse(extensions.stdout).extensions.find(item => item.id === 'wtfp') : null;
   record('desk-registered', extensions, desk && desk.valid && desk.enabled && desk.plugin === 'wtfp' && desk.diagnostics.length === 0, desk ? desk.rootPath : extensions.stderr);
+  // Discovery is separate evidence from validity and from any `fleet run` outcome.
+  const listed = native(['playbook', 'list'], workspace);
+  record('playbook-list', listed, ['wtfp-plan-section', 'wtfp-draft-review'].every(name => new RegExp(`^${name}\\s+plugin\\s+valid\\b`, 'mu').test(listed.stdout)), null);
   for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
     const validated = native(['playbook', 'validate', playbook, '--json'], workspace);
     record(`playbook-validate-${playbook}`, validated, validated.status === 0, null);

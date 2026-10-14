@@ -1,0 +1,79 @@
+{
+  "schema": "wtfp.evaluation.study/v2",
+  "id": "clio-reliability-comparison",
+  "version": 1,
+  "status": "draft",
+  "question": "On matched manuscript tasks, do explicit author decisions, claim-level evidence records, checked plans, separate review and durable state make Clio's manuscript production more reliable, and at what author effort and runtime cost?",
+  "hypotheses": [
+    { "id": "H1", "statement": "Clio with the WTF-P plugin and desk produces fewer externally checkable claims without inspected support than the same Clio and model without WTF-P.", "primary_outcome": "unsupported-claim-rate", "direction": "lower-is-better" },
+    { "id": "H2", "statement": "Clio with the WTF-P plugin and desk violates fewer recorded author decisions than the same Clio and model given an expert checklist prompt.", "primary_outcome": "author-decision-violations", "direction": "lower-is-better" },
+    { "id": "H3", "statement": "Runs interrupted mid-write recover to a consistent state more often with WTF-P than without it.", "primary_outcome": "recovery-success", "direction": "higher-is-better" }
+  ],
+  "conditions": [
+    { "id": "wtfp-desk", "role": "treatment", "description": "Clio 0.6.2 pinned build with the WTF-P plugin and desk extension; author answers at the desk.", "host": "clio-0.6.2-reference", "wtfp": "plugin-and-desk", "author_gates": "desk-attested" },
+    { "id": "clio-plain", "role": "baseline", "description": "The same Clio build and model with no WTF-P package; the same task statement and materials; the author answers the agent's questions in the session.", "host": "clio-0.6.2-reference", "wtfp": "none", "author_gates": "host-prompted" },
+    { "id": "clio-checklist", "role": "baseline", "description": "The same Clio build and model with no WTF-P package and an expert writing checklist prompt covering evidence, decisions, review and recovery; the author answers in the session.", "host": "clio-0.6.2-reference", "wtfp": "none", "author_gates": "author-instructed" }
+  ],
+  "ablations": [
+    { "id": "no-desk", "of": "wtfp-desk", "removes": "the desk extension: the plugin's prompts carry the same rules as instructions only", "keeps_production_author_gates": true, "isolates": "runtime-enforcement" },
+    { "id": "no-coverage-gate", "of": "wtfp-desk", "removes": "the readiness check on required-claim evidence before drafting; all other desk checks stay", "keeps_production_author_gates": true, "isolates": "evidence-checks" },
+    { "id": "shared-reviewer", "of": "wtfp-desk", "removes": "the separate reviewer role: the drafting session reviews its own section", "keeps_production_author_gates": true, "isolates": "reviewer-separation" },
+    { "id": "no-durable-state", "of": "wtfp-desk", "removes": "resumption from records: each session starts from the manuscript and materials only", "keeps_production_author_gates": true, "isolates": "durable-state" }
+  ],
+  "tasks": {
+    "sample": "Short sections and proposal parts drawn from author-supplied research materials, each with a closed-world corpus whose supportable and unsupportable claims are known to the assessors and hidden from the agents.",
+    "count": "pending",
+    "materials": "Closed-world corpora per task, identical across conditions; network search disabled so every condition sees the same evidence.",
+    "seeded_hazards": ["candidate-citation", "metadata-only-source", "contradicting-evidence", "retracted-source", "unsupported-author-request", "mid-run-interruption", "changed-plan-after-approval"],
+    "order": "counterbalanced"
+  },
+  "execution": {
+    "models": "pending",
+    "repetitions": "pending",
+    "budget_per_run_usd": "pending",
+    "evidence_access": "identical-across-conditions",
+    "instructions": "identical-task-statement-across-conditions",
+    "assistance": "identical-or-recorded",
+    "failure_treatment": "failed-and-blocked-runs-count-in-their-condition"
+  },
+  "outcomes": [
+    { "id": "unsupported-claim-rate", "tier": "primary", "measure": "Share of externally checkable claims in the final text with no inspected supporting evidence, judged against the task's hidden claim key.", "measured_by": "blinded-human-assessor" },
+    { "id": "citation-support-precision", "tier": "primary", "measure": "Share of citations whose cited passage supports the sentence that cites it.", "measured_by": "blinded-human-assessor" },
+    { "id": "required-claim-coverage", "tier": "primary", "measure": "Share of the task's required claims present with qualifying support.", "measured_by": "blinded-human-assessor" },
+    { "id": "author-decision-violations", "tier": "primary", "measure": "Count of final-text or record contradictions of the task's locked and deferred author decisions.", "measured_by": "blinded-human-assessor" },
+    { "id": "recovery-success", "tier": "primary", "measure": "Share of interrupted runs whose resumed session reaches a consistent, correct state without invented state.", "measured_by": "run-record" },
+    { "id": "structural-integrity", "tier": "secondary", "measure": "Schema, cross-record and claim-coverage findings on the final project, where records exist.", "measured_by": "structural-checker" },
+    { "id": "completion", "tier": "secondary", "measure": "Share of runs that deliver the required text within budget.", "measured_by": "run-record" },
+    { "id": "manuscript-quality", "tier": "secondary", "measure": "Blinded rubric rating of argument, fidelity and clarity.", "measured_by": "blinded-human-assessor" },
+    { "id": "author-active-minutes", "tier": "secondary", "measure": "Minutes the author spent answering, reviewing and correcting.", "measured_by": "author-log" },
+    { "id": "latency", "tier": "secondary", "measure": "Wall-clock time per task.", "measured_by": "run-record" },
+    { "id": "cost", "tier": "secondary", "measure": "Model cost per task where the host reports it; unavailable otherwise, never zero.", "measured_by": "run-record" }
+  ],
+  "assessment": {
+    "human_ratings": "blinded-to-condition",
+    "model_judges": "never-rate-their-own-condition-and-never-sole-judge",
+    "assessors": "pending",
+    "agreement": "Two assessors per output; agreement reported per primary outcome before adjudication."
+  },
+  "analysis": {
+    "comparisons": "Each hypothesis compares its treatment and baseline conditions on the same tasks; ablations compare against wtfp-desk only. Effect sizes with intervals per task family, no pooled ranking across unrelated scopes.",
+    "thresholds": "pending",
+    "null_results": "reported",
+    "post_hoc_changes": "new-version-and-labelled-exploratory"
+  },
+  "comparators": [
+    { "system": "The AI Scientist", "overlapping_task": "citation accuracy in generated manuscripts", "comparison": "not-compared" },
+    { "system": "Paper2Agent", "overlapping_task": "executable reuse of published methods", "comparison": "not-compared" },
+    { "system": "Proactive thought partners for writing", "overlapping_task": "author effort and control during writing", "comparison": "not-compared" },
+    { "system": "PaperBanana / PaperVizAgent", "overlapping_task": "faithful scientific figures", "comparison": "not-compared" }
+  ],
+  "decisions": [
+    { "field": "tasks.count", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "execution.models", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "execution.repetitions", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "execution.budget_per_run_usd", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "assessment.assessors", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "analysis.thresholds", "owner": "Anthony Kougkas", "status": "pending" },
+    { "field": "comparators", "owner": "Anthony Kougkas", "status": "pending" }
+  ]
+}

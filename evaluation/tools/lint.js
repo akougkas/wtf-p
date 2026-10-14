@@ -538,9 +538,11 @@ function lintEvaluation() {
 // bound to its fixture's current model inputs, and naming only real actions.
 function lintCampaigns() {
   const { loadCampaign } = require('./run-clio-campaign');
+  const { loadStudy } = require('../lib/study');
   const ids = new Set();
   let schemas = 0;
   let campaigns = 0;
+  let studies = 0;
   for (const version of fs.readdirSync(evaluationRoot).filter(name => /^v[2-9][0-9]*$/u.test(name)).sort()) {
     const versionSchemas = path.join(evaluationRoot, version, 'schemas');
     for (const name of fs.existsSync(versionSchemas) ? fs.readdirSync(versionSchemas).filter(file => file.endsWith('.schema.json')).sort() : []) {
@@ -557,15 +559,21 @@ function lintCampaigns() {
       assert(campaign.status !== 'observed' || campaign.model.model, `${version}/campaigns/${name}: an observed campaign names the model it ran`);
       campaigns += 1;
     }
+    const versionStudies = path.join(evaluationRoot, version, 'studies');
+    for (const name of fs.existsSync(versionStudies) ? fs.readdirSync(versionStudies).filter(file => file.endsWith('.json')).sort() : []) {
+      const { study } = loadStudy(path.join(versionStudies, name));
+      assert.strictEqual(`${study.id}.json`, name, `${version}/studies/${name}: file name must match the study id`);
+      studies += 1;
+    }
   }
-  return { schemas, campaigns };
+  return { schemas, campaigns, studies };
 }
 
 function main() {
   try {
     const counts = lintEvaluation();
     const versioned = lintCampaigns();
-    console.log(`✓ validated ${versioned.schemas} versioned campaign schemas and loaded ${versioned.campaigns} campaigns`);
+    console.log(`✓ validated ${versioned.schemas} versioned schemas, loaded ${versioned.campaigns} campaigns and ${versioned.studies} pre-registered studies`);
     console.log(`✓ validated ${counts.schemas} evaluation data schemas`);
     console.log(`✓ linted ${counts.routingCases} routing cases across ${counts.skills} skills and ${counts.operations} operations`);
     console.log(`✓ mapped ${counts.explicitActions} explicit actions with exact argument and ownership contracts`);
