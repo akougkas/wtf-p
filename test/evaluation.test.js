@@ -323,7 +323,7 @@ function testPlanningValidator(tempRoot) {
   const result = validatePlanningPaths([project]);
   const after = snapshotTree(project);
   assert.strictEqual(result.valid, true);
-  assert.strictEqual(result.checked, 10);
+  assert.strictEqual(result.checked, fs.readdirSync(templatesRoot).filter(name => name.endsWith('.json')).length);
   assert(result.roots[0].records.every(record => record.valid));
   assert.deepStrictEqual(after, before, 'planning validator modified its input');
 
