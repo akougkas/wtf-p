@@ -150,6 +150,10 @@ async function main() {
     const loosened = path.join(scratch, 'loosened.json');
     fs.writeFileSync(loosened, JSON.stringify({ ...campaign, permissions: { ...campaign.permissions, headless_author_gates: 'auto-approve' } }));
     assert.throws(() => runner.loadCampaign(loosened), /not a valid campaign/);
+    const executing = path.join(scratch, 'executing.json');
+    fs.writeFileSync(executing, JSON.stringify({ ...campaign, permissions: { ...campaign.permissions, code_execution: 'allowed' } }));
+    assert.throws(() => runner.loadCampaign(executing), /not a valid campaign/, 'a campaign cannot let a step run programs');
+    assert.strictEqual(campaign.permissions.code_execution, 'denied');
   });
 
   await test('plan is credential-free, writes nothing, and names what the operator still has to select', async () => {
@@ -194,8 +198,8 @@ process.exit(0);`);
     assert.deepStrictEqual(run.steps.map(step => [step.step, step.outcome]), [['initialize', 'author-unavailable']]);
     assert.deepStrictEqual([run.cost.status, run.cost.usd], ['unavailable', null], 'missing cost is unavailable, never zero');
     assert.strictEqual(run.evidence_level, 'no-model-call-observed', 'no model call seen, so no model evidence is claimed');
-    assert.match(run.isolation.model_code_execution, /test runners/, 'every run record says what it cannot vouch for');
-    assert.match(run.isolation.record_integrity, /can defeat/);
+    assert.match(run.isolation.model_code_execution, /^withheld: /, 'every run record says what it cannot vouch for');
+    assert.match(run.isolation.record_integrity, /rest on Clio enforcing the tool limits/);
     assert.strictEqual(run.credentials_removed, true);
     assert.ok(!fs.existsSync(path.join(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
     const recorded = fs.readFileSync(path.join(root, 'run.json'), 'utf8');
@@ -271,7 +275,9 @@ setTimeout(() => {}, 60000);`);
 
   await test('every step runs without retrieval tools inside the run home, and a network tool call is a policy violation', async () => {
     const envFile = path.join(scratch, 'step-env.json');
+    const argvFile = path.join(scratch, 'step-argv.json');
     const entry = fakeClio('fake-network', `require('fs').writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(process.env));
+require('fs').writeFileSync(${JSON.stringify(argvFile)}, JSON.stringify(args));
 ${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'web_fetch', args: { url: 'https://example.invalid' } })}
 ${measured(0.01)}
 process.exit(0);`);
@@ -280,7 +286,50 @@ process.exit(0);`);
     assert.strictEqual(env.CLIO_CODER_DISABLE_RETRIEVE_TOOLS, '1');
     assert.strictEqual(env.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
     assert.strictEqual(run.outcome, 'policy-violation');
-    assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, store_calls: 0, blocked_calls: 0 });
+    assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, store_calls: 0, execution_calls: 0, blocked_calls: 0 });
+    // Neither the main agent nor a worker it dispatches holds a tool that runs a program.
+    const argv = JSON.parse(fs.readFileSync(argvFile, 'utf8'));
+    const listed = (flag) => { const at = argv.indexOf(flag); assert.ok(at > 0, `the step passes ${flag}`); return argv[at + 1].split(','); };
+    assert.deepStrictEqual(listed('--allow-tools'), [...runner.MAIN_TOOLS]);
+    assert.deepStrictEqual(listed('--delegate-tools'), [...runner.WORKER_TOOLS]);
+    for (const tool of [...runner.EXECUTION_TOOLS, 'web_fetch', 'web_read', 'configure_clio', 'consult']) {
+      assert.ok(!runner.MAIN_TOOLS.includes(tool) && !runner.WORKER_TOOLS.includes(tool), `no step holds ${tool}`);
+    }
+    assert.deepStrictEqual(run.step_environment.tools, { main: [...runner.MAIN_TOOLS], delegated: [...runner.WORKER_TOOLS] });
+    // The main agent holds every desk tool by the name Clio gives it, and nothing the desk does not declare.
+    const manifest = fs.readFileSync(path.join(ROOT, 'clio/clio-coder-extension.yaml'), 'utf8');
+    const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)].map(match => `extension_wtfp__${match[1]}`);
+    assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
+  });
+
+  await test('a step that runs a program violates the campaign policy, whether the main agent or a worker ran it', async () => {
+    const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const main = { file: 'main.json', receipt: { agentId: 'main-agent', costUsd: 0.01, costProvenance: 'known' } };
+    const lines = (...events) => events.map(event => JSON.stringify(event)).join('\n');
+    const start = (id, toolName) => ({ type: 'tool_execution_start', toolCallId: id, toolName, args: { command: 'node --test planted.test.js' } });
+    const outcome = (stdout, receipts = [main]) => { const step = runner.classifyStep(ok, stdout, '', { receipts }); return [step.outcome, step.tools.execution_calls]; };
+    assert.deepStrictEqual(outcome(lines(start('c1', 'read'))), ['completed', 0]);
+    for (const tool of runner.EXECUTION_TOOLS) assert.deepStrictEqual(outcome(lines(start('c1', tool))), ['policy-violation', 1], `${tool} by the main agent`);
+    assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'blocked' })), ['completed', 0], 'a call Clio blocked did not run');
+    assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c2', outcome: 'blocked' })), ['policy-violation', 1], 'another call\'s block does not excuse this one');
+    const worker = (toolStats) => ({ file: 'worker.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free', toolStats } });
+    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'verify', count: 2, ok: 2, errors: 0, blocked: 0 }])]), ['policy-violation', 2], 'a worker that ran verify');
+    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'bash', count: 1, ok: 0, errors: 0, blocked: 1 }, { tool: 'read', count: 3, ok: 3, errors: 0, blocked: 0 }])]), ['completed', 0], 'a worker call Clio blocked did not run');
+  });
+
+  await test('prepare refuses a WTF-P recipe that declares a tool a step\'s workers may not hold', async () => {
+    assert.deepStrictEqual(runner.recipeToolsOutside(path.join(ROOT, 'vendors/plugin')), [], 'the shipped recipes fit the delegated tools');
+    const plugin = path.join(scratch, 'grown-plugin');
+    fs.cpSync(path.join(ROOT, 'vendors/plugin/ai.iowarp.clio/agents'), path.join(plugin, 'ai.iowarp.clio/agents'), { recursive: true });
+    const recipe = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-reviewer.md');
+    fs.writeFileSync(recipe, fs.readFileSync(recipe, 'utf8').replace('optional: [grep,', 'optional: [verify, grep,'));
+    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify']);
+    const writer = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-writer.md');
+    fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace('{anyOf: [write, edit]}', '{anyOf: [write, edit, bash]}'));
+    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify', 'wtfp-section-writer: bash']);
+    fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace(/^tools: .*$/m, 'tools:\n  required: [bash]'));
+    assert.match(runner.recipeToolsOutside(plugin).join('\n'), /wtfp-section-writer\.md: tools not declared/);
+    assert.match(runner.recipeToolsOutside(path.join(scratch, 'no-plugin')).join(''), /no WTF-P recipes/);
   });
 
   await test('a gated step is never completed while its gate is pending or answered without a sealed author answer', async () => {

@@ -110,10 +110,14 @@
     "permissions": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["autonomy", "network", "headless_author_gates"],
+      "required": ["autonomy", "network", "code_execution", "headless_author_gates"],
       "properties": {
         "autonomy": { "const": "default" },
         "network": { "const": "none" },
+        "code_execution": {
+          "description": "No step's main agent or worker holds a tool that runs a program; the runner passes Clio's tool allowlists and treats any such call as a policy violation.",
+          "const": "denied"
+        },
         "headless_author_gates": { "const": "typed-unavailable" }
       }
     },

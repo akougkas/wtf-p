@@ -50,6 +50,20 @@ const PACKAGE_PATHS = ['bin', 'protocol', 'vendors', 'clio', 'evaluation', 'scri
 const NETWORK_TOOLS = new Set(['web_fetch', 'web_read']);
 // Clio's switches for a step: no retrieval tools, and every Clio directory under the run's CLIO_CODER_HOME.
 const STEP_GUARDS = { CLIO_CODER_DISABLE_RETRIEVE_TOOLS: '1', CLIO_CODER_REQUIRE_HOME_PREFIX: '1' };
+// Tools that run a program. At default autonomy Clio runs recognized test
+// runners on files the model wrote without asking, and verify runs whatever
+// check files declare, so no step holds one; a call to one is a policy violation.
+const EXECUTION_TOOLS = new Set(['bash', 'run_script', 'job', 'verify', 'git']);
+// The main agent's tools in a step (--allow-tools): reading, the desk-guarded
+// writes, orchestration, the author's interview and the desk's own tools.
+const MAIN_TOOLS = Object.freeze([
+  'read', 'evidence', 'grep', 'find', 'ls', 'code_nav', 'context', 'self_compact', 'clio_docs', 'clio_library', 'memory_recall',
+  'write', 'edit', 'artifact', 'dispatch', 'monitor', 'steer', 'tasks', 'ledger', 'limitation', 'decide', 'ask_user', 'gateway',
+  ...['record', 'read_record', 'readiness', 'measure_section', 'gate'].map(tool => `extension_wtfp__${tool}`)
+]);
+// The tools a dispatched worker may hold (--delegate-tools): exactly what the
+// WTF-P recipes declare. Clio refuses a worker whose recipe declares more.
+const WORKER_TOOLS = Object.freeze(['read', 'grep', 'find', 'ls', 'context', 'ledger', 'limitation', 'write', 'edit']);
 const GIT_ENV = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
 
 function sha256(data) {
@@ -294,6 +308,22 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   };
 }
 
+/** Each installed WTF-P Clio recipe tool that a campaign step's workers may not hold, as `agent: tool`. */
+function recipeToolsOutside(pluginRoot) {
+  const agents = path.join(pluginRoot, 'ai.iowarp.clio', 'agents');
+  const files = fs.existsSync(agents) ? fs.readdirSync(agents).filter(name => /^wtfp-.+\.md$/u.test(name)).sort() : [];
+  if (files.length === 0) return [`no WTF-P recipes under ${agents}`];
+  const outside = [];
+  for (const file of files) {
+    const declared = /^tools:\s*\{required:\s*\[(.*)\],\s*optional:\s*\[(.*)\]\}\s*$/mu.exec(fs.readFileSync(path.join(agents, file), 'utf8'));
+    if (!declared) { outside.push(`${file}: tools not declared in the form this check reads`); continue; }
+    for (const tool of `${declared[1]},${declared[2]}`.replace(/\{anyOf:\s*\[|\]\}/gu, '').split(',').map(name => name.trim()).filter(Boolean)) {
+      if (!WORKER_TOOLS.includes(tool)) outside.push(`${file.replace(/\.md$/u, '')}: ${tool}`);
+    }
+  }
+  return outside;
+}
+
 function prepare(campaign, options) {
   const identity = clioIdentity(options.entry, campaign);
   if (identity.mismatches.length > 0 && !options.allowUnpinned) {
@@ -355,6 +385,9 @@ function prepare(campaign, options) {
     const graph = native(['playbook', 'graph', playbook, '--json'], workspace);
     record(`playbook-graph-${playbook}`, graph, graph.status === 0 && !/"\.planning\/"/u.test(graph.stdout), null);
   }
+  // Clio refuses a worker whose recipe declares a tool beyond --delegate-tools, so a recipe that outgrew them fails here, not mid-run.
+  const outside = plugin ? recipeToolsOutside(plugin.rootPath) : ['plugin root unavailable'];
+  checks.push({ name: 'worker-recipes-within-delegated-tools', passed: outside.length === 0, detail: outside.length ? outside.join('; ') : `${WORKER_TOOLS.join(',')}` });
   const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).CLIO_CODER_CONFIG_DIR, 'extensions', 'wtfp');
   const deskTests = native(['extensions', 'test', deskRoot], workspace, 600000);
   const passed = deskTestsPassed(deskTests);
@@ -563,8 +596,8 @@ function effortObservation(messages, receipts) {
 /**
  * One step's outcome from its process result, its JSON event stream, the
  * receipts Clio sealed for it and the project state it left, all judged
- * structurally. A step that ran a network tool or reached for the seal store
- * violated the campaign's policy. A recorded answer no sealed author answer
+ * structurally. A step that ran a network tool, ran a program, or reached for
+ * the seal store violated the campaign's policy. A recorded answer no sealed author answer
  * stands behind, or an interaction record added by a headless step, which no
  * author could have given, is an integrity violation. A step that failed is
  * failed whatever else it left. A blocking gate still pending is an author the
@@ -585,20 +618,33 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
   let networkCalls = 0;
   let storeCalls = 0;
   let blockedCalls = 0;
+  // A program-running call counts unless Clio blocked it; a worker's count comes from its sealed receipt.
+  const executing = new Map();
   for (const event of events) {
     if (event.type === 'tool_execution_start') {
       const name = String(event.toolName ?? event.tool ?? event.name ?? 'unknown');
       tools[name] = (tools[name] || 0) + 1;
       if (NETWORK_TOOLS.has(name)) networkCalls += 1;
       if (STORE_ACCESS.test(JSON.stringify(event.args ?? {}))) storeCalls += 1;
-    } else if (event.type === 'tool_execution_end' && event.outcome === 'blocked') blockedCalls += 1;
+      if (EXECUTION_TOOLS.has(name)) executing.set(event.toolCallId ?? Symbol(name), name);
+    } else if (event.type === 'tool_execution_end' && event.outcome === 'blocked') {
+      blockedCalls += 1;
+      executing.delete(event.toolCallId);
+    }
+  }
+  let executionCalls = executing.size;
+  for (const { receipt } of receipts) {
+    if (!receipt || receipt.agentId === 'main-agent' || !Array.isArray(receipt.toolStats)) continue;
+    for (const stat of receipt.toolStats) {
+      if (stat && EXECUTION_TOOLS.has(stat.tool)) executionCalls += Math.max(0, (Number(stat.count) || 0) - (Number(stat.blocked) || 0));
+    }
   }
   const messages = events.filter(event => event.type === 'message_end' && event.message && event.message.role === 'assistant').map(event => event.message);
   const gated = Boolean(context.step && context.step.author_gate);
   let outcome = 'completed';
   if (context.cancelled || (result.signal && !result.timedOut)) outcome = 'cancelled';
   else if (result.timedOut) outcome = 'timed-out';
-  else if (networkCalls > 0 || storeCalls > 0) outcome = 'policy-violation';
+  else if (networkCalls > 0 || storeCalls > 0 || executionCalls > 0) outcome = 'policy-violation';
   else if (gates.unconfirmed.length > 0 || added.length > 0) outcome = 'integrity-violation';
   else if (result.exitCode !== 0) outcome = 'failed';
   else if (gates.pending.length > 0) outcome = 'author-unavailable';
@@ -615,7 +661,7 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     // A provider error is not a model's output, so it is not counted as an observed call.
     model_calls: messages.filter(message => message.stopReason !== 'error').length +
       receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent' && servedRows(receipt).length > 0).length,
-    tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, blocked_calls: blockedCalls },
+    tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, execution_calls: executionCalls, blocked_calls: blockedCalls },
     gates,
     interactions_added: added,
     observed_models: models.reported,
@@ -1054,12 +1100,16 @@ async function execute(campaign, options) {
     wtfp: bound.wtfp,
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
-    step_environment: { ...STEP_GUARDS, network_sandbox: 'none: retrieval tools are removed, but bash and provider traffic are not sandboxed' },
+    step_environment: {
+      ...STEP_GUARDS,
+      tools: { main: MAIN_TOOLS, delegated: WORKER_TOOLS },
+      network_sandbox: 'none: retrieval and program-running tools are withheld, and provider traffic is not sandboxed'
+    },
     // What this record can and cannot vouch for, stated in every run so no reader takes bookkeeping for isolation.
     isolation: {
       steps_run_as: 'the operator\'s own OS user, with no sandbox',
-      model_code_execution: 'possible: at default autonomy Clio 0.6.2 runs recognized test runners, such as node --test, on files the model wrote, without approval',
-      record_integrity: 'tamper-evident against accidents and naive tampering; a step that runs code can defeat any of these checks'
+      model_code_execution: 'withheld: neither the main agent nor any worker holds bash, run_script, job, git or verify (step_environment.tools), and a call to one is a policy violation',
+      record_integrity: 'tamper-evident against accidents and naive tampering; with no OS sandbox these checks rest on Clio enforcing the tool limits'
     },
     timeout_minutes: timeoutMinutes,
     resources,
@@ -1161,7 +1211,8 @@ async function execute(campaign, options) {
       const startDigest = workspaceDigest(workspace);
       const result = await spawnCaptured({
         executable: process.execPath,
-        argv: [options.entry, 'run', '--target', options.target, '--model', options.model, '--thinking', options.effort, '--autonomy', campaign.permissions.autonomy, '--json-events', 'full', prompt(step)],
+        argv: [options.entry, 'run', '--target', options.target, '--model', options.model, '--thinking', options.effort, '--autonomy', campaign.permissions.autonomy,
+          '--allow-tools', MAIN_TOOLS.join(','), '--delegate-tools', WORKER_TOOLS.join(','), '--json-events', 'full', prompt(step)],
         cwd: workspace,
         env,
         stdoutFile: path.join(logs, 'stdout.jsonl'),
@@ -1375,6 +1426,9 @@ if (require.main === module) {
 }
 
 module.exports = {
+  EXECUTION_TOOLS,
+  MAIN_TOOLS,
+  WORKER_TOOLS,
   canonical,
   classifyStep,
   clioIdentity,
@@ -1391,6 +1445,7 @@ module.exports = {
   plan,
   prepare,
   profilePaths,
+  recipeToolsOutside,
   settingsSecrets,
   verifySeal,
   workspaceDigest,

@@ -735,7 +735,7 @@ function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
   ].join('\n');
 }
 
-function renderMarkdownCommand(action, workflowBody, target, availability, deskTools = false) {
+function renderMarkdownCommand(action, workflowBody, target, availability, deskTools = false, reviewers = new Set()) {
   const lines = ['---'];
   // Claude derives the stable command name from the plugin id and flat file
   // name. Repeating either in frontmatter creates names such as
@@ -759,7 +759,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target, deskTools);
   const clioRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
-  const userGateBody = target === 'clio' ? [clioUserGateBody(action, deskTools), clioResearchConnectionBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
+  // Clio refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
+  const clioReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`wtfp-${entry.role}\``);
+  const reviewerPhrasing = clioReviewers.length ? ` ${clioReviewers.join(', ')} ${clioReviewers.length === 1 ? 'is' : 'are'} read-only: begin each task for ${clioReviewers.length === 1 ? 'it' : 'them'} with "Review", because Clio refuses a read-only agent a task it reads as a change.` : '';
+  const userGateBody = target === 'clio' ? [clioUserGateBody(action, deskTools), clioResearchConnectionBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -926,12 +929,13 @@ function renderCopilotCloudRole(role, slug) {
 
 function renderClioRole(role, slug) {
   const verifier = role.fields.execution_class === 'verifier-report';
+  // Verifier roles judge text and run nothing, so their recipes are Clio's
+  // read-only class: no write, no shell and no verify, whose checks run
+  // commands from files a writer could have planted.
   const required = verifier
-    ? '[verify, context]'
+    ? '[read, context]'
     : '[read, context, limitation, {anyOf: [write, edit]}]';
-  const optional = verifier
-    ? '[read, grep, find, ls, ledger]'
-    : '[grep, find, ls, ledger]';
+  const optional = '[grep, find, ls, ledger]';
   const nativeResult = verifier
     ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each ordinary evidence value to one short sentence (the wtfp.role-result entry contains compact serialized JSON), keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
@@ -944,7 +948,7 @@ function renderClioRole(role, slug) {
     `skills: [${ROLE_SKILLS[slug]}]`,
     'audience: custom',
     `category: ${verifier ? 'quality' : slug.includes('citation') || slug.includes('research') ? 'research' : slug.includes('plan') || slug === 'outliner' ? 'plan' : 'implement'}`,
-    `capabilityClass: ${verifier ? 'verification' : 'workspace-edit'}`,
+    `capabilityClass: ${verifier ? 'read-only' : 'workspace-edit'}`,
     `latencyClass: ${verifier ? 'fast' : 'balanced'}`,
     'projectContextTier: bounded',
     `budget: {toolCalls: ${verifier ? 24 : 64}, readReserve: ${verifier ? 4 : 8}, synthesis: true}`,
@@ -1291,8 +1295,8 @@ function manuscriptGuardActions(model, availabilityById, host) {
 // contract does not declare. `paperWriters` are the Clio agent IDs of the
 // writing roles that manuscript-producing actions dispatch; the desk confines
 // them to manuscripts whose sections are ready to draft. `readOnlyAgents` are
-// the verifier roles, whose Clio recipes carry no file-writing tool, so the
-// desk may dispatch them without write roots.
+// the verifier roles, whose Clio recipes are read-only class and carry no
+// write, shell or verify tool, so the desk may dispatch them without write roots.
 function clioWriteGuard(model, availabilityById) {
   const available = model.actions.filter((action) => availabilityById.get(action.id).available);
   if (!available.some((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))) {
@@ -1991,10 +1995,11 @@ function compilePlans(options = {}) {
   addFile(gemini, 'gemini-extension.json', geminiManifest(model.version));
   addFile(gemini, 'GEMINI.md', '# WTF-P\n\nUse the bundled Agent Skills and portable protocol for evidence-grounded academic work.\n');
 
+  const reviewers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
   for (const action of model.actions) {
     addFile(clio, `prompts/wtfp/${action.id}.md`, action.id === 'help'
       ? clioHelpCard(model, availabilityByTarget.get('clio'))
-      : renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id)));
+      : renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id), false, reviewers));
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
     addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
     addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
@@ -2028,7 +2033,7 @@ function compilePlans(options = {}) {
     const usesRecords = action && action.produces.some((output) =>
       /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
     const projected = usesRecords && availabilityByTarget.get('clio').get(actionId).available
-      ? renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(actionId), true)
+      ? renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(actionId), true, reviewers)
       : content;
     addFile(portable, native ? `ai.iowarp.clio/${file}` : file, projected);
   }

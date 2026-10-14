@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "24cb9a515866bd215646f8d913c9647de5f52aafb4a674ca06140daf7005353d",
+  "sourceHash": "e97fb2dfd95af7e345f380880945846ca8dae6b13afa27be93dc104a26fb6741",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -202,7 +202,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-argument-verifier.md",
-      "sha256": "2c116fca5ad174ab7901d81c3f86e083d27be56ceaa0c5c3b8a9c4070fd05905"
+      "sha256": "1670d0788dd2a8de94706e903201e51117f43b85c8eeb3a723f30063ccac3009"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-citation-expert.md",
@@ -214,7 +214,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-coherence-checker.md",
-      "sha256": "90ca5168e8b80f48acd4714e097f7cf01011e3f1439946263fac2ac0d0f76e7c"
+      "sha256": "4737bdca79c823c9250e85f9811da81da34f7b36c5a5c2b97b16855ee69bdc67"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-outliner.md",
@@ -222,7 +222,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-plan-checker.md",
-      "sha256": "e6c92845a6a1829101ad5987057c269e4c37a3205fe439ed764aeaa58e4d6501"
+      "sha256": "357ce28e07388b3caa9ecfe8434a3c17b68672a3a874736d74add63b98d17cf0"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-prose-polisher.md",
@@ -238,7 +238,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-reviewer.md",
-      "sha256": "a94d9e3329aae4d9e6deff00ddca06dc9a3c69ed81761a0deb5f9af58b4574f5"
+      "sha256": "1e5f96213105334db81e7a129202751f79e80fe3ec68e33bce14ddc52c016444"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-writer.md",
@@ -298,7 +298,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
-      "sha256": "993c22dc62ccac9d984af27b140b7ba4106f464effee08427c314ca565652736"
+      "sha256": "14e002811c5447f2500a2b651f0c4c7565b886e7be51af82678ddc1105c79d32"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/export-latex.md",
@@ -338,7 +338,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "a2cf5475ab364eef3322ca5904ada3611bc13679aabe7e561aaa6c0c2b10faef"
+      "sha256": "caf8b81ab3dcfda42829d9c0c6992e73712bf1e17e5cae099874cab75c686e2a"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
@@ -374,7 +374,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/review-section.md",
-      "sha256": "92937c7d5aa13ad2176bf5ac8238f88244a78e987e11cda9c14e0d800752dcda"
+      "sha256": "805209a8730a1a6b8d06870872068dc478eb29d083711fd08bb581ea05c954ae"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/settings.md",
@@ -394,7 +394,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "529755ba8e272aa8a43659af1a2ca735d6436e73be4413dee53d8dc37c1db3c5"
+      "sha256": "d12f5f51bad476fb2395054ff6019cec6decc5334aa6ea57fe9ceffb79611933"
     },
     {
       "path": "aliases.lock.json",

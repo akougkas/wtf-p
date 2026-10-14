@@ -51,6 +51,7 @@
   "permissions": {
     "autonomy": "default",
     "network": "none",
+    "code_execution": "denied",
     "headless_author_gates": "typed-unavailable"
   },
   "budget": {

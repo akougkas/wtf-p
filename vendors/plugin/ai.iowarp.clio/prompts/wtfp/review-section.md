@@ -50,7 +50,7 @@ For a pending checkpoint in the declared gate's exact scope, call `extension_wtf
 
 ## Clio role-result binding
 
-Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-section-reviewer`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
+Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-section-reviewer`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles. `wtfp-section-reviewer` is read-only: begin each task for it with "Review", because Clio refuses a read-only agent a task it reads as a change.
 
 Read the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.
 

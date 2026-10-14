@@ -57,16 +57,21 @@ text and action contracts changed.
   claim ids support nothing; citations, in every LaTeX `cite` form too, must
   resolve to one verified source of the project
 - Campaign `execute` refuses any drift from what `prepare` bound, launcher and
-  installed packages included, runs steps without retrieval tools, and records
+  installed packages included, runs steps with Clio tool allowlists that hold
+  no shell, script, job, git, verify or retrieval tool, and records
   per step the provider-reported models, the resolved thinking level, cost
   from Clio's sealed receipts by provenance, gate state and workspace digest;
   a gated step that raises no gate, or a headless step that adds an
   interaction record, never counts as completed, and an unfinished run exits
   non-zero; the desk's seal key is held in the runner's memory while steps
   run, every process a step leaves behind is stopped, and the whole Clio
-  package root is bound; this is same-user bookkeeping, not isolation, and
-  every run record and the capability docs say that a headless step can run
-  model-written code through Clio's recognized test runners
+  package root is bound; a program-running call is a policy violation, and
+  `prepare` fails when an installed recipe declares a tool a step's workers
+  may not hold; steps still run as the operator's user without an OS sandbox,
+  and every run record says so
+- Clio reviewer recipes are Clio's `read-only` class instead of
+  `verification`, so they no longer hold `verify`, whose checks run commands
+  from files a writer could plant
 - Seven action contracts now declare record writes their workflows already
   made; plan-section and write-section route missing evidence to `research-gap`
   through a checkpoint instead of running it inline

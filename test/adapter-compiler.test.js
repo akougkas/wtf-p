@@ -1212,7 +1212,20 @@ record('research handoff declares incremental state and preserves native decisio
     assert.match(body, /entry named wtfp.role-result/);
     assert.match(body, /status needs_input/);
     assert.match(body, /Embedded portable result schema:/);
+    // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
+    const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
+    assert.ok(tools, `${role}: Clio recipe declares its tools`);
+    const declared = `${tools[1]}, ${tools[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
+    for (const tool of ['bash', 'verify', 'run_script', 'job', 'git']) {
+      assert.ok(!declared.includes(tool), `${role}: Clio recipe must not hold ${tool}`);
+    }
+    if (/resultContract: \{kind: verifier-report\}/.test(body)) {
+      assert.match(body, /^capabilityClass: read-only$/m, `${role}: a reviewer recipe is Clio's read-only class`);
+      assert.deepStrictEqual(declared.filter((tool) => ['write', 'edit', 'artifact'].includes(tool)), [], `${role}: a reviewer recipe holds no write tool`);
+    }
   }
+  assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
+  assert.doesNotMatch(planText(clio, 'prompts/wtfp/create-outline.md'), /is read-only: begin each task/);
   assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
   for (const role of EXPECTED_ROLES) {
     const body = planText(plansById.get('claude'), `agents/wtfp-${role}.md`);
