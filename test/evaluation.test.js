@@ -400,7 +400,15 @@ function testPlanningValidator(tempRoot) {
   fs.writeFileSync(path.join(project, 'paper', `${sectionRecord.id}.md`), 'Cites [@Nobody2020].\n');
   assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved'));
   fs.rmSync(path.join(project, 'paper'), { recursive: true });
+  // A drafted section whose manuscript link names no file under paper/ is reported, not skipped.
+  fs.writeFileSync(sectionFile, `${JSON.stringify({ ...sectionRecord, status: 'writing', artifacts: { ...sectionRecord.artifacts, manuscript: 'project://materials/notes' } }, null, 2)}\n`);
+  assert(supportNow().findings.some(finding => finding.code === 'manuscript-unread' && /under paper/.test(finding.message)));
   fs.writeFileSync(sectionFile, `${JSON.stringify(sectionRecord, null, 2)}\n`);
+  // An outline section with no record yet still has its conventional manuscript checked.
+  fs.mkdirSync(path.join(project, 'paper'));
+  fs.writeFileSync(path.join(project, 'paper', 'implementation.md'), 'Cites [@Nobody2020].\n');
+  assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved' && finding.subject === 'project://sections/implementation'));
+  fs.rmSync(path.join(project, 'paper'), { recursive: true });
   // Only .planning/project.json says which project this is; a stray manifest elsewhere does not.
   const strayManifest = path.join(planning, 'aaa-manifest.json');
   fs.writeFileSync(strayManifest, `${JSON.stringify({ ...readJson(path.join(planning, 'project.json')), id: 'another-project' }, null, 2)}\n`);

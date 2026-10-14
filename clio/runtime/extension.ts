@@ -639,7 +639,10 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	});
 	// A manuscript that exists but cannot be read safely, or that a drafted section lacks, leaves its citations unchecked.
 	const unread = loaded.flatMap((item) => {
-		if (item.manuscript === null || item.source !== null) return [];
+		if (item.source !== null) return [];
+		const drafted = ["writing", "reviewing", "complete"].includes(text(item.record?.status));
+		if (item.manuscript === null)
+			return drafted ? [{ section: item.id, file: text((item.artifacts as Json).manuscript), reason: "its manuscript link does not name a file under paper/" }] : [];
 		let present = false;
 		try {
 			lstatSync(path.join(workspace, item.manuscript));

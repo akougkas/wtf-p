@@ -242,6 +242,32 @@ function nativeRunner(root, entry, session = 'S1') {
   };
 }
 
+/**
+ * SHA-256 over a tree as it stands: every file's bytes, every link's target
+ * (never followed) and every directory, so a package manager's link farm is
+ * covered without being walked twice. Null when the tree does not exist.
+ */
+function treeDigest(root) {
+  if (!root || !fs.existsSync(root)) return null;
+  const hash = crypto.createHash('sha256');
+  const visit = (relative) => {
+    const entries = fs.readdirSync(path.join(root, relative), { withFileTypes: true })
+      .sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0));
+    for (const entry of entries) {
+      const child = relative ? `${relative}/${entry.name}` : entry.name;
+      const absolute = path.join(root, child);
+      if (entry.isSymbolicLink()) hash.update(`${JSON.stringify(['link', child, fs.readlinkSync(absolute)])}\n`);
+      else if (entry.isDirectory()) {
+        hash.update(`${JSON.stringify(['dir', child])}\n`);
+        visit(child);
+      } else if (entry.isFile()) hash.update(`${JSON.stringify(['file', child, sha256(fs.readFileSync(absolute))])}\n`);
+      else hash.update(`${JSON.stringify(['other', child])}\n`);
+    }
+  };
+  visit('');
+  return hash.digest('hex');
+}
+
 /** The desk's package tests passed only if the run exited 0 and reported no failure. */
 function deskTestsPassed(result) {
   return result.status === 0 && /ℹ fail 0\b/u.test(`${result.stdout}${result.stderr}`) && /ℹ pass [1-9]/u.test(`${result.stdout}${result.stderr}`);
@@ -258,6 +284,8 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
     entry,
     entry_sha256: entry && fs.existsSync(entry) ? sha256(fs.readFileSync(entry)) : null,
     dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(path.dirname(path.dirname(entry))) : null,
+    // The build loads its dependencies from the Clio package's node_modules, beside dist/.
+    dependencies_sha256: entry ? treeDigest(path.join(path.dirname(path.dirname(path.dirname(entry))), 'node_modules')) : null,
     wrapper_sha256: fs.existsSync(wrapper) ? sha256(fs.readFileSync(wrapper)) : null,
     plugin_root: pluginRoot,
     plugin_sha256: digest(pluginRoot),
@@ -494,7 +522,8 @@ function modelObservation(messages, receipts, selected) {
   const workers = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId !== 'main-agent');
   const calls = [
     // Clio records a provider's report on the message itself for some API families and as responseModel for others.
-    ...messages.map(message => reportedModel(message.responseModelIdObservation) ?? (typeof message.responseModel === 'string' ? message.responseModel : null)),
+    // A provider error is not a served call.
+    ...messages.filter(message => message.stopReason !== 'error').map(message => reportedModel(message.responseModelIdObservation) ?? (typeof message.responseModel === 'string' ? message.responseModel : null)),
     // A run-aggregate row sums a worker's calls; it is not one more call.
     ...workers.flatMap(receipt => (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : [])
       .filter(response => response && response.usageScope !== 'run-aggregate')
@@ -687,18 +716,37 @@ function holdStore(file) {
   return bytes;
 }
 
-/** Puts the held key back; a store a step created in the meantime is set aside and reported. */
-function restoreStore(file, bytes) {
-  let recreated = null;
-  if (fs.existsSync(file)) {
-    recreated = `${file}.made-during-run-${crypto.randomUUID()}`;
-    fs.renameSync(file, recreated);
+/**
+ * Puts the held key back without following anything a step planted: every
+ * directory from the run root down must be a real directory, and any entry a
+ * step left at the store's path, a dangling link included, is set aside and
+ * reported before the key is written to a new file. Returns what was set aside.
+ */
+function restoreStore(root, file, bytes) {
+  const asides = [];
+  const setAside = (target) => {
+    const aside = `${target}.made-during-run-${crypto.randomUUID()}`;
+    fs.renameSync(target, aside);
+    asides.push(aside);
+  };
+  const statOf = (target) => {
+    try {
+      return fs.lstatSync(target);
+    } catch {
+      return null;
+    }
+  };
+  let current = root;
+  for (const part of path.relative(root, path.dirname(file)).split(path.sep)) {
+    current = path.join(current, part);
+    const stat = statOf(current);
+    if (stat && stat.isDirectory()) continue;
+    if (stat) setAside(current);
+    fs.mkdirSync(current, { mode: 0o700 });
   }
-  if (bytes !== null) {
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, bytes, { mode: 0o600 });
-  }
-  return recreated;
+  if (statOf(file)) setAside(file);
+  if (bytes !== null) fs.writeFileSync(file, bytes, { flag: 'wx', mode: 0o600 });
+  return asides;
 }
 
 /** Secret-looking values in the operator's credentials, to search the run's own logs for. */
@@ -707,26 +755,120 @@ function secretTokens(text, minimum = 8) {
 }
 
 const SECRET_KEY = /auth|header|token|secret|passw|api[-_]?key|bearer|cookie|credential/iu;
+// Fields of Clio's credential records that are not secret (src/domains/providers/auth/storage.ts).
+const CREDENTIAL_FIELDS_IN_CLEAR = new Set(['type', 'updatedAt', 'expires', 'expiresAt', 'createdAt']);
+
+const unquote = (value) => value.trim().replace(/^(["'])([\s\S]*)\1$/u, '$2');
+
+/** Scalars of a YAML flow collection (`{ a: { b: c } }`, `[x, y]`) with the keys above each. */
+function flowScalars(text, base, out) {
+  const stack = [...base];
+  const frames = [];
+  let pending = null;
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index];
+    if (char === '{' || char === '[') {
+      frames.push(pending);
+      if (pending !== null) stack.push(pending);
+      pending = null;
+      index += 1;
+    } else if (char === '}' || char === ']') {
+      if (frames.pop() != null) stack.pop();
+      pending = null;
+      index += 1;
+    } else if (char === ',' || /\s/u.test(char)) {
+      index += 1;
+    } else {
+      let token;
+      if (char === '"' || char === "'") {
+        const end = text.indexOf(char, index + 1);
+        token = text.slice(index + 1, end < 0 ? text.length : end);
+        index = end < 0 ? text.length : end + 1;
+      } else {
+        let end = index;
+        while (end < text.length && !',{}[]'.includes(text[end]) && !(text[end] === ':' && /\s|$/u.test(text[end + 1] ?? ''))) end += 1;
+        token = text.slice(index, end).trim();
+        index = end;
+      }
+      while (text[index] === ' ') index += 1;
+      if (text[index] === ':') {
+        pending = token;
+        index += 1;
+      } else {
+        out.push({ path: pending === null ? [...stack] : [...stack, pending], value: token });
+        pending = null;
+      }
+    }
+  }
+}
 
 /**
- * The values in a settings file that sit under an authentication key. Model
- * ids and URLs stay out: redacting them would erase the very evidence a run
- * records about which model it called.
+ * Every scalar value in a small YAML document with the keys above it: block
+ * mappings and sequences by indentation, block scalars (`|`, `>`), and flow
+ * collections. Enough for Clio's settings and credentials files; anything it
+ * cannot place is kept under the keys it has, never dropped.
+ */
+function yamlScalars(text) {
+  const out = [];
+  const stack = [];
+  const lines = text.split(/\r?\n/u);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const indent = line.length - line.trimStart().length;
+    while (stack.length > 0 && stack[stack.length - 1].indent >= indent) stack.pop();
+    let body = trimmed;
+    let itemIndent = indent;
+    while (body === '-' || body.startsWith('- ')) {
+      body = body.slice(1).trimStart();
+      itemIndent += 2;
+    }
+    const keys = stack.map(entry => entry.key);
+    const pair = /^("[^"]*"|'[^']*'|[^:{}[\],#][^:#]*?)\s*:(?:\s+(.*))?$/u.exec(body);
+    if (!pair) {
+      if (body.startsWith('{') || body.startsWith('[')) flowScalars(body, keys, out);
+      else if (body) out.push({ path: keys, value: unquote(body.replace(/\s+#.*$/u, '')) });
+      continue;
+    }
+    const key = unquote(pair[1]);
+    const value = (pair[2] ?? '').replace(/\s+#.*$/u, '').trim();
+    const here = [...keys, key];
+    if (/^[|>][+-]?[0-9]?$/u.test(value)) {
+      const block = [];
+      while (index + 1 < lines.length && (!lines[index + 1].trim() || lines[index + 1].length - lines[index + 1].trimStart().length > itemIndent)) {
+        index += 1;
+        block.push(lines[index].trim());
+      }
+      out.push({ path: here, value: block.join(' ').trim() });
+    } else if (value.startsWith('{') || value.startsWith('[')) {
+      flowScalars(value, here, out);
+    } else if (value) {
+      out.push({ path: here, value: unquote(value) });
+    } else {
+      stack.push({ indent: itemIndent > indent ? itemIndent : indent, key });
+    }
+  }
+  return out;
+}
+
+/**
+ * The values in a settings file that sit under an authentication key, in any
+ * YAML form. Model ids and URLs stay out: redacting them would erase the very
+ * evidence a run records about which model it called.
  */
 function settingsSecrets(text) {
-  const stack = [];
-  const values = [];
-  for (const line of text.split('\n')) {
-    const match = /^(\s*)(?:-\s*)?([^:#\s][^:#]*?)\s*:\s*(.*?)\s*$/u.exec(line);
-    if (!match) continue;
-    const indent = match[1].length;
-    while (stack.length > 0 && stack[stack.length - 1].indent >= indent) stack.pop();
-    stack.push({ indent, key: match[2] });
-    const value = match[3].replace(/^["']|["']$/gu, '');
-    if (value && stack.some(entry => SECRET_KEY.test(entry.key))) values.push(value);
-  }
-  return values.flatMap(value => secretTokens(value));
+  return yamlScalars(text).filter(entry => entry.path.some(key => SECRET_KEY.test(key))).flatMap(entry => secretTokens(entry.value));
 }
+
+/** The values of Clio's credential records, never their provider names, types or timestamps. */
+function credentialSecrets(text) {
+  return yamlScalars(text)
+    .filter(entry => entry.path.length > 0 && !CREDENTIAL_FIELDS_IN_CLEAR.has(entry.path[entry.path.length - 1]))
+    .flatMap(entry => secretTokens(entry.value));
+}
+
 
 /**
  * Searches files under `directory` for the operator's secret values. With
@@ -769,7 +911,7 @@ function verifyLauncher(root, prepared, entry) {
   const bound = prepared.launcher;
   if (!bound) throw new Error('the prepared root records no launcher identity; prepare a new root');
   const now = launcherIdentity(root, entry, bound.plugin_root, bound.desk_root);
-  for (const key of ['entry', 'entry_sha256', 'dist_sha256', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
+  for (const key of ['entry', 'entry_sha256', 'dist_sha256', 'dependencies_sha256', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
     if (now[key] !== bound[key]) throw new Error(`the launcher changed since prepare (${key}); prepare a new root`);
   }
 }
@@ -836,7 +978,7 @@ async function execute(campaign, options) {
   ];
   // Every credential value is a secret, and so is a settings value under an auth key, such as a target's headers.
   const secrets = [...new Set([
-    ...secretTokens(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8')),
+    ...credentialSecrets(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8')),
     ...settingsSecrets(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'))
   ])];
   const receipts = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'receipts');
@@ -884,11 +1026,11 @@ async function execute(campaign, options) {
     run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
     // Nothing a step left running may outlive the run, and the key returns only after it is gone.
     run.processes_swept_at_end = attempt('sweep', () => sweepRun(marker)) ?? { swept: false, killed: [] };
-    const made = attempt('seal store', () => restoreStore(storeFile, held));
-    if (made) integrity.push(`a seal store was created during the run and set aside as ${path.relative(root, made)}`);
+    const made = attempt('seal store', () => restoreStore(root, storeFile, held)) ?? [];
+    for (const aside of made) integrity.push(`a seal store or its directory was created or replaced during the run and set aside as ${path.relative(root, aside)}`);
     run.seal_store = { held_during_run: held !== null, restored: held !== null && !integrity.some(item => item.startsWith('seal store')) };
-    const unwiped = attempt('wipe', () => wipePrivate(config)) ?? [];
-    run.credentials_removed = fs.existsSync(config) && !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name) && fs.lstatSync(path.join(config, name)).isFile());
+    const unwiped = attempt('wipe', () => wipePrivate(config)) ?? ['the configuration directory could not be read'];
+    run.credentials_removed = attempt('wipe check', () => fs.existsSync(config) && !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name) && fs.lstatSync(path.join(config, name)).isFile())) ?? false;
     if (unwiped.length > 0) run.unwiped = unwiped;
     const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => attempt('redaction', () => scanSecrets(directory, secrets, true)) ?? { found: [], unscanned: [directory] });
     const workspaceSecrets = attempt('workspace scan', () => scanSecrets(workspace, secrets, false)) ?? { found: [], unscanned: [workspace] };
@@ -899,12 +1041,16 @@ async function execute(campaign, options) {
     };
     // The run's own records are the runner's: a step that wrote or changed them tampered with the evidence.
     const target = path.join(root, 'run.json');
-    if (fs.existsSync(target)) {
+    attempt('run record', () => {
+      let stat = null;
+      try { stat = fs.lstatSync(target); } catch { /* not there, as it should be */ }
+      if (!stat) return;
       const aside = `run.json.written-during-run-${crypto.randomUUID()}`;
       fs.renameSync(target, path.join(root, aside));
       integrity.push(`run.json was written during the run and set aside as ${aside}`);
-    }
-    if (sha256(fs.readFileSync(preparedFile)) !== preparedSha) integrity.push('prepared.json changed during the run');
+    });
+    const preparedNow = attempt('prepared record', () => sha256(fs.readFileSync(preparedFile)));
+    if (preparedNow !== undefined && preparedNow !== preparedSha) integrity.push('prepared.json changed during the run');
     if (integrity.length > 0) {
       run.integrity = integrity;
       run.outcome = 'integrity-violation';
@@ -1153,6 +1299,7 @@ module.exports = {
   clioIdentity,
   collect,
   confirmValue,
+  credentialSecrets,
   deskTestsPassed,
   directoryDigest,
   execute,
@@ -1163,6 +1310,7 @@ module.exports = {
   plan,
   prepare,
   profilePaths,
+  settingsSecrets,
   verifySeal,
   workspaceDigest,
   workspaceHead,

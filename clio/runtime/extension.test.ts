@@ -565,6 +565,10 @@ test("literature-heavy sections wait for verified evidence behind their required
 		rmSync(path.join(workspace, "paper/introduction.md"));
 		symlinkSync(path.join(workspace, ".planning/project.json"), path.join(workspace, "paper/introduction.md"));
 		assert.match((await host.command("validate")).text, /manuscript-unread project:\/\/sections\/introduction/);
+		// A drafted section whose manuscript link names nothing under paper/ is reported too.
+		const linked2 = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", { ...linked2, status: "writing", artifacts: { ...(linked2.artifacts as Json), manuscript: "project://materials/notes" } });
+		assert.match((await host.command("validate")).text, /manuscript-unread project:\/\/sections\/introduction: project:\/\/materials\/notes could not be checked/);
 	}, SERVED));
 
 test("a section file counts only for the section whose id names its directory", () =>

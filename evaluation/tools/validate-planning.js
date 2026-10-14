@@ -195,7 +195,11 @@ function coverageForRoot(resolved, validation) {
     // A section without its own manuscript link writes the conventional one, as the desk resolves it.
     const linked = record.artifacts && record.artifacts.manuscript;
     const uri = typeof linked === 'string' ? linked : `project://paper/${record.id}`;
-    if (!uri.startsWith('project://paper/')) continue;
+    const drafted = ['writing', 'reviewing', 'complete'].includes(record.status);
+    if (!uri.startsWith('project://paper/')) {
+      if (drafted) unread.push({ section: record.id, file: uri, reason: 'its manuscript link does not name a file under paper/' });
+      continue;
+    }
     const artifact = uri.slice('project://paper/'.length);
     if (artifact.split('/').some(part => part === '' || part === '.' || part === '..')) {
       unread.push({ section: record.id, file: uri, reason: 'it does not name a contained file' });
@@ -213,8 +217,20 @@ function coverageForRoot(resolved, validation) {
       manuscripts.push({ section: record.id, file: `paper/${found.candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', found.candidate), 'utf8') });
     } else if (found) {
       unread.push({ section: record.id, file: `paper/${found.candidate}`, reason: 'it is a link or not a regular file' });
-    } else if (['writing', 'reviewing', 'complete'].includes(record.status)) {
+    } else if (drafted) {
       unread.push({ section: record.id, file: uri, reason: `the section is ${record.status} but its manuscript does not exist` });
+    }
+  }
+  // An outline section with no record yet still owns its conventional manuscript, and the desk reads it.
+  const recorded = new Set(sections.map(({ record }) => record.id));
+  for (const entry of projectRoot && outline && Array.isArray(outline.sections) ? outline.sections : []) {
+    if (typeof entry.id !== 'string' || recorded.has(entry.id)) continue;
+    for (const candidate of [`${entry.id}.md`, `${entry.id}.tex`, `${entry.id}.typ`]) {
+      let stat;
+      try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
+      if (stat.isFile() && !throughLink(`paper/${candidate}`)) manuscripts.push({ section: entry.id, file: `paper/${candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', candidate), 'utf8') });
+      else unread.push({ section: entry.id, file: `paper/${candidate}`, reason: 'it is a link or not a regular file' });
+      break;
     }
   }
   const report = analyzeCoverage({

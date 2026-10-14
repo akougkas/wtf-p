@@ -408,7 +408,7 @@ process.exit(0);`);
     ] } };
     const step = runner.classifyStep(ok, lines, '', { receipts: [worker], selection: { model: 'm' } });
     assert.deepStrictEqual(step.model_observation.reported, ['m-fallback', 'm-legacy', 'm-responses']);
-    assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [4, 1], 'the aggregate row is not a call');
+    assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [3, 0], 'neither the aggregate row nor a provider error is a call');
     assert.strictEqual(step.model_calls, 2, 'a provider error is not an observed model call');
   });
 
@@ -440,7 +440,73 @@ require('fs').writeFileSync(store, '{}');
 process.exit(0);`);
     const made = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('store-maker', maker, undefined, ungatedFile), entry: maker, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(made.outcome, 'integrity-violation');
-    assert.match(made.integrity.join(' '), /seal store was created during the run/);
+    assert.match(made.integrity.join(' '), /seal store or its directory was created or replaced during the run/);
+  });
+
+  await test('the key returns to a real file, the build\'s dependencies are bound, and the run record survives a hostile step', async () => {
+    // A step that plants a dangling link at the store path, or replaces its directory with a link, gets neither the key nor a clean run.
+    const landing = path.join(scratch, 'store-landing.json');
+    const planter = fakeClio('fake-planter', `${mainReceipt(0.01)}
+require('fs').symlinkSync(${JSON.stringify(landing)}, require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
+process.exit(0);`);
+    const plantRoot = preparedRoot('planter', planter, undefined, ungatedFile);
+    const store = path.join(runner.profilePaths(plantRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    fs.mkdirSync(path.dirname(store), { recursive: true });
+    fs.writeFileSync(store, 'held-key');
+    const planted = await withEnv(executeEnv, () => runner.execute(ungated, { root: plantRoot, entry: planter, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(planted.outcome, 'integrity-violation');
+    assert.ok(!fs.existsSync(landing), 'the key was never written through the planted link');
+    assert.ok(fs.lstatSync(store).isFile() && fs.readFileSync(store, 'utf8') === 'held-key');
+    const elsewhere = path.join(scratch, 'store-dir-elsewhere');
+    fs.mkdirSync(elsewhere);
+    const mover = fakeClio('fake-dir-mover', `${mainReceipt(0.01)}
+const fs = require('fs'); const path = require('path');
+const dir = path.join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp');
+fs.renameSync(dir, dir + '-old');
+fs.symlinkSync(${JSON.stringify(elsewhere)}, dir);
+process.exit(0);`);
+    const moveRoot = preparedRoot('dir-mover', mover, undefined, ungatedFile);
+    const moveStore = path.join(runner.profilePaths(moveRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    fs.mkdirSync(path.dirname(moveStore), { recursive: true });
+    fs.writeFileSync(moveStore, 'held-key');
+    const moved = await withEnv(executeEnv, () => runner.execute(ungated, { root: moveRoot, entry: mover, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(moved.outcome, 'integrity-violation');
+    assert.deepStrictEqual(fs.readdirSync(elsewhere), [], 'the key was never written into the linked directory');
+    assert.strictEqual(fs.readFileSync(moveStore, 'utf8'), 'held-key');
+    // A step that changes a dependency the build loads is caught before the next step.
+    const dependent = fakeClio('fake-dependent', `const dep = require(require('path').join(__dirname, '..', '..', 'node_modules', 'dep.js'));
+console.log(JSON.stringify({ type: 'note', dep }));
+${mainReceipt(0.01)}
+require('fs').writeFileSync(require('path').join(__dirname, '..', '..', 'node_modules', 'dep.js'), 'module.exports = "changed-by-a-step";');
+process.exit(0);`);
+    fs.mkdirSync(path.join(scratch, 'fake-dependent', 'node_modules'));
+    fs.writeFileSync(path.join(scratch, 'fake-dependent', 'node_modules', 'dep.js'), 'module.exports = "original";');
+    const dependentRoot = preparedRoot('dependent', dependent, undefined, ungatedFile);
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: dependentRoot, entry: dependent, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(dependencies_sha256\)/);
+    // A step that makes the runner's own files unreadable still leaves a run record, failing closed.
+    const locker = fakeClio('fake-locker', `${mainReceipt(0.01)}
+require('fs').chmodSync(require('path').join(process.env.CLIO_CODER_HOME, '..', 'prepared.json'), 0);
+require('fs').chmodSync(process.env.CLIO_CODER_CONFIG_DIR, 0);
+process.exit(0);`);
+    const lockRoot = preparedRoot('locker', locker, undefined, ungatedFile);
+    try {
+      const locked = await withEnv(executeEnv, () => runner.execute(ungated, { root: lockRoot, entry: locker, ...selection, campaignFile: ungatedFile }));
+      assert.strictEqual(locked.outcome, 'integrity-violation');
+      assert.strictEqual(locked.credentials_removed, false, 'copies it could not reach are never reported removed');
+      assert.ok(fs.existsSync(path.join(lockRoot, 'run.json')));
+    } finally {
+      fs.chmodSync(path.join(lockRoot, 'prepared.json'), 0o600);
+      fs.chmodSync(runner.profilePaths(lockRoot).CLIO_CODER_CONFIG_DIR, 0o700);
+    }
+  });
+
+  await test('secrets are every credential value and every settings value under an auth key, in any YAML form, and nothing else', async () => {
+    assert.deepStrictEqual(runner.settingsSecrets('targets: { t: { model: long-model-identifier, headers: { X-Custom: flow-token-123456 } } }'), ['flow-token-123456']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  model: long-model-identifier\n  Authorization: >-\n    Bearer block-scalar-987654\n'), ['block-scalar-987654']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  tokens:\n    - sequence-token-1234\n'), ['sequence-token-1234']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers:\n    - { Authorization: sequence-flow-1234 }\n  models:\n    - { id: long-model-identifier }\n'), ['sequence-flow-1234']);
+    assert.deepStrictEqual(runner.credentialSecrets('anthropic:\n  type: api_key\n  key: sk-ant-secret-1234\n  updatedAt: 2026-10-14T12:00:00Z\nopenrouter:\n  type: oauth\n  access: access-token-1234\n  refresh: refresh-token-1234\n  expires: 1760000000000\n'),
+      ['sk-ant-secret-1234', 'access-token-1234', 'refresh-token-1234'], 'provider names, types and timestamps stay in the evidence');
   });
 
   await test('a step cannot rewrite the build, prepare the next step\'s logs, forge the run record, or block cleanup', async () => {
