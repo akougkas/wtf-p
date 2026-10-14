@@ -55,6 +55,10 @@ if (process.env.WTFP_TEST_INSPECT_FAILURE === '1' && args[0] === 'library' && ar
 }
 const result = require('child_process').spawnSync(process.execPath, [${JSON.stringify(entry)}, ...args], {stdio:'inherit'});
 if (result.error) throw result.error;
+// The second package really installs, then reports failure, after the plugin is already active.
+if (process.env.WTFP_TEST_EXTENSION_FAILURE === '1' && args[0] === 'extensions' && args[1] === 'install') {
+  console.error('injected failure after real desk extension installation'); process.exit(1);
+}
 process.exit(result.status ?? 1);
 `, { mode: 0o755 });
 const env = { ...probe.environment, PATH: `${wrapperDir}${path.delimiter}/usr/bin:/bin` };
@@ -124,7 +128,7 @@ try {
     const listing = JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd));
     const plugin = installedCopies(listing).find(item => item.id === 'wtfp' && item.scope === scope);
     for (const flag of ['valid', 'enabled', 'compatible', 'effective', 'loadable']) assert.strictEqual(plugin?.[flag], true, JSON.stringify(plugin));
-    const inspected = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], cwd));
+    const inspected = JSON.parse(native(['library', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], cwd));
     assert.strictEqual(inspected.id, 'wtfp');
     assert.strictEqual(inspected.scope, scope);
     assert.strictEqual(path.resolve(inspected.rootPath), path.join(target, 'plugins/wtfp'));
@@ -152,8 +156,25 @@ try {
     for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
     for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
       native(['playbook', 'validate', playbook], cwd);
-      native(['playbook', 'graph', playbook], cwd);
+      const graph = JSON.parse(native(['playbook', 'graph', playbook, '--json'], cwd));
+      const canonical = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/fleets', `${playbook}.json`), 'utf8'));
+      const boundary = (uri) => /^project:\/\/paper(?:\/|$)/u.test(uri) ? 'paper/' : /^project:\/\/sections\//u.test(uri) ? '.planning/sections/' : '.planning/';
+      const observed = graph.waves.flatMap(wave => wave.steps).map(step => ({ id: step.id, agent: step.agent, scope: step.scope, writes: [...step.writes].sort(), dependencies: step.dependencies }));
+      const expected = canonical.steps.map(step => ({
+        id: step.id,
+        agent: `wtfp-${step.role.slice('role://'.length)}`,
+        scope: step.operation === 'mutate' ? 'workspace' : 'readonly',
+        writes: [...new Set(step.writes.map(boundary))].sort(),
+        dependencies: step.dependsOn
+      }));
+      assert.deepStrictEqual(observed, expected, `${playbook}: native graph drifts from its canonical fleet contract`);
+      assert.ok(!observed.some(step => step.writes.includes('.planning/')), `${playbook}: a playbook worker may write checkpoints, interactions or state`);
     }
+    // The desk runs its own package tests from where Clio installed it, with no reference to this checkout.
+    const deskTests = runCombined(entry, ['extensions', 'test', path.join(target, 'extensions/wtfp')], cwd);
+    assert.match(deskTests, /ℹ fail 0/, deskTests);
+    assert.match(deskTests, /ℹ pass [1-9]\d*/, deskTests);
+    assert.doesNotMatch(deskTests, new RegExp(ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'installed desk tests referred to the source checkout');
     assert.match(native(['run', '/wtfp:help'], cwd), /wtfp:new-paper/);
 
     // Clio marks a prompt unavailable when any packaged reference in its body
@@ -212,7 +233,7 @@ try {
     assert.ok(before.equals(fs.readFileSync(stateFile)), 'idempotent reinstall changed native registration');
     // Enable/disable is the operator's switch and Clio's state. A reinstall
     // must report it, not silently flip it back on.
-    native(['library', 'disable', 'wtfp', `--${scope}`, '--json'], cwd);
+    native(['library', 'disable', 'plugin:wtfp', `--${scope}`, '--json'], cwd);
     const afterDisable = runCombined(path.join(ROOT, 'bin/install.js'), args, cwd);
     assert.match(afterDisable, /installed but disabled/);
     const stillDisabled = installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], cwd))).find(item => item.id === 'wtfp' && item.scope === scope);
@@ -223,10 +244,10 @@ try {
     staleState.installed.wtfp.contentDigest = '0'.repeat(64);
     fs.writeFileSync(stateFile, JSON.stringify(staleState));
     assert.match(runCombined(installer, args, cwd), /installed but disabled/);
-    const repaired = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], cwd));
+    const repaired = JSON.parse(native(['library', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], cwd));
     assert.strictEqual(repaired.valid, true);
     assert.strictEqual(repaired.enabled, false);
-    native(['library', 'enable', 'wtfp', `--${scope}`, '--json'], cwd);
+    native(['library', 'enable', 'plugin:wtfp', `--${scope}`, '--json'], cwd);
     run(path.join(ROOT, 'bin/uninstall.js'), ['--clio', '--config-dir', target, '--yes', '--no-color'], cwd);
     assert.ok(!fs.existsSync(installedRoot));
     assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
@@ -247,7 +268,7 @@ try {
   const copies = installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], coexist))).filter(item => item.id === 'wtfp');
   assert.deepStrictEqual(copies.map(item => item.scope).sort(), ['project', 'user']);
   for (const scope of ['user', 'project']) {
-    const selected = JSON.parse(native(['library', 'inspect', 'wtfp', `--${scope}`, '--json'], coexist));
+    const selected = JSON.parse(native(['library', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], coexist));
     assert.strictEqual(selected.scope, scope);
     assert.strictEqual(selected.valid, true);
     assert.strictEqual(selected.rootPath, path.join(scope === 'user' ? userTarget : projectTarget, 'plugins/wtfp'));
@@ -256,7 +277,7 @@ try {
   }
   run(uninstaller, ['--clio', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
   assert.ok(projectState.equals(fs.readFileSync(path.join(projectTarget, 'plugins/state.json'))));
-  assert.strictEqual(JSON.parse(native(['library', 'inspect', 'wtfp', '--project', '--json'], coexist)).valid, true);
+  assert.strictEqual(JSON.parse(native(['library', 'inspect', 'plugin:wtfp', '--project', '--json'], coexist)).valid, true);
   run(uninstaller, ['--clio', '--config-dir', projectTarget, '--yes', '--no-color'], coexist);
   console.log('PASS coexistence: both installed copies listed, exact scoped inspect/list, user removal preserves project registration');
   for (const scope of ['user', 'project']) {
@@ -273,5 +294,62 @@ try {
     assert.ok(!JSON.parse(fs.readFileSync(path.join(target, 'plugins/state.json'))).installed.wtfp);
     assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
     console.log(`PASS ${scope}: real native install/remove compensates injected verification failure; no files, receipt, or registration remain`);
+    const second = spawnSync(process.execPath, [installer, ...installArgs(target)], {
+      cwd: coexist, env: { ...env, WTFP_TEST_EXTENSION_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+    });
+    assert.ifError(second.error);
+    assert.notStrictEqual(second.status, 0);
+    assert.match(second.stdout + second.stderr, /injected failure after real desk extension installation/);
+    assert.doesNotMatch(second.stdout + second.stderr, /native rollback also failed/);
+    for (const root of ['plugins/wtfp', 'extensions/wtfp', '.wtfp-version']) assert.ok(!fs.existsSync(path.join(target, root)), `${root} survived a failed second install`);
+    assert.ok(!installedCopies(JSON.parse(native(['library', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
+    assert.ok(!JSON.parse(native(['extensions', 'list', `--${scope}`, '--json'], coexist)).extensions.some(item => item.id === 'wtfp'));
+    console.log(`PASS ${scope}: a failure after the desk extension installs compensates the active plugin too; nothing remains`);
   }
+  // Removal never takes a file WTF-P did not publish.
+  run(installer, installArgs(userTarget), coexist);
+  const note = path.join(userTarget, 'extensions/wtfp/operator-notes.md');
+  fs.writeFileSync(note, 'kept by the operator\n');
+  const refused = runCombined(uninstaller, ['--clio', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(fs.existsSync(note), 'uninstall deleted an unowned file inside the installed desk');
+  assert.match(refused, /Kept the WTF-P extension installed and registered: extensions\/wtfp\/ holds files WTF-P did not publish/, refused);
+  const keptDesk = JSON.parse(native(['extensions', 'list', '--user', '--json'], coexist)).extensions.find(item => item.id === 'wtfp');
+  assert.ok(keptDesk && keptDesk.valid === false, 'the kept desk stays registered; Clio reports the unowned note as drift');
+  assert.ok(fs.existsSync(path.join(userTarget, 'extensions/wtfp/clio-coder-extension.yaml')), 'uninstall gutted a package Clio still registers');
+  fs.rmSync(note);
+  run(uninstaller, ['--clio', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(!fs.existsSync(path.join(userTarget, 'extensions/wtfp')));
+  assert.ok(!fs.existsSync(path.join(userTarget, 'plugins/wtfp')));
+  console.log('PASS removal preserves an unowned file in the installed desk and completes once it is gone');
+
+  // An upgrade over an unchanged installation: build the next version from a
+  // copy of this checkout and install it over the current one.
+  const nextRoot = path.join(scratch, 'next-version');
+  fs.cpSync(ROOT, nextRoot, { recursive: true, filter: source => !/(^|[\\/])(\.git|node_modules)$/u.test(source) });
+  const nextPackage = JSON.parse(fs.readFileSync(path.join(nextRoot, 'package.json'), 'utf8'));
+  const nextVersion = `${nextPackage.version}-upgrade.1`;
+  fs.writeFileSync(path.join(nextRoot, 'package.json'), `${JSON.stringify({ ...nextPackage, version: nextVersion }, null, 2)}\n`);
+  const progressWorkflow = path.join(nextRoot, 'protocol/workflows/progress.md');
+  fs.appendFileSync(progressWorkflow, '\nThis line exists only in the upgrade fixture.\n');
+  const rebuilt = spawnSync(process.execPath, [path.join(nextRoot, 'scripts/build-adapters.js')], { cwd: nextRoot, env, encoding: 'utf8', timeout: 120000 });
+  assert.strictEqual(rebuilt.status, 0, rebuilt.stdout + rebuilt.stderr);
+  run(installer, installArgs(userTarget), coexist);
+  native(['library', 'disable', 'plugin:wtfp', '--user', '--json'], coexist);
+  const upgraded = runCombined(path.join(nextRoot, 'bin/install.js'), installArgs(userTarget), coexist);
+  assert.match(upgraded, /installed but disabled/, upgraded);
+  const upgradedReceipt = JSON.parse(fs.readFileSync(path.join(userTarget, '.wtfp-version'), 'utf8'));
+  assert.strictEqual(upgradedReceipt.version, nextVersion);
+  assert.strictEqual(upgradedReceipt.partial, false);
+  for (const item of upgradedReceipt.files) assert.strictEqual(hash(path.join(userTarget, item.path)), item.sha256, item.path);
+  const upgradedPlugin = JSON.parse(native(['library', 'inspect', 'plugin:wtfp', '--user', '--json'], coexist));
+  assert.strictEqual(upgradedPlugin.valid, true, JSON.stringify(upgradedPlugin.diagnostics));
+  assert.strictEqual(upgradedPlugin.enabled, false, 'the upgrade re-enabled a plugin the operator disabled');
+  assert.strictEqual(upgradedPlugin.version, nextVersion);
+  assert.match(fs.readFileSync(path.join(userTarget, 'plugins/wtfp/ai.iowarp.clio/prompts/wtfp/progress.md'), 'utf8'), /only in the upgrade fixture/);
+  const upgradedDesk = JSON.parse(native(['extensions', 'list', '--user', '--json'], coexist)).extensions.find(item => item.id === 'wtfp');
+  assert.ok(upgradedDesk && upgradedDesk.valid === true && upgradedDesk.diagnostics.length === 0, JSON.stringify(upgradedDesk));
+  native(['library', 'enable', 'plugin:wtfp', '--user', '--json'], coexist);
+  run(path.join(nextRoot, 'bin/uninstall.js'), ['--clio', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(!fs.existsSync(path.join(userTarget, 'plugins/wtfp')) && !fs.existsSync(path.join(userTarget, 'extensions/wtfp')));
+  console.log(`PASS upgrade to ${nextVersion} over an unchanged install: new receipt, valid plugin and desk, disabled preference kept, clean removal`);
 } finally { probe.cleanup(); }

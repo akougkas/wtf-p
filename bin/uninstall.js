@@ -787,8 +787,18 @@ async function uninstall(runtime, options, out) {
     );
     if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
       out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);
-    } else if (nativeRemoval.status === 'deferred' && !options.hasQuiet) {
-      out.warn(nativeRemoval.reason || 'The target cannot be natively unregistered; only WTF-P-owned staging files will be removed.');
+    } else if (nativeRemoval.status === 'deferred') {
+      // A package Clio still registers keeps every owned file and its receipt
+      // entries; removing them would leave a registration with no content.
+      for (const root of nativeRemoval.keptRoots || []) {
+        for (const item of plan.items) {
+          if (item.path.startsWith(`${root}/`) && item.removable) {
+            item.removable = false;
+            item.keptRegistered = true;
+          }
+        }
+      }
+      if (!options.hasQuiet) out.warn(nativeRemoval.reason || 'The target cannot be natively unregistered; only WTF-P-owned staging files will be removed.');
     }
   } else if (vendorConfig.native && !options.hasQuiet) {
     out.warn('Native registration was preserved because this uninstall cannot remove every WTF-P-owned source file safely.');
@@ -803,11 +813,16 @@ async function uninstall(runtime, options, out) {
   }
 
   const remaining = plan.items.filter(item => !item.removed && item.state !== 'missing');
-  if (remaining.length > 0) {
-    out.log(`\n  ${c.yellow('Partial uninstall:')} preserved ${remaining.length} modified, untrusted, or unsafe file(s).`);
+  const keptRegistered = remaining.filter(item => item.keptRegistered).length;
+  if (keptRegistered > 0) {
+    out.log(`\n  ${c.yellow('Partial uninstall:')} kept ${keptRegistered} owned file(s) of a package Clio still registers, with their receipt entries, so uninstall can finish once the unowned files are moved out.`);
+  }
+  if (remaining.length > keptRegistered) {
+    out.log(`\n  ${c.yellow('Partial uninstall:')} preserved ${remaining.length - keptRegistered} modified, untrusted, or unsafe file(s).`);
     out.log(`  Re-run with ${c.cyan('--force')} only if you intend to remove exact modified/legacy receipt files.\n`);
     return { status: 'partial', plan, summary };
   }
+  if (keptRegistered > 0) return { status: 'partial', plan, summary };
 
   out.log(`\n  ${c.green('Done!')} Removed WTF-P-owned files from ${vendorConfig.name}.`);
   out.log(`  ${c.dim('Unowned files and nonempty shared directories were not touched.')}\n`);

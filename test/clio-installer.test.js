@@ -64,6 +64,9 @@ if(args[0]==='extensions') {
  process.exit(0);
 }
 const state=read();
+// Clio 0.6.2 refuses a bare name a plugin and an extension share once both exist in a scope.
+const ref=args[2], extensionRoot=path.join(config,'extensions','wtfp');
+if(['inspect','remove','enable','disable'].includes(command)&&ref==='wtfp'&&fs.existsSync(extensionRoot)){console.log(JSON.stringify({ok:false,error:'ambiguous package: wtfp; use extension:wtfp or plugin:wtfp'}));process.exit(1);}
 if(command==='install') {
  if(fs.existsSync(root)&&!args.includes('--force'))throw Error('library destination already exists: '+root);
  fs.rmSync(root,{recursive:true,force:true});
@@ -187,7 +190,7 @@ try {
   assert.strictEqual(detected.hasCommands,true);assert.strictEqual(detected.hasSkills,true);assert.strictEqual(detected.hasAgents,true);
   const nativeInstall=library(ctx).find(c=>c.args[1]==='install');
   assert.ok(nativeInstall.args.includes(project?'--project':'--user'));assert.ok(!nativeInstall.args.includes('--force'));
-  assert.ok(calls(ctx).some(c=>JSON.stringify(c.args)===JSON.stringify(['library','inspect','wtfp',project?'--project':'--user','--json'])));
+  assert.ok(calls(ctx).some(c=>JSON.stringify(c.args)===JSON.stringify(['library','inspect','plugin:wtfp',project?'--project':'--user','--json'])));
   // The desk is a second, separate Clio install that follows the plugin's.
   const desk=extensions(ctx).find(c=>c.args[1]==='install');
   const log=calls(ctx);assert.ok(log.findIndex(c=>c.args[0]==='extensions')>log.findIndex(c=>c.args[0]==='library'&&c.args[1]==='install'));
@@ -219,7 +222,7 @@ try {
   const file=path.join(ctx.target,'plugins/state.json'), saved=state(ctx);
   saved.disabled.push('wtfp');fs.writeFileSync(file,JSON.stringify(saved));
   const before=fs.readFileSync(file),result=install(ctx);ok(result);
-  assert.match(result.stdout+result.stderr,new RegExp('library enable wtfp --'+(project?'project':'user')));
+  assert.match(result.stdout+result.stderr,new RegExp('library enable plugin:wtfp --'+(project?'project':'user')));
   assert.ok(before.equals(fs.readFileSync(file)),'idempotence must not change disabled state');
   saved.installed.wtfp.contentDigest='0'.repeat(64);fs.writeFileSync(file,JSON.stringify(saved));
   const repaired=install(ctx);ok(repaired);
@@ -272,6 +275,19 @@ try {
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
   assert.ok(!state(ctx).installed.wtfp);assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
  });
+ test('a project trust gate registers and names the trust command without granting it',()=>{
+  const ctx=context('trust-gate');
+  const gate={type:'warning',message:'project plugins are not trusted for this workspace and are not loaded; review with clio-coder config trust plugins, then run /library reload',path:path.join(ctx.target,'plugins/state.json')};
+  const copy={id:'wtfp',kind:'plugin',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[gate]};
+  const result=install(ctx,{FAKE_INSPECT_JSON:JSON.stringify(copy)});ok(result);
+  assert.match(result.stdout+result.stderr,/until you trust its package state; WTF-P does not grant that\. Review it with clio-coder config trust plugins/);
+  verifyReceipt(ctx);assert.ok(!calls(ctx).some(c=>c.args.includes('trust')),'the installer must never run config trust');
+  const other=context('other-warning');
+  const warned={...copy,rootPath:path.join(other.target,'plugins/wtfp'),diagnostics:[{type:'warning',message:'manifest declares an unknown resource'}]};
+  const refused=install(other,{FAKE_INSPECT_JSON:JSON.stringify(warned)});
+  assert.notStrictEqual(refused.status,0);assert.match(refused.stdout+refused.stderr,/exact WTF-P plugin/);
+  assert.ok(!fs.existsSync(path.join(other.target,'plugins/wtfp')));
+ });
  test('native verification failure rolls back created files and shared registration',()=>{
   const ctx=context('verify-failure');const result=install(ctx,{FAKE_VERIFY_FAILURE:'1'});assert.notStrictEqual(result.status,0,result.stdout+result.stderr);
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
@@ -310,10 +326,19 @@ try {
  });
  test('uninstall preserves unowned siblings instead of allowing recursive native removal',()=>{
   const ctx=context('unowned');ok(install(ctx));const extra=path.join(ctx.target,'plugins/wtfp/author-note.txt');fs.writeFileSync(extra,'keep');
-  ok(uninstall(ctx));assert.strictEqual(fs.readFileSync(extra,'utf8'),'keep');
+  const first=uninstall(ctx);ok(first);assert.strictEqual(fs.readFileSync(extra,'utf8'),'keep');
+  assert.match(first.stdout+first.stderr,/Kept the WTF-P plugin installed and registered: plugins\/wtfp\/ holds files WTF-P did not publish or that changed \(author-note\.txt\)/);
   assert.ok(!library(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.wtfp);
+  // A package Clio still registers keeps its owned content and receipt entries.
+  assert.ok(fs.existsSync(path.join(ctx.target,'plugins/wtfp/plugin.json')));
+  const kept=JSON.parse(fs.readFileSync(path.join(ctx.target,'.wtfp-version')));
+  assert.ok(kept.files.length>0&&kept.files.every(file=>file.path.startsWith('plugins/wtfp/')));
   // The extension's own tree is owned and unchanged, so its removal proceeds.
   assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
+  // Once the operator moves the note out, the same uninstall finishes the job.
+  fs.rmSync(extra);ok(uninstall(ctx));
+  assert.ok(library(ctx).some(c=>c.args[1]==='remove'));assert.ok(!state(ctx).installed.wtfp);
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
  });
  test('an extension install failure compensates the extension and then the plugin',()=>{
   const ctx=context('extension-failure');const result=install(ctx,{FAKE_EXTENSION_FAILURE:'1'});

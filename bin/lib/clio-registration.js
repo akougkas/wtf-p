@@ -125,21 +125,24 @@ function installedExtensionEntry(stdout, targetDir, native, scope) {
 
 // The two Clio packages WTF-P installs, plugin first. Each is its own Clio
 // install with its own lifecycle command, generated inventory and checks.
+// Both carry the id `wtfp`, and Clio 0.6.2 refuses a bare name that a plugin
+// and an extension share, so `library` commands name the plugin as
+// `plugin:wtfp`. The `extensions` commands select extensions by themselves.
 function clioPackages(native) {
   const plugin = {
-    noun: 'plugin', command: 'library', id: native.id, source: native.source, inventory: 'portable-plugin',
+    noun: 'plugin', command: 'library', id: native.id, ref: `plugin:${native.id}`, source: native.source, inventory: 'portable-plugin',
     deferral: 'Clio activation requires an intact generated bundle without extra or modified files',
     list: () => ['library', 'list', '--kind', 'plugin', '--json'],
     listed: (stdout, targetDir, scope) => installedListEntry(stdout, targetDir, native, scope),
     // `inspect` returns the installed record for the explicitly selected scope.
-    verify: scope => ['library', 'inspect', native.id, `--${scope}`, '--json'],
+    verify: scope => ['library', 'inspect', `plugin:${native.id}`, `--${scope}`, '--json'],
     verified: (stdout, targetDir, scope) => verifiedEntry(stdout, targetDir, native, scope)
   };
   if (!native.extension) return [plugin];
   const extension = native.extension;
   const listed = (stdout, targetDir, scope) => installedExtensionEntry(stdout, targetDir, extension, scope);
   return [plugin, {
-    noun: 'extension', command: 'extensions', id: extension.id, source: extension.source, inventory: 'clio-extension',
+    noun: 'extension', command: 'extensions', id: extension.id, ref: extension.id, source: extension.source, inventory: 'clio-extension',
     deferral: 'Clio extension activation requires an intact generated extension without extra or modified files',
     list: scope => ['extensions', 'list', `--${scope}`, '--json'],
     listed,
@@ -149,15 +152,34 @@ function clioPackages(native) {
 }
 
 // Registration is what WTF-P is responsible for. Whether the operator has a
-// package switched on is Clio's state and their decision, so it is reported,
-// never asserted and never changed.
+// package switched on, and whether they trust a project's package state, is
+// Clio's state and their decision, so it is reported, never asserted and never
+// changed. Clio binds project trust to the content of that state, so any
+// project install after the first waits for `config trust`.
+const TRUST_GATE = /^project (?:plugins|extensions) are not trusted for this workspace\b/u;
+
+function trustGate(diagnostic) {
+  return Boolean(diagnostic) && diagnostic.type === 'warning' && TRUST_GATE.test(String(diagnostic.message));
+}
+
 function registered(entry) {
   return Boolean(entry) && entry.valid === true &&
-    Array.isArray(entry.diagnostics) && entry.diagnostics.length === 0;
+    Array.isArray(entry.diagnostics) && entry.diagnostics.every(trustGate);
 }
 
 function disabledNotice(pkg, scope) {
-  return `Clio reports ${pkg.id} as installed but disabled. WTF-P does not change that preference; run clio-coder ${pkg.command} enable ${pkg.id} --${scope} to switch it back on.`;
+  return `Clio reports ${pkg.id} as installed but disabled. WTF-P does not change that preference; run clio-coder ${pkg.command} enable ${pkg.ref} --${scope} to switch it back on.`;
+}
+
+function preferenceNotice(pkg, scope, entry) {
+  const surface = pkg.noun === 'plugin' ? 'plugins' : 'extensions';
+  const notices = [
+    ...(entry.enabled === false ? [disabledNotice(pkg, scope)] : []),
+    ...(entry.diagnostics.some(trustGate)
+      ? [`Clio holds this project's ${surface} until you trust its package state; WTF-P does not grant that. Review it with clio-coder config trust ${surface}.`]
+      : [])
+  ];
+  return notices.length > 0 ? { notice: notices.join(' ') } : {};
 }
 
 // Install the plugin, then the extension. A failure in the second compensates
@@ -210,10 +232,7 @@ function activatePackage(targetDir, pkg, options) {
   results.push(priorList);
   const priorEntry = pkg.listed(priorList.stdout, targetDir, options.scope);
   if (registered(priorEntry)) {
-    return {
-      status: 'registered', executable: 'clio-coder', results,
-      ...(priorEntry.enabled === false ? { notice: disabledNotice(pkg, options.scope) } : {})
-    };
+    return { status: 'registered', executable: 'clio-coder', results, ...preferenceNotice(pkg, options.scope, priorEntry) };
   }
 
   // `library install` copies a source into the destination it owns, so the
@@ -232,7 +251,7 @@ function activatePackage(targetDir, pkg, options) {
         if (!sameTree(publishedFiles, treeFiles(root))) {
           throw new Error('Clio content changed concurrently; recovery tree preserved');
         }
-        const removal = execute('clio-coder', [pkg.command, 'remove', pkg.id, `--${options.scope}`, '--json'], environment,
+        const removal = execute('clio-coder', [pkg.command, 'remove', pkg.ref, `--${options.scope}`, '--json'], environment,
           { ...options, allowAlreadyAbsent: true });
         results.push(removal);
         if (removal.status === 'unavailable') throw new Error('Clio became unavailable during rollback');
@@ -268,7 +287,7 @@ function activatePackage(targetDir, pkg, options) {
     }
     return {
       status: 'registered', executable: 'clio-coder', results, rollback,
-      ...(entry.enabled === false ? { notice: disabledNotice(pkg, options.scope) } : {}),
+      ...preferenceNotice(pkg, options.scope, entry),
       commit() {
         // Only the private held copy is removed; Clio owns its installed tree.
         finished = true;
@@ -301,9 +320,13 @@ function deactivateClio(targetDir, native, suppliedOptions) {
     removed.push(result);
   }
   if (removed.length === 1) return removed[0];
-  const deferred = removed.find(result => result.status === 'deferred');
+  const deferred = removed.filter(result => result.status === 'deferred');
   const results = removed.flatMap(result => result.results);
-  if (deferred) return { status: 'deferred', reason: deferred.reason, results };
+  // A deferred package stays installed and registered, so the caller must keep
+  // its owned files and receipt entries for a later uninstall to finish.
+  if (deferred.length > 0) {
+    return { status: 'deferred', reason: deferred.map(result => result.reason).join('; '), results, keptRoots: deferred.map(result => result.root) };
+  }
   return removed.some(result => result.status === 'unregistered')
     ? { status: 'unregistered', executable: 'clio-coder', results }
     : { status: 'not-required', results };
@@ -323,9 +346,13 @@ function deactivatePackage(targetDir, pkg, options) {
   const root = resolveOwnedPath(targetDir, pkg.source, guard);
   const ownedFiles = options.ownedFiles;
   if (!ownedFiles || !sameTree(treeFiles(root), ownedFiles)) {
-    return { status: 'deferred', reason: `Clio native removal would include unowned or modified ${pkg.noun} files`, results: [listing] };
+    const foreign = ownedFiles ? [...treeFiles(root).keys()].filter(file => !ownedFiles.has(file)).slice(0, 5) : [];
+    return {
+      status: 'deferred', root: pkg.source, results: [listing],
+      reason: `Kept the WTF-P ${pkg.noun} installed and registered: ${pkg.source}/ holds files WTF-P did not publish or that changed${foreign.length ? ` (${foreign.join(', ')})` : ''}. Move them out and run uninstall again.`
+    };
   }
-  const result = execute('clio-coder', [pkg.command, 'remove', pkg.id, `--${options.scope}`, '--json'], environment, options);
+  const result = execute('clio-coder', [pkg.command, 'remove', pkg.ref, `--${options.scope}`, '--json'], environment, options);
   if (result.status === 'unavailable') return { status: 'unavailable', executable: 'clio-coder', results: [listing] };
   const after = execute('clio-coder', pkg.list(options.scope), environment, options);
   if (after.status === 'unavailable' || fs.existsSync(root) || pkg.listed(after.stdout, targetDir, options.scope)) {
