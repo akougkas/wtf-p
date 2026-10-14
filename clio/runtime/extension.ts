@@ -627,7 +627,11 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	const outlined = Array.isArray(outline?.sections) ? (outline.sections as Json[]) : [];
 	const loaded = outlined.map((entry) => {
 		const id = text(entry.id, "section");
-		const record = readRecord(workspace, `.planning/sections/${id}/section.json`);
+		// A section file holds the section its directory names; a record with another id is not this section's.
+		const file = `.planning/sections/${id}/section.json`;
+		const found = readRecord(workspace, file);
+		if (found && found.id !== id) ignored.push({ file, reason: `it holds section ${String(found.id)}, not ${id}` });
+		const record = found && found.id === id ? found : null;
 		const artifacts = (record?.artifacts ?? {}) as Json;
 		const manuscript = manuscriptFile(workspace, artifacts.manuscript ?? `project://paper/${id}`, outputFormat);
 		const source = manuscript ? readText(workspace, manuscript) : null;
@@ -1263,7 +1267,8 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 		throw new Error(`${armed.action} does not declare ${bytes === null ? "creating" : "updating"} ${uri}; record what remains as a handoff instead`);
 	if (origin === "agent" && route.type === "checkpoint") {
 		const plan = new RegExp(`^project://sections/(${IDENTIFIER})/plans/${IDENTIFIER}$`, "u").exec(text(prior?.scope_uri));
-		const plans = plan ? ((readRecord(workspace, `.planning/sections/${plan[1]}/section.json`)?.artifacts as Json | undefined)?.plans as unknown[] | undefined) : undefined;
+		const owner = plan ? readRecord(workspace, `.planning/sections/${plan[1]}/section.json`) : null;
+		const plans = plan && owner?.id === plan[1] ? ((owner.artifacts as Json | undefined)?.plans as unknown[] | undefined) : undefined;
 		const superseded = plan !== null && Array.isArray(plans) && plans.length > 0 && plans[plans.length - 1] !== prior?.scope_uri;
 		const refusal = checkpointRefusal(prior, record, superseded);
 		if (refusal) throw new Error(`${uri}: ${refusal}`);

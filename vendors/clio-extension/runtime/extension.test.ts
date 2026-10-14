@@ -568,6 +568,34 @@ test("literature-heavy sections wait for verified evidence behind their required
 		assert.match((await host.command("validate")).text, /manuscript-unread project:\/\/sections\/introduction/);
 	}, SERVED));
 
+test("a section file counts only for the section whose id names its directory", () =>
+	withDesk(async (host, workspace) => {
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const [entry] = outline.sections as Json[];
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [{ ...entry, research: { required: true, topics: ["logging"] } }] });
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		const claims = [{ id: "claim-flush", statement: "Flushes dominate logging cost.", status: "planned", evidence_required: true, evidence_uris: [] }];
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, claims });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const readyNow = async () => ((await host.tool("readiness", { section: "introduction" })).data as Json).ready;
+		assert.equal(await readyNow(), false, "the unsupported required claim holds the section");
+		// Renaming the record inside the file must not move its claims out of the section the outline names.
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, id: "intro-other", claims });
+		assert.equal(await readyNow(), false);
+		assert.ok(blocked(await write(host, "paper/introduction.md")));
+		assert.match((await host.command("validate")).text, /record-ignored \.planning\/sections\/introduction\/section\.json/);
+	}, SERVED));
+
+test("a renamed section record cannot make a pending plan gate look superseded", () =>
+	withDesk(async (host, workspace) => {
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, id: "intro-other", artifacts: { ...(section.artifacts as Json), plans: [PLAN_URI, "project://sections/introduction/plans/decoy"] } });
+		const checkpoint = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);
+		const expired = await host.tool("record", { uri: `project://checkpoints/${PLAN_GATE}`, record: { ...checkpoint, status: "expired" }, expect_sha256: sha(workspace, `.planning/checkpoints/${PLAN_GATE}.json`) });
+		assert.match(expired.text, /cannot be expired by the agent/);
+	}));
+
 test("turning a gate off needs the author's confirmation at the desk", () =>
 	withDesk(async (host, workspace) => {
 		const config = read(workspace, ".planning/config.json");
