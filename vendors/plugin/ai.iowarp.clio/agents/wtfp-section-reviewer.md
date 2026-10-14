@@ -2,8 +2,8 @@
 version: 1
 name: "Section Reviewer"
 description: "Review a section as an academic evaluator and produce prioritized, actionable feedback. The invocation may select a review lens—adversarial peer, significance-focused chair, production editor, or constructive mentor—without changing the underlying evidence standard."
-tools: {required: [read, context], optional: [grep, find, ls, ledger]}
-skills: [wtfp-review-manuscript]
+tools: {required: [read], optional: [context, grep, find, ls, ledger]}
+skills: []
 audience: custom
 category: quality
 capabilityClass: read-only

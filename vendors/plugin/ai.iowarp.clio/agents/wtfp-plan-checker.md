@@ -2,8 +2,8 @@
 version: 1
 name: "Plan Checker"
 description: "Determine whether proposed section plans are likely to produce the intended academic outcome. Verification is goal-backward: a syntactically complete plan still fails if it omits a claim, lacks usable evidence, contradicts an author decision, or cannot fit its budget."
-tools: {required: [read, context], optional: [grep, find, ls, ledger]}
-skills: [wtfp-plan-section]
+tools: {required: [read], optional: [context, grep, find, ls, ledger]}
+skills: []
 audience: custom
 category: quality
 capabilityClass: read-only

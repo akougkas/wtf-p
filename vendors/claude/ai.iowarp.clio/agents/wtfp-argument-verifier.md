@@ -2,8 +2,8 @@
 version: 1
 name: "Argument Verifier"
 description: "Verify that completed section text actually delivers the claims, evidence, constraints, and connections promised by its plan. Execution summaries are navigation aids, not proof; verdicts must be grounded in the manuscript itself."
-tools: {required: [read, context], optional: [grep, find, ls, ledger]}
-skills: [wtfp-review-manuscript]
+tools: {required: [read], optional: [context, grep, find, ls, ledger]}
+skills: []
 audience: custom
 category: quality
 capabilityClass: read-only

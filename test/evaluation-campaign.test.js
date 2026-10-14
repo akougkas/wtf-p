@@ -315,6 +315,56 @@ process.exit(0);`);
     const worker = (toolStats) => ({ file: 'worker.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free', toolStats } });
     assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'verify', count: 2, ok: 2, errors: 0, blocked: 0 }])]), ['policy-violation', 2], 'a worker that ran verify');
     assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'bash', count: 1, ok: 0, errors: 0, blocked: 1 }, { tool: 'read', count: 3, ok: 3, errors: 0, blocked: 0 }])]), ['completed', 0], 'a worker call Clio blocked did not run');
+    // A gateway call keeps the name gateway in every form Clio accepts but `op: call` with `capability`.
+    const via = (args) => ({ type: 'tool_execution_start', toolCallId: 'g1', toolName: 'gateway', args });
+    assert.deepStrictEqual(outcome(lines(via({ name: 'bash', args: { command: 'node --test x.js' } }))), ['policy-violation', 1], 'gateway call by name');
+    assert.deepStrictEqual(outcome(lines(via({ tool: 'run_script', args: {} }))), ['policy-violation', 1], 'gateway call by tool');
+    assert.deepStrictEqual(outcome(lines(via({ op: 'chain', steps: [{ id: 'a', capability: 'read', args: {} }, { id: 'b', capability: 'verify', args: {} }] }))), ['policy-violation', 1], 'a chain step');
+    assert.deepStrictEqual(outcome(lines(via({ op: 'find', query: 'tests' }))), ['completed', 0], 'discovery names no capability');
+    const fetched = runner.classifyStep(ok, lines(via({ name: 'web_fetch', args: { url: 'https://example.invalid' } })), '', { receipts: [main] });
+    assert.deepStrictEqual([fetched.outcome, fetched.tools.network_calls], ['policy-violation', 1], 'a retrieval call through the gateway');
+    // Clio's event stream does not tell a refusal from a failed run, so only a blocked outcome clears a call.
+    assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'error' })), ['policy-violation', 1]);
+  });
+
+  await test('a worker receipt the runner cannot read vouches for nothing, so its step fails integrity', async () => {
+    const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const main = { file: 'main.json', receipt: { agentId: 'main-agent', costUsd: 0.01, costProvenance: 'known' } };
+    const judged = (receipts) => { const step = runner.classifyStep(ok, '', '', { receipts }); return [step.outcome, step.unreadable_worker_receipts]; };
+    assert.deepStrictEqual(judged([main, { file: 'w.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free', toolStats: [] } }]), ['completed', []]);
+    assert.deepStrictEqual(judged([main, { file: 'torn.json', receipt: null }]), ['integrity-violation', ['torn.json']]);
+    assert.deepStrictEqual(judged([main, { file: 'bare.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free' } }]), ['integrity-violation', ['bare.json']]);
+  });
+
+  await test('a step that changes the Clio configuration later steps load fails integrity; Clio\'s own runtime output does not', async () => {
+    const fileWrite = (relative, text) => `{ const f = require('path').join(process.cwd(), ${JSON.stringify(relative)}); require('fs').mkdirSync(require('path').dirname(f), { recursive: true }); require('fs').writeFileSync(f, ${JSON.stringify(text)}); }`;
+    const outputs = fakeClio('fake-outputs', `${fileWrite('.clio-coder/runs/r1/stdout.log', 'ran')}
+${fileWrite('.clio-coder/state.json', '{}')}
+${fileWrite('.clio-coder/artifacts/plan.md', 'a plan')}
+${fileWrite('.clio-coder/handoffs/h.md', 'notes')}
+${mainReceipt(0.01)}
+process.exit(0);`);
+    const clean = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('outputs', outputs, undefined, ungatedFile), entry: outputs, ...selection, campaignFile: ungatedFile }));
+    assert.deepStrictEqual(clean.steps.map(step => [step.outcome, step.clio_config_changed]), [['completed', []], ['completed', []]]);
+    const recipe = fakeClio('fake-recipe', `${fileWrite('.clio-coder/agents/wtfp-section-reviewer.md', '---\nname: always pass\n---\n')}
+${mainReceipt(0.01)}
+process.exit(0);`);
+    const overridden = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('recipe', recipe, undefined, ungatedFile), entry: recipe, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(overridden.outcome, 'integrity-violation');
+    assert.deepStrictEqual(overridden.steps[0].clio_config_changed, ['.clio-coder/agents', '.clio-coder/agents/wtfp-section-reviewer.md']);
+    // A link inside the configuration counts by its target, so retargeting it is a change.
+    const config = path.join(scratch, 'config-links');
+    fs.mkdirSync(path.join(config, '.clio-coder', 'wiki'), { recursive: true });
+    fs.symlinkSync('wiki', path.join(config, '.clio-coder', 'agents'));
+    const linkedBefore = runner.clioProjectConfig(config);
+    fs.rmSync(path.join(config, '.clio-coder', 'agents'));
+    fs.symlinkSync('../elsewhere', path.join(config, '.clio-coder', 'agents'));
+    assert.deepStrictEqual(runner.configChanges(linkedBefore, runner.clioProjectConfig(config)), ['.clio-coder/agents']);
+    const linked = fakeClio('fake-linked-config', `require('fs').symlinkSync(require('os').tmpdir(), require('path').join(process.cwd(), '.clio-coder'));
+${mainReceipt(0.01)}
+process.exit(0);`);
+    const relinked = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('linked-config', linked, undefined, ungatedFile), entry: linked, ...selection, campaignFile: ungatedFile }));
+    assert.deepStrictEqual([relinked.outcome, relinked.steps[0].clio_config_changed], ['integrity-violation', ['.clio-coder']]);
   });
 
   await test('prepare refuses a WTF-P recipe that declares a tool a step\'s workers may not hold', async () => {
@@ -322,7 +372,9 @@ process.exit(0);`);
     const plugin = path.join(scratch, 'grown-plugin');
     fs.cpSync(path.join(ROOT, 'vendors/plugin/ai.iowarp.clio/agents'), path.join(plugin, 'ai.iowarp.clio/agents'), { recursive: true });
     const recipe = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-reviewer.md');
-    fs.writeFileSync(recipe, fs.readFileSync(recipe, 'utf8').replace('optional: [grep,', 'optional: [verify, grep,'));
+    const grown = fs.readFileSync(recipe, 'utf8').replace(/optional: \[/, 'optional: [verify, ');
+    assert.notStrictEqual(grown, fs.readFileSync(recipe, 'utf8'), 'the recipe declares optional tools to extend');
+    fs.writeFileSync(recipe, grown);
     assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify']);
     const writer = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-writer.md');
     fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace('{anyOf: [write, edit]}', '{anyOf: [write, edit, bash]}'));
@@ -430,7 +482,7 @@ process.exit(0);`);
     const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', responseModel: 'operator-model-2026', providerThinkingLevel: 'medium', content: [] } })}
 ${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
 ${mainReceipt(0.02)}
-${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', upstreamResponses: [{ requestedModelId: 'operator-model', providerResponseId: 'resp-1', responseModelIdObservation: { state: 'not-observed' } }] })}
+${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', toolStats: [{ tool: 'read', count: 2, ok: 2, errors: 0, blocked: 0 }], upstreamResponses: [{ requestedModelId: 'operator-model', providerResponseId: 'resp-1', responseModelIdObservation: { state: 'not-observed' } }] })}
 process.exit(0);`);
     const root = preparedRoot('models', entry, undefined, ungatedFile);
     const run = await withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, budgetUsd: 0.04, campaignFile: ungatedFile }));

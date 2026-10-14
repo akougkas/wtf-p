@@ -65,13 +65,18 @@ text and action contracts changed.
   interaction record, never counts as completed, and an unfinished run exits
   non-zero; the desk's seal key is held in the runner's memory while steps
   run, every process a step leaves behind is stopped, and the whole Clio
-  package root is bound; a program-running call is a policy violation, and
-  `prepare` fails when an installed recipe declares a tool a step's workers
-  may not hold; steps still run as the operator's user without an OS sandbox,
-  and every run record says so
+  package root is bound; a program-running call is a policy violation, a step
+  that changes the Clio configuration later steps load or leaves an unreadable
+  worker receipt fails integrity, and `prepare` fails when an installed recipe
+  declares a tool a step's workers may not hold; steps still run as the
+  operator's user without an OS sandbox, and every run record says so
 - Clio reviewer recipes are Clio's `read-only` class instead of
   `verification`, so they no longer hold `verify`, whose checks run commands
-  from files a writer could plant
+  from files a writer could plant; they bind no skill, since Clio refuses a
+  skill load in a read-only run
+- The capability docs now say the desk runs only in Clio's interactive
+  sessions: Clio 0.6.2 loads no api 2 runtime in a headless `run`, so a
+  campaign step runs without it
 - Seven action contracts now declare record writes their workflows already
   made; plan-section and write-section route missing evidence to `research-gap`
   through a checkpoint instead of running it inline

@@ -931,11 +931,13 @@ function renderClioRole(role, slug) {
   const verifier = role.fields.execution_class === 'verifier-report';
   // Verifier roles judge text and run nothing, so their recipes are Clio's
   // read-only class: no write, no shell and no verify, whose checks run
-  // commands from files a writer could have planted.
+  // commands from files a writer could have planted. Clio refuses a skill load
+  // in a read-only run, so they bind none; the recipe body is the role's whole
+  // contract, and the orchestrator holds the action's skill.
   const required = verifier
-    ? '[read, context]'
+    ? '[read]'
     : '[read, context, limitation, {anyOf: [write, edit]}]';
-  const optional = '[grep, find, ls, ledger]';
+  const optional = verifier ? '[context, grep, find, ls, ledger]' : '[grep, find, ls, ledger]';
   const nativeResult = verifier
     ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each ordinary evidence value to one short sentence (the wtfp.role-result entry contains compact serialized JSON), keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
@@ -945,7 +947,7 @@ function renderClioRole(role, slug) {
     `name: ${yamlScalar(role.fields.name)}`,
     `description: ${yamlScalar(roleDescription(role))}`,
     `tools: {required: ${required}, optional: ${optional}}`,
-    `skills: [${ROLE_SKILLS[slug]}]`,
+    `skills: [${verifier ? '' : ROLE_SKILLS[slug]}]`,
     'audience: custom',
     `category: ${verifier ? 'quality' : slug.includes('citation') || slug.includes('research') ? 'research' : slug.includes('plan') || slug === 'outliner' ? 'plan' : 'implement'}`,
     `capabilityClass: ${verifier ? 'read-only' : 'workspace-edit'}`,

@@ -840,7 +840,7 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     const source = planText(plan, sourcePath);
     const verifier = ['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'].includes(role);
     assert.match(source, /^---\nversion: 1\n/);
-    assert.ok(source.includes(`\nskills: [${CLIO_ROLE_SKILLS[role]}]\n`), `${sourcePath}: incorrect skill binding`);
+    assert.ok(source.includes(`\nskills: [${verifier ? '' : CLIO_ROLE_SKILLS[role]}]\n`), `${sourcePath}: incorrect skill binding`);
     assert.match(source, /^audience: custom$/m);
     assert.match(source, /^projectContextTier: bounded$/m);
     assert.match(source, /^budget: \{toolCalls: \d+, readReserve: \d+, synthesis: true\}$/m);
@@ -1222,6 +1222,8 @@ record('research handoff declares incremental state and preserves native decisio
     if (/resultContract: \{kind: verifier-report\}/.test(body)) {
       assert.match(body, /^capabilityClass: read-only$/m, `${role}: a reviewer recipe is Clio's read-only class`);
       assert.deepStrictEqual(declared.filter((tool) => ['write', 'edit', 'artifact'].includes(tool)), [], `${role}: a reviewer recipe holds no write tool`);
+      // Clio refuses context(scope=skills) in a read-only run, so a bound skill could never load.
+      assert.match(body, /^skills: \[\]$/m, `${role}: a read-only reviewer binds no skill`);
     }
   }
   assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
