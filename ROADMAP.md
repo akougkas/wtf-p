@@ -98,7 +98,7 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 
 ### Native clients
 
-- [x] Build Clio Coder extension with namespaced prompts, agents, skills, and fleets
+- [x] Build the Clio Coder content plugin with namespaced prompts, agents, skills, and playbooks, and the WTF-P writing desk as its own Clio extension
 - [x] Build Claude Code plugin with generated commands, agents, and skills
 - [x] Build Codex plugin and repo marketplace
 - [x] Build GitHub Copilot CLI plugin and committed `.github` cloud projection
@@ -116,10 +116,10 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Add exact-file v2 receipts, rollback, containment, and safe uninstall
 - [x] Complete isolated native discovery and the primary Claude, Codex, and Clio `new-paper` evaluations
 - [x] Define versioned routing corpora, semantic invariants, budget metadata, and fail-closed comparison tooling
-- [x] Canonicalize both Clio fleets and validate their corrected directory boundaries with Clio 0.3.8
+- [x] Canonicalize both Clio fleets, ship them as playbooks, and validate their write boundaries on the pinned Clio 0.6.2 build (first validated with Clio 0.3.8)
 - [x] Retain exact `dynamo/qwen3.8-27b` blocked lifecycle and mixed fleet readings without promoting them to a baseline
 - [x] Exercise a monitored one-section NSF 25-531 write/review/pause path and a corrected fresh-process resume/progress path with 25/25 schema-valid records
-- [ ] Complete the paid skill-routing matrix and full Clio lifecycle/fleet runs
+- [ ] Complete the paid skill-routing matrix and the model-backed Clio 0.6.2 reference campaign, which is prepared and awaits resources and the author brief
 - [ ] Establish observed cross-version academic-output baselines
 - [x] Publish `0.6.0-rc.1` under the npm `next` tag
 - [x] Publish `0.6.0-rc.2` under the npm `next` tag
@@ -211,6 +211,7 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
+| v0.8.0 | Oct 2026 | WTF-P writing desk for Clio Coder as its own extension; Clio fleet contracts shipped as playbooks |
 | v0.6.0-rc.2 | Aug 2026 | Decision fidelity, lifecycle guardrails, and bounded NSF proposal UAT |
 | v0.6.0-rc.1 | Aug 2026 | Portable protocol, seven native adapters, Clio reference integration, safe transactional installer |
 | v0.7.0 | Sep 2026 | Optional CiteNexus MCP research backend for `citation.fetch` |
