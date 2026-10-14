@@ -37,13 +37,15 @@ that the operator lets read Clio's state directory from minting one.
 The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
 `run_script` and `job` calls, and judges a path where Clio's tools land it:
 after `@` and `~`, and with a `..` after a link stepping up from the link's
-target. A running action may write only what its contract declares, for the
+target. The desk reads the whole workspace so it sees every link in it, and it
+refuses a path whose landing it cannot inspect. A running action may write only what its contract declares, for the
 section it names, until its turn ends. A section's manuscript, including any
 file nested under its stem, waits for its blocking gates, an author `approve`
 answer given for the current plan bytes, and verified, uncontested evidence for
 required claims in literature-heavy sections. Dispatch is parsed as Clio parses
 it. Workers are confined through `intent.write_roots` to manuscripts that are
-ready and never get an empty, whole-workspace or record-covering root; outside
+ready and never get an empty, whole-workspace, record-covering or linked root,
+nor a `cwd` other than the project root; outside
 an action a worker must name roots that leave out `.planning` and the gated
 manuscripts. Changes that loosen what the desk holds, such as a re-pointed
 manuscript or rewritten plan history, wait for the author at the desk.

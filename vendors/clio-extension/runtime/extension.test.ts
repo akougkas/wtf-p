@@ -9,6 +9,7 @@
  */
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
@@ -291,7 +292,7 @@ test("no record write or file write escapes through a symbolic link", () =>
 			symlinkSync(path.join(workspace, "paper"), path.join(workspace, "drafts"));
 			assert.match(blocked(await write(host, "drafts/introduction.md")) ?? "", /cannot be written yet/);
 			symlinkSync(path.join(outside, "missing"), path.join(workspace, "paper/dangling.md"));
-			assert.match(blocked(await write(host, "paper/dangling.md")) ?? "", /dangling symbolic link/);
+			assert.match(blocked(await write(host, "paper/dangling.md")) ?? "", /dangling link/);
 		} finally {
 			rmSync(outside, { recursive: true, force: true });
 		}
@@ -615,6 +616,9 @@ test("WTF-P workers are dispatched only inside their action and only to manuscri
 		);
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src"] } })) ?? "", /lie outside what write-section may write/);
 		assert.ok(existsSync(path.join(workspace, "paper/introduction.md")));
+		// A root the action itself grants is refused when a link makes it lead somewhere else.
+		symlinkSync(path.join(workspace, ".planning/sections"), path.join(workspace, "paper/introduction"));
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft." })) ?? "", /paper\/introduction\/ does not lead where it reads/);
 	}, SERVED));
 
 test("the guard judges the file Clio's tools open, however the path is spelled (W2)", () =>
@@ -636,6 +640,70 @@ test("the guard judges the file Clio's tools open, however the path is spelled (
 		const hooked = /on: before_tool, tools: \[([^\]]*)\]/u.exec(manifest)?.[1]?.split(/,\s*/u) ?? [];
 		for (const tool of ["write", "edit", "artifact", "dispatch", "bash", "run_script", "job"]) assert.ok(hooked.includes(tool), `${tool} is hooked`);
 	}));
+
+/** Loads the desk the way Clio's runtime child does and prints the before_tool verdict for each call. */
+const HARNESS = `
+import { pathToFileURL } from "node:url";
+const [entry, workspace, calls] = process.argv.slice(2);
+const hooks = new Map();
+const noop = () => {};
+const kv = () => {
+	const map = new Map();
+	return {
+		async get(key) { return map.has(key) ? { value: structuredClone(map.get(key)), version: 1 } : { value: undefined, version: 0 }; },
+		async set(key, value) { map.set(key, structuredClone(value)); return { ok: true }; },
+		async delete(key) { map.delete(key); },
+		async keys() { return [...map.keys()]; },
+	};
+};
+const ctx = { snapshot: { plugin: null, workspace, sessionId: "s", generation: 1, mode: "interactive", activeWorkspace: null }, requestId: "r", signal: new AbortController().signal, options: {}, state: kv(), store: kv() };
+const module = await import(pathToFileURL(entry).href);
+module.default({ handle: noop, action: noop, tool: noop, interview: noop, on: noop, hook: (point, handler) => hooks.set(point, handler) });
+const verdicts = [];
+for (const call of JSON.parse(calls)) {
+	const out = await hooks.get("before_tool")({ point: "before_tool", turnId: "t1", ...call }, ctx);
+	verdicts.push(out?.effects?.find((effect) => effect.kind === "block_tool")?.reason ?? null);
+}
+console.log(JSON.stringify(verdicts));
+`;
+
+test("under the read and write access Clio grants the desk, it still sees every link in the project and refuses what it cannot see (W2)", async () => {
+	const workspace = project();
+	const harness = path.join(process.env.TMPDIR as string, `wtfp-host-harness-${process.pid}-${Date.now()}.mjs`);
+	try {
+		symlinkSync(path.join(workspace, "paper"), path.join(workspace, "drafts"));
+		mkdirSync(path.join(workspace, "notes"));
+		symlinkSync(path.join(workspace, ".planning"), path.join(workspace, "notes/records"));
+		writeFileSync(harness, HARNESS);
+		// The flags Clio 0.6.2 builds from the manifest (runtimePermissionArgs in runtime-process-v2.ts).
+		const declared = /fs: \{ read: \[([^\]]*)\], write: \[([^\]]*)\] \}/u.exec(readFileSync(path.join(ROOT, "clio-coder-extension.yaml"), "utf8"));
+		assert.ok(declared, "the manifest declares its file access");
+		const entries = (list: string): string[] => list.split(",").map((entry) => entry.trim().replace(/^"|"$/gu, "")).filter(Boolean);
+		const directory = (root: string): string => (root.endsWith(path.sep) ? root : `${root}${path.sep}`);
+		const read = entries(declared[1] as string).map((entry) => directory(entry === "workspace" ? workspace : entry === "home" ? homedir() : path.join(workspace, entry)));
+		const write = entries(declared[2] as string).filter((entry) => entry !== "store").map((entry) => directory(path.join(workspace, entry)));
+		const calls: Array<[Json, boolean]> = [
+			[{ tool: "write", args: { path: "paper/introduction.md" } }, true],
+			[{ tool: "write", args: { path: "drafts/introduction.md" } }, true],
+			[{ tool: "write", args: { path: "notes/records/config.json" } }, true],
+			[{ tool: "write", args: { path: "src/notes.md" } }, false],
+			[{ tool: "dispatch", args: { agent: "coder", task: "x", intent: { write_roots: ["drafts/"] } } }, true],
+			[{ tool: "dispatch", args: { agent: "coder", task: "x", intent: { write_roots: ["src/"] } } }, false],
+			...(existsSync("/proc/self/cwd") ? ([[{ tool: "write", args: { path: "/proc/self/cwd/paper/introduction.md" } }, true]] as Array<[Json, boolean]>) : []),
+		];
+		const run = spawnSync(
+			process.execPath,
+			["--permission", ...[directory(ROOT), harness, ...read].map((root) => `--allow-fs-read=${root}`), ...write.map((root) => `--allow-fs-write=${root}`), harness, path.join(ROOT, "runtime/extension.ts"), workspace, JSON.stringify(calls.map(([call]) => call))],
+			{ cwd: workspace, encoding: "utf8", timeout: 60000 },
+		);
+		assert.equal(run.status, 0, run.stderr);
+		const verdicts = JSON.parse(run.stdout) as Array<string | null>;
+		calls.forEach(([call, refused], index) => assert.equal(verdicts[index] !== null, refused, `${JSON.stringify(call)}: ${verdicts[index]}`));
+	} finally {
+		rmSync(harness, { force: true });
+		rmSync(workspace, { recursive: true, force: true });
+	}
+});
 
 test("a manuscript nested under another section's stem is judged by every section it belongs to", () =>
 	withDesk(async (host, workspace) => {
@@ -661,7 +729,7 @@ test("a manuscript nested under another section's stem is judged by every sectio
 	}, SERVED));
 
 test("dispatch is judged as Clio parses it, and no worker gets an unbounded or record-covering root (W3)", () =>
-	withDesk(async (host) => {
+	withDesk(async (host, workspace) => {
 		const dispatch = (args: Json) => host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args });
 		// Clio trims agent ids and accepts a batch as a JSON string or a single object.
 		for (const args of [
@@ -678,6 +746,12 @@ test("dispatch is judged as Clio parses it, and no worker gets an unbounded or r
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: [".planning/sections/"] } })) ?? "", /\.planning/);
 		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src/"] } })), null);
 		assert.match(blocked(await dispatch({ apply_winner: { branch: "clio-coder/compete/g/1" } })) ?? "", /cannot see what/);
+		// Clio resolves write roots against a worker's cwd, and fixes a boundary where a root physically leads.
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", cwd: "paper", intent: { write_roots: ["introduction.md"] } })) ?? "", /cwd/);
+		assert.match(blocked(await dispatch({ tasks: [{ agent: "coder", task: "x", cwd: ".planning", intent: { write_roots: ["checkpoints/"] } }] })) ?? "", /cwd/);
+		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", cwd: ".", intent: { write_roots: ["src/"] } })), null);
+		symlinkSync(path.join(workspace, "paper"), path.join(workspace, "drafts"));
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["drafts/"] } })) ?? "", /does not lead where it reads/);
 		// An action that declares no file outputs never hands a writer an empty list, which Clio reads as no boundary.
 		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
 		assert.match(blocked(await dispatch({ tasks: [{ agent: "wtfp-section-planner", task: "x" }] })) ?? "", /declares no file outputs/);

@@ -258,33 +258,51 @@ function contained(workspace: string, relative: string): string | null {
 
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/gu;
 
+/** The workspace's real path, where every walk inside the project starts. */
+function realWorkspace(workspace: string): string {
+	try {
+		return realpathSync(workspace);
+	} catch {
+		return workspace;
+	}
+}
+
 /**
  * Where a Clio file tool lands a path argument, resolved the way Clio's
  * src/tools/path-utils.ts and core/path-canonical.ts resolve it: a leading `@`
  * is dropped, Unicode spaces become plain ones, `~` is the home directory, and
  * the components are walked as the kernel walks them, so a `..` after a link
- * steps up from the link's target. Null when a link on the way does not
- * resolve; the guard refuses those rather than guess where they land.
+ * steps up from the link's target. A path that starts in the workspace is
+ * walked from its real path. Null when the walk cannot be verified: a link
+ * that does not resolve, or a component the desk may not inspect. Clio runs
+ * the desk with read access to the workspace only, so a path through anything
+ * outside it, such as /proc/self/cwd, cannot be seen and is refused rather
+ * than guessed.
  */
 function toolTarget(raw: string, workspace: string): string | null {
 	let spelled = (raw.startsWith("@") ? raw.slice(1) : raw).replace(UNICODE_SPACES, " ");
 	if (spelled === "~") spelled = homedir();
 	else if (spelled.startsWith("~/")) spelled = homedir() + spelled.slice(1);
 	const joined = path.isAbsolute(spelled) ? spelled : `${workspace}${path.sep}${spelled}`;
-	const { root } = path.parse(joined);
-	let current = root;
-	for (const part of joined.slice(root.length).split(path.sep)) {
+	const real = realWorkspace(workspace);
+	const base = [workspace, real].find((candidate) => joined === candidate || joined.startsWith(`${candidate}${path.sep}`));
+	let current = base === undefined ? path.parse(joined).root : real;
+	const rest = base === undefined ? joined.slice(current.length) : joined.slice(base.length);
+	for (const part of rest.split(path.sep)) {
 		if (part === "" || part === ".") continue;
 		if (part === "..") {
 			current = path.dirname(current);
 			continue;
 		}
 		const next = path.join(current, part);
-		let link = false;
+		let link: boolean;
 		try {
 			link = lstatSync(next).isSymbolicLink();
-		} catch {
-			// Missing: nothing below it is a link, and a later `..` climbs back lexically.
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			// Missing: nothing below it is a link, and a later `..` climbs back lexically. Anything else is unseen.
+			if (code !== "ENOENT" && code !== "ENOTDIR") return null;
+			link = false;
 		}
 		if (!link) {
 			current = next;
@@ -2363,7 +2381,8 @@ async function guardWrite(ctx: ExtensionContextV2, target: string): Promise<Exte
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
 	const real = toolTarget(target, workspace);
-	if (real === null) return block(`WTF-P write guard: ${target} goes through a dangling symbolic link; refused.`);
+	if (real === null)
+		return block(`WTF-P write guard: the desk cannot verify where ${target} lands (a dangling link, or a path through somewhere it may not inspect); refused. Write inside the project by a plain path.`);
 	const root = realpathSync(workspace);
 	if (!inside(root, real)) return {};
 	const relative = posix(path.relative(root, real)) || ".";
@@ -2444,7 +2463,7 @@ function isObject(value: unknown): value is Json {
  * a write root of "." or "./" is the whole workspace, as no list is. Throws
  * for a shape the desk cannot read, since it could not confine it.
  */
-function dispatchTasks(args: Json): DispatchTask[] {
+function dispatchTasks(args: Json, workspace: string): DispatchTask[] {
 	const unreadable = (what: string): Error => new Error(`WTF-P dispatch guard: the desk cannot read this dispatch's ${what}, so it cannot confine its workers.`);
 	let tasks: unknown = args.tasks;
 	if (typeof tasks === "string") {
@@ -2460,6 +2479,13 @@ function dispatchTasks(args: Json): DispatchTask[] {
 	if (isObject(tasks) || typeof tasks === "string") tasks = [tasks];
 	if (tasks === undefined && typeof args.task === "string") tasks = [{ task: args.task }];
 	if (!Array.isArray(tasks) || tasks.length === 0) throw unreadable("tasks");
+	// Clio resolves a worker's write roots against its cwd, so a cwd other than the project root moves every root the desk judged.
+	for (const holder of [args, ...tasks.filter(isObject)]) {
+		const cwd = holder.cwd;
+		if (cwd === undefined) continue;
+		if (typeof cwd !== "string" || (cwd.trim() !== "" && cwd.trim() !== "." && cwd.trim() !== "./" && path.resolve(workspace, cwd.trim()) !== path.resolve(workspace)))
+			throw new Error("WTF-P dispatch guard: a worker's cwd moves the write roots the desk judged; dispatch from the project root without cwd.");
+	}
 	const shared = args.intent;
 	if (shared !== undefined && !isObject(shared)) throw unreadable("intent");
 	return tasks.map((task) => {
@@ -2484,12 +2510,17 @@ function dispatchTasks(args: Json): DispatchTask[] {
 	});
 }
 
-/** Where a worker root really leads inside the project, so a link cannot dress up a held path. */
-function rootSpellings(workspace: string, root: string): string[] {
-	const real = toolTarget(root.replace(/\/$/u, ""), workspace);
-	const base = realpathSync(workspace);
-	const physical = real !== null && inside(base, real) ? posix(path.relative(base, real)) || "." : null;
-	return physical === null || physical === root.replace(/\/$/u, "") ? [root] : [root, physical];
+/**
+ * Refuses a worker root that does not lead where it reads: Clio fixes a
+ * worker's boundary at the root's physical location, so a root through a link
+ * would let the worker write wherever the link points.
+ */
+function plainRoot(workspace: string, root: string): void {
+	const lexical = root.replace(/\/$/u, "");
+	const real = toolTarget(lexical, workspace);
+	const base = realWorkspace(workspace);
+	if (real === null || !inside(base, real) || (posix(path.relative(base, real)) || ".") !== lexical)
+		throw new Error(`WTF-P dispatch guard: write root ${root} does not lead where it reads (a link or an unverifiable path); name the real project path.`);
 }
 
 async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<ExtensionHookResult> {
@@ -2499,7 +2530,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<Exten
 	const desk = loadDesk(workspace, await storedKey(ctx, false));
 	if (desk.present && (args.from_scout !== undefined || args.apply_winner !== undefined))
 		return block("WTF-P dispatch guard: the desk cannot see what a scout continuation or a compete winner writes, so a WTF-P project refuses them.");
-	const entries = dispatchTasks(args);
+	const entries = dispatchTasks(args, workspace);
 	const armed = await armedFor(ctx);
 	if (!armed) {
 		const wtfp = entries.filter((entry) => entry.agent !== null && WTFP_AGENT.test(entry.agent));
@@ -2516,7 +2547,8 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<Exten
 					`WTF-P dispatch guard: outside a WTF-P action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
 				);
 			for (const root of entry.roots) {
-				const hit = held.find((file) => rootSpellings(workspace, root).some((spelling) => overlaps(spelling, file)));
+				plainRoot(workspace, root);
+				const hit = held.find((file) => overlaps(root, file));
 				if (hit) return block(`WTF-P dispatch guard: write root ${root} reaches ${hit}, which a worker outside a WTF-P action may not change.`);
 			}
 		}
@@ -2558,6 +2590,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<Exten
 				: `WTF-P dispatch guard: ${name} declares no file outputs a worker may write; only its read-only reviewers may be dispatched.`,
 		);
 	});
+	for (const roots of narrowed) for (const root of roots ?? []) plainRoot(workspace, root);
 	const writers = entries.filter((entry, index) => narrowed[index] !== null);
 	if (writers.length > 1 && writers.some((entry) => entry.roots === null))
 		return block(

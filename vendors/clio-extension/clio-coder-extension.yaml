@@ -70,7 +70,7 @@ runtime:
         - { key: h, action: help, label: "WTF-P action reference" }
   access: [prompt, tool-args]
   permissions:
-    fs: { read: [".planning", "paper"], write: [".planning"] }
+    fs: { read: [workspace], write: [".planning"] }
     exec: false
     net: false
   state: { session: true, store: true }
