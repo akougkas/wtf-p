@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "9937c0fbb38a4c98153d92d4e03ba0d7043c3dad",
+  "wtfp_commit": "bc980b31c0fcedcc08d16bf014f6fb297317faab",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -37,14 +37,14 @@
     {
       "target": "claude",
       "path": "vendors/claude/.wtfp-generated.json",
-      "manifest_sha256": "e1d9482ecdc8db6b7237ec4ff098d0b2df957ad142c5b37393081a35fd13267e",
-      "source_sha256": "24cb9a515866bd215646f8d913c9647de5f52aafb4a674ca06140daf7005353d"
+      "manifest_sha256": "0c225fb89bcf650837f77f019f6962595a1129d17fa3c567f2a5a1d6b2ce31eb",
+      "source_sha256": "e97fb2dfd95af7e345f380880945846ca8dae6b13afa27be93dc104a26fb6741"
     },
     {
       "target": "clio",
       "path": "vendors/plugin/.wtfp-generated.json",
-      "manifest_sha256": "70b3e3401289c628992c3bfa5466c1bfc81540ef23102e8046c0f27bf187aa6a",
-      "source_sha256": "075ddf665c726a7a6ab414e3be236307e7a27bd12c061d4c96b3239d20a8090a"
+      "manifest_sha256": "e56e2ad8026e9b6ec408da94350d0c07347372a6f2f02bb689d9eb19ed81ac78",
+      "source_sha256": "4a22dab5eedcf29cc2b12a38b454dd9d31e07551e391a3160476d5d3e4634fe3"
     },
     {
       "target": "codex-marketplace",
