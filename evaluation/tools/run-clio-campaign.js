@@ -256,6 +256,8 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   const digest = (directory) => (directory && fs.existsSync(directory) ? directoryDigest(directory) : null);
   return {
     entry,
+    entry_sha256: entry && fs.existsSync(entry) ? sha256(fs.readFileSync(entry)) : null,
+    dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(path.dirname(path.dirname(entry))) : null,
     wrapper_sha256: fs.existsSync(wrapper) ? sha256(fs.readFileSync(wrapper)) : null,
     plugin_root: pluginRoot,
     plugin_sha256: digest(pluginRoot),
@@ -480,12 +482,23 @@ function stepCost(receipts) {
  * `responseModelIdObservation`. A call without a report is counted, not
  * assumed to be the requested model.
  */
+/** The model id a Clio response-model observation reports, or null when it reports none. */
+function reportedModel(observation) {
+  if (!observation || typeof observation !== 'object') return null;
+  if (observation.state === 'reported' && typeof observation.reportedModelId === 'string') return observation.reportedModelId;
+  if (observation.state === 'legacy-difference-only' && typeof observation.differingModelId === 'string') return observation.differingModelId;
+  return null;
+}
+
 function modelObservation(messages, receipts, selected) {
   const workers = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId !== 'main-agent');
   const calls = [
-    ...messages.map(message => (typeof message.responseModel === 'string' ? message.responseModel : null)),
+    // Clio records a provider's report on the message itself for some API families and as responseModel for others.
+    ...messages.map(message => reportedModel(message.responseModelIdObservation) ?? (typeof message.responseModel === 'string' ? message.responseModel : null)),
+    // A run-aggregate row sums a worker's calls; it is not one more call.
     ...workers.flatMap(receipt => (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : [])
-      .map(response => (response && response.responseModelIdObservation && response.responseModelIdObservation.state === 'reported' ? response.responseModelIdObservation.reportedModelId : null)))
+      .filter(response => response && response.usageScope !== 'run-aggregate')
+      .map(response => reportedModel(response.responseModelIdObservation) ?? (typeof response.differingResponseModelId === 'string' ? response.differingResponseModelId : null)))
   ];
   const reported = [...new Set(calls.filter(model => typeof model === 'string'))].sort();
   const unreported = calls.filter(model => model === null).length;
@@ -563,7 +576,8 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     latency_ms: result.latencyMs,
     process_group: result.processGroup,
     events: events.length,
-    model_calls: messages.length + receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent').length,
+    // A provider error is not a model's output, so it is not counted as an observed call.
+    model_calls: messages.filter(message => message.stopReason !== 'error').length + receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent').length,
     tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, blocked_calls: blockedCalls },
     gates,
     interactions_added: added,
@@ -597,6 +611,7 @@ function wipe(file) {
   } catch {
     return;
   }
+  if (stat.isDirectory()) throw new Error(`${path.basename(file)} is a directory, not a copy the run made; left in place`);
   if (stat.isFile()) {
     const handle = fs.openSync(file, 'r+');
     try {
@@ -609,15 +624,108 @@ function wipe(file) {
   fs.unlinkSync(file);
 }
 
-/** The operator's settings and credentials copies, and any backup or temporary sibling Clio left beside them. */
+/** The operator's settings and credentials copies, and any backup or temporary sibling Clio left beside them; returns what it could not wipe. */
 function wipePrivate(config) {
-  if (!fs.existsSync(config)) return;
-  for (const name of fs.readdirSync(config)) if (PRIVATE_FILES.test(name)) wipe(path.join(config, name));
+  const failures = [];
+  if (!fs.existsSync(config)) return failures;
+  for (const name of fs.readdirSync(config)) {
+    if (!PRIVATE_FILES.test(name)) continue;
+    try {
+      wipe(path.join(config, name));
+    } catch (error) {
+      failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return failures;
+}
+
+const RUN_MARKER = 'WTFP_CAMPAIGN_RUN';
+
+/**
+ * Stops every process still carrying this run's marker: anything a step left
+ * running, detached or not, once the step is over. Linux only; elsewhere the
+ * record says the sweep did not run. A process that dropped its environment
+ * cannot be found this way.
+ */
+function sweepRun(marker) {
+  if (process.platform !== 'linux' || !fs.existsSync('/proc')) return { swept: false, killed: [] };
+  const killed = [];
+  for (const name of fs.readdirSync('/proc')) {
+    if (!/^\d+$/u.test(name) || Number(name) === process.pid) continue;
+    let environ;
+    try {
+      environ = fs.readFileSync(`/proc/${name}/environ`, 'utf8');
+    } catch {
+      continue;
+    }
+    if (!environ.split('\0').includes(`${RUN_MARKER}=${marker}`)) continue;
+    try {
+      process.kill(Number(name), 'SIGKILL');
+      killed.push(Number(name));
+    } catch {
+      // Already gone.
+    }
+  }
+  return { swept: true, killed };
+}
+
+/**
+ * Takes the desk's seal key out of the profile for the length of a run. Every
+ * file a step's processes can name, they can read, so the key lives only in
+ * this process's memory while headless steps run. A runner killed outright
+ * loses it, and earlier answers then read as unconfirmed until the author
+ * confirms them again: that fails closed.
+ */
+function holdStore(file) {
+  let bytes = null;
+  try {
+    if (fs.lstatSync(file).isFile()) bytes = fs.readFileSync(file);
+  } catch {
+    return null;
+  }
+  if (bytes !== null) wipe(file);
+  return bytes;
+}
+
+/** Puts the held key back; a store a step created in the meantime is set aside and reported. */
+function restoreStore(file, bytes) {
+  let recreated = null;
+  if (fs.existsSync(file)) {
+    recreated = `${file}.made-during-run-${crypto.randomUUID()}`;
+    fs.renameSync(file, recreated);
+  }
+  if (bytes !== null) {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, bytes, { mode: 0o600 });
+  }
+  return recreated;
 }
 
 /** Secret-looking values in the operator's credentials, to search the run's own logs for. */
-function secretTokens(text) {
-  return [...new Set(text.match(/[A-Za-z0-9_\-+/=.]{16,}/gu) || [])];
+function secretTokens(text, minimum = 8) {
+  return [...new Set(text.match(new RegExp(`[A-Za-z0-9_\\-+/=.]{${minimum},}`, 'gu')) || [])];
+}
+
+const SECRET_KEY = /auth|header|token|secret|passw|api[-_]?key|bearer|cookie|credential/iu;
+
+/**
+ * The values in a settings file that sit under an authentication key. Model
+ * ids and URLs stay out: redacting them would erase the very evidence a run
+ * records about which model it called.
+ */
+function settingsSecrets(text) {
+  const stack = [];
+  const values = [];
+  for (const line of text.split('\n')) {
+    const match = /^(\s*)(?:-\s*)?([^:#\s][^:#]*?)\s*:\s*(.*?)\s*$/u.exec(line);
+    if (!match) continue;
+    const indent = match[1].length;
+    while (stack.length > 0 && stack[stack.length - 1].indent >= indent) stack.pop();
+    stack.push({ indent, key: match[2] });
+    const value = match[3].replace(/^["']|["']$/gu, '');
+    if (value && stack.some(entry => SECRET_KEY.test(entry.key))) values.push(value);
+  }
+  return values.flatMap(value => secretTokens(value));
 }
 
 /**
@@ -661,7 +769,7 @@ function verifyLauncher(root, prepared, entry) {
   const bound = prepared.launcher;
   if (!bound) throw new Error('the prepared root records no launcher identity; prepare a new root');
   const now = launcherIdentity(root, entry, bound.plugin_root, bound.desk_root);
-  for (const key of ['entry', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
+  for (const key of ['entry', 'entry_sha256', 'dist_sha256', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
     if (now[key] !== bound[key]) throw new Error(`the launcher changed since prepare (${key}); prepare a new root`);
   }
 }
@@ -726,9 +834,15 @@ async function execute(campaign, options) {
     copyPrivateSource(SETTINGS_ENV, path.join(config, 'settings.yaml'), root),
     copyPrivateSource(CREDENTIALS_ENV, path.join(config, 'credentials.yaml'), root)
   ];
-  // Clio targets can carry auth headers in settings, so both files' values are secrets.
-  const secrets = secretTokens(['settings.yaml', 'credentials.yaml'].map(name => fs.readFileSync(path.join(config, name), 'utf8')).join('\n'));
+  // Every credential value is a secret, and so is a settings value under an auth key, such as a target's headers.
+  const secrets = [...new Set([
+    ...secretTokens(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8')),
+    ...settingsSecrets(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'))
+  ])];
   const receipts = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'receipts');
+  const storeFile = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+  const preparedSha = sha256(fs.readFileSync(preparedFile));
+  const marker = crypto.randomUUID();
   const run = {
     schema: 'wtfp.evaluation.campaign-run/v2',
     campaign: prepared.campaign,
@@ -742,6 +856,7 @@ async function execute(campaign, options) {
     timeout_minutes: timeoutMinutes,
     resources,
     workspace: { prepared_sha256: prepared.workspace_sha256, initial_sha256: bound.initial, head: workspaceHead(workspace) },
+    prepared_record_sha256: preparedSha,
     started_at: new Date().toISOString(),
     steps: [],
     outcome: 'running'
@@ -749,6 +864,16 @@ async function execute(campaign, options) {
   let spent = 0;
   let costStatus = 'reported';
   let persisted = false;
+  let held = null;
+  const integrity = [];
+  const attempt = (label, work) => {
+    try {
+      return work();
+    } catch (error) {
+      integrity.push(`${label}: ${error instanceof Error ? error.message : String(error)}`);
+      return undefined;
+    }
+  };
   const persist = () => {
     if (persisted) return;
     persisted = true;
@@ -757,22 +882,36 @@ async function execute(campaign, options) {
     run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: COST_SCOPE } : { status: costStatus, usd: spent, scope: COST_SCOPE };
     // Model evidence is claimed only for a run in which a model call was actually seen.
     run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
-    try {
-      wipePrivate(config);
-      run.credentials_removed = !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name));
-      const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => scanSecrets(directory, secrets, true));
-      const workspaceSecrets = scanSecrets(workspace, secrets, false);
-      run.secrets = {
-        redacted_files: redacted.flatMap(item => item.found).map(file => path.relative(root, file)),
-        in_workspace: workspaceSecrets.found.map(file => path.relative(root, file)),
-        unscanned: [...redacted, workspaceSecrets].flatMap(item => item.unscanned).map(file => path.relative(root, file))
-      };
-    } catch (error) {
-      run.credentials_removed ??= false;
-      run.secrets = { error: error instanceof Error ? error.message : String(error) };
-    } finally {
-      writeJson(path.join(root, 'run.json'), run);
+    // Nothing a step left running may outlive the run, and the key returns only after it is gone.
+    run.processes_swept_at_end = attempt('sweep', () => sweepRun(marker)) ?? { swept: false, killed: [] };
+    const made = attempt('seal store', () => restoreStore(storeFile, held));
+    if (made) integrity.push(`a seal store was created during the run and set aside as ${path.relative(root, made)}`);
+    run.seal_store = { held_during_run: held !== null, restored: held !== null && !integrity.some(item => item.startsWith('seal store')) };
+    const unwiped = attempt('wipe', () => wipePrivate(config)) ?? [];
+    run.credentials_removed = fs.existsSync(config) && !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name) && fs.lstatSync(path.join(config, name)).isFile());
+    if (unwiped.length > 0) run.unwiped = unwiped;
+    const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => attempt('redaction', () => scanSecrets(directory, secrets, true)) ?? { found: [], unscanned: [directory] });
+    const workspaceSecrets = attempt('workspace scan', () => scanSecrets(workspace, secrets, false)) ?? { found: [], unscanned: [workspace] };
+    run.secrets = {
+      redacted_files: redacted.flatMap(item => item.found).map(file => path.relative(root, file)),
+      in_workspace: workspaceSecrets.found.map(file => path.relative(root, file)),
+      unscanned: [...redacted, workspaceSecrets].flatMap(item => item.unscanned).map(file => path.relative(root, file))
+    };
+    // The run's own records are the runner's: a step that wrote or changed them tampered with the evidence.
+    const target = path.join(root, 'run.json');
+    if (fs.existsSync(target)) {
+      const aside = `run.json.written-during-run-${crypto.randomUUID()}`;
+      fs.renameSync(target, path.join(root, aside));
+      integrity.push(`run.json was written during the run and set aside as ${aside}`);
     }
+    if (sha256(fs.readFileSync(preparedFile)) !== preparedSha) integrity.push('prepared.json changed during the run');
+    if (integrity.length > 0) {
+      run.integrity = integrity;
+      run.outcome = 'integrity-violation';
+    }
+    const staging = path.join(root, `.run.json.${crypto.randomUUID()}.partial`);
+    writeJson(staging, run);
+    fs.renameSync(staging, target);
   };
   // The first signal stops the step and the loop records it; a second exits the process, so the run is recorded first, as cancelled.
   const signals = installExecutionSignalHandlers(() => {
@@ -780,12 +919,16 @@ async function execute(campaign, options) {
     if (signals.state.count > 1) persist();
   });
   try {
+    held = holdStore(storeFile);
     for (const step of campaign.lifecycle) {
       if (signals.state.signal) { run.outcome = 'cancelled'; break; }
-      const env = { ...sanitizedChildEnv(profilePaths(root, step.session)), ...STEP_GUARDS };
+      const env = { ...sanitizedChildEnv(profilePaths(root, step.session)), ...STEP_GUARDS, [RUN_MARKER]: marker };
       env.PATH = [path.join(root, 'clio', 'bin'), env.PATH].join(path.delimiter);
       const logs = path.join(root, 'logs', step.step);
       verifyLauncher(root, prepared, options.entry);
+      // The step's log directory is new or the run stops: a step may not prepare the next one's logs.
+      fs.mkdirSync(path.join(root, 'logs'), { recursive: true, mode: 0o700 });
+      fs.mkdirSync(logs, { mode: 0o700 });
       const before = listReceipts(receipts);
       const interactionsBefore = interactionFiles(workspace);
       const startDigest = workspaceDigest(workspace);
@@ -811,9 +954,11 @@ async function execute(campaign, options) {
         spent += classified.cost.usd;
         if (classified.cost.status === 'estimated' && costStatus === 'reported') costStatus = 'estimated';
       }
+      const swept = sweepRun(marker);
       run.steps.push({
         step: step.step, action: step.action, session: step.session, prompt: prompt(step), author_gate: step.author_gate,
         ...classified,
+        processes_swept: swept,
         workspace_before_sha256: startDigest,
         workspace_sha256: workspaceDigest(workspace),
         workspace_head: workspaceHead(workspace)
@@ -927,6 +1072,7 @@ function collect(campaign, options) {
       collected: before,
       prepared_matches_run: run ? run.workspace.prepared_sha256 === prepared.workspace_sha256 && run.workspace.initial_sha256 === prepared.workspace_sha256 : null,
       changed_since_run: lastStep ? lastStep.workspace_sha256 !== before : null,
+      prepared_unchanged_since_run: run ? sha256(fs.readFileSync(path.join(root, 'prepared.json'))) === run.prepared_record_sha256 : null,
       head: workspaceHead(workspace)
     },
     evaluator_mutation: { workspace_before: before, workspace_after: after, changed: before !== after, wrote_only: path.relative(root, evidence) }

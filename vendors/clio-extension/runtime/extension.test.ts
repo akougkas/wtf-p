@@ -784,6 +784,9 @@ test("dispatch is judged as Clio parses it, and no worker gets an unbounded or r
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["paper/"] } })) ?? "", /paper\/introduction\.md/);
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: [".planning/sections/"] } })) ?? "", /\.planning/);
 		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src/"] } })), null);
+		// Every spelling the section's manuscript can take is held, not only the file that exists now.
+		for (const root of ["paper/introduction.tex", "paper/introduction.typ", "paper/introduction", "paper/introduction.v2.md"])
+			assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: [root] } })) ?? "", /may not change/, root);
 		assert.match(blocked(await dispatch({ apply_winner: { branch: "clio-coder/compete/g/1" } })) ?? "", /cannot see what/);
 		// Clio resolves write roots against a worker's cwd, and fixes a boundary where a root physically leads.
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", cwd: "paper", intent: { write_roots: ["introduction.md"] } })) ?? "", /cwd/);

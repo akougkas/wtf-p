@@ -362,8 +362,8 @@ setInterval(() => {}, 1000);`);
     await new Promise(resolve => setTimeout(resolve, 200));
     child.kill('SIGINT');
     const code = await closed;
-    process.kill(Number(fs.readFileSync(started, 'utf8')), 'SIGKILL');
     assert.strictEqual(code, 130);
+    assert.throws(() => process.kill(Number(fs.readFileSync(started, 'utf8')), 0), /ESRCH/, 'the run swept the detached process it left');
     const recorded = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(recorded.outcome, 'cancelled');
     assert.strictEqual(recorded.credentials_removed, true);
@@ -390,6 +390,87 @@ process.exit(0);`);
     assert.deepStrictEqual([run.cost.status, run.cost.usd], ['reported', 0.05]);
     assert.strictEqual(run.evidence_level, 'observed-model');
     assert.strictEqual(run.workspace.initial_sha256, JSON.parse(fs.readFileSync(path.join(root, 'prepared.json'), 'utf8')).workspace_sha256);
+    assert.strictEqual(runner.collect(ungated, { root }).workspace_chain.prepared_unchanged_since_run, true);
+    fs.appendFileSync(path.join(root, 'prepared.json'), ' ');
+    assert.strictEqual(runner.collect(ungated, { root }).workspace_chain.prepared_unchanged_since_run, false, 'a rewritten prepared.json shows');
+  });
+
+  await test('a model is observed by whichever report its provider family gives, and only real calls count', async () => {
+    const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const lines = [
+      { type: 'message_end', message: { role: 'assistant', model: 'm', responseModelIdObservation: { state: 'reported', reportedModelId: 'm-responses' }, content: [] } },
+      { type: 'message_end', message: { role: 'assistant', model: 'm', stopReason: 'error', content: [] } }
+    ].map(line => JSON.stringify(line)).join('\n');
+    const worker = { file: 'w.json', receipt: { agentId: 'wtfp-section-writer', wireModelId: 'm', upstreamResponses: [
+      { requestedModelId: 'm', responseModelIdObservation: { state: 'not-observed' }, differingResponseModelId: 'm-fallback' },
+      { requestedModelId: 'm', responseModelIdObservation: { state: 'legacy-difference-only', differingModelId: 'm-legacy' } },
+      { requestedModelId: 'm', usageScope: 'run-aggregate', responseModelIdObservation: { state: 'not-observed' } }
+    ] } };
+    const step = runner.classifyStep(ok, lines, '', { receipts: [worker], selection: { model: 'm' } });
+    assert.deepStrictEqual(step.model_observation.reported, ['m-fallback', 'm-legacy', 'm-responses']);
+    assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [4, 1], 'the aggregate row is not a call');
+    assert.strictEqual(step.model_calls, 2, 'a provider error is not an observed model call');
+  });
+
+  await test('the seal key is out of reach while headless steps run, and nothing a step leaves running outlives the run', async () => {
+    const probe = path.join(scratch, 'store-probe.json');
+    const late = path.join(scratch, 'late-interaction.json');
+    const entry = fakeClio('fake-keyless', `${mainReceipt(0.01)}
+const store = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+require('fs').writeFileSync(${JSON.stringify(probe)}, JSON.stringify({ present: require('fs').existsSync(store) }));
+require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(`setTimeout(() => require('fs').writeFileSync(${JSON.stringify(late)}, 'minted'), 1500)`)}], { detached: true, stdio: 'ignore' }).unref();
+process.exit(0);`);
+    const root = preparedRoot('keyless', entry, undefined, ungatedFile);
+    const store = path.join(runner.profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    fs.mkdirSync(path.dirname(store), { recursive: true });
+    const stored = JSON.stringify({ version: 1, entries: { 'seal-key': { value: 'a'.repeat(64), version: 1 } } });
+    fs.writeFileSync(store, stored);
+    const run = await withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, campaignFile: ungatedFile }));
+    assert.deepStrictEqual(JSON.parse(fs.readFileSync(probe, 'utf8')), { present: false }, 'a step never sees the store');
+    assert.strictEqual(fs.readFileSync(store, 'utf8'), stored, 'the key is back, byte for byte');
+    assert.deepStrictEqual(run.seal_store, { held_during_run: true, restored: true });
+    assert.ok(run.steps[0].processes_swept.killed.length >= 1, 'the detached process was swept');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    assert.ok(!fs.existsSync(late), 'the swept process wrote nothing after the step');
+    // A store a step creates is not the author's key: it is set aside and the run fails integrity.
+    const maker = fakeClio('fake-store-maker', `${mainReceipt(0.01)}
+const store = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+require('fs').mkdirSync(require('path').dirname(store), { recursive: true });
+require('fs').writeFileSync(store, '{}');
+process.exit(0);`);
+    const made = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('store-maker', maker, undefined, ungatedFile), entry: maker, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(made.outcome, 'integrity-violation');
+    assert.match(made.integrity.join(' '), /seal store was created during the run/);
+  });
+
+  await test('a step cannot rewrite the build, prepare the next step\'s logs, forge the run record, or block cleanup', async () => {
+    const swapper = fakeClio('fake-swapper', `${mainReceipt(0.01)}
+require('fs').appendFileSync(__filename, '\\n// rewritten by a step\\n');
+process.exit(0);`);
+    const swapRoot = preparedRoot('swapper', swapper, undefined, ungatedFile);
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: swapRoot, entry: swapper, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(entry_sha256\)/);
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(swapRoot, 'run.json'), 'utf8')).outcome, 'runner-error');
+    const next = ungated.lifecycle[1].step;
+    const trapper = fakeClio('fake-trapper', `${mainReceipt(0.01)}
+const logs = require('path').join(process.env.CLIO_CODER_HOME, '..', 'logs', ${JSON.stringify(next)});
+require('fs').mkdirSync(logs, { recursive: true });
+require('fs').writeFileSync(require('path').join(logs, 'stdout.jsonl'), 'planted');
+process.exit(0);`);
+    const trapRoot = preparedRoot('trapper', trapper, undefined, ungatedFile);
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: trapRoot, entry: trapper, ...selection, campaignFile: ungatedFile })), /EEXIST/);
+    const trapped = JSON.parse(fs.readFileSync(path.join(trapRoot, 'run.json'), 'utf8'));
+    assert.deepStrictEqual([trapped.outcome, trapped.steps.length, trapped.credentials_removed], ['runner-error', 1, true]);
+    const forger = fakeClio('fake-forger', `${mainReceipt(0.01)}
+require('fs').writeFileSync(require('path').join(process.env.CLIO_CODER_HOME, '..', 'run.json'), JSON.stringify({ outcome: 'completed', steps: [] }));
+require('fs').mkdirSync(require('path').join(process.env.CLIO_CODER_CONFIG_DIR, 'credentials.yaml.d'));
+process.exit(0);`);
+    const forgeRoot = preparedRoot('forger', forger, undefined, ungatedFile);
+    const forged = await withEnv(executeEnv, () => runner.execute(ungated, { root: forgeRoot, entry: forger, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(forged.outcome, 'integrity-violation');
+    assert.match(forged.integrity.join(' '), /run\.json was written during the run/);
+    assert.strictEqual(JSON.parse(fs.readFileSync(path.join(forgeRoot, 'run.json'), 'utf8')).outcome, 'integrity-violation', 'the runner\'s record is the one on disk');
+    assert.match(forged.unwiped.join(' '), /credentials\.yaml\.d: .*directory/);
+    assert.strictEqual(forged.credentials_removed, true, 'the real copies were still wiped');
   });
 
   await test('every step launches the build and packages prepare bound, and a runner failure is recorded as one', async () => {
@@ -416,7 +497,7 @@ process.exit(0);`);
     const secret = 'sk-campaign-secret-0123456789abcdef';
     const header = 'Bearer settings-header-0123456789abcdef';
     const source = privateSource('leaky-credentials.yaml', `providers:\n  key: ${secret}\n`);
-    const settings = privateSource('leaky-settings.yaml', `targets:\n  t:\n    auth:\n      headers:\n        Authorization: ${header}\n`);
+    const settings = privateSource('leaky-settings.yaml', `targets:\n  t:\n    model: operator-model-long-identifier-2026\n    auth:\n      headers:\n        Authorization: ${header}\n`);
     const outside = path.join(scratch, 'outside-target.txt');
     fs.writeFileSync(outside, 'keep me');
     const entry = fakeClio('fake-leak', `const fs = require('fs'); const path = require('path');
@@ -443,6 +524,7 @@ process.exit(1);`);
     const log = fs.readFileSync(path.join(root, 'logs', 'initialize', 'stdout.jsonl'), 'utf8');
     assert.doesNotMatch(log, new RegExp(secret));
     assert.doesNotMatch(log, /settings-header-0123456789abcdef/);
+    assert.match(log, /operator-model-long-identifier-2026/, 'a model id in settings is evidence, not a secret');
     assert.deepStrictEqual(run.secrets.in_workspace, [path.join('workspace', 'leaked.md')], 'a secret in the measured workspace is reported, not edited');
   });
 

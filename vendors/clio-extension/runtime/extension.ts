@@ -2402,6 +2402,18 @@ function heldManuscripts(desk: Desk): { roots: string[]; notes: string[] } {
 	return { roots, notes };
 }
 
+/**
+ * The held manuscript a worker root would reach, judged like a direct write:
+ * by every section the path belongs to, so a `.tex` or `.typ` spelling of a
+ * section whose file does not exist yet is held too.
+ */
+function heldBy(desk: Desk, held: string[], root: string): string | undefined {
+	const hit = held.find((file) => overlaps(root, file));
+	if (hit) return hit;
+	const lexical = root.replace(/\/$/u, "");
+	return sectionsForPaper(desk, lexical).some((section) => blockers(desk, section).length > 0) ? lexical : undefined;
+}
+
 async function guardWrite(ctx: ExtensionContextV2, target: string): Promise<ExtensionHookResult> {
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
@@ -2573,7 +2585,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<Exten
 				);
 			for (const root of entry.roots) {
 				plainRoot(workspace, root);
-				const hit = held.find((file) => overlaps(root, file));
+				const hit = heldBy(desk, held, root);
 				if (hit) return block(`WTF-P dispatch guard: write root ${root} reaches ${hit}, which a worker outside a WTF-P action may not change.`);
 			}
 		}

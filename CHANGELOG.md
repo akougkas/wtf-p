@@ -62,7 +62,8 @@ text and action contracts changed.
   from Clio's sealed receipts by provenance, gate state and workspace digest;
   a gated step that raises no gate, or a headless step that adds an
   interaction record, never counts as completed, and an unfinished run exits
-  non-zero
+  non-zero; the desk's seal key is held in the runner's memory while steps
+  run, and every process a step leaves behind is stopped
 - Seven action contracts now declare record writes their workflows already
   made; plan-section and write-section route missing evidence to `research-gap`
   through a checkpoint instead of running it inline

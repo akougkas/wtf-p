@@ -149,7 +149,8 @@ function coverageForRoot(resolved, validation) {
   const ignored = [];
   for (const file of resolved.files) {
     const relative = path.relative(resolved.root, file).split(path.sep).join('/');
-    if (relative.split('/').includes('archives')) continue;
+    // Archives are the top-level `.planning/archives/` tree; a section that happens to be named archives is live.
+    if (relative.startsWith('archives/')) continue;
     let value;
     try {
       value = readJson(file);
@@ -179,9 +180,22 @@ function coverageForRoot(resolved, validation) {
   const projectRoot = path.basename(resolved.root) === '.planning' ? path.dirname(resolved.root) : null;
   const manuscripts = [];
   const unread = [];
+  // Whether any component below the project root is a link: the evaluator follows none, as the desk does not.
+  const throughLink = (relative) => {
+    let current = projectRoot;
+    for (const part of relative.split('/')) {
+      current = path.join(current, part);
+      let stat;
+      try { stat = fs.lstatSync(current); } catch { return false; }
+      if (stat.isSymbolicLink()) return true;
+    }
+    return false;
+  };
   for (const { record } of projectRoot ? sections : []) {
-    const uri = record.artifacts && record.artifacts.manuscript;
-    if (typeof uri !== 'string' || !uri.startsWith('project://paper/')) continue;
+    // A section without its own manuscript link writes the conventional one, as the desk resolves it.
+    const linked = record.artifacts && record.artifacts.manuscript;
+    const uri = typeof linked === 'string' ? linked : `project://paper/${record.id}`;
+    if (!uri.startsWith('project://paper/')) continue;
     const artifact = uri.slice('project://paper/'.length);
     if (artifact.split('/').some(part => part === '' || part === '.' || part === '..')) {
       unread.push({ section: record.id, file: uri, reason: 'it does not name a contained file' });
@@ -191,7 +205,7 @@ function coverageForRoot(resolved, validation) {
     for (const candidate of [artifact, `${artifact}.md`, `${artifact}.tex`, `${artifact}.typ`]) {
       let stat;
       try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
-      found = { candidate, stat };
+      found = { candidate, stat: throughLink(`paper/${candidate}`) ? { isFile: () => false } : stat };
       break;
     }
     // A manuscript that exists but is not a plain file is never followed; one that should exist but does not is reported.

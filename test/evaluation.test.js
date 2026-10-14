@@ -387,6 +387,19 @@ function testPlanningValidator(tempRoot) {
   fs.symlinkSync(path.join(tempRoot, 'outside-manuscript.md'), path.join(project, 'paper', /\.(md|tex|typ)$/.test(manuscriptName) ? manuscriptName : `${manuscriptName}.md`));
   assert(supportNow().findings.some(finding => finding.code === 'manuscript-unread' && /link/.test(finding.message)));
   fs.rmSync(path.join(project, 'paper'), { recursive: true });
+  // The paper directory itself linked elsewhere is followed by neither the desk nor the evaluator.
+  fs.mkdirSync(path.join(tempRoot, 'outside-paper'), { recursive: true });
+  fs.writeFileSync(path.join(tempRoot, 'outside-paper', /\.(md|tex|typ)$/.test(manuscriptName) ? manuscriptName : `${manuscriptName}.md`), 'Cites [@Nobody2020].\n');
+  fs.symlinkSync(path.join(tempRoot, 'outside-paper'), path.join(project, 'paper'));
+  assert(supportNow().findings.some(finding => finding.code === 'manuscript-unread' && /link/.test(finding.message)));
+  fs.rmSync(path.join(project, 'paper'));
+  // A drafted section with no manuscript link is checked at its conventional manuscript, as the desk checks it.
+  const { manuscript: _manuscript, ...unlinked } = sectionRecord.artifacts;
+  fs.writeFileSync(sectionFile, `${JSON.stringify({ ...sectionRecord, status: 'complete', artifacts: unlinked }, null, 2)}\n`);
+  fs.mkdirSync(path.join(project, 'paper'));
+  fs.writeFileSync(path.join(project, 'paper', `${sectionRecord.id}.md`), 'Cites [@Nobody2020].\n');
+  assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved'));
+  fs.rmSync(path.join(project, 'paper'), { recursive: true });
   fs.writeFileSync(sectionFile, `${JSON.stringify(sectionRecord, null, 2)}\n`);
   // Only .planning/project.json says which project this is; a stray manifest elsewhere does not.
   const strayManifest = path.join(planning, 'aaa-manifest.json');
