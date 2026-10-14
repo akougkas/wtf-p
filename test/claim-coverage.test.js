@@ -6,7 +6,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-const { analyzeCoverage, citationKeys, unsupportedRequired, STRUCTURAL_SCOPE } = require('../evaluation/lib/claim-coverage');
+const { analyzeCoverage, citationKeys, indexRecords, unsupportedRequired, STRUCTURAL_SCOPE } = require('../evaluation/lib/claim-coverage');
 
 const templates = path.join(__dirname, '..', 'protocol', 'project', 'templates');
 const read = (name) => JSON.parse(fs.readFileSync(path.join(templates, `${name}.json`), 'utf8'));
@@ -166,6 +166,61 @@ check('contradictory evidence marks the claim contested and blocks a verified la
   assert(found.includes('blocker:support-missing'), found.join());
 });
 
+check('a contested claim is not ready to draft, whether its contradiction is linked or only on record', () => {
+  const report = analyzeCoverage(project(
+    [
+      claim('claim-linked', ['evidence-for', 'evidence-against']),
+      claim('claim-unlinked', ['evidence-for-unlinked']),
+      claim('claim-planned', ['evidence-for-planned', 'evidence-against-planned'], { status: 'planned' })
+    ],
+    [
+      evidence('evidence-for', 'claim-linked', 'source-a'),
+      evidence('evidence-against', 'claim-linked', 'source-b', { relation: 'contradicts' }),
+      evidence('evidence-for-unlinked', 'claim-unlinked', 'source-a'),
+      evidence('evidence-against-unlinked', 'claim-unlinked', 'source-b', { relation: 'contradicts' }),
+      evidence('evidence-for-planned', 'claim-planned', 'source-a'),
+      evidence('evidence-against-planned', 'claim-planned', 'source-b', { relation: 'contradicts' })
+    ],
+    [source('source-a'), source('source-b')]
+  ));
+  const found = codes(report);
+  assert(found.includes('error:evidence-contradicts'), found.join());
+  assert(found.includes('error:evidence-contradicts-unlinked'), found.join());
+  assert(found.includes('warning:evidence-contradicts'), 'a planned claim is warned, not failed');
+  assert.strictEqual(report.claims.find(item => item.claim === 'claim-unlinked').contested, true);
+  assert.deepStrictEqual(unsupportedRequired(report, 'introduction').sort(), ['claim-linked', 'claim-planned', 'claim-unlinked']);
+});
+
+check('a claim id names one claim in the project, so a reused id supports neither claim', () => {
+  const base = project([claim('claim-shared', ['evidence-shared'])], [evidence('evidence-shared', 'claim-shared', 'source-a')], [source('source-a')]);
+  const other = { ...clone(base.sections[0].record), id: 'methods', claims: [claim('claim-shared', ['evidence-shared'], { statement: 'An unrelated claim.' })] };
+  const report = analyzeCoverage({ ...base, sections: [...base.sections, { uri: 'project://sections/methods', record: other }] });
+  assert.deepStrictEqual(report.claims.map(item => `${item.section}/${item.support}`).sort(), ['introduction/none', 'methods/none']);
+  assert.strictEqual(codes(report).filter(code => code === 'error:claim-id-duplicate').length, 2);
+});
+
+check('records the loader leaves out are reported, and an id carried twice names neither record', () => {
+  const { byUri, ignored } = indexRecords([
+    { file: 'evidence/a.json', record: { id: 'evidence-one' } },
+    { file: 'evidence/b.json', record: { id: 'evidence-one' } },
+    { file: 'evidence/c.json', record: { id: 'evidence-two' } }
+  ], 'evidence');
+  assert.deepStrictEqual(Object.keys(byUri), ['project://evidence/evidence-two']);
+  assert.deepStrictEqual(ignored.map(item => item.file), ['evidence/a.json', 'evidence/b.json']);
+  const report = analyzeCoverage({ ...project([], [], []), ignored: [...ignored, { file: 'evidence/d.json', reason: 'it fails its schema' }] });
+  assert.deepStrictEqual(codes(report), ['error:record-ignored', 'error:record-ignored', 'error:record-ignored']);
+});
+
+check('primary-data inspection needs a source inspected as primary data', () => {
+  const report = analyzeCoverage(project(
+    [claim('claim-overstated', ['evidence-overstated'])],
+    [evidence('evidence-overstated', 'claim-overstated', 'source-paper', { inspection_depth: 'primary-data' })],
+    [source('source-paper', { provenance: { inspection_depth: 'full-text' } })]
+  ));
+  assert.strictEqual(supportOf(report, 'claim-overstated'), 'none');
+  assert(codes(report).includes('error:inspection-exceeds-source'), codes(report).join());
+});
+
 check('author-provided primary data supports a claim like inspected literature', () => {
   const report = analyzeCoverage(project(
     [claim('claim-measured', ['evidence-measured'])],
@@ -187,4 +242,16 @@ check('manuscript citation keys must resolve to a usable source record', () => {
     [{ section: 'introduction', file: 'paper/introduction.md', text: 'Known [@smith2024], unknown [@nobody2021], lost [@gone2020].' }]
   ));
   assert.deepStrictEqual(codes(report).sort(), ['error:citation-unavailable', 'error:citation-unresolved']);
+  const strays = analyzeCoverage(project(
+    [],
+    [],
+    [
+      source('source-candidate2025', { status: 'provisional' }),
+      source('source-foreign2024', { project_id: 'another-project' }),
+      source('source-twin2023'),
+      source('source-twin2023-copy', { citation_key: 'twin2023' })
+    ],
+    [{ section: 'introduction', file: 'paper/introduction.md', text: 'See [@candidate2025], [@foreign2024] and [@twin2023].' }]
+  ));
+  assert.deepStrictEqual(codes(strays).sort(), ['error:citation-ambiguous', 'error:citation-cross-project', 'error:citation-provisional']);
 });

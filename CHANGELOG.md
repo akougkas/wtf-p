@@ -27,6 +27,8 @@ text and action contracts changed.
   depth and manuscript citation keys checked structurally
 - `evaluation/v2`: the `clio-0.6.2-reference` campaign and
   `run-clio-campaign.js` (`plan`, `prepare`, `execute`, `collect`)
+- `evaluation/lib/desk-trust.js`, the one rule for whether a recorded answer is
+  the author's, shared by the desk and the campaign collector
 
 ### Changed
 
@@ -38,6 +40,21 @@ text and action contracts changed.
 - Every Clio action arms the write guard from its declared outputs; WTF-P
   workers are dispatched only inside their action with confined write roots;
   turning a gate off waits for the author at the desk
+- The Clio write guard also covers `artifact`, `run_script` and `job`, and
+  judges a path where Clio's tools land it; dispatch is parsed as Clio parses
+  it, and no worker gets an empty, whole-workspace or record-covering root
+- Plan history is append-only, and re-pointing a manuscript, dropping an
+  outline section, turning off a research, evidence or safety requirement, or
+  stepping down the interaction mode waits for the author; on a plan gate the
+  desk owns the wording of `approve`
+- A required claim with a contradiction on record, linked or not, is not ready
+  to draft; records failing their schema, ids carried twice and reused claim
+  ids support nothing; citations must resolve to one verified source of the
+  project
+- Campaign `execute` refuses any drift from what `prepare` bound, runs steps
+  without retrieval tools, and records per step the observed models, cost by
+  provenance, gate state and workspace digest; it exits non-zero on any
+  unfinished run
 - Seven action contracts now declare record writes their workflows already
   made; plan-section and write-section route missing evidence to `research-gap`
   through a checkpoint instead of running it inline
@@ -52,7 +69,10 @@ text and action contracts changed.
   installer names `clio-coder config trust plugins` and never grants it
 - Uninstall no longer removes the owned files of a package whose native removal
   was deferred by an unowned file, so a later uninstall can finish
-- `hash-fixtures.js --check` no longer crashes on the user-acceptance template
+- `hash-fixtures.js --check` no longer crashes on the user-acceptance template,
+  and a sealed fixture that changes its schema fails the check
+- A desk write that failed after its commit point is reported as committed,
+  not as not written
 
 ## [0.8.0] - 2026-10-06
 

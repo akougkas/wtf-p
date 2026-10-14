@@ -340,6 +340,30 @@ function testPlanningValidator(tempRoot) {
   assert.strictEqual(uncovered.coverage[0].valid, false);
   assert(uncovered.coverage[0].findings.some(finding => finding.code === 'evidence-cross-project'));
   fs.writeFileSync(evidenceFile, `${JSON.stringify(strayEvidence, null, 2)}\n`);
+  // Archived evidence is history, a record failing its schema supports nothing, and an id carried twice names neither record.
+  const supportNow = () => validatePlanningPaths([project], { coverage: true }).coverage[0];
+  const claimSupport = (report) => report.claims.find(claim => claim.claim === 'claim-portable-state').support;
+  const archive = path.join(planning, 'archives', 'milestone-1');
+  fs.mkdirSync(archive, { recursive: true });
+  fs.renameSync(evidenceFile, path.join(archive, 'evidence.json'));
+  const archivedOnly = supportNow();
+  assert.strictEqual(claimSupport(archivedOnly), 'none');
+  assert(archivedOnly.findings.some(finding => finding.code === 'evidence-dangling'));
+  fs.renameSync(path.join(archive, 'evidence.json'), evidenceFile);
+  fs.rmSync(path.join(planning, 'archives'), { recursive: true });
+  const { statement: _statement, ...statementless } = strayEvidence;
+  fs.writeFileSync(evidenceFile, `${JSON.stringify(statementless, null, 2)}\n`);
+  const invalidSupport = supportNow();
+  assert.strictEqual(claimSupport(invalidSupport), 'none');
+  assert(invalidSupport.findings.some(finding => finding.code === 'record-ignored' && /fails its schema/.test(finding.message)));
+  fs.writeFileSync(evidenceFile, `${JSON.stringify(strayEvidence, null, 2)}\n`);
+  const twin = path.join(planning, 'evidence-twin.json');
+  fs.writeFileSync(twin, `${JSON.stringify({ ...strayEvidence, relation: 'contradicts' }, null, 2)}\n`);
+  const twinned = supportNow();
+  assert.strictEqual(claimSupport(twinned), 'none');
+  assert.strictEqual(twinned.findings.filter(finding => finding.code === 'record-ignored').length, 2);
+  fs.rmSync(twin);
+  assert.strictEqual(claimSupport(supportNow()), 'full');
 
   const invalidProject = path.join(tempRoot, 'invalid-project');
   fs.mkdirSync(invalidProject);

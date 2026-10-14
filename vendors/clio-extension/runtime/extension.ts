@@ -62,6 +62,7 @@ const deskTrust = require("./desk-trust.cjs") as {
 const coverage = require("./claim-coverage.cjs") as {
 	STRUCTURAL_SCOPE: string;
 	analyzeCoverage(input: unknown): CoverageReport;
+	indexRecords(entries: Array<{ file: string; record: Json }>, collection: string): { byUri: Record<string, Json>; ignored: Array<{ file: string; reason: string }> };
 	unsupportedRequired(report: CoverageReport, section: string): string[];
 };
 
@@ -583,19 +584,24 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	const confirmPlan = gates.confirm_plan !== false;
 	const outputFormat = text(config?.output_format, "markdown");
 
-	const sourceRecords: Record<string, Json> = {};
+	// Only a record that passes its schema can support a claim, and an id carried by two records names neither.
+	const ignored: Array<{ file: string; reason: string }> = [];
 	const sources: Record<string, number> = {};
-	for (const file of listJson(workspace, ".planning/sources")) {
-		const record = readRecord(workspace, file);
-		if (record && typeof record.id === "string") sourceRecords[`project://sources/${record.id}`] = record;
-		const status = text(record?.status, "unknown");
-		sources[status] = (sources[status] ?? 0) + 1;
-	}
-	const evidenceRecords: Record<string, Json> = {};
-	for (const file of listJson(workspace, ".planning/evidence")) {
-		const record = readRecord(workspace, file);
-		if (record && typeof record.id === "string") evidenceRecords[`project://evidence/${record.id}`] = record;
-	}
+	const indexed = (collection: string): Record<string, Json> => {
+		const entries: Array<{ file: string; record: Json }> = [];
+		for (const file of listJson(workspace, `.planning/${collection}`)) {
+			const record = readRecord(workspace, file);
+			if (!record) continue;
+			if (collection === "sources") sources[text(record.status, "unknown")] = (sources[text(record.status, "unknown")] ?? 0) + 1;
+			if (validateRecord(record).length > 0) ignored.push({ file, reason: "it fails its schema" });
+			else entries.push({ file, record });
+		}
+		const index = coverage.indexRecords(entries, collection);
+		ignored.push(...index.ignored);
+		return index.byUri;
+	};
+	const sourceRecords = indexed("sources");
+	const evidenceRecords = indexed("evidence");
 
 	const outlined = Array.isArray(outline?.sections) ? (outline.sections as Json[]) : [];
 	const loaded = outlined.map((entry) => {
@@ -615,6 +621,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 		manuscripts: loaded
 			.filter((item) => item.source !== null && item.manuscript !== null)
 			.map((item) => ({ section: item.id, file: item.manuscript, text: item.source })),
+		ignored,
 	});
 
 	const sections: SectionRow[] = loaded.map(({ entry, id, record, artifacts, manuscript, source }) => {

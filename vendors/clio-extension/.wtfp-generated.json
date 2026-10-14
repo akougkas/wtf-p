@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "edbe943e311ec1b2613d353690ce97fda86754b881a8fcdc9a748b4d9c29e221",
+  "sourceHash": "de9d3f613177824c5698efe4c9a7930dc8dc9f7346d60498679c4e1a47d77c15",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -206,7 +206,7 @@
     },
     {
       "path": "runtime/claim-coverage.cjs",
-      "sha256": "59de88f3cf8a48f0164ad11c2d3dfd23481f6027a44b3bb6c7f44c75c4367132"
+      "sha256": "83539be4be63af6c40e527e0b8aef3f8e31adee3de8d68c208b568051ff41eb1"
     },
     {
       "path": "runtime/desk-trust.cjs",
@@ -214,11 +214,11 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "993922a259f4fe9459f600dc1ac970e8bc1ac6c64e6a42c42bc17aa01f08faa8"
+      "sha256": "efc779438281b9a3f7cd74a755c263418a838abf6bddb3dbaa14f75f1d8c481a"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "702434dd70e032bc9dfef7cde5e135adbed2b708df4c0d562e65f829f987d1d3"
+      "sha256": "adef18773cc5ca2686fdb8cf2024b026e1b950b19f538ef3b888008a1c924b03"
     },
     {
       "path": "runtime/json-schema.cjs",

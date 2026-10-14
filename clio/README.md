@@ -27,18 +27,29 @@ record, compares it with the revision or SHA-256 its writer read, commits under
 `.planning/.wtfp-lock`, and journals paired records so an interrupted write is
 completed by the next one. It records an author's answer only from its own
 interview, as a sealed `project://interactions/` record bound to the checkpoint
-and artifact the author saw; the seal key lives in Clio's extension store, never
-in the project. A resolution without a matching seal is unattested and keeps its
-gate closed until the author confirms it.
+and artifact the author saw; the seal key lives in Clio's extension store under
+Clio's state directory, never in the project. A resolution without a matching
+seal is unattested and keeps its gate closed until the author confirms it. The
+trust rule is `evaluation/lib/desk-trust.js`, which the campaign collector
+shares. A seal proves the desk observed an answer; it cannot stop a process
+that the operator lets read Clio's state directory from minting one.
 
-The write guard covers `write`, `edit`, `dispatch` and `bash` calls. A running
-action may write only what its contract declares, for the section it names,
-until its turn ends. A section's manuscript waits for its blocking gates, an
-author `approve` answer given for the current plan bytes, and verified evidence
-for required claims in literature-heavy sections. Dispatched WTF-P workers are
-confined through `intent.write_roots` to manuscripts that are ready. Interpreter
-commands run through `bash` are not parsed; Clio's default autonomy asks the
-operator before running them, and the seal keeps them from forging an answer.
+The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
+`run_script` and `job` calls, and judges a path where Clio's tools land it:
+after `@` and `~`, and with a `..` after a link stepping up from the link's
+target. A running action may write only what its contract declares, for the
+section it names, until its turn ends. A section's manuscript, including any
+file nested under its stem, waits for its blocking gates, an author `approve`
+answer given for the current plan bytes, and verified, uncontested evidence for
+required claims in literature-heavy sections. Dispatch is parsed as Clio parses
+it. Workers are confined through `intent.write_roots` to manuscripts that are
+ready and never get an empty, whole-workspace or record-covering root; outside
+an action a worker must name roots that leave out `.planning` and the gated
+manuscripts. Changes that loosen what the desk holds, such as a re-pointed
+manuscript or rewritten plan history, wait for the author at the desk.
+Interpreter commands run through `bash`, `run_script` or `job` are refused only
+when they name the desk's own records; Clio's default autonomy asks the
+operator before running an unrecognized command.
 
 `clio-coder extensions test vendors/clio-extension` runs the package tests: the
 record contract, symbolic-link containment, each gate scenario, plan approval,

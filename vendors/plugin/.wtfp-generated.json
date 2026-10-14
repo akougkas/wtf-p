@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "ee4390b54e9db4f40cb8975e45fe09cc02a21aa1d49c1e5cd2fd532d97905157",
+  "sourceHash": "075ddf665c726a7a6ab414e3be236307e7a27bd12c061d4c96b3239d20a8090a",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -366,7 +366,7 @@
     },
     {
       "path": "project/README.md",
-      "sha256": "37894b02af023921e3c1440ebc17a10e5ca1cc38d5762e590344811d8b290b75"
+      "sha256": "73b9dbb65d5d43594d992fd945f1845e2b4d38c691d3b5ab406b7022497b4981"
     },
     {
       "path": "project/schemas/checkpoint.schema.json",

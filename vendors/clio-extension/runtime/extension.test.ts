@@ -528,6 +528,32 @@ test("literature-heavy sections wait for verified evidence behind their required
 		assert.equal((ready.data as Json).ready, false);
 		assert.match(ready.text, /1 required claim lacks verified evidence \(claim-flush\); run research-gap first/);
 		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /research-gap/);
+		// Verified, full-text support makes it ready; a contradiction on record, an invalid record or a reused id takes that back.
+		put(workspace, ".planning/sources/source-flush.json", {
+			schema: "wtfp.project.source/v1", id: "source-flush", project_id: PROJECT, kind: "journal-article", title: "Flush Costs", creators: ["A. Author"], year: 2025,
+			identifiers: { doi: "10.1234/flush" }, citation_key: "author2025", status: "verified",
+			provenance: { discovered_via: "scholarly-index", inspection_depth: "full-text", verified_at: AT },
+		});
+		const support = {
+			schema: "wtfp.project.evidence/v1", id: "evidence-flush", project_id: PROJECT, source_uri: "project://sources/source-flush", claim_id: "claim-flush", relation: "supports",
+			statement: "Flushes dominate.", locator: { kind: "section", value: "3" }, interpretation: "Direct measurement.", confidence: "high", inspection_depth: "full-text", verified_at: AT,
+		};
+		put(workspace, ".planning/evidence/evidence-flush.json", support);
+		const linked = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", { ...linked, claims: [{ ...(linked.claims as Json[])[0], evidence_uris: ["project://evidence/evidence-flush"] }] });
+		const readyNow = async () => ((await host.tool("readiness", { section: "introduction" })).data as Json).ready;
+		assert.equal(await readyNow(), true);
+		put(workspace, ".planning/evidence/evidence-against.json", { ...support, id: "evidence-against", relation: "contradicts" });
+		assert.equal(await readyNow(), false, "an unlinked contradiction contests the claim");
+		rmSync(path.join(workspace, ".planning/evidence/evidence-against.json"));
+		const { statement: _statement, ...statementless } = support;
+		put(workspace, ".planning/evidence/evidence-flush.json", statementless);
+		assert.equal(await readyNow(), false, "an evidence record that fails its schema supports nothing");
+		put(workspace, ".planning/evidence/evidence-flush.json", support);
+		put(workspace, ".planning/evidence/evidence-flush-copy.json", support);
+		assert.equal(await readyNow(), false, "an id carried twice names neither record");
+		rmSync(path.join(workspace, ".planning/evidence/evidence-flush-copy.json"));
+		assert.equal(await readyNow(), true);
 	}, SERVED));
 
 test("turning a gate off needs the author's confirmation at the desk", () =>

@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { SchemaRegistry, readJson, validateInstance } = require('../lib/json-schema');
-const { analyzeCoverage } = require('../lib/claim-coverage');
+const { analyzeCoverage, indexRecords } = require('../lib/claim-coverage');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 const schemasRoot = path.join(repositoryRoot, 'protocol', 'project', 'schemas');
@@ -110,8 +110,8 @@ function validatePlanningPaths(inputs, options = {}) {
   const coverage = [];
   for (const input of inputs) {
     const resolved = resolveInput(input);
-    if (options.coverage) coverage.push(coverageForRoot(resolved));
     const records = resolved.files.map(file => validateRecord(file, resolved.root, registry));
+    if (options.coverage) coverage.push(coverageForRoot(resolved, records));
     if (records.length === 0) {
       records.push({
         file: '.',
@@ -139,23 +139,41 @@ function validatePlanningPaths(inputs, options = {}) {
 }
 
 // Structural claim coverage for one planning root, from the same validator the
-// Clio desk ships. Manuscripts are read only for citation keys, from the
-// project's paper/ directory beside .planning, and never through a link.
-function coverageForRoot(resolved) {
+// Clio desk ships. Archived records are history, never live support, and a
+// record that fails its schema supports nothing; both are left out, the
+// second with a finding. Manuscripts are read only for citation keys, from
+// the project's paper/ directory beside .planning, and never through a link.
+function coverageForRoot(resolved, validation) {
+  const valid = new Map(validation.map(result => [result.file, result.valid]));
   const records = {};
+  const ignored = [];
   for (const file of resolved.files) {
+    const relative = path.relative(resolved.root, file).split(path.sep).join('/');
+    if (relative.split('/').includes('archives')) continue;
+    let value;
     try {
-      const value = readJson(file);
-      if (value && typeof value.schema === 'string') records[path.relative(resolved.root, file).split(path.sep).join('/')] = value;
+      value = readJson(file);
     } catch {
-      // Unreadable records are already reported by schema validation.
+      continue; // Unreadable records are already reported by schema validation.
     }
+    if (!value || typeof value.schema !== 'string') continue;
+    if (valid.get(relative) === false) {
+      if (/^wtfp\.project\.(?:evidence|source|section)\/v1$/u.test(value.schema)) ignored.push({ file: relative, reason: 'it fails its schema' });
+      continue;
+    }
+    records[relative] = value;
   }
   const byType = (type) => Object.entries(records).filter(([, value]) => value.schema === `wtfp.project.${type}/v1`);
   const manifest = byType('manifest').map(([, value]) => value)[0] || null;
   const outline = byType('outline').map(([, value]) => value)[0] || null;
-  const sections = byType('section').map(([, record]) => ({ uri: `project://sections/${record.id}`, record }));
-  const keyed = (type, prefix) => Object.fromEntries(byType(type).map(([, record]) => [`project://${prefix}/${record.id}`, record]));
+  const indexed = (type, collection) => {
+    const index = indexRecords(byType(type).map(([file, record]) => ({ file, record })), collection);
+    ignored.push(...index.ignored);
+    return index.byUri;
+  };
+  const sections = Object.entries(indexed('section', 'sections')).map(([uri, record]) => ({ uri, record }));
+  const evidence = indexed('evidence', 'evidence');
+  const sources = indexed('source', 'sources');
   const projectRoot = path.basename(resolved.root) === '.planning' ? path.dirname(resolved.root) : null;
   const manuscripts = [];
   for (const { record } of projectRoot ? sections : []) {
@@ -176,9 +194,10 @@ function coverageForRoot(resolved) {
     projectId: manifest ? manifest.id : null,
     outline,
     sections,
-    evidence: keyed('evidence', 'evidence'),
-    sources: keyed('source', 'sources'),
-    manuscripts
+    evidence,
+    sources,
+    manuscripts,
+    ignored
   });
   return {
     planning_root: resolved.root,
