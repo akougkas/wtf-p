@@ -129,6 +129,35 @@ codex exec -s workspace-write -m gpt-5.6-luna -c 'model_reasoning_effort="xhigh"
 
 Whether Codex loads the TOML agents at runtime was not observed: there is no CLI listing for custom agents, and neither headless run needed a subagent.
 
+## Clio Coder 0.6.2 reference (verified 2026-10-14)
+
+Clio is the reference host. Its qualified build is the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` is pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
+
+Observed on that build, in disposable profiles, with no credentials and no model call:
+
+- `test/clio-native-integration.test.js` with `WTFP_CLIO_ENTRY` set to the build covered user and project scopes. It exercised first install with exact receipts and 180 resolved packaged references per scope, plugin and desk registration, the 11 recipes and 7 skills, `playbook validate` and `playbook graph --json` whose steps and write roots match `protocol/fleets/*.json`, and the desk's package tests run from its installed root. It also exercised unchanged reinstall, a preserved disabled preference, an upgrade over an unchanged install, coexistence of both scopes, compensation of a failure in either package, an unowned file in the installed desk surviving removal, and clean removal.
+- `clio-coder extensions test vendors/clio-extension` passed 21 package tests, including a lifecycle rehearsal whose author answers are scripted interview events. It is simulated: it proves the desk's bookkeeping, not an author's decision.
+- `node evaluation/tools/run-clio-campaign.js prepare` on commit `51d6c69` recorded the same native discovery in a campaign profile.
+
+Clio 0.6.2 refuses a bare `wtfp` once the plugin and the desk, which share that name, are both present. The installer therefore names the plugin `plugin:wtfp` in every `library` command, and operators should too. Project-scope trust binds to the content of `.clio-coder/plugins/state.json`, so only a first project install is trusted automatically. The installer registers a later one and names `clio-coder config trust plugins` without granting it.
+
+| Guarantee | On Clio 0.6.2 with the desk | Evidence |
+| --- | --- | --- |
+| Only the author resolves a gate | Enforced. The desk records an answer only from its own interview, sealed and bound to the checkpoint, options and subject bytes shown. The record tool refuses `resolved_by: author`, a blocking policy resolution, unblocking, re-scoping or expiring a pending blocking gate; `write`/`edit` refuse `.planning/**/*.json`; `bash` touching the desk's records is refused and the host protects `.planning/interactions`. A resolution without a matching seal keeps its gate closed. | package tests G1–G4, mutation-checked |
+| A stale, unoffered, replayed or foreign answer counts | Enforced against. A changed checkpoint or subject sets the answer aside and asks again. | package tests G3, G4 |
+| Drafting needs an approved plan | Enforced for `write`/`edit` and for dispatched WTF-P writers. The current plan must be the last linked plan, a real contained file, approved by an attested `approve` for its current bytes; linked plans are immutable. | package tests W1, W3, rehearsal |
+| An action writes only what it declares | Enforced for `write`, `edit`, record writes and dispatched workers' `write_roots` while the action's turn lasts. | package test on arming, rehearsal |
+| Literature-heavy sections draft only supported claims | Enforced structurally: required claims need verified, inspected, same-project evidence. Whether a passage supports a sentence is not checked by code. | `test/claim-coverage.test.js`, package test |
+| Concurrent writers never lose an update | Enforced by compare-and-swap on revision or SHA-256 under a project lock. | package test R1 |
+| Paired records commit together | Enforced by a journal; a failure before the commit point changes nothing, after it the next write or `/ext:wtfp:validate` completes it. | package test R2 |
+| Turning a gate or validation off | Enforced: the record tool asks the author at the desk before such a config change, or before changing a locked author decision. | package test |
+| Interpreter commands through `bash` | Unsupported as enforcement. Commands are not parsed beyond the desk's own paths; Clio's `default` autonomy asks the operator before an unrecognized command. Seals keep such a command from forging an answer. `yolo` autonomy is outside the qualified mode. | documented boundary |
+| An explicit `clio-coder fleet run` playbook | Unsupported as orchestration. Workers run no desk hook and ask no author. Write boundaries keep them to `paper/` and `.planning/sections/`, and the desk reports manuscript text that has no approved plan. | `test/adapter-compiler.test.js`, native graph check |
+| Fresh-process recovery | Enforced for trust: a new session verifies seals with the same machine's key and treats others as unconfirmed. Records and drift are reported, never invented. | package test L1, rehearsal |
+| A model-backed run or an author-led session | Not yet observed. The v2 campaign is prepared and `awaiting-resources`. | `evaluation/v2/campaigns/` |
+
+Without the desk, the plugin's prompts carry the same rules as instructions only.
+
 ## Clio Coder 0.4.7 and 0.4.8 (verified)
 
 On 2026-09-14 the published `@iowarp/clio-coder` 0.4.8 (`npm install -g @iowarp/clio-coder`) validated `vendors/plugin` and `vendors/claude` with `library validate --json` (`valid: true`, zero diagnostics, seven skill resources), and the installer route in a disposable `CLIO_CODER_CONFIG_DIR` wrote 203 files, after which `library inspect wtfp --user --json` returned `valid: true`, `enabled: true`, `trust: "trusted"`, zero diagnostics at the expected root, and `library skills --all --json` listed the seven `wtfp-*` skills. Everything below was observed on 0.4.7.

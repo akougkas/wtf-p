@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Hardens the Clio desk into the reference implementation of WTF-P's author
+gates and record contract, and qualifies both Clio packages on a pinned Clio
+0.6.2 build. The other six host projections change only where shared protocol
+text and action contracts changed.
+
+### Added
+
+- `wtfp.project.interaction/v1` records an author's answer as the host
+  observed it: the checkpoint digest, the options offered and the subject
+  artifact's SHA-256. The Clio desk seals each answer with an HMAC whose key
+  stays in Clio's extension store, and counts a resolution as the author's only
+  while a matching seal stands behind it
+- Desk tools `read_record` (record, revision, SHA-256 and attestation) and
+  `readiness` (gates, plan approval and evidence coverage for a section); the
+  `record` tool takes `writes` to commit several records together
+- `evaluation/lib/claim-coverage.js`, shared by the desk and
+  `validate-planning.js --coverage`: claims, evidence, sources, inspection
+  depth and manuscript citation keys checked structurally
+- `evaluation/v2`: the `clio-0.6.2-reference` campaign and
+  `run-clio-campaign.js` (`plan`, `prepare`, `execute`, `collect`)
+
+### Changed
+
+- A plan is approved for drafting only by an author `approve` answer on a
+  checkpoint scoped to that plan, given for its current bytes; linked plans are
+  immutable and `plan-revision` links its plan only after approval
+- Record updates name the revision or SHA-256 they read and commit under a
+  project lock; paired records are journaled so an interrupted write completes
+- Every Clio action arms the write guard from its declared outputs; WTF-P
+  workers are dispatched only inside their action with confined write roots;
+  turning a gate off waits for the author at the desk
+- Seven action contracts now declare record writes their workflows already
+  made; plan-section and write-section route missing evidence to `research-gap`
+  through a checkpoint instead of running it inline
+- Clio playbook write boundaries project section artifacts to
+  `.planning/sections/`
+
+### Fixed
+
+- On Clio 0.6.2 the installer failed and could not roll back because the
+  plugin and the desk share the name `wtfp`; it now names `plugin:wtfp`
+- A project-scope reinstall no longer rolls back over Clio's trust gate; the
+  installer names `clio-coder config trust plugins` and never grants it
+- Uninstall no longer removes the owned files of a package whose native removal
+  was deferred by an unowned file, so a later uninstall can finish
+- `hash-fixtures.js --check` no longer crashes on the user-acceptance template
+
 ## [0.8.0] - 2026-10-06
 
 Adds the WTF-P writing desk for Clio Coder as its own Clio extension beside

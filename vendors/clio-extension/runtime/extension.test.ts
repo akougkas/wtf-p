@@ -653,6 +653,153 @@ test("a fresh process trusts only answers it can verify and reports drift instea
 	}
 });
 
+// --- simulated lifecycle rehearsal --------------------------------------------------------
+
+/**
+ * SIMULATED: every "author" answer below is a scripted interview event, not a
+ * person. This rehearses the desk's bookkeeping across a whole section
+ * lifecycle; it is never evidence that an author decided anything.
+ */
+test("SIMULATED rehearsal: initialize, outline, reject then approve a plan, draft through an interruption, review, revise, pause and resume in a fresh process", async () => {
+	assert.ok(process.env.TMPDIR, "Tests need a task-owned TMPDIR.");
+	const workspace = mkdtempSync(path.join(process.env.TMPDIR, "wtfp-desk-rehearsal-"));
+	const ID = "rehearsal";
+	const S = "evaluation";
+	let host = await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s1" });
+	const turn = async (command: string) => {
+		await host.observe({ event: "turn_end", turnId: "t", outcome: "completed", usage: null });
+		const armed = await host.hook({ point: "prompt_submit", text: command });
+		assert.equal(armed.effects?.[0]?.kind, "notify_operator", `${command} did not arm`);
+	};
+	const write = async (uri: string, change: (record: Json | null) => Json) => {
+		const seen = (await host.tool("read_record", { uri })).data as Json;
+		const record = change(seen.exists ? (seen.record as Json) : null);
+		const expect = !seen.exists ? {} : typeof seen.revision === "number" ? { expect_revision: seen.revision } : { expect_sha256: seen.sha256 };
+		const result = await host.tool("record", { uri, record, ...expect });
+		assert.equal(result.isError, undefined, `${uri}: ${result.text}`);
+	};
+	const file = async (relative: string, text: string) => {
+		assert.equal(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t", args: { path: relative } })), null, `writing ${relative} was refused`);
+		put(workspace, relative, text);
+	};
+	const ask = async (checkpoint: string, choice: string) => {
+		const asked = await host.tool("gate", { checkpoint });
+		const done = await host.interview({ id: "gate-one", step: asked.interview?.step.key as string, nav: "next", answers: { choice } });
+		assert.ok("done" in done, `answering ${checkpoint} was asked again`);
+		return done.text;
+	};
+	const checkpoint = (id: string, scope: string, request: string, options: Array<[string, string]>): Json => ({
+		schema: "wtfp.project.checkpoint/v1", id, project_id: ID, kind: "decision", status: "pending", blocking: true,
+		scope_uri: scope, request, options: options.map(([option, label]) => ({ id: option, label, implication: `${label}.` })),
+		resume_action: "write-section", created_at: AT,
+	});
+	const sectionUri = `project://sections/${S}`;
+	try {
+		await turn("/wtfp:new-paper durable workflows");
+		await write("project://manifest", () => ({
+			schema: "wtfp.project.manifest/v1", protocol_version: 1, id: ID, title: "Resilient Checkpoint Coordination",
+			document_type: "research-article", core_argument: "Coordinated incremental checkpoints reduce interruption.",
+			target: { audience: "Systems researchers", word_limit: 120 }, requirements: { must_have: [], should_have: [], out_of_scope: [] },
+			created_at: AT, updated_at: AT,
+			artifacts: { manifest: "project://manifest", config: "project://config", state: "project://state", decisions: "project://decisions", outline: "project://structure/outline", materials: [], manuscripts: [], deliverables: [], archives: [] },
+		}));
+		await write("project://config", () => ({ schema: "wtfp.project.config/v1", project_id: ID, interaction_mode: "standard", depth: "standard", output_format: "markdown", language: "en-US", gates: { confirm_outline: true, confirm_plan: true, confirm_write: true, confirm_review: true, confirm_delivery: true }, workflow: { research: true, plan_validation: true, argument_validation: true, coherence_validation: true }, safety: { destructive_requires_authorization: true, external_publish_requires_authorization: true, backup_before_major_edits: true }, parallelism: { enabled: false, max_workers: 1 } }));
+		await write("project://state", () => ({ schema: "wtfp.project.state/v1", project_id: ID, revision: 0, phase: "initialized", status: "active", current_section_uri: null, progress: { sections_total: 0, sections_complete: 0, word_target: 120, word_count: 0 }, active_checkpoint_uris: [], updated_at: AT }));
+		await write("project://decisions", () => ({ schema: "wtfp.project.decisions/v1", project_id: ID, revision: 0, items: [], updated_at: AT }));
+		const entry = { id: S, title: "Evaluation", goal: "Report the measurements.", argument_role: "evidence", word_target: 120, wave: 1, depends_on: [], claim_ids: [], research: { required: false, topics: [] } };
+		await write("project://structure/outline", () => ({ schema: "wtfp.project.outline/v1", project_id: ID, revision: 0, thesis: "Coordinated incremental checkpoints reduce interruption.", target_words: 120, sections: [entry], updated_at: AT }));
+
+		await turn("/wtfp:create-outline");
+		await write("project://structure/outline", (outline) => ({ ...(outline as Json), sections: [{ ...entry, goal: "Report the synthetic interruption measurements." }] }));
+		await write(sectionUri, () => ({ schema: "wtfp.project.section/v1", id: S, project_id: ID, outline_uri: "project://structure/outline", title: "Evaluation", goal: "Report the synthetic interruption measurements.", status: "not-started", word_target: 120, word_count: 0, wave: 1, depends_on: [], claims: [], artifacts: { plans: [], reviews: [], manuscript: `project://paper/${S}` }, checkpoint_uris: [], validation_uris: [], updated_at: AT }));
+		await write("project://state", (state) => ({ ...(state as Json), phase: "outlining", progress: { ...((state as Json).progress as Json), sections_total: 1 } }));
+
+		await turn(`/wtfp:discuss-section ${S}`);
+		await file(`.planning/sections/${S}/context.md`, "# Context\n\nReport only the supplied synthetic observations.\n");
+		await write("project://checkpoints/framing", () => checkpoint("framing", sectionUri, "Lead with interruption time or recovery coverage?", [["interruption", "Interruption time"], ["coverage", "Recovery coverage"]]));
+		assert.match(await ask("framing", "interruption"), /Recorded the author's answer/);
+		await write(sectionUri, (section) => ({ ...(section as Json), checkpoint_uris: ["project://checkpoints/framing"], artifacts: { ...((section as Json).artifacts as Json), context: `${sectionUri}/context` } }));
+
+		await turn(`/wtfp:plan-section ${S}`);
+		await file(`.planning/sections/${S}/plans/first.md`, "# Plan\n\n1. Report every measurement at once.\n");
+		await write("project://checkpoints/approve-first", () => checkpoint("approve-first", `${sectionUri}/plans/first`, "Approve the evaluation plan?", [["approve", "Approve"], ["revise", "Revise"], ["reject", "Reject"]]));
+		assert.match(await ask("approve-first", "revise"), /Revise/, "the author's rejection is recorded, not approval");
+		await file(`.planning/sections/${S}/plans/second.md`, "# Plan\n\n1. Lead with interruption time.\n2. Bound every claim to the synthetic workload.\n");
+		await write("project://checkpoints/approve-second", () => checkpoint("approve-second", `${sectionUri}/plans/second`, "Approve the revised evaluation plan?", [["approve", "Approve"], ["revise", "Revise"], ["reject", "Reject"]]));
+		assert.match(await ask("approve-second", "approve"), /Approve/);
+		await write(sectionUri, (section) => ({ ...(section as Json), status: "planned", artifacts: { ...((section as Json).artifacts as Json), plans: [`${sectionUri}/plans/second`] } }));
+		await write("project://state", (state) => ({ ...(state as Json), phase: "planning", current_section_uri: sectionUri }));
+
+		await turn(`/wtfp:write-section ${S}`);
+		assert.equal((((await host.tool("readiness", { section: S })).data) as Json).ready, true);
+		const dispatched = await host.hook({ point: "before_tool", tool: "dispatch", turnId: "t", args: { agent: "wtfp-section-writer", task: "Draft the evaluation." } });
+		assert.ok(dispatched.effects?.some((effect) => effect.kind === "rewrite_tool_input"), "the writer is dispatched with confined roots");
+		await file(`paper/${S}.md`, "# Evaluation\n\nCoordinated incremental checkpoints reduced measured interruption in the synthetic workload.\n");
+		process.env.WTFP_DESK_TEST_FAULT = "between-renames";
+		try {
+			assert.match((await host.tool("measure_section", { section: S })).text, /injected fault/);
+		} finally {
+			delete process.env.WTFP_DESK_TEST_FAULT;
+		}
+		assert.match((await host.command("validate")).text, /Completed an interrupted write/);
+		await file(`.planning/sections/${S}/summary.md`, "Drafted from the second plan; eleven body words.\n");
+		await write("project://manifest", (manifest) => ({ ...(manifest as Json), artifacts: { ...((manifest as Json).artifacts as Json), manuscripts: [`project://paper/${S}`] } }));
+		await write(sectionUri, (section) => ({ ...(section as Json), status: "reviewing", artifacts: { ...((section as Json).artifacts as Json), summary: `${sectionUri}/summary` } }));
+
+		await turn(`/wtfp:review-section ${S}`);
+		await file(`.planning/sections/${S}/reviews/first.md`, "# Review\n\nThe sentence needs the workload size.\n");
+		await write("project://validations/review-first", () => ({ schema: "wtfp.project.validation/v1", id: "review-first", project_id: ID, subject_uri: sectionUri, validator_role: "section-reviewer", action_id: "review-section", status: "issues-found", checks: [{ id: "scope", status: "failed", summary: "Workload size is missing.", evidence: ["paper/evaluation.md"] }], issues: [{ severity: "error", summary: "State the workload size." }], next_actions: [{ action: "plan-revision", reason: "One error to fix." }], effects_applied: [], executed_at: AT }));
+		await write(sectionUri, (section) => ({ ...(section as Json), validation_uris: ["project://validations/review-first"], artifacts: { ...((section as Json).artifacts as Json), reviews: [`${sectionUri}/reviews/first`] } }));
+
+		await turn(`/wtfp:plan-revision ${S}`);
+		assert.ok(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t", args: { path: `.planning/sections/${S}/plans/second.md` } })), "the approved plan cannot be edited in place");
+		await file(`.planning/sections/${S}/plans/revision.md`, "# Revision plan\n\n1. Add the workload size to the measured sentence.\n");
+		await write("project://checkpoints/approve-revision", () => checkpoint("approve-revision", `${sectionUri}/plans/revision`, "Approve the revision plan?", [["approve", "Approve"], ["revise", "Revise"], ["reject", "Reject"]]));
+		assert.ok(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t", args: { path: `paper/${S}.md` } })), "plan-revision never writes the manuscript");
+		assert.match(await ask("approve-revision", "approve"), /Approve/);
+		await write(sectionUri, (section) => ({ ...(section as Json), status: "writing", artifacts: { ...((section as Json).artifacts as Json), plans: [`${sectionUri}/plans/second`, `${sectionUri}/plans/revision`] } }));
+
+		await turn(`/wtfp:write-section ${S}`);
+		await file(`paper/${S}.md`, "# Evaluation\n\nIn the synthetic 512-node workload, coordinated incremental checkpoints reduced measured interruption.\n");
+		assert.equal((await host.tool("measure_section", { section: S })).isError, undefined);
+
+		await turn("/wtfp:pause-writing");
+		await file(`.planning/sections/${S}/handoff.md`, "Resume by verifying the revised evaluation.\n");
+		await write("project://checkpoints/resume", () => ({ ...checkpoint("resume", sectionUri, "Which action resumes the work?", [["verify", "Verify the section"], ["review", "Review again"]]), kind: "human-action", resume_action: "verify-work" }));
+		await write(sectionUri, (section) => ({ ...(section as Json), checkpoint_uris: ["project://checkpoints/framing", "project://checkpoints/resume"], artifacts: { ...((section as Json).artifacts as Json), handoff: `${sectionUri}/handoff` } }));
+		await write("project://state", (state) => ({ ...(state as Json), status: "paused", phase: "writing", active_checkpoint_uris: ["project://checkpoints/resume"] }));
+
+		// A fresh process: no session state, the same machine's store.
+		const key = (await host.store.get("seal-key")).value;
+		await host.dispose();
+		host = await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s2" });
+		await host.store.set("seal-key", key);
+		const progress = await host.command("progress");
+		assert.match(progress.text, /evaluation: writing .* plan approved/);
+		assert.match(progress.text, /Next: \/wtfp:check-todos \(Gate waiting on you: Which action resumes the work\?\)/);
+		await turn("/wtfp:resume-writing");
+		assert.match(await ask("resume", "verify"), /Verify the section/);
+		await write("project://state", (state) => ({ ...(state as Json), status: "active" }));
+		const validated = await host.command("validate");
+		assert.doesNotMatch(validated.text, /^(blocker|error) /m, validated.text);
+		assert.ok(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t", args: { path: `paper/${S}.md` } })), "resume-writing declares no manuscript output");
+		await host.observe({ event: "turn_end", turnId: "t", outcome: "completed", usage: null });
+		assert.equal((((await host.tool("readiness", { section: S })).data) as Json).ready, true);
+		assert.equal(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t", args: { path: `paper/${S}.md` } })), null, "the approved revision still authorizes the manuscript");
+		const decisions = interactions(workspace).map((entry) => `${entry.subject_uri}:${entry.outcome}:${entry.selected_option ?? ""}`).sort();
+		assert.deepEqual(decisions, [
+			"project://checkpoints/approve-first:selected:revise",
+			"project://checkpoints/approve-revision:selected:approve",
+			"project://checkpoints/approve-second:selected:approve",
+			"project://checkpoints/framing:selected:interruption",
+			"project://checkpoints/resume:selected:verify",
+		]);
+	} finally {
+		await host.dispose();
+		rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
 // --- the desk itself -------------------------------------------------------------------
 
 test("the desk enters with its four regions and clears its ambient UI when left in a folder with no project", async () => {

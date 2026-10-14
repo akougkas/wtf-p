@@ -181,8 +181,9 @@ TMPDIR=<disposable-tmp> WTFP_CLIO_ENTRY=/path/to/built/clio-coder/dist/cli/index
 
 Evidence requirements and boundaries:
 - **Explicit entry and disposable isolation**: The test requires `WTFP_CLIO_ENTRY` pointing to an absolute built CLI file and isolates all profiles, data, state, cache, and scratch directories under disposable roots. It forwards no credentials and makes no model or network calls.
-- **Interim frozen snapshot labeling**: Current native verification rests on an interim frozen Clio 0.4.7 built snapshot (entry SHA-256 `97c11656520161dcec48600786ecc128f1ae2cde660e7fb99a6d9f347e3a9f39`, dist digest `13b913e506a34e0532119c2cb27b8d7d38dd52431ca8d3e2ba0805f7313003dc`, source HEAD `b7d9e591` plus uncommitted changes recorded at snapshot creation). This is explicitly **not** a final clean release SHA or final packed-consumer proof from an npm registry build.
-- **Status of release gates**: Native integration tests pass with exit 0 (`test/clio-native-integration.test.js` at commit `6f95279`, production installer at `3d9387f`). Final release gates remain open pending settled documentation, final preflight checks, and publication of Clio 0.4.7.
+- **Pinned reference build**: Qualify against the build `evaluation/v2/campaigns/clio-0.6.2-reference.json` pins, not an operator's working checkout. Build it in a scratch directory: `git -C <clio> archive v0.6.2 | tar -x`, install the tag's lockfile dependencies, run `node --import tsx scripts/build.ts` and `node --import tsx scripts/build-codewiki-asset.ts`, then confirm with `node evaluation/tools/run-clio-campaign.js plan --clio-entry <scratch>/dist/cli/index.js` that `clio.mismatches` is empty. A fresh build that differs only in esbuild chunk names is a new binary identity; record it and requalify rather than editing the pin.
+- **Same build for the desk**: Run the desk package tests through the same build, `TMPDIR=<disposable-tmp> node <scratch>/dist/cli/index.js extensions test vendors/clio-extension`, and record the pass count.
+- **Historical snapshot**: Earlier native verification rested on an interim frozen Clio 0.4.7 snapshot (entry SHA-256 `97c11656520161dcec48600786ecc128f1ae2cde660e7fb99a6d9f347e3a9f39`, dist digest `13b913e506a34e0532119c2cb27b8d7d38dd52431ca8d3e2ba0805f7313003dc`, source HEAD `b7d9e591` plus uncommitted changes). It is retained with that meaning and does not qualify the current packages.
 
 At least one harmless academic fixture must also exercise real Claude, Codex,
 and Clio execution without touching normal client state. Keep static lint,
@@ -203,7 +204,8 @@ plugin lifecycle.
 - [ ] the real-agent fixture passes the exact scope claimed; partial and failed phases are documented without promotion to a full-lifecycle result
 - [ ] applicable routing/lifecycle evidence passes its sealed matrix or records an honest capability limitation
 - [ ] certifying Clio lifecycle evidence uses `read-only` preview or supervised `suggest` autonomy and fails on every undeclared tool call; exploratory `full-auto` runs are labeled non-certifying because Clio slash prompts do not enforce an action-scoped tool surface
-- [ ] both generated Clio fleets validate and execute nested writes without rollback
+- [ ] both generated Clio playbooks validate, and their graphed write roots match `protocol/fleets/*.json`
+- [ ] `run-clio-campaign.js prepare` passes on the release commit against the pinned Clio build; an author-led campaign is reported separately from it
 - [ ] `git diff --check` passes
 - [ ] `CHANGELOG.md`, README capability matrix, and migration notes match observed behavior
 - [ ] `npm run preflight` passes on the release commit
