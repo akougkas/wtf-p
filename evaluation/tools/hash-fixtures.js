@@ -9,14 +9,18 @@ const { inventoryFixture } = require('../lib/fixture-hashes');
 
 const fixturesRoot = path.resolve(__dirname, '../v1/fixtures');
 
-// Only closed-world `wtfp.evaluation.fixture/v1` fixtures carry a byte
-// manifest. A user-acceptance fixture is a template the user materializes, so
-// its bytes are not this tool's to seal.
+const SEALED_SCHEMA = 'wtfp.evaluation.fixture/v1';
+
+// Closed-world `wtfp.evaluation.fixture/v1` fixtures carry a byte manifest. A
+// user-acceptance fixture is a template the user materializes, so its bytes
+// are not this tool's to seal. A directory that already holds a manifest
+// stays sealed: changing its schema is a check failure, never a way out of it.
 function fixtureDirectories() {
   return fs.readdirSync(fixturesRoot, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => path.join(fixturesRoot, entry.name))
-    .filter(directory => JSON.parse(fs.readFileSync(path.join(directory, 'fixture.json'), 'utf8')).schema === 'wtfp.evaluation.fixture/v1')
+    .filter(directory => fs.existsSync(path.join(directory, 'manifest.json')) ||
+      JSON.parse(fs.readFileSync(path.join(directory, 'fixture.json'), 'utf8')).schema === SEALED_SCHEMA)
     .sort();
 }
 
@@ -42,6 +46,10 @@ function stableJson(value) {
 function checkFixture(fixtureRoot) {
   const manifestFile = path.join(fixtureRoot, 'manifest.json');
   const expected = expectedManifest(fixtureRoot);
+  const schema = JSON.parse(fs.readFileSync(path.join(fixtureRoot, 'fixture.json'), 'utf8')).schema;
+  if (schema !== SEALED_SCHEMA) {
+    return { fixtureRoot, valid: false, expected, reason: `fixture.json changed its schema to ${schema} under a sealed manifest` };
+  }
   if (!fs.existsSync(manifestFile)) {
     return { fixtureRoot, valid: false, expected, reason: 'manifest.json is missing' };
   }

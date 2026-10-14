@@ -99,10 +99,11 @@
     "fixture": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "model_inputs_sha256", "section"],
+      "required": ["path", "model_inputs_sha256", "evaluator_oracles_sha256", "section"],
       "properties": {
         "path": { "type": "string", "pattern": "^evaluation/v[0-9]+/fixtures/[a-z0-9-]+$" },
         "model_inputs_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "evaluator_oracles_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "section": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
       }
     },

@@ -45,6 +45,7 @@
   "fixture": {
     "path": "evaluation/v1/fixtures/hpc-checkpointing",
     "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
+    "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
     "section": "evaluation"
   },
   "permissions": {

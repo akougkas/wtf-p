@@ -14,6 +14,7 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const runner = require('../evaluation/tools/run-clio-campaign');
+const deskTrust = require('../evaluation/lib/desk-trust');
 
 const CAMPAIGN_FILE = path.join(ROOT, 'evaluation/v2/campaigns/clio-0.6.2-reference.json');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-campaign-test-'));
@@ -56,7 +57,12 @@ ${body}
   return entry;
 }
 
-function preparedRoot(name, entry) {
+/**
+ * A root as prepare leaves it, bound to this checkout, the fake Clio and the
+ * fixture. The fake build is unpinned, and the test tree may be dirty, so the
+ * record says both, as prepare does when the operator allows them.
+ */
+function preparedRoot(name, entry, change = (prepared) => prepared) {
   const campaign = runner.loadCampaign(CAMPAIGN_FILE);
   const root = path.join(scratch, name);
   fs.mkdirSync(path.join(root, 'workspace'), { recursive: true });
@@ -65,14 +71,29 @@ function preparedRoot(name, entry) {
       if (directory.startsWith(root)) fs.mkdirSync(directory, { recursive: true });
     }
   }
-  fs.writeFileSync(path.join(root, 'prepared.json'), `${JSON.stringify({
+  fs.writeFileSync(path.join(root, 'workspace', 'project-brief.md'), 'A brief.\n');
+  const identity = runner.clioIdentity(entry, campaign);
+  const wtfp = runner.wtfpIdentity();
+  fs.writeFileSync(path.join(root, 'prepared.json'), `${JSON.stringify(change({
     schema: 'wtfp.evaluation.campaign-prepared/v2',
-    campaign: { id: campaign.id, version: campaign.version },
-    clio: runner.clioIdentity(entry, campaign).observed,
-    workspace: 'workspace'
-  }, null, 2)}\n`);
+    campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(CAMPAIGN_FILE)) },
+    wtfp,
+    allow_dirty: wtfp.package_tree !== 'clean',
+    clio: identity.observed,
+    clio_unpinned: identity.mismatches,
+    fixture: { ...runner.fixtureIdentity(campaign), evaluator_oracles_copied: false },
+    workspace: 'workspace',
+    workspace_sha256: runner.workspaceDigest(path.join(root, 'workspace')),
+    workspace_head: runner.workspaceHead(path.join(root, 'workspace')),
+    checks: [{ name: 'desk-package-tests', passed: true, detail: null }]
+  }), null, 2)}\n`);
   return root;
 }
+
+/** Lines a fake Clio prints and records it writes into its workspace, as JavaScript source. */
+const frame = (value) => `console.log(${JSON.stringify(JSON.stringify(value))});`;
+const planningWrite = (relative, value) => `{ const f = require('path').join(process.cwd(), '.planning', ${JSON.stringify(relative)}); require('fs').mkdirSync(require('path').dirname(f), { recursive: true }); require('fs').writeFileSync(f, ${JSON.stringify(JSON.stringify(value))}); }`;
+const measured = (costUsd) => frame({ type: 'agent_end', messageCount: 2, usage: { input: 10, output: 5, cacheRead: 0, cacheWrite: 0, reasoning: 0, totalTokens: 15, costUsd, apiCalls: 1, measured: true } });
 
 function privateSource(name, text) {
   const file = path.join(scratch, 'operator', name);
@@ -184,13 +205,170 @@ setTimeout(() => {}, 60000);`);
     assert.strictEqual(run.credentials_removed, true);
   });
 
-  await test('reported costs are summed only when every step reports one', async () => {
-    const step = (cost) => runner.classifyStep({ exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} },
-      `${JSON.stringify({ type: 'turn_end', usage: { costUsd: cost } })}\n`, '');
-    assert.strictEqual(step(0.25).cost_usd, 0.25);
-    assert.strictEqual(step(null).cost_status, 'unavailable');
-    const failed = runner.classifyStep({ exitCode: 1, signal: null, timedOut: false, latencyMs: 1, processGroup: {} }, '', 'boom');
+  await test('cost comes from measured segments and worker receipt provenance, and unknown cost is never zero', async () => {
+    const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const usage = (fields) => `${JSON.stringify({ type: 'agent_end', usage: { costUsd: 0.25, measured: true, ...fields } })}\n`;
+    assert.deepStrictEqual(runner.classifyStep(ok, usage({}), '').cost, { status: 'reported', usd: 0.25, sources: { main_segments: 1, worker_receipts: 0 } });
+    assert.strictEqual(runner.classifyStep(ok, usage({ measured: false }), '').cost.status, 'unavailable');
+    assert.strictEqual(runner.classifyStep(ok, usage({ estimated: true }), '').cost.status, 'estimated');
+    assert.strictEqual(runner.classifyStep(ok, '', '').cost.usd, null, 'no usage at all is unavailable, not zero');
+    const receipt = (costProvenance) => ({ receipts: [{ file: 'r.json', receipt: { costUsd: 0.5, costProvenance, targetId: 't', wireModelId: 'm' } }] });
+    assert.deepStrictEqual(runner.classifyStep(ok, usage({}), '', receipt('known')).cost, { status: 'reported', usd: 0.75, sources: { main_segments: 1, worker_receipts: 1 } });
+    assert.strictEqual(runner.classifyStep(ok, usage({}), '', receipt('unknown')).cost.status, 'unavailable');
+    const failed = runner.classifyStep({ ...ok, exitCode: 1 }, '', 'boom');
     assert.strictEqual(failed.outcome, 'failed');
+  });
+
+  await test('execute runs only on the campaign, build, candidate, checks and workspace that prepare bound', async () => {
+    const entry = fakeClio('fake-bound', 'process.exit(0);');
+    const attempt = (root, extra = {}) => withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection, ...extra }));
+    const edited = path.join(scratch, 'edited-campaign.json');
+    fs.writeFileSync(edited, `${fs.readFileSync(CAMPAIGN_FILE, 'utf8')} `);
+    await assert.rejects(attempt(preparedRoot('bound-campaign', entry), { campaignFile: edited }), /campaign definition changed since prepare/);
+    await assert.rejects(attempt(preparedRoot('bound-checks', entry, (prepared) => ({ ...prepared, checks: [{ name: 'desk-registered', passed: false }] }))), /did not pass every native check/);
+    await assert.rejects(attempt(preparedRoot('bound-no-checks', entry, (prepared) => ({ ...prepared, checks: [] }))), /did not pass every native check/);
+    const moved = preparedRoot('bound-workspace', entry);
+    fs.writeFileSync(path.join(moved, 'workspace', 'planted.md'), 'x');
+    await assert.rejects(attempt(moved), /workspace changed since prepare/);
+    fs.rmSync(path.join(moved, 'workspace', 'planted.md'));
+    fs.mkdirSync(path.join(moved, 'workspace', 'empty'));
+    await assert.rejects(attempt(moved), /workspace changed since prepare/, 'an empty directory counts');
+    await assert.rejects(attempt(preparedRoot('bound-candidate', entry, (prepared) => ({ ...prepared, wtfp: { ...prepared.wtfp, commit: '0'.repeat(40) } }))), /WTF-P candidate changed/);
+    await assert.rejects(attempt(preparedRoot('bound-build', entry, (prepared) => ({ ...prepared, clio: { ...prepared.clio, dist_sha256: '0'.repeat(64) } }))), /Clio build changed since prepare/);
+    await assert.rejects(attempt(preparedRoot('bound-pinned', entry, (prepared) => ({ ...prepared, clio_unpinned: [] }))), /unpinned Clio build/);
+    await assert.rejects(attempt(preparedRoot('bound-timeout', entry), { timeoutMinutes: campaign.budget.timeout_minutes_per_step + 1 }), /at most the campaign's/);
+    for (const name of ['bound-campaign', 'bound-checks', 'bound-workspace', 'bound-candidate', 'bound-build', 'bound-pinned', 'bound-timeout']) {
+      assert.ok(!fs.existsSync(path.join(scratch, name, 'run.json')), `${name} ran nothing`);
+      assert.ok(!fs.existsSync(path.join(runner.profilePaths(path.join(scratch, name)).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')), `${name} copied no credential`);
+    }
+  });
+
+  await test('every step runs without retrieval tools inside the run home, and a network tool call is a policy violation', async () => {
+    const envFile = path.join(scratch, 'step-env.json');
+    const entry = fakeClio('fake-network', `require('fs').writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(process.env));
+${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'web_fetch', args: { url: 'https://example.invalid' } })}
+${measured(0.01)}
+process.exit(0);`);
+    const run = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('network', entry), entry, ...selection }));
+    const env = JSON.parse(fs.readFileSync(envFile, 'utf8'));
+    assert.strictEqual(env.CLIO_CODER_DISABLE_RETRIEVE_TOOLS, '1');
+    assert.strictEqual(env.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
+    assert.strictEqual(run.outcome, 'policy-violation');
+    assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, blocked_calls: 0 });
+  });
+
+  await test('a gated step is never completed while its gate is pending or answered without a sealed author answer', async () => {
+    const checkpoint = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/checkpoint.json'), 'utf8'));
+    const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/manifest.json'), 'utf8'));
+    const pending = fakeClio('fake-pending', `${planningWrite('project.json', manifest)}
+${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'pending' })}
+${measured(0.01)}
+process.exit(0);`);
+    const waiting = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('pending', pending), entry: pending, ...selection }));
+    assert.strictEqual(waiting.outcome, 'blocked-author-unavailable');
+    assert.deepStrictEqual(waiting.steps[0].gates, { pending: [checkpoint.id], unconfirmed: [] });
+    const forged = fakeClio('fake-forged', `${planningWrite('project.json', manifest)}
+${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'resolved', resolution: { resolved_by: 'author', selected_option: checkpoint.options[0].id, summary: 'Written by the agent.', resolved_at: '2026-10-14T12:00:00Z' } })}
+${measured(0.01)}
+process.exit(0);`);
+    const violated = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('forged', forged), entry: forged, ...selection }));
+    assert.strictEqual(violated.outcome, 'integrity-violation');
+    assert.deepStrictEqual(violated.steps[0].gates, { pending: [], unconfirmed: [checkpoint.id] });
+  });
+
+  await test('a signal during a step records it cancelled, and an unmeasurable cost stops the run', async () => {
+    // The step exits cleanly when the runner stops it, so only the runner knows it was interrupted.
+    const entry = fakeClio('fake-signal', `${measured(0.01)}
+process.on('SIGTERM', () => process.exit(0));
+process.kill(process.ppid, 'SIGINT');
+setTimeout(() => process.exit(0), 2000);`);
+    const cancelled = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('signal', entry), entry, ...selection }));
+    assert.strictEqual(cancelled.outcome, 'cancelled');
+    assert.deepStrictEqual(cancelled.steps.map(step => [step.outcome, step.exit_code]), [['cancelled', 0]]);
+    assert.strictEqual(cancelled.credentials_removed, true);
+    // A second signal exits the runner, and the run is still on record. A detached grandchild keeps the
+    // step's output open, so the step never returns and only the runner's own exit can record the run.
+    const started = path.join(scratch, 'stubborn.started');
+    const stubborn = fakeClio('fake-stubborn', `process.on('SIGTERM', () => {});
+const holder = require('child_process').spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: true, stdio: ['ignore', 'inherit', 'inherit'] });
+require('fs').writeFileSync(${JSON.stringify(started)}, String(holder.pid));
+setInterval(() => {}, 1000);`);
+    const root = preparedRoot('stubborn', stubborn);
+    const child = require('child_process').spawn(process.execPath, [path.join(ROOT, 'evaluation/tools/run-clio-campaign.js'), 'execute', '--root', root, '--clio-entry', stubborn,
+      '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
+    { env: { ...process.env, ...executeEnv }, stdio: 'ignore' });
+    const closed = new Promise(resolve => child.on('close', code => resolve(code)));
+    for (let tries = 0; tries < 200 && !fs.existsSync(started); tries += 1) await new Promise(resolve => setTimeout(resolve, 50));
+    child.kill('SIGINT');
+    await new Promise(resolve => setTimeout(resolve, 200));
+    child.kill('SIGINT');
+    const code = await closed;
+    process.kill(Number(fs.readFileSync(started, 'utf8')), 'SIGKILL');
+    assert.strictEqual(code, 130);
+    const recorded = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
+    assert.strictEqual(recorded.outcome, 'cancelled');
+    assert.strictEqual(recorded.credentials_removed, true);
+    const unmetered = fakeClio('fake-unmetered', `${frame({ type: 'agent_end', usage: { costUsd: 0, measured: false } })}
+process.exit(0);`);
+    const stopped = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('unmetered', unmetered), entry: unmetered, ...selection }));
+    assert.strictEqual(stopped.outcome, 'stopped-cost-unavailable');
+    assert.deepStrictEqual(stopped.cost, { status: 'unavailable', usd: null });
+    assert.strictEqual(stopped.steps.length, 1);
+  });
+
+  await test('the run records the models Clio reports and worker receipts, and says effort is unobservable', async () => {
+    const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
+${measured(0.02)}
+{ const dir = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'receipts'); require('fs').mkdirSync(dir, { recursive: true });
+  require('fs').writeFileSync(require('path').join(dir, 'run-1.json'), JSON.stringify({ runId: 'run-1', targetId: 'worker-target', wireModelId: 'worker-model', costUsd: 0.03, costProvenance: 'known' })); }
+process.exit(0);`);
+    const root = preparedRoot('models', entry);
+    const run = await withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection, budgetUsd: 0.04 }));
+    assert.strictEqual(run.outcome, 'stopped-budget');
+    assert.deepStrictEqual(run.steps[0].observed_models, [{ target: 'operator-target', model: 'operator-model' }, { target: 'worker-target', model: 'worker-model' }]);
+    assert.strictEqual(run.steps[0].model_observation, 'differs', 'a worker on another model is not the selected model');
+    assert.deepStrictEqual(run.cost, { status: 'reported', usd: 0.05 });
+    assert.strictEqual(run.effort_observation.status, 'unobservable');
+    assert.strictEqual(run.workspace.initial_sha256, JSON.parse(fs.readFileSync(path.join(root, 'prepared.json'), 'utf8')).workspace_sha256);
+  });
+
+  await test('credential copies are wiped without following links, logs are scrubbed, and an unfinished run exits non-zero', async () => {
+    const secret = 'sk-campaign-secret-0123456789abcdef';
+    const source = privateSource('leaky-credentials.yaml', `providers:\n  key: ${secret}\n`);
+    const outside = path.join(scratch, 'outside-target.txt');
+    fs.writeFileSync(outside, 'keep me');
+    const entry = fakeClio('fake-leak', `const fs = require('fs'); const path = require('path');
+const config = process.env.CLIO_CODER_CONFIG_DIR;
+fs.copyFileSync(path.join(config, 'credentials.yaml'), path.join(config, 'credentials.yaml.bak'));
+fs.symlinkSync(${JSON.stringify(outside)}, path.join(config, 'credentials.yaml.link'));
+console.log(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8'));
+${measured(0.01)}
+process.exit(1);`);
+    const root = preparedRoot('leak', entry);
+    const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-clio-campaign.js'), 'execute', '--root', root, '--clio-entry', entry,
+      '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
+    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: source }, encoding: 'utf8', timeout: 60000 });
+    assert.strictEqual(cli.status, 3, cli.stderr);
+    const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
+    assert.strictEqual(run.outcome, 'failed');
+    assert.strictEqual(run.credentials_removed, true);
+    assert.deepStrictEqual(fs.readdirSync(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR).filter(name => name.startsWith('credentials')), []);
+    assert.strictEqual(fs.readFileSync(outside, 'utf8'), 'keep me', 'a link is removed, never written through');
+    assert.ok(run.logs_redacted >= 1);
+    assert.doesNotMatch(fs.readFileSync(path.join(root, 'logs', 'initialize', 'stdout.jsonl'), 'utf8'), new RegExp(secret));
+  });
+
+  await test('a fixture stays pinned: oracle drift and a schema change under a sealed manifest both fail', async () => {
+    const drifted = path.join(scratch, 'oracle-drift.json');
+    fs.writeFileSync(drifted, JSON.stringify({ ...campaign, fixture: { ...campaign.fixture, evaluator_oracles_sha256: '0'.repeat(64) } }));
+    assert.throws(() => runner.loadCampaign(drifted), /evaluator oracles changed/);
+    const { checkFixture } = require('../evaluation/tools/hash-fixtures');
+    const copy = path.join(scratch, 'fixture-copy');
+    fs.cpSync(path.join(ROOT, campaign.fixture.path), copy, { recursive: true });
+    assert.strictEqual(checkFixture(copy).valid, true);
+    const descriptor = JSON.parse(fs.readFileSync(path.join(copy, 'fixture.json'), 'utf8'));
+    fs.writeFileSync(path.join(copy, 'fixture.json'), JSON.stringify({ ...descriptor, schema: 'wtfp.evaluation.user-acceptance/v1' }));
+    assert.match(checkFixture(copy).reason, /changed its schema/);
   });
 
   await test('collect verifies desk seals independently and never writes into the workspace', async () => {
@@ -233,15 +411,38 @@ setTimeout(() => {}, 60000);`);
     const resolution = { resolved_by: 'author', selected_option: checkpoint.options[0].id, summary: 'Answered at the desk.', resolved_at: '2026-10-14T12:01:00Z' };
     put(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, status: 'resolved', resolution });
     put('checkpoints/checkpoint-hand-edited.json', { ...checkpoint, id: 'checkpoint-hand-edited', status: 'resolved', resolution });
+    // Each of these carries a valid seal under the profile's key, yet none is the author's answer to what the checkpoint now records.
+    const answered = (id, fields = {}, change = (record) => record) => {
+      const record = { ...checkpoint, id };
+      const asked = { ...record };
+      delete asked.status;
+      put(`interactions/interaction-${id}.json`, deskTrust.seal({ ...interaction, id: `interaction-${id}`, subject_uri: `project://checkpoints/${id}`, presented: { ...interaction.presented, content_sha256: sha256(runner.canonical(asked)) }, ...fields }, key));
+      put(`checkpoints/${id}.json`, change({ ...record, status: 'resolved', resolution }));
+    };
+    answered('checkpoint-swapped', {}, (record) => ({ ...record, resolution: { ...resolution, selected_option: checkpoint.options[1].id } }));
+    answered('checkpoint-rewritten', {}, (record) => ({ ...record, request: 'A question the author never saw.' }));
+    answered('checkpoint-deferred', { outcome: 'kept-pending', selected_option: undefined });
+    answered('checkpoint-elsewhere', { project_id: 'another-project' });
+    answered('checkpoint-prompted', { channel: 'host-prompt' });
+    answered('checkpoint-waived', { outcome: 'waived', selected_option: undefined }, (record) => ({ ...record, status: 'waived', resolution: { resolved_by: 'author', summary: 'Waived at the desk.', resolved_at: '2026-10-14T12:01:00Z' } }));
+    put('checkpoints/checkpoint-policy.json', { ...checkpoint, id: 'checkpoint-policy', blocking: false, status: 'resolved', resolution: { resolved_by: 'policy', summary: 'The default applies.', resolved_at: '2026-10-14T12:01:00Z' } });
     const before = tree(workspace);
     const report = runner.collect(campaign, { root });
     assert.deepStrictEqual(tree(workspace), before);
     assert.strictEqual(report.evaluator_mutation.changed, false);
     assert.ok(report.evaluator_mutation.wrote_only.startsWith('evidence'));
-    const seals = Object.fromEntries(report.interactions.map(item => [item.id, item.seal]));
+    const seals = Object.fromEntries(report.interactions.filter(item => !item.id.startsWith('interaction-checkpoint-')).map(item => [item.id, item.seal]));
     assert.deepStrictEqual(seals, { 'interaction-answer': 'valid', 'interaction-elsewhere': 'foreign', 'interaction-forged': 'invalid' });
-    assert.deepStrictEqual(report.unattested_author_resolutions, ['checkpoint-hand-edited']);
+    assert.deepStrictEqual(report.unattested_author_resolutions.sort(), ['checkpoint-deferred', 'checkpoint-elsewhere', 'checkpoint-hand-edited', 'checkpoint-prompted', 'checkpoint-rewritten', 'checkpoint-swapped']);
+    const trust = Object.fromEntries(report.decisions.map(item => [item.checkpoint, item.trust]));
+    assert.strictEqual(trust[checkpoint.id], 'attested');
+    assert.strictEqual(trust['checkpoint-waived'], 'attested');
+    assert.deepStrictEqual(report.waived, [{ checkpoint: 'checkpoint-waived', trust: 'attested' }]);
+    assert.deepStrictEqual(report.policy_resolutions, [{ checkpoint: 'checkpoint-policy', blocking: false }]);
     assert.ok(report.evidence_levels.includes('observed-author'));
+    assert.strictEqual(report.workspace_chain.prepared, JSON.parse(fs.readFileSync(path.join(root, 'prepared.json'), 'utf8')).workspace_sha256);
+    assert.strictEqual(report.workspace_chain.collected, report.evaluator_mutation.workspace_before);
+    assert.strictEqual(report.workspace_chain.run_final, null, 'no run, no run digest');
   });
 
   await test('the comparative study stays a draft until every owner decision is made, and its rules are enforced', async () => {
