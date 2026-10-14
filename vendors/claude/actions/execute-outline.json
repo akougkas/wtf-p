@@ -39,6 +39,10 @@
   "produces": [
     {
       "uri": "project://paper/{artifact}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://paper/{artifact}",
       "mode": "update"
     },
     {
@@ -68,6 +72,10 @@
     {
       "uri": "project://validations/{validation}",
       "mode": "create"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
     }
   ],
   "delegation": [
@@ -94,11 +102,11 @@
     },
     {
       "id": "filesystem.create",
-      "scope": "project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://validations/{validation}"
+      "scope": "project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://sections/{section}, project://state"
+      "scope": "project://paper/{artifact}, project://sections/{section}/summary, project://checkpoints/{checkpoint}, project://sections/{section}, project://state, project://manifest"
     },
     {
       "id": "filesystem.read",

@@ -603,7 +603,7 @@ function clioUserGateBody(action, deskTools = false) {
   if (deskTools) return [
     '## Clio user-gate binding',
     '',
-    'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, retained or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author` yourself or infer approval from invocation text, prose or silence. Read back a persisted resolution before applying its gated mutation.'
+    'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.'
   ].join('\n');
   return [
     '## Clio user-gate binding',
@@ -619,7 +619,7 @@ function clioDeskWorkflowBody(action, workflowBody) {
     .replace(/^@protocol:\/\/project\/README\.md\n/gm, '')
     .replace(/^@protocol:\/\/skills\/[^\n]+\/references\/actions\.md\n/gm, '')
     .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m,
-      'Use `extension_wtfp__record` for each declared JSON record write: pass its logical `uri`, complete `record`, and the revision read as `expect_revision` for revisioned updates. It validates, bumps revisions/timestamps, replaces atomically and reads back; preserve stable IDs and author decisions.')
+      'Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.')
     .replace(/^Manuscript prose and supporting context,[^\n]+$/m,
       'Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.');
   if (action.id === 'write-section') body = body.replace(/^3\. Read the persisted manuscript text back[^\n]+$/m,
@@ -628,7 +628,9 @@ function clioDeskWorkflowBody(action, workflowBody) {
     .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_wtfp__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
   const bindings = [
-    'Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool\'s error or refusal stops the action; never bypass it with a manual write or shell script.',
+    'Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool\'s error or refusal stops the action; never bypass it with a manual write or shell script.',
+    ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
+      ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
       ? ['After changing a linked section manuscript, call `extension_wtfp__measure_section` with that section ID; it persists the desk\'s body-word count in the section and state.'] : []),
     `If desk tools are absent, follow \`\${pluginRoot}/workflows/${action.id}.md\` and \`\${pluginRoot}/project/README.md\` with native tools and \`ask_user\` gates.`
@@ -1017,8 +1019,12 @@ function clioPluginManifest(model, legacyFleetNames = false) {
   });
 }
 
+// Playbook write boundaries are literal paths, so `{section}` cannot be
+// substituted. Section artifacts project to `.planning/sections/`, which keeps
+// workers away from checkpoints, interactions, state and config.
 function clioFleetWriteBoundary(resource, fleetId) {
   if (/^project:\/\/paper(?:\/|$)/u.test(resource)) return 'paper/';
+  if (/^project:\/\/sections\//u.test(resource)) return '.planning/sections/';
   if (/^project:\/\//u.test(resource)) return '.planning/';
   throw new Error(`fleet ${fleetId} has no Clio write-boundary projection for ${resource}`);
 }
@@ -1279,6 +1285,32 @@ function manuscriptGuardActions(model, availabilityById, host) {
   return guarded;
 }
 
+// The Clio desk arms on every available action. Each entry carries the
+// action's exact declared outputs: the desk derives file roots from them,
+// substitutes the section an invocation names, and refuses record writes the
+// contract does not declare. `paperWriters` are the Clio agent IDs of the
+// writing roles that manuscript-producing actions dispatch; the desk confines
+// them to manuscripts whose sections are ready to draft.
+function clioWriteGuard(model, availabilityById) {
+  const available = model.actions.filter((action) => availabilityById.get(action.id).available);
+  if (!available.some((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))) {
+    throw new Error('no manuscript-writing action is available on Clio');
+  }
+  const verifiers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
+  const paperWriters = new Set();
+  for (const action of available) {
+    if (!action.produces.some((output) => output.uri.startsWith('project://paper'))) continue;
+    for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
+  }
+  return stableJson({
+    schema: 'wtfp.clio-write-guard/v2',
+    actions: Object.fromEntries(available.map((action) => [action.id, {
+      produces: action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
+    }])),
+    paperWriters: [...paperWriters].sort()
+  });
+}
+
 // The Claude write guard arms on the manuscript-writing actions, confines
 // Write/Edit calls for the rest of that prompt to the roots the action
 // declares, and disarms when the turn stops.
@@ -1431,10 +1463,8 @@ function addClioRuntime(plan, model, availabilityById) {
   addFile(plan, 'runtime/extension.test.ts', `${generatedScriptBanner('clio', 'runtime/extension.test.ts')}\n${source('runtime/extension.test.ts')}`);
   addFile(plan, 'runtime/package.json', source('runtime/package.json'));
   addFile(plan, 'runtime/json-schema.cjs', `${generatedScriptBanner('evaluation', 'lib/json-schema.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'json-schema.js'), 'utf8')}`);
-  addFile(plan, 'runtime/write-guard.json', stableJson({
-    schema: 'wtfp.clio-write-guard/v1',
-    actions: Object.fromEntries(manuscriptGuardActions(model, availabilityById, 'Clio'))
-  }));
+  addFile(plan, 'runtime/claim-coverage.cjs', `${generatedScriptBanner('evaluation', 'lib/claim-coverage.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'claim-coverage.js'), 'utf8')}`);
+  addFile(plan, 'runtime/write-guard.json', clioWriteGuard(model, availabilityById));
   addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'actions'), 'actions');

@@ -20,8 +20,8 @@ allowed-tools:
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://paper/{artifact}`.
-Produce: `project://paper/{artifact}` (update), `project://validations/{validation}` (create).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://paper/{artifact}`, `project://sections/{section}`, `project://state`.
+Produce: `project://paper/{artifact}` (update), `project://validations/{validation}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -31,7 +31,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Require an explicit manuscript selection and preserve claims, evidence meaning, citations, author voice, and protected text.
 2. Propose substantive changes separately from mechanical edits and gate the substantive diff.
-3. Apply only approved edits and emit a validation describing preserved meaning and any unresolved defects.
+3. Apply only approved edits and emit a validation describing preserved meaning and any unresolved defects. When the edited text is a section's linked manuscript, measure it again and reconcile that section's and the state's word counts.
 
 ## Safety and completion
 
@@ -49,6 +49,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${CLAUDE_PLUGIN_ROOT}/project/templates/decisions.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/manifest.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/manifest.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/section.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/section.json
+@${CLAUDE_PLUGIN_ROOT}/project/schemas/state.schema.json
+@${CLAUDE_PLUGIN_ROOT}/project/templates/state.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/validation.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/validation.json
 

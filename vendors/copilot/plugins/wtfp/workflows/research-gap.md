@@ -12,8 +12,8 @@ source: wtfp.protocol
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sources/{source}`, `project://evidence/{evidence}`.
-Produce: `project://sources/{source}` (create), `project://evidence/{evidence}` (create), `project://sections/{section}/research` (create), `project://sections/{section}` (update).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/context`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://sections/{section}/research`.
+Produce: `project://sources/{source}` (create), `project://sources/{source}` (update), `project://evidence/{evidence}` (create), `project://evidence/{evidence}` (update), `project://sections/{section}/research` (create), `project://sections/{section}/research` (update), `project://sections/{section}` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 

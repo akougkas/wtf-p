@@ -31,7 +31,8 @@
     "project://sections/{section}",
     "project://sections/{section}/context",
     "project://sources/{source}",
-    "project://evidence/{evidence}"
+    "project://evidence/{evidence}",
+    "project://sections/{section}/research"
   ],
   "produces": [
     {
@@ -39,12 +40,24 @@
       "mode": "create"
     },
     {
+      "uri": "project://sources/{source}",
+      "mode": "update"
+    },
+    {
       "uri": "project://evidence/{evidence}",
       "mode": "create"
     },
     {
+      "uri": "project://evidence/{evidence}",
+      "mode": "update"
+    },
+    {
       "uri": "project://sections/{section}/research",
       "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/research",
+      "mode": "update"
     },
     {
       "uri": "project://sections/{section}",
@@ -76,11 +89,11 @@
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sections/{section}"
+      "scope": "project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sources/{source}, project://evidence/{evidence}"
+      "scope": "project://manifest, project://config, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/context, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research"
     },
     {
       "id": "network.fetch",

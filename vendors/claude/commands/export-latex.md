@@ -19,8 +19,8 @@ allowed-tools:
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://paper/{artifact}`.
-Produce: `project://deliverables/latex/{artifact}` (create).
+Read: `project://manifest`, `project://config`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://deliverables/latex/{artifact}`.
+Produce: `project://deliverables/latex/{artifact}` (create), `project://deliverables/latex/{artifact}` (update), `project://manifest` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -28,9 +28,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 ## Procedure
 
-1. Confirm venue template and whether an existing deliverable may be replaced.
+1. Confirm venue template and whether an existing deliverable may be replaced; replacing one is an update and needs that answer.
 2. Convert manuscript structure, citations, figures, tables, and bibliography without inventing content or metadata.
-3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. Bibliography entries for the deliverable come from `bib-format` in its default `bibtex` style, which emits standard entry types; never pass `--style=al-folio` for a LaTeX export, since that projection does not compile under bibtex or biber. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
+3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. Bibliography entries for the deliverable come from `bib-format` in its default `bibtex` style, which emits standard entry types; never pass `--style=al-folio` for a LaTeX export, since that projection does not compile under bibtex or biber. Index the written deliverable in `manifest.artifacts.deliverables`. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
 
 ## Bundled tool execution
 

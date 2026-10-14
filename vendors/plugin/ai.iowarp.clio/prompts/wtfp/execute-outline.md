@@ -10,9 +10,9 @@ argument-hint: "[arguments]"
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://paper/{artifact}`.
-Produce: `project://paper/{artifact}` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://checkpoints/{checkpoint}` (create), `project://checkpoints/{checkpoint}` (update), `project://sections/{section}` (update), `project://state` (update), `project://validations/{validation}` (create).
+Produce: `project://paper/{artifact}` (create), `project://paper/{artifact}` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://checkpoints/{checkpoint}` (create), `project://checkpoints/{checkpoint}` (update), `project://sections/{section}` (update), `project://state` (update), `project://validations/{validation}` (create), `project://manifest` (update).
 
-Use `extension_wtfp__record` for each declared JSON record write: pass its logical `uri`, complete `record`, and the revision read as `expect_revision` for revisioned updates. It validates, bumps revisions/timestamps, replaces atomically and reads back; preserve stable IDs and author decisions.
+Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 
 Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
@@ -20,7 +20,7 @@ Write prose and linked artifacts with native file tools; keep their authored for
 
 1. Build waves from outline dependencies and select only sections with approved plans.
 2. Within configured parallelism, delegate bounded section work grounded in source/evidence records; create or update summaries, serialize overlapping outputs, and create or reconcile blocking checkpoints before dependent work proceeds.
-3. After each wave, validate outputs and reconcile section/state records from actual artifacts. Do not create branches or commits.
+3. After each wave, validate outputs, synchronize each drafted manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records from actual artifacts. Do not create branches or commits.
 
 ## Safety and completion
 
@@ -28,7 +28,8 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section's manuscript and summary; the desk narrows or refuses anything wider.
 After changing a linked section manuscript, call `extension_wtfp__measure_section` with that section ID; it persists the desk's body-word count in the section and state.
 If desk tools are absent, follow `${pluginRoot}/workflows/execute-outline.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
 
@@ -46,7 +47,7 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, retained or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author` yourself or infer approval from invocation text, prose or silence. Read back a persisted resolution before applying its gated mutation.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
 
 ## Clio role-result binding
 

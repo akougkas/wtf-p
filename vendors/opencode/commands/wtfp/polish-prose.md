@@ -29,6 +29,7 @@ Logical URIs identify project data without exposing a workstation path or a runt
 | `project://evidence/{evidence}` | `.planning/evidence/{evidence}.json` | Claim-level interpretation of a source |
 | `project://checkpoints/{checkpoint}` | `.planning/checkpoints/{checkpoint}.json` | Orchestrator-managed interaction gate |
 | `project://validations/{validation}` | `.planning/validations/{validation}.json` | Read-only verification result |
+| `project://interactions/{interaction}` | `.planning/interactions/{interaction}.json` | An author's answer as the host observed it |
 
 The conventional locations are adapter mappings, not absolute paths embedded in records. Adapters must reject URI traversal segments and must not resolve a logical URI outside the project root.
 
@@ -72,6 +73,27 @@ The JSON records above are the interoperable source of truth, while research and
 - A `state-snapshot` checkpoint is non-blocking and points to an immutable archive plus the logical URI, revision, and SHA-256 digest of every captured resource. Restores require a separate gate and a verified recovery archive.
 - Validation records report findings and never imply that a mutation was applied.
 - Timestamps use RFC 3339 date-time strings. Dates use ISO 8601 calendar dates.
+
+## Author answers and approvals
+
+A checkpoint's `resolution.resolved_by: author` is a claim. It becomes evidence only when an interaction record stands behind it. An interaction records what the author was shown and what the author chose:
+
+- `kind: checkpoint-answer` answers a checkpoint. `subject_uri` names the checkpoint, and `outcome` is `selected` (with `selected_option`), `done`, `waived`, `kept-pending`, or `discarded-stale`.
+- `kind: record-change` confirms or declines a record change that would weaken the author's controls. Its outcome is `approved`, `declined`, or `discarded-stale`.
+- `presented.content_sha256` is the SHA-256 of the canonical JSON of what was asked. For a checkpoint, that is the record with `status` and `resolution` removed, so answering it does not change the digest. Canonical JSON orders object keys by code unit and has no insignificant whitespace. `presented.options` lists the option identifiers offered, and `presented.artifact` holds the URI and SHA-256 of the file the checkpoint is about, when it names one.
+- `channel: attested-interview` means the host observed the answer in its own interview and sealed the record with `seal` (HMAC-SHA-256 over the canonical record without `seal`, keyed by a secret that never enters the project). `channel: host-prompt` documents an answer obtained through a host prompt that the host cannot attest; it carries no seal.
+
+A host that attests answers counts a resolution as the author's only when a sealed interaction whose seal verifies matches the checkpoint's current digest and recorded outcome. Anything else is unattested: a hand edit, an answer recorded by another host, or a seal made with another machine's key. An unattested resolution of a blocking checkpoint keeps holding its scope until the author confirms it, which records a new sealed interaction. Migration never upgrades an existing resolution to an attested one.
+
+On a host that attests answers, only its recorder writes interaction records and author resolutions; agents never write `resolved_by: author` and never resolve a blocking checkpoint. On a host that cannot attest, the agent records the resolution from the answer it received through the host's prompt. That resolution documents the answer without proving it, and an attesting host treats it as unattested. On every host, a pending blocking checkpoint cannot be made nonblocking, re-scoped, or expired by an agent. The one exception is a plan-approval checkpoint whose plan is no longer the section's current plan, which may be expired. An answered checkpoint is immutable; asking again creates a new checkpoint. `resolved_by: policy` applies only to nonblocking checkpoints.
+
+A plan is approved for drafting when its section links it as the last entry of `artifacts.plans` and a `decision` checkpoint scoped to that plan's URI carries an attested answer of `approve` that was given for the plan's current SHA-256. Any other answer, such as `revise` or `reject`, leaves the plan unapproved even when `confirm_plan` is off. With `confirm_plan` off and no author answer on the plan, a linked plan that resolves to a file stands by policy. Editing an approved plan voids its approval. Linked plans are immutable; a revision is a new plan appended to `artifacts.plans` that needs its own approval.
+
+## Concurrent updates and recovery
+
+An update names the version it read. Revisioned records (`state`, `outline`, `decisions`) carry the revision read; every other record carries the SHA-256 of the bytes read. An update that names no version, or a stale one, is refused and changes nothing. A create names no version and fails if the record already exists. Adapters advance revisions and timestamps themselves and replace each record atomically.
+
+Several records that change together, such as a checkpoint and the state that lists it, either all change or none does. An adapter stages every new file durably and then writes one journal naming them all, which is the commit point. It then moves each file into place and removes the journal. A process that stops before the journal exists leaves only staged files, which the next writer removes. A process that stops after it leaves the journal, which the next writer completes. Readers report a pending journal instead of repairing it.
 
 `templates/` contains minimal valid examples and `schemas/` contains JSON Schema 2020-12 contracts. The examples are safe fixtures for adapter and conformance tests; they are not prose-writing templates.
 
@@ -224,8 +246,8 @@ Completion requires total traceability from each audit gap to one appropriate re
 </details>
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://paper/{artifact}`.
-Produce: `project://paper/{artifact}` (update), `project://validations/{validation}` (create).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://paper/{artifact}`, `project://sections/{section}`, `project://state`.
+Produce: `project://paper/{artifact}` (update), `project://validations/{validation}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -235,7 +257,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Require an explicit manuscript selection and preserve claims, evidence meaning, citations, author voice, and protected text.
 2. Propose substantive changes separately from mechanical edits and gate the substantive diff.
-3. Apply only approved edits and emit a validation describing preserved meaning and any unresolved defects.
+3. Apply only approved edits and emit a validation describing preserved meaning and any unresolved defects. When the edited text is a section's linked manuscript, measure it again and reconcile that section's and the state's word counts.
 
 ## Safety and completion
 
@@ -274,7 +296,9 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     "project://manifest",
     "project://config",
     "project://decisions",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://sections/{section}",
+    "project://state"
   ],
   "produces": [
     {
@@ -284,6 +308,14 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "uri": "project://validations/{validation}",
       "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
     }
   ],
   "delegation": [
@@ -305,11 +337,11 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://paper/{artifact}"
+      "scope": "project://paper/{artifact}, project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}, project://sections/{section}, project://state"
     },
     {
       "id": "user.gate",
@@ -682,6 +714,233 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     "deliverables": [],
     "archives": []
   }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/section.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/section.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/section/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "outline_uri",
+    "title",
+    "goal",
+    "status",
+    "word_target",
+    "word_count",
+    "wave",
+    "depends_on",
+    "claims",
+    "artifacts",
+    "checkpoint_uris",
+    "validation_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.section/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "outline_uri": { "const": "project://structure/outline" },
+    "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "goal": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "status": {
+      "enum": ["not-started", "researching", "planned", "writing", "reviewing", "complete", "blocked"]
+    },
+    "word_target": { "type": "integer", "minimum": 1 },
+    "word_count": { "type": "integer", "minimum": 0 },
+    "wave": { "type": "integer", "minimum": 1 },
+    "depends_on": {
+      "type": "array",
+      "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+      "uniqueItems": true
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "status", "evidence_required", "evidence_uris"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "statement": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "status": { "enum": ["planned", "drafted", "verified", "rejected"] },
+          "evidence_required": { "type": "boolean" },
+          "evidence_uris": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^project://evidence/[A-Za-z0-9._~-]+$" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plans", "reviews"],
+      "properties": {
+        "context": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "research": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "plans": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "reviews": {
+          "type": "array",
+          "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+          "uniqueItems": true
+        },
+        "manuscript": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+        "handoff": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" }
+      }
+    },
+    "checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "validation_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://validations/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/section.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/section.json</summary>
+
+{
+  "schema": "wtfp.project.section/v1",
+  "id": "introduction",
+  "project_id": "portable-research-demo",
+  "outline_uri": "project://structure/outline",
+  "title": "Introduction",
+  "goal": "Establish the portability problem, the evidence-fidelity requirement, and the paper's contribution.",
+  "status": "researching",
+  "word_target": 1500,
+  "word_count": 0,
+  "wave": 1,
+  "depends_on": [],
+  "claims": [
+    {
+      "id": "claim-portable-state",
+      "statement": "Portable project state reduces coupling between academic workflows and runtime-specific interfaces.",
+      "status": "planned",
+      "evidence_required": true,
+      "evidence_uris": ["project://evidence/evidence-portability-boundaries"]
+    }
+  ],
+  "artifacts": {
+    "context": "project://sections/introduction/context",
+    "research": "project://sections/introduction/research",
+    "plans": ["project://sections/introduction/plans/initial"],
+    "reviews": [],
+    "manuscript": "project://paper/introduction"
+  },
+  "checkpoint_uris": [],
+  "validation_uris": [],
+  "updated_at": "2026-08-28T12:35:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/state.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/state.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/state/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_id",
+    "revision",
+    "phase",
+    "status",
+    "current_section_uri",
+    "progress",
+    "active_checkpoint_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.state/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "phase": {
+      "enum": ["initialized", "mapped", "outlining", "planning", "writing", "reviewing", "ready", "delivered"]
+    },
+    "status": { "enum": ["active", "paused", "blocked", "complete"] },
+    "current_section_uri": {
+      "type": ["string", "null"],
+      "pattern": "^project://sections/[A-Za-z0-9._~-]+$"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections_total", "sections_complete", "word_target", "word_count"],
+      "properties": {
+        "sections_total": { "type": "integer", "minimum": 0 },
+        "sections_complete": { "type": "integer", "minimum": 0 },
+        "word_target": { "type": "integer", "minimum": 0 },
+        "word_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "active_checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "last_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "reason", "at"],
+      "properties": {
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/state.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/state.json</summary>
+
+{
+  "schema": "wtfp.project.state/v1",
+  "project_id": "portable-research-demo",
+  "revision": 0,
+  "phase": "outlining",
+  "status": "active",
+  "current_section_uri": "project://sections/introduction",
+  "progress": {
+    "sections_total": 2,
+    "sections_complete": 0,
+    "word_target": 6000,
+    "word_count": 0
+  },
+  "active_checkpoint_uris": [],
+  "last_transition": {
+    "from": "initialized",
+    "to": "outlining",
+    "reason": "The project brief and author decisions are recorded.",
+    "at": "2026-08-28T12:10:00Z"
+  },
+  "updated_at": "2026-08-28T12:10:00Z"
 }
 
 </details>

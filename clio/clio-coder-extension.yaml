@@ -16,22 +16,45 @@ runtime:
     - { name: check-todos, description: "Answer pending gates and author tasks.", replaces: prompt }
     - { name: checkpoints, description: "List interaction gates and state snapshots." }
     - { name: validate, description: "Validate every planning record against its schema." }
-  events: [session_open, dispatch_started, dispatch_completed, dispatch_failed, fs_changed, workspace_enter, workspace_leave]
+  events: [session_open, turn_end, dispatch_started, dispatch_completed, dispatch_failed, fs_changed, workspace_enter, workspace_leave]
   watch: [".planning/**", "paper/**"]
   hooks:
     - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
-    - { on: before_tool, tools: [write, edit], timeoutMs: 1000, onTimeout: block, onError: block }
+    - { on: before_tool, tools: [write, edit, dispatch, bash], timeoutMs: 1500, onTimeout: block, onError: block }
   tools:
     - name: record
-      description: "Write one .planning record at its logical URI, validated against its canonical schema, its revision bumped, replaced atomically and read back."
+      description: "Write .planning records at their logical URIs: each validated against its canonical schema, checked against the version you read (expect_revision for state, outline and decisions; expect_sha256 for the rest; neither when creating), its revision bumped, and committed under the project lock. Pass several as writes to commit them together. Refuses author resolutions and anything the running action does not declare."
       actionClass: execute
-      inputSchema: { type: object, properties: { uri: { type: string }, record: { type: object }, expect_revision: { type: integer } }, required: [uri, record], additionalProperties: false }
+      inputSchema:
+        type: object
+        properties:
+          uri: { type: string }
+          record: { type: object }
+          expect_revision: { type: integer }
+          expect_sha256: { type: string }
+          writes:
+            type: array
+            maxItems: 16
+            items:
+              type: object
+              properties: { uri: { type: string }, record: { type: object }, expect_revision: { type: integer }, expect_sha256: { type: string } }
+              required: [uri, record]
+              additionalProperties: false
+        additionalProperties: false
+    - name: read_record
+      description: "Read one .planning record at its logical URI with the revision and sha256 to pass back to record, and, for a checkpoint, whether the author's answer is attested by the desk."
+      actionClass: execute
+      inputSchema: { type: object, properties: { uri: { type: string } }, required: [uri], additionalProperties: false }
+    - name: readiness
+      description: "Whether a section's manuscript may be drafted now: its blocking gates, whether the author approved exactly its current plan, and structural evidence coverage of its required claims."
+      actionClass: execute
+      inputSchema: { type: object, properties: { section: { type: string } }, required: [section], additionalProperties: false }
     - name: measure_section
-      description: "Count a section's manuscript body words by the desk's one method and record the count in the section and state records."
+      description: "Count a section's manuscript body words by the desk's one method and record the count in the section and state records, committed together."
       actionClass: execute
       inputSchema: { type: object, properties: { section: { type: string } }, required: [section], additionalProperties: false }
     - name: gate
-      description: "Ask the author a pending checkpoint as an interview; only the author's answer resolves it, and that answer is the result."
+      description: "Ask the author a pending checkpoint, or confirm a recorded answer the desk never saw, as an interview; only the author's answer resolves it, and the desk seals what was asked and answered."
       actionClass: execute
       inputSchema: { type: object, properties: { checkpoint: { type: string } }, required: [checkpoint], additionalProperties: false }
   ui: [status, band, card, toast, interview]
@@ -51,4 +74,4 @@ runtime:
     fs: { read: [".planning", "paper"], write: [".planning"] }
     exec: false
     net: false
-  state: { session: true, store: false }
+  state: { session: true, store: true }

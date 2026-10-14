@@ -12,7 +12,7 @@ argument-hint: "[arguments]"
 ## Record contract
 
 Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/summary`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://paper/{artifact}`.
-Produce: `project://paper/{artifact}` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://checkpoints/{checkpoint}` (create), `project://checkpoints/{checkpoint}` (update), `project://sections/{section}` (update), `project://state` (update), `project://validations/{validation}` (create).
+Produce: `project://paper/{artifact}` (create), `project://paper/{artifact}` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://checkpoints/{checkpoint}` (create), `project://checkpoints/{checkpoint}` (update), `project://sections/{section}` (update), `project://state` (update), `project://validations/{validation}` (create), `project://manifest` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Build waves from outline dependencies and select only sections with approved plans.
 2. Within configured parallelism, delegate bounded section work grounded in source/evidence records; create or update summaries, serialize overlapping outputs, and create or reconcile blocking checkpoints before dependent work proceeds.
-3. After each wave, validate outputs and reconcile section/state records from actual artifacts. Do not create branches or commits.
+3. After each wave, validate outputs, synchronize each drafted manuscript URI in `manifest.artifacts.manuscripts`, and reconcile section/state records from actual artifacts. Do not create branches or commits.
 
 ## Safety and completion
 

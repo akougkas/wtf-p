@@ -20,7 +20,7 @@ allowed-tools:
 ## Record contract
 
 Read: the declared portable records and authored artifacts selected for the snapshot.
-Produce: `project://checkpoints/{checkpoint}` (create), `project://archives/checkpoints/{checkpoint}` (create), `project://archives/recovery/{artifact}` (create on restore), `project://manifest` (update), `project://state` (update).
+Produce: `project://checkpoints/{checkpoint}` (create), `project://checkpoints/{checkpoint}` (update on restore), `project://archives/checkpoints/{checkpoint}` (create), `project://archives/recovery/{artifact}` (create on restore), `project://manifest` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -30,7 +30,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. For save, select concrete contained resources, copy their exact bytes into an immutable checkpoint archive, hash every entry, then create a non-blocking `state-snapshot` checkpoint that records the archive URI, logical resource URIs, record revisions, and SHA-256 values. Link the archive from the manifest and read everything back before success.
 2. For list or inspect, report snapshot scope and verify that the archive, resources, revisions, and hashes still resolve without mutation.
-3. For restore, compare the selected snapshot with current resources, create and verify a pre-restore recovery archive, preview the exact replacements, and require a separate authorization immediately before applying them. Restore only snapshot-declared resources atomically, schema-validate records, verify hashes, and mark the checkpoint restored. Never use a commit, tag, checkout, reset, or branch movement as checkpoint storage.
+3. For restore, compare the selected snapshot with current resources, create and verify a pre-restore recovery archive, preview the exact replacements, and require a separate authorization immediately before applying them. Restore only snapshot-declared resources atomically, schema-validate records, verify hashes, and update the checkpoint to restored. Never use a commit, tag, checkout, reset, or branch movement as checkpoint storage.
 
 ## Safety and completion
 

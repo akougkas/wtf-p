@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "d1388143689a91d4a49762032d04ff2ec6947089b12cf203bbd1442dc3236441",
+  "sourceHash": "595275737915afad2f7273bb4a14dfa7d3c4eb40d58fc4263d3085eb5012dd19",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -26,7 +26,7 @@
     },
     {
       "path": "actions/checkpoint.json",
-      "sha256": "e0bb5900cffcd9a98cc84da9197f3d2ecc0d320856e03c4a895f6d023289fbd9"
+      "sha256": "7823eadcc0cdf1bb1bbe308d5295ac27d4d90a71dee8802c793527bab794f3c4"
     },
     {
       "path": "actions/contribute.json",
@@ -50,11 +50,11 @@
     },
     {
       "path": "actions/execute-outline.json",
-      "sha256": "a565763ea822144cdb4ab10b0a887787398a5f2d8b15edf4dcdc73da6f984e86"
+      "sha256": "73b4f5dd663e88509d9490b44156bd7c37131d4e1ea128bffcdbd6a1455e88c4"
     },
     {
       "path": "actions/export-latex.json",
-      "sha256": "eeea52127f94fd6d055ce4b7aba4c7a9ca47c9954b21e1bbc2d38f192b0adb5f"
+      "sha256": "50c1a6293ea383389ba8bc3b7492c5da41a82037ae28be9c3356049e177c6cf1"
     },
     {
       "path": "actions/help.json",
@@ -86,7 +86,7 @@
     },
     {
       "path": "actions/plan-revision.json",
-      "sha256": "07c1d196cc3a0c3788cbfab65b43eaf362b393a547ae895e074b7a5503462701"
+      "sha256": "43bbeb67e1fdbf55d4ecec28fd681d8747dd044d5080879e21854741340fe213"
     },
     {
       "path": "actions/plan-section.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": "actions/polish-prose.json",
-      "sha256": "be96bfdc9fb38d7116ba9e44bc404429f5476d628115186b77edc9ca4e4624ed"
+      "sha256": "0c41133b1da1b4aba405476332acf934f43f2416495443dcbb0e788f711b14e3"
     },
     {
       "path": "actions/progress.json",
@@ -118,7 +118,7 @@
     },
     {
       "path": "actions/research-gap.json",
-      "sha256": "0c26fa663f1d2526cbefcc9750b0a176ddf1ca538a46585a1de48c763fbb1a13"
+      "sha256": "c24643007ad2ec872f63be68cb54f980c73eea3924940bec7be4eded43fc6b24"
     },
     {
       "path": "actions/resume-writing.json",
@@ -142,7 +142,7 @@
     },
     {
       "path": "actions/verify-work.json",
-      "sha256": "8a2f05e116dbe4032f95d4efd617bce3911b8231443a54afafc75678e5998065"
+      "sha256": "edbb22a79f0bf8cc7c6ed7a2810ba53452ade20520d3c3462ab68bb4da2b3cc0"
     },
     {
       "path": "actions/write-section.json",
@@ -150,7 +150,7 @@
     },
     {
       "path": "clio-coder-extension.yaml",
-      "sha256": "7bdbec034759ab1b1d6fd1671f5b2c359096dd7361b549486dc76061d82c4cfa"
+      "sha256": "5c926df4781d14d987489fd5ecdd5ccbfe528bdcb725642a8d040ec00eade82b"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -177,6 +177,10 @@
       "sha256": "e7e7d9934d192bbeb788d7669bfb7298fe48b6ab78ad6709d44b8413190a38e2"
     },
     {
+      "path": "project/schemas/interaction.schema.json",
+      "sha256": "b45eec73ae295e32e1fe88ad050f58f192e40f178283213ce014b207c3d98f93"
+    },
+    {
       "path": "project/schemas/manifest.schema.json",
       "sha256": "6098eb621afce830c8ab20764114e8d7854efe5805453cbb3192e7eb3eae66f2"
     },
@@ -201,12 +205,16 @@
       "sha256": "89e8bdc850474d557e816a4db5e5e46cf401fb73b98863a1e49a42af33689fa1"
     },
     {
+      "path": "runtime/claim-coverage.cjs",
+      "sha256": "59de88f3cf8a48f0164ad11c2d3dfd23481f6027a44b3bb6c7f44c75c4367132"
+    },
+    {
       "path": "runtime/extension.test.ts",
-      "sha256": "6b1bf8ba7ab05bd0fbed0b6fa18b68a3b20cf5c8655ba55e65bf943c55589c8b"
+      "sha256": "49ce05a53c71522517e431fd0c571d82bf07a3e4d325a75fb9c4e9ad6ccccc75"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "6f743c0588602551843037aa59e1eacaf1a1047d973788ad170ebd715a748d75"
+      "sha256": "f292155fa3b72d9f8dc81cda82830ebe7753986304cc6e4715a41c6d0c1f7153"
     },
     {
       "path": "runtime/json-schema.cjs",
@@ -218,7 +226,7 @@
     },
     {
       "path": "runtime/write-guard.json",
-      "sha256": "67637036292b1d003e72a823cfd764c4e0996553b0cf55ec0a700a09518a3ffd"
+      "sha256": "6ebc6ecae3930bad71afd6b0fb428117499b133e28ffd930c044d729f9a3f2c0"
     },
     {
       "path": "skins/wtfp.json",

@@ -29,12 +29,17 @@
     "project://sources/{source}",
     "project://evidence/{evidence}",
     "project://validations/{validation}",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://checkpoints/{checkpoint}"
   ],
   "produces": [
     {
       "uri": "project://checkpoints/{checkpoint}",
       "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "update"
     },
     {
       "uri": "project://archives/checkpoints/{checkpoint}",
@@ -59,6 +64,10 @@
     {
       "id": "filesystem.create",
       "scope": "project://checkpoints/{checkpoint}, project://archives/checkpoints/{checkpoint}, project://archives/recovery/{artifact}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://checkpoints/{checkpoint}"
     },
     {
       "id": "filesystem.read",

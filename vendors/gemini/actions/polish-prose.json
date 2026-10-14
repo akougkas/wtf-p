@@ -24,7 +24,9 @@
     "project://manifest",
     "project://config",
     "project://decisions",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://sections/{section}",
+    "project://state"
   ],
   "produces": [
     {
@@ -34,6 +36,14 @@
     {
       "uri": "project://validations/{validation}",
       "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
     }
   ],
   "delegation": [
@@ -55,11 +65,11 @@
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://paper/{artifact}"
+      "scope": "project://paper/{artifact}, project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}, project://sections/{section}, project://state"
     },
     {
       "id": "user.gate",

@@ -1,12 +1,14 @@
 /**
  * Package tests for the WTF-P desk, run by `clio-coder extensions test
- * vendors/clio-extension`. One case per runtime tool, the write guard, the
- * desk workspace and the desk without its plugin, each against a small valid
- * project in a task-owned TMPDIR. The kit serves no plugin unless a case
- * passes one.
+ * vendors/clio-extension`. Each case builds a small valid project in a
+ * task-owned TMPDIR and drives the desk the way Clio does: tool calls,
+ * interviews, hooks and observations. The kit serves no plugin unless a case
+ * passes one. Answers here are simulated interview events, not a human's:
+ * they test the desk's bookkeeping, never an author's judgment.
  */
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -16,15 +18,22 @@ const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const PROJECT = "desk-test";
 const AT = "2026-10-01T12:00:00Z";
 const GATE = "checkpoint-framing";
+const PLAN_GATE = "approve-initial";
+const PLAN_URI = "project://sections/introduction/plans/initial";
+const PLAN_FILE = ".planning/sections/introduction/plans/initial.md";
+
+type Json = Record<string, unknown>;
+type Host = Awaited<ReturnType<typeof createExtensionTestHost>>;
+
+function put(workspace: string, relative: string, value: unknown): void {
+	mkdirSync(path.dirname(path.join(workspace, relative)), { recursive: true });
+	writeFileSync(path.join(workspace, relative), typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
+}
 
 function project(): string {
 	assert.ok(process.env.TMPDIR, "Tests need a task-owned TMPDIR.");
 	const workspace = mkdtempSync(path.join(process.env.TMPDIR, "wtfp-desk-test-"));
-	const put = (relative: string, value: unknown): void => {
-		mkdirSync(path.dirname(path.join(workspace, relative)), { recursive: true });
-		writeFileSync(path.join(workspace, relative), typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`);
-	};
-	put(".planning/project.json", {
+	put(workspace, ".planning/project.json", {
 		schema: "wtfp.project.manifest/v1",
 		protocol_version: 1,
 		id: PROJECT,
@@ -42,12 +51,12 @@ function project(): string {
 			decisions: "project://decisions",
 			outline: "project://structure/outline",
 			materials: [],
-			manuscripts: [],
+			manuscripts: ["project://paper/introduction"],
 			deliverables: [],
 			archives: [],
 		},
 	});
-	put(".planning/config.json", {
+	put(workspace, ".planning/config.json", {
 		schema: "wtfp.project.config/v1",
 		project_id: PROJECT,
 		interaction_mode: "standard",
@@ -60,7 +69,7 @@ function project(): string {
 		safety: { destructive_requires_authorization: true, external_publish_requires_authorization: true, backup_before_major_edits: true },
 		parallelism: { enabled: false, max_workers: 1 },
 	});
-	put(".planning/state.json", {
+	put(workspace, ".planning/state.json", {
 		schema: "wtfp.project.state/v1",
 		project_id: PROJECT,
 		revision: 3,
@@ -68,11 +77,11 @@ function project(): string {
 		status: "active",
 		current_section_uri: "project://sections/introduction",
 		progress: { sections_total: 1, sections_complete: 0, word_target: 100, word_count: 0 },
-		active_checkpoint_uris: [`project://checkpoints/${GATE}`],
-		last_transition: { from: "planning", to: "writing", reason: "The plan is approved.", at: AT },
+		active_checkpoint_uris: [`project://checkpoints/${GATE}`, `project://checkpoints/${PLAN_GATE}`],
+		last_transition: { from: "planning", to: "writing", reason: "The plan is linked.", at: AT },
 		updated_at: AT,
 	});
-	put(".planning/structure/outline.json", {
+	put(workspace, ".planning/structure/outline.json", {
 		schema: "wtfp.project.outline/v1",
 		project_id: PROJECT,
 		revision: 1,
@@ -93,7 +102,7 @@ function project(): string {
 		],
 		updated_at: AT,
 	});
-	put(".planning/sections/introduction/section.json", {
+	put(workspace, ".planning/sections/introduction/section.json", {
 		schema: "wtfp.project.section/v1",
 		id: "introduction",
 		project_id: PROJECT,
@@ -106,18 +115,13 @@ function project(): string {
 		wave: 1,
 		depends_on: [],
 		claims: [],
-		artifacts: {
-			context: "project://sections/introduction/context",
-			research: "project://sections/introduction/research",
-			plans: ["project://sections/introduction/plans/initial"],
-			reviews: [],
-			manuscript: "project://paper/introduction",
-		},
-		checkpoint_uris: [`project://checkpoints/${GATE}`],
+		artifacts: { plans: [PLAN_URI], reviews: [], manuscript: "project://paper/introduction" },
+		checkpoint_uris: [`project://checkpoints/${GATE}`, `project://checkpoints/${PLAN_GATE}`],
 		validation_uris: [],
 		updated_at: AT,
 	});
-	put(`.planning/checkpoints/${GATE}.json`, {
+	put(workspace, PLAN_FILE, "# Plan\n\n1. State the bottleneck.\n2. State the contribution.\n");
+	put(workspace, `.planning/checkpoints/${GATE}.json`, {
 		schema: "wtfp.project.checkpoint/v1",
 		id: GATE,
 		project_id: PROJECT,
@@ -133,23 +137,51 @@ function project(): string {
 		resume_action: "write-section",
 		created_at: AT,
 	});
+	put(workspace, `.planning/checkpoints/${PLAN_GATE}.json`, {
+		schema: "wtfp.project.checkpoint/v1",
+		id: PLAN_GATE,
+		project_id: PROJECT,
+		kind: "decision",
+		status: "pending",
+		blocking: true,
+		scope_uri: PLAN_URI,
+		request: "Approve the introduction plan?",
+		options: [
+			{ id: "approve", label: "Approve", implication: "The writer drafts from exactly this plan." },
+			{ id: "revise", label: "Revise", implication: "The plan is rewritten before drafting." },
+		],
+		resume_action: "write-section",
+		created_at: AT,
+	});
 	// Eleven body words: front matter, the heading, the citation key and the code block do not count.
 	put(
+		workspace,
 		"paper/introduction.md",
 		"---\ntitle: Introduction\n---\n# Introduction\n\nShared memory changes the cost of logging [@smith2024]. It's a well-known trade-off.\n\n```c\nint flush = 1;\n```\n",
 	);
 	return workspace;
 }
 
-type Json = Record<string, unknown>;
 const read = (workspace: string, relative: string): Json => JSON.parse(readFileSync(path.join(workspace, relative), "utf8")) as Json;
+const sha = (workspace: string, relative: string): string => createHash("sha256").update(readFileSync(path.join(workspace, relative))).digest("hex");
+const interactions = (workspace: string): Json[] => {
+	const directory = path.join(workspace, ".planning/interactions");
+	return existsSync(directory) ? readdirSync(directory).sort().map((name) => read(workspace, `.planning/interactions/${name}`)) : [];
+};
 
-const SERVED = { id: "wtfp", prompts: ["wtfp:check-todos", "wtfp:plan-section", "wtfp:progress", "wtfp:write-section"] };
+function tree(workspace: string, relative = "."): Record<string, string> {
+	const out: Record<string, string> = {};
+	for (const entry of readdirSync(path.join(workspace, relative), { withFileTypes: true })) {
+		const child = path.join(relative, entry.name);
+		if (entry.isDirectory()) Object.assign(out, tree(workspace, child));
+		else out[child] = sha(workspace, child);
+	}
+	return out;
+}
 
-async function withDesk(
-	run: (host: Awaited<ReturnType<typeof createExtensionTestHost>>, workspace: string) => Promise<void>,
-	plugin: typeof SERVED | null = null,
-): Promise<void> {
+const SERVED = { id: "wtfp", prompts: ["wtfp:check-todos", "wtfp:plan-section", "wtfp:progress", "wtfp:write-section", "wtfp:research-gap"] };
+
+async function withDesk(run: (host: Host, workspace: string) => Promise<void>, plugin: typeof SERVED | null = null): Promise<void> {
 	const workspace = project();
 	const host = await createExtensionTestHost(ROOT, { workspace, plugin });
 	try {
@@ -160,57 +192,406 @@ async function withDesk(
 	}
 }
 
-test("record writes a validated record at the revision the caller read and refuses a stale or invalid one", () =>
+async function ask(host: Host, checkpoint: string): Promise<string> {
+	const asked = await host.tool("gate", { checkpoint });
+	assert.equal(asked.interview?.id, "gate-one", asked.text);
+	return asked.interview?.step.key as string;
+}
+
+async function answer(host: Host, checkpoint: string, choice: string): Promise<string> {
+	const key = await ask(host, checkpoint);
+	const done = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice } });
+	return "done" in done ? done.text : `step ${done.step.key}`;
+}
+
+const blocked = (result: { effects?: Array<{ kind: string }> }): string | null => {
+	const effect = result.effects?.find((entry) => entry.kind === "block_tool") as { reason?: string } | undefined;
+	return effect ? (effect.reason ?? "") : null;
+};
+
+const write = (host: Host, target: string) => host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: target } });
+
+// --- record writes -------------------------------------------------------------
+
+test("record writes at the revision or digest the caller read and refuses stale, blind and invalid writes", () =>
 	withDesk(async (host, workspace) => {
 		const state = read(workspace, ".planning/state.json");
 		const written = await host.tool("record", { uri: "project://state", record: { ...state, phase: "reviewing" }, expect_revision: 3 });
 		assert.equal(written.isError, undefined, written.text);
-		assert.deepEqual(written.data, { uri: "project://state", file: ".planning/state.json", revision: 4 });
-		assert.equal(read(workspace, ".planning/state.json").phase, "reviewing");
+		assert.equal((written.data as Json).revision, 4);
 		const stale = await host.tool("record", { uri: "project://state", record: { ...state, phase: "ready" }, expect_revision: 3 });
-		assert.equal(stale.isError, true);
 		assert.match(stale.text, /revision 4, not 3/);
-		const invalid = await host.tool("record", { uri: "project://state", record: { ...state, phase: "drafting" } });
-		assert.equal(invalid.isError, true);
+		const blind = await host.tool("record", { uri: "project://state", record: { ...state, phase: "ready" } });
+		assert.match(blind.text, /already exists; read it with extension_wtfp__read_record/);
+		const invalid = await host.tool("record", { uri: "project://state", record: { ...state, phase: "drafting" }, expect_revision: 4 });
 		assert.match(invalid.text, /would not validate/);
 		assert.deepEqual([read(workspace, ".planning/state.json").phase, read(workspace, ".planning/state.json").revision], ["reviewing", 4]);
+
+		// Two writers read the same section bytes; only the first lands (R1).
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		const seen = (await host.tool("read_record", { uri: "project://sections/introduction" })).data as Json;
+		assert.equal(seen.sha256, sha(workspace, ".planning/sections/introduction/section.json"));
+		const first = await host.tool("record", { uri: "project://sections/introduction", record: { ...section, goal: "First writer." }, expect_sha256: seen.sha256 });
+		assert.equal(first.isError, undefined, first.text);
+		const second = await host.tool("record", { uri: "project://sections/introduction", record: { ...section, goal: "Second writer." }, expect_sha256: seen.sha256 });
+		assert.match(second.text, /changed since it was read/);
+		assert.equal(read(workspace, ".planning/sections/introduction/section.json").goal, "First writer.");
+
+		const gone = await host.tool("record", { uri: "project://sources/never-made", record: {}, expect_sha256: "0".repeat(64) });
+		assert.match(gone.text, /holds wtfp.project.source\/v1|no longer exists/);
 	}));
 
-test("measure_section counts body words by the desk's one method and records them in the section and state", () =>
+test("record refuses wrong type, id, project and unknown fields without touching the destination", () =>
 	withDesk(async (host, workspace) => {
-		const measured = await host.tool("measure_section", { section: "introduction" });
-		assert.equal(measured.isError, undefined, measured.text);
-		assert.deepEqual(measured.data, { words: 11, target: 100, file: "paper/introduction.md", total: 11 });
-		assert.equal(read(workspace, ".planning/sections/introduction/section.json").word_count, 11);
-		assert.equal((read(workspace, ".planning/state.json").progress as Json).word_count, 11);
+		const before = sha(workspace, ".planning/sections/introduction/section.json");
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		const expect_sha256 = before;
+		const cases: Array<[Json, RegExp]> = [
+			[{ ...section, schema: "wtfp.project.source/v1" }, /holds wtfp.project.section\/v1/],
+			[{ ...section, id: "methods" }, /whose id is introduction/],
+			[{ ...section, project_id: "another-project" }, /belongs to project another-project/],
+			[{ ...section, surprise: true }, /would not validate: .*unknown property surprise|surprise/],
+		];
+		for (const [record, pattern] of cases) {
+			const refused = await host.tool("record", { uri: "project://sections/introduction", record, expect_sha256 });
+			assert.equal(refused.isError, true);
+			assert.match(refused.text, pattern);
+		}
+		assert.equal(sha(workspace, ".planning/sections/introduction/section.json"), before);
 	}));
 
-test("gate asks the author and records only the author's answer", () =>
+test("no record write or file write escapes through a symbolic link", () =>
 	withDesk(async (host, workspace) => {
-		const asked = await host.tool("gate", { checkpoint: GATE });
-		assert.equal(asked.interview?.id, "gate-one");
-		assert.equal(asked.interview?.step.key, GATE);
-		assert.equal(read(workspace, `.planning/checkpoints/${GATE}.json`).status, "pending");
-		const answered = await host.interview({ id: "gate-one", step: GATE, nav: "next", answers: { choice: "workflow-first" } });
-		assert.match("done" in answered ? answered.text : "", /Recorded the author's answer/);
+		const outside = mkdtempSync(path.join(process.env.TMPDIR as string, "wtfp-outside-"));
+		try {
+			symlinkSync(outside, path.join(workspace, ".planning/sections/escape"));
+			const section = { ...read(workspace, ".planning/sections/introduction/section.json"), id: "escape", title: "Escape" };
+			const refused = await host.tool("record", { uri: "project://sections/escape", record: section });
+			assert.match(refused.text, /symbolic link/);
+			assert.deepEqual(readdirSync(outside), []);
+			// A link that lands in paper/ is judged where it lands (W2).
+			symlinkSync(path.join(workspace, "paper"), path.join(workspace, "drafts"));
+			assert.match(blocked(await write(host, "drafts/introduction.md")) ?? "", /cannot be written yet/);
+			symlinkSync(path.join(outside, "missing"), path.join(workspace, "paper/dangling.md"));
+			assert.match(blocked(await write(host, "paper/dangling.md")) ?? "", /dangling symbolic link/);
+		} finally {
+			rmSync(outside, { recursive: true, force: true });
+		}
+	}));
+
+// --- author gates --------------------------------------------------------------
+
+test("a gate answer is recorded as a sealed interaction bound to what the author saw", () =>
+	withDesk(async (host, workspace) => {
+		const text = await answer(host, GATE, "workflow-first");
+		assert.match(text, /Recorded the author's answer: checkpoint-framing: Workflow first/);
 		const checkpoint = read(workspace, `.planning/checkpoints/${GATE}.json`);
 		assert.equal(checkpoint.status, "resolved");
 		assert.deepEqual(
 			[(checkpoint.resolution as Json).resolved_by, (checkpoint.resolution as Json).selected_option],
 			["author", "workflow-first"],
 		);
-		assert.deepEqual(read(workspace, ".planning/state.json").active_checkpoint_uris, []);
+		assert.deepEqual(read(workspace, ".planning/state.json").active_checkpoint_uris, [`project://checkpoints/${PLAN_GATE}`]);
+		const [interaction] = interactions(workspace);
+		assert.equal(interaction?.channel, "attested-interview");
+		assert.equal(interaction?.outcome, "selected");
+		assert.equal(interaction?.selected_option, "workflow-first");
+		assert.match(String((interaction?.seal as Json).mac), /^[a-f0-9]{64}$/);
+		const seen = (await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json;
+		assert.equal(seen.trust, "attested");
+		// The answer cannot be applied twice (G4).
+		const again = await host.tool("gate", { checkpoint: GATE });
+		assert.match(again.text, /already resolved by the author at this desk/);
 	}));
 
-test("the write guard refuses a write outside the roots the armed action declares", () =>
-	withDesk(async (host) => {
-		const armed = await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
-		assert.equal(armed.effects?.[0]?.kind, "notify_operator");
-		const refused = await host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: "src/notes.md" } });
-		const effect = refused.effects?.[0];
-		assert.equal(effect?.kind, "block_tool");
-		assert.match(effect && "reason" in effect ? effect.reason : "", /\/wtfp:write-section may write only under \.planning, paper; refused src\/notes\.md/);
+test("cancelling, headless asking and keeping a gate pending never resolve it (G2)", () =>
+	withDesk(async (host, workspace) => {
+		let key = await ask(host, GATE);
+		const cancelled = await host.interview({ id: "gate-one", step: key, nav: "cancel", answers: {}, reason: "operator" });
+		assert.match("done" in cancelled ? cancelled.text : "", /stays pending/);
+		key = await ask(host, GATE);
+		const headless = await host.interview({ id: "gate-one", step: key, nav: "cancel", answers: {}, reason: "headless" });
+		assert.match("done" in headless ? headless.text : "", /headless session; the gate stays pending and authorizes nothing/);
+		const kept = await answer(host, GATE, "__keep");
+		assert.match(kept, /kept checkpoint-framing pending/);
+		assert.equal(read(workspace, `.planning/checkpoints/${GATE}.json`).status, "pending");
+		assert.deepEqual(interactions(workspace).map((entry) => entry.outcome), ["kept-pending"]);
+		assert.ok(blocked(await write(host, "paper/introduction.md")));
+	}));
+
+test("an answer that was not offered, replayed, or meant for another desk records nothing (G3, G4)", () =>
+	withDesk(async (host, workspace) => {
+		const key = await ask(host, GATE);
+		const offered = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice: "__resolve" } });
+		assert.match("done" in offered ? offered.text : "", /not one of the options offered/);
+		const replay = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice: "workflow-first" } });
+		assert.match("done" in replay ? replay.text : "", /matches no open question/);
+		const forged = await host.interview({ id: "gate-one", step: "gate.0123456789ab", nav: "next", answers: { choice: "workflow-first" } });
+		assert.match("done" in forged ? forged.text : "", /matches no open question/);
+		const other = project();
+		const elsewhere = await createExtensionTestHost(ROOT, { workspace: other });
+		try {
+			const foreign = await elsewhere.interview({ id: "gate-one", step: await ask(host, GATE), nav: "next", answers: { choice: "workflow-first" } });
+			assert.match("done" in foreign ? foreign.text : "", /matches no open question/);
+			assert.equal(read(other, `.planning/checkpoints/${GATE}.json`).status, "pending");
+		} finally {
+			await elsewhere.dispose();
+			rmSync(other, { recursive: true, force: true });
+		}
+		assert.equal(read(workspace, `.planning/checkpoints/${GATE}.json`).status, "pending");
+		assert.deepEqual(interactions(workspace), []);
+	}));
+
+test("a question that changes while it is open sets the old answer aside and asks again (G3)", () =>
+	withDesk(async (host, workspace) => {
+		const key = await ask(host, PLAN_GATE);
+		writeFileSync(path.join(workspace, PLAN_FILE), "# Plan\n\n1. A different plan.\n");
+		const stale = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice: "approve" } });
+		assert.ok(!("done" in stale), "a changed subject is asked again");
+		assert.equal(read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`).status, "pending");
+		assert.deepEqual(interactions(workspace).map((entry) => entry.outcome), ["discarded-stale"]);
+		const checkpoint = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);
+		const key2 = "step" in stale ? stale.step.key : "";
+		put(workspace, `.planning/checkpoints/${PLAN_GATE}.json`, { ...checkpoint, request: "Approve the rewritten plan?" });
+		const stale2 = await host.interview({ id: "gate-one", step: key2, nav: "next", answers: { choice: "approve" } });
+		assert.ok(!("done" in stale2));
+		assert.equal(read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`).status, "pending");
+	}));
+
+test("an agent cannot fabricate, unblock, rescope or expire an author gate through any write path it has (G1)", () =>
+	withDesk(async (host, workspace) => {
+		const checkpoint = read(workspace, `.planning/checkpoints/${GATE}.json`);
+		const expect_sha256 = sha(workspace, `.planning/checkpoints/${GATE}.json`);
+		const resolution = { resolved_by: "author", selected_option: "workflow-first", summary: "The author chose it.", resolved_at: AT };
+		const attempts: Array<[Json, RegExp]> = [
+			[{ ...checkpoint, status: "resolved", resolution }, /only the author's answer at the desk/],
+			[{ ...checkpoint, status: "resolved", resolution: { ...resolution, resolved_by: "policy" } }, /resolved only by the author/],
+			[{ ...checkpoint, blocking: false }, /cannot be made nonblocking/],
+			[{ ...checkpoint, scope_uri: "project://sections/elsewhere" }, /cannot change scope/],
+			[{ ...checkpoint, status: "expired" }, /cannot be expired by the agent/],
+		];
+		for (const [record, pattern] of attempts) {
+			const refused = await host.tool("record", { uri: `project://checkpoints/${GATE}`, record, expect_sha256 });
+			assert.match(refused.text, pattern);
+		}
+		const interaction = await host.tool("record", { uri: "project://interactions/fake", record: { schema: "wtfp.project.interaction/v1", id: "fake" } });
+		assert.match(interaction.text, /only the desk records an author's answer/);
+		const first = await write(host, `.planning/checkpoints/${GATE}.json`);
+		assert.match(blocked(first) ?? "", /portable record; write it with extension_wtfp__record/);
+		assert.ok(first.effects?.some((effect) => effect.kind === "protect_path"), "the desk asks the host to protect its answers from shell mutation");
+		assert.match(blocked(await write(host, ".planning/interactions/fake.json")) ?? "", /written only by the desk/);
+		const shell = await host.hook({ point: "before_tool", tool: "bash", turnId: "t1", args: { command: "python3 -c 'open(\".planning/interactions/x.json\",\"w\")'" } });
+		assert.match(blocked(shell) ?? "", /desk's own records/);
+
+		// A resolution written straight to disk is not the author's answer: it holds its scope and is offered for confirmation.
+		put(workspace, `.planning/checkpoints/${GATE}.json`, { ...checkpoint, status: "resolved", resolution });
+		const seen = (await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json;
+		assert.equal(seen.trust, "unattested");
+		await answer(host, PLAN_GATE, "approve");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /not observed by this desk and must be confirmed/);
+		const gates = await host.command("check-todos");
+		assert.match(gates.interview?.step.title ?? "", /Confirm a recorded answer/);
+		const confirmed = await host.interview({ id: "gate", step: gates.interview?.step.key as string, nav: "next", answers: { choice: "workflow-first" } });
+		assert.match("done" in confirmed ? confirmed.text : "", /Recorded: checkpoint-framing: Workflow first/);
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null);
+	}));
+
+// --- approved plans and write boundaries ---------------------------------------------
+
+test("the manuscript waits for an author-approved plan whose exact bytes were approved (W1)", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /has not answered "Approve the introduction plan\?"/);
+		const declined = project();
+		const other = await createExtensionTestHost(ROOT, { workspace: declined });
+		try {
+			await answer(other, GATE, "protocol-first");
+			await answer(other, PLAN_GATE, "revise");
+			assert.match(blocked(await write(other, "paper/introduction.md")) ?? "", /answered "revise" on approve-initial, not approve/);
+		} finally {
+			await other.dispose();
+			rmSync(declined, { recursive: true, force: true });
+		}
+		await answer(host, PLAN_GATE, "approve");
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null);
+		const ready = await host.tool("readiness", { section: "introduction" });
+		assert.equal((ready.data as Json).ready, true, ready.text);
+		// A linked plan is immutable, and changing its bytes anyway voids the approval.
+		assert.match(blocked(await write(host, PLAN_FILE)) ?? "", /linked plans are immutable/);
+		writeFileSync(path.join(workspace, PLAN_FILE), "# Plan\n\n1. Something the author never saw.\n");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /plan changed after the author approved it/);
+		rmSync(path.join(workspace, PLAN_FILE));
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /does not resolve to a plan file/);
+		// A status alone never stands in for a plan.
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, artifacts: { plans: [], reviews: [], manuscript: "project://paper/introduction" } });
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /no plan is linked/);
+		// Nested and variant manuscript paths are the same section's manuscript.
+		assert.ok(blocked(await write(host, "paper/introduction/results.md")));
+		assert.ok(blocked(await write(host, "paper/introduction.v2.md")));
+		assert.equal(blocked(await write(host, "paper/unrelated-notes.md")), null);
+	}));
+
+test("literature-heavy sections wait for verified evidence behind their required claims", () =>
+	withDesk(async (host, workspace) => {
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const [entry] = outline.sections as Json[];
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [{ ...entry, research: { required: true, topics: ["logging"] } }] });
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", {
+			...section,
+			claims: [{ id: "claim-flush", statement: "Flushes dominate logging cost.", status: "planned", evidence_required: true, evidence_uris: [] }],
+		});
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const ready = await host.tool("readiness", { section: "introduction" });
+		assert.equal((ready.data as Json).ready, false);
+		assert.match(ready.text, /1 required claim lacks verified evidence \(claim-flush\); run research-gap first/);
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /research-gap/);
 	}, SERVED));
+
+test("turning a gate off needs the author's confirmation at the desk", () =>
+	withDesk(async (host, workspace) => {
+		const config = read(workspace, ".planning/config.json");
+		const proposal = { ...config, gates: { ...(config.gates as Json), confirm_plan: false } };
+		const expect_sha256 = sha(workspace, ".planning/config.json");
+		const asked = await host.tool("record", { uri: "project://config", record: proposal, expect_sha256 });
+		assert.equal(asked.interview?.id, "confirm-write");
+		assert.match(JSON.stringify(asked.interview?.step.intro), /gates.confirm_plan: on → off/);
+		const declined = await host.interview({ id: "confirm-write", step: asked.interview?.step.key as string, nav: "next", answers: { choice: "decline" } });
+		assert.match("done" in declined ? declined.text : "", /kept the current settings/);
+		assert.equal(((read(workspace, ".planning/config.json").gates as Json).confirm_plan), true);
+		const again = await host.tool("record", { uri: "project://config", record: proposal, expect_sha256 });
+		const approved = await host.interview({ id: "confirm-write", step: again.interview?.step.key as string, nav: "next", answers: { choice: "approve" } });
+		assert.match("done" in approved ? approved.text : "", /approved the change/);
+		assert.equal(((read(workspace, ".planning/config.json").gates as Json).confirm_plan), false);
+		assert.deepEqual(interactions(workspace).map((entry) => `${entry.kind}:${entry.outcome}`).sort(), ["record-change:approved", "record-change:declined"]);
+		// With confirm_plan off, a contained linked plan stands without approval once no gate holds the section.
+		rmSync(path.join(workspace, `.planning/checkpoints/${PLAN_GATE}.json`));
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /has not answered "Lead with the protocol/);
+		await answer(host, GATE, "protocol-first");
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null);
+	}));
+
+test("an armed action writes only what its contract declares, for the section it names, until its turn ends", () =>
+	withDesk(async (host, workspace) => {
+		const armed = await host.hook({ point: "prompt_submit", text: "/wtfp:plan-section introduction" });
+		assert.match(JSON.stringify(armed.effects), /plan-section introduction: files stay under \.planning\/sections\/introduction\/plans/);
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /may write only under \.planning\/sections\/introduction\/plans/);
+		assert.equal(blocked(await write(host, ".planning/sections/introduction/plans/second.md")), null);
+		assert.ok(blocked(await write(host, ".planning/sections/methods/plans/second.md")));
+		const manifest = read(workspace, ".planning/project.json");
+		const undeclared = await host.tool("record", { uri: "project://manifest", record: { ...manifest, title: "Retitled" }, expect_sha256: sha(workspace, ".planning/project.json") });
+		assert.match(undeclared.text, /plan-section does not declare updating project:\/\/manifest/);
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		assert.ok(!blocked(await write(host, ".planning/sections/methods/notes.md")), "the guard disarms when its turn ends");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
+		assert.match(blocked(await write(host, ".planning/sections/introduction/notes.md")) ?? "", /declares no file outputs/);
+	}, SERVED));
+
+test("WTF-P workers are dispatched only inside their action and only to manuscripts that are ready (W3)", () =>
+	withDesk(async (host, workspace) => {
+		const dispatch = (args: Json) => host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args });
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft the introduction." })) ?? "", /run only inside the WTF-P action/);
+		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft the introduction." })) ?? "", /would have no manuscript it may write/);
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const allowed = await dispatch({ agent: "wtfp-section-writer", task: "Draft the introduction." });
+		const rewrite = allowed.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
+		assert.deepEqual((rewrite?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		const narrowed = await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { write_roots: ["."] } });
+		const rewritten = narrowed.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
+		assert.deepEqual((rewritten?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		assert.match(
+			blocked(await dispatch({ tasks: [{ agent: "wtfp-section-writer", task: "a" }, { agent: "wtfp-section-writer", task: "b" }] })) ?? "",
+			/give each task its own intent.write_roots/,
+		);
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src"] } })) ?? "", /lie outside what write-section may write/);
+		assert.ok(existsSync(path.join(workspace, "paper/introduction.md")));
+	}, SERVED));
+
+// --- durability and recovery ---------------------------------------------------------
+
+test("measure_section counts body words by the desk's one method and commits the section and state together", () =>
+	withDesk(async (host, workspace) => {
+		const measured = await host.tool("measure_section", { section: "introduction" });
+		assert.equal(measured.isError, undefined, measured.text);
+		assert.deepEqual(measured.data, { words: 11, target: 100, file: "paper/introduction.md", total: 11 });
+		assert.equal(read(workspace, ".planning/sections/introduction/section.json").word_count, 11);
+		assert.equal((read(workspace, ".planning/state.json").progress as Json).word_count, 11);
+		assert.equal(read(workspace, ".planning/state.json").revision, 4);
+	}));
+
+test("a failure between paired writes leaves a journal the next write completes; one before the commit point leaves nothing (R2)", () =>
+	withDesk(async (host, workspace) => {
+		process.env.WTFP_DESK_TEST_FAULT = "between-renames";
+		try {
+			const failed = await host.tool("measure_section", { section: "introduction" });
+			assert.equal(failed.isError, true);
+			assert.match(failed.text, /injected fault at between-renames/);
+		} finally {
+			delete process.env.WTFP_DESK_TEST_FAULT;
+		}
+		assert.ok(existsSync(path.join(workspace, ".planning/.wtfp-journal.json")));
+		assert.equal(read(workspace, ".planning/sections/introduction/section.json").word_count, 11);
+		assert.equal((read(workspace, ".planning/state.json").progress as Json).word_count, 0);
+		const before = tree(workspace);
+		const progress = await host.command("progress");
+		assert.match(progress.text, /interrupted record write awaits recovery/);
+		assert.deepEqual(tree(workspace), before, "progress reads and never repairs");
+		const validated = await host.command("validate");
+		assert.match(validated.text, /Completed an interrupted write of \.planning\/sections\/introduction\/section\.json, \.planning\/state\.json/);
+		assert.equal((read(workspace, ".planning/state.json").progress as Json).word_count, 11);
+		assert.ok(!existsSync(path.join(workspace, ".planning/.wtfp-journal.json")));
+
+		process.env.WTFP_DESK_TEST_FAULT = "before-commit";
+		const sectionBefore = sha(workspace, ".planning/sections/introduction/section.json");
+		try {
+			writeFileSync(path.join(workspace, "paper/introduction.md"), "Just four words here.\n");
+			const failed = await host.tool("measure_section", { section: "introduction" });
+			assert.match(failed.text, /injected fault at before-commit/);
+		} finally {
+			delete process.env.WTFP_DESK_TEST_FAULT;
+		}
+		assert.equal(sha(workspace, ".planning/sections/introduction/section.json"), sectionBefore);
+		assert.ok(!existsSync(path.join(workspace, ".planning/.wtfp-journal.json")));
+		assert.deepEqual(
+			readdirSync(path.join(workspace, ".planning/sections/introduction")).filter((name) => name.endsWith(".partial")),
+			[],
+		);
+	}));
+
+test("a fresh process trusts only answers it can verify and reports drift instead of inventing state (L1)", async () => {
+	const workspace = project();
+	let key: unknown;
+	const first = await createExtensionTestHost(ROOT, { workspace, sessionId: "first" });
+	try {
+		await answer(first, GATE, "protocol-first");
+		await answer(first, PLAN_GATE, "approve");
+		key = (await first.store.get("seal-key")).value;
+		assert.match(String(key), /^[a-f0-9]{64}$/);
+	} finally {
+		await first.dispose();
+	}
+	const resumed = await createExtensionTestHost(ROOT, { workspace, sessionId: "resumed" });
+	const elsewhere = await createExtensionTestHost(ROOT, { workspace, sessionId: "other-machine" });
+	try {
+		await resumed.store.set("seal-key", key);
+		assert.equal(blocked(await write(resumed, "paper/introduction.md")), null, "the same machine's key verifies the sealed answers");
+		assert.match(blocked(await write(elsewhere, "paper/introduction.md")) ?? "", /not observed by this desk/);
+		const validated = await resumed.command("validate");
+		assert.match(validated.text, /words-unmeasured/);
+		writeFileSync(path.join(workspace, PLAN_FILE), "# Plan\n\nChanged between sessions.\n");
+		assert.match(blocked(await write(resumed, "paper/introduction.md")) ?? "", /plan changed after the author approved it/);
+	} finally {
+		await resumed.dispose();
+		await elsewhere.dispose();
+		rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+// --- the desk itself -------------------------------------------------------------------
 
 test("the desk enters with its four regions and clears its ambient UI when left in a folder with no project", async () => {
 	assert.ok(process.env.TMPDIR, "Tests need a task-owned TMPDIR.");
@@ -223,6 +604,7 @@ test("the desk enters with its four regions and clears its ambient UI when left 
 		assert.match(JSON.stringify(entered.band), /new-paper/);
 		const left = await host.observe({ event: "workspace_leave", workspace: "desk" });
 		assert.deepEqual(left, { text: "", status: null, band: null, islands: null });
+		assert.ok(!existsSync(path.join(workspace, ".planning")), "drawing the desk creates nothing");
 	} finally {
 		await host.dispose();
 		rmSync(workspace, { recursive: true, force: true });
@@ -230,18 +612,20 @@ test("the desk enters with its four regions and clears its ambient UI when left 
 });
 
 test("without its plugin the desk names only its own commands and never a /wtfp: prompt", () =>
-	withDesk(async (host) => {
+	withDesk(async (host, workspace) => {
+		const before = statSync(path.join(workspace, ".planning/state.json")).mtimeMs;
 		const outputs: unknown[] = [];
-		for (const name of ["desk", "progress", "help", "check-todos", "checkpoints", "validate"]) outputs.push(await host.command(name));
+		for (const name of ["desk", "progress", "help", "checkpoints", "validate"]) outputs.push(await host.command(name));
 		for (const id of ["next", "help"]) outputs.push(await host.action(id));
 		outputs.push(await host.action("section", "introduction"));
 		outputs.push(await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" }));
-		outputs.push(await host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: "src/notes.md" } }));
+		outputs.push(await write(host, "src/notes.md"));
 		await host.hook({ point: "prompt_submit", text: "plain text" });
-		outputs.push(await host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: "paper/introduction.md" } }));
+		outputs.push(await write(host, "paper/introduction.md"));
 		outputs.push(await host.observe({ event: "session_open", reason: "startup" }));
 		const emitted = JSON.stringify(outputs);
 		assert.doesNotMatch(emitted, /\/wtfp:/);
 		assert.match(emitted, /\/ext:wtfp:check-todos/);
 		assert.match(emitted, /needs the WTF-P plugin|not installed and enabled/);
+		assert.equal(statSync(path.join(workspace, ".planning/state.json")).mtimeMs, before);
 	}));

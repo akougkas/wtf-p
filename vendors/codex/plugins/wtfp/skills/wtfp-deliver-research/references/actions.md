@@ -50,13 +50,13 @@ Contract: [protocol/actions/submit-milestone.json](../../../actions/submit-miles
 2. Gather reproducible statistics from records and verified artifacts: completed sections, actual and target words, verified citations, figures, tables, validations, and open issues.
 3. Read the current milestone `project://validations/{validation}` and compare its recorded input revisions or hashes with current resources. Warn if missing, failed, or stale.
 4. If work is incomplete, present the exact omissions and require explicit approval to archive an incomplete milestone. Never label it submission-ready implicitly.
-5. Present a complete effect preview: final `project://archives/{archive}/{artifact}` resources, exact record/artifact revisions copied, manifest/state transitions, and any completion-status reset. VCS and remote effects are outside this action.
+5. Present a complete effect preview: final `project://archives/{archive}/{artifact}` resources, exact record/artifact revisions copied, and manifest/state transitions. VCS and remote effects are outside this action.
 6. Build the archive in an adapter-provided temporary sibling location. Copy exact manifest, config, state, decisions, outline, section records and authored artifacts, sources, evidence, validations, manuscript, and delivery manifest according to policy.
 7. Write archive metadata with label, date, status, source record revisions and artifact hashes, statistics, known issues, and included-resource hashes.
 8. Verify every archived hash and required resource before atomically publishing the final archive URI. On failure, leave active records untouched and report recovery material.
 9. Add the archive URI and delivery metadata to the manifest's author-approved artifact inventory only where the schema permits; otherwise keep history in the archive manifest rather than a Markdown index.
 10. Change a requirement, claim, or section status only when a current validation and evidence support the transition.
-11. Only after archive verification, preview any state transition for a revision round. Preserve stable section IDs, keep the archive immutable, and require approval before resetting completion statuses.
+11. Only after archive verification, preview any state transition for a revision round. Preserve stable section IDs and keep the archive immutable. This action never resets section completion statuses; a revision round reopens each section through `plan-revision` and an approved revision plan.
 12. Re-read archive, manifest, outline, section records, and state; verify they agree. Report archive URI, hashes/revisions, readiness caveats, and next action. Return any desired VCS operation as a non-executed handoff.
 
 Completion requires an independently verified immutable archive before any active-state reset.

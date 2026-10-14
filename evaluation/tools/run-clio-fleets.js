@@ -69,7 +69,7 @@ const FLEETS = Object.freeze([
     verifier: 'wtfp-plan-checker',
     mutatorStep: 'plan',
     verifierStep: 'check',
-    writes: Object.freeze(['.planning/']),
+    writes: Object.freeze(['.planning/sections/']),
     exactMutationFiles: Object.freeze(['.planning/sections/evaluation/plans/initial.md']),
     required: Object.freeze([/^\.planning\/sections\/evaluation\/plans\/initial\.md$/u]),
     allowedFiles: Object.freeze([/^\.planning\/sections\/evaluation\/plans\/initial\.md$/u]),
@@ -83,7 +83,7 @@ const FLEETS = Object.freeze([
     verifier: 'wtfp-section-reviewer',
     mutatorStep: 'draft',
     verifierStep: 'review',
-    writes: Object.freeze(['.planning/', 'paper/']),
+    writes: Object.freeze(['.planning/sections/', 'paper/']),
     exactMutationFiles: Object.freeze([
       'paper/evaluation.md',
       '.planning/sections/evaluation/summary.md'

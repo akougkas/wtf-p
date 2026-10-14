@@ -27,12 +27,21 @@
     "project://structure/outline",
     "project://sources/{source}",
     "project://evidence/{evidence}",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://deliverables/latex/{artifact}"
   ],
   "produces": [
     {
       "uri": "project://deliverables/latex/{artifact}",
       "mode": "create"
+    },
+    {
+      "uri": "project://deliverables/latex/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -46,8 +55,12 @@
       "scope": "project://deliverables/latex/{artifact}"
     },
     {
+      "id": "filesystem.modify",
+      "scope": "project://deliverables/latex/{artifact}, project://manifest"
+    },
+    {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://structure/outline, project://sources/{source}, project://evidence/{evidence}, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://structure/outline, project://sources/{source}, project://evidence/{evidence}, project://paper/{artifact}, project://deliverables/latex/{artifact}"
     },
     {
       "id": "filesystem.write",

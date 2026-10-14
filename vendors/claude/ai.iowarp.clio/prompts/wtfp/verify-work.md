@@ -11,8 +11,8 @@ argument-hint: "[arguments]"
 
 ## Record contract
 
-Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://evidence/{evidence}`, `project://paper/{artifact}`.
-Produce: `project://validations/{validation}` (create), `project://sections/{section}` (update), `project://state` (update).
+Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://validations/{validation}`.
+Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -22,7 +22,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve the selected plan, section record, manuscript artifact, claims, and evidence.
 2. Run acceptance, scope, citation, argument, and decision-fidelity checks without editing the subject.
-3. Write a validation with passed/failed checks, issues, evidence, limitations, and next actions; reconcile status only from the result.
+3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions; reconcile status only from the result.
 
 ## Safety and completion
 

@@ -164,7 +164,8 @@ const clioPrompt = read('vendors/plugin/ai.iowarp.clio/prompts/wtfp/new-paper.md
 check(clioPrompt.includes('${pluginRoot}'), 'Clio resolves protocol resources through its plugin root');
 check(clioPrompt.includes('$ARGUMENTS'), 'Clio forwards invocation arguments');
 check(clioPrompt.includes('extension_wtfp__record') &&
-  clioPrompt.includes('It validates, bumps revisions/timestamps, replaces atomically and reads back') &&
+  clioPrompt.includes('Read an existing record first with `extension_wtfp__read_record`') &&
+  clioPrompt.includes('The tool validates, bumps revisions and timestamps, commits under the project lock and reads back') &&
   clioPrompt.includes('If desk tools are absent, follow `${pluginRoot}/workflows/new-paper.md` and `${pluginRoot}/project/README.md`'),
   'Clio prompt validates records through the desk tool and retains its absence fallback');
 

@@ -12,7 +12,7 @@ argument-hint: "[arguments]"
 Read: `project://manifest`, `project://state`, `project://materials/{artifact}`, `project://paper/{artifact}`, `project://sources/{source}`, `project://evidence/{evidence}`.
 Produce: `project://sources/{source}` (create), `project://evidence/{evidence}` (create), `project://state` (update), `project://sources/{source}` (update), `project://evidence/{evidence}` (update), `project://manifest` (update).
 
-Use `extension_wtfp__record` for each declared JSON record write: pass its logical `uri`, complete `record`, and the revision read as `expect_revision` for revisioned updates. It validates, bumps revisions/timestamps, replaces atomically and reads back; preserve stable IDs and author decisions.
+Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 
 Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
@@ -30,7 +30,7 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
 If desk tools are absent, follow `${pluginRoot}/workflows/map-project.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
 
 ## Bound action contract

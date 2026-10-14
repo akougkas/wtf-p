@@ -759,7 +759,7 @@ function testPlaybookBoundaryProbe(root) {
   assert.strictEqual(valid.checks.draft_covers_manuscript, true);
 
   const planFile = path.join(installed, 'playbooks', 'wtfp-plan-section.md');
-  fs.writeFileSync(planFile, fs.readFileSync(planFile, 'utf8').replace('writes: [.planning/]', 'writes: [.planning]'));
+  fs.writeFileSync(planFile, fs.readFileSync(planFile, 'utf8').replace('writes: [.planning/sections/]', 'writes: [.planning]'));
   const unsafe = playbookBoundaryProbe(clioSource, installed);
   assert.strictEqual(unsafe.valid, false);
   assert.strictEqual(unsafe.checks.plan_exact_boundary, false);

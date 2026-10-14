@@ -5,24 +5,22 @@ argument-hint: "[arguments]"
 
 # Export LaTeX
 
-@${pluginRoot}/project/README.md
 @${pluginRoot}/skills/wtfp-deliver-research/SKILL.md
-@${pluginRoot}/skills/wtfp-deliver-research/references/actions.md
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://paper/{artifact}`.
-Produce: `project://deliverables/latex/{artifact}` (create).
+Read: `project://manifest`, `project://config`, `project://structure/outline`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://deliverables/latex/{artifact}`.
+Produce: `project://deliverables/latex/{artifact}` (create), `project://deliverables/latex/{artifact}` (update), `project://manifest` (update).
 
-Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 
-Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
 ## Procedure
 
-1. Confirm venue template and whether an existing deliverable may be replaced.
+1. Confirm venue template and whether an existing deliverable may be replaced; replacing one is an update and needs that answer.
 2. Convert manuscript structure, citations, figures, tables, and bibliography without inventing content or metadata.
-3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. Bibliography entries for the deliverable come from `bib-format` in its default `bibtex` style, which emits standard entry types; never pass `--style=al-folio` for a LaTeX export, since that projection does not compile under bibtex or biber. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
+3. Write a self-contained LaTeX deliverable and run the declared bibliography tools through the bundled dispatcher below. Bibliography entries for the deliverable come from `bib-format` in its default `bibtex` style, which emits standard entry types; never pass `--style=al-folio` for a LaTeX export, since that projection does not compile under bibtex or biber. Index the written deliverable in `manifest.artifacts.deliverables`. This action does not compile LaTeX and declares no effect that would let it: if the author asks for a PDF, report the portability limitations you observed and return a labeled handoff naming the exact compile command for their own toolchain.
 
 ## Bundled tool execution
 
@@ -40,20 +38,12 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+If desk tools are absent, follow `${pluginRoot}/workflows/export-latex.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
+
+## Bound action contract
 
 @${pluginRoot}/actions/export-latex.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/config.schema.json
-@${pluginRoot}/project/templates/config.json
-@${pluginRoot}/project/schemas/evidence.schema.json
-@${pluginRoot}/project/templates/evidence.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
-@${pluginRoot}/project/schemas/outline.schema.json
-@${pluginRoot}/project/templates/outline.json
-@${pluginRoot}/project/schemas/source.schema.json
-@${pluginRoot}/project/templates/source.json
 
 ## Invocation input
 
@@ -65,6 +55,6 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
 
 <!-- Generated by WTF-P adapter compiler v5 from protocol/actions/export-latex; do not edit. -->

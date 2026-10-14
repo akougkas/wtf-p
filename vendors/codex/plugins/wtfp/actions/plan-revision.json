@@ -21,6 +21,7 @@
   },
   "reads": [
     "project://manifest",
+    "project://config",
     "project://decisions",
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
@@ -33,6 +34,14 @@
     {
       "uri": "project://sections/{section}/plans/{plan}",
       "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -40,19 +49,23 @@
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "project://sections/{section}/plans/{plan}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sections/{section}/plans/{plan}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}"
     },
     {
       "id": "user.gate",
-      "scope": "revision priorities"
+      "scope": "revision priorities and approval of the exact revision plan"
     }
   ]
 }

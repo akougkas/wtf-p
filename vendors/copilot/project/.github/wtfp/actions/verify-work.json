@@ -24,12 +24,17 @@
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
     "project://evidence/{evidence}",
-    "project://paper/{artifact}"
+    "project://paper/{artifact}",
+    "project://validations/{validation}"
   ],
   "produces": [
     {
       "uri": "project://validations/{validation}",
       "mode": "create"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "update"
     },
     {
       "uri": "project://sections/{section}",
@@ -53,7 +58,7 @@
     },
     {
       "id": "filesystem.read",
-      "scope": "project://state, project://sections/{section}, project://sections/{section}/plans/{plan}, project://evidence/{evidence}, project://paper/{artifact}"
+      "scope": "project://state, project://sections/{section}, project://sections/{section}/plans/{plan}, project://evidence/{evidence}, project://paper/{artifact}, project://validations/{validation}"
     },
     {
       "id": "user.gate",

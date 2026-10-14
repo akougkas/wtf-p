@@ -228,7 +228,8 @@ function copyCompilerFixture(destination) {
     ['bin/lib', 'bin/lib'],
     ['protocol', 'protocol'],
     ['clio', 'clio'],
-    ['evaluation/lib/json-schema.js', 'evaluation/lib/json-schema.js']
+    ['evaluation/lib/json-schema.js', 'evaluation/lib/json-schema.js'],
+    ['evaluation/lib/claim-coverage.js', 'evaluation/lib/claim-coverage.js']
   ];
   for (const [source, target] of copies) {
     fs.cpSync(path.join(ROOT, source), path.join(destination, target), { recursive: true });
@@ -863,8 +864,8 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     'playbooks/wtfp-plan-section.md': ['wtfp-section-planner', 'wtfp-plan-checker']
   };
   const expectedFleetWrites = {
-    'playbooks/wtfp-draft-review.md': 'writes: [paper/, .planning/]',
-    'playbooks/wtfp-plan-section.md': 'writes: [.planning/]'
+    'playbooks/wtfp-draft-review.md': 'writes: [paper/, .planning/sections/]',
+    'playbooks/wtfp-plan-section.md': 'writes: [.planning/sections/]'
   };
   const expectedCanonicalStepWrites = {
     'playbooks/wtfp-draft-review.md': [

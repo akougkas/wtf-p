@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/interaction/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "checkpoint-answer" } }
+      },
+      "then": {
+        "properties": {
+          "subject_uri": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+          "outcome": { "enum": ["selected", "done", "waived", "kept-pending", "discarded-stale"] }
+        }
+      },
+      "else": {
+        "properties": {
+          "outcome": { "enum": ["approved", "declined", "discarded-stale"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["outcome"],
+        "properties": { "outcome": { "const": "selected" } }
+      },
+      "then": { "required": ["selected_option"] },
+      "else": { "not": { "required": ["selected_option"] } }
+    },
+    {
+      "if": {
+        "required": ["channel"],
+        "properties": { "channel": { "const": "attested-interview" } }
+      },
+      "then": { "required": ["seal"] },
+      "else": { "not": { "required": ["seal"] } }
+    }
+  ],
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "kind",
+    "subject_uri",
+    "channel",
+    "outcome",
+    "presented",
+    "asked_at",
+    "answered_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.interaction/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "kind": { "enum": ["checkpoint-answer", "record-change"] },
+    "subject_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "channel": { "enum": ["attested-interview", "host-prompt"] },
+    "outcome": {
+      "enum": ["selected", "done", "waived", "kept-pending", "approved", "declined", "discarded-stale"]
+    },
+    "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "presented": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["content_sha256", "options"],
+      "properties": {
+        "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "options": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "base_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["uri", "sha256"],
+          "properties": {
+            "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        }
+      }
+    },
+    "asked_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "answered_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "seal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "key_id", "mac"],
+      "properties": {
+        "method": { "const": "hmac-sha256" },
+        "key_id": { "type": "string", "pattern": "^[a-f0-9]{16}$" },
+        "mac": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

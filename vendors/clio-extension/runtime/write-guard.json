@@ -1,21 +1,566 @@
 {
-  "schema": "wtfp.clio-write-guard/v1",
+  "schema": "wtfp.clio-write-guard/v2",
   "actions": {
-    "execute-outline": [
-      ".planning",
-      "paper"
-    ],
-    "polish-prose": [
-      ".planning",
-      "paper"
-    ],
-    "quick": [
-      ".planning",
-      "paper"
-    ],
-    "write-section": [
-      ".planning",
-      "paper"
-    ]
-  }
+    "add-todo": {
+      "produces": [
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "analyze-bib": {
+      "produces": [
+        {
+          "uri": "project://sources/{source}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sources/{source}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        }
+      ]
+    },
+    "audit-milestone": {
+      "produces": [
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        }
+      ]
+    },
+    "check-refs": {
+      "produces": [
+        {
+          "uri": "project://deliverables/bibliography/{artifact}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        }
+      ]
+    },
+    "check-todos": {
+      "produces": [
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "checkpoint": {
+      "produces": [
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://archives/checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://archives/recovery/{artifact}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "create-outline": {
+      "produces": [
+        {
+          "uri": "project://structure/outline",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://decisions",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        }
+      ]
+    },
+    "create-poster": {
+      "produces": [
+        {
+          "uri": "project://deliverables/poster/{artifact}",
+          "mode": "create"
+        }
+      ]
+    },
+    "create-slides": {
+      "produces": [
+        {
+          "uri": "project://deliverables/slides/{artifact}",
+          "mode": "create"
+        }
+      ]
+    },
+    "discuss-section": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/context",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}/context",
+          "mode": "update"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://decisions",
+          "mode": "update"
+        }
+      ]
+    },
+    "execute-outline": {
+      "produces": [
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}/summary",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}/summary",
+          "mode": "update"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        }
+      ]
+    },
+    "export-latex": {
+      "produces": [
+        {
+          "uri": "project://deliverables/latex/{artifact}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://deliverables/latex/{artifact}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        }
+      ]
+    },
+    "help": {
+      "produces": []
+    },
+    "insert-section": {
+      "produces": [
+        {
+          "uri": "project://structure/outline",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "list-assumptions": {
+      "produces": []
+    },
+    "map-project": {
+      "produces": [
+        {
+          "uri": "project://sources/{source}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sources/{source}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        }
+      ]
+    },
+    "new-paper": {
+      "produces": [
+        {
+          "uri": "project://manifest",
+          "mode": "create"
+        },
+        {
+          "uri": "project://config",
+          "mode": "create"
+        },
+        {
+          "uri": "project://state",
+          "mode": "create"
+        },
+        {
+          "uri": "project://decisions",
+          "mode": "create"
+        },
+        {
+          "uri": "project://structure/outline",
+          "mode": "create"
+        }
+      ]
+    },
+    "pause-writing": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/handoff",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}/handoff",
+          "mode": "update"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "plan-milestone-gaps": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/plans/{plan}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        }
+      ]
+    },
+    "plan-revision": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/plans/{plan}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        }
+      ]
+    },
+    "plan-section": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/plans/{plan}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "polish-prose": {
+      "produces": [
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "progress": {
+      "produces": []
+    },
+    "quick": {
+      "produces": [
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "research-gap": {
+      "produces": [
+        {
+          "uri": "project://sources/{source}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sources/{source}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://evidence/{evidence}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}/research",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}/research",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        }
+      ]
+    },
+    "resume-writing": {
+      "produces": [
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "review-section": {
+      "produces": [
+        {
+          "uri": "project://sections/{section}/reviews/{review}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        }
+      ]
+    },
+    "settings": {
+      "produces": [
+        {
+          "uri": "project://config",
+          "mode": "update"
+        }
+      ]
+    },
+    "submit-milestone": {
+      "produces": [
+        {
+          "uri": "project://archives/{archive}/{artifact}",
+          "mode": "archive"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        }
+      ]
+    },
+    "verify-work": {
+      "produces": [
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    },
+    "write-section": {
+      "produces": [
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://paper/{artifact}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://manifest",
+          "mode": "update"
+        },
+        {
+          "uri": "project://sections/{section}/summary",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}/summary",
+          "mode": "update"
+        },
+        {
+          "uri": "project://validations/{validation}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
+          "uri": "project://sections/{section}",
+          "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
+        }
+      ]
+    }
+  },
+  "paperWriters": [
+    "wtfp-prose-polisher",
+    "wtfp-section-writer"
+  ]
 }

@@ -3,6 +3,7 @@
 'use strict';
 
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,7 +22,8 @@ const recordNames = [
   'outline',
   'section',
   'checkpoint',
-  'validation'
+  'validation',
+  'interaction'
 ];
 
 const schemaCache = new Map();
@@ -181,6 +183,15 @@ function validate(instance, schema, schemaFile, location = '$') {
   }
 
   return errors;
+}
+
+// Keys in code-unit order, no insignificant whitespace: the digest input the protocol README defines.
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  if (value !== null && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
 }
 
 function clone(value) {
@@ -635,9 +646,37 @@ function main() {
     });
   }
 
+  // An interaction binds an author answer to the exact checkpoint content shown.
+  const asked = clone(templates.checkpoint);
+  delete asked.status;
+  delete asked.resolution;
+  assert.strictEqual(templates.interaction.subject_uri, `project://checkpoints/${templates.checkpoint.id}`);
+  assert.strictEqual(
+    templates.interaction.presented.content_sha256,
+    crypto.createHash('sha256').update(canonicalJson(asked)).digest('hex'),
+    'interaction fixture must bind the canonical digest of the checkpoint fixture without status and resolution'
+  );
+  assert(templates.interaction.presented.options.includes(templates.interaction.selected_option));
+  const unselected = clone(templates.interaction);
+  delete unselected.selected_option;
+  assertInvalid('interaction', unselected, /missing required property selected_option/);
+  const optionWithoutSelection = { ...clone(templates.interaction), outcome: 'done' };
+  assertInvalid('interaction', optionWithoutSelection, /forbidden schema/);
+  const unsealedAttestation = { ...clone(templates.interaction), channel: 'attested-interview' };
+  assertInvalid('interaction', unsealedAttestation, /missing required property seal/);
+  const sealedPrompt = { ...clone(templates.interaction), seal: { method: 'hmac-sha256', key_id: '0123456789abcdef', mac: 'a'.repeat(64) } };
+  assertInvalid('interaction', sealedPrompt, /forbidden schema/);
+  const recordChangeSelection = { ...clone(templates.interaction), kind: 'record-change', subject_uri: 'project://config' };
+  assertInvalid('interaction', recordChangeSelection, /must be one of/);
+  const misdirected = { ...clone(templates.interaction), subject_uri: 'project://sections/introduction' };
+  assertInvalid('interaction', misdirected, /does not match/);
+  const weakSeal = { ...clone(templates.interaction), channel: 'attested-interview', seal: { method: 'hmac-sha256', key_id: 'short', mac: 'a'.repeat(64) } };
+  assertInvalid('interaction', weakSeal, /does not match/);
+
   console.log('✓ cross-record identifiers, dependencies, evidence, progress, and safety invariants align');
+  console.log('✓ interaction records bind an answer to the checkpoint content and options presented');
   console.log('✓ all project resources are host-neutral and path-portable');
-  console.log('\n10 portable .planning v1 record contracts passed.');
+  console.log(`\n${recordNames.length} portable .planning v1 record contracts passed.`);
 }
 
 try {

@@ -5,24 +5,23 @@ argument-hint: "[arguments]"
 
 # Plan a revision
 
-@${pluginRoot}/project/README.md
 @${pluginRoot}/skills/wtfp-plan-section/SKILL.md
-@${pluginRoot}/skills/wtfp-plan-section/references/actions.md
 
 ## Record contract
 
-Read: `project://manifest`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
 
-Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 
-Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
 ## Procedure
 
 1. Resolve manifest requirements, the selected section, linked review or failed validation findings, prior summary, current draft, original plan, and decisions.
 2. Separate required fixes, optional improvements, protected text, dependencies, and verification criteria.
-3. Write a new immutable plan artifact after approval; never overwrite the plan that produced the reviewed draft.
+3. Write a new immutable plan artifact after the author approves the revision priorities; never overwrite the plan that produced the reviewed draft.
+4. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan, and ask the author. Append the plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; any other answer leaves the earlier plan current and the revision unlinked. With confirm_plan off, append it directly.
 
 ## Safety and completion
 
@@ -30,18 +29,12 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+If desk tools are absent, follow `${pluginRoot}/workflows/plan-revision.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
+
+## Bound action contract
 
 @${pluginRoot}/actions/plan-revision.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/decisions.schema.json
-@${pluginRoot}/project/templates/decisions.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
-@${pluginRoot}/project/schemas/section.schema.json
-@${pluginRoot}/project/templates/section.json
-@${pluginRoot}/project/schemas/validation.schema.json
-@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 
@@ -53,6 +46,6 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
 
 <!-- Generated by WTF-P adapter compiler v5 from protocol/actions/plan-revision; do not edit. -->

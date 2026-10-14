@@ -29,6 +29,7 @@ Logical URIs identify project data without exposing a workstation path or a runt
 | `project://evidence/{evidence}` | `.planning/evidence/{evidence}.json` | Claim-level interpretation of a source |
 | `project://checkpoints/{checkpoint}` | `.planning/checkpoints/{checkpoint}.json` | Orchestrator-managed interaction gate |
 | `project://validations/{validation}` | `.planning/validations/{validation}.json` | Read-only verification result |
+| `project://interactions/{interaction}` | `.planning/interactions/{interaction}.json` | An author's answer as the host observed it |
 
 The conventional locations are adapter mappings, not absolute paths embedded in records. Adapters must reject URI traversal segments and must not resolve a logical URI outside the project root.
 
@@ -72,6 +73,27 @@ The JSON records above are the interoperable source of truth, while research and
 - A `state-snapshot` checkpoint is non-blocking and points to an immutable archive plus the logical URI, revision, and SHA-256 digest of every captured resource. Restores require a separate gate and a verified recovery archive.
 - Validation records report findings and never imply that a mutation was applied.
 - Timestamps use RFC 3339 date-time strings. Dates use ISO 8601 calendar dates.
+
+## Author answers and approvals
+
+A checkpoint's `resolution.resolved_by: author` is a claim. It becomes evidence only when an interaction record stands behind it. An interaction records what the author was shown and what the author chose:
+
+- `kind: checkpoint-answer` answers a checkpoint. `subject_uri` names the checkpoint, and `outcome` is `selected` (with `selected_option`), `done`, `waived`, `kept-pending`, or `discarded-stale`.
+- `kind: record-change` confirms or declines a record change that would weaken the author's controls. Its outcome is `approved`, `declined`, or `discarded-stale`.
+- `presented.content_sha256` is the SHA-256 of the canonical JSON of what was asked. For a checkpoint, that is the record with `status` and `resolution` removed, so answering it does not change the digest. Canonical JSON orders object keys by code unit and has no insignificant whitespace. `presented.options` lists the option identifiers offered, and `presented.artifact` holds the URI and SHA-256 of the file the checkpoint is about, when it names one.
+- `channel: attested-interview` means the host observed the answer in its own interview and sealed the record with `seal` (HMAC-SHA-256 over the canonical record without `seal`, keyed by a secret that never enters the project). `channel: host-prompt` documents an answer obtained through a host prompt that the host cannot attest; it carries no seal.
+
+A host that attests answers counts a resolution as the author's only when a sealed interaction whose seal verifies matches the checkpoint's current digest and recorded outcome. Anything else is unattested: a hand edit, an answer recorded by another host, or a seal made with another machine's key. An unattested resolution of a blocking checkpoint keeps holding its scope until the author confirms it, which records a new sealed interaction. Migration never upgrades an existing resolution to an attested one.
+
+On a host that attests answers, only its recorder writes interaction records and author resolutions; agents never write `resolved_by: author` and never resolve a blocking checkpoint. On a host that cannot attest, the agent records the resolution from the answer it received through the host's prompt. That resolution documents the answer without proving it, and an attesting host treats it as unattested. On every host, a pending blocking checkpoint cannot be made nonblocking, re-scoped, or expired by an agent. The one exception is a plan-approval checkpoint whose plan is no longer the section's current plan, which may be expired. An answered checkpoint is immutable; asking again creates a new checkpoint. `resolved_by: policy` applies only to nonblocking checkpoints.
+
+A plan is approved for drafting when its section links it as the last entry of `artifacts.plans` and a `decision` checkpoint scoped to that plan's URI carries an attested answer of `approve` that was given for the plan's current SHA-256. Any other answer, such as `revise` or `reject`, leaves the plan unapproved even when `confirm_plan` is off. With `confirm_plan` off and no author answer on the plan, a linked plan that resolves to a file stands by policy. Editing an approved plan voids its approval. Linked plans are immutable; a revision is a new plan appended to `artifacts.plans` that needs its own approval.
+
+## Concurrent updates and recovery
+
+An update names the version it read. Revisioned records (`state`, `outline`, `decisions`) carry the revision read; every other record carries the SHA-256 of the bytes read. An update that names no version, or a stale one, is refused and changes nothing. A create names no version and fails if the record already exists. Adapters advance revisions and timestamps themselves and replace each record atomically.
+
+Several records that change together, such as a checkpoint and the state that lists it, either all change or none does. An adapter stages every new file durably and then writes one journal naming them all, which is the commit point. It then moves each file into place and removes the journal. A process that stops before the journal exists leaves only staged files, which the next writer removes. A process that stops after it leaves the journal, which the next writer completes. Readers report a pending journal instead of repairing it.
 
 `templates/` contains minimal valid examples and `schemas/` contains JSON Schema 2020-12 contracts. The examples are safe fixtures for adapter and conformance tests; they are not prose-writing templates.
 
@@ -172,7 +194,7 @@ Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.jso
 2. Read the complete planning context before decomposing work: manifest, config, state, decisions, outline, section record, context, research, source/evidence records, relevant prior summaries, and the bounded `project://validations/*` collection.
 3. Before any specialist dispatch, filter the validation records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
 4. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
-5. If the section is literature-heavy, require a section-specific research artifact and resolvable source/evidence records for its planned claims before dispatch or approval. Run `research-gap` with the configured CiteNexus backend when available; if coverage remains insufficient, record a research checkpoint and stop. Search candidates alone are not verified citations. Do not manufacture citations to keep planning moving.
+5. If the section is literature-heavy, require a section-specific research artifact and resolvable source/evidence records for its planned claims before dispatch or approval. If coverage is insufficient, record a research checkpoint naming the uncovered claims and stop; `research-gap` is the next action, and its sources and evidence are not written here. Search candidates alone are not verified citations. Do not manufacture citations to keep planning moving.
 6. Summarize the section goal, claims, evidence, manuscript artifact, dependencies, and open decisions at `config.gates.confirm_plan`.
 7. After the prerequisites pass, require `section-planner` in a bounded delegated pass to create one or more immutable Markdown `project://sections/{section}/plans/{plan}` artifacts. Each plan must declare:
    - stable section and plan identifiers;
@@ -187,7 +209,7 @@ Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.jso
 9. Estimate words by rhetorical function and reconcile the total with the section budget.
 10. After the `section-planner` result, require `plan-checker` in a fresh delegated pass against the outline goal and claim IDs, decisions, context, research, evidence, dependencies, output URIs, and verification criteria. Persist that read-only result at `project://validations/{validation}`; configuration may tighten its rubric but must not skip the independent pass.
 11. Revise concrete defects and re-check. After a bounded number of failed passes, create a checkpoint for remaining author judgment rather than self-approving.
-12. Link the approved plan from the section record and set section/state status to planned only after the plan and validation are readable. Do not execute VCS effects.
+12. At `config.gates.confirm_plan`, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Link the plan from the section record and set section/state status to planned only after an `approve` answer for its current bytes and after the plan and validation are readable. Do not execute VCS effects.
 
 Completion requires an executable plan whose tasks are sufficient for its success criteria and whose evidence obligations are explicit.
 
@@ -208,8 +230,9 @@ Contract: [protocol/actions/plan-revision.json](../../../actions/plan-revision.j
    - expected revised manuscript and revision summary.
 6. Never prescribe a cosmetic rewrite for an evidence or argument defect. Route missing evidence to research and structural defects to explicit author approval.
 7. Validate that every selected issue is addressed once and every excluded issue remains visible.
+8. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Append the revision plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; the plan that produced the reviewed draft is never edited and remains in the history.
 
-Completion requires a targeted, traceable path from finding to fix to re-verification.
+Completion requires a targeted, traceable path from finding to fix to re-verification, and a revision plan the author approved before any rewrite.
 
 ## `insert-section`
 
@@ -243,8 +266,8 @@ Completion requires preservation of all authored work and consistent outline/sta
 </details>
 ## Record contract
 
-Read: `project://manifest`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -254,7 +277,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve manifest requirements, the selected section, linked review or failed validation findings, prior summary, current draft, original plan, and decisions.
 2. Separate required fixes, optional improvements, protected text, dependencies, and verification criteria.
-3. Write a new immutable plan artifact after approval; never overwrite the plan that produced the reviewed draft.
+3. Write a new immutable plan artifact after the author approves the revision priorities; never overwrite the plan that produced the reviewed draft.
+4. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan, and ask the author. Append the plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; any other answer leaves the earlier plan current and the revision unlinked. With confirm_plan off, append it directly.
 
 ## Safety and completion
 
@@ -290,6 +314,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   },
   "reads": [
     "project://manifest",
+    "project://config",
     "project://decisions",
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
@@ -302,6 +327,14 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "uri": "project://sections/{section}/plans/{plan}",
       "mode": "create"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -309,19 +342,23 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "project://sections/{section}/plans/{plan}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://sections/{section}"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sections/{section}/plans/{plan}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}"
     },
     {
       "id": "user.gate",
-      "scope": "revision priorities"
+      "scope": "revision priorities and approval of the exact revision plan"
     }
   ]
 }
@@ -361,6 +398,253 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     "confidence": {
       "enum": ["high", "medium", "low", "unknown"]
     }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/checkpoint.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/checkpoint.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/checkpoint/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "state-snapshot" } }
+      },
+      "then": {
+        "required": ["snapshot"],
+        "properties": {
+          "status": { "enum": ["available", "restored", "expired"] },
+          "blocking": { "const": false }
+        }
+      },
+      "else": {
+        "not": { "required": ["snapshot"] },
+        "properties": {
+          "status": { "enum": ["pending", "resolved", "waived", "expired"] }
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "kind",
+    "status",
+    "blocking",
+    "scope_uri",
+    "request",
+    "options",
+    "resume_action",
+    "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.checkpoint/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "kind": { "enum": ["human-verify", "decision", "human-action", "safety-authorization", "state-snapshot"] },
+    "status": { "enum": ["pending", "resolved", "waived", "expired", "available", "restored"] },
+    "blocking": { "type": "boolean" },
+    "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "request": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "context": { "type": "string" },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "implication"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "label": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "implication": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "resume_action": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archive_uri", "resources"],
+      "properties": {
+        "archive_uri": {
+          "type": "string",
+          "pattern": "^project://archives/checkpoints/[A-Za-z0-9._~-]+$"
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["uri", "sha256"],
+            "properties": {
+              "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+              "revision": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolved_by", "summary", "resolved_at"],
+      "properties": {
+        "resolved_by": { "enum": ["author", "policy"] },
+        "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "resolved_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/checkpoint.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/checkpoint.json</summary>
+
+{
+  "schema": "wtfp.project.checkpoint/v1",
+  "id": "checkpoint-contribution-framing",
+  "project_id": "portable-research-demo",
+  "kind": "decision",
+  "status": "pending",
+  "blocking": true,
+  "scope_uri": "project://sections/introduction",
+  "request": "Choose the primary contribution framing before the introduction is drafted.",
+  "context": "The choice changes the order and strength of the contribution claims.",
+  "options": [
+    {
+      "id": "protocol-contribution",
+      "label": "Protocol contribution",
+      "implication": "Lead with interoperability and evidence fidelity."
+    },
+    {
+      "id": "workflow-contribution",
+      "label": "Workflow contribution",
+      "implication": "Lead with the end-to-end academic process."
+    }
+  ],
+  "resume_action": "write-section",
+  "created_at": "2026-08-28T12:40:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/config.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/config.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/config/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_id",
+    "interaction_mode",
+    "depth",
+    "output_format",
+    "language",
+    "gates",
+    "workflow",
+    "safety",
+    "parallelism"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.config/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "interaction_mode": { "enum": ["guided", "standard", "autonomous"] },
+    "depth": { "enum": ["quick", "standard", "comprehensive"] },
+    "output_format": { "enum": ["markdown", "latex", "typst"] },
+    "language": { "type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
+    "citation_style": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["confirm_outline", "confirm_plan", "confirm_write", "confirm_review", "confirm_delivery"],
+      "properties": {
+        "confirm_outline": { "type": "boolean" },
+        "confirm_plan": { "type": "boolean" },
+        "confirm_write": { "type": "boolean" },
+        "confirm_review": { "type": "boolean" },
+        "confirm_delivery": { "type": "boolean" }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["research", "plan_validation", "argument_validation", "coherence_validation"],
+      "properties": {
+        "research": { "type": "boolean" },
+        "plan_validation": { "type": "boolean" },
+        "argument_validation": { "type": "boolean" },
+        "coherence_validation": { "type": "boolean" }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destructive_requires_authorization", "external_publish_requires_authorization", "backup_before_major_edits"],
+      "properties": {
+        "destructive_requires_authorization": { "const": true },
+        "external_publish_requires_authorization": { "const": true },
+        "backup_before_major_edits": { "type": "boolean" }
+      }
+    },
+    "parallelism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "max_workers"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "max_workers": { "type": "integer", "minimum": 1, "maximum": 32 }
+      }
+    }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/config.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/config.json</summary>
+
+{
+  "schema": "wtfp.project.config/v1",
+  "project_id": "portable-research-demo",
+  "interaction_mode": "standard",
+  "depth": "standard",
+  "output_format": "markdown",
+  "language": "en-US",
+  "citation_style": "author-date",
+  "gates": {
+    "confirm_outline": true,
+    "confirm_plan": true,
+    "confirm_write": true,
+    "confirm_review": true,
+    "confirm_delivery": true
+  },
+  "workflow": {
+    "research": true,
+    "plan_validation": true,
+    "argument_validation": true,
+    "coherence_validation": true
+  },
+  "safety": {
+    "destructive_requires_authorization": true,
+    "external_publish_requires_authorization": true,
+    "backup_before_major_edits": true
+  },
+  "parallelism": {
+    "enabled": true,
+    "max_workers": 3
   }
 }
 

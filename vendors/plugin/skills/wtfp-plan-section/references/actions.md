@@ -62,7 +62,7 @@ Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.jso
 2. Read the complete planning context before decomposing work: manifest, config, state, decisions, outline, section record, context, research, source/evidence records, relevant prior summaries, and the bounded `project://validations/*` collection.
 3. Before any specialist dispatch, filter the validation records to candidates whose `subject_uri` is exactly `project://structure/outline` and whose `action_id` is exactly `create-outline`. A candidate is current only when `executed_at >= outline.updated_at`. Because the v1 validation schema carries no outline revision or content hash, disclose that this timestamp test is a conservative freshness proxy.
 4. Require exactly one current candidate and require its `status` to be `passed`. Separately verify that the current outline and target section are consistent with all current locked and deferred author choices: honor locked choices and do not treat deferred choices as resolved. A missing, stale, ambiguous, or non-passing candidate, or a decision contradiction, blocks all specialist dispatch and every plan, section, state, or validation write. Only a recovery checkpoint may be proposed on this blocked path, and it may be written only after a complete record preview and explicit author approval.
-5. If the section is literature-heavy, require a section-specific research artifact and resolvable source/evidence records for its planned claims before dispatch or approval. Run `research-gap` with the configured CiteNexus backend when available; if coverage remains insufficient, record a research checkpoint and stop. Search candidates alone are not verified citations. Do not manufacture citations to keep planning moving.
+5. If the section is literature-heavy, require a section-specific research artifact and resolvable source/evidence records for its planned claims before dispatch or approval. If coverage is insufficient, record a research checkpoint naming the uncovered claims and stop; `research-gap` is the next action, and its sources and evidence are not written here. Search candidates alone are not verified citations. Do not manufacture citations to keep planning moving.
 6. Summarize the section goal, claims, evidence, manuscript artifact, dependencies, and open decisions at `config.gates.confirm_plan`.
 7. After the prerequisites pass, require `section-planner` in a bounded delegated pass to create one or more immutable Markdown `project://sections/{section}/plans/{plan}` artifacts. Each plan must declare:
    - stable section and plan identifiers;
@@ -77,7 +77,7 @@ Contract: [protocol/actions/plan-section.json](../../../actions/plan-section.jso
 9. Estimate words by rhetorical function and reconcile the total with the section budget.
 10. After the `section-planner` result, require `plan-checker` in a fresh delegated pass against the outline goal and claim IDs, decisions, context, research, evidence, dependencies, output URIs, and verification criteria. Persist that read-only result at `project://validations/{validation}`; configuration may tighten its rubric but must not skip the independent pass.
 11. Revise concrete defects and re-check. After a bounded number of failed passes, create a checkpoint for remaining author judgment rather than self-approving.
-12. Link the approved plan from the section record and set section/state status to planned only after the plan and validation are readable. Do not execute VCS effects.
+12. At `config.gates.confirm_plan`, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Link the plan from the section record and set section/state status to planned only after an `approve` answer for its current bytes and after the plan and validation are readable. Do not execute VCS effects.
 
 Completion requires an executable plan whose tasks are sufficient for its success criteria and whose evidence obligations are explicit.
 
@@ -98,8 +98,9 @@ Contract: [protocol/actions/plan-revision.json](../../../actions/plan-revision.j
    - expected revised manuscript and revision summary.
 6. Never prescribe a cosmetic rewrite for an evidence or argument defect. Route missing evidence to research and structural defects to explicit author approval.
 7. Validate that every selected issue is addressed once and every excluded issue remains visible.
+8. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Append the revision plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; the plan that produced the reviewed draft is never edited and remains in the history.
 
-Completion requires a targeted, traceable path from finding to fix to re-verification.
+Completion requires a targeted, traceable path from finding to fix to re-verification, and a revision plan the author approved before any rewrite.
 
 ## `insert-section`
 

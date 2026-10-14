@@ -12,8 +12,8 @@ source: wtfp.protocol
 
 ## Record contract
 
-Read: `project://manifest`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create).
+Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -23,7 +23,8 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve manifest requirements, the selected section, linked review or failed validation findings, prior summary, current draft, original plan, and decisions.
 2. Separate required fixes, optional improvements, protected text, dependencies, and verification criteria.
-3. Write a new immutable plan artifact after approval; never overwrite the plan that produced the reviewed draft.
+3. Write a new immutable plan artifact after the author approves the revision priorities; never overwrite the plan that produced the reviewed draft.
+4. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan, and ask the author. Append the plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; any other answer leaves the earlier plan current and the revision unlinked. With confirm_plan off, append it directly.
 
 ## Safety and completion
 

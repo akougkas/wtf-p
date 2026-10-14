@@ -24,6 +24,7 @@ Logical URIs identify project data without exposing a workstation path or a runt
 | `project://evidence/{evidence}` | `.planning/evidence/{evidence}.json` | Claim-level interpretation of a source |
 | `project://checkpoints/{checkpoint}` | `.planning/checkpoints/{checkpoint}.json` | Orchestrator-managed interaction gate |
 | `project://validations/{validation}` | `.planning/validations/{validation}.json` | Read-only verification result |
+| `project://interactions/{interaction}` | `.planning/interactions/{interaction}.json` | An author's answer as the host observed it |
 
 The conventional locations are adapter mappings, not absolute paths embedded in records. Adapters must reject URI traversal segments and must not resolve a logical URI outside the project root.
 
@@ -67,5 +68,26 @@ The JSON records above are the interoperable source of truth, while research and
 - A `state-snapshot` checkpoint is non-blocking and points to an immutable archive plus the logical URI, revision, and SHA-256 digest of every captured resource. Restores require a separate gate and a verified recovery archive.
 - Validation records report findings and never imply that a mutation was applied.
 - Timestamps use RFC 3339 date-time strings. Dates use ISO 8601 calendar dates.
+
+## Author answers and approvals
+
+A checkpoint's `resolution.resolved_by: author` is a claim. It becomes evidence only when an interaction record stands behind it. An interaction records what the author was shown and what the author chose:
+
+- `kind: checkpoint-answer` answers a checkpoint. `subject_uri` names the checkpoint, and `outcome` is `selected` (with `selected_option`), `done`, `waived`, `kept-pending`, or `discarded-stale`.
+- `kind: record-change` confirms or declines a record change that would weaken the author's controls. Its outcome is `approved`, `declined`, or `discarded-stale`.
+- `presented.content_sha256` is the SHA-256 of the canonical JSON of what was asked. For a checkpoint, that is the record with `status` and `resolution` removed, so answering it does not change the digest. Canonical JSON orders object keys by code unit and has no insignificant whitespace. `presented.options` lists the option identifiers offered, and `presented.artifact` holds the URI and SHA-256 of the file the checkpoint is about, when it names one.
+- `channel: attested-interview` means the host observed the answer in its own interview and sealed the record with `seal` (HMAC-SHA-256 over the canonical record without `seal`, keyed by a secret that never enters the project). `channel: host-prompt` documents an answer obtained through a host prompt that the host cannot attest; it carries no seal.
+
+A host that attests answers counts a resolution as the author's only when a sealed interaction whose seal verifies matches the checkpoint's current digest and recorded outcome. Anything else is unattested: a hand edit, an answer recorded by another host, or a seal made with another machine's key. An unattested resolution of a blocking checkpoint keeps holding its scope until the author confirms it, which records a new sealed interaction. Migration never upgrades an existing resolution to an attested one.
+
+On a host that attests answers, only its recorder writes interaction records and author resolutions; agents never write `resolved_by: author` and never resolve a blocking checkpoint. On a host that cannot attest, the agent records the resolution from the answer it received through the host's prompt. That resolution documents the answer without proving it, and an attesting host treats it as unattested. On every host, a pending blocking checkpoint cannot be made nonblocking, re-scoped, or expired by an agent. The one exception is a plan-approval checkpoint whose plan is no longer the section's current plan, which may be expired. An answered checkpoint is immutable; asking again creates a new checkpoint. `resolved_by: policy` applies only to nonblocking checkpoints.
+
+A plan is approved for drafting when its section links it as the last entry of `artifacts.plans` and a `decision` checkpoint scoped to that plan's URI carries an attested answer of `approve` that was given for the plan's current SHA-256. Any other answer, such as `revise` or `reject`, leaves the plan unapproved even when `confirm_plan` is off. With `confirm_plan` off and no author answer on the plan, a linked plan that resolves to a file stands by policy. Editing an approved plan voids its approval. Linked plans are immutable; a revision is a new plan appended to `artifacts.plans` that needs its own approval.
+
+## Concurrent updates and recovery
+
+An update names the version it read. Revisioned records (`state`, `outline`, `decisions`) carry the revision read; every other record carries the SHA-256 of the bytes read. An update that names no version, or a stale one, is refused and changes nothing. A create names no version and fails if the record already exists. Adapters advance revisions and timestamps themselves and replace each record atomically.
+
+Several records that change together, such as a checkpoint and the state that lists it, either all change or none does. An adapter stages every new file durably and then writes one journal naming them all, which is the commit point. It then moves each file into place and removes the journal. A process that stops before the journal exists leaves only staged files, which the next writer removes. A process that stops after it leaves the journal, which the next writer completes. Readers report a pending journal instead of repairing it.
 
 `templates/` contains minimal valid examples and `schemas/` contains JSON Schema 2020-12 contracts. The examples are safe fixtures for adapter and conformance tests; they are not prose-writing templates.
