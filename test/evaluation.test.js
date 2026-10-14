@@ -408,6 +408,10 @@ function testPlanningValidator(tempRoot) {
   fs.mkdirSync(path.join(project, 'paper'));
   fs.writeFileSync(path.join(project, 'paper', 'implementation'), 'Cites [@Nobody2020].\n');
   assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved' && finding.subject === 'project://sections/implementation'), 'the bare name is tried first, as the desk tries it');
+  fs.rmSync(path.join(project, 'paper', 'implementation'));
+  fs.mkdirSync(path.join(project, 'paper', 'implementation'));
+  fs.writeFileSync(path.join(project, 'paper', 'implementation.md'), 'Cites [@Nobody2021].\n');
+  assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved' && /Nobody2021/.test(finding.message)), 'a directory of that name is passed over for the file, as the desk passes it over');
   fs.rmSync(path.join(project, 'paper'), { recursive: true });
   // Only .planning/project.json says which project this is; a stray manifest elsewhere does not.
   const strayManifest = path.join(planning, 'aaa-manifest.json');

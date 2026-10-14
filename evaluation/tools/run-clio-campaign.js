@@ -514,7 +514,8 @@ function stepCost(receipts) {
 function servedRows(receipt) {
   return (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : []).filter(response =>
     response && response.usageScope !== 'run-aggregate' &&
-    (typeof response.providerResponseId === 'string' || (response.usage && ((response.usage.output ?? 0) > 0 || (response.usage.totalTokens ?? 0) > 0))));
+    // Clio counts a reply without usage as a real call; a row with usage, no output and no response id is a provider error.
+    (typeof response.providerResponseId === 'string' || !response.usage || (response.usage.output ?? 0) > 0));
 }
 
 /** The model id a Clio response-model observation reports, or null when it reports none. */
@@ -773,7 +774,7 @@ function secretTokens(text, minimum = 8) {
   return [...new Set(text.match(new RegExp(`[A-Za-z0-9_\\-+/=.]{${minimum},}`, 'gu')) || [])];
 }
 
-const SECRET_KEY = /header|token|secret|passw|api[-_]?key|bearer|cookie|credential|authorization/iu;
+const SECRET_KEY = /auth|header|token|secret|passw|api[-_]?key|bearer|cookie|credential/iu;
 // Clio's TargetAuth fields that name a secret rather than hold one (src/domains/providers/types/target-descriptor.ts).
 const SETTINGS_REFERENCES = new Set(['apiKeyEnvVar', 'apiKeyRef', 'oauthProfile']);
 // Fields of Clio's credential records that are not secret (src/domains/providers/auth/storage.ts).
@@ -868,7 +869,8 @@ function yamlScalars(text) {
     } else if (value.startsWith('{') || value.startsWith('[')) {
       // A flow collection may span lines; read until its brackets balance.
       let flow = value;
-      const depth = (text) => [...text].reduce((sum, char) => sum + ('{['.includes(char) ? 1 : '}]'.includes(char) ? -1 : 0), 0);
+      // Brackets inside quoted strings are text, not structure.
+      const depth = (text) => [...text.replace(/"(?:[^"\\]|\\.)*"|'[^']*'/gu, '')].reduce((sum, char) => sum + ('{['.includes(char) ? 1 : '}]'.includes(char) ? -1 : 0), 0);
       while (depth(flow) > 0 && index + 1 < lines.length) {
         index += 1;
         flow += ` ${lines[index].trim()}`;
@@ -890,7 +892,9 @@ function yamlScalars(text) {
  */
 function settingsSecrets(text) {
   return yamlScalars(text)
-    .filter(entry => entry.path.length > 0 && !SETTINGS_REFERENCES.has(entry.path[entry.path.length - 1]) && entry.path.some(key => SECRET_KEY.test(key)))
+    // A TargetAuth reference names a secret only as a direct field of `auth`; anywhere else the same name is just a key.
+    .filter(entry => entry.path.length > 0 && entry.path.some(key => SECRET_KEY.test(key)) &&
+      !(entry.path.length >= 2 && entry.path[entry.path.length - 2] === 'auth' && SETTINGS_REFERENCES.has(entry.path[entry.path.length - 1])))
     .flatMap(entry => secretTokens(entry.value));
 }
 
@@ -1030,6 +1034,12 @@ async function execute(campaign, options) {
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
     step_environment: { ...STEP_GUARDS, network_sandbox: 'none: retrieval tools are removed, but bash and provider traffic are not sandboxed' },
+    // What this record can and cannot vouch for, stated in every run so no reader takes bookkeeping for isolation.
+    isolation: {
+      steps_run_as: 'the operator\'s own OS user, with no sandbox',
+      model_code_execution: 'possible: at default autonomy Clio 0.6.2 runs recognized test runners, such as node --test, on files the model wrote, without approval',
+      record_integrity: 'tamper-evident against accidents and naive tampering; a step that runs code can defeat any of these checks'
+    },
     timeout_minutes: timeoutMinutes,
     resources,
     workspace: { prepared_sha256: prepared.workspace_sha256, initial_sha256: bound.initial, head: workspaceHead(workspace) },
@@ -1069,7 +1079,7 @@ async function execute(campaign, options) {
     const links = copies.map(copy => attempt('zero copy', () => zeroHeld(copy.fd)));
     const made = sameRoot ? attempt('seal store', () => restoreStore(root, storeFile, held)) ?? [] : [];
     for (const aside of made) integrity.push(`a seal store or its directory was created or replaced during the run and set aside as ${path.relative(root, aside)}`);
-    run.seal_store = { held_during_run: held !== null, restored: held !== null && !integrity.some(item => item.startsWith('seal store')) };
+    run.seal_store = { held_during_run: held !== null, restored: held !== null && sameRoot && !integrity.some(item => item.startsWith('seal store')) };
     const unwiped = attempt('wipe', () => wipePrivate(config)) ?? ['the configuration directory could not be read'];
     const remaining = copies.map(copy => attempt('copy links', () => fs.fstatSync(copy.fd).nlink));
     for (const copy of copies) attempt('close copy', () => fs.closeSync(copy.fd));

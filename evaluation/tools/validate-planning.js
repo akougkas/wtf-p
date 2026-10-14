@@ -191,6 +191,17 @@ function coverageForRoot(resolved, validation) {
     }
     return false;
   };
+  // The first candidate that is a plain file, as the desk picks it; else the first one that exists but cannot be read.
+  const pickManuscript = (candidates) => {
+    let unreadable = null;
+    for (const candidate of candidates) {
+      let stat;
+      try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
+      if (stat.isFile() && !throughLink(`paper/${candidate}`)) return { candidate, readable: true };
+      unreadable ??= { candidate, readable: false };
+    }
+    return unreadable;
+  };
   for (const { record } of projectRoot ? sections : []) {
     // A section without its own manuscript link writes the conventional one, as the desk resolves it.
     const linked = record.artifacts && record.artifacts.manuscript;
@@ -205,15 +216,9 @@ function coverageForRoot(resolved, validation) {
       unread.push({ section: record.id, file: uri, reason: 'it does not name a contained file' });
       continue;
     }
-    let found = null;
-    for (const candidate of [artifact, `${artifact}.md`, `${artifact}.tex`, `${artifact}.typ`]) {
-      let stat;
-      try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
-      found = { candidate, stat: throughLink(`paper/${candidate}`) ? { isFile: () => false } : stat };
-      break;
-    }
+    const found = pickManuscript([artifact, `${artifact}.md`, `${artifact}.tex`, `${artifact}.typ`]);
     // A manuscript that exists but is not a plain file is never followed; one that should exist but does not is reported.
-    if (found && found.stat.isFile()) {
+    if (found && found.readable) {
       manuscripts.push({ section: record.id, file: `paper/${found.candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', found.candidate), 'utf8') });
     } else if (found) {
       unread.push({ section: record.id, file: `paper/${found.candidate}`, reason: 'it is a link or not a regular file' });
@@ -225,13 +230,9 @@ function coverageForRoot(resolved, validation) {
   const recorded = new Set(sections.map(({ record }) => record.id));
   for (const entry of projectRoot && outline && Array.isArray(outline.sections) ? outline.sections : []) {
     if (typeof entry.id !== 'string' || recorded.has(entry.id)) continue;
-    for (const candidate of [entry.id, `${entry.id}.md`, `${entry.id}.tex`, `${entry.id}.typ`]) {
-      let stat;
-      try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
-      if (stat.isFile() && !throughLink(`paper/${candidate}`)) manuscripts.push({ section: entry.id, file: `paper/${candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', candidate), 'utf8') });
-      else unread.push({ section: entry.id, file: `paper/${candidate}`, reason: 'it is a link or not a regular file' });
-      break;
-    }
+    const found = pickManuscript([entry.id, `${entry.id}.md`, `${entry.id}.tex`, `${entry.id}.typ`]);
+    if (found && found.readable) manuscripts.push({ section: entry.id, file: `paper/${found.candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', found.candidate), 'utf8') });
+    else if (found) unread.push({ section: entry.id, file: `paper/${found.candidate}`, reason: 'it is a link or not a regular file' });
   }
   const report = analyzeCoverage({
     projectId: manifest ? manifest.id : null,

@@ -194,6 +194,8 @@ process.exit(0);`);
     assert.deepStrictEqual(run.steps.map(step => [step.step, step.outcome]), [['initialize', 'author-unavailable']]);
     assert.deepStrictEqual([run.cost.status, run.cost.usd], ['unavailable', null], 'missing cost is unavailable, never zero');
     assert.strictEqual(run.evidence_level, 'no-model-call-observed', 'no model call seen, so no model evidence is claimed');
+    assert.match(run.isolation.model_code_execution, /test runners/, 'every run record says what it cannot vouch for');
+    assert.match(run.isolation.record_integrity, /can defeat/);
     assert.strictEqual(run.credentials_removed, true);
     assert.ok(!fs.existsSync(path.join(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
     const recorded = fs.readFileSync(path.join(root, 'run.json'), 'utf8');
@@ -411,8 +413,13 @@ process.exit(0);`);
     assert.deepStrictEqual(step.model_observation.reported, ['m-fallback', 'm-legacy', 'm-responses']);
     assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [3, 0], 'neither the aggregate row nor a provider error is a call');
     assert.strictEqual(step.model_calls, 2, 'a provider error is not an observed model call');
-    const failedWorker = { file: 'f.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [{ requestedModelId: 'm', usage: { input: 3, output: 0, totalTokens: 0 }, responseModelIdObservation: { state: 'not-observed' } }] } };
+    const failedWorker = { file: 'f.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [{ requestedModelId: 'm', usage: { input: 120, output: 0, totalTokens: 120 }, responseModelIdObservation: { state: 'not-observed' } }] } };
     assert.strictEqual(runner.classifyStep(ok, '', '', { receipts: [failedWorker] }).model_calls, 0, 'a worker whose only call failed served nothing');
+    const usageless = { file: 'u.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [
+      { requestedModelId: 'm', providerResponseId: 'r1', responseModelIdObservation: { state: 'reported', reportedModelId: 'm' } },
+      { requestedModelId: 'm', responseModelIdObservation: { state: 'reported', reportedModelId: 'other-model' } }
+    ] } };
+    assert.strictEqual(runner.classifyStep(ok, '', '', { receipts: [usageless], selection: { model: 'm' } }).model_observation.status, 'differs', 'a reply Clio recorded without usage is still a call that counts');
   });
 
   await test('the seal key is out of reach while headless steps run, and nothing a step leaves running outlives the run', async () => {
@@ -530,6 +537,7 @@ process.exit(0);`);
     const swapped = await withEnv(executeEnv, () => runner.execute(oneStep, { root: swapRoot, entry: swapper, ...selection, campaignFile: oneStepFile }));
     assert.strictEqual(swapped.outcome, 'integrity-violation');
     assert.match(swapped.integrity.join(' '), /run root was replaced/);
+    assert.deepStrictEqual(swapped.seal_store, { held_during_run: true, restored: false }, 'a key not restored is never recorded as restored');
     assert.ok(!fs.existsSync(path.join(landing, 'clio', 'state', 'extensions', 'wtfp', 'store.json')), 'the key is not written into the stand-in root');
     assert.strictEqual(swapped.credentials_removed, false);
     assert.ok(fs.readFileSync(path.join(`${swapRoot}-old`, 'clio', 'config', 'credentials.yaml')).every(byte => byte === 0), 'the copy left behind was zeroed');
@@ -552,6 +560,10 @@ process.exit(0);`);
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers: {\n    X-Custom: multiline-flow-secret-1234\n  }\n  model: long-model-identifier\n'), ['multiline-flow-secret-1234']);
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    oauthProfile: anthropic-max\n    apiKeyRef: anthropic-key\n    apiKeyEnvVar: ANTHROPIC_API_KEY\n    headers:\n      Authorization: Bearer header-secret-1234\n'),
       ['header-secret-1234'], 'names of secrets, such as profiles, refs and environment variables, are evidence');
+    assert.deepStrictEqual(runner.settingsSecrets('agents:\n  external:\n    env: { GITHUB_AUTH: ghp-secret-value-123456789 }\n'), ['ghp-secret-value-123456789'], 'an auth-named key anywhere holds a secret');
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    headers: {\n      "X-A": "{",\n      X-Custom: custom-secret-123456789\n    }\n  model: claude-opus-model-2026\n'),
+      ['custom-secret-123456789'], 'a bracket inside a quoted string is text, and the model id after the map stays evidence');
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    headers:\n      apiKeyRef: header-value-123456789\n'), ['header-value-123456789'], 'a reference name is a reference only directly under auth');
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers:\n    - { Authorization: sequence-flow-1234 }\n  models:\n    - { id: long-model-identifier }\n'), ['sequence-flow-1234']);
     assert.deepStrictEqual(runner.credentialSecrets('anthropic:\n  type: api_key\n  key: sk-ant-secret-1234\n  updatedAt: 2026-10-14T12:00:00Z\nopenrouter:\n  type: oauth\n  access: access-token-1234\n  refresh: refresh-token-1234\n  expires: 1760000000000\n'),
       ['sk-ant-secret-1234', 'access-token-1234', 'refresh-token-1234'], 'provider names, types and timestamps stay in the evidence');
