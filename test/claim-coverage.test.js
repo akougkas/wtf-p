@@ -41,9 +41,10 @@ function claim(id, evidenceIds, overrides = {}) {
 
 function project(claims, evidenceRecords, sourceRecords, manuscripts = []) {
   const section = { ...clone(read('section')), claims };
+  const outline = read('outline');
   return {
     projectId: PROJECT,
-    outline: read('outline'),
+    outline: { ...outline, sections: outline.sections.map(entry => (entry.id === section.id ? { ...entry, claim_ids: claims.map(item => item.id) } : entry)) },
     sections: [{ uri: `project://sections/${section.id}`, record: section }],
     evidence: Object.fromEntries(evidenceRecords.map(item => [`project://evidence/${item.id}`, item])),
     sources: Object.fromEntries(sourceRecords.map(item => [`project://sources/${item.id}`, item])),
@@ -219,6 +220,22 @@ check('primary-data inspection needs a source inspected as primary data', () => 
   ));
   assert.strictEqual(supportOf(report, 'claim-overstated'), 'none');
   assert(codes(report).includes('error:inspection-exceeds-source'), codes(report).join());
+});
+
+check('every citation form is read, and a citation command whose keys cannot be read fails closed', () => {
+  assert.deepStrictEqual(citationKeys('\\Cite{a} \\cites[p.~2]{b}{c} \\cite {d} \\textcite[see][3]{e,f} {not-a-key} \\nocite{*}', 'paper/x.tex'), ['a', 'b', 'c', 'd', 'e', 'f']);
+  assert.deepStrictEqual(citationKeys('Braced [@{g}] and #cite(label("h")).', 'paper/x.typ'), ['g', 'h']);
+  const report = analyzeCoverage(project([], [], [source('source-gone2020', { status: 'retracted' })],
+    [{ section: 'introduction', file: 'paper/introduction.tex', text: 'As \\Cite{gone2020} and \\cite showed.' }]));
+  assert.deepStrictEqual(codes(report).sort(), ['error:citation-retracted', 'error:citation-unparsed']);
+});
+
+check('an outline claim a started section does not record is unsupported, and an unread manuscript is reported', () => {
+  const base = project([claim('claim-recorded', ['evidence-a'])], [evidence('evidence-a', 'claim-recorded', 'source-a')], [source('source-a')]);
+  const outline = { ...base.outline, sections: base.outline.sections.map(entry => (entry.id === 'introduction' ? { ...entry, claim_ids: ['claim-recorded', 'claim-forgotten'] } : entry)) };
+  const report = analyzeCoverage({ ...base, outline, unread: [{ section: 'introduction', file: 'paper/introduction.md', reason: 'it is a link' }] });
+  assert.deepStrictEqual(codes(report).sort(), ['error:claim-missing', 'error:manuscript-unread']);
+  assert.deepStrictEqual(unsupportedRequired(report, 'introduction'), ['claim-forgotten']);
 });
 
 check('author-provided primary data supports a claim like inspected literature', () => {

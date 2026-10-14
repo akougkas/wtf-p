@@ -36,7 +36,13 @@ const CAMPAIGN_SCHEMA = path.join(ROOT, 'evaluation/v2/schemas/campaign.schema.j
 const CONFIRM_ENV = 'WTFP_CAMPAIGN_CONFIRM';
 const CREDENTIALS_ENV = 'WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE';
 const SETTINGS_ENV = 'WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE';
-const HEADLESS_GATE = /no operator can answer an interview here|headless session/u;
+// A tool call naming the desk's seal store is an attempt on the key that makes answers attestable.
+const STORE_ACCESS = /extensions[\\/]+wtfp[\\/]+store\.json|seal-key/u;
+// What a step's cost covers: Clio's sealed receipts, the main agent's and every dispatched worker's.
+const COST_SCOPE = 'Clio run receipts: the main agent and every worker it dispatched. Model calls Clio records outside receipts, such as compaction, are not counted, and Clio 0.6.2 takes no cost ceiling, so the budget is enforced between steps.';
+// Operator-selected Clio files a run copies in; they and any copy Clio makes of them are wiped at the end.
+const PRIVATE_FILES = /^\.?(?:credentials|settings)\.yaml/u;
+const SCAN_LIMIT = 64 * 1024 * 1024;
 // Everything that decides what a campaign run means: the packages, the
 // desk, the evaluator and its campaign definitions, and the build scripts.
 const PACKAGE_PATHS = ['bin', 'protocol', 'vendors', 'clio', 'evaluation', 'scripts', 'package.json'];
@@ -236,6 +242,28 @@ function nativeRunner(root, entry, session = 'S1') {
   };
 }
 
+/** The desk's package tests passed only if the run exited 0 and reported no failure. */
+function deskTestsPassed(result) {
+  return result.status === 0 && /ℹ fail 0\b/u.test(`${result.stdout}${result.stderr}`) && /ℹ pass [1-9]/u.test(`${result.stdout}${result.stderr}`);
+}
+
+/**
+ * What steps actually launch: the Clio entry, the `clio-coder` wrapper the
+ * desk and installer find on PATH, and the two installed WTF-P packages.
+ */
+function launcherIdentity(root, entry, pluginRoot, deskRoot) {
+  const wrapper = path.join(root, 'clio', 'bin', 'clio-coder');
+  const digest = (directory) => (directory && fs.existsSync(directory) ? directoryDigest(directory) : null);
+  return {
+    entry,
+    wrapper_sha256: fs.existsSync(wrapper) ? sha256(fs.readFileSync(wrapper)) : null,
+    plugin_root: pluginRoot,
+    plugin_sha256: digest(pluginRoot),
+    desk_root: deskRoot,
+    desk_sha256: digest(deskRoot)
+  };
+}
+
 function prepare(campaign, options) {
   const identity = clioIdentity(options.entry, campaign);
   if (identity.mismatches.length > 0 && !options.allowUnpinned) {
@@ -299,7 +327,7 @@ function prepare(campaign, options) {
   }
   const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).CLIO_CODER_CONFIG_DIR, 'extensions', 'wtfp');
   const deskTests = native(['extensions', 'test', deskRoot], workspace, 600000);
-  const passed = /ℹ fail 0/u.test(deskTests.stdout + deskTests.stderr);
+  const passed = deskTestsPassed(deskTests);
   record('desk-package-tests', deskTests, passed, (deskTests.stdout.match(/ℹ (?:tests|pass|fail) \d+/gu) || []).join(', '));
   const prepared = {
     schema: 'wtfp.evaluation.campaign-prepared/v2',
@@ -314,6 +342,7 @@ function prepare(campaign, options) {
     workspace: path.relative(root, workspace),
     workspace_sha256: workspaceDigest(workspace),
     workspace_head: workspaceHead(workspace),
+    launcher: launcherIdentity(root, options.entry, plugin ? plugin.rootPath : null, desk ? desk.rootPath : null),
     checks,
     native_observations: observations,
     interactive_session: {
@@ -344,12 +373,13 @@ function workspaceDigest(workspace) {
       if (relative === '' && entry.name === '.git') continue;
       const child = relative ? `${relative}/${entry.name}` : entry.name;
       const absolute = path.join(workspace, child);
-      if (entry.isSymbolicLink()) lines.push(`link ${child} -> ${fs.readlinkSync(absolute)}`);
+      // Each entry is one JSON array, so no name can forge another entry's line.
+      if (entry.isSymbolicLink()) lines.push(JSON.stringify(['link', child, fs.readlinkSync(absolute)]));
       else if (entry.isDirectory()) {
-        lines.push(`dir ${child}/`);
+        lines.push(JSON.stringify(['dir', child]));
         visit(child);
-      } else if (entry.isFile()) lines.push(`file ${child} ${sha256(fs.readFileSync(absolute))}`);
-      else lines.push(`other ${child}`);
+      } else if (entry.isFile()) lines.push(JSON.stringify(['file', child, sha256(fs.readFileSync(absolute))]));
+      else lines.push(JSON.stringify(['other', child]));
     }
   };
   visit('');
@@ -420,34 +450,77 @@ function newReceipts(directory, before) {
 }
 
 /**
- * Cost from where Clio says it came from. A main-agent segment counts when its
- * usage is measured and not estimated; a worker receipt by its sealed
- * provenance. Anything unmeasured or unknown makes the step's cost
- * unavailable, never zero; an estimate is reported as one.
+ * Cost from Clio's sealed receipts and the provenance each one carries: the
+ * main agent's receipt, which `clio-coder run` writes for the whole turn, and
+ * every dispatched worker's. A stream's `measured` flag says only that token
+ * usage was reported, never what it cost, so it is not used. No main-agent
+ * receipt, or any unknown provenance, makes the step's cost unavailable,
+ * never zero; an estimate is reported as one.
  */
-function stepCost(segments, receipts) {
-  const parts = [
-    ...segments.map(usage => ({
-      usd: usage.costUsd,
-      provenance: usage.measured === true && usage.estimated !== true ? 'known' : usage.estimated === true ? 'estimated' : 'unknown'
-    })),
-    ...receipts.map(({ receipt }) => ({ usd: receipt ? receipt.costUsd : null, provenance: receipt ? receipt.costProvenance : 'unknown' }))
-  ];
-  const usable = parts.length > 0 && parts.every(part => Number.isFinite(part.usd) && part.usd >= 0 && ['known', 'known_free', 'estimated'].includes(part.provenance));
+function stepCost(receipts) {
+  const parts = receipts.map(({ receipt }) => ({
+    main: Boolean(receipt && receipt.agentId === 'main-agent'),
+    usd: receipt ? receipt.costUsd : null,
+    provenance: receipt ? receipt.costProvenance : 'unknown'
+  }));
+  const usable = parts.some(part => part.main) &&
+    parts.every(part => Number.isFinite(part.usd) && part.usd >= 0 && ['known', 'known_free', 'estimated'].includes(part.provenance));
   const status = !usable ? 'unavailable' : parts.some(part => part.provenance === 'estimated') ? 'estimated' : 'reported';
   return {
     status,
     usd: status === 'unavailable' ? null : parts.reduce((sum, part) => sum + part.usd, 0),
-    sources: { main_segments: segments.length, worker_receipts: receipts.length }
+    sources: { main_receipts: parts.filter(part => part.main).length, worker_receipts: parts.filter(part => !part.main).length },
+    scope: COST_SCOPE
+  };
+}
+
+/**
+ * The models that served a step as the providers reported them, never as
+ * requested: a main-agent message's `responseModel` and each worker call's
+ * `responseModelIdObservation`. A call without a report is counted, not
+ * assumed to be the requested model.
+ */
+function modelObservation(messages, receipts, selected) {
+  const workers = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId !== 'main-agent');
+  const calls = [
+    ...messages.map(message => (typeof message.responseModel === 'string' ? message.responseModel : null)),
+    ...workers.flatMap(receipt => (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : [])
+      .map(response => (response && response.responseModelIdObservation && response.responseModelIdObservation.state === 'reported' ? response.responseModelIdObservation.reportedModelId : null)))
+  ];
+  const reported = [...new Set(calls.filter(model => typeof model === 'string'))].sort();
+  const unreported = calls.filter(model => model === null).length;
+  return {
+    requested: [...new Set([...messages.map(message => message.model), ...workers.map(receipt => receipt.wireModelId)].filter(model => typeof model === 'string'))].sort(),
+    reported,
+    calls: calls.length,
+    unreported_calls: unreported,
+    status: reported.length === 0 ? 'unobserved' : reported.some(model => model !== selected) ? 'differs' : unreported > 0 ? 'partial' : 'matches'
+  };
+}
+
+/** The thinking level Clio resolved for the main agent and what providers reported they used. */
+function effortObservation(messages, receipts) {
+  const main = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId === 'main-agent' && receipt.runtimeResolution);
+  const distinct = (values) => [...new Set(values.filter(value => typeof value === 'string'))].sort();
+  const effective = distinct(main.map(receipt => receipt.runtimeResolution.effectiveThinkingLevel));
+  return {
+    requested: distinct(main.map(receipt => receipt.runtimeResolution.requestedThinkingLevel)),
+    effective,
+    provider_reported: distinct(messages.map(message => message.providerThinkingLevel)),
+    status: effective.length > 0 ? 'observed' : 'unobserved'
   };
 }
 
 /**
  * One step's outcome from its process result, its JSON event stream, the
- * receipts of the workers it dispatched and the gates it left. A blocking gate
- * still pending is an author the session could not ask; a recorded answer
- * with no sealed author answer behind it is an integrity violation; neither is
- * ever a completed action.
+ * receipts Clio sealed for it and the project state it left, all judged
+ * structurally. A step that ran a network tool or reached for the seal store
+ * violated the campaign's policy. A recorded answer no sealed author answer
+ * stands behind, or an interaction record added by a headless step, which no
+ * author could have given, is an integrity violation. A step that failed is
+ * failed whatever else it left. A blocking gate still pending is an author the
+ * session could not ask, and a gated step that raised no gate skipped its
+ * author; neither is ever a completed action.
  */
 function classifyStep(result, stdoutText, stderrText, context = {}) {
   const frames = [];
@@ -456,35 +529,33 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     try { frames.push(JSON.parse(line)); } catch { /* non-JSON progress lines are kept only in the raw log */ }
   }
   const events = frames.filter(frame => frame !== null && typeof frame === 'object');
-  const text = `${stdoutText}\n${stderrText}`;
   const receipts = context.receipts || [];
   const gates = context.gates || { pending: [], unconfirmed: [] };
+  const added = context.interactionsAdded || [];
   const tools = {};
   let networkCalls = 0;
+  let storeCalls = 0;
   let blockedCalls = 0;
   for (const event of events) {
     if (event.type === 'tool_execution_start') {
       const name = String(event.toolName ?? event.tool ?? event.name ?? 'unknown');
       tools[name] = (tools[name] || 0) + 1;
       if (NETWORK_TOOLS.has(name)) networkCalls += 1;
+      if (STORE_ACCESS.test(JSON.stringify(event.args ?? {}))) storeCalls += 1;
     } else if (event.type === 'tool_execution_end' && event.outcome === 'blocked') blockedCalls += 1;
   }
-  const segments = events.filter(event => event.type === 'agent_end' && event.usage && typeof event.usage === 'object').map(event => event.usage);
-  const models = [
-    ...events.filter(event => event.type === 'message_end' && event.message && event.message.role === 'assistant')
-      .map(event => ({ source: 'main', target: event.message.provider ?? null, model: event.message.model ?? null })),
-    ...receipts.map(({ file, receipt }) => ({ source: `receipt ${file}`, target: receipt ? receipt.targetId ?? null : null, model: receipt ? receipt.wireModelId ?? null : null }))
-  ];
-  const distinct = [...new Map(models.map(item => [`${item.target}\u0000${item.model}`, { target: item.target, model: item.model }])).values()];
-  const selected = context.selection ? context.selection.model : null;
+  const messages = events.filter(event => event.type === 'message_end' && event.message && event.message.role === 'assistant').map(event => event.message);
+  const gated = Boolean(context.step && context.step.author_gate);
   let outcome = 'completed';
   if (context.cancelled || (result.signal && !result.timedOut)) outcome = 'cancelled';
   else if (result.timedOut) outcome = 'timed-out';
-  else if (networkCalls > 0) outcome = 'policy-violation';
-  else if (gates.unconfirmed.length > 0) outcome = 'integrity-violation';
-  else if (gates.pending.length > 0 || HEADLESS_GATE.test(text)) outcome = 'author-unavailable';
+  else if (networkCalls > 0 || storeCalls > 0) outcome = 'policy-violation';
+  else if (gates.unconfirmed.length > 0 || added.length > 0) outcome = 'integrity-violation';
   else if (result.exitCode !== 0) outcome = 'failed';
-  const cost = stepCost(segments, receipts);
+  else if (gates.pending.length > 0) outcome = 'author-unavailable';
+  else if (gated) outcome = 'gate-not-raised';
+  const cost = stepCost(receipts);
+  const models = modelObservation(messages, receipts, context.selection ? context.selection.model : null);
   return {
     outcome,
     exit_code: result.exitCode,
@@ -492,10 +563,14 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     latency_ms: result.latencyMs,
     process_group: result.processGroup,
     events: events.length,
-    tools: { calls: tools, network_calls: networkCalls, blocked_calls: blockedCalls },
+    model_calls: messages.length + receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent').length,
+    tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, blocked_calls: blockedCalls },
     gates,
-    observed_models: distinct,
-    model_observation: distinct.length === 0 ? 'unobserved' : selected !== null && distinct.every(item => item.model === selected) ? 'matches' : 'differs',
+    interactions_added: added,
+    observed_models: models.reported,
+    model_observation: models,
+    effort_observation: effortObservation(messages, receipts),
+    receipts: receipts.map(({ file }) => file),
     cost,
     cost_usd: cost.usd,
     cost_status: cost.status
@@ -534,10 +609,10 @@ function wipe(file) {
   fs.unlinkSync(file);
 }
 
-/** The credential copy and any backup or temporary sibling a tool left beside it. */
-function wipeCredentials(config) {
+/** The operator's settings and credentials copies, and any backup or temporary sibling Clio left beside them. */
+function wipePrivate(config) {
   if (!fs.existsSync(config)) return;
-  for (const name of fs.readdirSync(config)) if (/^credentials\.yaml/u.test(name)) wipe(path.join(config, name));
+  for (const name of fs.readdirSync(config)) if (PRIVATE_FILES.test(name)) wipe(path.join(config, name));
 }
 
 /** Secret-looking values in the operator's credentials, to search the run's own logs for. */
@@ -545,27 +620,50 @@ function secretTokens(text) {
   return [...new Set(text.match(/[A-Za-z0-9_\-+/=.]{16,}/gu) || [])];
 }
 
-/** Replaces any credential value found in the run's logs; returns how many files held one. */
-function redactLogs(directory, tokens) {
-  if (tokens.length === 0 || !fs.existsSync(directory)) return 0;
-  let redacted = 0;
+/**
+ * Searches files under `directory` for the operator's secret values. With
+ * `redact`, it replaces each one; without, it only reports. Links are never
+ * followed, and a file too large to scan is listed rather than assumed clean.
+ */
+function scanSecrets(directory, tokens, redact) {
+  const found = [];
+  const unscanned = [];
+  if (tokens.length === 0 || !fs.existsSync(directory)) return { found, unscanned };
   const visit = (current) => {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const file = path.join(current, entry.name);
       if (entry.isDirectory()) visit(file);
       else if (entry.isFile()) {
+        if (fs.statSync(file).size > SCAN_LIMIT) { unscanned.push(file); continue; }
         const content = fs.readFileSync(file, 'utf8');
-        let scrubbed = content;
-        for (const token of tokens) scrubbed = scrubbed.split(token).join('[REDACTED]');
-        if (scrubbed !== content) {
+        if (!tokens.some(token => content.includes(token))) continue;
+        found.push(file);
+        if (redact) {
+          let scrubbed = content;
+          for (const token of tokens) scrubbed = scrubbed.split(token).join('[REDACTED]');
           fs.writeFileSync(file, scrubbed);
-          redacted += 1;
         }
       }
     }
   };
   visit(directory);
-  return redacted;
+  return { found, unscanned };
+}
+
+/** The interaction record files in the workspace, by name. */
+function interactionFiles(workspace) {
+  const directory = path.join(workspace, '.planning', 'interactions');
+  return fs.existsSync(directory) && fs.lstatSync(directory).isDirectory() ? new Set(fs.readdirSync(directory).filter(name => name.endsWith('.json'))) : new Set();
+}
+
+/** Refuses to start a step on a launcher or installed package other than the one prepare bound. */
+function verifyLauncher(root, prepared, entry) {
+  const bound = prepared.launcher;
+  if (!bound) throw new Error('the prepared root records no launcher identity; prepare a new root');
+  const now = launcherIdentity(root, entry, bound.plugin_root, bound.desk_root);
+  for (const key of ['entry', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
+    if (now[key] !== bound[key]) throw new Error(`the launcher changed since prepare (${key}); prepare a new root`);
+  }
 }
 
 /** Refuses to run unless the campaign, Clio build, WTF-P candidate, fixture and workspace are the ones prepare bound. */
@@ -598,6 +696,7 @@ function boundRun(campaign, options, root, prepared) {
   const initial = workspaceDigest(workspace);
   if (initial !== prepared.workspace_sha256) throw new Error('the workspace changed since prepare; prepare a new root');
   if ((prepared.workspace_head ?? null) !== workspaceHead(workspace)) throw new Error('the workspace checkout moved since prepare; prepare a new root');
+  verifyLauncher(root, prepared, options.entry);
   return { identity, wtfp, fixture, workspace, initial };
 }
 
@@ -627,18 +726,18 @@ async function execute(campaign, options) {
     copyPrivateSource(SETTINGS_ENV, path.join(config, 'settings.yaml'), root),
     copyPrivateSource(CREDENTIALS_ENV, path.join(config, 'credentials.yaml'), root)
   ];
-  const secrets = secretTokens(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8'));
+  // Clio targets can carry auth headers in settings, so both files' values are secrets.
+  const secrets = secretTokens(['settings.yaml', 'credentials.yaml'].map(name => fs.readFileSync(path.join(config, name), 'utf8')).join('\n'));
   const receipts = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'receipts');
   const run = {
     schema: 'wtfp.evaluation.campaign-run/v2',
     campaign: prepared.campaign,
-    evidence_level: 'observed-model',
+    evidence_level: 'pending',
     clio: bound.identity.observed,
     clio_unpinned: bound.identity.mismatches,
     wtfp: bound.wtfp,
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
-    effort_observation: { status: 'unobservable', reason: 'Clio 0.6.2 run streams and worker receipts do not report the thinking level a run used.' },
     step_environment: { ...STEP_GUARDS, network_sandbox: 'none: retrieval tools are removed, but bash and provider traffic are not sandboxed' },
     timeout_minutes: timeoutMinutes,
     resources,
@@ -653,17 +752,31 @@ async function execute(campaign, options) {
   const persist = () => {
     if (persisted) return;
     persisted = true;
-    wipeCredentials(config);
     run.ended_at = new Date().toISOString();
     if (run.outcome === 'running') run.outcome = 'cancelled';
-    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null } : { status: costStatus, usd: spent };
-    run.credentials_removed = !fs.readdirSync(config).some(name => /^credentials\.yaml/u.test(name));
-    run.logs_redacted = redactLogs(path.join(root, 'logs'), secrets);
-    writeJson(path.join(root, 'run.json'), run);
+    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: COST_SCOPE } : { status: costStatus, usd: spent, scope: COST_SCOPE };
+    // Model evidence is claimed only for a run in which a model call was actually seen.
+    run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
+    try {
+      wipePrivate(config);
+      run.credentials_removed = !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name));
+      const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => scanSecrets(directory, secrets, true));
+      const workspaceSecrets = scanSecrets(workspace, secrets, false);
+      run.secrets = {
+        redacted_files: redacted.flatMap(item => item.found).map(file => path.relative(root, file)),
+        in_workspace: workspaceSecrets.found.map(file => path.relative(root, file)),
+        unscanned: [...redacted, workspaceSecrets].flatMap(item => item.unscanned).map(file => path.relative(root, file))
+      };
+    } catch (error) {
+      run.credentials_removed ??= false;
+      run.secrets = { error: error instanceof Error ? error.message : String(error) };
+    } finally {
+      writeJson(path.join(root, 'run.json'), run);
+    }
   };
   // The first signal stops the step and the loop records it; a second exits the process, so the run is recorded first, as cancelled.
   const signals = installExecutionSignalHandlers(() => {
-    wipeCredentials(config);
+    wipePrivate(config);
     if (signals.state.count > 1) persist();
   });
   try {
@@ -672,7 +785,9 @@ async function execute(campaign, options) {
       const env = { ...sanitizedChildEnv(profilePaths(root, step.session)), ...STEP_GUARDS };
       env.PATH = [path.join(root, 'clio', 'bin'), env.PATH].join(path.delimiter);
       const logs = path.join(root, 'logs', step.step);
+      verifyLauncher(root, prepared, options.entry);
       const before = listReceipts(receipts);
+      const interactionsBefore = interactionFiles(workspace);
       const startDigest = workspaceDigest(workspace);
       const result = await spawnCaptured({
         executable: process.execPath,
@@ -686,6 +801,8 @@ async function execute(campaign, options) {
       const classified = classifyStep(result, fs.readFileSync(path.join(logs, 'stdout.jsonl'), 'utf8'), fs.readFileSync(path.join(logs, 'stderr.log'), 'utf8'), {
         receipts: newReceipts(receipts, before),
         gates: gateSummary(deskState(root, workspace)),
+        interactionsAdded: [...interactionFiles(workspace)].filter(name => !interactionsBefore.has(name)).sort(),
+        step,
         selection: options,
         cancelled: Boolean(signals.state.signal)
       });
@@ -710,9 +827,14 @@ async function execute(campaign, options) {
       if (spent >= options.budgetUsd) { run.outcome = 'stopped-budget'; break; }
     }
     if (run.outcome === 'running') run.outcome = 'completed';
+  } catch (error) {
+    // A failure of the runner itself is its own outcome, never a cancellation.
+    run.outcome = 'runner-error';
+    run.error = error instanceof Error ? error.message : String(error);
+    throw error;
   } finally {
     signals.remove();
-    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null } : { status: costStatus, usd: spent };
+    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: COST_SCOPE } : { status: costStatus, usd: spent, scope: COST_SCOPE };
     persist();
   }
   return run;
@@ -730,10 +852,11 @@ function verifySeal(record, key) {
  * Independent verification of a campaign workspace. It reads, hashes and
  * copies; it never writes into the workspace, and it reports that the
  * workspace digest is unchanged by its own work. A recorded answer counts as
- * the author's only under the desk's trust rule: the newest interaction for
- * that checkpoint, given at the desk's interview, for this project, for
- * exactly what the checkpoint asks and the option it records, sealed under
- * this profile's key.
+ * the author's only under the desk's trust rule: the newest interaction that
+ * matches the checkpoint's recorded outcome, given at the desk's interview, for
+ * this project and exactly what the checkpoint asks, sealed under this
+ * profile's key. An interaction that appeared during a headless execute step
+ * is never the author's, whatever its seal says: no author was there.
  */
 function collect(campaign, options) {
   const root = path.resolve(options.root);
@@ -742,7 +865,14 @@ function collect(campaign, options) {
   const before = workspaceDigest(workspace);
   const planning = path.join(workspace, '.planning');
   const state = deskState(root, workspace);
-  const schemas = fs.existsSync(planning) ? validatePlanningPaths([workspace], { coverage: true }) : null;
+  let schemas = null;
+  let schemaError = null;
+  try {
+    schemas = fs.existsSync(planning) ? validatePlanningPaths([workspace], { coverage: true }) : null;
+  } catch (error) {
+    // The validator refuses to follow a link; that is a finding about the project, not a reason to stop collecting.
+    schemaError = error instanceof Error ? error.message : String(error);
+  }
   const interactions = state.interactions.map(record => ({
     id: record.id,
     kind: record.kind,
@@ -753,17 +883,21 @@ function collect(campaign, options) {
     channel: record.channel,
     seal: verifySeal(record, state.key)
   }));
-  const decisions = state.checkpoints.filter(entry => entry.trust !== 'snapshot').map(entry => ({
-    checkpoint: entry.record.id,
-    status: entry.record.status,
-    blocking: entry.record.blocking === true,
-    resolved_by: entry.record.resolution ? entry.record.resolution.resolved_by : null,
-    ...(entry.record.resolution && entry.record.resolution.selected_option ? { selected_option: entry.record.resolution.selected_option } : {}),
-    trust: entry.trust,
-    attested_by: entry.answer ? entry.answer.id : null
-  }));
   const runFile = path.join(root, 'run.json');
   const run = fs.existsSync(runFile) ? readJson(runFile) : null;
+  const headless = new Set((run ? run.steps : []).flatMap(step => (step.interactions_added || []).map(name => name.replace(/\.json$/u, ''))));
+  const decisions = state.checkpoints.filter(entry => entry.trust !== 'snapshot').map(entry => {
+    const fromHeadless = entry.answer && headless.has(entry.answer.id);
+    return {
+      checkpoint: entry.record.id,
+      status: entry.record.status,
+      blocking: entry.record.blocking === true,
+      resolved_by: entry.record.resolution ? entry.record.resolution.resolved_by : null,
+      ...(entry.record.resolution && entry.record.resolution.selected_option ? { selected_option: entry.record.resolution.selected_option } : {}),
+      trust: fromHeadless ? 'sealed-during-headless-step' : entry.trust,
+      attested_by: entry.answer && !fromHeadless ? entry.answer.id : null
+    };
+  });
   const lastStep = run && run.steps.length > 0 ? run.steps[run.steps.length - 1] : null;
   const evidence = path.join(root, 'evidence', `collect-${new Date().toISOString().replace(/[:.]/gu, '-')}`);
   fs.mkdirSync(evidence, { recursive: true, mode: 0o700 });
@@ -778,11 +912,12 @@ function collect(campaign, options) {
     collected_at: new Date().toISOString(),
     evidence_levels: decisions.some(item => item.trust === 'attested') ? ['native-discovery', 'observed-author'] : ['native-discovery'],
     seal_key: state.key ? 'present' : 'absent',
-    records: schemas ? { valid: schemas.valid, checked: schemas.checked } : null,
+    records: schemaError ? { valid: false, error: schemaError } : schemas ? { valid: schemas.valid, checked: schemas.checked } : null,
     coverage: schemas && schemas.coverage ? schemas.coverage.map(item => ({ valid: item.valid, findings: item.findings, claims: item.claims, scope: item.scope })) : [],
     interactions,
     decisions,
-    unattested_author_resolutions: decisions.filter(item => ['unattested', 'foreign'].includes(item.trust)).map(item => item.checkpoint),
+    unattested_author_resolutions: decisions.filter(item => ['unattested', 'foreign', 'sealed-during-headless-step'].includes(item.trust)).map(item => item.checkpoint),
+    headless_interactions: [...headless].sort(),
     waived: decisions.filter(item => item.status === 'waived').map(item => ({ checkpoint: item.checkpoint, trust: item.trust })),
     policy_resolutions: decisions.filter(item => item.trust === 'policy').map(item => ({ checkpoint: item.checkpoint, blocking: item.blocking })),
     workspace_chain: {
@@ -872,9 +1007,11 @@ module.exports = {
   clioIdentity,
   collect,
   confirmValue,
+  deskTestsPassed,
   directoryDigest,
   execute,
   fixtureIdentity,
+  launcherIdentity,
   loadCampaign,
   parseArgs,
   plan,

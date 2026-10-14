@@ -164,30 +164,43 @@ function coverageForRoot(resolved, validation) {
     records[relative] = value;
   }
   const byType = (type) => Object.entries(records).filter(([, value]) => value.schema === `wtfp.project.${type}/v1`);
-  const manifest = byType('manifest').map(([, value]) => value)[0] || null;
-  const outline = byType('outline').map(([, value]) => value)[0] || null;
-  const indexed = (type, collection) => {
-    const index = indexRecords(byType(type).map(([file, record]) => ({ file, record })), collection);
+  // Coverage resolves logical URIs the way the protocol maps them, so only records at their protocol files count.
+  const at = (type, file) => byType(type).filter(([relative]) => relative === file).map(([, value]) => value)[0] || null;
+  const manifest = at('manifest', 'project.json');
+  const outline = at('outline', 'structure/outline.json');
+  const indexed = (type, collection, location) => {
+    const index = indexRecords(byType(type).map(([file, record]) => ({ file, record })), collection, location);
     ignored.push(...index.ignored);
     return index.byUri;
   };
-  const sections = Object.entries(indexed('section', 'sections')).map(([uri, record]) => ({ uri, record }));
-  const evidence = indexed('evidence', 'evidence');
-  const sources = indexed('source', 'sources');
+  const sections = Object.entries(indexed('section', 'sections', id => `sections/${id}/section.json`)).map(([uri, record]) => ({ uri, record }));
+  const evidence = indexed('evidence', 'evidence', id => `evidence/${id}.json`);
+  const sources = indexed('source', 'sources', id => `sources/${id}.json`);
   const projectRoot = path.basename(resolved.root) === '.planning' ? path.dirname(resolved.root) : null;
   const manuscripts = [];
+  const unread = [];
   for (const { record } of projectRoot ? sections : []) {
     const uri = record.artifacts && record.artifacts.manuscript;
     if (typeof uri !== 'string' || !uri.startsWith('project://paper/')) continue;
     const artifact = uri.slice('project://paper/'.length);
-    if (artifact.split('/').some(part => part === '' || part === '.' || part === '..')) continue;
+    if (artifact.split('/').some(part => part === '' || part === '.' || part === '..')) {
+      unread.push({ section: record.id, file: uri, reason: 'it does not name a contained file' });
+      continue;
+    }
+    let found = null;
     for (const candidate of [artifact, `${artifact}.md`, `${artifact}.tex`, `${artifact}.typ`]) {
-      const file = path.join(projectRoot, 'paper', candidate);
       let stat;
-      try { stat = fs.lstatSync(file); } catch { continue; }
-      if (!stat.isFile()) continue;
-      manuscripts.push({ section: record.id, file: `paper/${candidate}`, text: fs.readFileSync(file, 'utf8') });
+      try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
+      found = { candidate, stat };
       break;
+    }
+    // A manuscript that exists but is not a plain file is never followed; one that should exist but does not is reported.
+    if (found && found.stat.isFile()) {
+      manuscripts.push({ section: record.id, file: `paper/${found.candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', found.candidate), 'utf8') });
+    } else if (found) {
+      unread.push({ section: record.id, file: `paper/${found.candidate}`, reason: 'it is a link or not a regular file' });
+    } else if (['writing', 'reviewing', 'complete'].includes(record.status)) {
+      unread.push({ section: record.id, file: uri, reason: `the section is ${record.status} but its manuscript does not exist` });
     }
   }
   const report = analyzeCoverage({
@@ -197,7 +210,8 @@ function coverageForRoot(resolved, validation) {
     evidence,
     sources,
     manuscripts,
-    ignored
+    ignored,
+    unread
   });
   return {
     planning_root: resolved.root,

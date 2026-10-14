@@ -42,19 +42,27 @@ text and action contracts changed.
   turning a gate off waits for the author at the desk
 - The Clio write guard also covers `artifact`, `run_script` and `job`, and
   judges a path where Clio's tools land it; dispatch is parsed as Clio parses
-  it, and no worker gets an empty, whole-workspace or record-covering root
+  it, and no worker gets an empty, whole-workspace, record-covering or linked
+  root, nor a `cwd` other than the project root
+- The desk declares read access to the whole workspace, so under Clio's
+  runtime permissions it sees every link in the project; a path whose landing
+  it cannot inspect is refused
 - Plan history is append-only, and re-pointing a manuscript, dropping an
   outline section, turning off a research, evidence or safety requirement, or
   stepping down the interaction mode waits for the author; on a plan gate the
   desk owns the wording of `approve`
 - A required claim with a contradiction on record, linked or not, is not ready
-  to draft; records failing their schema, ids carried twice and reused claim
-  ids support nothing; citations must resolve to one verified source of the
-  project
-- Campaign `execute` refuses any drift from what `prepare` bound, runs steps
-  without retrieval tools, and records per step the observed models, cost by
-  provenance, gate state and workspace digest; it exits non-zero on any
-  unfinished run
+  to draft, and neither is an outline claim its section does not record; only
+  records at their protocol files that pass their schema count, and reused
+  claim ids support nothing; citations, in every LaTeX `cite` form too, must
+  resolve to one verified source of the project
+- Campaign `execute` refuses any drift from what `prepare` bound, launcher and
+  installed packages included, runs steps without retrieval tools, and records
+  per step the provider-reported models, the resolved thinking level, cost
+  from Clio's sealed receipts by provenance, gate state and workspace digest;
+  a gated step that raises no gate, or a headless step that adds an
+  interaction record, never counts as completed, and an unfinished run exits
+  non-zero
 - Seven action contracts now declare record writes their workflows already
   made; plan-section and write-section route missing evidence to `research-gap`
   through a checkpoint instead of running it inline

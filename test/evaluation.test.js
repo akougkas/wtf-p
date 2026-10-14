@@ -212,11 +212,23 @@ function snapshotTree(root, relative = '') {
   return snapshot;
 }
 
+/** Every template at the file its logical URI maps to, as a project holds it. */
 function createPlanningProject(root) {
   const planning = path.join(root, '.planning');
-  fs.mkdirSync(planning, { recursive: true });
+  const located = {
+    'manifest.json': () => 'project.json',
+    'outline.json': () => 'structure/outline.json',
+    'section.json': id => `sections/${id}/section.json`,
+    'evidence.json': id => `evidence/${id}.json`,
+    'source.json': id => `sources/${id}.json`,
+    'checkpoint.json': id => `checkpoints/${id}.json`,
+    'validation.json': id => `validations/${id}.json`,
+    'interaction.json': id => `interactions/${id}.json`
+  };
   for (const name of fs.readdirSync(templatesRoot).filter(name => name.endsWith('.json'))) {
-    fs.copyFileSync(path.join(templatesRoot, name), path.join(planning, name));
+    const target = path.join(planning, located[name] ? located[name](readJson(path.join(templatesRoot, name)).id) : name);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(templatesRoot, name), target);
   }
   return planning;
 }
@@ -333,7 +345,7 @@ function testPlanningValidator(tempRoot) {
   assert.strictEqual(covered.coverage[0].valid, true);
   assert.match(covered.coverage[0].scope, /independent review/);
   assert.strictEqual(covered.coverage[0].claims.find(claim => claim.claim === 'claim-portable-state').support, 'full');
-  const evidenceFile = path.join(planning, 'evidence.json');
+  const evidenceFile = path.join(planning, 'evidence', 'evidence-portability-boundaries.json');
   const strayEvidence = readJson(evidenceFile);
   fs.writeFileSync(evidenceFile, `${JSON.stringify({ ...strayEvidence, project_id: 'another-project' }, null, 2)}\n`);
   const uncovered = validatePlanningPaths([project], { coverage: true });
@@ -357,24 +369,42 @@ function testPlanningValidator(tempRoot) {
   assert.strictEqual(claimSupport(invalidSupport), 'none');
   assert(invalidSupport.findings.some(finding => finding.code === 'record-ignored' && /fails its schema/.test(finding.message)));
   fs.writeFileSync(evidenceFile, `${JSON.stringify(strayEvidence, null, 2)}\n`);
-  const twin = path.join(planning, 'evidence-twin.json');
-  fs.writeFileSync(twin, `${JSON.stringify({ ...strayEvidence, relation: 'contradicts' }, null, 2)}\n`);
+  // A record away from its protocol file is not the record its URI names: it is left out and fails coverage.
+  const misplaced = path.join(planning, 'evidence-twin.json');
+  fs.writeFileSync(misplaced, `${JSON.stringify({ ...strayEvidence, relation: 'contradicts' }, null, 2)}\n`);
   const twinned = supportNow();
-  assert.strictEqual(claimSupport(twinned), 'none');
-  assert.strictEqual(twinned.findings.filter(finding => finding.code === 'record-ignored').length, 2);
-  fs.rmSync(twin);
+  assert.strictEqual(twinned.valid, false);
+  assert.deepStrictEqual(twinned.findings.filter(finding => finding.code === 'record-ignored').map(finding => finding.subject), ['evidence-twin.json']);
+  fs.rmSync(misplaced);
+  // A drafted section whose manuscript is a link, or is missing, cannot have its citations checked.
+  const sectionFile = path.join(planning, 'sections', 'introduction', 'section.json');
+  const sectionRecord = readJson(sectionFile);
+  fs.writeFileSync(sectionFile, `${JSON.stringify({ ...sectionRecord, status: 'writing' }, null, 2)}\n`);
+  assert(supportNow().findings.some(finding => finding.code === 'manuscript-unread' && /does not exist/.test(finding.message)));
+  fs.mkdirSync(path.join(project, 'paper'), { recursive: true });
+  fs.writeFileSync(path.join(tempRoot, 'outside-manuscript.md'), 'Cites [@Nobody2020].\n');
+  const manuscriptName = String(sectionRecord.artifacts.manuscript).slice('project://paper/'.length);
+  fs.symlinkSync(path.join(tempRoot, 'outside-manuscript.md'), path.join(project, 'paper', /\.(md|tex|typ)$/.test(manuscriptName) ? manuscriptName : `${manuscriptName}.md`));
+  assert(supportNow().findings.some(finding => finding.code === 'manuscript-unread' && /link/.test(finding.message)));
+  fs.rmSync(path.join(project, 'paper'), { recursive: true });
+  fs.writeFileSync(sectionFile, `${JSON.stringify(sectionRecord, null, 2)}\n`);
+  // Only .planning/project.json says which project this is; a stray manifest elsewhere does not.
+  const strayManifest = path.join(planning, 'aaa-manifest.json');
+  fs.writeFileSync(strayManifest, `${JSON.stringify({ ...readJson(path.join(planning, 'project.json')), id: 'another-project' }, null, 2)}\n`);
+  assert.strictEqual(claimSupport(supportNow()), 'full');
+  fs.rmSync(strayManifest);
   assert.strictEqual(claimSupport(supportNow()), 'full');
 
   const invalidProject = path.join(tempRoot, 'invalid-project');
   fs.mkdirSync(invalidProject);
   const invalidPlanning = createPlanningProject(invalidProject);
-  const manifestFile = path.join(invalidPlanning, 'manifest.json');
+  const manifestFile = path.join(invalidPlanning, 'project.json');
   const manifest = readJson(manifestFile);
   manifest.unexpected = true;
   fs.writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
   const invalid = validatePlanningPaths([invalidProject]);
   assert.strictEqual(invalid.valid, false);
-  assert.match(invalid.roots[0].records.find(record => record.file === 'manifest.json').errors.join('\n'), /unknown property unexpected/);
+  assert.match(invalid.roots[0].records.find(record => record.file === 'project.json').errors.join('\n'), /unknown property unexpected/);
 
   const symlinkProject = path.join(tempRoot, 'symlink-project');
   fs.mkdirSync(symlinkProject);

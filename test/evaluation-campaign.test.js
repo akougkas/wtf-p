@@ -62,8 +62,8 @@ ${body}
  * fixture. The fake build is unpinned, and the test tree may be dirty, so the
  * record says both, as prepare does when the operator allows them.
  */
-function preparedRoot(name, entry, change = (prepared) => prepared) {
-  const campaign = runner.loadCampaign(CAMPAIGN_FILE);
+function preparedRoot(name, entry, change = (prepared) => prepared, campaignFile = CAMPAIGN_FILE) {
+  const campaign = runner.loadCampaign(campaignFile);
   const root = path.join(scratch, name);
   fs.mkdirSync(path.join(root, 'workspace'), { recursive: true });
   for (const session of ['S1', 'S2']) {
@@ -72,11 +72,12 @@ function preparedRoot(name, entry, change = (prepared) => prepared) {
     }
   }
   fs.writeFileSync(path.join(root, 'workspace', 'project-brief.md'), 'A brief.\n');
+  fs.writeFileSync(path.join(root, 'clio', 'bin', 'clio-coder'), `#!${process.execPath}\n// launches ${entry}\n`, { mode: 0o755 });
   const identity = runner.clioIdentity(entry, campaign);
   const wtfp = runner.wtfpIdentity();
   fs.writeFileSync(path.join(root, 'prepared.json'), `${JSON.stringify(change({
     schema: 'wtfp.evaluation.campaign-prepared/v2',
-    campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(CAMPAIGN_FILE)) },
+    campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(campaignFile)) },
     wtfp,
     allow_dirty: wtfp.package_tree !== 'clean',
     clio: identity.observed,
@@ -85,6 +86,7 @@ function preparedRoot(name, entry, change = (prepared) => prepared) {
     workspace: 'workspace',
     workspace_sha256: runner.workspaceDigest(path.join(root, 'workspace')),
     workspace_head: runner.workspaceHead(path.join(root, 'workspace')),
+    launcher: runner.launcherIdentity(root, entry, null, null),
     checks: [{ name: 'desk-package-tests', passed: true, detail: null }]
   }), null, 2)}\n`);
   return root;
@@ -94,6 +96,14 @@ function preparedRoot(name, entry, change = (prepared) => prepared) {
 const frame = (value) => `console.log(${JSON.stringify(JSON.stringify(value))});`;
 const planningWrite = (relative, value) => `{ const f = require('path').join(process.cwd(), '.planning', ${JSON.stringify(relative)}); require('fs').mkdirSync(require('path').dirname(f), { recursive: true }); require('fs').writeFileSync(f, ${JSON.stringify(JSON.stringify(value))}); }`;
 const measured = (costUsd) => frame({ type: 'agent_end', messageCount: 2, usage: { input: 10, output: 5, cacheRead: 0, cacheWrite: 0, reasoning: 0, totalTokens: 15, costUsd, apiCalls: 1, measured: true } });
+/** A receipt as Clio seals one into the run's state directory. */
+const receiptWrite = (name, receipt) => `{ const dir = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'receipts'); require('fs').mkdirSync(dir, { recursive: true }); require('fs').writeFileSync(require('path').join(dir, ${JSON.stringify(`${name}.json`)}), ${JSON.stringify(JSON.stringify(receipt))}); }`;
+const mainReceipt = (costUsd, costProvenance = 'known') => receiptWrite(`main-${costUsd}`, { runId: `main-${costUsd}`, agentId: 'main-agent', targetId: 'operator-target', wireModelId: 'operator-model', costUsd, costProvenance, runtimeResolution: { requestedThinkingLevel: 'medium', effectiveThinkingLevel: 'medium' } });
+const checkpointTemplate = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/checkpoint.json'), 'utf8'));
+const manifestTemplate = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/manifest.json'), 'utf8'));
+/** A fake step that raises one blocking gate and leaves it pending, as a headless gated step should. */
+const raisesGate = `${planningWrite('project.json', manifestTemplate)}
+${planningWrite(`checkpoints/${checkpointTemplate.id}.json`, { ...checkpointTemplate, blocking: true, status: 'pending' })}`;
 
 function privateSource(name, text) {
   const file = path.join(scratch, 'operator', name);
@@ -123,6 +133,10 @@ async function main() {
     WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: privateSource('credentials.yaml', 'secret-value-that-must-be-wiped\n')
   };
   const selection = { target: 'operator-target', model: 'operator-model', effort: 'medium', budgetUsd: 5 };
+  /** The campaign with only ungated steps, for cases a gated first step would stop before they are reached. */
+  const ungatedFile = path.join(scratch, 'ungated.campaign.json');
+  fs.writeFileSync(ungatedFile, JSON.stringify({ ...campaign, lifecycle: campaign.lifecycle.filter(step => step.author_gate === null).slice(0, 2) }));
+  const ungated = runner.loadCampaign(ungatedFile);
 
   await test('the campaign validates, pins the qualified Clio build, and keeps the v1 fixture meaning', async () => {
     assert.strictEqual(campaign.status, 'awaiting-resources');
@@ -171,16 +185,15 @@ async function main() {
   });
 
   await test('a headless author gate stops the run as a typed unavailable result and the credential is wiped', async () => {
-    const entry = fakeClio('fake-gate', `
+    const entry = fakeClio('fake-gate', `${raisesGate}
 console.log(JSON.stringify({ type: 'session' }));
-console.log(JSON.stringify({ type: 'tool_end', tool: 'extension_wtfp__gate', result: 'extension_wtfp__gate: no operator can answer an interview here' }));
-console.log(JSON.stringify({ type: 'turn_end', usage: { inputTokens: 10, outputTokens: 5 } }));
 process.exit(0);`);
     const root = preparedRoot('gate', entry);
     const run = await withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection }));
     assert.strictEqual(run.outcome, 'blocked-author-unavailable');
     assert.deepStrictEqual(run.steps.map(step => [step.step, step.outcome]), [['initialize', 'author-unavailable']]);
-    assert.deepStrictEqual(run.cost, { status: 'unavailable', usd: null }, 'missing cost is unavailable, never zero');
+    assert.deepStrictEqual([run.cost.status, run.cost.usd], ['unavailable', null], 'missing cost is unavailable, never zero');
+    assert.strictEqual(run.evidence_level, 'no-model-call-observed', 'no model call seen, so no model evidence is claimed');
     assert.strictEqual(run.credentials_removed, true);
     assert.ok(!fs.existsSync(path.join(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
     const recorded = fs.readFileSync(path.join(root, 'run.json'), 'utf8');
@@ -205,18 +218,20 @@ setTimeout(() => {}, 60000);`);
     assert.strictEqual(run.credentials_removed, true);
   });
 
-  await test('cost comes from measured segments and worker receipt provenance, and unknown cost is never zero', async () => {
+  await test('cost comes only from sealed receipts by their provenance, and unknown cost is never zero', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
-    const usage = (fields) => `${JSON.stringify({ type: 'agent_end', usage: { costUsd: 0.25, measured: true, ...fields } })}\n`;
-    assert.deepStrictEqual(runner.classifyStep(ok, usage({}), '').cost, { status: 'reported', usd: 0.25, sources: { main_segments: 1, worker_receipts: 0 } });
-    assert.strictEqual(runner.classifyStep(ok, usage({ measured: false }), '').cost.status, 'unavailable');
-    assert.strictEqual(runner.classifyStep(ok, usage({ estimated: true }), '').cost.status, 'estimated');
-    assert.strictEqual(runner.classifyStep(ok, '', '').cost.usd, null, 'no usage at all is unavailable, not zero');
-    const receipt = (costProvenance) => ({ receipts: [{ file: 'r.json', receipt: { costUsd: 0.5, costProvenance, targetId: 't', wireModelId: 'm' } }] });
-    assert.deepStrictEqual(runner.classifyStep(ok, usage({}), '', receipt('known')).cost, { status: 'reported', usd: 0.75, sources: { main_segments: 1, worker_receipts: 1 } });
-    assert.strictEqual(runner.classifyStep(ok, usage({}), '', receipt('unknown')).cost.status, 'unavailable');
-    const failed = runner.classifyStep({ ...ok, exitCode: 1 }, '', 'boom');
-    assert.strictEqual(failed.outcome, 'failed');
+    const segment = `${JSON.stringify({ type: 'agent_end', usage: { costUsd: 0.25, measured: true } })}\n`;
+    const main = (costUsd, costProvenance) => ({ file: 'main.json', receipt: { agentId: 'main-agent', costUsd, costProvenance } });
+    const worker = (costUsd, costProvenance) => ({ file: 'worker.json', receipt: { agentId: 'wtfp-section-writer', costUsd, costProvenance } });
+    const cost = (receipts) => { const result = runner.classifyStep(ok, segment, '', { receipts }).cost; return [result.status, result.usd]; };
+    assert.deepStrictEqual(cost([]), ['unavailable', null], 'a measured segment without a receipt is not a cost');
+    assert.deepStrictEqual(cost([main(0.25, 'known')]), ['reported', 0.25], 'the main receipt already covers the segment; it is not added twice');
+    assert.deepStrictEqual(cost([main(0.25, 'known'), worker(0.5, 'known_free')]), ['reported', 0.75]);
+    assert.deepStrictEqual(cost([main(0.25, 'estimated')]), ['estimated', 0.25]);
+    assert.deepStrictEqual(cost([main(0, 'unknown')]), ['unavailable', null]);
+    assert.deepStrictEqual(cost([worker(0.5, 'known')]), ['unavailable', null], 'without the main agent\'s receipt the step is not accounted for');
+    const failed = runner.classifyStep({ ...ok, exitCode: 1 }, 'a headless session was mentioned', 'boom');
+    assert.strictEqual(failed.outcome, 'failed', 'text in the output never decides an outcome');
   });
 
   await test('execute runs only on the campaign, build, candidate, checks and workspace that prepare bound', async () => {
@@ -237,6 +252,15 @@ setTimeout(() => {}, 60000);`);
     await assert.rejects(attempt(preparedRoot('bound-build', entry, (prepared) => ({ ...prepared, clio: { ...prepared.clio, dist_sha256: '0'.repeat(64) } }))), /Clio build changed since prepare/);
     await assert.rejects(attempt(preparedRoot('bound-pinned', entry, (prepared) => ({ ...prepared, clio_unpinned: [] }))), /unpinned Clio build/);
     await assert.rejects(attempt(preparedRoot('bound-timeout', entry), { timeoutMinutes: campaign.budget.timeout_minutes_per_step + 1 }), /at most the campaign's/);
+    // Entry names cannot forge another entry: a file named like two listing lines digests differently from the two files.
+    const twoFiles = path.join(scratch, 'digest-two');
+    const oneFile = path.join(scratch, 'digest-one');
+    fs.mkdirSync(twoFiles);
+    fs.mkdirSync(oneFile);
+    fs.writeFileSync(path.join(twoFiles, 'p'), 'P');
+    fs.writeFileSync(path.join(twoFiles, 'q'), 'Q');
+    fs.writeFileSync(path.join(oneFile, `p ${sha256('P')}\nfile q`), 'Q');
+    assert.notStrictEqual(runner.workspaceDigest(oneFile), runner.workspaceDigest(twoFiles));
     for (const name of ['bound-campaign', 'bound-checks', 'bound-workspace', 'bound-candidate', 'bound-build', 'bound-pinned', 'bound-timeout']) {
       assert.ok(!fs.existsSync(path.join(scratch, name, 'run.json')), `${name} ran nothing`);
       assert.ok(!fs.existsSync(path.join(runner.profilePaths(path.join(scratch, name)).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')), `${name} copied no credential`);
@@ -254,7 +278,7 @@ process.exit(0);`);
     assert.strictEqual(env.CLIO_CODER_DISABLE_RETRIEVE_TOOLS, '1');
     assert.strictEqual(env.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
     assert.strictEqual(run.outcome, 'policy-violation');
-    assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, blocked_calls: 0 });
+    assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, store_calls: 0, blocked_calls: 0 });
   });
 
   await test('a gated step is never completed while its gate is pending or answered without a sealed author answer', async () => {
@@ -274,6 +298,41 @@ process.exit(0);`);
     const violated = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('forged', forged), entry: forged, ...selection }));
     assert.strictEqual(violated.outcome, 'integrity-violation');
     assert.deepStrictEqual(violated.steps[0].gates, { pending: [], unconfirmed: [checkpoint.id] });
+    // A gated step that raises no gate skipped its author.
+    const skipper = fakeClio('fake-skipper', `${mainReceipt(0.01)}
+process.exit(0);`);
+    const skipped = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('skipped', skipper), entry: skipper, ...selection }));
+    assert.deepStrictEqual([skipped.outcome, skipped.steps.length], ['gate-not-raised', 1]);
+    // No author can answer during a headless step, so an interaction it adds is never the author's, even under a valid seal.
+    const key = crypto.randomBytes(32);
+    const resolution = { resolved_by: 'author', selected_option: checkpoint.options[0].id, summary: 'Minted in a headless step.', resolved_at: '2026-10-14T12:01:00Z' };
+    const asked = { ...checkpoint, blocking: true };
+    delete asked.status;
+    const sealedAnswer = deskTrust.seal({
+      schema: 'wtfp.project.interaction/v1', id: 'interaction-minted', project_id: manifest.id, kind: 'checkpoint-answer',
+      subject_uri: `project://checkpoints/${checkpoint.id}`, channel: 'attested-interview', outcome: 'selected', selected_option: checkpoint.options[0].id,
+      presented: { content_sha256: sha256(runner.canonical(asked)), options: checkpoint.options.map(option => option.id) }, asked_at: '2026-10-14T12:00:00Z', answered_at: '2026-10-14T12:01:00Z'
+    }, key);
+    const minted = fakeClio('fake-minted', `${planningWrite('project.json', manifest)}
+${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'resolved', resolution })}
+${planningWrite('interactions/interaction-minted.json', sealedAnswer)}
+process.exit(0);`);
+    const mintedRoot = preparedRoot('minted', minted);
+    const store = path.join(runner.profilePaths(mintedRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    fs.mkdirSync(path.dirname(store), { recursive: true });
+    fs.writeFileSync(store, JSON.stringify({ version: 1, entries: { 'seal-key': { value: key.toString('hex'), version: 1 } } }));
+    const mintedRun = await withEnv(executeEnv, () => runner.execute(campaign, { root: mintedRoot, entry: minted, ...selection }));
+    assert.strictEqual(mintedRun.outcome, 'integrity-violation');
+    assert.deepStrictEqual(mintedRun.steps[0].interactions_added, ['interaction-minted.json']);
+    const mintedReport = runner.collect(campaign, { root: mintedRoot });
+    assert.deepStrictEqual(mintedReport.headless_interactions, ['interaction-minted']);
+    assert.deepStrictEqual(mintedReport.decisions.map(item => [item.checkpoint, item.trust, item.attested_by]), [[checkpoint.id, 'sealed-during-headless-step', null]]);
+    assert.ok(!mintedReport.evidence_levels.includes('observed-author'), 'a seal minted with no author present is not author evidence');
+    // Reaching for the seal store is a policy violation whatever tool does it.
+    const reaching = fakeClio('fake-reaching', `${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'bash', args: { command: 'cat ../clio/state/extensions/wtfp/store.json' } })}
+process.exit(0);`);
+    const reached = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('reaching', reaching), entry: reaching, ...selection }));
+    assert.deepStrictEqual([reached.outcome, reached.steps[0].tools.store_calls], ['policy-violation', 1]);
   });
 
   await test('a signal during a step records it cancelled, and an unmeasurable cost stops the run', async () => {
@@ -308,54 +367,83 @@ setInterval(() => {}, 1000);`);
     const recorded = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(recorded.outcome, 'cancelled');
     assert.strictEqual(recorded.credentials_removed, true);
-    const unmetered = fakeClio('fake-unmetered', `${frame({ type: 'agent_end', usage: { costUsd: 0, measured: false } })}
+    const unmetered = fakeClio('fake-unmetered', `${mainReceipt(0, 'unknown')}
 process.exit(0);`);
-    const stopped = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('unmetered', unmetered), entry: unmetered, ...selection }));
+    const stopped = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('unmetered', unmetered, undefined, ungatedFile), entry: unmetered, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(stopped.outcome, 'stopped-cost-unavailable');
-    assert.deepStrictEqual(stopped.cost, { status: 'unavailable', usd: null });
+    assert.deepStrictEqual([stopped.cost.status, stopped.cost.usd], ['unavailable', null]);
     assert.strictEqual(stopped.steps.length, 1);
   });
 
-  await test('the run records the models Clio reports and worker receipts, and says effort is unobservable', async () => {
-    const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
-${measured(0.02)}
-{ const dir = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'receipts'); require('fs').mkdirSync(dir, { recursive: true });
-  require('fs').writeFileSync(require('path').join(dir, 'run-1.json'), JSON.stringify({ runId: 'run-1', targetId: 'worker-target', wireModelId: 'worker-model', costUsd: 0.03, costProvenance: 'known' })); }
+  await test('the run records the models providers reported, never the ones requested, and the effort Clio resolved', async () => {
+    const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', responseModel: 'operator-model-2026', providerThinkingLevel: 'medium', content: [] } })}
+${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
+${mainReceipt(0.02)}
+${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', upstreamResponses: [{ requestedModelId: 'operator-model', responseModelIdObservation: { state: 'not-observed' } }] })}
 process.exit(0);`);
-    const root = preparedRoot('models', entry);
-    const run = await withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection, budgetUsd: 0.04 }));
+    const root = preparedRoot('models', entry, undefined, ungatedFile);
+    const run = await withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, budgetUsd: 0.04, campaignFile: ungatedFile }));
     assert.strictEqual(run.outcome, 'stopped-budget');
-    assert.deepStrictEqual(run.steps[0].observed_models, [{ target: 'operator-target', model: 'operator-model' }, { target: 'worker-target', model: 'worker-model' }]);
-    assert.strictEqual(run.steps[0].model_observation, 'differs', 'a worker on another model is not the selected model');
-    assert.deepStrictEqual(run.cost, { status: 'reported', usd: 0.05 });
-    assert.strictEqual(run.effort_observation.status, 'unobservable');
+    const [step] = run.steps;
+    assert.deepStrictEqual(step.model_observation, { requested: ['operator-model'], reported: ['operator-model-2026'], calls: 3, unreported_calls: 2, status: 'differs' });
+    assert.deepStrictEqual(step.effort_observation, { requested: ['medium'], effective: ['medium'], provider_reported: ['medium'], status: 'observed' });
+    assert.deepStrictEqual([run.cost.status, run.cost.usd], ['reported', 0.05]);
+    assert.strictEqual(run.evidence_level, 'observed-model');
     assert.strictEqual(run.workspace.initial_sha256, JSON.parse(fs.readFileSync(path.join(root, 'prepared.json'), 'utf8')).workspace_sha256);
+  });
+
+  await test('every step launches the build and packages prepare bound, and a runner failure is recorded as one', async () => {
+    const entry = fakeClio('fake-launcher', `${mainReceipt(0.01)}
+require('fs').appendFileSync(require('path').join(process.env.CLIO_CODER_HOME, 'bin', 'clio-coder'), '// swapped\\n');
+process.exit(0);`);
+    const root = preparedRoot('launcher', entry, undefined, ungatedFile);
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(wrapper_sha256\)/);
+    const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
+    assert.deepStrictEqual([run.outcome, run.steps.length], ['runner-error', 1], 'the step that ran is kept and the run is not called cancelled');
+    assert.strictEqual(run.credentials_removed, true);
+    const moved = preparedRoot('launcher-entry', entry, (prepared) => ({ ...prepared, launcher: { ...prepared.launcher, entry: '/elsewhere/dist/cli/index.js' } }));
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(campaign, { root: moved, entry, ...selection })), /launcher changed since prepare \(entry\)/);
+    assert.ok(!fs.existsSync(path.join(moved, 'run.json')), 'a moved launcher is refused before anything runs');
+    assert.ok(!fs.existsSync(path.join(runner.profilePaths(moved).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
+    // Prepare counts the desk's package tests as passed only on a clean exit that ran and failed nothing.
+    assert.strictEqual(runner.deskTestsPassed({ status: 0, stdout: 'ℹ pass 31\nℹ fail 0\n', stderr: '' }), true);
+    assert.strictEqual(runner.deskTestsPassed({ status: 1, stdout: 'ℹ pass 31\nℹ fail 0\n', stderr: '' }), false);
+    assert.strictEqual(runner.deskTestsPassed({ status: 0, stdout: 'ℹ pass 0\nℹ fail 0\n', stderr: '' }), false);
+    assert.strictEqual(runner.deskTestsPassed({ status: 0, stdout: 'ℹ pass 30\nℹ fail 01\n', stderr: '' }), false);
   });
 
   await test('credential copies are wiped without following links, logs are scrubbed, and an unfinished run exits non-zero', async () => {
     const secret = 'sk-campaign-secret-0123456789abcdef';
+    const header = 'Bearer settings-header-0123456789abcdef';
     const source = privateSource('leaky-credentials.yaml', `providers:\n  key: ${secret}\n`);
+    const settings = privateSource('leaky-settings.yaml', `targets:\n  t:\n    auth:\n      headers:\n        Authorization: ${header}\n`);
     const outside = path.join(scratch, 'outside-target.txt');
     fs.writeFileSync(outside, 'keep me');
     const entry = fakeClio('fake-leak', `const fs = require('fs'); const path = require('path');
 const config = process.env.CLIO_CODER_CONFIG_DIR;
 fs.copyFileSync(path.join(config, 'credentials.yaml'), path.join(config, 'credentials.yaml.bak'));
+fs.copyFileSync(path.join(config, 'settings.yaml'), path.join(config, '.settings.yaml.tmp-1'));
 fs.symlinkSync(${JSON.stringify(outside)}, path.join(config, 'credentials.yaml.link'));
 console.log(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8'));
+console.log(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'));
+fs.writeFileSync(path.join(process.cwd(), 'leaked.md'), ${JSON.stringify(header)});
 ${measured(0.01)}
 process.exit(1);`);
     const root = preparedRoot('leak', entry);
     const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-clio-campaign.js'), 'execute', '--root', root, '--clio-entry', entry,
       '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
-    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: source }, encoding: 'utf8', timeout: 60000 });
+    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE: settings }, encoding: 'utf8', timeout: 60000 });
     assert.strictEqual(cli.status, 3, cli.stderr);
     const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(run.outcome, 'failed');
     assert.strictEqual(run.credentials_removed, true);
-    assert.deepStrictEqual(fs.readdirSync(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR).filter(name => name.startsWith('credentials')), []);
+    assert.deepStrictEqual(fs.readdirSync(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR).filter(name => /credentials|settings/.test(name)), []);
     assert.strictEqual(fs.readFileSync(outside, 'utf8'), 'keep me', 'a link is removed, never written through');
-    assert.ok(run.logs_redacted >= 1);
-    assert.doesNotMatch(fs.readFileSync(path.join(root, 'logs', 'initialize', 'stdout.jsonl'), 'utf8'), new RegExp(secret));
+    assert.ok(run.secrets.redacted_files.includes(path.join('logs', 'initialize', 'stdout.jsonl')));
+    const log = fs.readFileSync(path.join(root, 'logs', 'initialize', 'stdout.jsonl'), 'utf8');
+    assert.doesNotMatch(log, new RegExp(secret));
+    assert.doesNotMatch(log, /settings-header-0123456789abcdef/);
+    assert.deepStrictEqual(run.secrets.in_workspace, [path.join('workspace', 'leaked.md')], 'a secret in the measured workspace is reported, not edited');
   });
 
   await test('a fixture stays pinned: oracle drift and a schema change under a sealed manifest both fail', async () => {
@@ -443,6 +531,11 @@ process.exit(1);`);
     assert.strictEqual(report.workspace_chain.prepared, JSON.parse(fs.readFileSync(path.join(root, 'prepared.json'), 'utf8')).workspace_sha256);
     assert.strictEqual(report.workspace_chain.collected, report.evaluator_mutation.workspace_before);
     assert.strictEqual(report.workspace_chain.run_final, null, 'no run, no run digest');
+    // A link in .planning is a finding about the project, not a reason to stop collecting.
+    fs.symlinkSync(path.join(planning, 'project.json'), path.join(planning, 'linked.json'));
+    const linked = runner.collect(campaign, { root });
+    assert.strictEqual(linked.records.valid, false);
+    assert.match(linked.records.error, /symbolic link/);
   });
 
   await test('the comparative study stays a draft until every owner decision is made, and its rules are enforced', async () => {
@@ -457,6 +550,13 @@ process.exit(1);`);
       return target;
     };
     assert.throws(() => loadStudy(variant('frozen-early', value => ({ ...value, status: 'frozen' }))), /cannot be frozen while decisions are pending/);
+    const decided = (value) => ({ ...value, status: 'frozen', decisions: value.decisions.map(decision => ({ ...decision, status: 'decided' })), tasks: { ...value.tasks, count: 12 } });
+    assert.throws(() => loadStudy(variant('frozen-placeholders', value => ({
+      ...decided(value),
+      execution: { ...value.execution, models: [], repetitions: 0, budget_per_run_usd: -1 },
+      assessment: { ...value.assessment, assessors: 1 },
+      analysis: { ...value.analysis, thresholds: 'chosen after looking at the data' }
+    }))), /unusable values for execution\.models, execution\.repetitions, execution\.budget_per_run_usd, assessment\.assessors, analysis\.thresholds/);
     assert.throws(() => loadStudy(variant('gateless', value => ({ ...value, ablations: [{ ...value.ablations[0], keeps_production_author_gates: false }] }))), /not a valid study/);
     assert.throws(() => loadStudy(variant('self-judging', value => ({ ...value, assessment: { ...value.assessment, model_judges: 'allowed' } }))), /not a valid study/);
     assert.throws(() => loadStudy(variant('hidden-null', value => ({ ...value, analysis: { ...value.analysis, null_results: 'omitted' } }))), /not a valid study/);

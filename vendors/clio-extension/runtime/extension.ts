@@ -62,7 +62,11 @@ const deskTrust = require("./desk-trust.cjs") as {
 const coverage = require("./claim-coverage.cjs") as {
 	STRUCTURAL_SCOPE: string;
 	analyzeCoverage(input: unknown): CoverageReport;
-	indexRecords(entries: Array<{ file: string; record: Json }>, collection: string): { byUri: Record<string, Json>; ignored: Array<{ file: string; reason: string }> };
+	indexRecords(
+		entries: Array<{ file: string; record: Json }>,
+		collection: string,
+		location?: (id: string) => string,
+	): { byUri: Record<string, Json>; ignored: Array<{ file: string; reason: string }> };
 	unsupportedRequired(report: CoverageReport, section: string): string[];
 };
 
@@ -614,7 +618,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 			if (validateRecord(record).length > 0) ignored.push({ file, reason: "it fails its schema" });
 			else entries.push({ file, record });
 		}
-		const index = coverage.indexRecords(entries, collection);
+		const index = coverage.indexRecords(entries, collection, (id) => `.planning/${collection}/${id}.json`);
 		ignored.push(...index.ignored);
 		return index.byUri;
 	};
@@ -630,6 +634,20 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 		const source = manuscript ? readText(workspace, manuscript) : null;
 		return { entry, id, record, artifacts, manuscript, source };
 	});
+	// A manuscript that exists but cannot be read safely, or that a drafted section lacks, leaves its citations unchecked.
+	const unread = loaded.flatMap((item) => {
+		if (item.manuscript === null || item.source !== null) return [];
+		let present = false;
+		try {
+			lstatSync(path.join(workspace, item.manuscript));
+			present = true;
+		} catch {
+			present = false;
+		}
+		if (present) return [{ section: item.id, file: item.manuscript, reason: "it is a link, not a regular file, or too large" }];
+		const status = text(item.record?.status);
+		return ["writing", "reviewing", "complete"].includes(status) ? [{ section: item.id, file: item.manuscript, reason: `the section is ${status} but its manuscript does not exist` }] : [];
+	});
 	const report = coverage.analyzeCoverage({
 		projectId,
 		outline,
@@ -640,6 +658,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 			.filter((item) => item.source !== null && item.manuscript !== null)
 			.map((item) => ({ section: item.id, file: item.manuscript, text: item.source })),
 		ignored,
+		unread,
 	});
 
 	const sections: SectionRow[] = loaded.map(({ entry, id, record, artifacts, manuscript, source }) => {

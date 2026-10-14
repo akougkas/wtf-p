@@ -26,26 +26,77 @@ function rank(depth) {
   return Object.prototype.hasOwnProperty.call(INSPECTION_RANK, depth) ? INSPECTION_RANK[depth] : -1;
 }
 
-// Citation keys in Markdown (`[@key]`, `@key`), LaTeX (`\cite{a,b}` and its
-// variants) and Typst (`@key`, `#cite(<key>)`). Code spans and blocks are
-// removed first so code never reads as a citation.
-function citationKeys(text, file) {
+// A LaTeX citation command and what follows it: optional arguments in
+// brackets or parentheses, then one braced key list, or one per citation for
+// the multi-cite commands whose names end in `s` (`\cites{a}{b}`). Matched
+// case-insensitively, so `\Cite` and `\Textcite` count too.
+const LATEX_CITE = /\\([a-z]*cite[a-z]*)\*?/giu;
+
+function bracketed(body, start, open, close) {
+  let depth = 0;
+  for (let index = start; index < body.length; index += 1) {
+    if (body[index] === open) depth += 1;
+    else if (body[index] === close && --depth === 0) return index + 1;
+  }
+  return -1;
+}
+
+function latexCitations(body, keys, unparsed) {
+  for (const match of body.matchAll(LATEX_CITE)) {
+    // \nocite adds bibliography entries without citing them in the text.
+    if (/^nocite$/iu.test(match[1])) continue;
+    const multi = /s$/iu.test(match[1]);
+    let at = match.index + match[0].length;
+    let groups = 0;
+    for (;;) {
+      while (at < body.length && /\s/u.test(body[at])) at += 1;
+      const open = body[at];
+      if (open === '[' || open === '(') {
+        const end = bracketed(body, at, open, open === '[' ? ']' : ')');
+        if (end < 0) break;
+        at = end;
+        continue;
+      }
+      if (open !== '{' || (groups > 0 && !multi)) break;
+      const end = bracketed(body, at, '{', '}');
+      if (end < 0) break;
+      for (const key of body.slice(at + 1, end - 1).split(',')) if (key.trim()) keys.add(key.trim());
+      groups += 1;
+      at = end;
+    }
+    if (groups === 0) unparsed.add(match[0].trim());
+  }
+}
+
+/**
+ * Citation keys in Markdown (`[@key]`, `@key`, `@{key}`), LaTeX (`\cite{a,b}`
+ * and its variants) and Typst (`@key`, `#cite(<key>)`, `#cite(label("key"))`).
+ * Code spans and blocks are removed first so code never reads as a citation.
+ * `unparsed` lists citation commands whose keys could not be read; they fail
+ * closed rather than being treated as citing nothing.
+ */
+function citationScan(text, file) {
   const keys = new Set();
+  const unparsed = new Set();
   let body = String(text)
     .replace(/```[\s\S]*?```/gu, ' ')
     .replace(/`[^`\n]*`/gu, ' ')
     .replace(/<!--[\s\S]*?-->/gu, ' ');
   if (/\.tex$/u.test(file)) {
     body = body.replace(/(^|[^\\])%.*$/gmu, '$1');
-    for (const match of body.matchAll(/\\[a-zA-Z]*cite[a-zA-Z]*\*?(?:\[[^\]]*\])*\{([^}]*)\}/gu)) {
-      for (const key of match[1].split(',')) if (key.trim()) keys.add(key.trim());
-    }
-    return [...keys].sort();
+    latexCitations(body, keys, unparsed);
+    return { keys: [...keys].sort(), unparsed: [...unparsed].sort() };
   }
-  for (const match of body.matchAll(/#cite\(\s*<([A-Za-z0-9:_-]+)>/gu)) keys.add(match[1]);
+  for (const match of body.matchAll(/#cite\(\s*<([^>\s]+)>/gu)) keys.add(match[1]);
+  for (const match of body.matchAll(/#cite\(\s*label\(\s*"([^"]+)"\s*\)/gu)) keys.add(match[1]);
+  for (const match of body.matchAll(/(^|[^\w@])@\{([^}]+)\}/gmu)) keys.add(match[2].trim());
   // A bare `@` preceded by a word character is an e-mail address, not a citation.
   for (const match of body.matchAll(/(^|[^\w@])@([A-Za-z0-9][A-Za-z0-9:_-]*[A-Za-z0-9]|[A-Za-z0-9])/gmu)) keys.add(match[2]);
-  return [...keys].sort();
+  return { keys: [...keys].sort(), unparsed: [...unparsed].sort() };
+}
+
+function citationKeys(text, file) {
+  return citationScan(text, file).keys;
 }
 
 /**
@@ -53,16 +104,21 @@ function citationKeys(text, file) {
  * none of them, so every one is left out and reported instead of one winning
  * by file order. `entries` are `{ file, record }`.
  */
-function indexRecords(entries, collection) {
+function indexRecords(entries, collection, location = null) {
   const groups = new Map();
+  const ignored = [];
   for (const entry of entries) {
     const id = entry.record && entry.record.id;
     if (typeof id !== 'string') continue;
+    // A logical URI resolves to one protocol file; a record anywhere else is not the one it names.
+    if (location && entry.file !== location(id)) {
+      ignored.push({ file: entry.file, reason: `a record with the id ${id} belongs at ${location(id)}` });
+      continue;
+    }
     if (!groups.has(id)) groups.set(id, []);
     groups.get(id).push(entry);
   }
   const byUri = {};
-  const ignored = [];
   for (const [id, group] of [...groups.entries()].sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))) {
     if (group.length === 1) byUri[`project://${collection}/${id}`] = group[0].record;
     else ignored.push(...group.map(entry => ({ file: entry.file, reason: `${group.length} records carry the id ${id}, so none of them counts` })));
@@ -80,6 +136,7 @@ function indexRecords(entries, collection) {
  *   sources: { [uri]: record }
  *   manuscripts: [{ section, file, text }] for citation-key resolution (optional)
  *   ignored: [{ file, reason }] records the loader left out (optional)
+ *   unread: [{ section, file, reason }] manuscripts the loader could not read (optional)
  * Unreadable records are the caller's to report; a missing URI here is dangling.
  */
 function analyzeCoverage(input) {
@@ -94,6 +151,9 @@ function analyzeCoverage(input) {
   );
   for (const item of input.ignored || []) {
     findings.push(finding('error', 'record-ignored', item.file, `${item.file} was left out of coverage: ${item.reason}.`));
+  }
+  for (const item of input.unread || []) {
+    findings.push(finding('error', 'manuscript-unread', `project://sections/${item.section}`, `${item.file} could not be checked for citations: ${item.reason}.`));
   }
   // Evidence names its claim by id alone, so a claim id must name one claim in the whole project.
   const claimCount = new Map();
@@ -209,6 +269,17 @@ function analyzeCoverage(input) {
     }
   }
 
+  // An outline claim that a started section does not record cannot have support behind it.
+  const recorded = new Map((input.sections || []).map(({ record }) => [record.id, new Set((Array.isArray(record.claims) ? record.claims : []).map(claim => claim.id))]));
+  for (const entry of (input.outline && Array.isArray(input.outline.sections)) ? input.outline.sections : []) {
+    if (!recorded.has(entry.id)) continue;
+    for (const claimId of Array.isArray(entry.claim_ids) ? entry.claim_ids : []) {
+      if (recorded.get(entry.id).has(claimId)) continue;
+      findings.push(finding('error', 'claim-missing', `project://sections/${entry.id}#${claimId}`, `The outline assigns ${claimId} to ${entry.id}, but the section record does not record it.`));
+      claims.push({ section: entry.id, claim: claimId, status: 'missing', evidence_required: true, support: 'none', contested: false, research_required: researchRequired.get(entry.id) === true });
+    }
+  }
+
   const keys = new Map();
   for (const source of Object.values(sources)) {
     if (!source || typeof source.citation_key !== 'string') continue;
@@ -216,7 +287,11 @@ function analyzeCoverage(input) {
     keys.get(source.citation_key).push(source);
   }
   for (const manuscript of input.manuscripts || []) {
-    for (const key of citationKeys(manuscript.text, manuscript.file)) {
+    const scanned = citationScan(manuscript.text, manuscript.file);
+    for (const command of scanned.unparsed) {
+      findings.push(finding('error', 'citation-unparsed', `project://sections/${manuscript.section}`, `${manuscript.file} uses ${command}, whose keys could not be read; write it as a plain citation so its source can be checked.`));
+    }
+    for (const key of scanned.keys) {
       const carriers = keys.get(key) || [];
       const source = carriers[0];
       const subject = `project://sections/${manuscript.section}`;
@@ -251,6 +326,7 @@ module.exports = {
   STRUCTURAL_SCOPE,
   analyzeCoverage,
   citationKeys,
+  citationScan,
   indexRecords,
   unsupportedRequired
 };

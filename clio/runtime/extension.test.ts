@@ -550,10 +550,21 @@ test("literature-heavy sections wait for verified evidence behind their required
 		put(workspace, ".planning/evidence/evidence-flush.json", statementless);
 		assert.equal(await readyNow(), false, "an evidence record that fails its schema supports nothing");
 		put(workspace, ".planning/evidence/evidence-flush.json", support);
-		put(workspace, ".planning/evidence/evidence-flush-copy.json", support);
-		assert.equal(await readyNow(), false, "an id carried twice names neither record");
+		// A second copy can only sit away from the protocol file, so it is the copy that is ignored, and reported.
+		put(workspace, ".planning/evidence/evidence-flush-copy.json", { ...support, relation: "contradicts" });
+		assert.equal(await readyNow(), true);
+		assert.match((await host.command("validate")).text, /record-ignored \.planning\/evidence\/evidence-flush-copy\.json/);
 		rmSync(path.join(workspace, ".planning/evidence/evidence-flush-copy.json"));
 		assert.equal(await readyNow(), true);
+		// project://evidence/evidence-flush resolves to one file; the same record anywhere else is not it.
+		writeFileSync(path.join(workspace, ".planning/evidence/renamed.json"), readFileSync(path.join(workspace, ".planning/evidence/evidence-flush.json")));
+		rmSync(path.join(workspace, ".planning/evidence/evidence-flush.json"));
+		assert.equal(await readyNow(), false, "evidence away from its protocol file supports nothing");
+		assert.match((await host.command("validate")).text, /record-ignored \.planning\/evidence\/renamed\.json/);
+		// A manuscript the desk will not follow cannot have its citations checked, and says so.
+		rmSync(path.join(workspace, "paper/introduction.md"));
+		symlinkSync(path.join(workspace, ".planning/project.json"), path.join(workspace, "paper/introduction.md"));
+		assert.match((await host.command("validate")).text, /manuscript-unread project:\/\/sections\/introduction/);
 	}, SERVED));
 
 test("turning a gate off needs the author's confirmation at the desk", () =>

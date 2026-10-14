@@ -51,6 +51,18 @@ function loadStudy(file) {
   if (study.status !== 'draft' && pending.length > 0) {
     throw new Error(`${study.id} cannot be ${study.status} while decisions are pending: ${[...new Set(pending)].join(', ')}`);
   }
+  // A study past draft carries real values, not placeholders that only look decided.
+  if (study.status !== 'draft') {
+    const placeholders = [
+      ['tasks.count', Number.isInteger(study.tasks.count) && study.tasks.count >= 1],
+      ['execution.models', Array.isArray(study.execution.models) && study.execution.models.length > 0 && study.execution.models.every(model => typeof model === 'string' && model.trim().length > 0)],
+      ['execution.repetitions', Number.isInteger(study.execution.repetitions) && study.execution.repetitions >= 1],
+      ['execution.budget_per_run_usd', typeof study.execution.budget_per_run_usd === 'number' && study.execution.budget_per_run_usd > 0],
+      ['assessment.assessors', Number.isInteger(study.assessment.assessors) && study.assessment.assessors >= 2],
+      ['analysis.thresholds', study.analysis.thresholds !== null && typeof study.analysis.thresholds === 'object' && Object.keys(study.analysis.thresholds).length > 0]
+    ].filter(([, valid]) => !valid).map(([field]) => field);
+    if (placeholders.length > 0) throw new Error(`${study.id} cannot be ${study.status} with unusable values for ${placeholders.join(', ')}`);
+  }
   const undeclared = OWNER_FIELDS.filter(([field, value]) => value(study) === 'pending' && !study.decisions.some(decision => decision.field === field));
   if (undeclared.length > 0) throw new Error(`${study.id} leaves ${undeclared.map(([field]) => field).join(', ')} pending without naming its owner`);
   return { study, pending: [...new Set(pending)] };
