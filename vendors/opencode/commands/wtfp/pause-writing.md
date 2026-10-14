@@ -89,6 +89,21 @@ On a host that attests answers, only its recorder writes interaction records and
 
 A plan is approved for drafting when its section links it as the last entry of `artifacts.plans` and a `decision` checkpoint scoped to that plan's URI carries an attested answer of `approve` that was given for the plan's current SHA-256. Any other answer, such as `revise` or `reject`, leaves the plan unapproved even when `confirm_plan` is off. With `confirm_plan` off and no author answer on the plan, a linked plan that resolves to a file stands by policy. Editing an approved plan voids its approval. Linked plans are immutable; a revision is a new plan appended to `artifacts.plans` that needs its own approval.
 
+Each path through an author gate on an attesting host, and what it leaves behind:
+
+| Path | Checkpoint afterwards | Interaction recorded | Holds its scope |
+| --- | --- | --- | --- |
+| Author selects an offered option | `resolved`, `resolved_by: author`, `selected_option` | `selected`, sealed | No, while the seal matches the checkpoint |
+| Author marks a task done, or waives it | `resolved` or `waived` | `done` or `waived`, sealed | No |
+| Author answers `revise` or `reject` on a plan | `resolved` with that option | `selected`, sealed | No, but the plan stays unapproved |
+| Author keeps it pending (deferral) | `pending`, unchanged | `kept-pending`, sealed | Yes |
+| Interview cancelled, or no author can be asked | `pending`, unchanged | none | Yes |
+| Checkpoint or its subject changed while asked | `pending`, unchanged; asked again as it now is | `discarded-stale`, sealed | Yes |
+| Answer not offered, replayed, or for another project | unchanged | none | Unchanged |
+| Process stops between the paired writes | the journal completes the checkpoint, state and interaction together | as committed | As committed |
+| Resolution written by hand or by another host | as written | none that matches | Yes, until the author confirms it |
+| Approved plan edited afterwards | unchanged | unchanged | The plan is unapproved again |
+
 ## Concurrent updates and recovery
 
 An update names the version it read. Revisioned records (`state`, `outline`, `decisions`) carry the revision read; every other record carries the SHA-256 of the bytes read. An update that names no version, or a stale one, is refused and changes nothing. A create names no version and fails if the record already exists. Adapters advance revisions and timestamps themselves and replace each record atomically.
