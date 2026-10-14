@@ -406,8 +406,8 @@ function testPlanningValidator(tempRoot) {
   fs.writeFileSync(sectionFile, `${JSON.stringify(sectionRecord, null, 2)}\n`);
   // An outline section with no record yet still has its conventional manuscript checked.
   fs.mkdirSync(path.join(project, 'paper'));
-  fs.writeFileSync(path.join(project, 'paper', 'implementation.md'), 'Cites [@Nobody2020].\n');
-  assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved' && finding.subject === 'project://sections/implementation'));
+  fs.writeFileSync(path.join(project, 'paper', 'implementation'), 'Cites [@Nobody2020].\n');
+  assert(supportNow().findings.some(finding => finding.code === 'citation-unresolved' && finding.subject === 'project://sections/implementation'), 'the bare name is tried first, as the desk tries it');
   fs.rmSync(path.join(project, 'paper'), { recursive: true });
   // Only .planning/project.json says which project this is; a stray manifest elsewhere does not.
   const strayManifest = path.join(planning, 'aaa-manifest.json');

@@ -379,7 +379,7 @@ process.exit(0);`);
     const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', responseModel: 'operator-model-2026', providerThinkingLevel: 'medium', content: [] } })}
 ${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
 ${mainReceipt(0.02)}
-${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', upstreamResponses: [{ requestedModelId: 'operator-model', responseModelIdObservation: { state: 'not-observed' } }] })}
+${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', upstreamResponses: [{ requestedModelId: 'operator-model', providerResponseId: 'resp-1', responseModelIdObservation: { state: 'not-observed' } }] })}
 process.exit(0);`);
     const root = preparedRoot('models', entry, undefined, ungatedFile);
     const run = await withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, budgetUsd: 0.04, campaignFile: ungatedFile }));
@@ -402,14 +402,17 @@ process.exit(0);`);
       { type: 'message_end', message: { role: 'assistant', model: 'm', stopReason: 'error', content: [] } }
     ].map(line => JSON.stringify(line)).join('\n');
     const worker = { file: 'w.json', receipt: { agentId: 'wtfp-section-writer', wireModelId: 'm', upstreamResponses: [
-      { requestedModelId: 'm', responseModelIdObservation: { state: 'not-observed' }, differingResponseModelId: 'm-fallback' },
-      { requestedModelId: 'm', responseModelIdObservation: { state: 'legacy-difference-only', differingModelId: 'm-legacy' } },
-      { requestedModelId: 'm', usageScope: 'run-aggregate', responseModelIdObservation: { state: 'not-observed' } }
+      { requestedModelId: 'm', providerResponseId: 'r1', responseModelIdObservation: { state: 'not-observed' }, differingResponseModelId: 'm-fallback' },
+      { requestedModelId: 'm', providerResponseId: 'r2', responseModelIdObservation: { state: 'legacy-difference-only', differingModelId: 'm-legacy' } },
+      { requestedModelId: 'm', usageScope: 'run-aggregate', responseModelIdObservation: { state: 'not-observed' } },
+      { requestedModelId: 'm', usage: { input: 0, output: 0, totalTokens: 0 }, responseModelIdObservation: { state: 'reported', reportedModelId: 'm-err' } }
     ] } };
     const step = runner.classifyStep(ok, lines, '', { receipts: [worker], selection: { model: 'm' } });
     assert.deepStrictEqual(step.model_observation.reported, ['m-fallback', 'm-legacy', 'm-responses']);
     assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [3, 0], 'neither the aggregate row nor a provider error is a call');
     assert.strictEqual(step.model_calls, 2, 'a provider error is not an observed model call');
+    const failedWorker = { file: 'f.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [{ requestedModelId: 'm', usage: { input: 3, output: 0, totalTokens: 0 }, responseModelIdObservation: { state: 'not-observed' } }] } };
+    assert.strictEqual(runner.classifyStep(ok, '', '', { receipts: [failedWorker] }).model_calls, 0, 'a worker whose only call failed served nothing');
   });
 
   await test('the seal key is out of reach while headless steps run, and nothing a step leaves running outlives the run', async () => {
@@ -473,20 +476,22 @@ process.exit(0);`);
     assert.strictEqual(moved.outcome, 'integrity-violation');
     assert.deepStrictEqual(fs.readdirSync(elsewhere), [], 'the key was never written into the linked directory');
     assert.strictEqual(fs.readFileSync(moveStore, 'utf8'), 'held-key');
-    // A step that changes a dependency the build loads is caught before the next step.
+    // A step that changes anything the build loads from its package root, dependencies or rules beside dist/, is caught before the next step.
     const dependent = fakeClio('fake-dependent', `const dep = require(require('path').join(__dirname, '..', '..', 'node_modules', 'dep.js'));
 console.log(JSON.stringify({ type: 'note', dep }));
 ${mainReceipt(0.01)}
-require('fs').writeFileSync(require('path').join(__dirname, '..', '..', 'node_modules', 'dep.js'), 'module.exports = "changed-by-a-step";');
+require('fs').writeFileSync(require('path').join(__dirname, '..', '..', 'damage-control-rules.yaml'), 'packs: []\\n');
 process.exit(0);`);
     fs.mkdirSync(path.join(scratch, 'fake-dependent', 'node_modules'));
     fs.writeFileSync(path.join(scratch, 'fake-dependent', 'node_modules', 'dep.js'), 'module.exports = "original";');
+    fs.writeFileSync(path.join(scratch, 'fake-dependent', 'damage-control-rules.yaml'), 'packs: [default]\n');
     const dependentRoot = preparedRoot('dependent', dependent, undefined, ungatedFile);
-    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: dependentRoot, entry: dependent, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(dependencies_sha256\)/);
+    await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: dependentRoot, entry: dependent, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(package_sha256\)/);
     // A step that makes the runner's own files unreadable still leaves a run record, failing closed.
     const locker = fakeClio('fake-locker', `${mainReceipt(0.01)}
 require('fs').chmodSync(require('path').join(process.env.CLIO_CODER_HOME, '..', 'prepared.json'), 0);
 require('fs').chmodSync(process.env.CLIO_CODER_CONFIG_DIR, 0);
+require('fs').chmodSync(require('path').join(process.env.CLIO_CODER_HOME, '..'), 0o500);
 process.exit(0);`);
     const lockRoot = preparedRoot('locker', locker, undefined, ungatedFile);
     try {
@@ -495,15 +500,58 @@ process.exit(0);`);
       assert.strictEqual(locked.credentials_removed, false, 'copies it could not reach are never reported removed');
       assert.ok(fs.existsSync(path.join(lockRoot, 'run.json')));
     } finally {
+      fs.chmodSync(lockRoot, 0o700);
       fs.chmodSync(path.join(lockRoot, 'prepared.json'), 0o600);
       fs.chmodSync(runner.profilePaths(lockRoot).CLIO_CODER_CONFIG_DIR, 0o700);
     }
+  });
+
+  await test('a step that swaps the run root or carries off a credential copy gets neither the key nor the secret', async () => {
+    // Swapping the run root for a link is caught, and the key is not restored into the stand-in.
+    const landing = path.join(scratch, 'root-landing');
+    const swapper = fakeClio('fake-root-swapper', `${mainReceipt(0.01)}
+const fs = require('fs'); const path = require('path');
+const root = path.resolve(process.env.CLIO_CODER_HOME, '..');
+const landing = ${JSON.stringify(landing)};
+fs.mkdirSync(path.join(landing, 'clio', 'config'), { recursive: true });
+fs.copyFileSync(path.join(root, 'prepared.json'), path.join(landing, 'prepared.json'));
+fs.renameSync(root, root + '-old');
+fs.symlinkSync(path.join(root + '-old', 'logs'), path.join(landing, 'logs'));
+fs.symlinkSync(path.join(root + '-old', 'workspace'), path.join(landing, 'workspace'));
+fs.symlinkSync(landing, root);
+process.exit(0);`);
+    const oneStepFile = path.join(scratch, 'one-step.campaign.json');
+    fs.writeFileSync(oneStepFile, JSON.stringify({ ...ungated, lifecycle: ungated.lifecycle.slice(0, 1) }));
+    const oneStep = runner.loadCampaign(oneStepFile);
+    const swapRoot = preparedRoot('root-swapper', swapper, undefined, oneStepFile);
+    const store = path.join(runner.profilePaths(swapRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    fs.mkdirSync(path.dirname(store), { recursive: true });
+    fs.writeFileSync(store, 'held-key');
+    const swapped = await withEnv(executeEnv, () => runner.execute(oneStep, { root: swapRoot, entry: swapper, ...selection, campaignFile: oneStepFile }));
+    assert.strictEqual(swapped.outcome, 'integrity-violation');
+    assert.match(swapped.integrity.join(' '), /run root was replaced/);
+    assert.ok(!fs.existsSync(path.join(landing, 'clio', 'state', 'extensions', 'wtfp', 'store.json')), 'the key is not written into the stand-in root');
+    assert.strictEqual(swapped.credentials_removed, false);
+    assert.ok(fs.readFileSync(path.join(`${swapRoot}-old`, 'clio', 'config', 'credentials.yaml')).every(byte => byte === 0), 'the copy left behind was zeroed');
+    // A copy a step moves elsewhere is zeroed through the descriptor the runner kept, and never reported removed.
+    const stash = path.join(scratch, 'stashed-credentials.yaml');
+    const mover = fakeClio('fake-copy-mover', `${mainReceipt(0.01)}
+require('fs').renameSync(require('path').join(process.env.CLIO_CODER_CONFIG_DIR, 'credentials.yaml'), ${JSON.stringify(stash)});
+process.exit(0);`);
+    const moved = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('copy-mover', mover, undefined, ungatedFile), entry: mover, ...selection, campaignFile: ungatedFile }));
+    assert.strictEqual(moved.credentials_removed, false);
+    assert.match(moved.copies_zeroed_elsewhere, /zeroed in place/);
+    assert.ok(fs.readFileSync(stash).every(byte => byte === 0), 'the moved copy no longer holds the secret');
   });
 
   await test('secrets are every credential value and every settings value under an auth key, in any YAML form, and nothing else', async () => {
     assert.deepStrictEqual(runner.settingsSecrets('targets: { t: { model: long-model-identifier, headers: { X-Custom: flow-token-123456 } } }'), ['flow-token-123456']);
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  model: long-model-identifier\n  Authorization: >-\n    Bearer block-scalar-987654\n'), ['block-scalar-987654']);
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  tokens:\n    - sequence-token-1234\n'), ['sequence-token-1234']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  tokens:\n  - same-indent-secret-1234\n'), ['same-indent-secret-1234']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers: {\n    X-Custom: multiline-flow-secret-1234\n  }\n  model: long-model-identifier\n'), ['multiline-flow-secret-1234']);
+    assert.deepStrictEqual(runner.settingsSecrets('t:\n  auth:\n    oauthProfile: anthropic-max\n    apiKeyRef: anthropic-key\n    apiKeyEnvVar: ANTHROPIC_API_KEY\n    headers:\n      Authorization: Bearer header-secret-1234\n'),
+      ['header-secret-1234'], 'names of secrets, such as profiles, refs and environment variables, are evidence');
     assert.deepStrictEqual(runner.settingsSecrets('t:\n  headers:\n    - { Authorization: sequence-flow-1234 }\n  models:\n    - { id: long-model-identifier }\n'), ['sequence-flow-1234']);
     assert.deepStrictEqual(runner.credentialSecrets('anthropic:\n  type: api_key\n  key: sk-ant-secret-1234\n  updatedAt: 2026-10-14T12:00:00Z\nopenrouter:\n  type: oauth\n  access: access-token-1234\n  refresh: refresh-token-1234\n  expires: 1760000000000\n'),
       ['sk-ant-secret-1234', 'access-token-1234', 'refresh-token-1234'], 'provider names, types and timestamps stay in the evidence');

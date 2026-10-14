@@ -225,7 +225,7 @@ function coverageForRoot(resolved, validation) {
   const recorded = new Set(sections.map(({ record }) => record.id));
   for (const entry of projectRoot && outline && Array.isArray(outline.sections) ? outline.sections : []) {
     if (typeof entry.id !== 'string' || recorded.has(entry.id)) continue;
-    for (const candidate of [`${entry.id}.md`, `${entry.id}.tex`, `${entry.id}.typ`]) {
+    for (const candidate of [entry.id, `${entry.id}.md`, `${entry.id}.tex`, `${entry.id}.typ`]) {
       let stat;
       try { stat = fs.lstatSync(path.join(projectRoot, 'paper', candidate)); } catch { continue; }
       if (stat.isFile() && !throughLink(`paper/${candidate}`)) manuscripts.push({ section: entry.id, file: `paper/${candidate}`, text: fs.readFileSync(path.join(projectRoot, 'paper', candidate), 'utf8') });

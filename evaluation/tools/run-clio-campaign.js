@@ -284,8 +284,8 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
     entry,
     entry_sha256: entry && fs.existsSync(entry) ? sha256(fs.readFileSync(entry)) : null,
     dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(path.dirname(path.dirname(entry))) : null,
-    // The build loads its dependencies from the Clio package's node_modules, beside dist/.
-    dependencies_sha256: entry ? treeDigest(path.join(path.dirname(path.dirname(path.dirname(entry))), 'node_modules')) : null,
+    // Clio loads more than dist/ from its package root: dependencies, the extension host bootstrap, safety rules, prompts.
+    package_sha256: entry ? treeDigest(path.dirname(path.dirname(path.dirname(entry)))) : null,
     wrapper_sha256: fs.existsSync(wrapper) ? sha256(fs.readFileSync(wrapper)) : null,
     plugin_root: pluginRoot,
     plugin_sha256: digest(pluginRoot),
@@ -510,6 +510,13 @@ function stepCost(receipts) {
  * `responseModelIdObservation`. A call without a report is counted, not
  * assumed to be the requested model.
  */
+/** A worker receipt's upstream rows that a model actually served. */
+function servedRows(receipt) {
+  return (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : []).filter(response =>
+    response && response.usageScope !== 'run-aggregate' &&
+    (typeof response.providerResponseId === 'string' || (response.usage && ((response.usage.output ?? 0) > 0 || (response.usage.totalTokens ?? 0) > 0))));
+}
+
 /** The model id a Clio response-model observation reports, or null when it reports none. */
 function reportedModel(observation) {
   if (!observation || typeof observation !== 'object') return null;
@@ -524,10 +531,9 @@ function modelObservation(messages, receipts, selected) {
     // Clio records a provider's report on the message itself for some API families and as responseModel for others.
     // A provider error is not a served call.
     ...messages.filter(message => message.stopReason !== 'error').map(message => reportedModel(message.responseModelIdObservation) ?? (typeof message.responseModel === 'string' ? message.responseModel : null)),
-    // A run-aggregate row sums a worker's calls; it is not one more call.
-    ...workers.flatMap(receipt => (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : [])
-      .filter(response => response && response.usageScope !== 'run-aggregate')
-      .map(response => reportedModel(response.responseModelIdObservation) ?? (typeof response.differingResponseModelId === 'string' ? response.differingResponseModelId : null)))
+    // A run-aggregate row sums a worker's calls, and a row with no response id and no output is a provider error.
+    ...workers.flatMap(receipt => servedRows(receipt))
+      .map(response => reportedModel(response.responseModelIdObservation) ?? (typeof response.differingResponseModelId === 'string' ? response.differingResponseModelId : null))
   ];
   const reported = [...new Set(calls.filter(model => typeof model === 'string'))].sort();
   const unreported = calls.filter(model => model === null).length;
@@ -606,7 +612,8 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     process_group: result.processGroup,
     events: events.length,
     // A provider error is not a model's output, so it is not counted as an observed call.
-    model_calls: messages.filter(message => message.stopReason !== 'error').length + receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent').length,
+    model_calls: messages.filter(message => message.stopReason !== 'error').length +
+      receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent' && servedRows(receipt).length > 0).length,
     tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, blocked_calls: blockedCalls },
     gates,
     interactions_added: added,
@@ -629,7 +636,7 @@ function copyPrivateSource(variable, destination, root) {
   if (!stat.isFile()) throw new Error(`${variable} is not a regular file`);
   fs.copyFileSync(resolved, destination, fs.constants.COPYFILE_EXCL);
   fs.chmodSync(destination, 0o600);
-  return { variable, sha256: sha256(fs.readFileSync(destination)) };
+  return { variable, sha256: sha256(fs.readFileSync(destination)), fd: fs.openSync(destination, 'r+') };
 }
 
 /** Overwrites and removes a credential copy, never following a link; a link is only removed. */
@@ -651,6 +658,18 @@ function wipe(file) {
     }
   }
   fs.unlinkSync(file);
+}
+
+/**
+ * Zeroes a private copy through the descriptor held since it was made, so its
+ * bytes are destroyed wherever a step moved or linked it, and reports whether
+ * any name still reaches the file.
+ */
+function zeroHeld(fd) {
+  const { size } = fs.fstatSync(fd);
+  fs.writeSync(fd, Buffer.alloc(size), 0, size, 0);
+  fs.fsyncSync(fd);
+  return fs.fstatSync(fd).nlink;
 }
 
 /** The operator's settings and credentials copies, and any backup or temporary sibling Clio left beside them; returns what it could not wipe. */
@@ -754,7 +773,9 @@ function secretTokens(text, minimum = 8) {
   return [...new Set(text.match(new RegExp(`[A-Za-z0-9_\\-+/=.]{${minimum},}`, 'gu')) || [])];
 }
 
-const SECRET_KEY = /auth|header|token|secret|passw|api[-_]?key|bearer|cookie|credential/iu;
+const SECRET_KEY = /header|token|secret|passw|api[-_]?key|bearer|cookie|credential|authorization/iu;
+// Clio's TargetAuth fields that name a secret rather than hold one (src/domains/providers/types/target-descriptor.ts).
+const SETTINGS_REFERENCES = new Set(['apiKeyEnvVar', 'apiKeyRef', 'oauthProfile']);
 // Fields of Clio's credential records that are not secret (src/domains/providers/auth/storage.ts).
 const CREDENTIAL_FIELDS_IN_CLEAR = new Set(['type', 'updatedAt', 'expires', 'expiresAt', 'createdAt']);
 
@@ -818,7 +839,9 @@ function yamlScalars(text) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
     const indent = line.length - line.trimStart().length;
-    while (stack.length > 0 && stack[stack.length - 1].indent >= indent) stack.pop();
+    // A sequence may sit at its parent key's own indentation (`key:` then `- item`).
+    const item = trimmed === '-' || trimmed.startsWith('- ');
+    while (stack.length > 0 && (stack[stack.length - 1].indent > indent || (stack[stack.length - 1].indent === indent && !item))) stack.pop();
     let body = trimmed;
     let itemIndent = indent;
     while (body === '-' || body.startsWith('- ')) {
@@ -843,7 +866,14 @@ function yamlScalars(text) {
       }
       out.push({ path: here, value: block.join(' ').trim() });
     } else if (value.startsWith('{') || value.startsWith('[')) {
-      flowScalars(value, here, out);
+      // A flow collection may span lines; read until its brackets balance.
+      let flow = value;
+      const depth = (text) => [...text].reduce((sum, char) => sum + ('{['.includes(char) ? 1 : '}]'.includes(char) ? -1 : 0), 0);
+      while (depth(flow) > 0 && index + 1 < lines.length) {
+        index += 1;
+        flow += ` ${lines[index].trim()}`;
+      }
+      flowScalars(flow, here, out);
     } else if (value) {
       out.push({ path: here, value: unquote(value) });
     } else {
@@ -859,7 +889,9 @@ function yamlScalars(text) {
  * evidence a run records about which model it called.
  */
 function settingsSecrets(text) {
-  return yamlScalars(text).filter(entry => entry.path.some(key => SECRET_KEY.test(key))).flatMap(entry => secretTokens(entry.value));
+  return yamlScalars(text)
+    .filter(entry => entry.path.length > 0 && !SETTINGS_REFERENCES.has(entry.path[entry.path.length - 1]) && entry.path.some(key => SECRET_KEY.test(key)))
+    .flatMap(entry => secretTokens(entry.value));
 }
 
 /** The values of Clio's credential records, never their provider names, types or timestamps. */
@@ -911,7 +943,7 @@ function verifyLauncher(root, prepared, entry) {
   const bound = prepared.launcher;
   if (!bound) throw new Error('the prepared root records no launcher identity; prepare a new root');
   const now = launcherIdentity(root, entry, bound.plugin_root, bound.desk_root);
-  for (const key of ['entry', 'entry_sha256', 'dist_sha256', 'dependencies_sha256', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
+  for (const key of ['entry', 'entry_sha256', 'dist_sha256', 'package_sha256', 'wrapper_sha256', 'plugin_sha256', 'desk_sha256']) {
     if (now[key] !== bound[key]) throw new Error(`the launcher changed since prepare (${key}); prepare a new root`);
   }
 }
@@ -972,10 +1004,13 @@ async function execute(campaign, options) {
   const bound = boundRun(campaign, options, root, prepared);
   const { workspace } = bound;
   const config = profilePaths(root).CLIO_CODER_CONFIG_DIR;
-  const resources = [
+  // The run root as this process made it; a step that swaps it for another directory is caught at the end.
+  const rootIdentity = fs.lstatSync(root);
+  const copies = [
     copyPrivateSource(SETTINGS_ENV, path.join(config, 'settings.yaml'), root),
     copyPrivateSource(CREDENTIALS_ENV, path.join(config, 'credentials.yaml'), root)
   ];
+  const resources = copies.map(({ variable, sha256: digest }) => ({ variable, sha256: digest }));
   // Every credential value is a secret, and so is a settings value under an auth key, such as a target's headers.
   const secrets = [...new Set([
     ...credentialSecrets(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8')),
@@ -1026,11 +1061,24 @@ async function execute(campaign, options) {
     run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
     // Nothing a step left running may outlive the run, and the key returns only after it is gone.
     run.processes_swept_at_end = attempt('sweep', () => sweepRun(marker)) ?? { swept: false, killed: [] };
-    const made = attempt('seal store', () => restoreStore(root, storeFile, held)) ?? [];
+    // Every path below assumes the run root is still the directory this run made; a swapped root is not followed.
+    const rootNow = attempt('run root', () => fs.lstatSync(root));
+    const sameRoot = Boolean(rootNow && rootNow.isDirectory() && !rootNow.isSymbolicLink() && rootNow.dev === rootIdentity.dev && rootNow.ino === rootIdentity.ino);
+    if (!sameRoot) integrity.push('the run root was replaced during the run; the seal key was not restored and nothing below it is trusted');
+    // The private copies are zeroed through the descriptors held since they were made, wherever a step moved them.
+    const links = copies.map(copy => attempt('zero copy', () => zeroHeld(copy.fd)));
+    const made = sameRoot ? attempt('seal store', () => restoreStore(root, storeFile, held)) ?? [] : [];
     for (const aside of made) integrity.push(`a seal store or its directory was created or replaced during the run and set aside as ${path.relative(root, aside)}`);
     run.seal_store = { held_during_run: held !== null, restored: held !== null && !integrity.some(item => item.startsWith('seal store')) };
     const unwiped = attempt('wipe', () => wipePrivate(config)) ?? ['the configuration directory could not be read'];
-    run.credentials_removed = attempt('wipe check', () => fs.existsSync(config) && !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name) && fs.lstatSync(path.join(config, name)).isFile())) ?? false;
+    const remaining = copies.map(copy => attempt('copy links', () => fs.fstatSync(copy.fd).nlink));
+    for (const copy of copies) attempt('close copy', () => fs.closeSync(copy.fd));
+    const namesGone = attempt('wipe check', () => fs.existsSync(config) && !fs.readdirSync(config).some(name => PRIVATE_FILES.test(name) && fs.lstatSync(path.join(config, name)).isFile())) ?? false;
+    // Removed means no name reaches either copy any more, not only that the expected names are gone.
+    run.credentials_removed = namesGone && links.every(count => count !== undefined) && remaining.every(count => count === 0);
+    if (links.some(count => count !== undefined && count > 0) && remaining.some(count => count !== 0)) {
+      run.copies_zeroed_elsewhere = 'a private copy is still reachable by a name a step gave it; its bytes were zeroed in place';
+    }
     if (unwiped.length > 0) run.unwiped = unwiped;
     const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => attempt('redaction', () => scanSecrets(directory, secrets, true)) ?? { found: [], unscanned: [directory] });
     const workspaceSecrets = attempt('workspace scan', () => scanSecrets(workspace, secrets, false)) ?? { found: [], unscanned: [workspace] };
@@ -1055,6 +1103,8 @@ async function execute(campaign, options) {
       run.integrity = integrity;
       run.outcome = 'integrity-violation';
     }
+    // A step may have locked the run root; the runner reopens it for its own record.
+    attempt('run root access', () => fs.chmodSync(root, 0o700));
     const staging = path.join(root, `.run.json.${crypto.randomUUID()}.partial`);
     writeJson(staging, run);
     fs.renameSync(staging, target);
