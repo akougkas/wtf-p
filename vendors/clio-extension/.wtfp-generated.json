@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "cd2e4be505ba4e3de4c593866037693c63775c521c570f5d4fd27ca8a22e607c",
+  "sourceHash": "edbe943e311ec1b2613d353690ce97fda86754b881a8fcdc9a748b4d9c29e221",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -150,7 +150,7 @@
     },
     {
       "path": "clio-coder-extension.yaml",
-      "sha256": "5c926df4781d14d987489fd5ecdd5ccbfe528bdcb725642a8d040ec00eade82b"
+      "sha256": "4018a84c781c51d8a5a0edd81e9003adc776a9ba3e3f6b923f070d7fa35650db"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -209,12 +209,16 @@
       "sha256": "59de88f3cf8a48f0164ad11c2d3dfd23481f6027a44b3bb6c7f44c75c4367132"
     },
     {
+      "path": "runtime/desk-trust.cjs",
+      "sha256": "568e35ca9df18cec4518eeddbcf21f38ba8cd432a086affa662993656152bc03"
+    },
+    {
       "path": "runtime/extension.test.ts",
-      "sha256": "222b1fff783352770b74ea3433423bbdcd8ec19e5e7c7acb4573289f8f86f69c"
+      "sha256": "993922a259f4fe9459f600dc1ac970e8bc1ac6c64e6a42c42bc17aa01f08faa8"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "7e3983c5469dfcd57c2ae84c257e95a718abe6825d75ba31237ef5c3dec60434"
+      "sha256": "702434dd70e032bc9dfef7cde5e135adbed2b708df4c0d562e65f829f987d1d3"
     },
     {
       "path": "runtime/json-schema.cjs",
@@ -226,7 +230,7 @@
     },
     {
       "path": "runtime/write-guard.json",
-      "sha256": "6ebc6ecae3930bad71afd6b0fb428117499b133e28ffd930c044d729f9a3f2c0"
+      "sha256": "1420418a167e19ccda197a160238468f50367788bd8e9de50f5a5580def23c44"
     },
     {
       "path": "skins/wtfp.json",

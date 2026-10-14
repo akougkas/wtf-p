@@ -229,7 +229,8 @@ function copyCompilerFixture(destination) {
     ['protocol', 'protocol'],
     ['clio', 'clio'],
     ['evaluation/lib/json-schema.js', 'evaluation/lib/json-schema.js'],
-    ['evaluation/lib/claim-coverage.js', 'evaluation/lib/claim-coverage.js']
+    ['evaluation/lib/claim-coverage.js', 'evaluation/lib/claim-coverage.js'],
+    ['evaluation/lib/desk-trust.js', 'evaluation/lib/desk-trust.js']
   ];
   for (const [source, target] of copies) {
     fs.cpSync(path.join(ROOT, source), path.join(destination, target), { recursive: true });

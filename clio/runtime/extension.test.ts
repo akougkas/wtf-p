@@ -7,8 +7,9 @@
  * they test the desk's bookkeeping, never an author's judgment.
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -179,6 +180,19 @@ function tree(workspace: string, relative = "."): Record<string, string> {
 	return out;
 }
 
+const canonical = (value: unknown): string =>
+	Array.isArray(value)
+		? `[${value.map(canonical).join(",")}]`
+		: value !== null && typeof value === "object"
+			? `{${Object.keys(value).sort().map((name) => `${JSON.stringify(name)}:${canonical((value as Json)[name])}`).join(",")}}`
+			: JSON.stringify(value);
+
+/** An interaction sealed the way the desk seals one, for tests that need a valid seal on a changed record. */
+const resealed = (body: Json, key: Buffer): Json => ({
+	...body,
+	seal: { method: "hmac-sha256", key_id: createHash("sha256").update(key).digest("hex").slice(0, 16), mac: createHmac("sha256", key).update(canonical(body)).digest("hex") },
+});
+
 const SERVED = { id: "wtfp", prompts: ["wtfp:check-todos", "wtfp:plan-section", "wtfp:progress", "wtfp:write-section", "wtfp:research-gap"] };
 
 async function withDesk(run: (host: Host, workspace: string) => Promise<void>, plugin: typeof SERVED | null = null): Promise<void> {
@@ -210,6 +224,9 @@ const blocked = (result: { effects?: Array<{ kind: string }> }): string | null =
 };
 
 const write = (host: Host, target: string) => host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: target } });
+
+const rewriteOf = (result: { effects?: Array<{ kind: string }> }): Json | null =>
+	(result.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args?: Json } | undefined)?.args ?? null;
 
 // --- record writes -------------------------------------------------------------
 
@@ -287,6 +304,7 @@ test("a readback that differs from what was written is reported against the file
 			const result = await host.tool("record", { uri: "project://state", record: { ...state, phase: "reviewing" }, expect_revision: 3 });
 			assert.equal(result.isError, true);
 			assert.match(result.text, /readback of \.planning\/state\.json differs from what was written/);
+			assert.match(result.text, /^Committed, but/, "a write that landed is never reported as not written");
 		} finally {
 			delete process.env.WTFP_DESK_TEST_FAULT;
 		}
@@ -572,6 +590,213 @@ test("WTF-P workers are dispatched only inside their action and only to manuscri
 		assert.ok(existsSync(path.join(workspace, "paper/introduction.md")));
 	}, SERVED));
 
+test("the guard judges the file Clio's tools open, however the path is spelled (W2)", () =>
+	withDesk(async (host, workspace) => {
+		const manuscript = path.join(workspace, "paper/introduction.md");
+		for (const spelling of ["@paper/introduction.md", `~/${path.relative(homedir(), manuscript)}`, "paper/./introduction.md"])
+			assert.match(blocked(await write(host, spelling)) ?? "", /cannot be written yet/, spelling);
+		assert.match(blocked(await write(host, "@.planning/config.json")) ?? "", /portable record/);
+		// The kernel reads a link before the `..` after it, so latest/.. is paper/, not the workspace.
+		mkdirSync(path.join(workspace, "paper/introduction"), { recursive: true });
+		symlinkSync(path.join(workspace, "paper/introduction"), path.join(workspace, "latest"));
+		assert.match(blocked(await write(host, "latest/../introduction.md")) ?? "", /cannot be written yet/);
+		// The artifact tool trims its path and writes it like write does.
+		const artifact = await host.hook({ point: "before_tool", tool: "artifact", turnId: "t1", args: { kind: "report", path: " paper/introduction.md ", content: "x" } });
+		assert.match(blocked(artifact) ?? "", /cannot be written yet/);
+		const script = await host.hook({ point: "before_tool", tool: "run_script", turnId: "t1", args: { interpreter: "python3", script: "x.py", args: [".planning/interactions/x.json"] } });
+		assert.match(blocked(script) ?? "", /desk's own records/);
+		const manifest = readFileSync(path.join(ROOT, "clio-coder-extension.yaml"), "utf8");
+		const hooked = /on: before_tool, tools: \[([^\]]*)\]/u.exec(manifest)?.[1]?.split(/,\s*/u) ?? [];
+		for (const tool of ["write", "edit", "artifact", "dispatch", "bash", "run_script", "job"]) assert.ok(hooked.includes(tool), `${tool} is hooked`);
+	}));
+
+test("a manuscript nested under another section's stem is judged by every section it belongs to", () =>
+	withDesk(async (host, workspace) => {
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const [entry] = outline.sections as Json[];
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [entry, { ...entry, id: "appendix", title: "Appendix" }] });
+		const intro = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/appendix/section.json", {
+			...intro,
+			id: "appendix",
+			title: "Appendix",
+			artifacts: { plans: [], reviews: [], manuscript: "project://paper/introduction/appendix" },
+			checkpoint_uris: [],
+		});
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null);
+		assert.match(blocked(await write(host, "paper/introduction/appendix.md")) ?? "", /Appendix cannot be written yet/);
+		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
+		const result = await host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args: { agent: "wtfp-section-writer", task: "Draft." } });
+		const roots = (rewriteOf(result)?.intent as Json | undefined)?.write_roots;
+		assert.deepEqual(roots, [".planning/sections/introduction/summary.md", "paper/introduction.md"], "no worker root covers the appendix");
+	}, SERVED));
+
+test("dispatch is judged as Clio parses it, and no worker gets an unbounded or record-covering root (W3)", () =>
+	withDesk(async (host) => {
+		const dispatch = (args: Json) => host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args });
+		// Clio trims agent ids and accepts a batch as a JSON string or a single object.
+		for (const args of [
+			{ tasks: [{ agent: "wtfp-section-writer ", task: "Draft." }] },
+			{ tasks: JSON.stringify([{ agent: "wtfp-section-writer", task: "Draft." }]) },
+			{ tasks: { agent: "wtfp-section-writer", task: "Draft." } },
+			{ agent: " wtfp-section-writer", task: "Draft." },
+		])
+			assert.match(blocked(await dispatch(args)) ?? "", /run only inside the WTF-P action/, JSON.stringify(args));
+		// Outside an action, a generic worker must name roots that leave the records and gated manuscripts alone.
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x" })) ?? "", /intent\.write_roots/);
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["."] } })) ?? "", /intent\.write_roots/);
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["paper/"] } })) ?? "", /paper\/introduction\.md/);
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: [".planning/sections/"] } })) ?? "", /\.planning/);
+		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src/"] } })), null);
+		assert.match(blocked(await dispatch({ apply_winner: { branch: "clio-coder/compete/g/1" } })) ?? "", /cannot see what/);
+		// An action that declares no file outputs never hands a writer an empty list, which Clio reads as no boundary.
+		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
+		assert.match(blocked(await dispatch({ tasks: [{ agent: "wtfp-section-planner", task: "x" }] })) ?? "", /declares no file outputs/);
+		const reviewer = await dispatch({ tasks: [{ agent: "wtfp-plan-checker", task: "x" }] });
+		assert.equal(blocked(reviewer), null, "a read-only reviewer needs no roots");
+		assert.equal(rewriteOf(reviewer), null, "and is not given an empty list");
+		// Without a named section, a planner would get every section's directory, records included.
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		await host.hook({ point: "prompt_submit", text: "/wtfp:plan-section" });
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-planner", task: "x" })) ?? "", /name the section/);
+	}, SERVED));
+
+test("changes that loosen what the desk holds wait for the author at the desk", () =>
+	withDesk(async (host, workspace) => {
+		const asks = async (uri: string, file: string, record: Json, expect: Json) => {
+			const before = sha(workspace, file);
+			const result = await host.tool("record", { uri, record, ...expect });
+			assert.equal(result.interview?.id, "confirm-write", `${uri}: ${result.text}`);
+			assert.equal(sha(workspace, file), before, `${uri} was not written before the author answered`);
+			return JSON.stringify(result.interview?.step.intro);
+		};
+		const sectionFile = ".planning/sections/introduction/section.json";
+		const section = read(workspace, sectionFile);
+		const artifacts = section.artifacts as Json;
+		assert.match(
+			await asks("project://sections/introduction", sectionFile, { ...section, artifacts: { ...artifacts, manuscript: "project://paper/elsewhere" } }, { expect_sha256: sha(workspace, sectionFile) }),
+			/manuscript/,
+		);
+		assert.match(await asks("project://sections/introduction", sectionFile, { ...section, artifacts: { ...artifacts, plans: [] } }, { expect_sha256: sha(workspace, sectionFile) }), /plan history/);
+		const claim = { id: "claim-flush", statement: "Flushes dominate logging cost.", status: "planned", evidence_required: true, evidence_uris: [] };
+		put(workspace, sectionFile, { ...section, claims: [claim] });
+		assert.match(
+			await asks("project://sections/introduction", sectionFile, { ...section, claims: [{ ...claim, evidence_required: false }] }, { expect_sha256: sha(workspace, sectionFile) }),
+			/claim-flush/,
+		);
+		const outlineFile = ".planning/structure/outline.json";
+		const outline = read(workspace, outlineFile);
+		const [entry] = outline.sections as Json[];
+		assert.match(await asks("project://structure/outline", outlineFile, { ...outline, sections: [{ ...entry, id: "intro-renamed" }] }, { expect_revision: 1 }), /introduction/);
+		put(workspace, outlineFile, { ...outline, sections: [{ ...entry, research: { required: true, topics: ["logging"] } }] });
+		assert.match(await asks("project://structure/outline", outlineFile, { ...outline, sections: [{ ...entry, research: { required: false, topics: [] } }] }, { expect_revision: 1 }), /research/);
+		const configFile = ".planning/config.json";
+		const config = read(workspace, configFile);
+		assert.match(
+			await asks("project://config", configFile, { ...config, safety: { ...(config.safety as Json), backup_before_major_edits: false } }, { expect_sha256: sha(workspace, configFile) }),
+			/safety\.backup_before_major_edits/,
+		);
+		put(workspace, configFile, { ...config, interaction_mode: "guided" });
+		assert.match(await asks("project://config", configFile, { ...config, interaction_mode: "standard" }, { expect_sha256: sha(workspace, configFile) }), /guided → standard/);
+	}));
+
+test("a pending plan gate cannot be retired by briefly linking a decoy plan", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		const sectionFile = ".planning/sections/introduction/section.json";
+		const section = read(workspace, sectionFile);
+		const decoy = { ...(section.artifacts as Json), plans: [PLAN_URI, "project://sections/introduction/plans/decoy"] };
+		assert.equal((await host.tool("record", { uri: "project://sections/introduction", record: { ...section, artifacts: decoy }, expect_sha256: sha(workspace, sectionFile) })).isError, undefined);
+		const checkpoint = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);
+		await host.tool("record", { uri: `project://checkpoints/${PLAN_GATE}`, record: { ...checkpoint, status: "expired" }, expect_sha256: sha(workspace, `.planning/checkpoints/${PLAN_GATE}.json`) });
+		const restored = await host.tool("record", { uri: "project://sections/introduction", record: section, expect_sha256: sha(workspace, sectionFile) });
+		assert.equal(restored.interview?.id, "confirm-write", "unlinking the decoy rewrites the plan history, so the author is asked");
+		assert.ok(blocked(await write(host, "paper/introduction.md")), "the manuscript still waits on an approved current plan");
+	}));
+
+test("the author approves a plan under the desk's own label, whatever the checkpoint calls its options", () =>
+	withDesk(async (host, workspace) => {
+		const checkpoint = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);
+		const swapped = await host.tool("record", {
+			uri: `project://checkpoints/${PLAN_GATE}`,
+			record: {
+				...checkpoint,
+				options: [
+					{ id: "approve", label: "Send it back for revision", implication: "The plan is rewritten." },
+					{ id: "revise", label: "Approve", implication: "Draft from this plan." },
+				],
+			},
+			expect_sha256: sha(workspace, `.planning/checkpoints/${PLAN_GATE}.json`),
+		});
+		assert.equal(swapped.isError, undefined, swapped.text);
+		const asked = await host.tool("gate", { checkpoint: PLAN_GATE });
+		const options = asked.interview?.step.questions[0]?.options ?? [];
+		const approve = options.find((option) => option.value === "approve");
+		assert.match(approve?.label ?? "", /^Approve this plan/);
+		assert.ok(!options.some((option) => option.value !== "approve" && /approve/iu.test(option.label)), "no other option may read as approval");
+	}));
+
+test("a seal counts only in the exact form the desk writes", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		const [name] = readdirSync(path.join(workspace, ".planning/interactions"));
+		const file = `.planning/interactions/${name}`;
+		const interaction = read(workspace, file);
+		const seal = interaction.seal as Json;
+		for (const altered of [{ ...seal, mac: String(seal.mac).toUpperCase() }, { ...seal, method: "none" }]) {
+			put(workspace, file, { ...interaction, seal: altered });
+			assert.notEqual(((await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json).trust, "attested", JSON.stringify(altered));
+		}
+		// Even sealed with this machine's key, only an answer given at the desk's interview counts.
+		const key = Buffer.from(String((await host.store.get("seal-key")).value), "hex");
+		const { seal: _seal, ...body } = interaction;
+		put(workspace, file, resealed({ ...body, channel: "host-prompt" }, key));
+		assert.notEqual(((await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json).trust, "attested", "a host-prompt answer");
+		put(workspace, file, interaction);
+		assert.equal(((await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json).trust, "attested");
+	}));
+
+test("a sealed answer stands only behind the exact question, option and project it answered", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		const trust = async () => ((await host.tool("read_record", { uri: `project://checkpoints/${GATE}` })).data as Json).trust;
+		assert.equal(await trust(), "attested");
+		const checkpointFile = `.planning/checkpoints/${GATE}.json`;
+		const checkpoint = read(workspace, checkpointFile);
+		const resolution = checkpoint.resolution as Json;
+		put(workspace, checkpointFile, { ...checkpoint, resolution: { ...resolution, selected_option: "workflow-first" } });
+		assert.equal(await trust(), "unattested", "a hand-swapped option");
+		put(workspace, checkpointFile, { ...checkpoint, request: "A question the author never saw." });
+		assert.equal(await trust(), "unattested", "a rewritten question");
+		put(workspace, checkpointFile, checkpoint);
+		const [name] = readdirSync(path.join(workspace, ".planning/interactions"));
+		const interaction = read(workspace, `.planning/interactions/${name}`);
+		const { seal: _seal, ...body } = interaction;
+		const key = Buffer.from(String((await host.store.get("seal-key")).value), "hex");
+		put(workspace, `.planning/interactions/${name}`, resealed({ ...body, project_id: "another-project" }, key));
+		assert.equal(await trust(), "unattested", "an answer sealed for another project");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /not observed by this desk/);
+	}));
+
+test("recovery finishes only a journal of the desk's own record writes", () =>
+	withDesk(async (host, workspace) => {
+		put(workspace, "notes/draft.md", "Unplanned prose.\n");
+		const digest = createHash("sha256").update("Unplanned prose.\n").digest("hex");
+		const before = sha(workspace, "paper/introduction.md");
+		for (const entries of [
+			[{ file: "paper/introduction.md", staging: "notes/draft.md", sha256: digest }],
+			[{ file: ".planning/state.json", staging: "notes/draft.md", sha256: digest }],
+		]) {
+			put(workspace, ".planning/.wtfp-journal.json", { schema: "wtfp.clio-journal/v1", at: AT, entries });
+			assert.match((await host.command("validate")).text, /Set aside a journal/);
+		}
+		assert.equal(sha(workspace, "paper/introduction.md"), before);
+		assert.equal(read(workspace, ".planning/state.json").revision, 3);
+		assert.ok(existsSync(path.join(workspace, "notes/draft.md")));
+	}));
+
 // --- durability and recovery ---------------------------------------------------------
 
 test("measure_section counts body words by the desk's one method and commits the section and state together", () =>
@@ -591,6 +816,7 @@ test("a failure between paired writes leaves a journal the next write completes;
 			const failed = await host.tool("measure_section", { section: "introduction" });
 			assert.equal(failed.isError, true);
 			assert.match(failed.text, /injected fault at between-renames/);
+			assert.match(failed.text, /^Committed; recovery pending: injected fault at between-renames/);
 		} finally {
 			delete process.env.WTFP_DESK_TEST_FAULT;
 		}

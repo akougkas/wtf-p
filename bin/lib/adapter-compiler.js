@@ -1290,7 +1290,9 @@ function manuscriptGuardActions(model, availabilityById, host) {
 // substitutes the section an invocation names, and refuses record writes the
 // contract does not declare. `paperWriters` are the Clio agent IDs of the
 // writing roles that manuscript-producing actions dispatch; the desk confines
-// them to manuscripts whose sections are ready to draft.
+// them to manuscripts whose sections are ready to draft. `readOnlyAgents` are
+// the verifier roles, whose Clio recipes carry no file-writing tool, so the
+// desk may dispatch them without write roots.
 function clioWriteGuard(model, availabilityById) {
   const available = model.actions.filter((action) => availabilityById.get(action.id).available);
   if (!available.some((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))) {
@@ -1303,11 +1305,12 @@ function clioWriteGuard(model, availabilityById) {
     for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
   }
   return stableJson({
-    schema: 'wtfp.clio-write-guard/v2',
+    schema: 'wtfp.clio-write-guard/v3',
     actions: Object.fromEntries(available.map((action) => [action.id, {
       produces: action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
     }])),
-    paperWriters: [...paperWriters].sort()
+    paperWriters: [...paperWriters].sort(),
+    readOnlyAgents: [...verifiers].map((slug) => `wtfp-${slug}`).sort()
   });
 }
 
@@ -1464,6 +1467,7 @@ function addClioRuntime(plan, model, availabilityById) {
   addFile(plan, 'runtime/package.json', source('runtime/package.json'));
   addFile(plan, 'runtime/json-schema.cjs', `${generatedScriptBanner('evaluation', 'lib/json-schema.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'json-schema.js'), 'utf8')}`);
   addFile(plan, 'runtime/claim-coverage.cjs', `${generatedScriptBanner('evaluation', 'lib/claim-coverage.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'claim-coverage.js'), 'utf8')}`);
+  addFile(plan, 'runtime/desk-trust.cjs', `${generatedScriptBanner('evaluation', 'lib/desk-trust.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'desk-trust.js'), 'utf8')}`);
   addFile(plan, 'runtime/write-guard.json', clioWriteGuard(model, availabilityById));
   addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');

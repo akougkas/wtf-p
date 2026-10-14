@@ -20,7 +20,7 @@ runtime:
   watch: [".planning/**", "paper/**"]
   hooks:
     - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
-    - { on: before_tool, tools: [write, edit, dispatch, bash], timeoutMs: 1500, onTimeout: block, onError: block }
+    - { on: before_tool, tools: [write, edit, artifact, dispatch, bash, run_script, job], timeoutMs: 1500, onTimeout: block, onError: block }
   tools:
     - name: record
       description: "Write .planning records at their logical URIs: each validated against its canonical schema, checked against the version you read (expect_revision for state, outline and decisions; expect_sha256 for the rest; neither when creating), its revision bumped, and committed under the project lock. Pass several as writes to commit them together. Refuses author resolutions and anything the running action does not declare."

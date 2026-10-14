@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.clio-write-guard/v2",
+  "schema": "wtfp.clio-write-guard/v3",
   "actions": {
     "add-todo": {
       "produces": [
@@ -562,5 +562,11 @@
   "paperWriters": [
     "wtfp-prose-polisher",
     "wtfp-section-writer"
+  ],
+  "readOnlyAgents": [
+    "wtfp-argument-verifier",
+    "wtfp-coherence-checker",
+    "wtfp-plan-checker",
+    "wtfp-section-reviewer"
   ]
 }

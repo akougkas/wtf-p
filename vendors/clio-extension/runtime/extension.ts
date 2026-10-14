@@ -12,7 +12,7 @@
  * author's answer, as a sealed interaction record; a resolution counts as the
  * author's only while such a record still matches the checkpoint it answered.
  */
-import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import {
 	appendFileSync,
 	closeSync,
@@ -30,6 +30,7 @@ import {
 	writeSync,
 } from "node:fs";
 import { createRequire } from "node:module";
+import { homedir } from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
@@ -51,6 +52,12 @@ const require = createRequire(import.meta.url);
 const { SchemaRegistry, validateInstance } = require("./json-schema.cjs") as {
 	SchemaRegistry: new (files: string[]) => { get(file: string): unknown };
 	validateInstance: (value: unknown, schema: unknown, file: string, registry: unknown) => string[];
+};
+const deskTrust = require("./desk-trust.cjs") as {
+	canonical(value: unknown): string;
+	checkpointDigest(record: Json): string;
+	seal(record: Json, key: Buffer): Json;
+	trustOf(checkpoint: Json, interactions: Json[], key: Buffer | null, projectId: string | null): { trust: Trust; answer?: Json };
 };
 const coverage = require("./claim-coverage.cjs") as {
 	STRUCTURAL_SCOPE: string;
@@ -80,6 +87,7 @@ const GUARD = JSON.parse(readFileSync(new URL("./write-guard.json", import.meta.
 	schema: string;
 	actions: Record<string, GuardAction>;
 	paperWriters: string[];
+	readOnlyAgents: string[];
 };
 const SKIN = JSON.parse(readFileSync(new URL("../skins/wtfp.json", import.meta.url), "utf8")) as ExtensionSkin;
 const RECORD_LIMIT = 1024 * 1024;
@@ -248,26 +256,45 @@ function contained(workspace: string, relative: string): string | null {
 	return file;
 }
 
-/** The real location a write to `absolute` would reach, following links; null for a dangling link. */
-function realTarget(absolute: string): string | null {
-	const root = path.parse(absolute).root;
-	const parts = absolute.slice(root.length).split(path.sep).filter(Boolean);
+const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/gu;
+
+/**
+ * Where a Clio file tool lands a path argument, resolved the way Clio's
+ * src/tools/path-utils.ts and core/path-canonical.ts resolve it: a leading `@`
+ * is dropped, Unicode spaces become plain ones, `~` is the home directory, and
+ * the components are walked as the kernel walks them, so a `..` after a link
+ * steps up from the link's target. Null when a link on the way does not
+ * resolve; the guard refuses those rather than guess where they land.
+ */
+function toolTarget(raw: string, workspace: string): string | null {
+	let spelled = (raw.startsWith("@") ? raw.slice(1) : raw).replace(UNICODE_SPACES, " ");
+	if (spelled === "~") spelled = homedir();
+	else if (spelled.startsWith("~/")) spelled = homedir() + spelled.slice(1);
+	const joined = path.isAbsolute(spelled) ? spelled : `${workspace}${path.sep}${spelled}`;
+	const { root } = path.parse(joined);
 	let current = root;
-	for (let index = 0; index < parts.length; index += 1) {
-		const next = path.join(current, parts[index] as string);
-		let stat;
-		try {
-			stat = lstatSync(next);
-		} catch {
-			return path.join(current, ...parts.slice(index));
+	for (const part of joined.slice(root.length).split(path.sep)) {
+		if (part === "" || part === ".") continue;
+		if (part === "..") {
+			current = path.dirname(current);
+			continue;
 		}
-		if (stat.isSymbolicLink()) {
-			try {
-				current = realpathSync(next);
-			} catch {
-				return null;
-			}
-		} else current = next;
+		const next = path.join(current, part);
+		let link = false;
+		try {
+			link = lstatSync(next).isSymbolicLink();
+		} catch {
+			// Missing: nothing below it is a link, and a later `..` climbs back lexically.
+		}
+		if (!link) {
+			current = next;
+			continue;
+		}
+		try {
+			current = realpathSync(next);
+		} catch {
+			return null;
+		}
 	}
 	return current;
 }
@@ -315,20 +342,12 @@ function sha256(data: string | Buffer): string {
 
 /** JSON with object keys in code-unit order and no insignificant whitespace; the input to every digest and seal. */
 function canonical(value: unknown): string {
-	if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-	if (value !== null && typeof value === "object")
-		return `{${Object.keys(value)
-			.filter((key) => (value as Json)[key] !== undefined)
-			.sort()
-			.map((key) => `${JSON.stringify(key)}:${canonical((value as Json)[key])}`)
-			.join(",")}}`;
-	return JSON.stringify(value);
+	return deskTrust.canonical(value);
 }
 
 /** What a checkpoint asks, independent of whether and how it was answered. */
 export function checkpointDigest(record: Json): string {
-	const { status: _status, resolution: _resolution, file: _file, trust: _trust, answer: _answer, ...asked } = record;
-	return sha256(canonical(asked));
+	return deskTrust.checkpointDigest(record);
 }
 
 function timestamp(): string {
@@ -427,24 +446,9 @@ function planningRecords(workspace: string, relative = ".planning"): string[] {
 
 // --- seals -------------------------------------------------------------------
 
-function keyId(key: Buffer): string {
-	return sha256(key).slice(0, 16);
-}
-
-/** The desk's seal over an interaction record: an HMAC of its canonical form under this machine's key. */
+/** The desk's seal over an interaction record (evaluation/lib/desk-trust.js, shared with the campaign collector). */
 function sealed(record: Json, key: Buffer): Json {
-	const { seal: _seal, ...body } = record;
-	return { ...body, seal: { method: "hmac-sha256", key_id: keyId(key), mac: createHmac("sha256", key).update(canonical(body)).digest("hex") } };
-}
-
-function sealState(record: Json, key: Buffer | null): "valid" | "foreign" | "invalid" | "unsealed" {
-	const seal = record.seal as Json | undefined;
-	if (!seal || typeof seal.mac !== "string") return "unsealed";
-	if (key === null || seal.key_id !== keyId(key)) return "foreign";
-	const { seal: _seal, ...body } = record;
-	const expected = Buffer.from(createHmac("sha256", key).update(canonical(body)).digest("hex"), "hex");
-	const actual = Buffer.from(seal.mac, "hex");
-	return actual.length === expected.length && timingSafeEqual(actual, expected) ? "valid" : "invalid";
+	return deskTrust.seal(record, key);
 }
 
 async function storedKey(ctx: ExtensionContextV2, create: boolean): Promise<Buffer | null> {
@@ -457,35 +461,8 @@ async function storedKey(ctx: ExtensionContextV2, create: boolean): Promise<Buff
 	return typeof settled.value === "string" ? Buffer.from(settled.value, "hex") : null;
 }
 
-/** The outcome an interaction must carry to stand behind a checkpoint's recorded resolution. */
-function matchesResolution(interaction: Json, checkpoint: Checkpoint): boolean {
-	if (interaction.kind !== "checkpoint-answer" || interaction.subject_uri !== `project://checkpoints/${checkpoint.id}`) return false;
-	if (checkpoint.status === "waived") return interaction.outcome === "waived";
-	const option = checkpoint.resolution?.selected_option;
-	return option ? interaction.outcome === "selected" && interaction.selected_option === option : interaction.outcome === "done";
-}
-
 function trustOf(checkpoint: Checkpoint, interactions: Json[], key: Buffer | null, projectId: string | null): { trust: Trust; answer?: Json } {
-	if (checkpoint.kind === "state-snapshot") return { trust: "snapshot" };
-	if (checkpoint.status === "pending") return { trust: "pending" };
-	if (checkpoint.status === "expired") return { trust: "expired" };
-	if (checkpoint.resolution?.resolved_by === "policy") return { trust: "policy" };
-	const digest = checkpointDigest(checkpoint);
-	let foreign = false;
-	const answers = interactions
-		.filter(
-			(interaction) =>
-				matchesResolution(interaction, checkpoint) &&
-				interaction.project_id === projectId &&
-				(interaction.presented as Json | undefined)?.content_sha256 === digest,
-		)
-		.sort((a, b) => text(b.answered_at).localeCompare(text(a.answered_at)));
-	for (const interaction of answers) {
-		const state = sealState(interaction, key);
-		if (state === "valid") return { trust: "attested", answer: interaction };
-		if (state === "foreign") foreign = true;
-	}
-	return { trust: foreign ? "foreign" : "unattested" };
+	return deskTrust.trustOf(checkpoint, interactions, key, projectId);
 }
 
 /** Recorded as answered, but with no author answer sealed by this desk behind it. */
@@ -857,7 +834,45 @@ interface JournalEntry {
 	sha256: string;
 }
 
-const STAGING = /\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.partial$/u;
+const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const STAGING = new RegExp(`\\.${UUID}\\.partial$`, "u");
+
+/** Whether a journal entry is one `commit` could have written: a record file and its own staged copy. */
+function journaled(entry: unknown): entry is JournalEntry {
+	if (entry === null || typeof entry !== "object") return false;
+	const { file, staging, sha256: digest } = entry as Json;
+	return (
+		typeof file === "string" &&
+		RECORD_URIS.some((route) => route.filePattern.test(file)) &&
+		typeof staging === "string" &&
+		new RegExp(`^${file.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}\\.${UUID}\\.partial$`, "u").test(staging) &&
+		typeof digest === "string" &&
+		/^[a-f0-9]{64}$/u.test(digest)
+	);
+}
+
+/**
+ * A failure after the commit point. The write is in place, or the journal
+ * finishes it, so it must never be reported as not written. `pending` says
+ * recovery still has to finish it.
+ */
+class AfterCommit extends Error {
+	readonly pending: boolean;
+	constructor(message: string, pending: boolean) {
+		super(message);
+		this.pending = pending;
+	}
+}
+
+/** What a failed write tells the agent: before the commit point nothing changed; after it, the write stands. */
+function failure(refused: string, error: unknown): string {
+	const message = error instanceof Error ? error.message : String(error);
+	if (error instanceof AfterCommit)
+		return error.pending
+			? `Committed; recovery pending: ${message}. The next desk write or /ext:wtfp:validate completes it.`
+			: `Committed, but ${message}`;
+	return `${refused}: ${message}`;
+}
 
 function stagingFiles(workspace: string, relative = ".planning"): string[] {
 	const directory = contained(workspace, relative);
@@ -892,6 +907,13 @@ function recover(workspace: string): string | null {
 		const aside = `${JOURNAL}.unreadable-${randomUUID()}`;
 		renameSync(journal, path.join(workspace, aside));
 		return `Set aside an unreadable journal as ${aside}; check the records it may have touched before continuing.`;
+	}
+	// The desk journals only its own record writes, each staged beside its target; anything else did not come from a commit.
+	const foreign = entries.filter((entry) => !journaled(entry));
+	if (foreign.length > 0) {
+		const aside = `${JOURNAL}.untrusted-${randomUUID()}`;
+		renameSync(journal, path.join(workspace, aside));
+		return `Set aside a journal naming writes the desk never journals (${foreign.map((entry) => String((entry as Partial<JournalEntry>)?.file)).join(", ")}) as ${aside}; nothing it named was moved.`;
 	}
 	const finished: string[] = [];
 	const drifted: string[] = [];
@@ -951,17 +973,37 @@ function commit(workspace: string, writes: PendingWrite[]): void {
 		}
 		throw error;
 	}
-	// Committed: a failure from here leaves the journal for recover() to finish.
-	staged.forEach((entry, index) => {
-		if (index > 0) fault("between-renames");
-		renameSync(path.join(workspace, entry.staging), path.join(workspace, entry.file));
-	});
-	if (staged.length > 1) unlinkSync(path.join(workspace, JOURNAL));
+	if (staged.length === 1) {
+		// One write commits by its rename; a failed rename changed nothing.
+		const [entry] = staged as [JournalEntry];
+		try {
+			renameSync(path.join(workspace, entry.staging), path.join(workspace, entry.file));
+		} catch (error) {
+			try {
+				unlinkSync(path.join(workspace, entry.staging));
+			} catch {
+				// Already removed.
+			}
+			throw error;
+		}
+	} else {
+		// Committed: a failure from here leaves the journal for recover() to finish.
+		try {
+			staged.forEach((entry, index) => {
+				if (index > 0) fault("between-renames");
+				renameSync(path.join(workspace, entry.staging), path.join(workspace, entry.file));
+			});
+			unlinkSync(path.join(workspace, JOURNAL));
+		} catch (error) {
+			throw new AfterCommit(error instanceof Error ? error.message : String(error), true);
+		}
+	}
 	// Stands in for another process changing a file between the rename and the readback.
 	if (process.env.WTFP_DESK_TEST_FAULT === "tamper-after-rename" && staged[0]) appendFileSync(path.join(workspace, staged[0].file), " ");
 	for (const entry of staged) {
 		const back = readBytes(workspace, entry.file);
-		if (back === null || sha256(back) !== entry.sha256) throw new Error(`readback of ${entry.file} differs from what was written; read it again before relying on it`);
+		if (back === null || sha256(back) !== entry.sha256)
+			throw new AfterCommit(`readback of ${entry.file} differs from what was written; another writer changed it after the commit, so read it again before relying on it`, false);
 	}
 }
 
@@ -969,18 +1011,32 @@ function commit(workspace: string, writes: PendingWrite[]): void {
 
 const IDENTIFIER = "[a-z][a-z0-9]*(?:-[a-z0-9]+)*";
 /** The adapter mapping of project/README.md: logical URI to record type and project-relative file. */
-const RECORD_URIS: ReadonlyArray<{ pattern: RegExp; type: string; file: (id: string) => string }> = [
-	{ pattern: /^project:\/\/manifest$/u, type: "manifest", file: () => ".planning/project.json" },
-	{ pattern: /^project:\/\/config$/u, type: "config", file: () => ".planning/config.json" },
-	{ pattern: /^project:\/\/state$/u, type: "state", file: () => ".planning/state.json" },
-	{ pattern: /^project:\/\/decisions$/u, type: "decisions", file: () => ".planning/decisions.json" },
-	{ pattern: /^project:\/\/structure\/outline$/u, type: "outline", file: () => ".planning/structure/outline.json" },
-	{ pattern: new RegExp(`^project://sections/(${IDENTIFIER})$`, "u"), type: "section", file: (id) => `.planning/sections/${id}/section.json` },
-	{ pattern: new RegExp(`^project://sources/(${IDENTIFIER})$`, "u"), type: "source", file: (id) => `.planning/sources/${id}.json` },
-	{ pattern: new RegExp(`^project://evidence/(${IDENTIFIER})$`, "u"), type: "evidence", file: (id) => `.planning/evidence/${id}.json` },
-	{ pattern: new RegExp(`^project://checkpoints/(${IDENTIFIER})$`, "u"), type: "checkpoint", file: (id) => `.planning/checkpoints/${id}.json` },
-	{ pattern: new RegExp(`^project://validations/(${IDENTIFIER})$`, "u"), type: "validation", file: (id) => `.planning/validations/${id}.json` },
-	{ pattern: new RegExp(`^project://interactions/(${IDENTIFIER})$`, "u"), type: "interaction", file: (id) => `.planning/interactions/${id}.json` },
+const RECORD_URIS: ReadonlyArray<{ pattern: RegExp; type: string; file: (id: string) => string; filePattern: RegExp }> = [
+	{ pattern: /^project:\/\/manifest$/u, type: "manifest", file: () => ".planning/project.json", filePattern: /^\.planning\/project\.json$/u },
+	{ pattern: /^project:\/\/config$/u, type: "config", file: () => ".planning/config.json", filePattern: /^\.planning\/config\.json$/u },
+	{ pattern: /^project:\/\/state$/u, type: "state", file: () => ".planning/state.json", filePattern: /^\.planning\/state\.json$/u },
+	{ pattern: /^project:\/\/decisions$/u, type: "decisions", file: () => ".planning/decisions.json", filePattern: /^\.planning\/decisions\.json$/u },
+	{
+		pattern: /^project:\/\/structure\/outline$/u,
+		type: "outline",
+		file: () => ".planning/structure/outline.json",
+		filePattern: /^\.planning\/structure\/outline\.json$/u,
+	},
+	...(
+		[
+			["section", "sections", (id: string) => `.planning/sections/${id}/section.json`, `^\\.planning/sections/${IDENTIFIER}/section\\.json$`],
+			["source", "sources", (id: string) => `.planning/sources/${id}.json`, `^\\.planning/sources/${IDENTIFIER}\\.json$`],
+			["evidence", "evidence", (id: string) => `.planning/evidence/${id}.json`, `^\\.planning/evidence/${IDENTIFIER}\\.json$`],
+			["checkpoint", "checkpoints", (id: string) => `.planning/checkpoints/${id}.json`, `^\\.planning/checkpoints/${IDENTIFIER}\\.json$`],
+			["validation", "validations", (id: string) => `.planning/validations/${id}.json`, `^\\.planning/validations/${IDENTIFIER}\\.json$`],
+			["interaction", "interactions", (id: string) => `.planning/interactions/${id}.json`, `^\\.planning/interactions/${IDENTIFIER}\\.json$`],
+		] as const
+	).map(([type, collection, file, filePattern]) => ({
+		pattern: new RegExp(`^project://${collection}/(${IDENTIFIER})$`, "u"),
+		type,
+		file,
+		filePattern: new RegExp(filePattern, "u"),
+	})),
 ];
 const REVISIONED = new Set(["state", "outline", "decisions"]);
 const STAMPED = new Set(["state", "outline", "decisions", "manifest", "section"]);
@@ -992,18 +1048,55 @@ interface RecordWrite {
 	expect_sha256?: string;
 }
 
-/** Changes that weaken an author's control, each as the line the author is shown before it may land. */
+/** Interaction modes from the least to the most the workflow asks the author. */
+const MODES = ["autonomous", "standard", "guided"];
+
+const list = (value: unknown): Json[] => (Array.isArray(value) ? (value as Json[]) : []);
+
+/**
+ * Changes that weaken an author's control or what the desk holds, each as the
+ * line the author is shown before it may land: a gate, check or safeguard
+ * turned off, a less interactive mode, a locked decision changed, a section
+ * dropped from the outline or no longer researched, a manuscript re-pointed
+ * away from the file its gates hold, plan history rewritten, or a claim
+ * released from needing evidence.
+ */
 function weakening(type: string, prior: Json | null, next: Json): string[] {
 	const changes: string[] = [];
 	if (type === "config") {
-		const before = (prior?.gates ?? {}) as Json;
-		const after = (next.gates ?? {}) as Json;
-		for (const [key, value] of Object.entries(after)) if (value === false && before[key] !== false) changes.push(`gates.${key}: on → off`);
-		const beforeFlow = (prior?.workflow ?? {}) as Json;
-		for (const [key, value] of Object.entries((next.workflow ?? {}) as Json))
-			if (value === false && beforeFlow[key] !== false) changes.push(`workflow.${key}: on → off`);
-		if (next.interaction_mode === "autonomous" && prior?.interaction_mode !== "autonomous")
-			changes.push(`interaction_mode: ${text(prior?.interaction_mode, "unset")} → autonomous`);
+		for (const group of ["gates", "workflow", "safety"]) {
+			const before = (prior?.[group] ?? {}) as Json;
+			for (const [key, value] of Object.entries((next[group] ?? {}) as Json))
+				if (value === false && before[key] !== false) changes.push(`${group}.${key}: on → off`);
+		}
+		const from = prior ? text(prior.interaction_mode, "standard") : null;
+		const to = text(next.interaction_mode, "standard");
+		if (from === null ? to === "autonomous" : MODES.indexOf(to) < MODES.indexOf(from)) changes.push(`interaction_mode: ${from ?? "unset"} → ${to}`);
+	}
+	if (type === "outline" && prior) {
+		const after = new Map(list(next.sections).map((entry) => [entry.id, entry]));
+		for (const entry of list(prior.sections)) {
+			const kept = after.get(entry.id);
+			if (!kept) changes.push(`removes ${String(entry.id)} from the outline, so the desk no longer holds its manuscript`);
+			else if ((entry.research as Json | undefined)?.required === true && (kept.research as Json | undefined)?.required !== true)
+				changes.push(`${String(entry.id)}: research.required on → off, so its claims may be drafted without verified evidence`);
+		}
+	}
+	if (type === "section" && prior) {
+		const id = text(next.id);
+		const before = (prior.artifacts ?? {}) as Json;
+		const after = (next.artifacts ?? {}) as Json;
+		const mapped = (artifacts: Json): string => text(artifacts.manuscript, `project://paper/${id}`);
+		if (mapped(before) !== mapped(after))
+			changes.push(`${id}: manuscript ${mapped(before)} → ${mapped(after)}, so the desk no longer holds the old file`);
+		const plansBefore = Array.isArray(before.plans) ? (before.plans as unknown[]) : [];
+		const plansAfter = Array.isArray(after.plans) ? (after.plans as unknown[]) : [];
+		if (plansBefore.some((uri, index) => plansAfter[index] !== uri))
+			changes.push(`${id}: rewrites the plan history (${plansBefore.join(", ") || "none"} → ${plansAfter.join(", ") || "none"}); plans are only ever appended`);
+		const claims = new Map(list(next.claims).map((claim) => [claim.id, claim]));
+		for (const claim of list(prior.claims))
+			if (claim.evidence_required === true && claims.get(claim.id)?.evidence_required !== true)
+				changes.push(`${id}: claim ${String(claim.id)} no longer requires evidence`);
 	}
 	if (type === "decisions" && prior) {
 		const after = new Map((Array.isArray(next.items) ? (next.items as Json[]) : []).map((item) => [item.id, item]));
@@ -1630,13 +1723,26 @@ function askable(desk: Desk, skip: readonly string[]): Checkpoint[] {
 	);
 }
 
+function planGate(checkpoint: Checkpoint): boolean {
+	return new RegExp(`^project://sections/${IDENTIFIER}/plans/${IDENTIFIER}$`, "u").test(checkpoint.scope_uri);
+}
+
+/**
+ * The words the author sees for an option. On a plan gate the desk owns them:
+ * `approve` is what authorizes drafting, so it always reads as approval and
+ * nothing else does, whatever the checkpoint's own labels say.
+ */
+function shown(checkpoint: Checkpoint, option: { id: string; label: string; implication?: string }): { label: string; detail?: string } {
+	if (planGate(checkpoint)) {
+		if (option.id === APPROVE) return { label: "Approve this plan as shown", detail: "Drafting may start from exactly these plan bytes; any later change asks you again." };
+		if (/approv/iu.test(option.label)) return { label: `Do not draft from this plan yet (${option.id})`, detail: "Any answer but approval leaves the plan unapproved." };
+	}
+	return { label: option.label, ...(option.implication ? { detail: option.implication } : {}) };
+}
+
 function choices(checkpoint: Checkpoint): Array<{ value: string; label: string; detail?: string }> {
 	return checkpoint.options && checkpoint.options.length > 0
-		? checkpoint.options.map((option) => ({
-				value: option.id,
-				label: option.label,
-				...(option.implication ? { detail: option.implication } : {}),
-			}))
+		? checkpoint.options.map((option) => ({ value: option.id, ...shown(checkpoint, option) }))
 		: [
 				{ value: RESOLVE, label: checkpoint.kind === "human-verify" ? "Verified" : "Done", detail: "Mark it resolved by you." },
 				{ value: WAIVE, label: "Waive it", detail: "Record that you chose to skip it." },
@@ -1757,7 +1863,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown)
 						resolved_by: "author",
 						...(option ? { selected_option: option.id } : {}),
 						summary: option
-							? `The author chose "${option.label}" at the Clio WTF-P desk.`
+							? `The author chose "${shown(checkpoint, option).label}" at the Clio WTF-P desk.`
 							: picked === WAIVE
 								? "The author waived this gate at the Clio WTF-P desk."
 								: "The author marked this done at the Clio WTF-P desk.",
@@ -1793,7 +1899,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown)
 	if (picked === KEEP) return { kind: "kept", text: `${checkpoint.id}: kept pending`, checkpoint: checkpoint.id };
 	return {
 		kind: "recorded",
-		text: option ? `${checkpoint.id}: ${option.label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`,
+		text: option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`,
 		checkpoint: checkpoint.id,
 	};
 }
@@ -1849,7 +1955,7 @@ async function confirmStep(ctx: ExtensionContextV2, write: RecordWrite, prepared
 			t: "box",
 			dir: "col",
 			children: [
-				{ t: "text", text: `The agent wants to change ${write.uri}. This lowers how much the workflow asks you:`, wrap: "wrap" },
+				{ t: "text", text: `The agent wants to change ${write.uri}. This lowers what the workflow asks you or what the desk holds back:`, wrap: "wrap" },
 				...prepared.confirm.slice(0, 8).map((change) => ({ t: "text", text: `  ${change}`, tone: "warning", wrap: "wrap" }) as View),
 			],
 		},
@@ -2168,7 +2274,11 @@ interface Armed {
 	workspace: string;
 }
 
-/** The project roots an armed action's file tools and workers may write, from its declared outputs. */
+/**
+ * The project roots an armed action's file tools may write, from its declared
+ * outputs. Author-selected materials are never one: a "." root would be the
+ * whole workspace.
+ */
 function writeRoots(desk: Desk, armed: Armed): string[] {
 	const roots = new Set<string>();
 	const section = armed.section;
@@ -2181,8 +2291,7 @@ function writeRoots(desk: Desk, armed: Armed): string[] {
 		} else if (uri.startsWith("project://archives/")) {
 			const kind = uri.split("/")[3] ?? "";
 			roots.add(kind.startsWith("{") ? ".planning/archives" : `.planning/archives/${kind}`);
-		} else if (uri.startsWith("project://materials/")) roots.add(".");
-		else {
+		} else {
 			const match = /^project:\/\/sections\/\{section\}\/(context|research|summary|handoff|plans|reviews)/u.exec(uri);
 			if (match && !section) roots.add(".planning/sections");
 			else if (match) roots.add(match[1] === "plans" || match[1] === "reviews" ? `.planning/sections/${section}/${match[1]}` : `.planning/sections/${section}/${match[1]}.md`);
@@ -2202,8 +2311,9 @@ function manuscriptRoots(section: SectionRow | undefined): string[] {
 	return [section.manuscript, `${stem}/`];
 }
 
-function sectionForPaper(desk: Desk, relative: string): SectionRow | undefined {
-	return desk.sections.find((section) => {
+/** Every section whose manuscript this file is: its own file, a variant of it, or a file nested under its stem. */
+function sectionsForPaper(desk: Desk, relative: string): SectionRow[] {
+	return desk.sections.filter((section) => {
 		if (section.manuscript === null) return false;
 		const stem = section.manuscript.replace(/\.(md|tex|typ)$/u, "");
 		return relative === section.manuscript || relative === stem || relative.startsWith(`${stem}.`) || relative.startsWith(`${stem}/`);
@@ -2215,6 +2325,13 @@ function under(root: string, relative: string): boolean {
 	return trimmed === "." || relative === trimmed || relative.startsWith(`${trimmed}/`);
 }
 
+/** Whether two project paths share a file: one is the other or lies under it. */
+function overlaps(left: string, right: string): boolean {
+	const a = left.replace(/\/$/u, "");
+	const b = right.replace(/\/$/u, "");
+	return under(a, b) || under(b, a);
+}
+
 function block(reason: string): ExtensionHookResult {
 	return { effects: [{ kind: "block_tool", reason }] };
 }
@@ -2223,10 +2340,23 @@ function deskOwned(relative: string): boolean {
 	return DESK_OWNED.some((owned) => under(owned, relative)) || /^\.planning\/(?:.*\/)?\.wtfp-/u.test(relative);
 }
 
+/** The manuscripts a write must not reach now: those of sections that are not ready to draft. */
+function heldManuscripts(desk: Desk): { roots: string[]; notes: string[] } {
+	const roots: string[] = [];
+	const notes: string[] = [];
+	for (const section of desk.sections) {
+		const reasons = blockers(desk, section);
+		if (reasons.length === 0) continue;
+		roots.push(...manuscriptRoots(section));
+		notes.push(`${section.id}: ${reasons.join("; ")}`);
+	}
+	return { roots, notes };
+}
+
 async function guardWrite(ctx: ExtensionContextV2, target: string): Promise<ExtensionHookResult> {
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
-	const real = realTarget(path.resolve(workspace, target));
+	const real = toolTarget(target, workspace);
 	if (real === null) return block(`WTF-P write guard: ${target} goes through a dangling symbolic link; refused.`);
 	const root = realpathSync(workspace);
 	if (!inside(root, real)) return {};
@@ -2252,10 +2382,12 @@ async function guardWrite(ctx: ExtensionContextV2, target: string): Promise<Exte
 				return block(`WTF-P write guard: ${relative} is a linked plan, and linked plans are immutable; write a revision plan instead.`);
 	}
 	if (!under("paper", relative) || !desk.present) return {};
-	const section = sectionForPaper(desk, relative);
-	if (!section) return {};
-	const reasons = blockers(desk, section);
-	if (reasons.length === 0) return {};
+	// A file can be the manuscript of more than one section (one nested under another's stem); every one must be ready.
+	const held = sectionsForPaper(desk, relative)
+		.map((section) => ({ section, reasons: blockers(desk, section) }))
+		.find((entry) => entry.reasons.length > 0);
+	if (!held) return {};
+	const { section, reasons } = held;
 	const gate = section.gates[0];
 	return block(
 		`WTF-P gate: ${section.title} cannot be written yet: ${reasons.join("; ")}. ${
@@ -2273,7 +2405,7 @@ async function guardWrite(ctx: ExtensionContextV2, target: string): Promise<Exte
 /** Narrows requested write roots to those inside the allowed ones; a broader request becomes the allowed roots inside it. */
 function narrow(requested: string[], allowed: string[]): string[] {
 	const out = new Set<string>();
-	for (const want of requested.map((entry) => entry.replace(/^\.\//u, "").replace(/\/$/u, "") || ".")) {
+	for (const want of requested) {
 		for (const root of allowed) {
 			const bare = root.replace(/\/$/u, "");
 			if (under(bare, want)) out.add(want);
@@ -2284,82 +2416,167 @@ function narrow(requested: string[], allowed: string[]): string[] {
 }
 
 const WTFP_AGENT = /^wtfp-[a-z-]+$/u;
+const READ_ONLY_AGENTS = new Set(GUARD.readOnlyAgents);
+
+interface DispatchTask {
+	item: Json;
+	/** The trimmed agent id, or null for Clio's default agent. */
+	agent: string | null;
+	/** Normalized write roots, or null when the worker would have no boundary. */
+	roots: string[] | null;
+}
+
+function isObject(value: unknown): value is Json {
+	return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * A dispatch call's tasks as Clio 0.6.2 parses them (src/tools/dispatch-arguments.ts,
+ * domains/dispatch/intent.ts): a batch may arrive as a JSON string or as one
+ * object, `task` alone is a one-task batch, an agent id is trimmed and a blank
+ * one means Clio's default agent, a task's intent inherits the shared one, and
+ * a write root of "." or "./" is the whole workspace, as no list is. Throws
+ * for a shape the desk cannot read, since it could not confine it.
+ */
+function dispatchTasks(args: Json): DispatchTask[] {
+	const unreadable = (what: string): Error => new Error(`WTF-P dispatch guard: the desk cannot read this dispatch's ${what}, so it cannot confine its workers.`);
+	let tasks: unknown = args.tasks;
+	if (typeof tasks === "string") {
+		const raw = tasks.trim();
+		if (raw.startsWith("[") || raw.startsWith("{")) {
+			try {
+				tasks = JSON.parse(raw) as unknown;
+			} catch {
+				// Clio refuses the call with its own shape error.
+			}
+		}
+	}
+	if (isObject(tasks) || typeof tasks === "string") tasks = [tasks];
+	if (tasks === undefined && typeof args.task === "string") tasks = [{ task: args.task }];
+	if (!Array.isArray(tasks) || tasks.length === 0) throw unreadable("tasks");
+	const shared = args.intent;
+	if (shared !== undefined && !isObject(shared)) throw unreadable("intent");
+	return tasks.map((task) => {
+		const item = typeof task === "string" ? { task } : task;
+		if (!isObject(item)) throw unreadable("tasks");
+		if (item.intent !== undefined && !isObject(item.intent)) throw unreadable("intent");
+		const named = Object.hasOwn(item, "agent") ? item.agent : args.agent;
+		const agent = typeof named === "string" && named.trim().length > 0 ? named.trim() : null;
+		const declared = (item.intent as Json | undefined)?.write_roots ?? shared?.write_roots;
+		if (declared !== undefined && !Array.isArray(declared)) throw unreadable("write_roots");
+		const roots: string[] = [];
+		for (const entry of (declared as unknown[] | undefined) ?? []) {
+			if (typeof entry !== "string") throw unreadable("write_roots");
+			const trimmed = entry.trim().replace(/\/{2,}/gu, "/");
+			if (/^\.\/?$/u.test(trimmed)) continue;
+			const segments = trimmed.split("/").filter(Boolean);
+			if (trimmed.startsWith("/") || trimmed.includes("\\") || segments.includes("..") || segments.includes("."))
+				throw new Error(`WTF-P dispatch guard: write root ${entry} must be a plain project-relative path.`);
+			roots.push(trimmed);
+		}
+		return { item, agent, roots: roots.length === 0 ? null : roots };
+	});
+}
+
+/** Where a worker root really leads inside the project, so a link cannot dress up a held path. */
+function rootSpellings(workspace: string, root: string): string[] {
+	const real = toolTarget(root.replace(/\/$/u, ""), workspace);
+	const base = realpathSync(workspace);
+	const physical = real !== null && inside(base, real) ? posix(path.relative(base, real)) || "." : null;
+	return physical === null || physical === root.replace(/\/$/u, "") ? [root] : [root, physical];
+}
 
 async function guardDispatch(ctx: ExtensionContextV2, args: Json): Promise<ExtensionHookResult> {
 	if (args.list === true) return {};
+	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
-	const tasks = Array.isArray(args.tasks) ? (args.tasks as unknown[]) : null;
-	const entries: Array<{ agent: string | null; roots: string[] | null }> = (tasks ?? [args]).map((task) => {
-		const item = (typeof task === "string" ? {} : task) as Json;
-		const agent = typeof item.agent === "string" ? item.agent : typeof args.agent === "string" ? args.agent : null;
-		const own = (item.intent as Json | undefined)?.write_roots;
-		const shared = (args.intent as Json | undefined)?.write_roots;
-		const roots = Array.isArray(own) ? own : Array.isArray(shared) ? shared : null;
-		return { agent, roots: roots ? roots.filter((root): root is string => typeof root === "string") : null };
-	});
+	const desk = loadDesk(workspace, await storedKey(ctx, false));
+	if (desk.present && (args.from_scout !== undefined || args.apply_winner !== undefined))
+		return block("WTF-P dispatch guard: the desk cannot see what a scout continuation or a compete winner writes, so a WTF-P project refuses them.");
+	const entries = dispatchTasks(args);
 	const armed = await armedFor(ctx);
-	const wtfp = entries.filter((entry) => entry.agent !== null && WTFP_AGENT.test(entry.agent));
 	if (!armed) {
-		if (wtfp.length === 0) return {};
-		return block(
-			`WTF-P dispatch guard: ${wtfp.map((entry) => entry.agent).join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`,
-		);
+		const wtfp = entries.filter((entry) => entry.agent !== null && WTFP_AGENT.test(entry.agent));
+		if (wtfp.length > 0)
+			return block(
+				`WTF-P dispatch guard: ${wtfp.map((entry) => entry.agent).join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`,
+			);
+		if (!desk.present) return {};
+		// Workers run no desk check, so outside an action each must be kept off the records and the manuscripts still held.
+		const held = [".planning/", ...heldManuscripts(desk).roots];
+		for (const entry of entries) {
+			if (entry.roots === null)
+				return block(
+					`WTF-P dispatch guard: outside a WTF-P action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
+				);
+			for (const root of entry.roots) {
+				const hit = held.find((file) => rootSpellings(workspace, root).some((spelling) => overlaps(spelling, file)));
+				if (hit) return block(`WTF-P dispatch guard: write root ${root} reaches ${hit}, which a worker outside a WTF-P action may not change.`);
+			}
+		}
+		return {};
 	}
-	const desk = loadDesk(ctx.snapshot.workspace, await storedKey(ctx, false));
-	const base = writeRoots(desk, armed);
+	const name = actionName(served, armed.action);
+	// A worker never gets a root that holds records: the record tool is the only way records change.
+	const base = writeRoots(desk, armed).filter((root) => ![".", ".planning", ".planning/sections"].includes(root.replace(/\/$/u, "")));
+	const held = heldManuscripts(desk);
 	let allowed = base;
 	const notes: string[] = [];
 	if (base.includes("paper")) {
 		// Without a named section, a worker may reach only manuscripts whose sections are ready now.
-		const ready = desk.sections.filter((section) => blockers(desk, section).length === 0);
-		for (const section of desk.sections.filter((entry) => !ready.includes(entry)))
-			notes.push(`${section.id}: ${blockers(desk, section).join("; ")}`);
-		allowed = [...base.filter((root) => root !== "paper"), ...ready.flatMap((section) => manuscriptRoots(section))].sort();
+		notes.push(...held.notes);
+		allowed = [...base.filter((root) => root !== "paper"), ...desk.sections.filter((section) => blockers(desk, section).length === 0).flatMap((section) => manuscriptRoots(section))];
 	} else if (armed.section) {
 		const section = desk.sections.find((entry) => entry.id === armed.section);
 		const reasons = section ? blockers(desk, section) : [];
-		if (section && reasons.length > 0 && base.some((root) => root.startsWith("paper/"))) {
-			allowed = base.filter((root) => !root.startsWith("paper/"));
-			notes.push(`${section.id}: ${reasons.join("; ")}`);
-		}
+		if (section && reasons.length > 0 && base.some((root) => root.startsWith("paper/"))) notes.push(`${section.id}: ${reasons.join("; ")}`);
 	}
+	// No worker root may cover a manuscript that is still held, even one nested under a ready section's stem.
+	allowed = [...new Set(allowed.filter((root) => !held.roots.some((file) => overlaps(root, file))))].sort();
+	const sectionScoped = armed.produces.some((output) => output.uri.includes("{section}"));
 	const paperWriters = new Set(GUARD.paperWriters);
-	const narrowed = entries.map((entry) => {
+	const narrowed = entries.map((entry): string[] | null => {
+		if (entry.roots === null && entry.agent !== null && READ_ONLY_AGENTS.has(entry.agent)) return null;
 		const roots = entry.roots === null ? allowed : narrow(entry.roots, allowed);
 		if (entry.agent && paperWriters.has(entry.agent) && !roots.some((root) => root.startsWith("paper/")))
 			throw new Error(
 				`WTF-P dispatch guard: ${entry.agent} would have no manuscript it may write. ${notes.length > 0 ? notes.join(" · ") : "Name the section and approve its plan first."}`,
 			);
-		if (entry.roots !== null && roots.length === 0)
-			throw new Error(`WTF-P dispatch guard: ${entry.roots.join(", ")} lie outside what ${armed.action} may write (${allowed.join(", ") || "nothing"}).`);
-		return roots;
+		if (roots.length > 0) return roots;
+		// Clio reads an empty write_roots as no boundary at all, so an empty list is refused, never sent.
+		if (entry.roots !== null && allowed.length > 0)
+			throw new Error(`WTF-P dispatch guard: ${entry.roots.join(", ")} lie outside what ${armed.action} may write (${allowed.join(", ")}).`);
+		throw new Error(
+			sectionScoped && armed.section === null
+				? `WTF-P dispatch guard: ${name} names no section, so its workers would reach every section's records; name the section in the command.`
+				: `WTF-P dispatch guard: ${name} declares no file outputs a worker may write; only its read-only reviewers may be dispatched.`,
+		);
 	});
-	if (tasks && tasks.length > 1 && entries.some((entry) => entry.roots === null) && narrowed.some((roots) => roots.length > 0))
+	const writers = entries.filter((entry, index) => narrowed[index] !== null);
+	if (writers.length > 1 && writers.some((entry) => entry.roots === null))
 		return block(
 			`WTF-P dispatch guard: give each task its own intent.write_roots inside ${allowed.join(", ")}, one section's manuscript and summary per writer, so parallel writers stay disjoint.`,
 		);
-	const rewritten: Json = tasks
-		? {
-				...args,
-				tasks: tasks.map((task, index) => {
-					const item = typeof task === "string" ? { task } : (task as Json);
-					return { ...item, intent: { ...((item.intent as Json | undefined) ?? {}), write_roots: narrowed[index] } };
-				}),
-			}
-		: { ...args, intent: { ...((args.intent as Json | undefined) ?? {}), write_roots: narrowed[0] } };
+	const confine = (item: Json, roots: string[] | null): Json => (roots === null ? item : { ...item, intent: { ...((item.intent as Json | undefined) ?? {}), write_roots: roots } });
+	const single = args.tasks === undefined;
+	const rewritten: Json = single
+		? confine(args, narrowed[0] ?? null)
+		: { ...args, tasks: entries.map((entry, index) => confine(entry.item, narrowed[index] ?? null)) };
 	if (canonical(rewritten) === canonical(args)) return {};
 	return {
 		effects: [
 			{
 				kind: "rewrite_tool_input",
 				args: rewritten,
-				reason: `WTF-P confines ${actionName(served, armed.action)} workers to ${[...new Set(narrowed.flat())].join(", ") || "no writes"}.`,
+				reason: `WTF-P confines ${name} workers to ${[...new Set(narrowed.flatMap((roots) => roots ?? []))].join(", ") || "no writes"}.`,
 			},
 		],
 	};
 }
 
 const BASH_DESK_PATHS = /\.planning\/(?:interactions\b|\.wtfp-)/u;
+/** Tools that run a command or script; the desk can only refuse ones that name its own records. */
+const COMMAND_TOOLS = new Set(["bash", "run_script", "job"]);
 
 async function guard(ctx: ExtensionContextV2, tool: string, args: unknown): Promise<ExtensionHookResult> {
 	const input = args !== null && typeof args === "object" ? (args as Json) : {};
@@ -2372,12 +2589,13 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown): Prom
 	let result: ExtensionHookResult = {};
 	try {
 		if (tool === "dispatch") result = await guardDispatch(ctx, input);
-		else if (tool === "bash") {
-			const command = typeof input.command === "string" ? input.command : "";
-			if (BASH_DESK_PATHS.test(command)) result = block("WTF-P write guard: shell commands may not touch the desk's own records under .planning.");
+		else if (COMMAND_TOOLS.has(tool)) {
+			if (BASH_DESK_PATHS.test(JSON.stringify(input))) result = block("WTF-P write guard: commands may not touch the desk's own records under .planning.");
 		} else {
-			const target = input.path ?? input.file_path ?? input.filePath;
-			if (typeof target === "string" && target.length > 0) result = await guardWrite(ctx, target);
+			const raw = input.path ?? input.file_path ?? input.filePath;
+			// The artifact tool trims its path, and without one writes under Clio's own artifact directory.
+			const target = typeof raw === "string" ? (tool === "artifact" ? raw.trim() : raw) : "";
+			if (target.length > 0) result = await guardWrite(ctx, target);
 		}
 	} catch (error) {
 		result = block(error instanceof Error ? error.message : String(error));
@@ -2441,7 +2659,7 @@ export default function extension(api: ExtensionApiV2): void {
 		try {
 			return await recordTool(ctx, (input ?? {}) as Json);
 		} catch (error) {
-			return { text: `Not written: ${error instanceof Error ? error.message : String(error)}`, isError: true };
+			return { text: failure("Not written", error), isError: true };
 		}
 	});
 	api.tool("read_record", async (input, ctx) => {
@@ -2474,7 +2692,7 @@ export default function extension(api: ExtensionApiV2): void {
 				data: measured,
 			};
 		} catch (error) {
-			return { text: `Not measured: ${error instanceof Error ? error.message : String(error)}`, isError: true };
+			return { text: failure("Not measured", error), isError: true };
 		}
 	});
 	api.tool("gate", async (input, ctx) => {
@@ -2505,7 +2723,7 @@ export default function extension(api: ExtensionApiV2): void {
 			if (result.kind === "kept") return { done: true, text: `The author kept ${result.checkpoint} pending.`, ...(await picture(ctx)) };
 			return { done: true, text: result.text };
 		} catch (error) {
-			return { done: true, text: `Nothing was recorded: ${error instanceof Error ? error.message : String(error)}` };
+			return { done: true, text: failure("Nothing was recorded", error) };
 		}
 	});
 	api.interview("gate", async (event, ctx): Promise<InterviewNext> => {
@@ -2528,7 +2746,7 @@ export default function extension(api: ExtensionApiV2): void {
 				if (result.checkpoint) kept.push(result.checkpoint);
 			}
 		} catch (error) {
-			note = `Nothing was recorded: ${error instanceof Error ? error.message : String(error)}`;
+			note = failure("Nothing was recorded", error);
 		}
 		await ctx.state.set("gate-kept", kept);
 		await ctx.state.set("gate-recorded", recorded);
@@ -2596,7 +2814,7 @@ export default function extension(api: ExtensionApiV2): void {
 				...(await picture(ctx)),
 			};
 		} catch (error) {
-			return { done: true, text: `Nothing was written: ${error instanceof Error ? error.message : String(error)}` };
+			return { done: true, text: failure("Nothing was written", error) };
 		}
 	});
 
