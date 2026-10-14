@@ -326,6 +326,20 @@ function testPlanningValidator(tempRoot) {
   assert.strictEqual(result.checked, fs.readdirSync(templatesRoot).filter(name => name.endsWith('.json')).length);
   assert(result.roots[0].records.every(record => record.valid));
   assert.deepStrictEqual(after, before, 'planning validator modified its input');
+  assert.strictEqual(result.coverage, undefined, 'coverage stays opt-in so retained validator output is unchanged');
+
+  const covered = validatePlanningPaths([project], { coverage: true });
+  assert.strictEqual(covered.valid, true);
+  assert.strictEqual(covered.coverage[0].valid, true);
+  assert.match(covered.coverage[0].scope, /independent review/);
+  assert.strictEqual(covered.coverage[0].claims.find(claim => claim.claim === 'claim-portable-state').support, 'full');
+  const evidenceFile = path.join(planning, 'evidence.json');
+  const strayEvidence = readJson(evidenceFile);
+  fs.writeFileSync(evidenceFile, `${JSON.stringify({ ...strayEvidence, project_id: 'another-project' }, null, 2)}\n`);
+  const uncovered = validatePlanningPaths([project], { coverage: true });
+  assert.strictEqual(uncovered.coverage[0].valid, false);
+  assert(uncovered.coverage[0].findings.some(finding => finding.code === 'evidence-cross-project'));
+  fs.writeFileSync(evidenceFile, `${JSON.stringify(strayEvidence, null, 2)}\n`);
 
   const invalidProject = path.join(tempRoot, 'invalid-project');
   fs.mkdirSync(invalidProject);

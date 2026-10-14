@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { SchemaRegistry, readJson, validateInstance } = require('../lib/json-schema');
+const { analyzeCoverage } = require('../lib/claim-coverage');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 const schemasRoot = path.join(repositoryRoot, 'protocol', 'project', 'schemas');
@@ -103,11 +104,13 @@ function validateRecord(file, root, registry) {
   };
 }
 
-function validatePlanningPaths(inputs) {
+function validatePlanningPaths(inputs, options = {}) {
   const registry = new SchemaRegistry(schemaFiles());
   const roots = [];
+  const coverage = [];
   for (const input of inputs) {
     const resolved = resolveInput(input);
+    if (options.coverage) coverage.push(coverageForRoot(resolved));
     const records = resolved.files.map(file => validateRecord(file, resolved.root, registry));
     if (records.length === 0) {
       records.push({
@@ -130,24 +133,79 @@ function validatePlanningPaths(inputs) {
     schema: 'wtfp.evaluation.planning-validation/v1',
     valid: roots.every(root => root.valid),
     checked,
-    roots
+    roots,
+    ...(options.coverage ? { coverage } : {})
+  };
+}
+
+// Structural claim coverage for one planning root, from the same validator the
+// Clio desk ships. Manuscripts are read only for citation keys, from the
+// project's paper/ directory beside .planning, and never through a link.
+function coverageForRoot(resolved) {
+  const records = {};
+  for (const file of resolved.files) {
+    try {
+      const value = readJson(file);
+      if (value && typeof value.schema === 'string') records[path.relative(resolved.root, file).split(path.sep).join('/')] = value;
+    } catch {
+      // Unreadable records are already reported by schema validation.
+    }
+  }
+  const byType = (type) => Object.entries(records).filter(([, value]) => value.schema === `wtfp.project.${type}/v1`);
+  const manifest = byType('manifest').map(([, value]) => value)[0] || null;
+  const outline = byType('outline').map(([, value]) => value)[0] || null;
+  const sections = byType('section').map(([, record]) => ({ uri: `project://sections/${record.id}`, record }));
+  const keyed = (type, prefix) => Object.fromEntries(byType(type).map(([, record]) => [`project://${prefix}/${record.id}`, record]));
+  const projectRoot = path.basename(resolved.root) === '.planning' ? path.dirname(resolved.root) : null;
+  const manuscripts = [];
+  for (const { record } of projectRoot ? sections : []) {
+    const uri = record.artifacts && record.artifacts.manuscript;
+    if (typeof uri !== 'string' || !uri.startsWith('project://paper/')) continue;
+    const artifact = uri.slice('project://paper/'.length);
+    if (artifact.split('/').some(part => part === '' || part === '.' || part === '..')) continue;
+    for (const candidate of [artifact, `${artifact}.md`, `${artifact}.tex`, `${artifact}.typ`]) {
+      const file = path.join(projectRoot, 'paper', candidate);
+      let stat;
+      try { stat = fs.lstatSync(file); } catch { continue; }
+      if (!stat.isFile()) continue;
+      manuscripts.push({ section: record.id, file: `paper/${candidate}`, text: fs.readFileSync(file, 'utf8') });
+      break;
+    }
+  }
+  const report = analyzeCoverage({
+    projectId: manifest ? manifest.id : null,
+    outline,
+    sections,
+    evidence: keyed('evidence', 'evidence'),
+    sources: keyed('source', 'sources'),
+    manuscripts
+  });
+  return {
+    planning_root: resolved.root,
+    scope: report.scope,
+    valid: !report.findings.some(finding => finding.severity === 'blocker' || finding.severity === 'error'),
+    findings: report.findings,
+    claims: report.claims
   };
 }
 
 function usage() {
   return [
-    'Usage: node evaluation/tools/validate-planning.js [--json] <project-or-record> [...]',
+    'Usage: node evaluation/tools/validate-planning.js [--json] [--coverage] <project-or-record> [...]',
     '',
     'Directories containing .planning are resolved to that child. The command reads',
     'JSON records recursively and validates each schema discriminator against the',
-    'canonical protocol/project/schemas contract. It never modifies its inputs.'
+    'canonical protocol/project/schemas contract. It never modifies its inputs.',
+    '--coverage adds structural claim/evidence/source coverage and manuscript citation',
+    'keys. It never judges whether a passage supports a claim; that needs a reviewer.'
   ].join('\n');
 }
 
 function main(argv = process.argv.slice(2)) {
   const json = argv.includes('--json');
+  const withCoverage = argv.includes('--coverage');
   const help = argv.includes('--help') || argv.includes('-h');
-  const inputs = argv.filter(argument => !['--json', '--help', '-h'].includes(argument));
+  const inputs = argv.filter(argument => !['--json', '--coverage', '--help', '-h'].includes(argument));
   if (help) {
     process.stdout.write(`${usage()}\n`);
     return 0;
@@ -159,7 +217,7 @@ function main(argv = process.argv.slice(2)) {
 
   let result;
   try {
-    result = validatePlanningPaths(inputs);
+    result = validatePlanningPaths(inputs, { coverage: withCoverage });
   } catch (error) {
     if (json) {
       process.stdout.write(`${JSON.stringify({
@@ -185,8 +243,15 @@ function main(argv = process.argv.slice(2)) {
       }
     }
     process.stdout.write(`${result.valid ? 'PASS' : 'FAIL'}: ${result.checked} planning record(s) checked\n`);
+    for (const report of result.coverage || []) {
+      for (const finding of report.findings) {
+        process.stdout.write(`${finding.severity.toUpperCase()} ${finding.code} ${finding.subject}: ${finding.message}\n`);
+      }
+      process.stdout.write(`${report.valid ? 'PASS' : 'FAIL'}: coverage of ${report.claims.length} claim(s) in ${report.planning_root}\n${report.scope}\n`);
+    }
   }
-  return result.valid ? 0 : 1;
+  const coverageValid = (result.coverage || []).every(report => report.valid);
+  return result.valid && coverageValid ? 0 : 1;
 }
 
 if (require.main === module) {

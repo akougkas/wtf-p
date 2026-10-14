@@ -13,6 +13,7 @@
  */
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import {
+	appendFileSync,
 	closeSync,
 	existsSync,
 	fsyncSync,
@@ -955,6 +956,8 @@ function commit(workspace: string, writes: PendingWrite[]): void {
 		renameSync(path.join(workspace, entry.staging), path.join(workspace, entry.file));
 	});
 	if (staged.length > 1) unlinkSync(path.join(workspace, JOURNAL));
+	// Stands in for another process changing a file between the rename and the readback.
+	if (process.env.WTFP_DESK_TEST_FAULT === "tamper-after-rename" && staged[0]) appendFileSync(path.join(workspace, staged[0].file), " ");
 	for (const entry of staged) {
 		const back = readBytes(workspace, entry.file);
 		if (back === null || sha256(back) !== entry.sha256) throw new Error(`readback of ${entry.file} differs from what was written; read it again before relying on it`);

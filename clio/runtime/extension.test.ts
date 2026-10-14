@@ -279,6 +279,19 @@ test("no record write or file write escapes through a symbolic link", () =>
 		}
 	}));
 
+test("a readback that differs from what was written is reported against the file it names", () =>
+	withDesk(async (host, workspace) => {
+		const state = read(workspace, ".planning/state.json");
+		process.env.WTFP_DESK_TEST_FAULT = "tamper-after-rename";
+		try {
+			const result = await host.tool("record", { uri: "project://state", record: { ...state, phase: "reviewing" }, expect_revision: 3 });
+			assert.equal(result.isError, true);
+			assert.match(result.text, /readback of \.planning\/state\.json differs from what was written/);
+		} finally {
+			delete process.env.WTFP_DESK_TEST_FAULT;
+		}
+	}));
+
 // --- author gates --------------------------------------------------------------
 
 test("a gate answer is recorded as a sealed interaction bound to what the author saw", () =>
@@ -394,6 +407,54 @@ test("an agent cannot fabricate, unblock, rescope or expire an author gate throu
 		const confirmed = await host.interview({ id: "gate", step: gates.interview?.step.key as string, nav: "next", answers: { choice: "workflow-first" } });
 		assert.match("done" in confirmed ? confirmed.text : "", /Recorded: checkpoint-framing: Workflow first/);
 		assert.equal(blocked(await write(host, "paper/introduction.md")), null);
+	}));
+
+test("nonblocking policy resolutions and state snapshots are not author gates", () =>
+	withDesk(async (host, workspace) => {
+		const note = {
+			schema: "wtfp.project.checkpoint/v1",
+			id: "note-figure-style",
+			project_id: PROJECT,
+			kind: "human-action",
+			status: "pending",
+			blocking: false,
+			scope_uri: "project://sections/introduction",
+			request: "Pick a figure palette when convenient.",
+			options: [],
+			resume_action: "write-section",
+			created_at: AT,
+		};
+		const created = await host.tool("record", { uri: "project://checkpoints/note-figure-style", record: note });
+		assert.equal(created.isError, undefined, created.text);
+		const policy = { resolved_by: "policy", summary: "The configured default palette applies.", resolved_at: AT };
+		const resolved = await host.tool("record", {
+			uri: "project://checkpoints/note-figure-style",
+			record: { ...note, status: "resolved", resolution: policy },
+			expect_sha256: sha(workspace, ".planning/checkpoints/note-figure-style.json"),
+		});
+		assert.equal(resolved.isError, undefined, resolved.text);
+		assert.equal(((await host.tool("read_record", { uri: "project://checkpoints/note-figure-style" })).data as Json).trust, "policy");
+		const forged = await host.tool("record", {
+			uri: "project://checkpoints/blocking-by-policy",
+			record: { ...note, id: "blocking-by-policy", blocking: true, status: "resolved", resolution: policy },
+		});
+		assert.match(forged.text, /resolved only by the author/);
+		const snapshot = await host.tool("record", {
+			uri: "project://checkpoints/snapshot-before-revision",
+			record: {
+				...note,
+				id: "snapshot-before-revision",
+				kind: "state-snapshot",
+				status: "available",
+				request: "State before the revision.",
+				snapshot: { archive_uri: "project://archives/checkpoints/snapshot-before-revision", resources: [{ uri: "project://state", revision: 3, sha256: sha(workspace, ".planning/state.json") }] },
+			},
+		});
+		assert.equal(snapshot.isError, undefined, snapshot.text);
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null, "neither the policy-resolved note nor the snapshot holds the section");
+		assert.match((await host.command("check-todos")).text, /No pending gates/);
 	}));
 
 // --- approved plans and write boundaries ---------------------------------------------
