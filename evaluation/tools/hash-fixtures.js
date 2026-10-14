@@ -9,10 +9,14 @@ const { inventoryFixture } = require('../lib/fixture-hashes');
 
 const fixturesRoot = path.resolve(__dirname, '../v1/fixtures');
 
+// Only closed-world `wtfp.evaluation.fixture/v1` fixtures carry a byte
+// manifest. A user-acceptance fixture is a template the user materializes, so
+// its bytes are not this tool's to seal.
 function fixtureDirectories() {
   return fs.readdirSync(fixturesRoot, { withFileTypes: true })
     .filter(entry => entry.isDirectory())
     .map(entry => path.join(fixturesRoot, entry.name))
+    .filter(directory => JSON.parse(fs.readFileSync(path.join(directory, 'fixture.json'), 'utf8')).schema === 'wtfp.evaluation.fixture/v1')
     .sort();
 }
 

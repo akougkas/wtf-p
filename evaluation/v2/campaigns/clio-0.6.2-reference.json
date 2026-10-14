@@ -1,0 +1,76 @@
+{
+  "schema": "wtfp.evaluation.campaign/v2",
+  "id": "clio-0.6.2-reference",
+  "version": 1,
+  "status": "awaiting-resources",
+  "purpose": "Exercise the WTF-P plugin and desk extension on one pinned Clio 0.6.2 build through a full section lifecycle with separate author gates, a revision, and a fresh-process resume. Headless runs report every author gate as unavailable; author decisions are observed only from an interactive session in the prepared profile.",
+  "historical_suites": [
+    {
+      "path": "evaluation/v1",
+      "identity": "academic-skill-routing v1, primary-client-routing v1, hpc-checkpointing-paper v1, Clio 0.3.8 and 0.4.6 evidence packs",
+      "meaning": "unchanged"
+    }
+  ],
+  "wtfp": {
+    "candidate": "bound-at-prepare",
+    "packages": [
+      { "path": "vendors/plugin", "inventory_target": "portable-plugin" },
+      { "path": "vendors/clio-extension", "inventory_target": "clio-extension" }
+    ]
+  },
+  "clio": {
+    "version": "0.6.2",
+    "source": {
+      "repository": "https://github.com/iowarp/clio-coder",
+      "tag": "v0.6.2",
+      "commit": "e4b3c7b18e20db767cdc92139b85dac6d1219d1a",
+      "tree": "f693e85907fd0b8fa4d2dcdfb1ab14834daeb001",
+      "lockfile_sha256": "1422ca03bece68090ce09f06f5a671dc99dab7f293c0158718f5aa3f14e7881a"
+    },
+    "build": {
+      "entry": "dist/cli/index.js",
+      "dist_sha256": "499f84008deb6e22a0c1eb6a627d32a4d4d5c1b2185de1903867db92fc0a79be",
+      "entry_sha256": "70644cc5e8ee80a62756f2c9e204f5d677bcce732a468a4ce0471d45b79d2faf",
+      "node": "v24.20.0",
+      "byte_reproducible": false,
+      "procedure": "git archive v0.6.2 of the Clio repository, node_modules installed from the tag's pnpm-lock.yaml, then `node --import tsx scripts/build.ts` and `node --import tsx scripts/build-codewiki-asset.ts`. esbuild chunk names differ between builds, so the one qualified dist directory is pinned by the SHA-256 of its per-file `<sha256>  ./<path>` listing in code-unit path order."
+    }
+  },
+  "model": {
+    "selection": "operator",
+    "target": null,
+    "model": null,
+    "effort": null
+  },
+  "fixture": {
+    "path": "evaluation/v1/fixtures/hpc-checkpointing",
+    "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
+    "section": "evaluation"
+  },
+  "permissions": {
+    "autonomy": "default",
+    "network": "none",
+    "headless_author_gates": "typed-unavailable"
+  },
+  "budget": {
+    "currency": "USD",
+    "ceiling": null,
+    "timeout_minutes_per_step": 20,
+    "cost_when_unreported": "unavailable"
+  },
+  "lifecycle": [
+    { "step": "initialize", "action": "new-paper", "session": "S1", "arguments": "durable workflows", "author_gate": "project initialization decisions" },
+    { "step": "outline", "action": "create-outline", "session": "S1", "arguments": "", "author_gate": "confirm_outline" },
+    { "step": "discuss", "action": "discuss-section", "session": "S1", "arguments": "evaluation", "author_gate": "section intent and boundaries" },
+    { "step": "plan", "action": "plan-section", "session": "S1", "arguments": "evaluation", "author_gate": "approve the exact plan at the desk" },
+    { "step": "draft", "action": "write-section", "session": "S1", "arguments": "evaluation", "author_gate": null },
+    { "step": "review", "action": "review-section", "session": "S1", "arguments": "evaluation", "author_gate": "review persona and disputed findings" },
+    { "step": "revise-plan", "action": "plan-revision", "session": "S1", "arguments": "evaluation", "author_gate": "revision priorities and approval of the exact revision plan" },
+    { "step": "redraft", "action": "write-section", "session": "S1", "arguments": "evaluation", "author_gate": null },
+    { "step": "pause", "action": "pause-writing", "session": "S1", "arguments": "", "author_gate": null },
+    { "step": "resume", "action": "resume-writing", "session": "S2", "arguments": "", "author_gate": "selection of the resumed action", "fresh_process": true },
+    { "step": "verify", "action": "verify-work", "session": "S2", "arguments": "evaluation", "author_gate": "each failed or disputed verification check" },
+    { "step": "progress", "action": "progress", "session": "S2", "arguments": "", "author_gate": null }
+  ],
+  "evidence_levels": ["static", "native-discovery", "observed-model", "observed-author"]
+}

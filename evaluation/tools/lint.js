@@ -533,9 +533,39 @@ function lintEvaluation() {
   };
 }
 
+// Versioned campaigns after v1 carry their own schemas. Each schema uses the
+// 2020-12 dialect with a unique $id, and each campaign must load: valid,
+// bound to its fixture's current model inputs, and naming only real actions.
+function lintCampaigns() {
+  const { loadCampaign } = require('./run-clio-campaign');
+  const ids = new Set();
+  let schemas = 0;
+  let campaigns = 0;
+  for (const version of fs.readdirSync(evaluationRoot).filter(name => /^v[2-9][0-9]*$/u.test(name)).sort()) {
+    const versionSchemas = path.join(evaluationRoot, version, 'schemas');
+    for (const name of fs.existsSync(versionSchemas) ? fs.readdirSync(versionSchemas).filter(file => file.endsWith('.schema.json')).sort() : []) {
+      const schema = JSON.parse(fs.readFileSync(path.join(versionSchemas, name), 'utf8'));
+      assert.strictEqual(schema.$schema, 'https://json-schema.org/draft/2020-12/schema', `${version}/${name}: schema dialect`);
+      assert(typeof schema.$id === 'string' && !ids.has(schema.$id), `${version}/${name}: $id must be unique`);
+      ids.add(schema.$id);
+      schemas += 1;
+    }
+    const versionCampaigns = path.join(evaluationRoot, version, 'campaigns');
+    for (const name of fs.existsSync(versionCampaigns) ? fs.readdirSync(versionCampaigns).filter(file => file.endsWith('.json')).sort() : []) {
+      const campaign = loadCampaign(path.join(versionCampaigns, name));
+      assert.strictEqual(`${campaign.id}.json`, name, `${version}/campaigns/${name}: file name must match the campaign id`);
+      assert(campaign.status !== 'observed' || campaign.model.model, `${version}/campaigns/${name}: an observed campaign names the model it ran`);
+      campaigns += 1;
+    }
+  }
+  return { schemas, campaigns };
+}
+
 function main() {
   try {
     const counts = lintEvaluation();
+    const versioned = lintCampaigns();
+    console.log(`✓ validated ${versioned.schemas} versioned campaign schemas and loaded ${versioned.campaigns} campaigns`);
     console.log(`✓ validated ${counts.schemas} evaluation data schemas`);
     console.log(`✓ linted ${counts.routingCases} routing cases across ${counts.skills} skills and ${counts.operations} operations`);
     console.log(`✓ mapped ${counts.explicitActions} explicit actions with exact argument and ownership contracts`);

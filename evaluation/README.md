@@ -7,7 +7,20 @@ excluded from the npm archive; release users receive the authenticated protocol,
 adapters, installer, and tools, while evaluators use a source checkout whose
 commit and fixture hashes can be verified.
 
-The current suite is `v1`. A change that alters a fixture's meaning, expected route, semantic floor, or required invariant must create a new fixture or suite version. Editorial corrections still require refreshed SHA-256 metadata so every run identifies its exact inputs.
+The routing and lifecycle suite is `v1`. A change that alters a fixture's meaning, expected route, semantic floor, or required invariant must create a new fixture or suite version. Editorial corrections still require refreshed SHA-256 metadata so every run identifies its exact inputs.
+
+## Versioned Clio campaigns (`v2`)
+
+`v2/campaigns/clio-0.6.2-reference.json` is the current Clio campaign. It pins one Clio build: the `v0.6.2` tag (commit `e4b3c7b1`, tree and lockfile digests) and the SHA-256 of the one qualified `dist` directory, since esbuild chunk names make the build not byte-reproducible. It installs both WTF-P packages, the plugin from `vendors/plugin` and the desk from `vendors/clio-extension`, binds the WTF-P commit at prepare, and reuses the `hpc-checkpointing-paper` v1 fixture by its model-input digest without changing its meaning. Its status stays `awaiting-resources` until the operator selects a target, model, effort and budget for a run; the definition names none.
+
+`tools/run-clio-campaign.js` has four commands:
+
+- `plan` prints identities, the twelve lifecycle prompts and the resources still missing. It needs no credentials and writes nothing.
+- `prepare --root <new> --clio-entry <dist/cli/index.js>` refuses an unpinned build or a dirty package tree. It then creates a disposable profile with separate S1 and S2 sessions that share one extension store, installs both packages with the product installer, and records native discovery: plugin and desk registration, both playbooks validated and graphed, and the desk's package tests run from its installed root. Only model-visible fixture inputs enter the workspace.
+- `execute` runs each step headless with the operator's `--target`, `--model`, `--effort` and `--budget-usd`, after `WTFP_CAMPAIGN_CONFIRM` and private settings and credential sources are given by environment variable. A step that reaches an author gate stops the run as `blocked-author-unavailable`; a timeout or signal stops its process group and records a partial run; unreported cost is `unavailable`, never zero; the credential copy is wiped.
+- `collect --root <prepared>` verifies the workspace without the desk. It validates records and claim coverage, recomputes each interaction seal from the profile's extension store, lists author resolutions no seal stands behind, and copies records into the root's `evidence/` while confirming the workspace digest did not change.
+
+Author decisions are observed only from an interactive Clio session in the prepared profile; `prepare` prints its environment. Evidence stays under the run root. Retaining a run in this repository is a separate decision about visibility and sanitization.
 
 The checked-in HPC baseline is intentionally `definition-only`. It contains no observed run and makes no live-model claim. Change it to `observed` only when every referenced, non-secret `wtfp.evaluation.result/v1` file is checked in and passes the linter.
 

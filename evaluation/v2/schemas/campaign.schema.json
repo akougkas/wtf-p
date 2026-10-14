@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/evaluation/campaign/v2",
+  "title": "A versioned Clio evaluation campaign: the exact build, inputs, gates and evidence levels one run is judged against.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "status", "purpose", "historical_suites", "wtfp", "clio", "model", "fixture", "permissions", "budget", "lifecycle", "evidence_levels"],
+  "properties": {
+    "schema": { "const": "wtfp.evaluation.campaign/v2" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": {
+      "description": "awaiting-resources until the operator selects the model, effort and budget for a run; definition-only campaigns never claim an observation.",
+      "enum": ["awaiting-resources", "ready", "observed"]
+    },
+    "purpose": { "type": "string", "minLength": 1 },
+    "historical_suites": {
+      "description": "Earlier suites this campaign leaves under their original meaning.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "identity", "meaning"],
+        "properties": {
+          "path": { "type": "string", "pattern": "^evaluation/v[0-9]+$" },
+          "identity": { "type": "string", "minLength": 1 },
+          "meaning": { "const": "unchanged" }
+        }
+      }
+    },
+    "wtfp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "packages"],
+      "properties": {
+        "candidate": {
+          "description": "The WTF-P commit a run binds; prepare refuses a dirty package tree.",
+          "const": "bound-at-prepare"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "inventory_target"],
+            "properties": {
+              "path": { "type": "string", "pattern": "^vendors/[a-z-]+$" },
+              "inventory_target": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "clio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "source", "build"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["repository", "tag", "commit", "tree", "lockfile_sha256"],
+          "properties": {
+            "repository": { "type": "string", "format": "uri" },
+            "tag": { "type": "string", "minLength": 1 },
+            "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+            "tree": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+            "lockfile_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entry", "dist_sha256", "entry_sha256", "node", "byte_reproducible", "procedure"],
+          "properties": {
+            "entry": { "const": "dist/cli/index.js" },
+            "dist_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "entry_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "node": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
+            "byte_reproducible": { "type": "boolean" },
+            "procedure": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selection", "target", "model", "effort"],
+      "properties": {
+        "selection": { "const": "operator" },
+        "target": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "effort": { "type": ["string", "null"] }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "model_inputs_sha256", "section"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^evaluation/v[0-9]+/fixtures/[a-z0-9-]+$" },
+        "model_inputs_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "section": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["autonomy", "network", "headless_author_gates"],
+      "properties": {
+        "autonomy": { "const": "default" },
+        "network": { "const": "none" },
+        "headless_author_gates": { "const": "typed-unavailable" }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currency", "ceiling", "timeout_minutes_per_step", "cost_when_unreported"],
+      "properties": {
+        "currency": { "const": "USD" },
+        "ceiling": { "description": "Selected by the operator for a run; null in a definition.", "type": ["number", "null"], "minimum": 0 },
+        "timeout_minutes_per_step": { "type": "integer", "minimum": 1, "maximum": 120 },
+        "cost_when_unreported": { "const": "unavailable" }
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "action", "session", "arguments", "author_gate"],
+        "properties": {
+          "step": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "action": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "session": { "enum": ["S1", "S2"] },
+          "arguments": { "type": "string" },
+          "author_gate": { "type": ["string", "null"] },
+          "fresh_process": { "type": "boolean" }
+        }
+      }
+    },
+    "evidence_levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["static", "native-discovery", "observed-model", "observed-author"] }
+    }
+  }
+}
