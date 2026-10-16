@@ -352,6 +352,22 @@ process.exit(seen.length === 0 ? 0 : 4);`);
     assert.strictEqual(runner.classifyStep(ok, '', '', {}).outcome, 'failed', 'without a ceiling, exit 4 is a failure');
   });
 
+  await test('every digest reads files in chunks, so a file past one read\'s limit is hashed, not a runner error', async () => {
+    const dir = path.join(scratch, 'large');
+    fs.mkdirSync(dir);
+    const small = path.join(dir, 'small.bin');
+    fs.writeFileSync(small, crypto.randomBytes(3000));
+    assert.strictEqual(runner.fileDigest(small, 1024), sha256(fs.readFileSync(small)), 'chunked and whole reads agree');
+    // A sparse file past 2 GiB costs no disk, but one read of it throws.
+    const large = path.join(dir, 'large.bin');
+    fs.closeSync(fs.openSync(large, 'w'));
+    fs.truncateSync(large, 2 ** 31 + 4096);
+    assert.throws(() => fs.readFileSync(large), /greater than 2 GiB/);
+    assert.match(runner.directoryDigest(dir), /^[a-f0-9]{64}$/);
+    assert.match(runner.workspaceDigest(dir), /^[a-f0-9]{64}$/);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   await test('a worker receipt the runner cannot read vouches for nothing, so its step fails integrity', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
     const main = { file: 'main.json', receipt: { agentId: 'main-agent', costUsd: 0.01, costProvenance: 'known' } };

@@ -84,6 +84,19 @@ function sha256(data) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+/** A file's SHA-256, read in chunks: a Clio checkout or a step's workspace can hold files larger than one read allows. */
+function fileDigest(file, chunk = 8 * 1024 * 1024) {
+  const hash = crypto.createHash('sha256');
+  const buffer = Buffer.allocUnsafe(chunk);
+  const fd = fs.openSync(file, 'r');
+  try {
+    for (let read = fs.readSync(fd, buffer, 0, chunk, null); read > 0; read = fs.readSync(fd, buffer, 0, chunk, null)) hash.update(buffer.subarray(0, read));
+  } finally {
+    fs.closeSync(fd);
+  }
+  return hash.digest('hex');
+}
+
 const { canonical } = deskTrust;
 
 function readJson(file) {
@@ -108,7 +121,7 @@ function directoryDigest(root) {
       const child = relative ? `${relative}/${entry.name}` : entry.name;
       if (entry.isSymbolicLink()) throw new Error(`refusing symbolic link in ${root}: ${child}`);
       if (entry.isDirectory()) visit(child);
-      else if (entry.isFile()) lines.push([child, sha256(fs.readFileSync(path.join(root, child)))]);
+      else if (entry.isFile()) lines.push([child, fileDigest(path.join(root, child))]);
     }
   };
   visit('');
@@ -194,7 +207,7 @@ function clioIdentity(entry, campaign) {
   const observed = {
     entry,
     version: version.status === 0 ? version.stdout.trim() : null,
-    entry_sha256: sha256(fs.readFileSync(entry)),
+    entry_sha256: fileDigest(entry),
     dist_sha256: directoryDigest(dist),
     node: process.version
   };
@@ -292,7 +305,7 @@ function treeDigest(root) {
       else if (entry.isDirectory()) {
         hash.update(`${JSON.stringify(['dir', child])}\n`);
         visit(child);
-      } else if (entry.isFile()) hash.update(`${JSON.stringify(['file', child, sha256(fs.readFileSync(absolute))])}\n`);
+      } else if (entry.isFile()) hash.update(`${JSON.stringify(['file', child, fileDigest(absolute)])}\n`);
       else hash.update(`${JSON.stringify(['other', child])}\n`);
     }
   };
@@ -314,7 +327,7 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   const digest = (directory) => (directory && fs.existsSync(directory) ? directoryDigest(directory) : null);
   return {
     entry,
-    entry_sha256: entry && fs.existsSync(entry) ? sha256(fs.readFileSync(entry)) : null,
+    entry_sha256: entry && fs.existsSync(entry) ? fileDigest(entry) : null,
     dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(path.dirname(path.dirname(entry))) : null,
     // Clio loads more than dist/ from its package root: dependencies, the extension host bootstrap, safety rules, prompts.
     package_sha256: entry ? treeDigest(path.dirname(path.dirname(path.dirname(entry)))) : null,
@@ -459,7 +472,7 @@ function workspaceDigest(workspace) {
       else if (entry.isDirectory()) {
         lines.push(JSON.stringify(['dir', child]));
         visit(child);
-      } else if (entry.isFile()) lines.push(JSON.stringify(['file', child, sha256(fs.readFileSync(absolute))]));
+      } else if (entry.isFile()) lines.push(JSON.stringify(['file', child, fileDigest(absolute)]));
       else lines.push(JSON.stringify(['other', child]));
     }
   };
@@ -498,7 +511,7 @@ function clioProjectConfig(workspace) {
       else if (entry.isDirectory()) {
         entries.set(`.clio-coder/${child}`, 'dir');
         visit(child);
-      } else if (entry.isFile()) entries.set(`.clio-coder/${child}`, `file:${sha256(fs.readFileSync(absolute))}`);
+      } else if (entry.isFile()) entries.set(`.clio-coder/${child}`, `file:${fileDigest(absolute)}`);
       else entries.set(`.clio-coder/${child}`, 'other');
     }
   };
@@ -1515,6 +1528,7 @@ module.exports = {
   credentialSecrets,
   deskTestsPassed,
   directoryDigest,
+  fileDigest,
   execute,
   fixtureIdentity,
   launcherIdentity,
