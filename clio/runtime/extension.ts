@@ -90,7 +90,6 @@ const GUARD = JSON.parse(readFileSync(new URL("./write-guard.json", import.meta.
 	schema: string;
 	actions: Record<string, GuardAction>;
 	paperWriters: string[];
-	readOnlyAgents: string[];
 };
 const SKIN = JSON.parse(readFileSync(new URL("../skins/wtfp.json", import.meta.url), "utf8")) as ExtensionSkin;
 const RECORD_LIMIT = 1024 * 1024;
@@ -2554,7 +2553,6 @@ function narrow(requested: string[], allowed: string[]): string[] {
 }
 
 const WTFP_AGENT = /^wtfp-[a-z-]+$/u;
-const READ_ONLY_AGENTS = new Set(GUARD.readOnlyAgents);
 
 /** One worker a dispatch names, as Clio parsed it. */
 interface DispatchTask {
@@ -2562,6 +2560,8 @@ interface DispatchTask {
 	agent: string;
 	/** Project-relative write roots, or null when the worker would have no boundary. */
 	roots: string[] | null;
+	/** True when Clio runs the worker read-only, as it does every read-only recipe's; it then has no write roots. */
+	readOnly: boolean;
 }
 
 function isObject(value: unknown): value is Json {
@@ -2606,7 +2606,7 @@ function planTasks(plan: Extract<HostDispatch, { kind: "tasks" }>, workspace: st
 					throw new Error(`WTF-P dispatch guard: write root ${spelled} does not lead where it reads (a link, or a path outside the project); name the real project path.`);
 				roots.push(`${landed}${spelled.trim().endsWith("/") ? "/" : ""}`);
 			});
-			return { agent: task.agent, roots: unbounded ? null : roots };
+			return { agent: task.agent, roots: unbounded ? null : roots, readOnly: task.readOnly };
 		});
 }
 
@@ -2665,6 +2665,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		// Workers run no desk check, so outside an action each must be kept off the records and the manuscripts still held.
 		const held = [".planning/", ...heldManuscripts(desk).roots];
 		for (const entry of entries) {
+			if (entry.readOnly) continue;
 			if (entry.roots === null)
 				return block(
 					`WTF-P dispatch guard: outside a WTF-P action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
@@ -2696,7 +2697,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 	const sectionScoped = armed.produces.some((output) => output.uri.includes("{section}"));
 	const paperWriters = new Set(GUARD.paperWriters);
 	const narrowed = entries.map((entry): string[] | null => {
-		if (entry.roots === null && READ_ONLY_AGENTS.has(entry.agent)) return null;
+		if (entry.readOnly) return null;
 		const roots = entry.roots === null ? allowed : narrow(entry.roots, allowed);
 		if (paperWriters.has(entry.agent) && !roots.some((root) => root.startsWith("paper/")))
 			throw new Error(

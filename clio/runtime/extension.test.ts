@@ -235,7 +235,8 @@ const rewriteOf = (result: { effects?: Array<{ kind: string }> }): Json | null =
 // desk judges only those, so the test host models them as Clio resolves them,
 // with the test process's own access.
 
-const READ_ONLY_RECIPES = new Set((JSON.parse(readFileSync(path.join(ROOT, "runtime/write-guard.json"), "utf8")) as { readOnlyAgents: string[] }).readOnlyAgents);
+/** The WTF-P recipes Clio runs read-only: the reviewers, whose recipes are Clio's read-only class. */
+const READ_ONLY_RECIPES = new Set(["wtfp-argument-verifier", "wtfp-coherence-checker", "wtfp-plan-checker", "wtfp-section-reviewer"]);
 
 /** A path with its existing part resolved through links; the rest is kept as named. */
 function physical(file: string): string {
@@ -375,9 +376,11 @@ function clioPlan(prepared: Json, workspace: string): Json {
 		tasks: items.map((item) => {
 			const spelledCwd = typeof item.cwd === "string" ? item.cwd : typeof prepared.cwd === "string" ? prepared.cwd : ".";
 			const cwd = physical(path.resolve(real, spelledCwd.trim() || "."));
-			const roots = [...new Set((((item.intent as Json | undefined)?.write_roots ?? shared ?? []) as string[]).map((root) => root.trim()).filter((root) => !/^\.\/?$/u.test(root)))].sort();
-			// Clio reports read-only only for the gate roles a review, compete or council starts.
-			return { role: "task", agent: agentOf(item, prepared), cwd, writeRoots: roots, writeBoundaries: roots.map((root) => physical(path.resolve(cwd, root))), worktree: item.worktree === true, readOnly: false };
+			const agent = agentOf(item, prepared);
+			// Clio runs a read-only recipe's worker read-only, with no write roots (src/tools/dispatch.ts writerLanding).
+			const readOnly = READ_ONLY_RECIPES.has(agent);
+			const roots = readOnly ? [] : [...new Set((((item.intent as Json | undefined)?.write_roots ?? shared ?? []) as string[]).map((root) => root.trim()).filter((root) => !/^\.\/?$/u.test(root)))].sort();
+			return { role: "task", agent, cwd, writeRoots: roots, writeBoundaries: roots.map((root) => physical(path.resolve(cwd, root))), worktree: item.worktree === true, readOnly };
 		}),
 	};
 }
@@ -927,6 +930,8 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		assert.equal(blocked(await dispatch({}, { kind: "list" })), null);
 		assert.match(blocked(await dispatch(coder, plan({ agent: "coder" }))) ?? "", /form the desk cannot read/);
 		assert.match(blocked(await dispatch(coder, plan(task("coder", { agent: 7 })))) ?? "", /form the desk cannot read/);
+		// Outside an action, a worker Clio runs read-only needs no roots either.
+		assert.equal(blocked(await dispatch({ agent: "auto", task: "Look." }, plan(task("scout", { readOnly: true })))), null);
 		// Clio could not prepare this call and refuses it itself, with its own reason.
 		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", __clio_dispatch_plan_preparation_error: "write_roots entries may not start with ./" }, undefined)), null);
 		// A host that has sent facts once lacks them for a call only when Clio failed on it, and the desk says so.
@@ -947,10 +952,12 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		const confined = await dispatch({ agent: "wtfp-section-writer", tasks: [{ task: "Draft the introduction.", intent: { write_roots: roots } }], review: { reviewer: "wtfp-section-reviewer" } }, { kind: "tasks", mode: "review", tasks: [sent, review[1]] });
 		assert.equal(blocked(confined), null, "a loop that already names its roots runs as approved");
 		assert.equal(rewriteOf(confined), null);
-		// A WTF-P reviewer needs no write roots.
-		const reader = await dispatch({ agent: "wtfp-section-reviewer", tasks: [{ task: "Review the introduction." }] }, plan(task("wtfp-section-reviewer")));
+		// A worker Clio runs read-only needs no write roots, whatever its recipe is called.
+		const reader = await dispatch({ agent: "auto", tasks: [{ task: "Review the introduction." }] }, plan(task("scout", { readOnly: true })));
 		assert.equal(blocked(reader), null);
 		assert.equal(rewriteOf(reader), null);
+		// The desk takes that from Clio: a reviewer Clio does not report read-only is confined like any writer.
+		assert.deepEqual(rootsOf(rewriteOf(await dispatch({ agent: "wtfp-section-reviewer", tasks: [{ task: "Review." }] }, plan(task("wtfp-section-reviewer"))))), roots);
 		// A task Clio keeps as a string is confined as a task object, and Clio's private keys are left for Clio to recompute.
 		const spelled = await dispatch({ agent: "wtfp-section-writer", tasks: ["Draft."], __clio_resolved_dispatch_plan: { resolvedBy: "clio" } }, plan(task("wtfp-section-writer")));
 		assert.deepEqual(rewriteOf(spelled), { agent: "wtfp-section-writer", tasks: [{ task: "Draft.", intent: { write_roots: roots } }] });

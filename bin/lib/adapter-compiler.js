@@ -1350,9 +1350,9 @@ function manuscriptGuardActions(model, availabilityById, host) {
 // substitutes the section an invocation names, and refuses record writes the
 // contract does not declare. `paperWriters` are the Clio agent IDs of the
 // writing roles that manuscript-producing actions dispatch; the desk confines
-// them to manuscripts whose sections are ready to draft. `readOnlyAgents` are
-// the verifier roles, whose Clio recipes are read-only class and carry no
-// write, shell or verify tool, so the desk may dispatch them without write roots.
+// them to manuscripts whose sections are ready to draft. Clio reports which
+// workers run read-only, the verifier roles' read-only recipes among them, so
+// the guard names none.
 function clioWriteGuard(model, availabilityById) {
   const available = model.actions.filter((action) => availabilityById.get(action.id).available);
   if (!available.some((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))) {
@@ -1365,12 +1365,11 @@ function clioWriteGuard(model, availabilityById) {
     for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
   }
   return stableJson({
-    schema: 'wtfp.clio-write-guard/v3',
+    schema: 'wtfp.clio-write-guard/v4',
     actions: Object.fromEntries(available.map((action) => [action.id, {
       produces: action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
     }])),
-    paperWriters: [...paperWriters].sort(),
-    readOnlyAgents: [...verifiers].map((slug) => `wtfp-${slug}`).sort()
+    paperWriters: [...paperWriters].sort()
   });
 }
 
