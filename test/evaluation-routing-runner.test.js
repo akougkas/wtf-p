@@ -193,7 +193,7 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'b682ac0635e7a8eed9f2d7d58fcddaadaedc7c8e2dacbaddb5ce36a88c6a4b69');
+    assert.strictEqual(suite.manifest_sha256, '358760bfd03a25d7583e8111b93bf9f7023d8e14e33663c7063bfea1042608ea');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -201,9 +201,9 @@ async function main() {
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      'f3f8e8581c441ec65f629861b66f87fc32f653e28e56008f9a4fa2e2cbf0fb5d');
+      '5e04aedddfa52cd4c7582a5474998941022e049b5a7910811fe5b0760ec3cb7a');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      '1885f52aebeae59baa2fc6508c235448057913e4b17b8da9d6b388483389ebd9');
+      '02a7343a7eec20986101bd8e14a9ca95f2ff7f4bff3ee22c68bfb96befab62e3');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -1231,10 +1231,10 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      'cd4e30334a74634ecb19c0813c24059e5eaea50d');
+      '2c042820b88a0e4c3ee6bb664a470cb186536f66');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      '36efe1b28be23b997ed466f8960ba8a27aeb30ac240fbb105eec0bdf723cb653');
+      'b97275a9f64c3a0fea38b7685ec3c69f8c45f15041d0a40439aca9578647d003');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
     assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1681);
   });
