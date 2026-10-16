@@ -129,7 +129,35 @@ codex exec -s workspace-write -m gpt-5.6-luna -c 'model_reasoning_effort="xhigh"
 
 Whether Codex loads the TOML agents at runtime was not observed: there is no CLI listing for custom agents, and neither headless run needed a subagent.
 
+## Clio Coder 0.6.3 (local build, 2026-10-16)
+
+WTF-P 0.9.0 targets Clio 0.6.3, which is not yet released. The build observed here is the Clio repository's local `v063` branch at `ba6540bd7` (entry `4693e4d2…`, dist `0f69c8bb…`, Node v24.20.0). It still reports `Clio Coder 0.6.2` until Clio's version bump, so it is recorded by digest and not pinned; a campaign pinned to the released build follows that release.
+
+Observed on that build, in disposable profiles, with no credentials and no model call:
+
+- `test/clio-native-integration.test.js` passed all 10 checks in both scopes, as on 0.6.2.
+- `clio-coder extensions test` passed 35 desk package tests. The tests model the landing and dispatch plan Clio 0.6.3 sends each hook, including its physical path walk (`src/core/path-canonical.ts`), and replay a call the desk rewrites, as Clio judges it again.
+- A development `prepare`, which records the build as unpinned, passed all nine checks, including the desk's package tests from its installed root, zero plugin diagnostics, and every installed recipe within the delegated tools. `library validate vendors/plugin` reported the plugin valid with zero diagnostics.
+- `library components --kind prompt` reported 26 warnings, one for each prompt that names the desk's tools in `allowed-tools`: "keeps extension_wtfp__record, … for an extension tool that registers later". Clio keeps the names, so the turn still holds the desk's tools.
+
+Read from that build's source and not exercised with a model:
+
+| Guarantee | On Clio 0.6.3 with the desk | Evidence |
+| --- | --- | --- |
+| The desk runs wherever WTF-P runs | Enforced: the extension runtime runs in the attended TUI, headless `clio-coder run`, ACP, `fleet run`, `run --agent`, and dispatched workers, whose hook calls are proxied over the worker protocol. When the hook host fails to start or has stopped, a call a blocking hook applies to is refused. | `src/entry/orchestrator.ts`, `src/cli/worker-extension-hooks.ts` |
+| A write is judged where it lands | Enforced: each hook receives the landing Clio's own resolver computed, and `write`, `edit` and `artifact` publish only to the landing the hook judged, so a link swapped in afterwards is refused. A worker's write in a task worktree is judged at the checkout path it merges into. | `src/tools/tool-landing.ts`, `src/entry/extension-runtime-hooks.ts`; desk package tests |
+| Dispatch is judged as Clio parses it | Enforced: the desk judges Clio's plan, with each worker's resolved agent, `cwd`, physical write boundaries and worktree, and Clio judges the call the desk confines again. A WTF-P project refuses worktree writers, compete candidates included. | `src/tools/registry.ts` `judgeRewrite`; desk package tests |
+| A headless step cannot answer a gate | Enforced: a gate interview in a headless run is cancelled with reason `headless`, and the desk leaves the gate pending. | `src/tools/extension-interview.ts`; desk package tests |
+| An action holds only the tools it declares | Enforced for the turn: Clio narrows a prompt template's turn to its `allowed-tools` and caps its workers at `delegated-tools`, and the narrower of session and turn mode wins. Only `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex` and `research-gap` hold `bash`, for the bundled citation dispatcher; in them an attended session asks once per session before a recognized test runner runs, and a headless run does not ask. | Clio source; `test/adapter-compiler.test.js` |
+| A campaign step holds no program-running tool | Enforced by `--allow-tools` and `--delegate-tools`, as on 0.6.2; headless runs still run recognized test runners without asking, so the campaign keeps passing both. Each step also runs with the budget left as its `--max-cost-usd`, which stops the run with exit 4, and receipts count compaction. | Clio source; `test/evaluation-campaign.test.js` |
+| A hooked worker runs only where its hooks can | Enforced: CLI runtimes (`codex-cli`, `claude-code`, `opencode-cli`, `pi-cli`, `antigravity-code`) and ACP delegation are refused whenever a blocking hook applies; `claude-sdk` and other non-HTTP runtimes when one matches the worker's tools. A worker carries at most 64 hooks; the desk declares one hook entry. A fleet node runs hooked workers only if it reports worker spec version 9; a node too old to report counts as hook-free and gets none. | `src/domains/dispatch/extension.ts`, `src/domains/dispatch/fleet-preflight.ts` |
+| Other agents' configuration stays out of a campaign | Enforced: campaign profiles set `CLIO_CODER_INTEROP_HOME=none`, so no other agent's user home feeds skills, prompts or credentials, even one `CLAUDE_CONFIG_DIR` names. Plugin `mcp.json` declarations load only under explicit trust, and project extension and plugin trust binds package identities. | `src/core/xdg.ts`, `src/domains/plugins/discovery.ts`; `test/evaluation-campaign.test.js` |
+| A seal cannot be forged | Tamper evidence against workers and hand edits, not against the main agent: its shell runs unsandboxed as the operator's user and can read the key, as on 0.6.2. | Clio maintainer's decision |
+| A model-backed run or an author-led session | Not yet observed on 0.6.3. | none |
+
 ## Clio Coder 0.6.2 reference (verified 2026-10-14)
+
+This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.9.0 the desk judges only what Clio 0.6.3 sends, so on Clio 0.6.2 it refuses writes and dispatches inside a WTF-P project or action, and the rows below describe the earlier desk.
 
 Clio is the reference host. Its qualified build is the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` is pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
 
