@@ -5,12 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0]
 
-Hardens the Clio desk into the reference implementation of WTF-P's author
-gates and record contract, and qualifies both Clio packages on a pinned Clio
-0.6.2 build. The other six host projections change only where shared protocol
-text and action contracts changed.
+Makes the Clio desk the reference implementation of WTF-P's author gates and
+record contract on Clio Coder 0.6.3, which runs the desk on every host and
+tells it where each call lands and what each dispatch starts. Both Clio
+packages were qualified on a pinned Clio 0.6.2 build and on a local Clio 0.6.3
+build. The other six host projections change only where shared protocol text
+and action contracts changed.
 
 ### Added
 
@@ -51,6 +53,9 @@ text and action contracts changed.
 
 ### Changed
 
+- **Breaking:** inside a WTF-P project or action the Clio desk needs Clio
+  Coder 0.6.3 or later, since it judges only the landing and dispatch plan
+  Clio sends each hook; on Clio 0.6.2 it refuses those writes and dispatches
 - A plan is approved for drafting only by an author `approve` answer on a
   checkpoint scoped to that plan, given for its current bytes; linked plans are
   immutable and `plan-revision` links its plan only after approval
