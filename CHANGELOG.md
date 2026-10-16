@@ -43,9 +43,9 @@ text and action contracts changed.
   of the action's capabilities, and `delegated-tools` for its workers, exactly
   what the delegated recipes declare; only the five actions that run the
   bundled citation dispatcher hold a shell, and none holds `run_script`, `job`,
-  `git` or `verify`. Clio 0.6.3 narrows a template turn to them; Clio 0.6.2
-  ignores them, so `actionScoped` stays false until a qualified build enforces
-  them
+  `git` or `verify`. Clio 0.6.3 narrows a template turn to them, so the Clio
+  availability record now says `actionScoped: true` with surface
+  `clio:template-allowed-tools`; Clio 0.6.2 ignores both fields
 - `evaluation/lib/desk-trust.js`, the one rule for whether a recorded answer is
   the author's, shared by the desk and the campaign collector
 

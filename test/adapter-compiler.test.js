@@ -662,8 +662,8 @@ record('every target publishes exact action availability and skill-route blocker
     assert.deepStrictEqual(metadata.approvalBindings, TARGET_POLICIES[projection.target].approvals);
     if (projection.target === 'clio') {
       assert.deepStrictEqual(metadata.hostToolEnforcement, {
-        actionScoped: false,
-        surface: 'clio:session-tools',
+        actionScoped: true,
+        surface: 'clio:template-allowed-tools',
         certificationAutonomy: ['read-only', 'suggest'],
         undeclaredToolCall: 'fail'
       });

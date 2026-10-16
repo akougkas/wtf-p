@@ -3,8 +3,8 @@
   "target": "clio",
   "marker": "WTFP_ACTION_UNAVAILABLE",
   "hostToolEnforcement": {
-    "actionScoped": false,
-    "surface": "clio:session-tools",
+    "actionScoped": true,
+    "surface": "clio:template-allowed-tools",
     "certificationAutonomy": [
       "read-only",
       "suggest"

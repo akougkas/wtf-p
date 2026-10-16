@@ -202,15 +202,14 @@ const TARGET_POLICIES = Object.freeze({
 
 // Availability says that a target has a native binding for every required
 // capability and effect. It does not imply that every host can narrow its
-// main-agent tool surface for one prompt. Clio prompts declare allowed-tools
-// and delegated-tools per action; Clio 0.6.3 narrows a template turn to them,
-// but the qualified Clio 0.6.2 ignores both, so its template turns inherit the
-// session tool surface. actionScoped stays false until a qualified Clio build
-// enforces them, so an evaluation cannot mistake a declaration for enforcement.
+// main-agent tool surface for one prompt; keep that machine-readable so an
+// evaluation cannot mistake a declaration for enforcement. Clio prompts
+// declare allowed-tools and delegated-tools per action, and Clio 0.6.3, which
+// the desk requires, narrows a template turn to them and caps its workers.
 const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
   clio: Object.freeze({
-    actionScoped: false,
-    surface: 'clio:session-tools',
+    actionScoped: true,
+    surface: 'clio:template-allowed-tools',
     certificationAutonomy: Object.freeze(['read-only', 'suggest']),
     undeclaredToolCall: 'fail'
   })

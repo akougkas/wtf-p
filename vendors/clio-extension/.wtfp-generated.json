@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "bf9c680389569f1b7220a5f7d37f2e37e469c993d63ba98a63485ad1ebd70ca3",
+  "sourceHash": "86c517368ed9ea33f08de08630686e6ebedbfc328eb2542fa9daacf1ee68a1bf",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -154,7 +154,7 @@
     },
     {
       "path": "compatibility/action-availability.json",
-      "sha256": "b410e8921f8dd0657b71025c5aaf6b09999ec80b401cee9b47acdbc3d8844bce"
+      "sha256": "d72a554453f6a22378b5daf48bcc20eb48668ca637e27739ed9610122f6998d4"
     },
     {
       "path": "project/schemas/checkpoint.schema.json",
