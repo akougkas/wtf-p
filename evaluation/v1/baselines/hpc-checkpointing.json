@@ -40,7 +40,7 @@
     "project_protocol_version": 1,
     "catalog_schema": "wtfp.catalog/v1",
     "adapter_compiler_version": 5,
-    "canonical_source_commit": "09f822994b38bf6c6c501235226bc9caf27e688e",
+    "canonical_source_commit": "4cb4196749a485e840c50d7c9bab755f57c1b8a6",
     "canonical_source_sha256": "02a7343a7eec20986101bd8e14a9ca95f2ff7f4bff3ee22c68bfb96befab62e3"
   },
   "expected_invariants": [

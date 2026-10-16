@@ -193,7 +193,7 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'fb9561447f45c7b5808b164e70e583b9379b655594803e3da15b031590fab064');
+    assert.strictEqual(suite.manifest_sha256, '09adbdb2e8a8122b7ab6d6d5e0246c92086fffffa0ac1fa9e1cecba42b67a154');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -1231,7 +1231,7 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      '09f822994b38bf6c6c501235226bc9caf27e688e');
+      '4cb4196749a485e840c50d7c9bab755f57c1b8a6');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
       '061969bc83cf36becb3a8ae17568cc1516b34866b7915b07012bb1a9463e8068');
