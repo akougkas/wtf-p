@@ -294,6 +294,8 @@ process.exit(0);`);
     const listed = (flag) => { const at = argv.indexOf(flag); assert.ok(at > 0, `the step passes ${flag}`); return argv[at + 1].split(','); };
     assert.deepStrictEqual(listed('--allow-tools'), [...runner.MAIN_TOOLS]);
     assert.deepStrictEqual(listed('--delegate-tools'), [...runner.WORKER_TOOLS]);
+    assert.ok(!argv.includes('--max-cost-usd'), 'Clio 0.6.2 takes no cost ceiling');
+    assert.strictEqual(run.budget_enforcement, 'between steps');
     for (const tool of [...runner.EXECUTION_TOOLS, 'web_fetch', 'web_read', 'configure_clio', 'consult']) {
       assert.ok(!runner.MAIN_TOOLS.includes(tool) && !runner.WORKER_TOOLS.includes(tool), `no step holds ${tool}`);
     }
@@ -327,6 +329,27 @@ process.exit(0);`);
     assert.deepStrictEqual([fetched.outcome, fetched.tools.network_calls], ['policy-violation', 1], 'a retrieval call through the gateway');
     // Clio's event stream does not tell a refusal from a failed run, so only a blocked outcome clears a call.
     assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'error' })), ['policy-violation', 1]);
+  });
+
+  await test('on Clio 0.6.3 each step runs with the budget left as its cost ceiling, and a ceiling stop is stopped-budget', async () => {
+    const later = path.join(scratch, 'ceiling.campaign.json');
+    fs.writeFileSync(later, JSON.stringify({ ...ungated, clio: { ...ungated.clio, version: '0.6.3' } }));
+    const campaign063 = runner.loadCampaign(later);
+    const calls = path.join(scratch, 'ceiling-calls');
+    const entry = fakeClio('fake-ceiling', `const fs = require('fs');
+const log = ${JSON.stringify(calls)};
+const seen = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\\n').filter(Boolean) : [];
+fs.appendFileSync(log, JSON.stringify(args) + '\\n');
+${mainReceipt(0.01)}
+process.exit(seen.length === 0 ? 0 : 4);`);
+    const run = await withEnv(executeEnv, () => runner.execute(campaign063, { root: preparedRoot('ceiling', entry, undefined, later), entry, ...selection, campaignFile: later }));
+    const ceilings = fs.readFileSync(calls, 'utf8').split('\n').filter(Boolean).map(line => { const argv = JSON.parse(line); return argv[argv.indexOf('--max-cost-usd') + 1]; });
+    assert.deepStrictEqual(ceilings, ['5', '4.99'], 'each step gets the budget the earlier steps left');
+    assert.deepStrictEqual([run.outcome, run.steps.map(step => step.outcome)], ['stopped-budget', ['completed', 'stopped-budget']]);
+    assert.match(run.budget_enforcement, /per-step Clio ceiling/);
+    assert.match(run.cost.scope, /compaction and every worker/);
+    const ok = { exitCode: 4, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    assert.strictEqual(runner.classifyStep(ok, '', '', {}).outcome, 'failed', 'without a ceiling, exit 4 is a failure');
   });
 
   await test('a worker receipt the runner cannot read vouches for nothing, so its step fails integrity', async () => {

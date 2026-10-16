@@ -36,6 +36,9 @@ text and action contracts changed.
   refuses worktree writers in a WTF-P project and a call whose host facts are
   malformed. On a Clio that sends no facts, such as 0.6.2, it refuses writes
   and dispatches inside a WTF-P project or action
+- On a campaign that pins Clio 0.6.3 or later, each step runs with the budget
+  left as its `--max-cost-usd` ceiling, and a step Clio stops there is
+  `stopped-budget`; campaigns on 0.6.2 keep enforcing the budget between steps
 - Clio prompts declare `allowed-tools` for their turn, from the Clio bindings
   of the action's capabilities, and `delegated-tools` for its workers, exactly
   what the delegated recipes declare; only the five actions that run the

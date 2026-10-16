@@ -40,6 +40,15 @@ const SETTINGS_ENV = 'WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE';
 const STORE_ACCESS = /extensions[\\/]+wtfp[\\/]+store\.json|seal-key/u;
 // What a step's cost covers: Clio's sealed receipts, the main agent's and every dispatched worker's.
 const COST_SCOPE = 'Clio run receipts: the main agent and every worker it dispatched. Model calls Clio records outside receipts, such as compaction, are not counted, and Clio 0.6.2 takes no cost ceiling, so the budget is enforced between steps.';
+// From Clio 0.6.3 a run takes a priced ceiling (--max-cost-usd, exit 4 when it stops the run) and its receipts count compaction.
+const CEILING_COST_SCOPE = 'Clio run receipts: the main agent, compaction and every worker it dispatched. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
+const CEILING_EXIT = 4;
+
+/** Whether the campaign's Clio takes a per-run cost ceiling: 0.6.3 and later. */
+function takesCostCeiling(campaign) {
+  const [major, minor, patch] = String(campaign.clio.version).split('.').map(Number);
+  return major > 0 || minor > 6 || (minor === 6 && patch >= 3);
+}
 // Operator-selected Clio files a run copies in; they and any copy Clio makes of them are wiped at the end.
 const PRIVATE_FILES = /^\.?(?:credentials|settings)\.yaml/u;
 const SCAN_LIMIT = 64 * 1024 * 1024;
@@ -561,7 +570,7 @@ function newReceipts(directory, before) {
  * receipt, or any unknown provenance, makes the step's cost unavailable,
  * never zero; an estimate is reported as one.
  */
-function stepCost(receipts) {
+function stepCost(receipts, scope = COST_SCOPE) {
   const parts = receipts.map(({ receipt }) => ({
     main: Boolean(receipt && receipt.agentId === 'main-agent'),
     usd: receipt ? receipt.costUsd : null,
@@ -574,7 +583,7 @@ function stepCost(receipts) {
     status,
     usd: status === 'unavailable' ? null : parts.reduce((sum, part) => sum + part.usd, 0),
     sources: { main_receipts: parts.filter(part => part.main).length, worker_receipts: parts.filter(part => !part.main).length },
-    scope: COST_SCOPE
+    scope
   };
 }
 
@@ -703,10 +712,11 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
   else if (result.timedOut) outcome = 'timed-out';
   else if (networkCalls > 0 || storeCalls > 0 || executionCalls > 0) outcome = 'policy-violation';
   else if (gates.unconfirmed.length > 0 || added.length > 0 || configChanged.length > 0 || unreadableReceipts.length > 0) outcome = 'integrity-violation';
+  else if (context.ceiling && result.exitCode === CEILING_EXIT) outcome = 'stopped-budget';
   else if (result.exitCode !== 0) outcome = 'failed';
   else if (gates.pending.length > 0) outcome = 'author-unavailable';
   else if (gated) outcome = 'gate-not-raised';
-  const cost = stepCost(receipts);
+  const cost = stepCost(receipts, context.ceiling ? CEILING_COST_SCOPE : COST_SCOPE);
   const models = modelObservation(messages, receipts, context.selection ? context.selection.model : null);
   return {
     outcome,
@@ -1124,6 +1134,8 @@ async function execute(campaign, options) {
   if (!Number.isFinite(options.budgetUsd) || options.budgetUsd <= 0) throw new Error('execute needs the operator\'s --budget-usd ceiling');
   const ceiling = campaign.budget.timeout_minutes_per_step;
   const timeoutMinutes = options.timeoutMinutes === undefined ? ceiling : options.timeoutMinutes;
+  const costCeiling = takesCostCeiling(campaign);
+  const costScope = costCeiling ? CEILING_COST_SCOPE : COST_SCOPE;
   if (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0 || timeoutMinutes > ceiling) {
     throw new Error(`--timeout-minutes must be above 0 and at most the campaign's ${ceiling} minutes per step`);
   }
@@ -1159,6 +1171,7 @@ async function execute(campaign, options) {
     wtfp: bound.wtfp,
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
+    budget_enforcement: costCeiling ? 'per-step Clio ceiling (--max-cost-usd) and between steps' : 'between steps',
     step_environment: {
       ...STEP_GUARDS,
       tools: { main: MAIN_TOOLS, delegated: WORKER_TOOLS },
@@ -1196,7 +1209,7 @@ async function execute(campaign, options) {
     persisted = true;
     run.ended_at = new Date().toISOString();
     if (run.outcome === 'running') run.outcome = 'cancelled';
-    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: COST_SCOPE } : { status: costStatus, usd: spent, scope: COST_SCOPE };
+    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: costScope } : { status: costStatus, usd: spent, scope: costScope };
     // Model evidence is claimed only for a run in which a model call was actually seen.
     run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
     // Nothing a step left running may outlive the run, and the key returns only after it is gone.
@@ -1272,7 +1285,8 @@ async function execute(campaign, options) {
       const result = await spawnCaptured({
         executable: process.execPath,
         argv: [options.entry, 'run', '--target', options.target, '--model', options.model, '--thinking', options.effort, '--autonomy', campaign.permissions.autonomy,
-          '--allow-tools', MAIN_TOOLS.join(','), '--delegate-tools', WORKER_TOOLS.join(','), '--json-events', 'full', prompt(step)],
+          '--allow-tools', MAIN_TOOLS.join(','), '--delegate-tools', WORKER_TOOLS.join(','),
+          ...(costCeiling ? ['--max-cost-usd', String(options.budgetUsd - spent)] : []), '--json-events', 'full', prompt(step)],
         cwd: workspace,
         env,
         stdoutFile: path.join(logs, 'stdout.jsonl'),
@@ -1286,6 +1300,7 @@ async function execute(campaign, options) {
         configChanged: configChanges(configBefore, clioProjectConfig(workspace)),
         step,
         selection: options,
+        ceiling: costCeiling,
         cancelled: Boolean(signals.state.signal)
       });
       if (classified.cost.status === 'unavailable') costStatus = 'unavailable';
@@ -1318,7 +1333,7 @@ async function execute(campaign, options) {
     throw error;
   } finally {
     signals.remove();
-    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: COST_SCOPE } : { status: costStatus, usd: spent, scope: COST_SCOPE };
+    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: costScope } : { status: costStatus, usd: spent, scope: costScope };
     persist();
   }
   return run;
