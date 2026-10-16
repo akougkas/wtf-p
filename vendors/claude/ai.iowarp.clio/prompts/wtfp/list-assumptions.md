@@ -1,6 +1,12 @@
 ---
 description: "Preview the intended approach and assumptions for a section without changing project files."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
 ---
 
 # List section assumptions

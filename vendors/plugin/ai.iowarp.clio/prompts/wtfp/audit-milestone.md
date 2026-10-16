@@ -1,6 +1,21 @@
 ---
 description: "Run readiness checks across section completion, arguments, length, citations, and reviews."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - bash
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
 ---
 
 # Audit a milestone

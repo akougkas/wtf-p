@@ -1,6 +1,28 @@
 ---
 description: "Audit citation integrity and emit a validated corrected-bibliography candidate without mutating source records or manuscript inputs."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+  - bash
+delegated-tools:
+  - context
+  - edit
+  - find
+  - grep
+  - ledger
+  - limitation
+  - ls
+  - read
+  - write
 ---
 
 # Check references

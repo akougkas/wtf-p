@@ -202,10 +202,11 @@ const TARGET_POLICIES = Object.freeze({
 
 // Availability says that a target has a native binding for every required
 // capability and effect. It does not imply that every host can narrow its
-// main-agent tool surface for one prompt. Clio plugin prompt templates expand
-// into an ordinary user turn and therefore inherit the session tool surface.
-// Keep that limitation machine-readable so an evaluation cannot mistake a
-// semantic binding for action-scoped enforcement.
+// main-agent tool surface for one prompt. Clio prompts declare allowed-tools
+// and delegated-tools per action; Clio 0.6.3 narrows a template turn to them,
+// but the qualified Clio 0.6.2 ignores both, so its template turns inherit the
+// session tool surface. actionScoped stays false until a qualified Clio build
+// enforces them, so an evaluation cannot mistake a declaration for enforcement.
 const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
   clio: Object.freeze({
     actionScoped: false,
@@ -757,6 +758,15 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
       for (const tool of tools) lines.push(`  - ${tool}`);
     }
   }
+  if (target === 'clio') {
+    lines.push('allowed-tools:');
+    for (const tool of clioActionTools(action, deskTools)) lines.push(`  - ${tool}`);
+    const delegated = clioDelegatedTools(action, reviewers);
+    if (delegated.length > 0) {
+      lines.push('delegated-tools:');
+      for (const tool of delegated) lines.push(`  - ${tool}`);
+    }
+  }
   const nativeBody = nativeCommandBody(action, workflowBody, target, deskTools);
   const clioRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
   // Clio refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
@@ -927,17 +937,60 @@ function renderCopilotCloudRole(role, slug) {
   ].join('\n');
 }
 
+// The tools a Clio role recipe declares. Verifier roles judge text and run
+// nothing, so their recipes are Clio's read-only class: no write, no shell and
+// no verify, whose checks run commands from files a writer could have planted.
+// Clio refuses a skill load in a read-only run, so they bind none; the recipe
+// body is the role's whole contract, and the orchestrator holds the action's skill.
+function clioRoleTools(verifier) {
+  return verifier
+    ? { required: ['read'], optional: ['context', 'grep', 'find', 'ls', 'ledger'] }
+    : { required: ['read', 'context', 'limitation', { anyOf: ['write', 'edit'] }], optional: ['grep', 'find', 'ls', 'ledger'] };
+}
+
+function clioToolList(entries) {
+  return `[${entries.map((entry) => (typeof entry === 'string' ? entry : `{anyOf: [${entry.anyOf.join(', ')}]}`)).join(', ')}]`;
+}
+
+const CLIO_DESK_TOOLS = Object.freeze(['record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
+
+// The tools one Clio prompt's turn may hold (allowed-tools), from the Clio
+// bindings of the action's declared capabilities. Clio 0.6.3 narrows a
+// template turn to them; 0.6.2 ignores the field. Only the bundled citation
+// dispatcher needs a shell, so an action holds bash only when it declares
+// tool.execute or network.search, and never run_script, job, git or verify.
+function clioActionTools(action, deskTools) {
+  const capabilities = new Set(action.requirements.capabilities);
+  const tools = ['read', 'grep', 'find', 'ls', 'context'];
+  if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) tools.push('write', 'edit');
+  if (capabilities.has('user.interaction')) tools.push('ask_user');
+  if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.push('dispatch', 'monitor');
+  if (capabilities.has('network.fetch')) tools.push('web_fetch');
+  if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
+  if (deskTools) tools.push(...CLIO_DESK_TOOLS);
+  return tools;
+}
+
+// The tools the action's workers may hold (delegated-tools): every tool its
+// delegated roles' recipes declare, since Clio refuses a worker whose recipe
+// declares more than the ceiling, and without this field the turn's own
+// allowed-tools would be that ceiling.
+function clioDelegatedTools(action, reviewers) {
+  const tools = new Set();
+  for (const entry of action.delegation) {
+    const declared = clioRoleTools(reviewers.has(entry.role));
+    for (const item of [...declared.required, ...declared.optional]) {
+      for (const tool of typeof item === 'string' ? [item] : item.anyOf) tools.add(tool);
+    }
+  }
+  return [...tools].sort();
+}
+
 function renderClioRole(role, slug) {
   const verifier = role.fields.execution_class === 'verifier-report';
-  // Verifier roles judge text and run nothing, so their recipes are Clio's
-  // read-only class: no write, no shell and no verify, whose checks run
-  // commands from files a writer could have planted. Clio refuses a skill load
-  // in a read-only run, so they bind none; the recipe body is the role's whole
-  // contract, and the orchestrator holds the action's skill.
-  const required = verifier
-    ? '[read]'
-    : '[read, context, limitation, {anyOf: [write, edit]}]';
-  const optional = verifier ? '[context, grep, find, ls, ledger]' : '[grep, find, ls, ledger]';
+  const declared = clioRoleTools(verifier);
+  const required = clioToolList(declared.required);
+  const optional = clioToolList(declared.optional);
   const nativeResult = verifier
     ? 'Your entire final response must be one compact JSON object: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each ordinary evidence value to one short sentence (the wtfp.role-result entry contains compact serialized JSON), keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object.'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
@@ -2265,6 +2318,8 @@ function compileAdapters(options = {}) {
 module.exports = {
   GENERATOR_VERSION,
   TARGET_POLICIES,
+  clioActionTools,
+  clioDelegatedTools,
   TARGET_ROOTS,
   compileAdapters,
   compilePlans,

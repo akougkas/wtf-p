@@ -1,6 +1,24 @@
 ---
 description: "Review a drafted section for evidence, citations, coherence, requirements, and reader expectations."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+delegated-tools:
+  - context
+  - find
+  - grep
+  - ledger
+  - ls
+  - read
 ---
 
 # Review a section

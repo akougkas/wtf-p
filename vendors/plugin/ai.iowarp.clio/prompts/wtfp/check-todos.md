@@ -1,6 +1,20 @@
 ---
 description: "Review pending tasks and explicitly act on, defer, complete, or dismiss each one."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
 ---
 
 # Review todos

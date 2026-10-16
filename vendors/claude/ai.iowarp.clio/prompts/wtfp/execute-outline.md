@@ -1,6 +1,27 @@
 ---
 description: "Draft independent section waves in parallel and verify cross-section coherence."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+delegated-tools:
+  - context
+  - edit
+  - find
+  - grep
+  - ledger
+  - limitation
+  - ls
+  - read
+  - write
 ---
 
 # Execute the outline

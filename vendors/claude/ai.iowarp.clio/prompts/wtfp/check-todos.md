@@ -1,6 +1,15 @@
 ---
 description: "Review pending tasks and explicitly act on, defer, complete, or dismiss each one."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Review todos

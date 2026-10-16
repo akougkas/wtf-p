@@ -34,6 +34,13 @@ text and action contracts changed.
   path, and each worker's resolved agent and `cwd`; it refuses worktree writers
   in a WTF-P project, and a call whose host facts are malformed or differ from
   its own read. On Clio 0.6.2 it reads every call itself
+- Clio prompts declare `allowed-tools` for their turn, from the Clio bindings
+  of the action's capabilities, and `delegated-tools` for its workers, exactly
+  what the delegated recipes declare; only the five actions that run the
+  bundled citation dispatcher hold a shell, and none holds `run_script`, `job`,
+  `git` or `verify`. Clio 0.6.3 narrows a template turn to them; Clio 0.6.2
+  ignores them, so `actionScoped` stays false until a qualified build enforces
+  them
 - `evaluation/lib/desk-trust.js`, the one rule for whether a recorded answer is
   the author's, shared by the desk and the campaign collector
 

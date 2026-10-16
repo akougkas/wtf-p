@@ -1,6 +1,20 @@
 ---
 description: "Restore the latest portable handoff and route the researcher to the next safe action."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
 ---
 
 # Resume writing

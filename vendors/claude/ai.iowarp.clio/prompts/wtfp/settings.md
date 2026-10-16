@@ -1,6 +1,15 @@
 ---
 description: "View and update portable project settings after presenting the exact proposed diff."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Manage project settings

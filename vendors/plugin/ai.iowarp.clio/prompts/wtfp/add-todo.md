@@ -1,6 +1,19 @@
 ---
 description: "Capture a bounded note or task without disrupting the active research flow."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
 ---
 
 # Add a todo

@@ -1,6 +1,14 @@
 ---
 description: "Record an exact context handoff so another session can resume without reconstructing intent."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
 ---
 
 # Pause writing

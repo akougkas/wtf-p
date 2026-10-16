@@ -1,6 +1,32 @@
 ---
 description: "Execute an approved section plan, update state, and optionally verify argument coverage."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
+delegated-tools:
+  - context
+  - edit
+  - find
+  - grep
+  - ledger
+  - limitation
+  - ls
+  - read
+  - write
 ---
 
 # Write a section

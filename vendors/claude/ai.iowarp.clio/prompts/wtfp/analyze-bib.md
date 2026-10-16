@@ -1,6 +1,28 @@
 ---
 description: "Analyze a bibliography and map its evidence to the paper's sections and claims."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+  - bash
+delegated-tools:
+  - context
+  - edit
+  - find
+  - grep
+  - ledger
+  - limitation
+  - ls
+  - read
+  - write
 ---
 
 # Analyze the bibliography

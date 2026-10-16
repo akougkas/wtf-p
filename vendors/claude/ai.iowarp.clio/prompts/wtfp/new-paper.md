@@ -1,6 +1,15 @@
 ---
 description: "Interview the researcher and initialize a portable WTF-P project."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Start a new paper

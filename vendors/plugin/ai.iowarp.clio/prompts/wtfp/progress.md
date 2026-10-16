@@ -1,6 +1,13 @@
 ---
 description: "Summarize writing progress, surface blockers, and recommend the next compatible action."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - ask_user
 ---
 
 # Show project progress

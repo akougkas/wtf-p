@@ -1,6 +1,15 @@
 ---
 description: "Save, list, or restore an exact portable paper-state checkpoint."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Manage checkpoints

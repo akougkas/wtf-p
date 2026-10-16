@@ -1,6 +1,15 @@
 ---
 description: "Archive a completed draft or submission round with its reproducible project state and statistics."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Archive a milestone

@@ -1,6 +1,15 @@
 ---
 description: "Insert a newly discovered section while preserving established numbering and dependencies."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Insert a section

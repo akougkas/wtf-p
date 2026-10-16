@@ -1,6 +1,27 @@
 ---
 description: "Build the section structure, argument map, dependencies, and word budgets."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - dispatch
+  - monitor
+delegated-tools:
+  - context
+  - edit
+  - find
+  - grep
+  - ledger
+  - limitation
+  - ls
+  - read
+  - write
 ---
 
 # Create the paper outline

@@ -1,6 +1,15 @@
 ---
 description: "Restore the latest portable handoff and route the researcher to the next safe action."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Resume writing

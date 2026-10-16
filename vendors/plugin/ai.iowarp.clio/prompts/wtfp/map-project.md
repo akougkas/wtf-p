@@ -1,6 +1,19 @@
 ---
 description: "Index existing drafts, data, figures, and references into portable project state."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - extension_wtfp__record
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__measure_section
+  - extension_wtfp__gate
 ---
 
 # Map an existing project

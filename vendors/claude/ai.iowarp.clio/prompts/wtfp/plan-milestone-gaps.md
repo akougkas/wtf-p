@@ -1,6 +1,15 @@
 ---
 description: "Convert milestone audit failures into targeted, verifiable fix plans."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Plan milestone gap fixes

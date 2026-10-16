@@ -1,6 +1,15 @@
 ---
 description: "Capture the researcher's intended purpose, essential content, voice, and boundaries before planning."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Discuss a section

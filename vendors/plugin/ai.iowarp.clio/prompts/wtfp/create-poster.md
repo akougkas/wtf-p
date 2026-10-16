@@ -1,6 +1,15 @@
 ---
 description: "Transform the paper's argument, methods, and findings into a concise academic poster."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Create a research poster

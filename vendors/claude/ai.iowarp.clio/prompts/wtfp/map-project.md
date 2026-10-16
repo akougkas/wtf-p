@@ -1,6 +1,14 @@
 ---
 description: "Index existing drafts, data, figures, and references into portable project state."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
 ---
 
 # Map an existing project

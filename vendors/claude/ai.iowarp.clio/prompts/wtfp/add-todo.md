@@ -1,6 +1,14 @@
 ---
 description: "Capture a bounded note or task without disrupting the active research flow."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
 ---
 
 # Add a todo

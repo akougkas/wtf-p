@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "1885f52aebeae59baa2fc6508c235448057913e4b17b8da9d6b388483389ebd9",
+  "sourceHash": "02a7343a7eec20986101bd8e14a9ca95f2ff7f4bff3ee22c68bfb96befab62e3",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -202,27 +202,27 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/add-todo.md",
-      "sha256": "08a43e3a4f151d789f4d90f4c2d8be45ad6a949984cbfcbb2269e9b6aab8c769"
+      "sha256": "804ba4ae9ed4ebd1081f5817525c22c68ee09dd41667b61617776087deee1b80"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
-      "sha256": "60ecf60df1c26736fc15248e088d0a6df3ec232adfaf1a5d2552001c40ec6f79"
+      "sha256": "6eb1e7af34cf7290f9fceea81979fad16d08b361743efc8d365ee37fc8b4ed4a"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/audit-milestone.md",
-      "sha256": "4869a5e91c28348c677b99c512b472743ee1d3f17b231a68208be168fe5a157e"
+      "sha256": "5a32de0309d12b6ae80ab82b395cd1db39d4fd59311d741254d3d3989ccd25c1"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/check-refs.md",
-      "sha256": "d93a0a7ad4e44678d4590271e6b93c060a21be1341da4da5be799a1b1f2648c1"
+      "sha256": "4f230e1501cf773441ece8e928b9d9c43e5085a97b1546504f7396abde121224"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/check-todos.md",
-      "sha256": "65da458c715e64bfc58771ecd3c0558093bee526d1a338a59a6c3d325dc43898"
+      "sha256": "5d61225ea04d7f4890d71bd36fd78e21249db8e5343319446935d56c424fc6d2"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/checkpoint.md",
-      "sha256": "93dc474614b8908f3c0f6d08667b90b7bae46f5332108ddac690252678e855f1"
+      "sha256": "1bb814298da02722235411434452ae163809342b305499e43a735071a29069e2"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/contribute.md",
@@ -230,27 +230,27 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/create-outline.md",
-      "sha256": "d5d62b69fb4bdc861f071b2908e3879ef5e1864f9fbfcb3c91fc89ead2cce027"
+      "sha256": "9713f2b0e555ccaf72e340c067fe848c2112e623d75959cf9d8290e1b01aa6f4"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/create-poster.md",
-      "sha256": "770ff722673f4316ce200b930178f0a276786c6727246cb3187fe15937655158"
+      "sha256": "624fad081383bf2329d102db27acacd0c900745af94da0cc83d5dc1f3314a163"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/create-slides.md",
-      "sha256": "8b800bf059b600272803a0afbfefe77741bc52f44f412e2bbe7b06b45f8d007d"
+      "sha256": "e0c1dcb75e7b08b2ecf5de012b552efebe8b985db23d575471b95c312c743aa2"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/discuss-section.md",
-      "sha256": "e0cfe871ed71720e800526e9987763a177ff5b52f264914aa8fde28f5dcf46a8"
+      "sha256": "7bdc68e1fcacd33c8e0f980abef9b132cce1b00037fad25c1bb534dd1897949c"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
-      "sha256": "668e21187a5e9e45c2b25b121abe23d283d6243d7fe6e8af17b65143dab03ca1"
+      "sha256": "06ea0b4ae82234a7b38f4a5475013e2e99d5ec730e3a1801214dd1e940ad89c0"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/export-latex.md",
-      "sha256": "c898055efa9507ab10ff90ddd0b66474328cb5684ae61979383fa0d49e67cbd7"
+      "sha256": "60a28b59b677ebf01c7e31b404b03fc46acab9ee47308b8a3cabba8fa69d499b"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
@@ -258,47 +258,47 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
-      "sha256": "30ad57dd434d53fae098ea2382e87219f37ee8d8c88638a66be41e9e64856fa1"
+      "sha256": "ab033b08cf2d6cc8e81e7a50e75b91b446e66337e7ccd4342ce430d8d6f3ae89"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/list-assumptions.md",
-      "sha256": "1a4c8db17bddeaf60af8ba5d03fb53dcb2d1406ac2945d50ca397acaee91d08b"
+      "sha256": "cf45921321d9b62e8f71aaf91ee1d90506c993900a04210eded3a75ebc234040"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/map-project.md",
-      "sha256": "0bdae51204bbbe23cb91833f35671ad803ad48c81e479d66cc3cec31ee1eab2d"
+      "sha256": "352fd33424cfa477768e8499a81ba6a4bcfc607df8beb2a0f4ed543c80b6ba3d"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/new-paper.md",
-      "sha256": "2bbb99be50e78895481bb8543a739fd4605e61d119e6ecbf2c89ce0745b22404"
+      "sha256": "341cc8b3fe96611ea51160c45d32dd81bcfa9dc9f6b76deeace1a9dbe4ae88d6"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/pause-writing.md",
-      "sha256": "7d77d6415c164d13405295038dea83e5b25d9388129293618e81bb9d2fe11f39"
+      "sha256": "4ae568940039f5d6df0d540ab8fe57d12021b00520a58067a10f18c9448a8743"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-milestone-gaps.md",
-      "sha256": "653fc46a2a9b66d21a522c6cd01356323e9fe171eaef41af6861846e49dd501b"
+      "sha256": "d244cad1494ace510cfdb78f6262695bd7f23080db27ab2a0d2ce97e9767548f"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-revision.md",
-      "sha256": "09d02f4a38399e9821fddf403dfed300252a02af39c5ec62531585675534a6ef"
+      "sha256": "7fff2ac05f029fee9adcde2c29843ac5a559a061513995d3a8425d94dfda3816"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "fa5a36573cb1e72dc925ae6442ef695895fbf9c12345ae0e18304d6a72c8522d"
+      "sha256": "e6c96cc5c5d75c66e0cd4048c4d906f9f9b22b27af62f65fdf4a93abb454841d"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
-      "sha256": "2c63d23a33fee2f6a49da609204d8b8fbea8e62d566017779fbe8ec72f1c9acd"
+      "sha256": "218b52885255c9e472fe1eba77c724e9e67fc621e6d2bb5707efe3c092c68bf8"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/progress.md",
-      "sha256": "4da0d73e7f8d0d546a2c50d8ba97116ce7c4f22b0e382025d3ef3cbdb99c98f6"
+      "sha256": "4417ffebae0734f602066a2b2649a2b976a6a44e19600b3ba135e7d0b8413563"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/quick.md",
-      "sha256": "3a2ecea9e9d0c6aa76bebe7ff9d9ebe47a7620b5d7016e7291cbd8303559dd40"
+      "sha256": "7d172a764e990f5b425e50052427f82cc5cd9c1d082bd25581d6fa5fc87f9c83"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/remove-section.md",
@@ -314,23 +314,23 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
-      "sha256": "d3ebc093a465241ffe2ecf57130c4cc3641510453a9be761af9eb74b046b1a0f"
+      "sha256": "06d438360bcb0bd80fe955c90e0f3c7fa35dda4701a4814ef69ac33f1d10a4d3"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",
-      "sha256": "638133563686c91fa43ebaa2347534ec78d684bce1771516bd78f3c974a9c5ea"
+      "sha256": "638400d9fdaba5833f51cd4f0e5753c3b094578e881426150c6c1af963d8b04f"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/review-section.md",
-      "sha256": "0095294f238bbb842b815320e78da0f6e5e21851f7672b557e5f09e24cad0c71"
+      "sha256": "f550381fcbb25ed0e6646b852546fc8f29c809a6f6588eae1bf3dd0b8a71b0a1"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/settings.md",
-      "sha256": "741be4bb9a673cd4199f335e59130f8bdc290452d209a58b20f6accf2cc6f416"
+      "sha256": "64ecb61190feea041390ce5a91aef59d0a82555eac9ef806e72e9d0760d50c82"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/submit-milestone.md",
-      "sha256": "799f2544aef1ec0302a4ff2bd32fb845832accc4143e5c1a8c16684240e0bf1c"
+      "sha256": "30a49ec154f557d67e9c76c1a20cc8a310d4fc523a220fb8f70fb745afca11fd"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/update.md",
@@ -338,11 +338,11 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/verify-work.md",
-      "sha256": "fdf259d4aa6e45f2b387cca8aa7409ded30a5fed61bf8ca586cbd95333a7ff7c"
+      "sha256": "7cf94056fe04fa7c59f88fa3e06a828690c1e395acc5cd7f7cbff28f08f83ecf"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "f81418af6d5858bda0e169229589f97c5519fbad9dff53420584af2bff568dd9"
+      "sha256": "3e2f89fb7e4a1b4699131899891d14cefa73bbc1b23d7b42d59485cc88105064"
     },
     {
       "path": "aliases.lock.json",

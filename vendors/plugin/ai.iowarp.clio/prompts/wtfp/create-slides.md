@@ -1,6 +1,15 @@
 ---
 description: "Transform the paper's argument, evidence, and findings into an audience-appropriate presentation."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Create presentation slides

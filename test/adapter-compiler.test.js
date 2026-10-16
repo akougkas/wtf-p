@@ -1226,6 +1226,43 @@ record('research handoff declares incremental state and preserves native decisio
       assert.match(body, /^skills: \[\]$/m, `${role}: a read-only reviewer binds no skill`);
     }
   }
+  // Each Clio prompt scopes its turn (allowed-tools) and its workers (delegated-tools); Clio 0.6.3 enforces both, 0.6.2 ignores them.
+  const portablePlan = plansById.get('portable-plugin');
+  const availability = JSON.parse(planText(portablePlan, 'compatibility/action-availability.json'));
+  const listField = (text, key) => {
+    const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)?.[1] ?? '';
+    const block = new RegExp(`^${key}:\\n((?:  - .*\\n?)+)`, 'm').exec(frontmatter);
+    return block ? block[1].trim().split('\n').map((line) => line.replace(/^\s*- /, '')) : null;
+  };
+  const recipeTools = (role) => {
+    const declared = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(planText(clio, `agents/wtfp-${role}.md`));
+    return `${declared[1]}, ${declared[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
+  };
+  const deskTools = ['record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`);
+  for (const entry of availability.actions.filter((item) => item.status === 'available' && item.id !== 'help')) {
+    const action = readJson(path.join(ROOT, 'protocol/actions', `${entry.id}.json`));
+    const capabilities = new Set(action.requirements.capabilities);
+    for (const [label, text] of [['clio', planText(clio, `prompts/wtfp/${entry.id}.md`)], ['portable', planText(portablePlan, `ai.iowarp.clio/prompts/wtfp/${entry.id}.md`)]]) {
+      const allowed = listField(text, 'allowed-tools');
+      assert.ok(allowed && allowed.includes('read'), `${label} ${entry.id}: the prompt scopes its turn`);
+      for (const tool of ['run_script', 'job', 'git', 'verify', 'configure_clio', 'web_read']) assert.ok(!allowed.includes(tool), `${label} ${entry.id}: never ${tool}`);
+      assert.strictEqual(allowed.includes('bash'), capabilities.has('tool.execute') || capabilities.has('network.search'), `${label} ${entry.id}: a shell only for the bundled tool dispatcher`);
+      assert.strictEqual(allowed.includes('write'), capabilities.has('filesystem.write') || capabilities.has('filesystem.delete'), `${label} ${entry.id}: writes only where declared`);
+      assert.strictEqual(allowed.includes('dispatch'), action.delegation.length > 0 || capabilities.has('agent.parallel'), `${label} ${entry.id}: dispatch only where delegation is declared`);
+      const delegated = listField(text, 'delegated-tools');
+      if (action.delegation.length === 0) assert.strictEqual(delegated, null, `${label} ${entry.id}: no worker ceiling without delegation`);
+      else {
+        // The ceiling is exactly what the delegated recipes declare, so Clio admits each of them and nothing wider.
+        const expected = [...new Set(action.delegation.flatMap((role) => recipeTools(role.role)))].sort();
+        assert.deepStrictEqual(delegated, expected, `${label} ${entry.id}: worker ceiling`);
+        assert.ok(!delegated.includes('bash') && !delegated.includes('verify'), `${label} ${entry.id}: no worker runs a program`);
+      }
+      const desked = deskTools.filter((tool) => allowed.includes(tool));
+      assert.ok(desked.length === 0 || desked.length === deskTools.length, `${label} ${entry.id}: the desk tools travel together`);
+      if (label === 'clio') assert.strictEqual(desked.length, 0, `${entry.id}: the desk-free projection names no desk tool`);
+    }
+  }
+  assert.deepStrictEqual(listField(planText(portablePlan, 'ai.iowarp.clio/prompts/wtfp/write-section.md'), 'allowed-tools').filter((tool) => tool.startsWith('extension_')), deskTools);
   assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
   assert.doesNotMatch(planText(clio, 'prompts/wtfp/create-outline.md'), /is read-only: begin each task/);
   assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);

@@ -1,6 +1,15 @@
 ---
 description: "Test a drafted section against each plan requirement and record evidence one check at a time."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Verify written work

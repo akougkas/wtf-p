@@ -1,6 +1,16 @@
 ---
 description: "Run readiness checks across section completion, arguments, length, citations, and reviews."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
+  - bash
 ---
 
 # Audit a milestone

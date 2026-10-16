@@ -1,6 +1,15 @@
 ---
 description: "Turn prioritized review findings into a bounded, testable revision plan."
 argument-hint: "[arguments]"
+allowed-tools:
+  - read
+  - grep
+  - find
+  - ls
+  - context
+  - write
+  - edit
+  - ask_user
 ---
 
 # Plan a revision
