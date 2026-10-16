@@ -29,11 +29,13 @@ text and action contracts changed.
   depth and manuscript citation keys checked structurally
 - `evaluation/v2`: the `clio-0.6.2-reference` campaign and
   `run-clio-campaign.js` (`plan`, `prepare`, `execute`, `collect`)
-- Where Clio 0.6.3 sends a hook the landing and dispatch plan it resolved, the
-  desk judges those: the file the tool opens, a worktree write at its checkout
-  path, and each worker's resolved agent and `cwd`; it refuses worktree writers
-  in a WTF-P project, and a call whose host facts are malformed or differ from
-  its own read. On Clio 0.6.2 it reads every call itself
+- The desk judges only the landing and dispatch plan Clio 0.6.3 sends each
+  hook, never its own reading of a call: the file the tool opens, a worktree
+  write at its checkout path, and each worker's resolved agent, `cwd` and
+  physical write boundaries, checked again on the call the desk confines. It
+  refuses worktree writers in a WTF-P project and a call whose host facts are
+  malformed. On a Clio that sends no facts, such as 0.6.2, it refuses writes
+  and dispatches inside a WTF-P project or action
 - Clio prompts declare `allowed-tools` for their turn, from the Clio bindings
   of the action's capabilities, and `delegated-tools` for its workers, exactly
   what the delegated recipes declare; only the five actions that run the

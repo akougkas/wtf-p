@@ -10,7 +10,7 @@
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -199,7 +199,7 @@ const SERVED = { id: "wtfp", prompts: ["wtfp:check-todos", "wtfp:plan-section", 
 
 async function withDesk(run: (host: Host, workspace: string) => Promise<void>, plugin: typeof SERVED | null = null): Promise<void> {
 	const workspace = project();
-	const host = await createExtensionTestHost(ROOT, { workspace, plugin });
+	const host = withClioFacts(await createExtensionTestHost(ROOT, { workspace, plugin }), workspace);
 	try {
 		await run(host, workspace);
 	} finally {
@@ -229,6 +229,165 @@ const write = (host: Host, target: string) => host.hook({ point: "before_tool", 
 
 const rewriteOf = (result: { effects?: Array<{ kind: string }> }): Json | null =>
 	(result.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args?: Json } | undefined)?.args ?? null;
+
+// --- the host's facts ------------------------------------------------------------
+// Clio 0.6.3 sends a before_tool hook where a path-taking tool lands and, for
+// dispatch, the plan admission parsed, and judges a rewritten call again. The
+// desk judges only those, so the test host models them as Clio resolves them,
+// with the test process's own access.
+
+const READ_ONLY_RECIPES = new Set((JSON.parse(readFileSync(path.join(ROOT, "runtime/write-guard.json"), "utf8")) as { readOnlyAgents: string[] }).readOnlyAgents);
+
+/** A path with its existing part resolved through links; the rest is kept as named. */
+function physical(file: string): string {
+	let head = file;
+	const rest: string[] = [];
+	while (!existsSync(head) && path.dirname(head) !== head) {
+		rest.unshift(path.basename(head));
+		head = path.dirname(head);
+	}
+	return path.join(realpathSync(head), ...rest);
+}
+
+/**
+ * Where a write through `joined` lands, as Clio's canonicalizeRawPath walks it
+ * (src/core/path-canonical.ts): a link at any component, dangling or not, is
+ * read and the walk goes on from its target, a `..` after a link steps up from
+ * the link's target, and a missing component ends the walk. Null for a loop,
+ * more than 40 links, or a component that cannot be inspected.
+ */
+function clioWalk(joined: string): string | null {
+	const { root } = path.parse(joined);
+	const parts = joined.slice(root.length).split(path.sep).filter((part) => part !== "" && part !== ".");
+	const up = parts.indexOf("..");
+	const pending = up === -1 ? [] : parts.slice(up);
+	let cursor = path.resolve(path.join(root, ...(up === -1 ? parts : parts.slice(0, up))));
+	const real = (file: string): string | null => {
+		try {
+			return path.resolve(realpathSync(file));
+		} catch {
+			return null;
+		}
+	};
+	let current = real(cursor);
+	while (current === null) {
+		const parent = path.dirname(cursor);
+		if (parent === cursor) return null;
+		pending.unshift(path.basename(cursor));
+		cursor = parent;
+		current = real(cursor);
+	}
+	let hops = 0;
+	while (pending.length > 0) {
+		const part = pending.shift() as string;
+		if (part === "..") {
+			current = path.dirname(current);
+			continue;
+		}
+		const next = path.join(current, part);
+		let target: string;
+		try {
+			target = readlinkSync(next);
+		} catch (error) {
+			const code = (error as NodeJS.ErrnoException).code;
+			if (code === "EINVAL") {
+				current = next;
+				continue;
+			}
+			if (code === "ENOENT" || code === "ENOTDIR") {
+				if (!pending.includes("..")) return path.resolve(next, ...pending);
+				current = next;
+				continue;
+			}
+			return null;
+		}
+		hops += 1;
+		if (hops > 40) return null;
+		if (path.isAbsolute(target)) current = path.parse(target).root;
+		pending.unshift(...target.split(path.sep).filter(Boolean));
+	}
+	return current;
+}
+
+/** Where Clio lands a tool's path: `@` dropped, Unicode spaces plain, `~` expanded, then Clio's physical walk from the workspace it runs in. */
+function clioTarget(raw: string, workspace: string): Json {
+	let spelled = (raw.startsWith("@") ? raw.slice(1) : raw).replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/gu, " ");
+	if (spelled === "~") spelled = homedir();
+	else if (spelled.startsWith("~/")) spelled = homedir() + spelled.slice(1);
+	const real = realpathSync(workspace);
+	// Clio runs in the workspace, so its own /proc/self/cwd is the workspace.
+	if (spelled === "/proc/self/cwd" || spelled.startsWith("/proc/self/cwd/")) spelled = real + spelled.slice("/proc/self/cwd".length);
+	const landed = clioWalk(path.isAbsolute(spelled) ? spelled : `${real}${path.sep}${spelled}`);
+	const at = landed ?? (path.isAbsolute(spelled) ? spelled : `${real}${path.sep}${spelled}`);
+	const relative = path.relative(real, at);
+	const inside = landed !== null && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+	return { arg: "path", path: at, resolved: landed !== null, workspacePath: inside ? relative.split(path.sep).join("/") || "." : null };
+}
+
+/** The plan Clio's dispatch admission parses from a call, for the shapes these tests send. */
+function clioPlan(args: Json, workspace: string): Json {
+	const real = realpathSync(workspace);
+	if (args.list === true) return { kind: "list" };
+	if (args.apply_winner !== undefined) return { kind: "apply-winner", branch: String((args.apply_winner as Json).branch ?? ""), cwd: real };
+	let tasks: unknown = args.tasks;
+	if (typeof tasks === "string") {
+		try {
+			tasks = JSON.parse(tasks) as unknown;
+		} catch {
+			// A plain string is one task's text.
+		}
+	}
+	if (tasks !== undefined && !Array.isArray(tasks)) tasks = [tasks];
+	const items = (tasks === undefined ? [args] : (tasks as unknown[])).map((task) => (typeof task === "string" ? { task } : (task as Json)));
+	const shared = (args.intent as Json | undefined)?.write_roots;
+	return {
+		kind: "tasks",
+		mode: tasks === undefined ? "single" : "fanout",
+		tasks: items.map((item) => {
+			const named = typeof item.agent === "string" ? item.agent : typeof args.agent === "string" ? args.agent : "";
+			const agent = named.trim() || "coder";
+			const spelledCwd = typeof item.cwd === "string" ? item.cwd : typeof args.cwd === "string" ? args.cwd : ".";
+			const cwd = physical(path.resolve(real, spelledCwd.trim() || "."));
+			const roots = (((item.intent as Json | undefined)?.write_roots ?? shared ?? []) as string[]).map((root) => root.trim());
+			return { role: "task", agent, cwd, writeRoots: roots, writeBoundaries: roots.map((root) => physical(path.resolve(cwd, root))), worktree: item.worktree === true, readOnly: READ_ONLY_RECIPES.has(agent) };
+		}),
+	};
+}
+
+/** A before_tool event with the facts Clio 0.6.3 adds, unless the test sent its own. */
+function withFacts(event: Json, workspace: string): Json {
+	if (event.point !== "before_tool" || "target" in event || "dispatch" in event) return event;
+	const args = (event.args ?? {}) as Json;
+	if (event.tool === "dispatch") return { ...event, dispatch: clioPlan(args, workspace) };
+	const raw = args.path ?? args.file_path ?? args.filePath;
+	if (["write", "edit", "artifact"].includes(event.tool as string) && typeof raw === "string" && raw.trim().length > 0)
+		return { ...event, target: clioTarget(event.tool === "artifact" ? raw.trim() : raw, workspace) };
+	return event;
+}
+
+/**
+ * The test host as Clio 0.6.3 runs the desk: each before_tool event carries
+ * Clio's facts, and a dispatch the desk rewrites is judged again with the plan
+ * of what the rewritten call starts. An event marked `bare` reaches the desk
+ * as Clio 0.6.2 sends it.
+ */
+function withClioFacts(host: Host, workspace: string): Host {
+	const hook = host.hook.bind(host);
+	const judged = async (event: Json, options?: Json) => {
+		if (event.bare === true) {
+			const { bare: _bare, ...sent } = event;
+			return hook(sent as never, options as never);
+		}
+		const first = await hook(withFacts(event, workspace) as never, options as never);
+		if (event.point !== "before_tool" || event.tool !== "dispatch" || "dispatch" in event) return first;
+		const rewritten = rewriteOf(first);
+		if (rewritten === null || blocked(first) !== null) return first;
+		const second = await hook(withFacts({ ...event, args: rewritten }, workspace) as never, options as never);
+		const refused = blocked(second);
+		return refused === null ? first : { effects: [{ kind: "block_tool", reason: `extension wtfp rewrote dispatch input into a call that is blocked: ${refused}` }] };
+	};
+	return new Proxy(host, { get: (target, key) => (key === "hook" ? judged : Reflect.get(target, key)) }) as Host;
+}
 
 // --- record writes -------------------------------------------------------------
 
@@ -291,8 +450,12 @@ test("no record write or file write escapes through a symbolic link", () =>
 			// A link that lands in paper/ is judged where it lands (W2).
 			symlinkSync(path.join(workspace, "paper"), path.join(workspace, "drafts"));
 			assert.match(blocked(await write(host, "drafts/introduction.md")) ?? "", /cannot be written yet/);
+			// Clio follows a dangling link to its target, here outside the project, and refuses the write if the link changes after the hook.
 			symlinkSync(path.join(outside, "missing"), path.join(workspace, "paper/dangling.md"));
-			assert.match(blocked(await write(host, "paper/dangling.md")) ?? "", /dangling link/);
+			assert.equal(blocked(await write(host, "paper/dangling.md")), null);
+			// A link Clio cannot resolve, such as a loop, is refused.
+			symlinkSync("loop", path.join(workspace, "paper/loop"));
+			assert.match(blocked(await write(host, "paper/loop/draft.md")) ?? "", /could not resolve/);
 		} finally {
 			rmSync(outside, { recursive: true, force: true });
 		}
@@ -362,7 +525,7 @@ test("an answer that was not offered, replayed, or meant for another desk record
 		const forged = await host.interview({ id: "gate-one", step: "gate.0123456789ab", nav: "next", answers: { choice: "workflow-first" } });
 		assert.match("done" in forged ? forged.text : "", /matches no open question/);
 		const other = project();
-		const elsewhere = await createExtensionTestHost(ROOT, { workspace: other });
+		const elsewhere = withClioFacts(await createExtensionTestHost(ROOT, { workspace: other }), other);
 		try {
 			const foreign = await elsewhere.interview({ id: "gate-one", step: await ask(host, GATE), nav: "next", answers: { choice: "workflow-first" } });
 			assert.match("done" in foreign ? foreign.text : "", /matches no open question/);
@@ -484,7 +647,7 @@ test("the manuscript waits for an author-approved plan whose exact bytes were ap
 		await answer(host, GATE, "protocol-first");
 		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /has not answered "Approve the introduction plan\?"/);
 		const declined = project();
-		const other = await createExtensionTestHost(ROOT, { workspace: declined });
+		const other = withClioFacts(await createExtensionTestHost(ROOT, { workspace: declined }), declined);
 		try {
 			await answer(other, GATE, "protocol-first");
 			await answer(other, PLAN_GATE, "revise");
@@ -713,12 +876,16 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 			blocked(await dispatch(coder, { kind: "tasks", mode: "compete", candidates: 2, tasks: [task("coder", { role: "candidate", worktree: true }), task("verifier", { role: "judge", readOnly: true })] })) ?? "",
 			/refuses worktree writers/,
 		);
-		assert.match(blocked(await dispatch(coder, plan(task("coder"), task("coder")))) ?? "", /Clio reads 2 worker task\(s\) in this dispatch and the desk reads 1/);
-		assert.match(blocked(await dispatch(coder, plan(task("scout")))) ?? "", /resolves task 1 to scout, not coder/);
+		assert.match(blocked(await dispatch(coder, plan(task("coder", { writeRoots: ["src"] })))) ?? "", /form the desk cannot read/, "every root has its boundary");
+		// A root lands where Clio says: one that resolves elsewhere does not lead where it reads, and one on the whole project is no boundary.
+		assert.match(blocked(await dispatch(coder, plan(task("coder", { writeRoots: ["drafts/"], writeBoundaries: [path.join(real, "paper")] })))) ?? "", /drafts\/ does not lead where it reads/);
+		assert.match(blocked(await dispatch(coder, plan(task("coder", { writeRoots: ["src", "."], writeBoundaries: [path.join(real, "src"), real] })))) ?? "", /intent\.write_roots/);
 		assert.match(blocked(await dispatch({}, { kind: "apply-winner", branch: "winner", cwd: real })) ?? "", /compete winner/);
 		assert.equal(blocked(await dispatch({}, { kind: "list" })), null);
 		assert.match(blocked(await dispatch(coder, plan({ agent: "coder" }))) ?? "", /form the desk cannot read/);
 		assert.match(blocked(await dispatch(coder, plan(task("coder", { agent: 7 })))) ?? "", /form the desk cannot read/);
+		// Outside an action, a worker Clio runs read-only needs no roots either.
+		assert.equal(blocked(await dispatch({ agent: "auto", task: "Look." }, plan(task("verifier", { readOnly: true })))), null);
 		// Inside an action, a review loop's reviewer only judges: the builder is confined and the gate role leaves the count alone.
 		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
 		await answer(host, GATE, "protocol-first");
@@ -734,7 +901,32 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		const reader = await dispatch({ agent: "auto", task: "Review the introduction." }, plan(task("verifier", { readOnly: true })));
 		assert.equal(blocked(reader), null);
 		assert.equal(reader.effects?.find((effect) => effect.kind === "rewrite_tool_input"), undefined);
+		// The desk adds roots only to Clio's canonical shapes, never reproducing its other spellings.
+		const spelled = await dispatch({ tasks: JSON.stringify([{ agent: "wtfp-section-writer", task: "Draft." }]) }, { kind: "tasks", mode: "fanout", tasks: [task("wtfp-section-writer")] });
+		assert.match(blocked(spelled) ?? "", /send tasks as an array of task objects/);
 	}, SERVED));
+
+test("a Clio that sends no landing or dispatch plan is refused inside a WTF-P project or action and left alone elsewhere", async () => {
+	await withDesk(async (host) => {
+		const bare = (tool: string, args: Json) => host.hook({ point: "before_tool", tool, turnId: "t1", args, bare: true } as never);
+		assert.match(blocked(await bare("write", { path: "src/notes.md" })) ?? "", /needs Clio 0\.6\.3/);
+		assert.match(blocked(await bare("dispatch", { agent: "coder", task: "x", intent: { write_roots: ["src/"] } })) ?? "", /needs Clio 0\.6\.3/);
+		assert.equal(blocked(await bare("dispatch", { list: true })), null);
+		assert.equal(blocked(await bare("bash", { command: "ls" })), null);
+	});
+	const folder = mkdtempSync(path.join(process.env.TMPDIR as string, "wtfp-no-project-"));
+	const host = await createExtensionTestHost(ROOT, { workspace: folder, plugin: null });
+	try {
+		const bare = (tool: string, args: Json) => host.hook({ point: "before_tool", tool, turnId: "t1", args } as never);
+		assert.equal(blocked(await bare("write", { path: "notes.md" })), null, "a folder that is no WTF-P project is not the desk's to guard");
+		assert.equal(blocked(await bare("dispatch", { agent: "coder", task: "x" })), null);
+		await host.hook({ point: "prompt_submit", text: "/wtfp:new-paper durable workflows" });
+		assert.match(blocked(await bare("write", { path: "notes.md" })) ?? "", /needs Clio 0\.6\.3/, "inside a WTF-P action it is");
+	} finally {
+		await host.dispose();
+		rmSync(folder, { recursive: true, force: true });
+	}
+});
 
 /** Loads the desk the way Clio's runtime child does and prints the before_tool verdict for each call. */
 const HARNESS = `
@@ -762,7 +954,7 @@ for (const call of JSON.parse(calls)) {
 console.log(JSON.stringify(verdicts));
 `;
 
-test("under the read and write access Clio grants the desk, it still sees every link in the project and refuses what it cannot see (W2)", async () => {
+test("under the read and write access Clio grants the desk, it judges every call by the landing and plan Clio sends (W2)", async () => {
 	const workspace = project();
 	const harness = path.join(process.env.TMPDIR as string, `wtfp-host-harness-${process.pid}-${Date.now()}.mjs`);
 	try {
@@ -788,7 +980,7 @@ test("under the read and write access Clio grants the desk, it still sees every 
 		];
 		const run = spawnSync(
 			process.execPath,
-			["--permission", ...[directory(ROOT), harness, ...read].map((root) => `--allow-fs-read=${root}`), ...write.map((root) => `--allow-fs-write=${root}`), harness, path.join(ROOT, "runtime/extension.ts"), workspace, JSON.stringify(calls.map(([call]) => call))],
+			["--permission", ...[directory(ROOT), harness, ...read].map((root) => `--allow-fs-read=${root}`), ...write.map((root) => `--allow-fs-write=${root}`), harness, path.join(ROOT, "runtime/extension.ts"), workspace, JSON.stringify(calls.map(([call]) => withFacts({ point: "before_tool", ...call }, workspace)))],
 			{ cwd: workspace, encoding: "utf8", timeout: 60000 },
 		);
 		assert.equal(run.status, 0, run.stderr);
@@ -1051,7 +1243,7 @@ test("a failure between paired writes leaves a journal the next write completes;
 test("a fresh process trusts only answers it can verify and reports drift instead of inventing state (L1)", async () => {
 	const workspace = project();
 	let key: unknown;
-	const first = await createExtensionTestHost(ROOT, { workspace, sessionId: "first" });
+	const first = withClioFacts(await createExtensionTestHost(ROOT, { workspace, sessionId: "first" }), workspace);
 	try {
 		await answer(first, GATE, "protocol-first");
 		await answer(first, PLAN_GATE, "approve");
@@ -1060,8 +1252,8 @@ test("a fresh process trusts only answers it can verify and reports drift instea
 	} finally {
 		await first.dispose();
 	}
-	const resumed = await createExtensionTestHost(ROOT, { workspace, sessionId: "resumed" });
-	const elsewhere = await createExtensionTestHost(ROOT, { workspace, sessionId: "other-machine" });
+	const resumed = withClioFacts(await createExtensionTestHost(ROOT, { workspace, sessionId: "resumed" }), workspace);
+	const elsewhere = withClioFacts(await createExtensionTestHost(ROOT, { workspace, sessionId: "other-machine" }), workspace);
 	try {
 		await resumed.store.set("seal-key", key);
 		assert.equal(blocked(await write(resumed, "paper/introduction.md")), null, "the same machine's key verifies the sealed answers");
@@ -1089,7 +1281,7 @@ test("SIMULATED rehearsal: initialize, outline, reject then approve a plan, draf
 	const workspace = mkdtempSync(path.join(process.env.TMPDIR, "wtfp-desk-rehearsal-"));
 	const ID = "rehearsal";
 	const S = "evaluation";
-	let host = await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s1" });
+	let host = withClioFacts(await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s1" }), workspace);
 	const turn = async (command: string) => {
 		await host.observe({ event: "turn_end", turnId: "t", outcome: "completed", usage: null });
 		const armed = await host.hook({ point: "prompt_submit", text: command });
@@ -1196,7 +1388,7 @@ test("SIMULATED rehearsal: initialize, outline, reject then approve a plan, draf
 		// A fresh process: no session state, the same machine's store.
 		const key = (await host.store.get("seal-key")).value;
 		await host.dispose();
-		host = await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s2" });
+		host = withClioFacts(await createExtensionTestHost(ROOT, { workspace, plugin: SERVED, sessionId: "s2" }), workspace);
 		await host.store.set("seal-key", key);
 		const progress = await host.command("progress");
 		assert.match(progress.text, /evaluation: writing .* plan approved/);
@@ -1229,7 +1421,7 @@ test("SIMULATED rehearsal: initialize, outline, reject then approve a plan, draf
 test("the desk enters with its four regions and clears its ambient UI when left in a folder with no project", async () => {
 	assert.ok(process.env.TMPDIR, "Tests need a task-owned TMPDIR.");
 	const workspace = mkdtempSync(path.join(process.env.TMPDIR, "wtfp-desk-empty-"));
-	const host = await createExtensionTestHost(ROOT, { workspace });
+	const host = withClioFacts(await createExtensionTestHost(ROOT, { workspace }), workspace);
 	try {
 		const entered = await host.command("desk");
 		assert.deepEqual(entered.workspace, { enter: "desk" });

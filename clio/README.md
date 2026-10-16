@@ -37,31 +37,32 @@ operator's user and can read the key, as can any process the operator lets
 read Clio's state directory.
 
 The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
-`run_script` and `job` calls, and judges a path where Clio's tools land it:
-after `@` and `~`, and with a `..` after a link stepping up from the link's
-target. The desk reads the whole workspace so it sees every link in it, and it
-refuses a path whose landing it cannot inspect. A running action may write only what its contract declares, for the
-section it names, until its turn ends. A section's manuscript, including any
-file nested under its stem, waits for its blocking gates, an author `approve`
-answer given for the current plan bytes, and verified, uncontested evidence for
-required claims in literature-heavy sections. Dispatch is parsed as Clio parses
-it. Workers are confined through `intent.write_roots` to manuscripts that are
-ready and never get an empty, whole-workspace, record-covering or linked root,
-nor a `cwd` other than the project root; outside
-an action a worker must name roots that leave out `.planning` and the gated
-manuscripts. Changes that loosen what the desk holds, such as a re-pointed
-manuscript or rewritten plan history, wait for the author at the desk.
+`run_script` and `job` calls. It judges only what Clio 0.6.3 and later send
+each hook: the landing Clio resolved for a path, which Clio refuses to change
+before the tool runs, and for `dispatch` the plan its admission parsed, with
+each worker's resolved agent, `cwd`, write boundaries and worktree. The desk
+never reads a call itself, so it cannot drift from Clio's grammar, and it
+refuses a call whose facts are malformed or a landing Clio could not resolve.
+A worker's write in a task worktree is judged at the checkout path it merges
+into. On a Clio that sends no facts, such as 0.6.2, the desk refuses writes
+and dispatches inside a WTF-P project or action and leaves other folders
+alone.
 
-Clio 0.6.3 and later send each hook the landing Clio resolved and, for
-`dispatch`, the plan admission parsed. The desk then judges the file the tool
-opens, which Clio refuses to change before the tool runs, and a worker's write
-in a task worktree at the checkout path it merges into. It also checks each
-worker against the agent Clio resolved, `auto` included, and against the
-`cwd` Clio resolved. It still reads the call itself, because it confines
-workers by rewriting it, and refuses when the two reads differ or the host's
-facts are malformed. A WTF-P project refuses worktree writers, compete
-candidates included, since the desk cannot see what a merge brings back. On
-Clio 0.6.2 the desk reads every call itself, as above.
+A running action may write only what its contract declares, for the section
+it names, until its turn ends. A section's manuscript, including any file
+nested under its stem, waits for its blocking gates, an author `approve`
+answer given for the current plan bytes, and verified, uncontested evidence
+for required claims in literature-heavy sections. Workers are confined
+through `intent.write_roots` to manuscripts that are ready. A worker never
+gets an empty, whole-workspace, record-covering or linked root, a `cwd` other
+than the project root, or a task worktree, compete candidates included, since
+the desk cannot see what a merge brings back. Clio judges the confined call
+again, so the roots the desk hands a worker must land where they read too.
+The desk adds roots only to Clio's canonical shapes, a single task or an
+array of task objects. Outside an action a worker must name roots that leave
+out `.planning` and the gated manuscripts, unless Clio runs it read-only.
+Changes that loosen what the desk holds, such as a re-pointed manuscript or
+rewritten plan history, wait for the author at the desk.
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
 when they name the desk's own records; Clio's default autonomy asks the
 operator before running an unrecognized command, but runs recognized test
