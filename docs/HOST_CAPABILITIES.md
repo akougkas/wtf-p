@@ -131,11 +131,11 @@ Whether Codex loads the TOML agents at runtime was not observed: there is no CLI
 
 ## Clio Coder 0.6.3 (local build, 2026-10-16)
 
-WTF-P 0.9.0 targets Clio 0.6.3, which is not yet released. The build observed here is the Clio repository's local `v063` branch at `ba6540bd7` (entry `4693e4d2…`, dist `0f69c8bb…`, Node v24.20.0). It still reports `Clio Coder 0.6.2` until Clio's version bump, so it is recorded by digest and not pinned; a campaign pinned to the released build follows that release.
+WTF-P 0.9.0 requires Clio 0.6.3: both Clio packages declare `>=0.6.3`, and Clio 0.6.2 refuses them ("plugin requires Clio >=0.6.3"). Clio 0.6.3 is not yet released. The build observed here is the Clio repository's local `v063` branch at `6a27580c7`, "prepare 0.6.3", which reports `Clio Coder 0.6.3` and is not yet tagged (entry `6ed41053…`, dist `bafc6c96…`, Node v24.20.0). It is recorded by digest; a campaign pinned to the tagged build follows that release. The same observations held on the branch's earlier `ba6540bd7` build, which still reported 0.6.2.
 
 Observed on that build, in disposable profiles, with no credentials and no model call:
 
-- `test/clio-native-integration.test.js` passed all 10 checks in both scopes, as on 0.6.2.
+- `test/clio-native-integration.test.js` passed all 10 checks in both scopes.
 - `clio-coder extensions test` passed 35 desk package tests. The tests model what Clio 0.6.3 sends each hook: the landing from its physical path walk (`src/core/path-canonical.ts`), and dispatch arguments as its admission prepares them, with the plan or the reason preparation failed. They replay a call the desk rewrites as Clio admits it again, refusing a rewritten call that would need the operator's approval.
 - A development `prepare`, which records the build as unpinned, passed all nine checks, including the desk's package tests from its installed root, zero plugin diagnostics, and every installed recipe within the delegated tools. `library validate vendors/plugin` reported the plugin valid with zero diagnostics.
 - `library components --kind prompt` reported 26 warnings, one for each prompt that names the desk's tools in `allowed-tools`: "keeps extension_wtfp__record, … for an extension tool that registers later". Clio keeps the names, so the turn still holds the desk's tools.
@@ -157,7 +157,7 @@ Read from that build's source and not exercised with a model:
 
 ## Clio Coder 0.6.2 reference (verified 2026-10-14)
 
-This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.9.0 the desk judges only what Clio 0.6.3 sends, so on Clio 0.6.2 it refuses writes and dispatches inside a WTF-P project or action, and the rows below describe the earlier desk.
+This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.9.0 both Clio packages require Clio 0.6.3, which Clio 0.6.2 enforces by refusing them, so the rows below describe the earlier desk.
 
 Clio is the reference host. Its qualified build is the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` is pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
 

@@ -10,9 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Makes the Clio desk the reference implementation of WTF-P's author gates and
 record contract on Clio Coder 0.6.3, which runs the desk on every host and
 tells it where each call lands and what each dispatch starts. Both Clio
-packages were qualified on a pinned Clio 0.6.2 build and on a local Clio 0.6.3
-build. The other six host projections change only where shared protocol text
-and action contracts changed.
+packages require Clio 0.6.3 and were checked on its release build; the desk
+they replace was qualified on a pinned Clio 0.6.2 build. The other six host
+projections change only where shared protocol text and action contracts
+changed.
 
 ### Added
 
@@ -57,9 +58,10 @@ and action contracts changed.
 
 ### Changed
 
-- **Breaking:** inside a WTF-P project or action the Clio desk needs Clio
-  Coder 0.6.3 or later, since it judges only the landing and dispatch plan
-  Clio sends each hook; on Clio 0.6.2 it refuses those writes and dispatches
+- **Breaking:** both Clio packages require Clio Coder 0.6.3 (`>=0.6.3`), since
+  the desk judges only the landing and dispatch plan Clio 0.6.3 sends each
+  hook and the prompts scope their tools only from 0.6.3; Clio 0.6.2 refuses
+  them
 - A plan is approved for drafting only by an author `approve` answer on a
   checkpoint scoped to that plan, given for its current bytes; linked plans are
   immutable and `plan-revision` links its plan only after approval
