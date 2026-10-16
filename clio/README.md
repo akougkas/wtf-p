@@ -51,6 +51,17 @@ nor a `cwd` other than the project root; outside
 an action a worker must name roots that leave out `.planning` and the gated
 manuscripts. Changes that loosen what the desk holds, such as a re-pointed
 manuscript or rewritten plan history, wait for the author at the desk.
+
+Clio 0.6.3 and later send each hook the landing Clio resolved and, for
+`dispatch`, the plan admission parsed. The desk then judges the file the tool
+opens, which Clio refuses to change before the tool runs, and a worker's write
+in a task worktree at the checkout path it merges into. It also checks each
+worker against the agent Clio resolved, `auto` included, and against the
+`cwd` Clio resolved. It still reads the call itself, because it confines
+workers by rewriting it, and refuses when the two reads differ or the host's
+facts are malformed. A WTF-P project refuses worktree writers, compete
+candidates included, since the desk cannot see what a merge brings back. On
+Clio 0.6.2 the desk reads every call itself, as above.
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
 when they name the desk's own records; Clio's default autonomy asks the
 operator before running an unrecognized command, but runs recognized test

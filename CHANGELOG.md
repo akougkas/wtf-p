@@ -29,6 +29,11 @@ text and action contracts changed.
   depth and manuscript citation keys checked structurally
 - `evaluation/v2`: the `clio-0.6.2-reference` campaign and
   `run-clio-campaign.js` (`plan`, `prepare`, `execute`, `collect`)
+- Where Clio 0.6.3 sends a hook the landing and dispatch plan it resolved, the
+  desk judges those: the file the tool opens, a worktree write at its checkout
+  path, and each worker's resolved agent and `cwd`; it refuses worktree writers
+  in a WTF-P project, and a call whose host facts are malformed or differ from
+  its own read. On Clio 0.6.2 it reads every call itself
 - `evaluation/lib/desk-trust.js`, the one rule for whether a recorded answer is
   the author's, shared by the desk and the campaign collector
 

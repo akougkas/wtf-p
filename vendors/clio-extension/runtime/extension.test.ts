@@ -10,7 +10,7 @@
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -683,6 +683,58 @@ test("the guard judges the file Clio's tools open, however the path is spelled (
 		const hooked = /on: before_tool, tools: \[([^\]]*)\]/u.exec(manifest)?.[1]?.split(/,\s*/u) ?? [];
 		for (const tool of ["write", "edit", "artifact", "dispatch", "bash", "run_script", "job"]) assert.ok(hooked.includes(tool), `${tool} is hooked`);
 	}));
+
+test("where Clio resolves a call's landing and dispatch plan, the desk judges what Clio resolved", () =>
+	withDesk(async (host, workspace) => {
+		const real = realpathSync(workspace);
+		const manuscript = path.join(real, "paper/introduction.md");
+		const landed = (args: Json, target: unknown) => host.hook({ point: "before_tool", tool: "write", turnId: "t1", args, target });
+		// The landing Clio sends is the file the tool opens, whatever the call spells.
+		assert.match(blocked(await landed({ path: "notes.md" }, { arg: "path", path: manuscript, resolved: true, workspacePath: "paper/introduction.md" })) ?? "", /cannot be written yet/);
+		// A path the desk could not inspect is judged where Clio says it lands.
+		assert.match(blocked(await landed({ path: "/proc/self/cwd/paper/introduction.md" }, { arg: "path", path: manuscript, resolved: true, workspacePath: "paper/introduction.md" })) ?? "", /cannot be written yet/);
+		// A worker's write in a task worktree is judged at the checkout path it merges into.
+		assert.match(blocked(await landed({ path: "paper/introduction.md" }, { arg: "path", path: "/elsewhere/worktree/paper/introduction.md", resolved: true, workspacePath: "paper/introduction.md" })) ?? "", /cannot be written yet/);
+		// Without a workspace path, the desk maps Clio's physical path itself.
+		assert.match(blocked(await landed({ path: "x" }, { arg: "path", path: manuscript, resolved: true })) ?? "", /cannot be written yet/);
+		assert.equal(blocked(await landed({ path: "/elsewhere/notes.md" }, { arg: "path", path: "/elsewhere/notes.md", resolved: true, workspacePath: null })), null);
+		assert.match(blocked(await landed({ path: "loop/x" }, { arg: "path", path: path.join(real, "loop/x"), resolved: false, workspacePath: null })) ?? "", /Clio could not resolve/);
+		assert.match(blocked(await landed({ path: "x" }, { arg: "path", path: 7, resolved: true })) ?? "", /form the desk cannot read/);
+
+		const dispatch = (args: Json, plan: unknown) => host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args, dispatch: plan });
+		const task = (agent: string, extra: Json = {}) => ({ role: "task", agent, cwd: real, writeRoots: [], writeBoundaries: [], worktree: false, readOnly: false, ...extra });
+		const plan = (...tasks: Json[]) => ({ kind: "tasks", mode: "single", tasks });
+		const coder = { agent: "coder", task: "x", intent: { write_roots: ["src"] } };
+		assert.equal(blocked(await dispatch(coder, plan(task("coder", { writeRoots: ["src"], writeBoundaries: [path.join(real, "src")] })))), null);
+		// Clio resolves auto; a WTF-P agent it picks outside its action is refused like one named.
+		assert.match(blocked(await dispatch({ agent: "auto", task: "Draft." }, plan(task("wtfp-section-writer")))) ?? "", /run only inside the WTF-P action/);
+		assert.match(blocked(await dispatch(coder, plan(task("coder", { cwd: path.join(real, "paper") })))) ?? "", /cwd moves the write roots/);
+		assert.match(
+			blocked(await dispatch(coder, { kind: "tasks", mode: "compete", candidates: 2, tasks: [task("coder", { role: "candidate", worktree: true }), task("verifier", { role: "judge", readOnly: true })] })) ?? "",
+			/refuses worktree writers/,
+		);
+		assert.match(blocked(await dispatch(coder, plan(task("coder"), task("coder")))) ?? "", /Clio reads 2 worker task\(s\) in this dispatch and the desk reads 1/);
+		assert.match(blocked(await dispatch(coder, plan(task("scout")))) ?? "", /resolves task 1 to scout, not coder/);
+		assert.match(blocked(await dispatch({}, { kind: "apply-winner", branch: "winner", cwd: real })) ?? "", /compete winner/);
+		assert.equal(blocked(await dispatch({}, { kind: "list" })), null);
+		assert.match(blocked(await dispatch(coder, plan({ agent: "coder" }))) ?? "", /form the desk cannot read/);
+		assert.match(blocked(await dispatch(coder, plan(task("coder", { agent: 7 })))) ?? "", /form the desk cannot read/);
+		// Inside an action, a review loop's reviewer only judges: the builder is confined and the gate role leaves the count alone.
+		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const loop = await dispatch(
+			{ agent: "wtfp-section-writer", task: "Draft the introduction.", review: { reviewer: "wtfp-section-reviewer" } },
+			{ kind: "tasks", mode: "review", tasks: [task("wtfp-section-writer", { role: "builder" }), task("wtfp-section-reviewer", { role: "reviewer", readOnly: true })] },
+		);
+		assert.equal(blocked(loop), null);
+		const rewrite = loop.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
+		assert.deepEqual((rewrite?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		// A worker Clio runs read-only needs no write roots, whatever its recipe is called.
+		const reader = await dispatch({ agent: "auto", task: "Review the introduction." }, plan(task("verifier", { readOnly: true })));
+		assert.equal(blocked(reader), null);
+		assert.equal(reader.effects?.find((effect) => effect.kind === "rewrite_tool_input"), undefined);
+	}, SERVED));
 
 /** Loads the desk the way Clio's runtime child does and prints the before_tool verdict for each call. */
 const HARNESS = `
