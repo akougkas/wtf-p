@@ -38,7 +38,9 @@ changed.
   physical write boundaries, checked again on the call the desk confines. A
   single worker is confined by a rewrite; a call that needs the operator's
   approval is refused with each worker's exact roots, since Clio admits a
-  rewritten call afresh without that approval. It refuses worktree writers in
+  rewritten call afresh without that approval. A worker Clio reports
+  read-only, such as a WTF-P reviewer, gets no roots, and the write guard no
+  longer carries its own reviewer list. It refuses worktree writers in
   a WTF-P project, leaves a dispatch Clio could not prepare to Clio's own
   refusal, and outside a WTF-P project and action checks only that no WTF-P
   recipe runs outside its action. On a Clio that sends no facts, such as

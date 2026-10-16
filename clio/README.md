@@ -65,7 +65,8 @@ afresh, without the operator's approval of the original, so a call that
 needs that approval (more than one worker, a review loop) is instead refused
 with each worker's exact roots, and the call sent with them runs unchanged.
 Outside an action a worker must name roots that leave out `.planning` and
-the gated manuscripts; the WTF-P reviewers need none.
+the gated manuscripts. A worker Clio runs read-only, as it runs every
+read-only recipe including the WTF-P reviewers, needs none.
 Changes that loosen what the desk holds, such as a re-pointed manuscript or
 rewritten plan history, wait for the author at the desk.
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
