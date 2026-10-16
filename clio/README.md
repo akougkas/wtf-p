@@ -41,12 +41,14 @@ The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
 each hook: the landing Clio resolved for a path, which Clio refuses to change
 before the tool runs, and for `dispatch` the plan its admission parsed, with
 each worker's resolved agent, `cwd`, write boundaries and worktree. The desk
-never reads a call itself, so it cannot drift from Clio's grammar, and it
-refuses a call whose facts are malformed or a landing Clio could not resolve.
-A worker's write in a task worktree is judged at the checkout path it merges
-into. On a Clio that sends no facts, such as 0.6.2, the desk refuses writes
-and dispatches inside a WTF-P project or action and leaves other folders
-alone.
+never reads a call itself, so it cannot drift from Clio's grammar. Inside a
+WTF-P project or action it refuses a call whose facts are malformed or a
+landing Clio could not resolve, and a dispatch Clio could not prepare is left
+to Clio, which refuses it with its own reason. A worker's write in a task
+worktree is judged at the checkout path it merges into. On a Clio that sends
+no facts, such as 0.6.2, the desk refuses writes and dispatches inside a
+WTF-P project or action. Outside both it checks only that no WTF-P recipe is
+dispatched outside its action.
 
 A running action may write only what its contract declares, for the section
 it names, until its turn ends. A section's manuscript, including any file
@@ -56,11 +58,14 @@ for required claims in literature-heavy sections. Workers are confined
 through `intent.write_roots` to manuscripts that are ready. A worker never
 gets an empty, whole-workspace, record-covering or linked root, a `cwd` other
 than the project root, or a task worktree, compete candidates included, since
-the desk cannot see what a merge brings back. Clio judges the confined call
-again, so the roots the desk hands a worker must land where they read too.
-The desk adds roots only to Clio's canonical shapes, a single task or an
-array of task objects. Outside an action a worker must name roots that leave
-out `.planning` and the gated manuscripts, unless Clio runs it read-only.
+the desk cannot see what a merge brings back. A single worker whose roots
+need narrowing gets them by a rewrite, which Clio judges again, so the roots
+the desk hands it must land where they read too. Clio admits a rewritten call
+afresh, without the operator's approval of the original, so a call that
+needs that approval (more than one worker, a review loop) is instead refused
+with each worker's exact roots, and the call sent with them runs unchanged.
+Outside an action a worker must name roots that leave out `.planning` and
+the gated manuscripts; the WTF-P reviewers need none.
 Changes that loosen what the desk holds, such as a re-pointed manuscript or
 rewritten plan history, wait for the author at the desk.
 Interpreter commands run through `bash`, `run_script` or `job` are refused only

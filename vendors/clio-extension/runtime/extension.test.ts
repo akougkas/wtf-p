@@ -11,7 +11,7 @@ import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import os, { homedir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -324,41 +324,73 @@ function clioTarget(raw: string, workspace: string): Json {
 	return { arg: "path", path: at, resolved: landed !== null, workspacePath: inside ? relative.split(path.sep).join("/") || "." : null };
 }
 
-/** The plan Clio's dispatch admission parses from a call, for the shapes these tests send. */
-function clioPlan(args: Json, workspace: string): Json {
-	const real = realpathSync(workspace);
-	if (args.list === true) return { kind: "list" };
-	if (args.apply_winner !== undefined) return { kind: "apply-winner", branch: String((args.apply_winner as Json).branch ?? ""), cwd: real };
-	let tasks: unknown = args.tasks;
-	if (typeof tasks === "string") {
+/**
+ * A dispatch call as Clio's admission hands it to hooks (src/tools/dispatch-arguments.ts
+ * prepareDispatchArguments, src/tools/dispatch-admission.ts): `tasks` an array, a
+ * lone `task` moved into it, and either Clio's private resolved plan or the
+ * reason preparation failed. Clio refuses a `./` root and parallel writers
+ * without roots before any hook; these tests send no other failing shape.
+ */
+function clioPrepare(args: Json): Json {
+	const next: Json = { ...args };
+	if (typeof next.tasks === "string" && /^\s*[[{]/u.test(next.tasks)) {
 		try {
-			tasks = JSON.parse(tasks) as unknown;
+			next.tasks = JSON.parse(next.tasks) as unknown;
 		} catch {
-			// A plain string is one task's text.
+			// Clio leaves the string and reports the shape itself.
 		}
 	}
-	if (tasks !== undefined && !Array.isArray(tasks)) tasks = [tasks];
-	const items = (tasks === undefined ? [args] : (tasks as unknown[])).map((task) => (typeof task === "string" ? { task } : (task as Json)));
-	const shared = (args.intent as Json | undefined)?.write_roots;
+	if (next.tasks !== undefined && !Array.isArray(next.tasks)) next.tasks = [next.tasks];
+	if (next.tasks === undefined && typeof next.task === "string") {
+		const { task, ...rest } = next;
+		Object.assign(next, { ...rest, tasks: [{ task }] });
+		delete next.task;
+	}
+	if (args.list === true || args.apply_winner !== undefined || !Array.isArray(next.tasks)) return next;
+	const items = (next.tasks as unknown[]).map((task) => (typeof task === "string" ? { task } : (task as Json)));
+	const declared = items.map((item) => ((item.intent as Json | undefined)?.write_roots ?? (args.intent as Json | undefined)?.write_roots ?? []) as string[]);
+	const writers = items.filter((item, index) => !READ_ONLY_RECIPES.has(agentOf(item, args)) && declared[index] !== undefined);
+	const failure = declared.flat().some((root) => /^\.\/./u.test(root.trim()))
+		? "write_roots entries may not start with ./"
+		: writers.length > 1 && declared.some((roots, index) => !READ_ONLY_RECIPES.has(agentOf(items[index] as Json, args)) && roots.filter((root) => !/^\.\/?$/u.test(root.trim())).length === 0)
+			? "parallel writers need disjoint intent.write_roots"
+			: null;
+	return failure === null ? { ...next, __clio_resolved_dispatch_plan: { resolvedBy: "clio" } } : { ...next, __clio_dispatch_plan_preparation_error: failure };
+}
+
+function agentOf(item: Json, args: Json): string {
+	const named = typeof item.agent === "string" ? item.agent : typeof args.agent === "string" ? args.agent : "";
+	return named.trim() || "coder";
+}
+
+/** The plan Clio's admission reports for prepared arguments: write roots trimmed, without `.`, deduplicated and sorted, with their physical boundaries. */
+function clioPlan(prepared: Json, workspace: string): Json {
+	const real = realpathSync(workspace);
+	if (prepared.list === true) return { kind: "list" };
+	if (prepared.apply_winner !== undefined) return { kind: "apply-winner", branch: String((prepared.apply_winner as Json).branch ?? ""), cwd: real };
+	const items = ((prepared.tasks ?? []) as unknown[]).map((task) => (typeof task === "string" ? { task } : (task as Json)));
+	const shared = (prepared.intent as Json | undefined)?.write_roots;
 	return {
 		kind: "tasks",
-		mode: tasks === undefined ? "single" : "fanout",
+		mode: "single",
 		tasks: items.map((item) => {
-			const named = typeof item.agent === "string" ? item.agent : typeof args.agent === "string" ? args.agent : "";
-			const agent = named.trim() || "coder";
-			const spelledCwd = typeof item.cwd === "string" ? item.cwd : typeof args.cwd === "string" ? args.cwd : ".";
+			const spelledCwd = typeof item.cwd === "string" ? item.cwd : typeof prepared.cwd === "string" ? prepared.cwd : ".";
 			const cwd = physical(path.resolve(real, spelledCwd.trim() || "."));
-			const roots = (((item.intent as Json | undefined)?.write_roots ?? shared ?? []) as string[]).map((root) => root.trim());
-			return { role: "task", agent, cwd, writeRoots: roots, writeBoundaries: roots.map((root) => physical(path.resolve(cwd, root))), worktree: item.worktree === true, readOnly: READ_ONLY_RECIPES.has(agent) };
+			const roots = [...new Set((((item.intent as Json | undefined)?.write_roots ?? shared ?? []) as string[]).map((root) => root.trim()).filter((root) => !/^\.\/?$/u.test(root)))].sort();
+			// Clio reports read-only only for the gate roles a review, compete or council starts.
+			return { role: "task", agent: agentOf(item, prepared), cwd, writeRoots: roots, writeBoundaries: roots.map((root) => physical(path.resolve(cwd, root))), worktree: item.worktree === true, readOnly: false };
 		}),
 	};
 }
 
-/** A before_tool event with the facts Clio 0.6.3 adds, unless the test sent its own. */
+/** A before_tool event as Clio 0.6.3 sends it, unless the test sent its own facts. */
 function withFacts(event: Json, workspace: string): Json {
 	if (event.point !== "before_tool" || "target" in event || "dispatch" in event) return event;
 	const args = (event.args ?? {}) as Json;
-	if (event.tool === "dispatch") return { ...event, dispatch: clioPlan(args, workspace) };
+	if (event.tool === "dispatch") {
+		const prepared = clioPrepare(args);
+		return typeof prepared.__clio_dispatch_plan_preparation_error === "string" ? { ...event, args: prepared } : { ...event, args: prepared, dispatch: clioPlan(prepared, workspace) };
+	}
 	const raw = args.path ?? args.file_path ?? args.filePath;
 	if (["write", "edit", "artifact"].includes(event.tool as string) && typeof raw === "string" && raw.trim().length > 0)
 		return { ...event, target: clioTarget(event.tool === "artifact" ? raw.trim() : raw, workspace) };
@@ -367,27 +399,38 @@ function withFacts(event: Json, workspace: string): Json {
 
 /**
  * The test host as Clio 0.6.3 runs the desk: each before_tool event carries
- * Clio's facts, and a dispatch the desk rewrites is judged again with the plan
- * of what the rewritten call starts. An event marked `bare` reaches the desk
- * as Clio 0.6.2 sends it.
+ * Clio's facts; a dispatch Clio could not prepare is refused by Clio with its
+ * own reason when no hook refused it first; and a call the desk rewrites is
+ * admitted afresh, so a plan-scale one, which needs the operator's approval,
+ * is refused, and any other is judged again with the plan of what it starts.
+ * An event marked `bare` reaches the desk as Clio 0.6.2 sends it.
  */
 function withClioFacts(host: Host, workspace: string): Host {
 	const hook = host.hook.bind(host);
+	const refuse = (reason: string) => ({ effects: [{ kind: "block_tool", reason }] });
 	const judged = async (event: Json, options?: Json) => {
 		if (event.bare === true) {
 			const { bare: _bare, ...sent } = event;
 			return hook(sent as never, options as never);
 		}
-		const first = await hook(withFacts(event, workspace) as never, options as never);
+		const sent = withFacts(event, workspace);
+		const first = await hook(sent as never, options as never);
 		if (event.point !== "before_tool" || event.tool !== "dispatch" || "dispatch" in event) return first;
+		const failure = (sent.args as Json).__clio_dispatch_plan_preparation_error;
+		if (typeof failure === "string") return blocked(first) === null ? refuse(`Clio: ${failure}`) : first;
 		const rewritten = rewriteOf(first);
 		if (rewritten === null || blocked(first) !== null) return first;
+		if ((((sent.dispatch as Json).tasks as unknown[]) ?? []).length > 1) return refuse("extension wtfp rewrote dispatch input into a call that would need operator approval");
 		const second = await hook(withFacts({ ...event, args: rewritten }, workspace) as never, options as never);
 		const refused = blocked(second);
-		return refused === null ? first : { effects: [{ kind: "block_tool", reason: `extension wtfp rewrote dispatch input into a call that is blocked: ${refused}` }] };
+		return refused === null ? first : refuse(`extension wtfp rewrote dispatch input into a call that is blocked: ${refused}`);
 	};
 	return new Proxy(host, { get: (target, key) => (key === "hook" ? judged : Reflect.get(target, key)) }) as Host;
 }
+
+/** The write roots a confining rewrite hands its single worker, wherever the rewrite put them. */
+const rootsOf = (rewrite: Json | null): unknown =>
+	((((rewrite?.tasks as Json[] | undefined)?.[0]?.intent ?? rewrite?.intent) as Json | undefined)?.write_roots);
 
 // --- record writes -------------------------------------------------------------
 
@@ -811,14 +854,15 @@ test("WTF-P workers are dispatched only inside their action and only to manuscri
 		await answer(host, GATE, "protocol-first");
 		await answer(host, PLAN_GATE, "approve");
 		const allowed = await dispatch({ agent: "wtfp-section-writer", task: "Draft the introduction." });
-		const rewrite = allowed.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
-		assert.deepEqual((rewrite?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		assert.deepEqual(rootsOf(rewriteOf(allowed)), [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		assert.ok(!Object.keys(rewriteOf(allowed) ?? {}).some((key) => key.startsWith("__clio_")), "Clio recomputes its own admission keys for a rewritten call");
 		const narrowed = await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { write_roots: ["."] } });
-		const rewritten = narrowed.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
-		assert.deepEqual((rewritten?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		assert.deepEqual(rootsOf(rewriteOf(narrowed)), [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
+		// Roots that already are the confinement, in any order, need no rewrite.
+		assert.equal(rewriteOf(await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { write_roots: ["paper/introduction/", "paper/introduction.md", ".planning/sections/introduction/summary.md"] } })), null);
 		assert.match(
 			blocked(await dispatch({ tasks: [{ agent: "wtfp-section-writer", task: "a" }, { agent: "wtfp-section-writer", task: "b" }] })) ?? "",
-			/give each task its own intent.write_roots/,
+			/Clio: parallel writers need disjoint intent\.write_roots/,
 		);
 		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src"] } })) ?? "", /lie outside what write-section may write/);
 		assert.ok(existsSync(path.join(workspace, "paper/introduction.md")));
@@ -884,26 +928,37 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		assert.equal(blocked(await dispatch({}, { kind: "list" })), null);
 		assert.match(blocked(await dispatch(coder, plan({ agent: "coder" }))) ?? "", /form the desk cannot read/);
 		assert.match(blocked(await dispatch(coder, plan(task("coder", { agent: 7 })))) ?? "", /form the desk cannot read/);
-		// Outside an action, a worker Clio runs read-only needs no roots either.
-		assert.equal(blocked(await dispatch({ agent: "auto", task: "Look." }, plan(task("verifier", { readOnly: true })))), null);
+		// Clio could not prepare this call and refuses it itself, with its own reason.
+		assert.equal(blocked(await dispatch({ agent: "coder", task: "x", __clio_dispatch_plan_preparation_error: "write_roots entries may not start with ./" }, undefined)), null);
+		// A host that has sent facts once lacks them for a call only when Clio failed on it, and the desk says so.
+		assert.match(blocked(await host.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: "src/x.md" }, bare: true } as never)) ?? "", /Clio sent no landing for this call/);
+		assert.match(blocked(await dispatch(coder, { kind: "council-of-elders", tasks: [] })) ?? "", /form the desk cannot read/, "an unknown plan is no plan");
+		// A name that starts with `..` is still inside the project.
+		assert.equal(blocked(await dispatch({ ...coder, intent: { write_roots: ["..notes/"] } }, plan(task("coder", { writeRoots: ["..notes/"], writeBoundaries: [path.join(real, "..notes")] })))), null);
 		// Inside an action, a review loop's reviewer only judges: the builder is confined and the gate role leaves the count alone.
 		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
 		await answer(host, GATE, "protocol-first");
 		await answer(host, PLAN_GATE, "approve");
-		const loop = await dispatch(
-			{ agent: "wtfp-section-writer", task: "Draft the introduction.", review: { reviewer: "wtfp-section-reviewer" } },
-			{ kind: "tasks", mode: "review", tasks: [task("wtfp-section-writer", { role: "builder" }), task("wtfp-section-reviewer", { role: "reviewer", readOnly: true })] },
-		);
-		assert.equal(blocked(loop), null);
-		const rewrite = loop.effects?.find((effect) => effect.kind === "rewrite_tool_input") as { args: Json } | undefined;
-		assert.deepEqual((rewrite?.args.intent as Json).write_roots, [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
-		// A worker Clio runs read-only needs no write roots, whatever its recipe is called.
-		const reader = await dispatch({ agent: "auto", task: "Review the introduction." }, plan(task("verifier", { readOnly: true })));
+		// Clio admits a rewritten call afresh, without the approval a review loop needs, so the desk names the exact roots instead of rewriting.
+		const roots = [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"];
+		const review = [task("wtfp-section-writer", { role: "builder" }), task("wtfp-section-reviewer", { role: "reviewer", readOnly: true })];
+		const loop = await dispatch({ agent: "wtfp-section-writer", tasks: [{ task: "Draft the introduction." }], review: { reviewer: "wtfp-section-reviewer" } }, { kind: "tasks", mode: "review", tasks: review });
+		assert.match(blocked(loop) ?? "", /task 1 \(wtfp-section-writer\): \.planning\/sections\/introduction\/summary\.md, paper\/introduction\.md, paper\/introduction\//);
+		const sent = { ...review[0], writeRoots: roots, writeBoundaries: roots.map((root) => path.join(real, root)) };
+		const confined = await dispatch({ agent: "wtfp-section-writer", tasks: [{ task: "Draft the introduction.", intent: { write_roots: roots } }], review: { reviewer: "wtfp-section-reviewer" } }, { kind: "tasks", mode: "review", tasks: [sent, review[1]] });
+		assert.equal(blocked(confined), null, "a loop that already names its roots runs as approved");
+		assert.equal(rewriteOf(confined), null);
+		// A WTF-P reviewer needs no write roots.
+		const reader = await dispatch({ agent: "wtfp-section-reviewer", tasks: [{ task: "Review the introduction." }] }, plan(task("wtfp-section-reviewer")));
 		assert.equal(blocked(reader), null);
-		assert.equal(reader.effects?.find((effect) => effect.kind === "rewrite_tool_input"), undefined);
-		// The desk adds roots only to Clio's canonical shapes, never reproducing its other spellings.
-		const spelled = await dispatch({ tasks: JSON.stringify([{ agent: "wtfp-section-writer", task: "Draft." }]) }, { kind: "tasks", mode: "fanout", tasks: [task("wtfp-section-writer")] });
-		assert.match(blocked(spelled) ?? "", /send tasks as an array of task objects/);
+		assert.equal(rewriteOf(reader), null);
+		// A task Clio keeps as a string is confined as a task object, and Clio's private keys are left for Clio to recompute.
+		const spelled = await dispatch({ agent: "wtfp-section-writer", tasks: ["Draft."], __clio_resolved_dispatch_plan: { resolvedBy: "clio" } }, plan(task("wtfp-section-writer")));
+		assert.deepEqual(rewriteOf(spelled), { agent: "wtfp-section-writer", tasks: [{ task: "Draft.", intent: { write_roots: roots } }] });
+		// Clio's own artifact directory is no project file, but a landing elsewhere in the project, such as through a link, is judged there.
+		const artifact = (target: unknown) => host.hook({ point: "before_tool", tool: "artifact", turnId: "t1", args: { kind: "plan", content: "x" }, target });
+		assert.equal(blocked(await artifact({ arg: "path", path: path.join(real, ".clio-coder/artifacts/plan.md"), resolved: true, workspacePath: ".clio-coder/artifacts/plan.md" })), null);
+		assert.match(blocked(await artifact({ arg: "path", path: path.join(real, "src/plan.md"), resolved: true, workspacePath: "src/plan.md" })) ?? "", /may write only under/);
 	}, SERVED));
 
 test("a Clio that sends no landing or dispatch plan is refused inside a WTF-P project or action and left alone elsewhere", async () => {
@@ -922,6 +977,17 @@ test("a Clio that sends no landing or dispatch plan is refused inside a WTF-P pr
 		assert.equal(blocked(await bare("dispatch", { agent: "coder", task: "x" })), null);
 		await host.hook({ point: "prompt_submit", text: "/wtfp:new-paper durable workflows" });
 		assert.match(blocked(await bare("write", { path: "notes.md" })) ?? "", /needs Clio 0\.6\.3/, "inside a WTF-P action it is");
+		await host.hook({ point: "prompt_submit", text: "thanks" });
+		// With Clio 0.6.3's facts, only the WTF-P recipes are the desk's business there.
+		const facts = withClioFacts(host, folder);
+		symlinkSync(os.tmpdir(), path.join(folder, "elsewhere"));
+		assert.equal(blocked(await facts.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args: { agent: "coder", task: "x", cwd: "..", intent: { write_roots: ["elsewhere/"] } } } as never)), null);
+		assert.match(blocked(await facts.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args: { agent: "wtfp-section-writer", task: "x" } } as never)) ?? "", /run only inside the WTF-P action/);
+		assert.equal(blocked(await facts.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args: { agent: "coder", task: "x" }, dispatch: { kind: "council-of-elders" } } as never)), null, "a plan the desk cannot read is no plan, and this folder is not its to guard");
+		assert.equal(blocked(await facts.hook({ point: "before_tool", tool: "write", turnId: "t1", args: { path: "x.md" }, target: { path: 7 } } as never)), null);
+		// Once this Clio has sent facts, a call it sends none for failed in Clio, and an armed action says so.
+		await host.hook({ point: "prompt_submit", text: "/wtfp:new-paper durable workflows" });
+		assert.match(blocked(await bare("write", { path: "notes.md" })) ?? "", /Clio sent no landing for this call/);
 	} finally {
 		await host.dispose();
 		rmSync(folder, { recursive: true, force: true });
@@ -1011,7 +1077,7 @@ test("a manuscript nested under another section's stem is judged by every sectio
 		assert.match(blocked(await write(host, "paper/introduction/appendix.md")) ?? "", /Appendix cannot be written yet/);
 		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
 		const result = await host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args: { agent: "wtfp-section-writer", task: "Draft." } });
-		const roots = (rewriteOf(result)?.intent as Json | undefined)?.write_roots;
+		const roots = rootsOf(rewriteOf(result));
 		assert.deepEqual(roots, [".planning/sections/introduction/summary.md", "paper/introduction.md"], "no worker root covers the appendix");
 	}, SERVED));
 

@@ -231,7 +231,7 @@ function actionName(served: ServedPlugin, action: string): string {
 
 function inside(root: string, candidate: string): boolean {
 	const relative = path.relative(root, candidate);
-	return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+	return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
 }
 
 function posix(relative: string): string {
@@ -2375,11 +2375,15 @@ const GATE_ROLES = new Set(["reviewer", "judge", "member", "synthesis"]);
 
 const strings = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === "string");
 
-/** The host's landing for a hook event; a field the host sent in a shape the desk cannot read is refused, never ignored. */
-function hostLanding(event: unknown): HostLanding {
-	const unreadable = (what: string): Error => new Error(`WTF-P guard: Clio's ${what} for this call is in a form the desk cannot read; refused.`);
+/**
+ * The host's facts for a hook event. A fact in a shape the desk cannot read,
+ * or a dispatch kind it does not know, counts as no fact, and `malformed` says
+ * so: the desk then refuses the call inside a WTF-P project or action and
+ * leaves other folders alone, as for a host that sends none.
+ */
+function hostLanding(event: unknown): HostLanding & { malformed?: string } {
 	const fields = isObject(event) ? event : {};
-	const landing: HostLanding = {};
+	const landing: HostLanding & { malformed?: string } = {};
 	if (fields.target !== undefined) {
 		const target = fields.target;
 		if (
@@ -2388,40 +2392,44 @@ function hostLanding(event: unknown): HostLanding {
 			typeof target.resolved !== "boolean" ||
 			(target.workspacePath !== undefined && target.workspacePath !== null && typeof target.workspacePath !== "string")
 		)
-			throw unreadable("landing");
-		landing.target = { path: target.path, resolved: target.resolved, workspacePath: target.workspacePath as string | null | undefined };
+			landing.malformed = "landing";
+		else landing.target = { path: target.path, resolved: target.resolved, workspacePath: target.workspacePath as string | null | undefined };
 	}
 	if (fields.dispatch !== undefined) {
 		const dispatch = fields.dispatch;
-		if (!isObject(dispatch)) throw unreadable("dispatch plan");
-		if (dispatch.kind === "list") landing.dispatch = { kind: "list" };
-		else if (dispatch.kind === "apply-winner" && typeof dispatch.branch === "string" && typeof dispatch.cwd === "string")
+		const tasks = isObject(dispatch) && dispatch.kind === "tasks" && typeof dispatch.mode === "string" && Array.isArray(dispatch.tasks) ? dispatch.tasks : null;
+		if (isObject(dispatch) && dispatch.kind === "list") landing.dispatch = { kind: "list" };
+		else if (isObject(dispatch) && dispatch.kind === "apply-winner" && typeof dispatch.branch === "string" && typeof dispatch.cwd === "string")
 			landing.dispatch = { kind: "apply-winner", branch: dispatch.branch, cwd: dispatch.cwd };
-		else if (dispatch.kind === "tasks" && typeof dispatch.mode === "string" && Array.isArray(dispatch.tasks)) {
-			const tasks = dispatch.tasks.map((task): HostDispatchTask => {
-				if (
-					!isObject(task) ||
-					typeof task.agent !== "string" ||
-					typeof task.cwd !== "string" ||
-					!strings(task.writeRoots) ||
-					!strings(task.writeBoundaries) ||
-					typeof task.worktree !== "boolean" ||
-					typeof task.readOnly !== "boolean" ||
-					(task.role !== undefined && typeof task.role !== "string")
-				)
-					throw unreadable("dispatch plan");
-				return {
+		else if (
+			tasks !== null &&
+			tasks.every(
+				(task) =>
+					isObject(task) &&
+					typeof task.agent === "string" &&
+					typeof task.cwd === "string" &&
+					strings(task.writeRoots) &&
+					strings(task.writeBoundaries) &&
+					task.writeRoots.length === task.writeBoundaries.length &&
+					typeof task.worktree === "boolean" &&
+					typeof task.readOnly === "boolean" &&
+					(task.role === undefined || typeof task.role === "string"),
+			)
+		)
+			landing.dispatch = {
+				kind: "tasks",
+				mode: (dispatch as Json).mode as string,
+				tasks: (tasks as Json[]).map((task) => ({
 					...(task.role === undefined ? {} : { role: task.role as string }),
-					agent: task.agent,
-					cwd: task.cwd,
-					writeRoots: [...task.writeRoots],
-					writeBoundaries: [...task.writeBoundaries],
-					worktree: task.worktree,
-					readOnly: task.readOnly,
-				};
-			});
-			landing.dispatch = { kind: "tasks", mode: dispatch.mode, tasks };
-		} else throw unreadable("dispatch plan");
+					agent: task.agent as string,
+					cwd: task.cwd as string,
+					writeRoots: [...(task.writeRoots as string[])],
+					writeBoundaries: [...(task.writeBoundaries as string[])],
+					worktree: task.worktree as boolean,
+					readOnly: task.readOnly as boolean,
+				})),
+			};
+		else landing.malformed = "dispatch plan";
 	}
 	return landing;
 }
@@ -2464,6 +2472,12 @@ async function projectOrArmed(ctx: ExtensionContextV2): Promise<boolean> {
 /** Why a host that sends no landing or dispatch plan cannot be guarded. */
 const NEEDS_HOST_FACTS = "WTF-P needs Clio 0.6.3 or later, which tells the desk where each call lands and what each dispatch starts; this Clio does not, so the desk refuses the call inside a WTF-P project or action.";
 
+/** Why a call Clio sent no usable facts for is refused, once this Clio has shown it sends them. */
+async function missingFacts(ctx: ExtensionContextV2, malformed: string | undefined): Promise<string> {
+	if (malformed) return `Clio's ${malformed} for this call is in a form the desk cannot read; refused.`;
+	return (await ctx.state.get<boolean>("host-facts")).value ? "Clio sent no landing for this call, so the desk cannot see where it lands; refused." : NEEDS_HOST_FACTS;
+}
+
 /**
  * Where a write lands, relative to the project, or null outside it, as Clio
  * resolved it: the file the tool opens, which Clio refuses to change before
@@ -2477,10 +2491,10 @@ function writeLanding(target: string, workspace: string, host: HostTarget): { re
 	return { relative: inside(root, host.path) ? posix(path.relative(root, host.path)) || "." : null };
 }
 
-async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTarget): Promise<ExtensionHookResult> {
+async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTarget, malformed?: string): Promise<ExtensionHookResult> {
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
-	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P write guard: ${NEEDS_HOST_FACTS}`) : {};
+	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P write guard: ${await missingFacts(ctx, malformed)}`) : {};
 	const landed = writeLanding(target, workspace, host);
 	if ("refused" in landed) return block(landed.refused);
 	if (landed.relative === null) return {};
@@ -2492,7 +2506,8 @@ async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTa
 		);
 	const desk = loadDesk(workspace, await storedKey(ctx, false));
 	const armed = await armedFor(ctx);
-	if (armed) {
+	// Clio's own artifact directory is no project file; a link that leads it into the project lands, and is judged, elsewhere.
+	if (armed && !under(".clio-coder/artifacts", relative)) {
 		const roots = writeRoots(desk, armed);
 		if (!roots.some((allowed) => under(allowed, relative)))
 			return block(
@@ -2542,14 +2557,12 @@ function narrow(requested: string[], allowed: string[]): string[] {
 const WTFP_AGENT = /^wtfp-[a-z-]+$/u;
 const READ_ONLY_AGENTS = new Set(GUARD.readOnlyAgents);
 
-/** One worker a dispatch starts, as Clio parsed it. */
+/** One worker a dispatch names, as Clio parsed it. */
 interface DispatchTask {
 	/** The agent Clio resolved, `auto` and an omitted agent included. */
 	agent: string;
 	/** Project-relative write roots, or null when the worker would have no boundary. */
 	roots: string[] | null;
-	/** True when Clio runs the worker read-only. */
-	readOnly: boolean;
 }
 
 function isObject(value: unknown): value is Json {
@@ -2581,8 +2594,6 @@ function planTasks(plan: Extract<HostDispatch, { kind: "tasks" }>, workspace: st
 	return plan.tasks
 		.filter((task) => task.role === undefined || !GATE_ROLES.has(task.role))
 		.map((task) => {
-			if (task.writeBoundaries.length !== task.writeRoots.length)
-				throw new Error("WTF-P guard: Clio's dispatch plan for this call is in a form the desk cannot read; refused.");
 			let unbounded = task.writeRoots.length === 0;
 			const roots: string[] = [];
 			task.writeRoots.forEach((spelled, index) => {
@@ -2596,47 +2607,65 @@ function planTasks(plan: Extract<HostDispatch, { kind: "tasks" }>, workspace: st
 					throw new Error(`WTF-P dispatch guard: write root ${spelled} does not lead where it reads (a link, or a path outside the project); name the real project path.`);
 				roots.push(`${landed}${spelled.trim().endsWith("/") ? "/" : ""}`);
 			});
-			return { agent: task.agent, roots: unbounded ? null : roots, readOnly: task.readOnly };
+			return { agent: task.agent, roots: unbounded ? null : roots };
 		});
 }
 
+/** The call's arguments without Clio's private admission keys, which Clio recomputes for any rewritten call. */
+function withoutHostKeys(args: Json): Json {
+	return Object.fromEntries(Object.entries(args).filter(([key]) => !key.startsWith("__clio_")));
+}
+
 /**
- * The call with each worker held to its roots. The desk adds them only to
- * Clio's canonical shapes, a single task or an array of task objects, so it
- * never reproduces Clio's other spellings; a call it cannot confine that way
- * is refused with the shape to use.
+ * The call with each named worker held to its roots, in the shape Clio
+ * prepares for hooks: `tasks` an array of task objects or task strings, one
+ * per named worker, whose own intent overrides the shared one.
  */
-function confineCall(args: Json, count: number, narrowed: Array<string[] | null>): Json {
-	const confine = (item: Json, roots: string[] | null): Json => (roots === null ? item : { ...item, intent: { ...(isObject(item.intent) ? item.intent : {}), write_roots: roots } });
-	if (narrowed.every((roots) => roots === null)) return args;
-	if (args.tasks === undefined && count === 1) return confine(args, narrowed[0] ?? null);
+function confineCall(args: Json, narrowed: Array<string[] | null>): Json {
+	const confine = (item: unknown, roots: string[] | null): unknown => {
+		if (roots === null) return item;
+		const task = typeof item === "string" ? { task: item } : (item as Json);
+		return { ...task, intent: { ...(isObject(task.intent) ? task.intent : {}), write_roots: roots } };
+	};
 	const tasks = args.tasks;
-	if (Array.isArray(tasks) && tasks.length === count && tasks.every(isObject)) return { ...args, tasks: tasks.map((item, index) => confine(item as Json, narrowed[index] ?? null)) };
+	if (args.tasks === undefined && narrowed.length === 1) return { ...withoutHostKeys(args), intent: { ...(isObject(args.intent) ? args.intent : {}), write_roots: narrowed[0] } };
+	if (Array.isArray(tasks) && tasks.length === narrowed.length && tasks.every((item) => isObject(item) || typeof item === "string"))
+		return { ...withoutHostKeys(args), tasks: tasks.map((item, index) => confine(item, narrowed[index] ?? null)) };
 	throw new Error("WTF-P dispatch guard: the desk confines each worker through its intent.write_roots, so send tasks as an array of task objects.");
 }
 
-async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDispatch): Promise<ExtensionHookResult> {
+const sameRoots = (left: string[] | null, right: string[] | null): boolean =>
+	left !== null && right !== null && left.length === right.length && [...left].sort().every((root, index) => root === [...right].sort()[index]);
+
+async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDispatch, malformed?: string): Promise<ExtensionHookResult> {
 	if (args.list === true || host?.kind === "list") return {};
-	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P dispatch guard: ${NEEDS_HOST_FACTS}`) : {};
+	// Clio could not prepare this call and refuses it itself, with its own reason; nothing of it runs.
+	if (!host && typeof args.__clio_dispatch_plan_preparation_error === "string") return {};
+	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P dispatch guard: ${await missingFacts(ctx, malformed)}`) : {};
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
 	const desk = loadDesk(workspace, await storedKey(ctx, false));
+	const armed = await armedFor(ctx);
+	if (!desk.present && !armed) {
+		// Outside a WTF-P project and action, only the WTF-P recipes are the desk's business.
+		const wtfp = host.kind === "tasks" ? host.tasks.filter((task) => WTFP_AGENT.test(task.agent)).map((task) => task.agent) : [];
+		return wtfp.length > 0
+			? block(`WTF-P dispatch guard: ${wtfp.join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`)
+			: {};
+	}
 	if (desk.present && (args.from_scout !== undefined || host.kind === "apply-winner"))
 		return block("WTF-P dispatch guard: the desk cannot see what a scout continuation or a compete winner writes, so a WTF-P project refuses them.");
 	if (host.kind !== "tasks") return {};
 	const entries = planTasks(host, workspace, desk.present);
-	const armed = await armedFor(ctx);
 	if (!armed) {
 		const wtfp = entries.filter((entry) => WTFP_AGENT.test(entry.agent));
 		if (wtfp.length > 0)
 			return block(
 				`WTF-P dispatch guard: ${wtfp.map((entry) => entry.agent).join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`,
 			);
-		if (!desk.present) return {};
 		// Workers run no desk check, so outside an action each must be kept off the records and the manuscripts still held.
 		const held = [".planning/", ...heldManuscripts(desk).roots];
 		for (const entry of entries) {
-			if (entry.readOnly) continue;
 			if (entry.roots === null)
 				return block(
 					`WTF-P dispatch guard: outside a WTF-P action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
@@ -2668,7 +2697,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 	const sectionScoped = armed.produces.some((output) => output.uri.includes("{section}"));
 	const paperWriters = new Set(GUARD.paperWriters);
 	const narrowed = entries.map((entry): string[] | null => {
-		if (entry.roots === null && (entry.readOnly || READ_ONLY_AGENTS.has(entry.agent))) return null;
+		if (entry.roots === null && READ_ONLY_AGENTS.has(entry.agent)) return null;
 		const roots = entry.roots === null ? allowed : narrow(entry.roots, allowed);
 		if (paperWriters.has(entry.agent) && !roots.some((root) => root.startsWith("paper/")))
 			throw new Error(
@@ -2689,8 +2718,18 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		return block(
 			`WTF-P dispatch guard: give each task its own intent.write_roots inside ${allowed.join(", ")}, one section's manuscript and summary per writer, so parallel writers stay disjoint.`,
 		);
-	const rewritten = confineCall(args, entries.length, narrowed);
-	if (canonical(rewritten) === canonical(args)) return {};
+	// A worker whose roots already are its confinement, in any order, needs no rewrite.
+	const needed = narrowed.map((roots, index) => (roots === null || sameRoots(roots, entries[index]?.roots ?? null) ? null : roots));
+	if (needed.every((roots) => roots === null)) return {};
+	// Clio admits a rewritten call afresh, without the operator's approval of the original, so a call
+	// that needs approval (more than one worker, a review loop, compete) is refused with the exact roots instead.
+	if (host.tasks.length > 1)
+		return block(
+			`WTF-P dispatch guard: give each worker exactly these intent.write_roots, so the call you approve runs unchanged: ${entries
+				.map((entry, index) => `task ${index + 1} (${entry.agent}): ${(narrowed[index] ?? []).join(", ") || "none, it only reads"}`)
+				.join("; ")}.`,
+		);
+	const rewritten = confineCall(args, needed);
 	return {
 		effects: [
 			{
@@ -2717,14 +2756,16 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 	let result: ExtensionHookResult = {};
 	try {
 		const host = hostLanding(event);
-		if (tool === "dispatch") result = await guardDispatch(ctx, input, host.dispatch);
+		// A host that sends facts once sends them for every call it can resolve, so a later call without them failed in Clio.
+		if ((host.target || host.dispatch) && !(await ctx.state.get<boolean>("host-facts")).value) await ctx.state.set("host-facts", true);
+		if (tool === "dispatch") result = await guardDispatch(ctx, input, host.dispatch, host.malformed);
 		else if (COMMAND_TOOLS.has(tool)) {
 			if (BASH_DESK_PATHS.test(JSON.stringify(input))) result = block("WTF-P write guard: commands may not touch the desk's own records under .planning.");
 		} else {
 			const raw = input.path ?? input.file_path ?? input.filePath;
-			// The artifact tool trims its path, and without one writes under Clio's own artifact directory.
+			// The artifact tool trims its path; without one it writes under Clio's own artifact directory, where Clio's landing still says it lands.
 			const target = typeof raw === "string" ? (tool === "artifact" ? raw.trim() : raw) : "";
-			if (target.length > 0) result = await guardWrite(ctx, target, host.target);
+			if (target.length > 0 || host.target) result = await guardWrite(ctx, target || "the artifact", host.target, host.malformed);
 		}
 	} catch (error) {
 		result = block(error instanceof Error ? error.message : String(error));
