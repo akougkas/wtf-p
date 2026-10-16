@@ -31,8 +31,10 @@ and artifact the author saw; the seal key lives in Clio's extension store under
 Clio's state directory, never in the project. A resolution without a matching
 seal is unattested and keeps its gate closed until the author confirms it. The
 trust rule is `evaluation/lib/desk-trust.js`, which the campaign collector
-shares. A seal proves the desk observed an answer; it cannot stop a process
-that the operator lets read Clio's state directory from minting one.
+shares. A seal is tamper evidence against workers, hand edits and other
+machines, not against the main agent: its shell runs unsandboxed as the
+operator's user and can read the key, as can any process the operator lets
+read Clio's state directory.
 
 The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
 `run_script` and `job` calls, and judges a path where Clio's tools land it:

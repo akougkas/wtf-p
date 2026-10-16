@@ -285,6 +285,8 @@ process.exit(0);`);
     const env = JSON.parse(fs.readFileSync(envFile, 'utf8'));
     assert.strictEqual(env.CLIO_CODER_DISABLE_RETRIEVE_TOOLS, '1');
     assert.strictEqual(env.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
+    assert.strictEqual(env.CLIO_CODER_INTEROP_HOME, 'none', 'no other agent\'s home feeds a step');
+    assert.ok(!('CLAUDE_CONFIG_DIR' in env), 'an agent home variable never reaches a step');
     assert.strictEqual(run.outcome, 'policy-violation');
     assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, store_calls: 0, execution_calls: 0, blocked_calls: 0 });
     // Neither the main agent nor a worker it dispatches holds a tool that runs a program.

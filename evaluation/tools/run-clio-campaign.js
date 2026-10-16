@@ -248,6 +248,10 @@ function profilePaths(root, session = 'S1') {
     CLIO_CODER_DATA_DIR: path.join(root, 'clio', second ? 'data-s2' : 'data'),
     CLIO_CODER_CACHE_DIR: path.join(root, 'clio', second ? 'cache-s2' : 'cache'),
     CLIO_CODER_BIN_DIR: path.join(root, 'clio', 'bin'),
+    // No other agent's user home, not even one CLAUDE_CONFIG_DIR names, feeds
+    // skills, prompts or credentials into a run. Clio 0.6.3 reads this; 0.6.2
+    // ignores it, and HOME is the run's own on both.
+    CLIO_CODER_INTEROP_HOME: 'none',
     NO_COLOR: '1'
   };
 }

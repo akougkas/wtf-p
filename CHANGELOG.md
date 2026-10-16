@@ -18,7 +18,9 @@ text and action contracts changed.
   observed it: the checkpoint digest, the options offered and the subject
   artifact's SHA-256. The Clio desk seals each answer with an HMAC whose key
   stays in Clio's extension store, and counts a resolution as the author's only
-  while a matching seal stands behind it
+  while a matching seal stands behind it; the seal is tamper evidence against
+  workers and hand edits, not against the main agent, whose shell runs as the
+  operator's user
 - Desk tools `read_record` (record, revision, SHA-256 and attestation) and
   `readiness` (gates, plan approval and evidence coverage for a section); the
   `record` tool takes `writes` to commit several records together
