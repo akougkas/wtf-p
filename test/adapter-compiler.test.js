@@ -1060,7 +1060,7 @@ record('Codex, Claude, Copilot, Antigravity, Gemini, and plugin manifests resolv
   const pluginPlan = plansById.get('portable-plugin');
   const clioExtension = JSON.parse(planText(pluginPlan, 'plugin.json')).extensions['ai.iowarp.clio'];
   assert.strictEqual(clioExtension.manifestVersion, 1);
-  assert.strictEqual(clioExtension.compatibility.clio, '>=0.6.2');
+  assert.strictEqual(clioExtension.compatibility.clio, '>=0.6.3');
   assert.deepStrictEqual(clioExtension.resources, {
     skills: 'skills',
     prompts: 'ai.iowarp.clio/prompts',
@@ -1109,7 +1109,7 @@ record('the Claude envelope keeps its pre-playbook Clio namespace under the lega
   // Clio no longer adopts a Claude-installed WTF-P, so the carried copy stays
   // frozen: the canonical manifest with the playbook names and floor reverted.
   const legacyManifest = planText(portable, 'plugin.json')
-    .replace('"clio": ">=0.6.2"', '"clio": ">=0.4.7"')
+    .replace('"clio": ">=0.6.3"', '"clio": ">=0.4.7"')
     .replace('"playbooks": "ai.iowarp.clio/playbooks"', '"fleets": "ai.iowarp.clio/fleets"')
     .replaceAll('"kind": "playbook"', '"kind": "fleet"')
     .replaceAll('"path": "ai.iowarp.clio/playbooks/', '"path": "ai.iowarp.clio/fleets/');

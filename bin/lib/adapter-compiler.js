@@ -1067,8 +1067,10 @@ function clioPluginManifest(model, legacyFleetNames = false) {
   });
   return standardPluginManifest(model.version, 'wtfp', {
     manifestVersion: 1,
-    // The Claude copy keeps its pre-playbook floor; Clio 0.6.1 and older reject `playbooks`.
-    compatibility: { clio: legacyFleetNames ? '>=0.4.7' : '>=0.6.2' },
+    // The Claude copy keeps its pre-playbook floor. The plugin installs with
+    // the desk, which judges only what Clio 0.6.3 sends a hook, and its
+    // prompts scope their tools only from 0.6.3.
+    compatibility: { clio: legacyFleetNames ? '>=0.4.7' : '>=0.6.3' },
     resources: {
       skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents',
       [legacyFleetNames ? 'fleets' : 'playbooks']: playbookRoot

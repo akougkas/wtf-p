@@ -13,7 +13,7 @@
     "ai.iowarp.clio": {
       "manifestVersion": 1,
       "compatibility": {
-        "clio": ">=0.6.2"
+        "clio": ">=0.6.3"
       },
       "resources": {
         "skills": "skills",
