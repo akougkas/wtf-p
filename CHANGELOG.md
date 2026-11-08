@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0] - 2026-11-08
+## [0.8.1] - 2026-11-08
 
 Makes the Clio desk the reference implementation of WTF-P's author gates and
 record contract on Clio Coder 0.6.3, which runs the desk on every host and
@@ -742,8 +742,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.9.0...HEAD
-[0.9.0]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.9.0
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/akougkas/wtf-p/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/akougkas/wtf-p/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/akougkas/wtf-p/compare/v0.7.2...v0.7.3

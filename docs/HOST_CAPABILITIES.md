@@ -153,7 +153,7 @@ Not yet observed on 0.7.0: a dispatched WTF-P worker writing records, and the GU
 
 ## Clio Coder 0.6.3 (local build, 2026-10-16)
 
-WTF-P 0.9.0 requires Clio 0.6.3: both Clio packages declare `>=0.6.3`, and Clio 0.6.2 refuses them ("plugin requires Clio >=0.6.3"). Clio 0.6.3 was released on 2026-10-17, after this section was recorded. The build observed here is the Clio repository's local `v063` branch at `d5efb3ead`, which reports `Clio Coder 0.6.3` and is not yet tagged (entry `4f8c67f4…`, dist `f2adf2c2…`, Node v24.20.0). It is recorded by digest; a campaign is pinned only once a tag exists. The same checks passed on the branch's earlier `ba6540bd7` and `6a27580c7` builds.
+WTF-P 0.8.1 requires Clio 0.6.3: both Clio packages declare `>=0.6.3`, and Clio 0.6.2 refuses them ("plugin requires Clio >=0.6.3"). Clio 0.6.3 was released on 2026-10-17, after this section was recorded. The build observed here is the Clio repository's local `v063` branch at `d5efb3ead`, which reports `Clio Coder 0.6.3` and is not yet tagged (entry `4f8c67f4…`, dist `f2adf2c2…`, Node v24.20.0). It is recorded by digest; a campaign is pinned only once a tag exists. The same checks passed on the branch's earlier `ba6540bd7` and `6a27580c7` builds.
 
 Observed on that build, in disposable profiles, with no credentials and no model call:
 
@@ -179,7 +179,7 @@ Read from that build's source and not exercised with a model:
 
 ## Clio Coder 0.6.2 reference (verified 2026-10-14)
 
-This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.9.0 both Clio packages require Clio 0.6.3, which Clio 0.6.2 enforces by refusing them, so the rows below describe the earlier desk.
+This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.8.1 both Clio packages require Clio 0.6.3, which Clio 0.6.2 enforces by refusing them, so the rows below describe the earlier desk.
 
 Clio is the reference host. Its qualified build is the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` is pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
 
