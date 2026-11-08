@@ -132,7 +132,8 @@ const hosts = {
   claude: { dir: path.join(ROOT, 'vendors', 'claude', 'commands'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/claude/compatibility/action-availability.json' },
   copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/wtfp/compatibility/action-availability.json' },
   opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
-  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json' },
+  // Antigravity 1.5 loads actions only as skills; a router skill of the same name serves its action.
+  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'skills'), file: (id) => `wtfp-${id}/SKILL.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json', routers: new Set(readJson(path.join(ROOT, 'protocol', 'catalog.json')).skills.map((skill) => skill.id)) },
   gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
   clio: { dir: path.join(ROOT, 'vendors', 'plugin', 'ai.iowarp.clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/plugin/compatibility/action-availability.json' }
 };
@@ -143,6 +144,7 @@ for (const [host, spec] of Object.entries(hosts)) {
   const allExist = files.every((entry) => fs.existsSync(entry.file));
   check(allExist, `${host} exposes all ${actions.length} stable commands`);
   check(allExist && files.every(({ action, file }) => {
+    if (spec.routers?.has(`wtfp-${action.id}`)) return true;
     const source = fs.readFileSync(file, 'utf8');
     // A display-only prompt is rendered to the operator and takes no arguments.
     if (/^display-only: true$/m.test(source)) return !source.includes(spec.args);
