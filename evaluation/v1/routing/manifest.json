@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "e53f3ad5c6d2ba61432a2c6ce1a0d302bd1fc56c",
+  "wtfp_commit": "c6f424b1e67d92e5c9df0d20a149c4e1aab6fbea",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -31,8 +31,8 @@
     {
       "target": "antigravity",
       "path": "vendors/antigravity/.wtfp-generated.json",
-      "manifest_sha256": "b56c4164d90bec146b27c3415df20551977e5c4b12d6ca85074e18c0c22395e4",
-      "source_sha256": "960c6d88a81fe40e4d92740e4ef11915b2133c01ea3acb8072ed87a629e9ebb6"
+      "manifest_sha256": "7d871cfd3767c5b47cc27a922282d95a8a4e155f8f051be114a9ab279777fd74",
+      "source_sha256": "44ee36b914772d8d539c52b4eecc69b364b6103e630eafc113ad765e4ef36995"
     },
     {
       "target": "claude",
