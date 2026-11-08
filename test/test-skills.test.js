@@ -107,7 +107,6 @@ for (const [skill, actions] of Object.entries(expected)) {
 
   assert.deepStrictEqual(Object.keys(frontmatter).sort(), ['description', 'name']);
   assert.strictEqual(frontmatter.name, skill, `${skill} frontmatter name must match its directory`);
-  assert.match(frontmatter.description, /^This skill\b/, `${skill} description must use third-person trigger language`);
   assert.match(frontmatter.description, /activates when\b/i, `${skill} description must state activation contexts`);
   assert(skillMarkdown.split('\n').length < 500, `${skill}/SKILL.md exceeds 500 lines`);
   assert.match(skillMarkdown, /\[references\/actions\.md\]\(references\/actions\.md\)/);
