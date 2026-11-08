@@ -19,7 +19,7 @@ the scientific judgment. The agent keeps the bookkeeping and does bounded jobs.
 
 It ships as one canonical [Agent Plugins 1.0.0](https://agent-plugins.org)
 bundle that a deterministic compiler projects into a native package for seven
-coding-agent hosts. Version `0.8.0` is the current stable release and is
+coding-agent hosts. Version `0.9.0` is the current stable release and is
 what npm `latest` resolves to; v0.5 remains installable by explicit version.
 
 **Optional CiteNexus research backend (since 0.7.0):** `citation-search --backend=cite-nexus`
@@ -56,18 +56,18 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.6.2 or newer) | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | 0.6.2-dev (local build `89ea1b4`) |
-| Claude Code | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
-| Codex | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
-| OpenCode | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.8.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
+| Clio Coder (0.6.3 or newer) | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | 0.7.0 (local build `82dc12e21`) |
+| Claude Code | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
+| Codex | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
+| OpenCode | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in
 [Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder is published as
-`@iowarp/clio-coder`; 0.6.2 and newer carry the plugin and extension engine WTF-P uses.
+`@iowarp/clio-coder`; 0.6.3 and newer carry the plugin and extension engine WTF-P uses.
 Clio Coder itself requires Node.js 22.19 or newer.
 
 Keep the explicit `--package=wtf-p@<version> -- wtf-p` form. On a workstation
@@ -77,7 +77,7 @@ the old executable instead.
 ## Sixty-second start
 
 ```bash
-npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio
+npx --yes --package=wtf-p@0.9.0 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
 clio-coder --autonomy full-auto
 ```

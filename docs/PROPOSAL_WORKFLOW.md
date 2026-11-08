@@ -40,10 +40,10 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 
 ## 2. Install this candidate and start the client
 
-For Clio Coder 0.6.2 or newer:
+For Clio Coder 0.6.3 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.8.0 -- wtf-p install clio
+npx --yes --package=wtf-p@0.9.0 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
 clio-coder --autonomy suggest
 ```
