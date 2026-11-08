@@ -27,6 +27,7 @@ overview, then use the guide that matches your role.
 
 | Reference | What it holds |
 | --- | --- |
+| [Research direction and competitive evidence](RESEARCH_DIRECTION.md) | Maintainer priorities: Clio as the reference implementation, separate human gates, and a real manuscript demonstration; source-backed comparisons and proposed evaluation criteria |
 | [Building and releasing](BUILD_AND_RELEASE.md) | Source and generated boundaries, development commands, the routing-matrix reseal, preflight, version preparation, tagging, and publication |
 | [Contributing](../CONTRIBUTING.md) | Repository layout, how to change an action, project state, skills, roles, the compiler, and installer safety invariants |
 | [ADR 0001: tool execution](adr/0001-hybrid-tool-execution.md) | Why bibliography transforms stay local, why no MCP server ships, and the gates for any future network service, with its 2026-09-09 dispatcher and 2026-09-16 CiteNexus amendments |
