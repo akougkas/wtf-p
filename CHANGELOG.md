@@ -24,7 +24,8 @@ profiles: Claude Code 2.1.319, Codex 0.163.0, Copilot CLI 1.0.107, OpenCode
 pre-release build (`8cbece81e`). This release does not depend on a tagged Clio
 0.7.0; on that pre-release, a headless `clio-coder run` can still report a
 no-op error after a desk record write succeeded (see the known limitations in
-`docs/COMPATIBILITY.md`).
+`docs/COMPATIBILITY.md`). The integrated candidate run on a released Clio
+(sprint item WFP-09) is deferred to a later release.
 
 ### Added
 
