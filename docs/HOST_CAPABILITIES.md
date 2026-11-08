@@ -141,7 +141,15 @@ Observed on that build, in disposable profiles:
 - Clio 0.6.6 and later write no receipt files; `run-clio-campaign.js` reads each step's cost, worker tool counts and served models from `clio-coder telemetry`. A scratch campaign pinned to this build planned and prepared with all nine checks passing, and an `execute` on the LiteLLM route reported cost from telemetry for every call, with served models matching and no secret left behind. Its first step wrote the `init-preview` checkpoint through the desk, and the headless gate interview was cancelled and left pending.
 - Clio exits that step 1 as a no-op ("1 tool call was blocked without recovery and no write succeeded"): it classes every extension tool call as `execute`, so a successful `extension_wtfp__record` neither counts as a write nor resolves the `write` the desk redirected to it. The runner records such a step as failed. This is open with the Clio maintainers.
 
-Not yet observed on 0.7.0: an author-led session, a dispatched WTF-P worker writing records, and the GUI.
+Later builds of the same branch, `82dc12e21` (which adds `clio-coder arena` and `clio-coder research`) and `d84822760`, also pass all 36 desk package tests. On `82dc12e21`, which shares its extension host, session control, CLI and TUI sources with `d84822760`:
+
+- The three headless guard probes above held again.
+- An author-led TUI session answered two gate interviews from `/wtfp:check-todos` with no model call; both checkpoints were recorded as resolved by the author.
+- Two `clio-coder arena run` contenders ran `/wtfp:write-section introduction` from a committed, author-approved baseline. Each verified the author's sealed approvals inside its own worktree, because the seal key is per machine rather than per checkout, and each stopped at the next author gate. Each also drafted the section into a separate diff for a blind vote.
+- Headless runs never arm a WTF-P action: Clio hands the desk's `prompt_submit` hook the expanded template body instead of the typed `/wtfp:` line. Every action-scoped permission is refused as a result, including dispatching `wtfp-section-writer` from `/wtfp:write-section`. The guards still hold. This has been reported to the Clio maintainers.
+- In the TUI, each `/wtfp:` command that replaces its prompt is followed by a false "reloaded before its result arrived" warning, although its card still renders.
+
+Not yet observed on 0.7.0: a dispatched WTF-P worker writing records, and the GUI.
 
 ## Clio Coder 0.6.3 (local build, 2026-10-16)
 
