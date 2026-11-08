@@ -145,7 +145,9 @@ function listRegularFiles(root) {
 
 function assertPortableContract(root, context) {
   const files = listRegularFiles(root);
-  const skills = files.filter(file => /^skills\/wtfp-[^/]+\/SKILL\.md$/.test(file));
+  // Antigravity action skills are explicit-only (disable-model-invocation).
+  const skills = files.filter(file => /^skills\/wtfp-[^/]+\/SKILL\.md$/.test(file) &&
+    !/^---\nname: [^\n]+\ndisable-model-invocation: true\n/.test(fs.readFileSync(path.join(root, file), 'utf8')));
   const commands = files.filter(file => /^actions\/[^/]+\.json$/.test(file));
   const agents = files.filter(file => /^roles\/[^/]+\.md$/.test(file));
   const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'catalog.json'), 'utf8'));

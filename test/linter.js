@@ -75,6 +75,9 @@ function validateMarkdownCommand(filePath, actionId, options) {
   check(Boolean(parsed.fields.description), filePath, 'description is required');
   if (options.pathDerivedName) {
     check(!Object.hasOwn(parsed.fields, 'name'), filePath, 'host derives the canonical name from plugin and file path');
+  } else if (options.skillName) {
+    check(parsed.fields.name === `wtfp-${actionId}`, filePath, `name must be wtfp-${actionId}`);
+    check(parsed.fields['disable-model-invocation'] === 'true', filePath, 'action skill must be explicit-only');
   } else if (options.frontmatterName) {
     check(parsed.fields.name === `wtfp:${actionId}`, filePath, `name must be wtfp:${actionId}`);
   }
@@ -158,6 +161,7 @@ function validateAgent(filePath, roleId) {
 
 const aliases = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'aliases.lock.json'), 'utf8')).aliases;
 const actionIds = aliases.map((entry) => entry.action);
+const skillIds = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'catalog.json'), 'utf8')).skills.map((skill) => skill.id);
 const roleIds = fs.readdirSync(path.join(ROOT, 'protocol', 'roles'))
   .filter((file) => file.endsWith('.md'))
   .map((file) => path.basename(file, '.md'))
@@ -185,14 +189,18 @@ const markdownCommands = [
     options: { frontmatterName: true },
   },
   {
+    // Antigravity 1.5 loads actions only as skills; a router skill with the
+    // same name serves that action and is linted as a skill.
     target: 'antigravity',
-    pathFor: (id) => `vendors/antigravity/commands/wtfp-${id}.md`,
-    options: { frontmatterName: true },
+    pathFor: (id) => `vendors/antigravity/skills/wtfp-${id}/SKILL.md`,
+    skip: (id) => skillIds.includes(`wtfp-${id}`),
+    options: { skillName: true },
   },
 ];
 
 for (const commandTarget of markdownCommands) {
   for (const actionId of actionIds) {
+    if (commandTarget.skip?.(actionId)) continue;
     validateMarkdownCommand(path.join(ROOT, commandTarget.pathFor(actionId)), actionId, commandTarget.options);
   }
 }
