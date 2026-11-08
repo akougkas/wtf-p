@@ -129,9 +129,23 @@ codex exec -s workspace-write -m gpt-5.6-luna -c 'model_reasoning_effort="xhigh"
 
 Whether Codex loads the TOML agents at runtime was not observed: there is no CLI listing for custom agents, and neither headless run needed a subagent.
 
+## Clio Coder 0.7.0 (local build, 2026-11-08)
+
+The build observed here is the Clio repository's `v070` branch at `71bcf27b3`, which reports `Clio Coder 0.7.0` and is not yet tagged (entry `f8721aff…`, dist `00889552…`, Node v24.20.0). It is recorded by digest; a campaign is pinned only once a tag exists, so the campaign below ran from a scratch campaign file and none is committed.
+
+Observed on that build, in disposable profiles:
+
+- `test/clio-native-integration.test.js` passed, and `clio-coder extensions test` passed all 36 desk package tests.
+- Headless runs on a local LiteLLM route held the desk's guards: a manuscript write behind a pending gate was refused, a model-written author resolution was refused, and a raw write to a `.planning` record was refused and pointed at `extension_wtfp__record`.
+- Clio 0.7.0 runs the desk under Node's permission model, and Node 24 refuses every `fsync` there, even on the `.planning` path the manifest may write. Every record write failed with "fsync API is disabled when Permission Model is enabled" and left a staged `.partial` file. The desk now treats that flush as best effort: a record still lands whole by its rename but is not durable across power loss, and a staged file it could not write whole is removed. A package test commits a record under the same flags.
+- Clio 0.6.6 and later write no receipt files; `run-clio-campaign.js` reads each step's cost, worker tool counts and served models from `clio-coder telemetry`. A scratch campaign pinned to this build planned and prepared with all nine checks passing, and an `execute` on the LiteLLM route reported cost from telemetry for every call, with served models matching and no secret left behind. Its first step wrote the `init-preview` checkpoint through the desk, and the headless gate interview was cancelled and left pending.
+- Clio exits that step 1 as a no-op ("1 tool call was blocked without recovery and no write succeeded"): it classes every extension tool call as `execute`, so a successful `extension_wtfp__record` neither counts as a write nor resolves the `write` the desk redirected to it. The runner records such a step as failed. This is open with the Clio maintainers.
+
+Not yet observed on 0.7.0: an author-led session, a dispatched WTF-P worker writing records, and the GUI.
+
 ## Clio Coder 0.6.3 (local build, 2026-10-16)
 
-WTF-P 0.9.0 requires Clio 0.6.3: both Clio packages declare `>=0.6.3`, and Clio 0.6.2 refuses them ("plugin requires Clio >=0.6.3"). Clio 0.6.3 is not yet released. The build observed here is the Clio repository's local `v063` branch at `d5efb3ead`, which reports `Clio Coder 0.6.3` and is not yet tagged (entry `4f8c67f4…`, dist `f2adf2c2…`, Node v24.20.0). It is recorded by digest; a campaign is pinned only once a tag exists. The same checks passed on the branch's earlier `ba6540bd7` and `6a27580c7` builds.
+WTF-P 0.9.0 requires Clio 0.6.3: both Clio packages declare `>=0.6.3`, and Clio 0.6.2 refuses them ("plugin requires Clio >=0.6.3"). Clio 0.6.3 was released on 2026-10-17, after this section was recorded. The build observed here is the Clio repository's local `v063` branch at `d5efb3ead`, which reports `Clio Coder 0.6.3` and is not yet tagged (entry `4f8c67f4…`, dist `f2adf2c2…`, Node v24.20.0). It is recorded by digest; a campaign is pinned only once a tag exists. The same checks passed on the branch's earlier `ba6540bd7` and `6a27580c7` builds.
 
 Observed on that build, in disposable profiles, with no credentials and no model call:
 
