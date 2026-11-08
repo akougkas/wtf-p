@@ -149,7 +149,7 @@ Later builds of the same branch, `82dc12e21` (which adds `clio-coder arena` and 
 - Headless runs never arm a WTF-P action: Clio hands the desk's `prompt_submit` hook the expanded template body instead of the typed `/wtfp:` line. Every action-scoped permission is refused as a result, including dispatching `wtfp-section-writer` from `/wtfp:write-section`. The guards still hold. This has been reported to the Clio maintainers.
 - In the TUI, each `/wtfp:` command that replaces its prompt is followed by a false "reloaded before its result arrived" warning, although its card still renders.
 
-On `5a695fa84`, a later build of the same branch, both of those are fixed:
+On `5a695fa84`, a later build of the same branch, both of those are fixed. On `ae8c3bd99`, which caps a dispatched worker's autonomy at its dispatcher's level, the 36 desk package tests pass and the headless write-section run below behaved the same, with its section writer, planner, plan checker and argument verifier dispatched normally:
 
 - A headless `clio-coder run -- "/wtfp:write-section introduction"` from an approved baseline armed the action, dispatched `wtfp-section-writer`, wrote `paper/introduction.md` with its summary, section and state records, and exited 0. Arena contenders now run WTF-P actions the same way, and Clio counts a contender's record writes from its diff. `PROPOSAL_WORKFLOW.md` gives the arena recipe.
 - `/wtfp:progress` in the TUI renders its card with no false warning.
