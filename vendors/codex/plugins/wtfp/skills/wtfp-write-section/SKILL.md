@@ -1,6 +1,6 @@
 ---
 name: wtfp-write-section
-description: This skill drafts and revises manuscript sections from approved plans and evidence. It activates when an agent needs to write one section, execute an outline in dependency waves, make a small targeted prose or citation change, or perform the WTF-P write-section, execute-outline, or quick actions.
+description: This skill writes and revises academic manuscript sections, including narrow wording corrections to the abstract or any section. It activates when an agent needs to write one section, execute an outline in dependency waves, make a small targeted prose or citation change, or perform the WTF-P write-section, execute-outline, or quick actions.
 ---
 
 # Write a WTF-P Section

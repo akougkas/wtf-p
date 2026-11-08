@@ -1,6 +1,6 @@
 ---
 name: wtfp-research-literature
-description: This skill researches, organizes, and audits scholarly literature for an academic manuscript. It activates when an agent needs to investigate a research gap, analyze a bibliography, map references to sections, validate citation coverage, repair reference metadata, or perform the WTF-P research-gap, analyze-bib, or check-refs actions.
+description: This skill characterizes BibTeX collections and bibliographies, maps verified references to sections and claims, investigates research gaps, and audits scholarly citations. It activates when an agent needs to investigate a research gap, analyze a bibliography, map references to sections, validate citation coverage, repair reference metadata, or perform the WTF-P research-gap, analyze-bib, or check-refs actions.
 ---
 
 # Research Literature for WTF-P

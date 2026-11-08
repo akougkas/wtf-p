@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "58334c1ed4d93fc37ea14f3ef096d146a8e1fc188b368d281138d5d6c01c89fb",
+  "sourceHash": "79f1d1022661fe488c26d1f8d04ed2b484528689e13e47c60e3e9742f94df705",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -570,7 +570,7 @@
     },
     {
       "path": "output-styles/wtfp-academic-writing.md",
-      "sha256": "149edeab3b4faae146f0d8da068e720ac3e590a6dc2fa10133f754adfbfab44e"
+      "sha256": "2ad0aecc86fc88ecfeb839e9ea4d918c364e7016a5c6c739c094fa7a5551011a"
     },
     {
       "path": "plugin.json",
@@ -762,7 +762,7 @@
     },
     {
       "path": "skills/wtfp-deliver-research/SKILL.md",
-      "sha256": "65953743b2e8605f1e9c9bf297d67bfac50d05fc76a6b91d506d0b271c9bcd22"
+      "sha256": "01014138a663320b2e433ae635c5db66308f51e8b4cbe4410c2b21eaa8ec6e39"
     },
     {
       "path": "skills/wtfp-manage-project/agents/openai.yaml",
@@ -786,7 +786,7 @@
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
-      "sha256": "160c20748f9484ae628b48a1a281dd296fd3afb1092c33930991fd9822683f0a"
+      "sha256": "cea211ae52fa100cafc045efd2a4e47b8c9425171fd10306387c3173ffcc746a"
     },
     {
       "path": "skills/wtfp-research-literature/agents/openai.yaml",
@@ -798,7 +798,7 @@
     },
     {
       "path": "skills/wtfp-research-literature/SKILL.md",
-      "sha256": "a2babd6577ae25910b772703f7a2c322ec8a4ba917dfa3847dd8b7c9090f5377"
+      "sha256": "90029c0e83114f8100babf2c59f45aa8c30ae76a92698b805313ff43aece888b"
     },
     {
       "path": "skills/wtfp-review-manuscript/agents/openai.yaml",
@@ -810,7 +810,7 @@
     },
     {
       "path": "skills/wtfp-review-manuscript/SKILL.md",
-      "sha256": "24fe6f2ca0f8e0d7cb11bc0764b27799d8e4ff58e4f2a86e1c1368b6ac7d8286"
+      "sha256": "4962f1e5b430b31be3493bb343e5e57754e8acfcb38ed76b424f7c0098a3819c"
     },
     {
       "path": "skills/wtfp-start-project/agents/openai.yaml",
@@ -834,7 +834,7 @@
     },
     {
       "path": "skills/wtfp-write-section/SKILL.md",
-      "sha256": "f0db6891e31a5995cb96047f27040d27e6ee88f2a35748ab5b0a28cc49f90c71"
+      "sha256": "4d2f3abaee67da5e4b297d9f35ba9cff34339437efd5b96d3f1db7ad406c9db2"
     },
     {
       "path": "templates/grant-proposal-outline.md",

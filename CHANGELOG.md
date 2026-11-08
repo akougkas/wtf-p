@@ -122,6 +122,14 @@ changed.
   `.planning/sections/`
 - The skill-description test still requires each description to name when the
   skill activates, but no longer requires it to open with "This skill"
+- Five skill descriptions (`wtfp-deliver-research`, `wtfp-plan-section`,
+  `wtfp-research-literature`, `wtfp-review-manuscript`, `wtfp-write-section`)
+  name more of the requests they own. They came from a `clio-coder research`
+  run on the routing corpus and were adopted only after they also held on 42
+  held-out cases written without sight of them. Over three trials of a Clio
+  routing probe, median held-out accuracy rose from 0.619 to 0.690 with
+  negative specificity unchanged at 1.0, and median corpus accuracy rose from
+  0.850 to at least 0.95
 
 ### Fixed
 

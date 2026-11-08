@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "fa8a9ea7a91f37204b857ef4c5ab43dbebc9dbda03d46f086b6e7ceb91bf9df8",
+  "sourceHash": "0e22191042ab55824f634aa7b117a8d569b62b432045aa85291761ced8ea2ef6",
   "files": [
     {
       "path": "marketplace.json",
@@ -210,7 +210,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-deliver-research/SKILL.md",
-      "sha256": "65953743b2e8605f1e9c9bf297d67bfac50d05fc76a6b91d506d0b271c9bcd22"
+      "sha256": "01014138a663320b2e433ae635c5db66308f51e8b4cbe4410c2b21eaa8ec6e39"
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/agents/openai.yaml",
@@ -234,7 +234,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-plan-section/SKILL.md",
-      "sha256": "160c20748f9484ae628b48a1a281dd296fd3afb1092c33930991fd9822683f0a"
+      "sha256": "cea211ae52fa100cafc045efd2a4e47b8c9425171fd10306387c3173ffcc746a"
     },
     {
       "path": "project/.github/skills/wtfp-research-literature/agents/openai.yaml",
@@ -246,7 +246,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-research-literature/SKILL.md",
-      "sha256": "a2babd6577ae25910b772703f7a2c322ec8a4ba917dfa3847dd8b7c9090f5377"
+      "sha256": "90029c0e83114f8100babf2c59f45aa8c30ae76a92698b805313ff43aece888b"
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/agents/openai.yaml",
@@ -258,7 +258,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/SKILL.md",
-      "sha256": "24fe6f2ca0f8e0d7cb11bc0764b27799d8e4ff58e4f2a86e1c1368b6ac7d8286"
+      "sha256": "4962f1e5b430b31be3493bb343e5e57754e8acfcb38ed76b424f7c0098a3819c"
     },
     {
       "path": "project/.github/skills/wtfp-start-project/agents/openai.yaml",
@@ -282,7 +282,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-write-section/SKILL.md",
-      "sha256": "f0db6891e31a5995cb96047f27040d27e6ee88f2a35748ab5b0a28cc49f90c71"
+      "sha256": "4d2f3abaee67da5e4b297d9f35ba9cff34339437efd5b96d3f1db7ad406c9db2"
     },
     {
       "path": "project/.github/wtfp/actions/add-todo.json",
@@ -626,7 +626,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-deliver-research/SKILL.md",
-      "sha256": "65953743b2e8605f1e9c9bf297d67bfac50d05fc76a6b91d506d0b271c9bcd22"
+      "sha256": "01014138a663320b2e433ae635c5db66308f51e8b4cbe4410c2b21eaa8ec6e39"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/agents/openai.yaml",
@@ -650,7 +650,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-plan-section/SKILL.md",
-      "sha256": "160c20748f9484ae628b48a1a281dd296fd3afb1092c33930991fd9822683f0a"
+      "sha256": "cea211ae52fa100cafc045efd2a4e47b8c9425171fd10306387c3173ffcc746a"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-research-literature/agents/openai.yaml",
@@ -662,7 +662,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-research-literature/SKILL.md",
-      "sha256": "a2babd6577ae25910b772703f7a2c322ec8a4ba917dfa3847dd8b7c9090f5377"
+      "sha256": "90029c0e83114f8100babf2c59f45aa8c30ae76a92698b805313ff43aece888b"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/agents/openai.yaml",
@@ -674,7 +674,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/SKILL.md",
-      "sha256": "24fe6f2ca0f8e0d7cb11bc0764b27799d8e4ff58e4f2a86e1c1368b6ac7d8286"
+      "sha256": "4962f1e5b430b31be3493bb343e5e57754e8acfcb38ed76b424f7c0098a3819c"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-start-project/agents/openai.yaml",
@@ -698,7 +698,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-write-section/SKILL.md",
-      "sha256": "f0db6891e31a5995cb96047f27040d27e6ee88f2a35748ab5b0a28cc49f90c71"
+      "sha256": "4d2f3abaee67da5e4b297d9f35ba9cff34339437efd5b96d3f1db7ad406c9db2"
     },
     {
       "path": "project/.github/wtfp/templates/grant-proposal-outline.md",

@@ -1,6 +1,6 @@
 ---
 name: wtfp-review-manuscript
-description: This skill reviews, verifies, audits, and polishes academic manuscripts. It activates when an agent needs to review a section, test work against a plan, refine academic voice, audit submission readiness, create milestone gap plans, or perform the WTF-P review-section, verify-work, polish-prose, audit-milestone, or plan-milestone-gaps actions.
+description: This skill reviews, polishes, and audits academic manuscript sections for clarity, flow, precision, voice, unsupported claims, and citation misuse. It activates when an agent needs to review a section, test work against a plan, refine academic voice, audit submission readiness, create milestone gap plans, or perform the WTF-P review-section, verify-work, polish-prose, audit-milestone, or plan-milestone-gaps actions.
 ---
 
 # Review a WTF-P Manuscript

@@ -118,7 +118,7 @@ Several records that change together, such as a checkpoint and the state that li
 
 ---
 name: wtfp-deliver-research
-description: This skill packages completed research for publication and presentation. It activates when an agent needs to export a manuscript to LaTeX, archive a draft or submission milestone, create research slides, design an academic poster, or perform the WTF-P export-latex, submit-milestone, create-slides, or create-poster actions.
+description: This skill turns completed academic papers into conference posters, presentation slides, LaTeX exports, and archived submission milestones. It activates when an agent needs to export a manuscript to LaTeX, archive a draft or submission milestone, create research slides, design an academic poster, or perform the WTF-P export-latex, submit-milestone, create-slides, or create-poster actions.
 ---
 
 # Deliver WTF-P Research

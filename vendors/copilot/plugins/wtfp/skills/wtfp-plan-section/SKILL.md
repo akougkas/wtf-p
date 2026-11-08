@@ -1,6 +1,6 @@
 ---
 name: wtfp-plan-section
-description: This skill plans and safely reshapes manuscript sections. It activates when an agent needs to discuss a section, expose assumptions, make a writing or revision plan, insert a newly discovered section, remove an unstarted section, or perform the WTF-P discuss-section, list-assumptions, plan-section, plan-revision, insert-section, or remove-section actions.
+description: This skill plans manuscript sections, shows the intended approach, and lists every assumption about a section before writing or revising it. It activates when an agent needs to discuss a section, expose assumptions, make a writing or revision plan, insert a newly discovered section, remove an unstarted section, or perform the WTF-P discuss-section, list-assumptions, plan-section, plan-revision, insert-section, or remove-section actions.
 ---
 
 # Plan a WTF-P Section
