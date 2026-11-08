@@ -63,10 +63,10 @@ Start the client from the project directory after installation:
 | Codex | `codex` | `$wtfp-start-project Run the new-paper action. <exact brief>` |
 | GitHub Copilot CLI | `copilot` | `/wtfp:new-paper <exact brief>` |
 | OpenCode | `opencode` | `/wtfp:new-paper <exact brief>` |
-| Antigravity CLI | `agy` | `/wtfp:new-paper <exact brief>` |
+| Antigravity CLI | `agy` | `/wtfp-new-paper <exact brief>` |
 | Gemini CLI | `gemini` | `/wtfp:new-paper <exact brief>` |
 
-Clio, Claude, Copilot CLI, OpenCode, Antigravity, and Gemini expose the `/wtfp:<action>` namespace and nothing else. Codex exposes the same action contracts through seven native Agent Skills rather than slash commands. When Codex routing must be unambiguous, name the owning skill and the action as shown in the table; do not ask Codex to run `/wtfp:help`.
+Clio, Claude, Copilot CLI, OpenCode, and Gemini expose the `/wtfp:<action>` namespace and nothing else. Antigravity 1.5 loads plugin actions only as skills, so there each action is `/wtfp-<action>`; `/wtfp-write-section` and `/wtfp-plan-section` open the router skill of that name, which runs the action of the same name. Codex exposes the same action contracts through seven native Agent Skills rather than slash commands. When Codex routing must be unambiguous, name the owning skill and the action as shown in the table; do not ask Codex to run `/wtfp:help`.
 
 GitHub Copilot cloud is a separate, deliberately narrower surface. A CLI installation does not alter a repository. To use the cloud projection, review `vendors/copilot/project/.github/` from the release source, copy the desired files into the target repository, and commit them through that repository's normal review process.
 
@@ -149,7 +149,7 @@ WTF-P installs into Clio as a plugin at `<config>/plugins/wtfp/`. The installer 
 
 Three behaviors are worth knowing before the first install:
 
-- Registration is verified with `clio-coder library inspect wtfp --user --json` (or `--project` for project scope); the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope (returning the InstalledPlugin record shape). It never changes `enabled`: a package you disabled stays disabled and the installer names `clio-coder library enable wtfp --user` (or `--project`) as the command to run.
+- Registration is verified with `clio-coder library inspect plugin:wtfp --user --json` (or `--project` for project scope); the installer requires `valid` with zero diagnostics at the expected `rootPath` and scope (returning the InstalledPlugin record shape). It never changes `enabled`: a package you disabled stays disabled and the installer names `clio-coder library enable plugin:wtfp --user` (or `--project`) as the command to run.
 - Do not point `clio-coder library install` at `<config>/plugins/wtfp` itself. Clio rejects a source that overlaps its managed destination; re-run the WTF-P installer instead. Previews can be inspected with `clio-coder library install --dry-run` (no `--yes` flag is accepted or used).
 - If a 0.6 release candidate left a WTF-P extension at `<config>/extensions/wtfp`, remove it with that candidate's WTF-P uninstaller before installing the plugin. Both register the same prompt names, and the release neither reads nor retires the extension location.
 
@@ -157,7 +157,7 @@ After installing, confirm native discovery:
 
 ```bash
 clio-coder --version
-clio-coder library inspect wtfp --user --json
+clio-coder library inspect plugin:wtfp --user --json
 clio-coder library list --kind plugin --json
 clio-coder library skills --all --json
 clio-coder agents
@@ -243,7 +243,7 @@ run_isolated_clio clio-coder --autonomy suggest
 
 ## Verify or remove an installation
 
-The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder library inspect wtfp --user --json` (with `clio-coder library skills --all --json`), `clio-coder agents`, and `clio-coder playbook list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
+The `status` and `doctor` commands remain legacy Claude-oriented. Passing a modern target selector to them does not establish that a Clio, Codex, or other modern adapter was discovered. Use the client's native discovery surface instead: `clio-coder library inspect plugin:wtfp --user --json` (with `clio-coder library skills --all --json`), `clio-coder agents`, and `clio-coder playbook list` for Clio; `claude plugin list --json` and `claude plugin details wtfp@wtfp` for Claude Code; `codex plugin list --json` for Codex; `copilot plugin list` for Copilot CLI; `opencode agent list` and `opencode debug skill` for OpenCode; `agy plugin list` and `agy agents` for Antigravity; `gemini extensions list` and `gemini skills list --all` for Gemini. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) shows what each of those reported for this candidate.
 
 Preview removal before deleting exact receipt-owned files:
 

@@ -136,7 +136,6 @@ const surfaces = {
   copilot: { path: 'vendors/copilot/plugins/wtfp/commands', suffix: '.md' },
   gemini: { path: 'vendors/gemini/commands/wtfp', suffix: '.toml' },
   opencode: { path: 'vendors/opencode/commands/wtfp', suffix: '.md' },
-  antigravity: { path: 'vendors/antigravity/commands', suffix: '.md' },
   clio: { path: 'vendors/plugin/ai.iowarp.clio/prompts/wtfp', suffix: '.md' }
 };
 for (const [host, spec] of Object.entries(surfaces)) {
@@ -152,6 +151,7 @@ check(filesAt('vendors/codex/plugins/wtfp/agents', '.toml').length === roleCount
 check(filesAt('vendors/claude/output-styles', '.md').length === 1, 'Claude ships the academic writing output style');
 check(fs.existsSync(path.join(ROOT, 'vendors/claude/hooks/hooks.json')), 'Claude ships the write-guard hooks');
 check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/wtfp-project-state.md')), 'Antigravity ships the project-state rule');
+check(recursiveCount('vendors/antigravity/skills', 'SKILL.md') === skillCount + actionCount - 2, `Antigravity exposes ${skillCount} router skills plus every action as an explicit skill`);
 
 section('Clio-native integration');
 check(json('vendors/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');

@@ -13,7 +13,8 @@ tells it where each call lands and what each dispatch starts. Both Clio
 packages require Clio 0.6.3 and were checked on its release build; the desk
 they replace was qualified on a pinned Clio 0.6.2 build, and the desk was
 also checked on a Clio 0.7.0 build, which runs it under Node's permission
-model. The other six host
+model. Antigravity CLI 1.5 stopped loading plugin commands, so the
+Antigravity projection now ships each action as a skill. The other five host
 projections change only where shared protocol text and action contracts
 changed.
 
@@ -119,6 +120,8 @@ changed.
   through a checkpoint instead of running it inline
 - Clio playbook write boundaries project section artifacts to
   `.planning/sections/`
+- The skill-description test still requires each description to name when the
+  skill activates, but no longer requires it to open with "This skill"
 
 ### Fixed
 
@@ -141,6 +144,13 @@ changed.
   Node's permission model; Node 24 refuses `fsync` there, so the desk now
   treats that flush as best effort and removes a staged file it could not
   write whole
+- On Antigravity CLI 1.5 no action was reachable as a slash command and the
+  project-state rule never applied: plugins no longer load `commands/`, and a
+  named rule without a `trigger` fails `agy plugin validate`. Each action is
+  now an explicitly invoked skill, `/wtfp-<action>` (`disable-model-invocation:
+  true`, so model routing still sees only the seven router skills);
+  `/wtfp-write-section` and `/wtfp-plan-section` open the router skill of that
+  name. The rule is `trigger: always_on`, and the manifest carries `version`
 
 ## [0.8.0] - 2026-10-06
 

@@ -465,6 +465,11 @@ function nativeWorkflowBody(workflowBody, target) {
     body = body.replaceAll('protocol://', '.github/wtfp/');
   } else if (target === 'antigravity') {
     body = body.replaceAll('protocol://', '${PLUGIN_ROOT}/');
+    // Antigravity exposes plugin actions only as skills, invoked by skill name.
+    body = body.replace(
+      "this host's own invocation syntax, `/wtfp:<action>`. Do not invent a second spelling, a bare `wtfp-<action>` form, or a host-specific prefix.",
+      "Antigravity's invocation syntax, `/wtfp-<action>`, because Antigravity loads plugin actions as skills. Do not invent a second spelling."
+    );
   } else if (target === 'gemini' || target === 'opencode' || target === 'codex') {
     // None of these hosts exposes a reliable runtime variable for resolving
     // files in command/agent prompt text. Embed the referenced resources so
@@ -781,6 +786,13 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
     ''
   );
   return lines.join('\n');
+}
+
+function renderAntigravityActionSkill(action, workflowBody, availability) {
+  const command = renderMarkdownCommand(action, workflowBody, 'antigravity', availability);
+  const prefix = `---\nname: wtfp:${action.id}\n`;
+  if (!command.startsWith(prefix)) throw new Error(`Antigravity action ${action.id} has an unexpected command header`);
+  return `---\nname: wtfp-${action.id}\ndisable-model-invocation: true\n${command.slice(prefix.length)}`;
 }
 
 function renderGeminiCommand(action, workflowBody, availability) {
@@ -1238,28 +1250,34 @@ function claudeCompatibleManifest(version, name = 'wtfp') {
 }
 
 // The published Antigravity CLI manifest schema
-// (https://antigravity.google/schemas/v1/plugin.json) allows exactly `name`
-// and `description` with additionalProperties false; components are found by
-// their fixed directories (skills/, agents/, rules/, hooks.json, mcp_config.json).
+// (https://antigravity.google/schemas/v1/plugin.json) has additionalProperties
+// false; Antigravity 1.5 added `version` to it and warns when it is missing.
+// Components are found by their fixed directories (skills/, agents/, rules/,
+// hooks.json, mcp_config.json).
 function antigravityManifest(version) {
   return stableJson({
     $schema: 'https://antigravity.google/schemas/v1/plugin.json',
     name: 'wtfp',
+    version,
     description: `Portable academic research and writing workflows (WTF-P ${version}).`
   });
 }
 
-// Antigravity rules are always-on constraints. Project the portable project
-// protocol so the agent knows what `.planning/` and `paper/` are before any
-// skill is selected.
+// Project the portable project protocol as an always-on rule so the agent
+// knows what `.planning/` and `paper/` are before any skill is selected. A
+// named rule needs a `trigger` in its frontmatter; Antigravity 1.5 never
+// applies one without it.
 function antigravityRule() {
   const readme = fs.readFileSync(path.join(PROTOCOL_ROOT, 'project', 'README.md'), 'utf8').trim();
   return [
+    '---',
+    'trigger: always_on',
+    '---',
     generatedBanner('protocol/project', 'README.md'),
     '',
     '# WTF-P project state rules',
     '',
-    'When a workspace contains `.planning/` or `paper/`, treat it as a WTF-P research project. Route academic requests through the `wtfp-*` skills, invoke actions as `/wtfp:<action>`, never fabricate citations, results, or evidence, and never run Git or publish operations as a side effect.',
+    'When a workspace contains `.planning/` or `paper/`, treat it as a WTF-P research project. Route academic requests through the `wtfp-*` skills, invoke actions as `/wtfp-<action>`, never fabricate citations, results, or evidence, and never run Git or publish operations as a side effect.',
     '',
     readme,
     ''
@@ -2058,7 +2076,12 @@ function compilePlans(options = {}) {
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
     addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
     addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
-    addFile(antigravity, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'antigravity', availabilityByTarget.get('antigravity').get(action.id)));
+    // Antigravity 1.5 plugins load no commands/ directory, so each action is
+    // an explicitly invoked skill. A router skill that already has the name
+    // (wtfp-write-section, wtfp-plan-section) serves that action instead.
+    if (!model.catalog.skills.some((skill) => skill.id === `wtfp-${action.id}`)) {
+      addFile(antigravity, `skills/wtfp-${action.id}/SKILL.md`, renderAntigravityActionSkill(action, action.workflowBody, availabilityByTarget.get('antigravity').get(action.id)));
+    }
     addFile(gemini, `commands/wtfp/${action.id}.toml`, renderGeminiCommand(action, action.workflowBody, availabilityByTarget.get('gemini').get(action.id)));
   }
 
