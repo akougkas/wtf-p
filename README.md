@@ -56,13 +56,13 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.6.3 or newer) | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect plugin:wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | 0.7.0 (local build `ae8c3bd99`) |
-| Claude Code | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.274 |
-| Codex | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.153.3 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.85 |
-| OpenCode | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.18.31 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.2.5 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.60.0 |
+| Clio Coder (0.6.3 or newer) | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect plugin:wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | 0.7.0 pre-release (local build `8cbece81e`) |
+| Claude Code | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.319 |
+| Codex | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.163.0 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.107 |
+| OpenCode | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.19.5 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.5.3 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.8.1 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.67.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in

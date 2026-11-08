@@ -18,6 +18,14 @@ Antigravity projection now ships each action as a skill. The other five host
 projections change only where shared protocol text and action contracts
 changed.
 
+All seven hosts were requalified on the packed 0.8.1 candidate in disposable
+profiles: Claude Code 2.1.319, Codex 0.163.0, Copilot CLI 1.0.107, OpenCode
+1.19.5, Antigravity CLI 1.5.3, Gemini CLI 0.67.0, and a Clio Coder 0.7.0
+pre-release build (`8cbece81e`). This release does not depend on a tagged Clio
+0.7.0; on that pre-release, a headless `clio-coder run` can still report a
+no-op error after a desk record write succeeded (see the known limitations in
+`docs/COMPATIBILITY.md`).
+
 ### Added
 
 - `wtfp.project.interaction/v1` records an author's answer as the host
@@ -129,7 +137,7 @@ changed.
   held-out cases written without sight of them. Over three trials of a Clio
   routing probe, median held-out accuracy rose from 0.619 to 0.690 with
   negative specificity unchanged at 1.0, and median corpus accuracy rose from
-  0.850 to at least 0.95
+  0.850 to 0.975
 
 ### Fixed
 
