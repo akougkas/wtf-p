@@ -148,6 +148,17 @@ After approving the plan:
 
 The manuscript artifact belongs under `paper/`; its plan, summary, checkpoint, validation, and section state stay linked under `.planning/`. A draft must not skip the approved plan or outrun its evidence.
 
+Optional on Clio Coder 0.7.0: compare drafts blind with `clio-coder arena`, with the scientist as the only judge. Commit the approved plan first, because each contender works in its own Git worktree from `HEAD` and uncommitted approvals are not part of its baseline:
+
+```text
+git add .planning && git commit -m "approve the tcr-fit-significance plan"
+clio-coder arena run --contender <target>/<model> --contender <target>/<model> --suite wtfp-proposal -- "/wtfp:write-section tcr-fit-significance"
+clio-coder arena show <match-id>
+clio-coder arena vote <match-id> A|B|tie|both-bad --note "<why>"
+```
+
+Each contender runs the real action headlessly: the desk arms it, verifies the author's sealed approvals in its worktree, and stops at any author gate it cannot ask, so a contender may return a gate rather than a draft. Clio records the vote and never grades a draft. The worktrees are removed after the match; each contender's diff stays under `.clio-coder/arena/<match-id>/`. Do not apply a diff by hand, because its record changes would bypass the desk. Run `/wtfp:write-section` in the project and give it the preferred draft as guidance. A vote is not an author decision on the section. This needs a Clio 0.7.0 build that hands the desk the typed `/wtfp:` line in headless runs (see `HOST_CAPABILITIES.md`).
+
 Run the independent review as a separate action:
 
 ```text

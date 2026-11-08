@@ -59,6 +59,9 @@ changed.
   `clio:template-allowed-tools`; Clio 0.6.2 ignores both fields
 - `evaluation/lib/desk-trust.js`, the one rule for whether a recorded answer is
   the author's, shared by the desk and the campaign collector
+- `docs/PROPOSAL_WORKFLOW.md` gives a recipe for comparing section drafts
+  blind with `clio-coder arena` on Clio 0.7.0, with the scientist as the only
+  judge
 
 ### Changed
 
