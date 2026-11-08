@@ -240,6 +240,63 @@ setTimeout(() => {}, 60000);`);
     assert.strictEqual(failed.outcome, 'failed', 'text in the output never decides an outcome');
   });
 
+  await test('from Clio 0.6.6 a step is judged from sealed telemetry: session cost, worker run records and the session\'s references', async () => {
+    const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const sum = (measured, estimated = 0, unknownCount = 0) => ({ fact: { measured, estimated, unknownCount, absentCount: 0, coverage: { measured: measured > 0 ? 1 : 0, estimated: estimated > 0 ? 1 : 0, unknown: unknownCount } } });
+    const stream = [
+      { type: 'session', id: 'sess1', clioCoderVersion: '0.7.0' },
+      { type: 'message_end', message: { role: 'assistant', model: 'm', thinkingLevel: 'low', stopReason: 'stop', responseModelIdObservation: { state: 'reported', reportedModelId: 'm' } } }
+    ].map(value => JSON.stringify(value)).join('\n');
+    const runs = path.join(scratch, 'telemetry-runs');
+    fs.mkdirSync(path.join(runs, 'old'), { recursive: true });
+    const before = new Set(fs.readdirSync(runs));
+    for (const id of ['main1', 'w1']) fs.mkdirSync(path.join(runs, id));
+    const sealed = { status: 'verified' };
+    const records = {
+      'inspect --run main1': { seal: sealed, settled: { agentId: 'main-agent', tools: null } },
+      'inspect --run w1': { seal: sealed, settled: { agentId: 'wtfp-section-writer', route: { wireModelId: 'm' }, tools: [{ tool: 'read', calls: 2, blocked: 0 }, { tool: 'bash', calls: 1, blocked: 1 }] } },
+      'calls --run w1': { calls: [
+        { disposition: 'settled', responseId: 'r1', target: { reportedModel: { fact: { kind: 'measured', value: 'm' } } } },
+        { disposition: 'failed', responseId: null, target: { reportedModel: { fact: { kind: 'unknown' } } } }
+      ] },
+      'cost sess1': { total: { calls: sum(3), usd: sum(0.02) , pricedBy: { 'target-rates': 3 } } },
+      'inspect sess1': { runs: { count: 1, unresolved: 0 } }
+    };
+    const judge = (overrides = {}) => {
+      const read = (args) => { const key = args.join(' '); return key in overrides ? overrides[key] : records[key] ?? null; };
+      const telemetry = runner.stepTelemetry(stream, runs, before, read);
+      return runner.classifyStep(ok, stream, '', { telemetry, selection: { model: 'm', effort: 'low' } });
+    };
+    const step = judge();
+    assert.deepStrictEqual([step.outcome, step.telemetry_session, step.receipts], ['completed', 'sess1', ['run:main1', 'run:w1']]);
+    assert.deepStrictEqual([step.cost.status, step.cost.usd], ['reported', 0.02], 'the session total already folds its worker runs');
+    assert.strictEqual(step.tools.execution_calls, 0, 'a program-running call Clio blocked in a worker is not counted');
+    assert.deepStrictEqual([step.model_observation.status, step.model_observation.calls, step.model_calls], ['matches', 2, 2], 'a call Clio did not settle served nothing');
+    assert.deepStrictEqual([step.effort_observation.requested, step.effort_observation.effective], [['low'], ['low']]);
+    const cost = (total) => { const result = judge({ 'cost sess1': total }).cost; return [result.status, result.usd]; };
+    assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0.01) } }), ['estimated', 0.02]);
+    assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0, 1) } }), ['unavailable', null], 'one unpriced call makes the step\'s cost unknown, never partial');
+    assert.deepStrictEqual(cost(null), ['unavailable', null]);
+    const ran = judge({ 'inspect --run w1': { seal: sealed, settled: { agentId: 'wtfp-section-writer', tools: [{ tool: 'bash', calls: 1, blocked: 0 }] } } });
+    assert.deepStrictEqual([ran.outcome, ran.tools.execution_calls], ['policy-violation', 1]);
+    const judged = (overrides) => { const result = judge(overrides); return [result.outcome, result.unreadable_worker_receipts]; };
+    assert.deepStrictEqual(judged({ 'inspect --run w1': { seal: { status: 'broken' }, settled: records['inspect --run w1'].settled } }), ['integrity-violation', ['run:w1']], 'a run whose seal Clio does not verify vouches for nothing');
+    assert.deepStrictEqual(judged({ 'calls --run w1': null }), ['integrity-violation', ['run:w1']]);
+    assert.deepStrictEqual(judged({ 'inspect sess1': { runs: { count: 2, unresolved: 0 } } }), ['integrity-violation', ['session:sess1']], 'a worker run the session references but the runner cannot find');
+    assert.deepStrictEqual(judged({ 'inspect sess1': { runs: { count: 1, unresolved: 1 } } }), ['integrity-violation', ['session:sess1']]);
+  });
+
+  await test('the Clio version is the first line of --version, so 0.7.0\'s pane runtime line does not unpin a build', async () => {
+    const dist = path.join(scratch, 'fake-070', 'dist');
+    fs.mkdirSync(path.join(dist, 'cli'), { recursive: true });
+    const entry = path.join(dist, 'cli', 'index.js');
+    fs.writeFileSync(entry, "console.log('Clio Coder 0.6.2\\nPanes powered by herdr 0.9.5 (Apache-2.0)');\n");
+    const identity = runner.clioIdentity(entry, campaign);
+    assert.strictEqual(identity.observed.version, 'Clio Coder 0.6.2');
+    assert.ok(!identity.mismatches.some(item => item.startsWith('version')));
+    assert.deepStrictEqual([runner.readsTelemetry(campaign), runner.readsTelemetry({ clio: { version: '0.6.6' } }), runner.readsTelemetry({ clio: { version: '0.7.0' } })], [false, true, true]);
+  });
+
   await test('execute runs only on the campaign, build, candidate, checks and workspace that prepare bound', async () => {
     const entry = fakeClio('fake-bound', 'process.exit(0);');
     const attempt = (root, extra = {}) => withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection, ...extra }));

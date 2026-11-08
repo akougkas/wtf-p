@@ -42,12 +42,26 @@ const STORE_ACCESS = /extensions[\\/]+wtfp[\\/]+store\.json|seal-key/u;
 const COST_SCOPE = 'Clio run receipts: the main agent and every worker it dispatched. Model calls Clio records outside receipts, such as compaction, are not counted, and Clio 0.6.2 takes no cost ceiling, so the budget is enforced between steps.';
 // From Clio 0.6.3 a run takes a priced ceiling (--max-cost-usd, exit 4 when it stops the run) and its receipts count compaction.
 const CEILING_COST_SCOPE = 'Clio run receipts: the main agent, compaction and every worker it dispatched. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
+// From Clio 0.6.6 sealed telemetry journals replace receipt files, and a session's spend folds its own calls and every worker run it referenced.
+const TELEMETRY_COST_SCOPE = 'Clio sealed telemetry (clio-coder telemetry cost): every call the step\'s session journal owns, compaction included, and every worker run it referenced. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
 const CEILING_EXIT = 4;
+
+/** Whether the campaign's Clio is at least major.minor.patch. */
+function clioAtLeast(campaign, [wantMajor, wantMinor, wantPatch]) {
+  const [major, minor, patch] = String(campaign.clio.version).split('.').map(Number);
+  if (major !== wantMajor) return major > wantMajor;
+  if (minor !== wantMinor) return minor > wantMinor;
+  return patch >= wantPatch;
+}
 
 /** Whether the campaign's Clio takes a per-run cost ceiling: 0.6.3 and later. */
 function takesCostCeiling(campaign) {
-  const [major, minor, patch] = String(campaign.clio.version).split('.').map(Number);
-  return major > 0 || minor > 6 || (minor === 6 && patch >= 3);
+  return clioAtLeast(campaign, [0, 6, 3]);
+}
+
+/** Whether the campaign's Clio accounts runs in sealed telemetry instead of receipt files: 0.6.6 and later. */
+function readsTelemetry(campaign) {
+  return clioAtLeast(campaign, [0, 6, 6]);
 }
 // Operator-selected Clio files a run copies in; they and any copy Clio makes of them are wiped at the end.
 const PRIVATE_FILES = /^\.?(?:credentials|settings)\.yaml/u;
@@ -206,7 +220,8 @@ function clioIdentity(entry, campaign) {
   }
   const observed = {
     entry,
-    version: version.status === 0 ? version.stdout.trim() : null,
+    // Clio 0.7.0 adds a second line naming its pane runtime; the first line is Clio's own version.
+    version: version.status === 0 ? version.stdout.trim().split('\n')[0].trim() : null,
     entry_sha256: fileDigest(entry),
     dist_sha256: directoryDigest(dist),
     node: process.version
@@ -657,6 +672,123 @@ function effortObservation(messages, receipts) {
 }
 
 /**
+ * Cost from the sealed telemetry Clio 0.6.6 and later folds for a step's
+ * session: `clio-coder telemetry cost`, whose total covers the session's own
+ * calls and every worker run it referenced. Any unknown or absent price, or
+ * any call Clio could not count, makes the step's cost unavailable, never
+ * zero; an estimate is reported as one.
+ */
+function telemetryCost(total, scope = TELEMETRY_COST_SCOPE) {
+  const usd = total && total.usd && total.usd.fact;
+  const calls = total && total.calls && total.calls.fact;
+  const amount = value => Number.isFinite(value) && value >= 0;
+  const usable = Boolean(usd && calls) && amount(usd.measured) && amount(usd.estimated) &&
+    usd.unknownCount === 0 && usd.absentCount === 0 && calls.unknownCount === 0 && calls.absentCount === 0;
+  const estimated = usable && (usd.estimated > 0 || Boolean(usd.coverage && usd.coverage.estimated > 0));
+  const status = !usable ? 'unavailable' : estimated ? 'estimated' : 'reported';
+  return {
+    status,
+    usd: status === 'unavailable' ? null : usd.measured + usd.estimated,
+    sources: { session: total ? total.session ?? null : null, priced_by: total ? total.pricedBy ?? null : null },
+    scope
+  };
+}
+
+/** The thinking level the step asked for and the level Clio's main-agent messages carried (0.6.6 and later). */
+function telemetryEffort(messages, selection) {
+  const distinct = (values) => [...new Set(values.filter(value => typeof value === 'string'))].sort();
+  const effective = distinct(messages.map(message => message.thinkingLevel));
+  return {
+    requested: distinct([selection ? selection.effort : null]),
+    effective,
+    provider_reported: distinct(messages.map(message => message.providerThinkingLevel)),
+    status: effective.length > 0 ? 'observed' : 'unobserved'
+  };
+}
+
+/**
+ * A run's sealed telemetry record in the shape the classifier judges: its
+ * agent, its tool counts and the calls it settled. A run whose seal Clio does
+ * not verify, or whose tool counts or calls cannot be read, vouches for nothing.
+ */
+function telemetryWorker(runId, inspected, calls) {
+  const settled = inspected && inspected.settled;
+  // The main agent's own calls are judged from the stream; its run record need only be sealed.
+  const main = Boolean(settled && settled.agentId === 'main-agent');
+  const readable = Boolean(inspected && inspected.seal && inspected.seal.status === 'verified' &&
+    settled && (main || (Array.isArray(settled.tools) && Array.isArray(calls))));
+  const reported = call => {
+    const fact = call && call.target && call.target.reportedModel && call.target.reportedModel.fact;
+    return fact && fact.kind === 'measured' && typeof fact.value === 'string' ? { state: 'reported', reportedModelId: fact.value } : null;
+  };
+  return {
+    file: `run:${runId}`,
+    receipt: !readable ? null : main ? { agentId: 'main-agent' } : {
+      agentId: settled.agentId,
+      wireModelId: settled.route ? settled.route.wireModelId : undefined,
+      toolStats: settled.tools.map(stat => ({ tool: stat && stat.tool, count: stat && stat.calls, blocked: stat && stat.blocked })),
+      // A call Clio did not settle is a provider error, never a served call.
+      upstreamResponses: calls.filter(call => call && call.disposition === 'settled')
+        .map(call => ({ providerResponseId: typeof call.responseId === 'string' ? call.responseId : null, responseModelIdObservation: reported(call) }))
+    }
+  };
+}
+
+/** The session a `clio-coder run --json` stream opened, from its first session frame. */
+function streamSession(stdoutText) {
+  for (const line of stdoutText.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const frame = JSON.parse(line);
+      if (frame && frame.type === 'session' && typeof frame.id === 'string') return frame.id;
+    } catch { /* non-JSON progress lines are kept only in the raw log */ }
+  }
+  return null;
+}
+
+function listRuns(directory) {
+  if (!fs.existsSync(directory)) return new Set();
+  return new Set(fs.readdirSync(directory));
+}
+
+/** One `clio-coder telemetry ... --json` query in a step's profile; its DTO, or null when Clio cannot answer it. */
+function readTelemetry(entry, env, cwd, args) {
+  const result = spawnSync(process.execPath, [entry, 'telemetry', ...args, '--json'], {
+    cwd, env, encoding: 'utf8', timeout: 120000, maxBuffer: SCAN_LIMIT
+  });
+  if (result.status !== 0) return null;
+  try { return JSON.parse(result.stdout); } catch { return null; }
+}
+
+/**
+ * What Clio's sealed telemetry says about one step: the session's folded
+ * spend, and the run records that appeared while it ran. `read` runs one
+ * `clio-coder telemetry ... --json` query in the step's profile and returns
+ * its DTO, or null. A worker run the session references but the runner cannot
+ * find, or that Clio cannot resolve, is unreadable like a torn receipt.
+ */
+function stepTelemetry(stdoutText, runsDirectory, before, read) {
+  const session = streamSession(stdoutText);
+  const workers = [...listRuns(runsDirectory)].filter(id => !before.has(id)).sort().map(runId => {
+    const calls = read(['calls', '--run', runId]);
+    return telemetryWorker(runId, read(['inspect', '--run', runId]), calls ? calls.calls : null);
+  });
+  const unreadable = [];
+  let cost = null;
+  if (session) {
+    const costed = read(['cost', session]);
+    cost = costed && costed.total ? { ...costed.total, session } : null;
+    const inspected = read(['inspect', session]);
+    const referenced = inspected && inspected.runs;
+    const found = workers.filter(({ receipt }) => !receipt || receipt.agentId !== 'main-agent').length;
+    if (!referenced || !Number.isInteger(referenced.count) || referenced.unresolved !== 0 || referenced.count > found) {
+      unreadable.push(`session:${session}`);
+    }
+  }
+  return { session, cost, workers, unreadable };
+}
+
+/**
  * One step's outcome from its process result, its JSON event stream, the
  * receipts Clio sealed for it and the project state it left, all judged
  * structurally. A step that ran a network tool, ran a program, or reached for
@@ -684,7 +816,9 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     try { frames.push(JSON.parse(line)); } catch { /* non-JSON progress lines are kept only in the raw log */ }
   }
   const events = frames.filter(frame => frame !== null && typeof frame === 'object');
-  const receipts = context.receipts || [];
+  // Clio 0.6.6 and later seal runs in telemetry journals; earlier builds write receipt files.
+  const telemetry = context.telemetry || null;
+  const receipts = telemetry ? telemetry.workers : context.receipts || [];
   const gates = context.gates || { pending: [], unconfirmed: [] };
   const added = context.interactionsAdded || [];
   const configChanged = context.configChanged || [];
@@ -710,7 +844,7 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     }
   }
   let executionCalls = executing.size;
-  const unreadableReceipts = [];
+  const unreadableReceipts = telemetry ? [...telemetry.unreadable] : [];
   for (const { file, receipt } of receipts) {
     if (receipt && receipt.agentId === 'main-agent') continue;
     if (!receipt || !Array.isArray(receipt.toolStats)) { unreadableReceipts.push(file); continue; }
@@ -729,7 +863,7 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
   else if (result.exitCode !== 0) outcome = 'failed';
   else if (gates.pending.length > 0) outcome = 'author-unavailable';
   else if (gated) outcome = 'gate-not-raised';
-  const cost = stepCost(receipts, context.ceiling ? CEILING_COST_SCOPE : COST_SCOPE);
+  const cost = telemetry ? telemetryCost(telemetry.cost) : stepCost(receipts, context.ceiling ? CEILING_COST_SCOPE : COST_SCOPE);
   const models = modelObservation(messages, receipts, context.selection ? context.selection.model : null);
   return {
     outcome,
@@ -748,8 +882,9 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     unreadable_worker_receipts: unreadableReceipts,
     observed_models: models.reported,
     model_observation: models,
-    effort_observation: effortObservation(messages, receipts),
+    effort_observation: telemetry ? telemetryEffort(messages, context.selection) : effortObservation(messages, receipts),
     receipts: receipts.map(({ file }) => file),
+    ...(telemetry ? { telemetry_session: telemetry.session } : {}),
     cost,
     cost_usd: cost.usd,
     cost_status: cost.status
@@ -1148,7 +1283,8 @@ async function execute(campaign, options) {
   const ceiling = campaign.budget.timeout_minutes_per_step;
   const timeoutMinutes = options.timeoutMinutes === undefined ? ceiling : options.timeoutMinutes;
   const costCeiling = takesCostCeiling(campaign);
-  const costScope = costCeiling ? CEILING_COST_SCOPE : COST_SCOPE;
+  const telemetered = readsTelemetry(campaign);
+  const costScope = telemetered ? TELEMETRY_COST_SCOPE : costCeiling ? CEILING_COST_SCOPE : COST_SCOPE;
   if (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0 || timeoutMinutes > ceiling) {
     throw new Error(`--timeout-minutes must be above 0 and at most the campaign's ${ceiling} minutes per step`);
   }
@@ -1172,6 +1308,7 @@ async function execute(campaign, options) {
     ...settingsSecrets(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'))
   ])];
   const receipts = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'receipts');
+  const telemetryRuns = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'telemetry', 'runs');
   const storeFile = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
   const preparedSha = sha256(fs.readFileSync(preparedFile));
   const marker = crypto.randomUUID();
@@ -1291,7 +1428,7 @@ async function execute(campaign, options) {
       // The step's log directory is new or the run stops: a step may not prepare the next one's logs.
       fs.mkdirSync(path.join(root, 'logs'), { recursive: true, mode: 0o700 });
       fs.mkdirSync(logs, { mode: 0o700 });
-      const before = listReceipts(receipts);
+      const before = telemetered ? listRuns(telemetryRuns) : listReceipts(receipts);
       const interactionsBefore = interactionFiles(workspace);
       const configBefore = clioProjectConfig(workspace);
       const startDigest = workspaceDigest(workspace);
@@ -1306,8 +1443,11 @@ async function execute(campaign, options) {
         stderrFile: path.join(logs, 'stderr.log'),
         timeoutMs: timeoutMinutes * 60000
       });
-      const classified = classifyStep(result, fs.readFileSync(path.join(logs, 'stdout.jsonl'), 'utf8'), fs.readFileSync(path.join(logs, 'stderr.log'), 'utf8'), {
-        receipts: newReceipts(receipts, before),
+      const stdoutText = fs.readFileSync(path.join(logs, 'stdout.jsonl'), 'utf8');
+      // Telemetry is read in the step's own profile, from the run root, so the query never writes into the workspace.
+      const telemetry = telemetered ? stepTelemetry(stdoutText, telemetryRuns, before, args => readTelemetry(options.entry, env, root, args)) : null;
+      const classified = classifyStep(result, stdoutText, fs.readFileSync(path.join(logs, 'stderr.log'), 'utf8'), {
+        ...(telemetry ? { telemetry } : { receipts: newReceipts(receipts, before) }),
         gates: gateSummary(deskState(root, workspace)),
         interactionsAdded: [...interactionFiles(workspace)].filter(name => !interactionsBefore.has(name)).sort(),
         configChanged: configChanges(configBefore, clioProjectConfig(workspace)),
@@ -1537,8 +1677,10 @@ module.exports = {
   plan,
   prepare,
   profilePaths,
+  readsTelemetry,
   recipeToolsOutside,
   settingsSecrets,
+  stepTelemetry,
   verifySeal,
   workspaceDigest,
   workspaceHead,

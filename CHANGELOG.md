@@ -127,6 +127,11 @@ changed.
   and a sealed fixture that changes its schema fails the check
 - A desk write that failed after its commit point is reported as committed,
   not as not written
+- `run-clio-campaign.js` reads a campaign step's cost, worker tool counts and
+  served models from Clio's sealed telemetry (`clio-coder telemetry`) when the
+  campaign pins Clio 0.6.6 or later, which no longer writes receipt files, and
+  compares only the first line of `--version`, which Clio 0.7.0 extends with
+  its pane runtime
 
 ## [0.8.0] - 2026-10-06
 
