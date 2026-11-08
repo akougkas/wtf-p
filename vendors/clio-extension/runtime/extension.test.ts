@@ -1001,11 +1001,12 @@ test("a Clio that sends no landing or dispatch plan is refused inside a WTF-P pr
 	}
 });
 
-/** Loads the desk the way Clio's runtime child does and prints the before_tool verdict for each call. */
+/** Loads the desk the way Clio's runtime child does, prints the before_tool verdict for each call, then the result of each desk tool call. */
 const HARNESS = `
 import { pathToFileURL } from "node:url";
-const [entry, workspace, calls] = process.argv.slice(2);
+const [entry, workspace, calls, toolCalls = "[]"] = process.argv.slice(2);
 const hooks = new Map();
+const tools = new Map();
 const noop = () => {};
 const kv = () => {
 	const map = new Map();
@@ -1018,13 +1019,18 @@ const kv = () => {
 };
 const ctx = { snapshot: { plugin: null, workspace, sessionId: "s", generation: 1, mode: "interactive", activeWorkspace: null }, requestId: "r", signal: new AbortController().signal, options: {}, state: kv(), store: kv() };
 const module = await import(pathToFileURL(entry).href);
-module.default({ handle: noop, action: noop, tool: noop, interview: noop, on: noop, hook: (point, handler) => hooks.set(point, handler) });
+module.default({ handle: noop, action: noop, tool: (name, handler) => tools.set(name, handler), interview: noop, on: noop, hook: (point, handler) => hooks.set(point, handler) });
 const verdicts = [];
 for (const call of JSON.parse(calls)) {
 	const out = await hooks.get("before_tool")({ point: "before_tool", turnId: "t1", ...call }, ctx);
 	verdicts.push(out?.effects?.find((effect) => effect.kind === "block_tool")?.reason ?? null);
 }
-console.log(JSON.stringify(verdicts));
+const results = [];
+for (const [name, input] of JSON.parse(toolCalls)) {
+	const out = await tools.get(name)(input, ctx);
+	results.push({ isError: out.isError ?? false, text: out.text });
+}
+console.log(JSON.stringify(toolCalls === "[]" ? verdicts : { verdicts, results }));
 `;
 
 test("under the read and write access Clio grants the desk, it judges every call by the landing and plan Clio sends (W2)", async () => {
@@ -1059,6 +1065,38 @@ test("under the read and write access Clio grants the desk, it judges every call
 		assert.equal(run.status, 0, run.stderr);
 		const verdicts = JSON.parse(run.stdout) as Array<string | null>;
 		calls.forEach(([call, refused], index) => assert.equal(verdicts[index] !== null, refused, `${JSON.stringify(call)}: ${verdicts[index]}`));
+	} finally {
+		rmSync(harness, { force: true });
+		rmSync(workspace, { recursive: true, force: true });
+	}
+});
+
+test("under the write access Clio grants the desk, which refuses every flush, a record write still lands whole", () => {
+	const workspace = project();
+	const harness = path.join(process.env.TMPDIR as string, `wtfp-host-harness-${process.pid}-${Date.now()}.mjs`);
+	try {
+		writeFileSync(harness, HARNESS);
+		const state = read(workspace, ".planning/state.json");
+		const run = spawnSync(
+			process.execPath,
+			[
+				"--permission",
+				...[`${ROOT}${path.sep}`, harness, `${workspace}${path.sep}`].map((root) => `--allow-fs-read=${root}`),
+				`--allow-fs-write=${path.join(workspace, ".planning")}${path.sep}`,
+				harness,
+				path.join(ROOT, "runtime/extension.ts"),
+				workspace,
+				"[]",
+				JSON.stringify([["record", { uri: "project://state", record: { ...state, phase: "reviewing" }, expect_revision: 3 }]]),
+			],
+			{ cwd: workspace, encoding: "utf8", timeout: 60000 },
+		);
+		assert.equal(run.status, 0, run.stderr);
+		const { results } = JSON.parse(run.stdout) as { results: Array<{ isError: boolean; text: string }> };
+		assert.equal(results[0]?.isError, false, results[0]?.text);
+		assert.deepEqual([read(workspace, ".planning/state.json").phase, read(workspace, ".planning/state.json").revision], ["reviewing", 4]);
+		const leftovers = readdirSync(path.join(workspace, ".planning"), { recursive: true }).map(String).filter((name) => name.endsWith(".partial"));
+		assert.deepEqual(leftovers, [], "no staged file is left behind");
 	} finally {
 		rmSync(harness, { force: true });
 		rmSync(workspace, { recursive: true, force: true });

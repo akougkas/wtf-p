@@ -132,6 +132,10 @@ changed.
   campaign pins Clio 0.6.6 or later, which no longer writes receipt files, and
   compares only the first line of `--version`, which Clio 0.7.0 extends with
   its pane runtime
+- Every desk record write failed on Clio 0.7.0, which runs the desk under
+  Node's permission model; Node 24 refuses `fsync` there, so the desk now
+  treats that flush as best effort and removes a staged file it could not
+  write whole
 
 ## [0.8.0] - 2026-10-06
 

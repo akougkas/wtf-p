@@ -802,14 +802,32 @@ function withLock<T>(workspace: string, work: () => T): T {
 	}
 }
 
+/**
+ * Writes a new file and flushes it where the process may. Node's permission
+ * model, which Clio runs the desk under, refuses every flush (fsync,
+ * fdatasync, flush: true) with ERR_ACCESS_DENIED, so there a write is still
+ * all-or-nothing by its rename but not durable across power loss. A file that
+ * could not be written whole is removed.
+ */
 function writeDurably(file: string, data: string): void {
 	const handle = openSync(file, "wx", 0o644);
 	try {
 		writeSync(handle, data);
-		fsyncSync(handle);
-	} finally {
+		try {
+			fsyncSync(handle);
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code !== "ERR_ACCESS_DENIED") throw error;
+		}
+	} catch (error) {
 		closeSync(handle);
+		try {
+			unlinkSync(file);
+		} catch {
+			// Already removed.
+		}
+		throw error;
 	}
+	closeSync(handle);
 }
 
 /** Fault injection for the package tests; unset in every real session. */
@@ -885,7 +903,7 @@ function stagingFiles(workspace: string, relative = ".planning"): string[] {
 
 /**
  * Finishes or discards an interrupted commit; call with the lock held. A
- * journal exists only after every staged file was durable, so finishing it is
+ * journal exists only after every staged file was written whole, so finishing it is
  * always safe. Staged files without a journal never became visible and are
  * removed. Returns what it did, or null when there was nothing to do.
  */
