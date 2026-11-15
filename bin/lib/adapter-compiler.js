@@ -635,10 +635,15 @@ const CLIO_AUTHOR_QUESTIONS = 'Every question `ask_user` puts to the author here
 
 function clioUserGateBody(action, deskTools = false) {
   if (!action.effects.some((effect) => effect.id === 'user.gate')) return '';
+  // A local model tried every branch of a two-way rule in turn; state only the one this action can take.
+  const createsCheckpoint = action.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create');
+  const route = createsCheckpoint
+    ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID.'
+    : 'This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_wtfp__gate` only for a pending checkpoint `extension_wtfp__status` lists in the gate\'s exact scope, and never create one.';
   if (deskTools) return [
     '## Clio user-gate binding',
     '',
-    'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
+    route + ' Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
     '',
     CLIO_AUTHOR_QUESTIONS
   ].join('\n');

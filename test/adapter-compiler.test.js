@@ -857,6 +857,12 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     const source = planText(plan, sourcePath);
     for (const guard of guards) assert.ok(source.includes(guard), `${sourcePath}: missing lifecycle guard: ${guard}`);
   }
+  // A gate binding states only the branch the action can take: a local model tried both in turn.
+  for (const [id, creates] of [['create-outline', false], ['plan-section', true]]) {
+    const source = planText(plansById.get('portable-plugin'), `ai.iowarp.clio/prompts/wtfp/${id}.md`);
+    assert.strictEqual(source.includes('This action creates no checkpoint, so ask its gate question with `ask_user`'), !creates, `${id}: ask_user branch`);
+    assert.strictEqual(source.includes('When none exists yet, create it pending through `extension_wtfp__record`'), creates, `${id}: checkpoint branch`);
+  }
   // A local model read "alone in its call" as leave to batch questions into one
   // round, which Clio refuses for operator_only questions; the rule is literal.
   for (const sourcePath of [...plan.files.keys()].filter((file) => file.startsWith('prompts/wtfp/'))) {
