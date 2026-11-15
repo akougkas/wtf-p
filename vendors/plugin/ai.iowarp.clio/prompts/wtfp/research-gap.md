@@ -67,13 +67,13 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-Discover the named tools with `gateway(op="describe", capability="extension_wtfp__status")` (and likewise `extension_wtfp__record`, `extension_wtfp__read_record`, `extension_wtfp__readiness`, `extension_wtfp__measure_section`, `extension_wtfp__gate`), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
-Start from the desk's status, not from individual records: the desk puts it in a reminder at the start of this turn, and `extension_wtfp__status` returns it as structured data with every section's status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step. Then read only the records and artifacts this action will change, quote or check in detail. Without the desk, read the records the procedure names.
+Call desk tools with `gateway(op="call", capability="extension_wtfp__<tool>", args={...})`, without a describe first; args: status {}, record {uri, record, expect_revision|expect_sha256} or {writes:[...]}, read_record {uri}, readiness {section}, measure_section {section}, gate {checkpoint}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script.
+Start from the desk's status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.
 If desk tools are absent, follow `${pluginRoot}/workflows/research-gap.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
 
 ## Bound action contract
 
-Read the bound contract, `${pluginRoot}/actions/research-gap.json`, with `read` before acting: its reads, outputs, effects and conditions are what the desk enforces.
+The desk enforces `${pluginRoot}/actions/research-gap.json`; this prompt states its reads, outputs, conditions, gates and roles. Read it only when a refusal needs its exact terms.
 
 ## Invocation input
 

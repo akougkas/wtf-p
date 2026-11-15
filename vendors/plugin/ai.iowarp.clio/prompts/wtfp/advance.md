@@ -39,14 +39,7 @@ Before acting, load the `wtfp-manage-project` skill with `context(scope="skills"
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://structure/outline`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://sections/{section}/handoff`, `project://sources/{source}`, `project://evidence/{evidence}`, `project://checkpoints/{checkpoint}`, `project://validations/{validation}`, `project://paper/{artifact}`, `project://sections/{section}/context`, `project://sections/{section}/research`, `project://validations/*`.
-Produce: `project://structure/outline` (update), `project://sections/{section}` (create), `project://decisions` (update), `project://state` (update), `project://validations/{validation}` (create), `project://sections/{section}/context` (create), `project://sections/{section}/context` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://sources/{source}` (create), `project://sources/{source}` (update), `project://evidence/{evidence}` (create), `project://evidence/{evidence}` (update), `project://sections/{section}/research` (create), `project://sections/{section}/research` (update), `project://sections/{section}/plans/{plan}` (create), `project://paper/{artifact}` (create), `project://paper/{artifact}` (update), `project://manifest` (update), `project://sections/{section}/summary` (create), `project://sections/{section}/summary` (update), `project://sections/{section}/reviews/{review}` (create), `project://archives/{archive}/{artifact}` (archive).
-
-This contract is the union of the actions the driver may select: `create-outline`, `discuss-section`, `research-gap`, `plan-section`, `write-section`, `review-section`, `audit-milestone`, and `submit-milestone`. Each step may write only what its own action contract declares, for the section the driver names; the union is never a grant to one step.
-
-Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
-
-Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
+The driver writes nothing itself. Each step reads and writes only what its own prompt's record contract declares, for the section the desk names; the desk arms the write guard for that step alone.
 
 ## Procedure
 
@@ -66,11 +59,11 @@ Report each step the driver selected and its outcome, the gates the author answe
 
 ## Clio driver binding
 
-Discover `extension_wtfp__next_step` with `gateway(op="describe", capability="extension_wtfp__next_step")` and the other desk tools the same way, then call them with `gateway(op="call", capability="<exact name>", args={...})`. If `extension_wtfp__next_step` is absent, the WTF-P desk extension is not running: report that `advance` needs it and stop without running any action.
+Call desk tools with `gateway(op="call", capability="extension_wtfp__<tool>", args={...})`, without a describe first; args: status {}, record {uri, record, expect_revision|expect_sha256} or {writes:[...]}, read_record {uri}, readiness {section}, measure_section {section}, gate {checkpoint}, next_step {}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script. If `extension_wtfp__next_step` is absent, the WTF-P desk extension is not running: report that `advance` needs it and stop without running any action.
 
 Call `extension_wtfp__next_step` with no arguments. Its result names exactly one of:
 
-- `step`: an action, a section when the action takes one, and the step's prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names and read the contract it binds before acting. When the action completes, call `extension_wtfp__next_step` again.
+- `step`: an action, a section when the action takes one, and the step's prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.
 - `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.
 - `stop`: the reason the run ends. Report it with the steps taken and end the turn.
 
@@ -78,7 +71,7 @@ Never choose, skip, repeat or reorder an action, invoke another `/wtfp:` prompt,
 
 ## Bound action contract
 
-Read the bound contract, `${pluginRoot}/actions/advance.json`, with `read` before acting: its reads, outputs, effects and conditions are what the desk enforces.
+The desk enforces `${pluginRoot}/actions/advance.json`, the union of the actions it drives, through each step's own contract. Read it only when a refusal needs its exact terms.
 
 ## Invocation input
 

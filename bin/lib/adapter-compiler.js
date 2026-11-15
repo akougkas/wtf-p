@@ -517,6 +517,16 @@ function projectSchemasForAction(action) {
   return [...schemas].sort((left, right) => left.localeCompare(right));
 }
 
+// The desk enforces an action's contract, and the prompt already states its
+// reads, outputs, conditions, gates and roles. Reading the file would cost Clio
+// a round trip that resends the whole context for no new fact, so the prompt
+// names it only for an exact lookup.
+function clioBoundContract(action) {
+  return action.requirements.capabilities.includes('workflow.drive')
+    ? `The desk enforces \`protocol://actions/${action.id}.json\`, the union of the actions it drives, through each step's own contract. Read it only when a refusal needs its exact terms.`
+    : `The desk enforces \`protocol://actions/${action.id}.json\`; this prompt states its reads, outputs, conditions, gates and roles. Read it only when a refusal needs its exact terms.`;
+}
+
 function nativeCommandBody(action, workflowBody, target, deskTools = false) {
   const argumentToken = target === 'gemini'
     ? '{{args}}'
@@ -526,7 +536,7 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
   const schemas = projectSchemasForAction(action);
   const protocolIncludes = [
     deskTools
-      ? `Read the bound contract, \`protocol://actions/${action.id}.json\`, with \`read\` before acting: its reads, outputs, effects and conditions are what the desk enforces.`
+      ? clioBoundContract(action)
       : `@protocol://actions/${action.id}.json`,
     ...(!deskTools && schemas.length > 0 ? ['@protocol://project/schemas/common.schema.json'] : []),
     ...(!deskTools ? schemas : []).flatMap((schema) => [
@@ -679,10 +689,14 @@ function clioDeskWorkflowBody(action, workflowBody) {
   if (action.id === 'check-todos') body = body
     .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_wtfp__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
-  if (action.requirements.capabilities.includes('workflow.drive')) return `${body}\n\n${clioDriverBinding()}`;
+  if (action.requirements.capabilities.includes('workflow.drive')) {
+    const contract = /^## Record contract\n[\s\S]*?(?=^## Procedure$)/m;
+    if (!contract.test(body)) throw new Error(`${action.id}: no record contract section to project`);
+    return `${body.replace(contract, '## Record contract\n\nThe driver writes nothing itself. Each step reads and writes only what its own prompt\'s record contract declares, for the section the desk names; the desk arms the write guard for that step alone.\n\n')}\n\n${clioDriverBinding()}`;
+  }
   const bindings = [
-    `Discover the named tools with \`gateway(op="describe", capability="${clioDeskTools(action)[0]}")\` (and likewise ${clioDeskTools(action).slice(1).map((tool) => `\`${tool}\``).join(', ')}), then use \`gateway(op="call", capability="<exact name>", args={...})\`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.`,
-    'Start from the desk\'s status, not from individual records: the desk puts it in a reminder at the start of this turn, and `extension_wtfp__status` returns it as structured data with every section\'s status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step. Then read only the records and artifacts this action will change, quote or check in detail. Without the desk, read the records the procedure names.',
+    clioDeskCalls(clioDeskTools(action)),
+    'Start from the desk\'s status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
       ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
@@ -692,17 +706,38 @@ function clioDeskWorkflowBody(action, workflowBody) {
   return `${body}\n\n${bindings.join('\n')}`;
 }
 
+// Argument shapes for the desk tools. A gateway describe resends the whole
+// context, so a prompt that states the shapes lets the model call at once.
+const CLIO_DESK_ARGS = Object.freeze({
+  status: '{}',
+  next_step: '{}',
+  read_record: '{uri}',
+  readiness: '{section}',
+  measure_section: '{section}',
+  gate: '{checkpoint}',
+  record: '{uri, record, expect_revision|expect_sha256} or {writes:[...]}'
+});
+
+function clioDeskCalls(tools) {
+  const args = tools.map((tool) => {
+    const name = tool.replace(/^extension_wtfp__/, '');
+    if (!(name in CLIO_DESK_ARGS)) throw new Error(`no Clio argument shape for desk tool ${tool}`);
+    return `${name} ${CLIO_DESK_ARGS[name]}`;
+  });
+  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script.`;
+}
+
 // The Clio projection of the workflow.drive capability. The desk, not the
 // model, picks each step and arms the write guard for exactly that action.
 function clioDriverBinding() {
   return [
     '## Clio driver binding',
     '',
-    'Discover `extension_wtfp__next_step` with `gateway(op="describe", capability="extension_wtfp__next_step")` and the other desk tools the same way, then call them with `gateway(op="call", capability="<exact name>", args={...})`. If `extension_wtfp__next_step` is absent, the WTF-P desk extension is not running: report that `advance` needs it and stop without running any action.',
+    `${clioDeskCalls([...CLIO_DESK_TOOLS, CLIO_DRIVER_TOOL])} If \`extension_wtfp__next_step\` is absent, the WTF-P desk extension is not running: report that \`advance\` needs it and stop without running any action.`,
     '',
     'Call `extension_wtfp__next_step` with no arguments. Its result names exactly one of:',
     '',
-    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names and read the contract it binds before acting. When the action completes, call `extension_wtfp__next_step` again.',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
     '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
     '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
     '',
@@ -1098,6 +1133,33 @@ const CLIO_ROLE_TUNING = Object.freeze({
   'prose-polisher': { latency: 'balanced', toolCalls: 48, readReserve: 6 }
 });
 
+// The role-result schema as the object a worker writes. A recipe is resent
+// with every worker request, and the shape carries what the schema constrains
+// in a quarter of its bytes: fields, constants, enums, and which are optional.
+function clioRoleResultShape(schema) {
+  const optional = [];
+  const shape = (node, at) => {
+    const unstated = ['minItems', 'maxItems', 'maxLength', 'pattern', 'format', 'oneOf', 'anyOf', '$ref'].filter((key) => key in node);
+    if (unstated.length > 0) throw new Error(`role-result shape: ${at || 'root'} uses ${unstated.join(', ')}, which the shape does not state`);
+    if ('const' in node) return node.const;
+    if (node.enum) return node.enum.join('|');
+    if (node.type === 'array') return [shape(node.items, `${at}[]`)];
+    if (node.type === 'object') {
+      if (node.additionalProperties !== false) throw new Error(`role-result shape: ${at || 'root'} must close its properties`);
+      const required = new Set(node.required ?? []);
+      return Object.fromEntries(Object.entries(node.properties).map(([name, child]) => {
+        const path = at ? `${at}.${name}` : name;
+        if (!required.has(name)) optional.push(path);
+        return [name, shape(child, path)];
+      }));
+    }
+    if (node.type === 'string') return node.minLength ? '...' : '';
+    throw new Error(`role-result shape: unsupported schema at ${at || 'root'}`);
+  };
+  const object = JSON.stringify(shape(schema, ''));
+  return `Portable result object (${schema.$id}): ${object}. Values with | are enums; every field is required${optional.length ? ` except ${optional.map((name) => `\`${name}\``).join(', ')}` : ''}; strings are non-empty unless shown empty; arrays may be empty; add no other field.`;
+}
+
 function renderClioRole(role, slug) {
   const tuning = CLIO_ROLE_TUNING[slug];
   if (!tuning) throw new Error(`no Clio tuning for role ${slug}`);
@@ -1137,9 +1199,9 @@ function renderClioRole(role, slug) {
       'File readback establishes inspection, not executed validation. If this role changes files but cannot run the relevant checks with its admitted tools and approved scope, call limitation before returning. Name the exact output paths and checks left unrun, using the applicable reason: no-runner, blocked, out-of-scope, environment, or other. A prose disclaimer is not a limitation receipt. Do not add shell access or run a token command to satisfy the finish gate. Run available authorized checks when required; a limitation never turns an absent or failed check into a pass. Preserve unmeasured validation quality and leave the outstanding checks to the interactive caller.',
       ''
     ] : []),
-    'Embedded portable result schema: ' + JSON.stringify(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json'))),
+    clioRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json'))),
     '',
-    'Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string must be serialized JSON conforming to schemas/role-result.schema.json: schema wtfp.role-result/v1, role, action, status, summary, artifacts, issues, next_actions, effects_applied. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.',
+    'Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string is that object serialized as JSON. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.',
     ''
   ].join('\n');
 }

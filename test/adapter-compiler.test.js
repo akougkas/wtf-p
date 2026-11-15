@@ -1240,7 +1240,7 @@ record('research handoff declares incremental state and preserves native decisio
     const body = planText(clio, `agents/wtfp-${role}.md`);
     assert.match(body, /entry named wtfp.role-result/);
     assert.match(body, /status needs_input/);
-    assert.match(body, /Embedded portable result schema:/);
+    assert.match(body, /Portable result object \(wtfp.role-result\/v1\): \{"schema":"wtfp.role-result\/v1"/);
     // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
     const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
     assert.ok(tools, `${role}: Clio recipe declares its tools`);
