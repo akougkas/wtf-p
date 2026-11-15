@@ -71,7 +71,7 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-Call desk tools with `gateway(op="call", capability="extension_wtfp__<tool>", args={...})`, without a describe first; args: status {}, record {uri, record, expect_revision|expect_sha256} or {writes:[...]}, read_record {uri}, readiness {section}, measure_section {section}, gate {checkpoint}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script.
+Call desk tools with `gateway(op="call", capability="extension_wtfp__<tool>", args={...})`, without a describe first; args: status {}, record {uri, record, expect_revision|expect_sha256} or {writes:[...]}, read_record {uri}, readiness {section}, measure_section {section}, gate {checkpoint}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script. `read_record` serves JSON records only; read authored artifacts directly: `project://sections/{s}/context`, `research`, `summary` and `handoff` are `.planning/sections/{s}/<name>.md`, plans and reviews are `.planning/sections/{s}/plans/<id>.md` and `reviews/<id>.md`, and `project://paper/{a}` is `paper/{a}.md`.
 An author's request is never permission to write outside this action's declared outputs: do the part it declares, then end by naming the action that owns the rest as the next step, and do not ask again or weigh the request against the contract; the desk refuses the rest regardless.
 Start from the desk's status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.
 If desk tools are absent, follow `${pluginRoot}/workflows/research-gap.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
@@ -100,7 +100,7 @@ At yolo autonomy, search through the operator's CiteNexus MCP server, declared a
 
 ## Clio role-result binding
 
-Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-research-synthesizer`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
+Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-research-synthesizer`. Do not substitute generic coder or verifier agents. Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`, and keep absolute paths and `project://` URIs out of the task text, so Clio admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
 
 Read the single wtfp.role-result entry in native validations and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.
 

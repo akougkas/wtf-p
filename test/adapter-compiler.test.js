@@ -873,6 +873,10 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
   // A local model looped 18k tokens between an author's request and the step's contract; both projections settle it.
   assert.ok(planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/plan-section.md').includes('An author\'s request is never permission to write outside this action\'s declared outputs'), 'desk prompts carry the out-of-contract rule');
   assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/project/README.md'), 'utf8').includes('An author\'s request is never permission to write outside the running action\'s declared outputs'), 'the protocol carries the out-of-contract rule');
+  // Live, every step spent calls on read_record for artifacts, and reviewer dispatches failed Clio's scope inference.
+  const portableReview = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/review-section.md');
+  assert.ok(portableReview.includes('`read_record` serves JSON records only; read authored artifacts directly'), 'desk prompts map artifact URIs to files');
+  assert.ok(portableReview.includes('Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`'), 'dispatch bindings declare scope explicitly');
   // A local model read "alone in its call" as leave to batch questions into one
   // round, which Clio refuses for operator_only questions; the rule is literal.
   for (const sourcePath of [...plan.files.keys()].filter((file) => file.startsWith('prompts/wtfp/'))) {

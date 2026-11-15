@@ -96,7 +96,7 @@ Every question `ask_user` puts to the author here is the author's to answer: ask
 
 ## Clio role-result binding
 
-Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-citation-expert`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
+Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-citation-expert`. Do not substitute generic coder or verifier agents. Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`, and keep absolute paths and `project://` URIs out of the task text, so Clio admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.
 
 Read the single wtfp.role-result entry in native validations and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.
 
