@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "01be3e9bc210ab3f79dd45077ed52dc3d58053ea3bac2245a37fe3d8b5a79220",
+  "sourceHash": "d2a2b8ac9aab09c2bc702f0e7cbb5ae4b8cf1eeb7cc9a47c8401a05e9682c75c",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -230,7 +230,7 @@
     },
     {
       "path": "project/README.md",
-      "sha256": "73b9dbb65d5d43594d992fd945f1845e2b4d38c691d3b5ab406b7022497b4981"
+      "sha256": "36c5a77278ada6ab6d057fb62489c5f31e485926f288a7a0e1f5ae5b77119696"
     },
     {
       "path": "project/schemas/checkpoint.schema.json",

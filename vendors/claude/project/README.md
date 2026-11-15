@@ -50,6 +50,7 @@ The JSON records above are the interoperable source of truth, while research and
 - Keep the manifest's `materials`, `manuscripts`, `deliverables`, and `archives` indexes synchronized with authored artifacts. Section records retain immutable plan/review history arrays, their current handoff, and linked checkpoints instead of hiding those relationships in prose.
 - Keep authored prose, context, research, plans, reviews, summaries, handoffs, and deliverables in their native format. Link those artifacts from the relevant record instead of treating a Markdown control document as project state.
 - Reconcile state from records and verified artifacts. Never infer lifecycle status from legacy `PROJECT.md`, `ROADMAP.md`, or `STATE.md` files.
+- An author's request is never permission to write outside the running action's declared outputs. Do the part this action declares, then end by naming the action that owns the rest (for example `research-gap` for source or evidence records) as the next step. Do not ask again or weigh the request against the contract; the contract decides.
 - A workflow must not initialize a repository, create or switch branches, stage, commit, merge, push, or publish as an incidental side effect. An action that declares a `vcs.*` or external effect must preview the exact operation and cross a separate user gate immediately before that effect. Otherwise it may return only a non-executed handoff.
 
 ## Invariants
