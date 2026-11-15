@@ -841,7 +841,7 @@ test("the author's approval links the plan it approves, in the same commit", () 
 		const section = read(workspace, ".planning/sections/introduction/section.json");
 		put(workspace, ".planning/sections/introduction/section.json", { ...section, status: "not-started", artifacts: { ...(section.artifacts as Json), plans: [] } });
 		await answer(host, GATE, "protocol-first");
-		assert.match(await answer(host, PLAN_GATE, "approve"), /The desk linked project:\/\/sections\/introduction\/plans\/initial in project:\/\/sections\/introduction with this answer; do not link it again/);
+		assert.match(await answer(host, PLAN_GATE, "approve"), /The desk linked project:\/\/sections\/introduction\/plans\/initial in project:\/\/sections\/introduction with this answer; do not link it again\. The desk wrote project:\/\/checkpoints\/approve-initial, project:\/\/state, project:\/\/sections\/introduction; read any of them again before writing it/);
 		const linked = read(workspace, ".planning/sections/introduction/section.json");
 		assert.deepEqual((linked.artifacts as Json).plans, [PLAN_URI]);
 		assert.equal(linked.status, "planned");

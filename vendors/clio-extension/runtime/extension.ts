@@ -1399,8 +1399,8 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 		if (!byRevision && !bySha)
 			throw new Error(
 				REVISIONED.has(route.type) && input.expect_revision !== undefined
-					? `${uri} is at revision ${String(priorRevision)}, not ${input.expect_revision}; read it again before writing`
-					: `${uri} changed since it was read; read it again before writing`,
+					? `${uri} is at revision ${String(priorRevision)}, not ${input.expect_revision}; read it again and send the write again. A stale read is not a refusal and does not end the step`
+					: `${uri} changed since it was read; read it again and send the write again. A stale read is not a refusal and does not end the step`,
 			);
 	}
 	if (origin === "agent" && armed && !declares(armed, uri, bytes === null ? "create" : "update"))
@@ -2277,7 +2277,10 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 		kind: "recorded",
 		text: `${option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`}${
 			linkedIn ? `. The desk linked ${checkpoint.scope_uri} in ${linkedIn} with this answer; do not link it again` : ""
-		}`,
+		}. The desk wrote ${writes
+			.slice(1)
+			.map((entry) => entry.input.uri)
+			.join(", ")}; read any of them again before writing it`,
 		checkpoint: checkpoint.id,
 	};
 }
