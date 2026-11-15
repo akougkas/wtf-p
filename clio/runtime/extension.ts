@@ -411,6 +411,18 @@ function schemaRegistry(): InstanceType<typeof SchemaRegistry> {
 	return registry;
 }
 
+/** The top-level fields a record type's schema defines. */
+function recordFields(schema: string): Set<string> {
+	const match = /^wtfp\.project\.([a-z][a-z0-9-]*)\/v1$/u.exec(schema);
+	if (!match) return new Set();
+	try {
+		const parsed = JSON.parse(readFileSync(path.join(SCHEMAS, `${match[1]}.schema.json`), "utf8")) as Json;
+		return new Set(Object.keys((parsed.properties as Json | undefined) ?? {}));
+	} catch {
+		return new Set();
+	}
+}
+
 /** Schema errors for one record, as the canonical validator reports them. */
 function validateRecord(value: unknown): string[] {
 	if (value === null || typeof value !== "object" || Array.isArray(value)) return ["$: planning record must be a JSON object"];
@@ -2268,8 +2280,17 @@ async function recordTool(ctx: ExtensionContextV2, input: Json): Promise<{ text:
 	// The manifest lets unknown top-level keys through so the desk, not the gateway, can say where they belong:
 	// a long record whose object closed early leaves its last fields beside it.
 	const stray = Object.keys(input).filter((key) => !["uri", "record", "expect_revision", "expect_sha256", "writes"].includes(key));
-	if (stray.length > 0)
-		throw new Error(`${stray.join(", ")} ${stray.length === 1 ? "is" : "are"} not record tool arguments; if ${stray.length === 1 ? "it is a field" : "they are fields"} of the record, put ${stray.length === 1 ? "it" : "them"} inside record and send the call again`);
+	let folded: string[] = [];
+	if (stray.length > 0) {
+		const record = input.record !== null && typeof input.record === "object" && !Array.isArray(input.record) ? (input.record as Json) : null;
+		const fields = record ? recordFields(text(record.schema)) : new Set<string>();
+		// Fields the record's own schema defines and the record lacks are folded in; validation still judges the result.
+		if (!record || stray.some((key) => !fields.has(key) || key in record))
+			throw new Error(`${stray.join(", ")} ${stray.length === 1 ? "is not a record tool argument" : "are not record tool arguments"}; if ${stray.length === 1 ? "it is a field" : "they are fields"} of the record, put ${stray.length === 1 ? "it" : "them"} inside record and send the call again`);
+		input = { ...input, record: { ...record, ...Object.fromEntries(stray.map((key) => [key, input[key]])) } };
+		for (const key of stray) delete input[key];
+		folded = stray;
+	}
 	const writes = normalizeWrites(input);
 	const uris = writes.map((write) => write.uri);
 	if (new Set(uris).size !== uris.length) throw new Error("each record may appear once in writes");
@@ -2295,6 +2316,7 @@ async function recordTool(ctx: ExtensionContextV2, input: Json): Promise<{ text:
 	return {
 		text: [
 			...(recovered ? [recovered] : []),
+			...(folded.length > 0 ? [`${folded.join(", ")} arrived beside record and were moved inside it; send record fields inside record.`] : []),
 			...done.map((write) => `Wrote ${write.uri}${write.revision === null ? "" : ` at revision ${write.revision}`}; it validated and read back (sha256 ${write.sha256}).`),
 			...(done.length > 1 ? ["They committed together."] : []),
 		].join(" "),
