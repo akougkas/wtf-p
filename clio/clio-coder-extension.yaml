@@ -42,7 +42,7 @@ runtime:
               properties: { uri: { type: string }, record: { type: object }, expect_revision: { type: integer }, expect_sha256: { type: string } }
               required: [uri, record]
               additionalProperties: false
-        additionalProperties: false
+        additionalProperties: true
     - name: status
       description: "The whole project in one read: phase, every section's status, words, plan state, unsupported claims and blockers, open gates, evidence counts, record issues, and the next step by the progress ladder. Call it first instead of reading records to orient; then read only the records you will change or quote."
       actionClass: execute

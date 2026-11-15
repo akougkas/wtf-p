@@ -2265,6 +2265,11 @@ async function armedFor(ctx: ExtensionContextV2): Promise<Armed | null> {
 async function recordTool(ctx: ExtensionContextV2, input: Json): Promise<{ text: string; data?: unknown; isError?: boolean; interview?: { id: string; title: string; total: number; step: InterviewStep } }> {
 	const workspace = ctx.snapshot.workspace;
 	const armed = await armedFor(ctx);
+	// The manifest lets unknown top-level keys through so the desk, not the gateway, can say where they belong:
+	// a long record whose object closed early leaves its last fields beside it.
+	const stray = Object.keys(input).filter((key) => !["uri", "record", "expect_revision", "expect_sha256", "writes"].includes(key));
+	if (stray.length > 0)
+		throw new Error(`${stray.join(", ")} ${stray.length === 1 ? "is" : "are"} not record tool arguments; if ${stray.length === 1 ? "it is a field" : "they are fields"} of the record, put ${stray.length === 1 ? "it" : "them"} inside record and send the call again`);
 	const writes = normalizeWrites(input);
 	const uris = writes.map((write) => write.uri);
 	if (new Set(uris).size !== uris.length) throw new Error("each record may appear once in writes");

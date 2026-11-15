@@ -504,6 +504,9 @@ test("record refuses wrong type, id, project and unknown fields without touching
 		assert.equal(stamped.isError, undefined, stamped.text);
 		assert.match(String(read(workspace, ".planning/validations/introduction-stamped.json").executed_at), /^\d{4}-\d{2}-\d{2}T/);
 		assert.match((await host.tool("read_record", { uri: "project://checkpoints/never-made" })).text, /omit updated_at and created_at, which the desk sets/);
+		// Live, a long record closed early and left its last fields beside it; the desk names them.
+		const strayFields = await host.tool("record", { uri: "project://validations/stray", record: { schema: "wtfp.project.validation/v1" }, issues: [], next_actions: [] });
+		assert.match(strayFields.text, /issues, next_actions are not record tool arguments; if they are fields of the record, put them inside record/);
 		const update = await host.tool("record", { uri: "project://sections/introduction", record: { ...section, surprise: true }, expect_sha256 });
 		assert.doesNotMatch(update.text, /looks like this example/, "an update is refused without the example");
 		const snake = await host.tool("read_record", { uri: "project://checkpoints/confirm_outline" });
