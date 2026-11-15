@@ -31,7 +31,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 1. Resolve manifest requirements, the selected section, linked review or failed validation findings, prior summary, current draft, original plan, and decisions.
 2. Separate required fixes, optional improvements, protected text, dependencies, and verification criteria.
 3. Write a new immutable plan artifact after the author approves the revision priorities; never overwrite the plan that produced the reviewed draft.
-4. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan, and ask the author. Append the plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; any other answer leaves the earlier plan current and the revision unlinked. With confirm_plan off, append it directly.
+4. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan, and ask the author. Append the plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; any other answer leaves the earlier plan current and the revision unlinked. With confirm_plan off, append it directly. Linking the revision plan sets the section status to `planned`, so the next step writes from it.
 
 ## Safety and completion
 

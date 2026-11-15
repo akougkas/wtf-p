@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "035db8829d5cf36e7a490903e75edfe22612f3e876a06eb380486c31318ff817",
+  "sourceHash": "8296c76bc7dcc9a50a91abfa012b69acfe4f6ccc419250d1afa687fe47f1dd1b",
   "files": [
     {
       "path": "marketplace.json",
@@ -222,7 +222,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "3e301a3229cdfff6201ab7ea14e9120a00d1524a746c11862c3b30c6ac2ef936"
+      "sha256": "0feac17f9aa573c25218b1f4a4003da4ff14a04db5fe7e7ba4f5a6102d2dfafb"
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/SKILL.md",
@@ -234,7 +234,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-plan-section/references/actions.md",
-      "sha256": "40d1cea19d3e45ce13375ec708b6cde0d64f2ecad32d278635bd1719a4d675ce"
+      "sha256": "dd2a9a981c3fe0bc7b38c536dfa05adf24dd619a5798cf09ea8be6c31426abf0"
     },
     {
       "path": "project/.github/skills/wtfp-plan-section/SKILL.md",
@@ -258,7 +258,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "de6a2cf5c73b3e25c7c781b30b4218cff05e006fe0c010ad24845c733a4612f3"
+      "sha256": "63ec5b2fd1395a38318654a86a82e8995d2d008ab84eeceb224a20b364efc6e8"
     },
     {
       "path": "project/.github/skills/wtfp-review-manuscript/SKILL.md",
@@ -294,7 +294,7 @@
     },
     {
       "path": "project/.github/wtfp/actions/advance.json",
-      "sha256": "4469c11c8a77b1ec7000744c60d10bb71ba204528473e82e43ba61dcbccf67d3"
+      "sha256": "7d141296842be6ae5fc5e231280a7d3533ea18b8537d8567fb9a498e0f44348c"
     },
     {
       "path": "project/.github/wtfp/actions/analyze-bib.json",
@@ -430,7 +430,7 @@
     },
     {
       "path": "project/.github/wtfp/actions/verify-work.json",
-      "sha256": "edbb22a79f0bf8cc7c6ed7a2810ba53452ade20520d3c3462ab68bb4da2b3cc0"
+      "sha256": "9d25d3c74dec643816cf9684cdd55b99958ad96d0b46c0defa65c298ceddb4fc"
     },
     {
       "path": "project/.github/wtfp/actions/write-section.json",
@@ -642,7 +642,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "fb756da31f16cfaa7fc1584aa10d323b2f6fded38952ad1efc30ef859c584285"
+      "sha256": "016547adf6819000535da2c018b32fa1d28ea012f1a6b038fd9d027a2d1715b0"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/SKILL.md",
@@ -654,7 +654,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-plan-section/references/actions.md",
-      "sha256": "25ba559eff91c1c73f049b30c70310f0b7e0740665f0ca8010e521375f782f3e"
+      "sha256": "a8cda94be4f771e96fce803c4728609c778adc2a2017643957cde94d06358992"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-plan-section/SKILL.md",
@@ -678,7 +678,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "1169b104ed87673db340314247043926a70861b7a0cbff9c80ffe2ccf9864419"
+      "sha256": "02653a5c2e96d5c75d62a1f06f3185bbbdda184910c333bf6a7543fc941c9c6c"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-review-manuscript/SKILL.md",
@@ -738,7 +738,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/advance.md",
-      "sha256": "1a68fa622077da6dba687d667f6d228ca37157efa68ea60787a73315fe3a7bb7"
+      "sha256": "a8fb1bbb4c9595b6aed24f8c493e65f6b3e640f3c1c1b88acd60eb419fb09936"
     },
     {
       "path": "project/.github/wtfp/workflows/analyze-bib.md",
@@ -818,7 +818,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/plan-revision.md",
-      "sha256": "d0854005f8443a57a8ca88a0467c5f47d86942e05d1bb91213e6baf73f1cb6df"
+      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
     },
     {
       "path": "project/.github/wtfp/workflows/plan-section.md",
@@ -874,7 +874,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/verify-work.md",
-      "sha256": "c1da393e37003dbf0b47b67290a491ae21939a390f6f510290b85ad58b7cb50e"
+      "sha256": "cc7095b8c0c1e66688fdf291a888a01c11f20a75c77cb8f21bb9c9ceafebc84f"
     },
     {
       "path": "project/.github/wtfp/workflows/write-section.md",

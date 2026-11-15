@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "4b31d0763a6ccda8d9baef31d0fb797cd8e7ae8033fd80f47e75a32487572014",
+  "sourceHash": "e4f00bc83e3d89903ce73995130e086083289fcdc28e669cb692a61fe986f84d",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -14,7 +14,7 @@
     },
     {
       "path": "actions/advance.json",
-      "sha256": "4469c11c8a77b1ec7000744c60d10bb71ba204528473e82e43ba61dcbccf67d3"
+      "sha256": "7d141296842be6ae5fc5e231280a7d3533ea18b8537d8567fb9a498e0f44348c"
     },
     {
       "path": "actions/analyze-bib.json",
@@ -150,7 +150,7 @@
     },
     {
       "path": "actions/verify-work.json",
-      "sha256": "edbb22a79f0bf8cc7c6ed7a2810ba53452ade20520d3c3462ab68bb4da2b3cc0"
+      "sha256": "9d25d3c74dec643816cf9684cdd55b99958ad96d0b46c0defa65c298ceddb4fc"
     },
     {
       "path": "actions/write-section.json",
@@ -414,7 +414,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "d2ff8db13c507105e8c8ae17767c9ed173417800bca8f78f551ccc4fa781db7a"
+      "sha256": "b58f2546233a77547e3c6d59b3ed6036e39b1de8a64e202e11694fc6b35b0be3"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",
@@ -426,7 +426,7 @@
     },
     {
       "path": "skills/wtfp-plan-section/references/actions.md",
-      "sha256": "586bdc79bb7424d6b17dcdb230b6711bcc8c65e21d9fa2c6b9f96d426d3ad36e"
+      "sha256": "ec40e289516acc3803f180f50487a4649c6841b2e703172811c2666f87cd3b7e"
     },
     {
       "path": "skills/wtfp-plan-section/SKILL.md",
@@ -450,7 +450,7 @@
     },
     {
       "path": "skills/wtfp-review-manuscript/references/actions.md",
-      "sha256": "43e210a4c8764bd3b1cf906f64b3ac89f0555d78e677d0d6ee21a3f7a933b7cb"
+      "sha256": "b1b48bed1c46914c7294ad5f78ffc19d86a40ac66d534e67104c20ecd0b84d9b"
     },
     {
       "path": "skills/wtfp-review-manuscript/SKILL.md",
@@ -554,7 +554,7 @@
     },
     {
       "path": "workflows/advance.md",
-      "sha256": "1a68fa622077da6dba687d667f6d228ca37157efa68ea60787a73315fe3a7bb7"
+      "sha256": "a8fb1bbb4c9595b6aed24f8c493e65f6b3e640f3c1c1b88acd60eb419fb09936"
     },
     {
       "path": "workflows/analyze-bib.md",
@@ -634,7 +634,7 @@
     },
     {
       "path": "workflows/plan-revision.md",
-      "sha256": "d0854005f8443a57a8ca88a0467c5f47d86942e05d1bb91213e6baf73f1cb6df"
+      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
     },
     {
       "path": "workflows/plan-section.md",
@@ -690,7 +690,7 @@
     },
     {
       "path": "workflows/verify-work.md",
-      "sha256": "c1da393e37003dbf0b47b67290a491ae21939a390f6f510290b85ad58b7cb50e"
+      "sha256": "cc7095b8c0c1e66688fdf291a888a01c11f20a75c77cb8f21bb9c9ceafebc84f"
     },
     {
       "path": "workflows/write-section.md",

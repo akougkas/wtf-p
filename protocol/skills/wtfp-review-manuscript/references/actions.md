@@ -35,7 +35,8 @@ Contract: [protocol/actions/verify-work.json](../../../actions/verify-work.json)
    - `issues-found` when one or more issue records remain;
    - `needs-input` when author judgment is pending;
    - `failed` when required evidence or execution cannot satisfy the contract.
-9. Reconcile section and state status only from the completed validation, then route gaps to `plan-revision` or a pass to project progress.
+9. When the validation is complete, create one pending blocking `decision` checkpoint scoped to `project://validations/{validation}` with options `accept` and `revise`, `resume_action` `verify-work`, and a request that summarizes the result, then ask the author. The validation result alone never completes a section.
+10. Reconcile section and state only from the author's answer: `accept` marks the section `complete`; `revise` leaves it `reviewing` and routes to `plan-revision`. A rerun that finds this checkpoint resolved applies the resolution without asking again.
 
 Completion requires a resumable author-owned acceptance record, not an automated self-approval.
 

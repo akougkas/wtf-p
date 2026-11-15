@@ -67,6 +67,10 @@
       "mode": "create"
     },
     {
+      "uri": "project://validations/{validation}",
+      "mode": "update"
+    },
+    {
       "uri": "project://sections/{section}/context",
       "mode": "create"
     },
@@ -198,7 +202,7 @@
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://structure/outline, project://decisions, project://state, project://sections/{section}/context, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research, project://paper/{artifact}, project://manifest, project://sections/{section}/summary"
+      "scope": "project://structure/outline, project://decisions, project://state, project://sections/{section}/context, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research, project://paper/{artifact}, project://manifest, project://sections/{section}/summary, project://validations/{validation}"
     },
     {
       "id": "filesystem.read",

@@ -512,6 +512,10 @@
           "mode": "update"
         },
         {
+          "uri": "project://checkpoints/{checkpoint}",
+          "mode": "create"
+        },
+        {
           "uri": "project://sections/{section}",
           "mode": "update"
         },

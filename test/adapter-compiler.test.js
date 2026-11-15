@@ -857,6 +857,13 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     const source = planText(plan, sourcePath);
     for (const guard of guards) assert.ok(source.includes(guard), `${sourcePath}: missing lifecycle guard: ${guard}`);
   }
+  // verify-work is the author's acceptance after review: it closes with a checkpoint the driver routes on.
+  const verifyContract = readJson(path.join(ROOT, 'protocol/actions/verify-work.json'));
+  assert.ok(verifyContract.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create'), 'verify-work declares its acceptance checkpoint');
+  const verifyPrompt = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/verify-work.md');
+  assert.ok(verifyPrompt.includes('When none exists yet, create it pending through `extension_wtfp__record`'), 'verify-work gates through a checkpoint it creates');
+  assert.ok(verifyPrompt.includes('options `accept` and `revise`'), 'verify-work asks accept or revise');
+  assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/workflows/advance.md'), 'utf8').includes('`verify-work`, `plan-revision`'), 'advance drives verify-work and plan-revision');
   // A gate binding states only the branch the action can take: a local model tried both in turn.
   for (const [id, creates] of [['create-outline', false], ['plan-section', true]]) {
     const source = planText(plansById.get('portable-plugin'), `ai.iowarp.clio/prompts/wtfp/${id}.md`);

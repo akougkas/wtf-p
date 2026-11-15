@@ -82,7 +82,7 @@ Contract: [protocol/actions/plan-revision.json](../../../actions/plan-revision.j
    - expected revised manuscript and revision summary.
 6. Never prescribe a cosmetic rewrite for an evidence or argument defect. Route missing evidence to research and structural defects to explicit author approval.
 7. Validate that every selected issue is addressed once and every excluded issue remains visible.
-8. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Append the revision plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes; the plan that produced the reviewed draft is never edited and remains in the history.
+8. When confirm_plan is on, create a blocking `decision` checkpoint scoped to the plan's URI whose options include `approve`, `revise`, and `reject`, preview the plan and validation, and ask the author. Append the revision plan to the section's `artifacts.plans` only after an `approve` answer for its current bytes, and set the section status to `planned` when you link it; the plan that produced the reviewed draft is never edited and remains in the history.
 
 Completion requires a targeted, traceable path from finding to fix to re-verification, and a revision plan the author approved before any rewrite.
 

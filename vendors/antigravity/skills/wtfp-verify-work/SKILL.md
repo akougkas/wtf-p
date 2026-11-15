@@ -21,7 +21,7 @@ allowed-tools:
 ## Record contract
 
 Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://validations/{validation}`.
-Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://sections/{section}` (update), `project://state` (update).
+Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -31,7 +31,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve the selected plan, section record, manuscript artifact, claims, and evidence.
 2. Run acceptance, scope, citation, argument, and decision-fidelity checks without editing the subject.
-3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions; reconcile status only from the result.
+3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions.
+4. When the validation is complete, create one pending blocking `decision` checkpoint scoped to that validation's URI, with options `accept` and `revise` and `resume_action` `verify-work`, and ask the author. Only an author's `accept` marks the section `complete`; `revise` leaves it `reviewing`, and `plan-revision` owns the fix. The validation result alone never completes a section.
+5. When a rerun finds the acceptance checkpoint for the current validation already resolved, apply its resolution to the section and state instead of asking again.
 
 ## Safety and completion
 
@@ -43,6 +45,8 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 @${PLUGIN_ROOT}/actions/verify-work.json
 @${PLUGIN_ROOT}/project/schemas/common.schema.json
+@${PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
+@${PLUGIN_ROOT}/project/templates/checkpoint.json
 @${PLUGIN_ROOT}/project/schemas/evidence.schema.json
 @${PLUGIN_ROOT}/project/templates/evidence.json
 @${PLUGIN_ROOT}/project/schemas/section.schema.json

@@ -199,7 +199,8 @@ Contract: [protocol/actions/verify-work.json](../../../actions/verify-work.json)
    - `issues-found` when one or more issue records remain;
    - `needs-input` when author judgment is pending;
    - `failed` when required evidence or execution cannot satisfy the contract.
-9. Reconcile section and state status only from the completed validation, then route gaps to `plan-revision` or a pass to project progress.
+9. When the validation is complete, create one pending blocking `decision` checkpoint scoped to `project://validations/{validation}` with options `accept` and `revise`, `resume_action` `verify-work`, and a request that summarizes the result, then ask the author. The validation result alone never completes a section.
+10. Reconcile section and state only from the author's answer: `accept` marks the section `complete`; `revise` leaves it `reviewing` and routes to `plan-revision`. A rerun that finds this checkpoint resolved applies the resolution without asking again.
 
 Completion requires a resumable author-owned acceptance record, not an automated self-approval.
 
@@ -263,7 +264,7 @@ Completion requires total traceability from each audit gap to one appropriate re
 ## Record contract
 
 Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://validations/{validation}`.
-Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://sections/{section}` (update), `project://state` (update).
+Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -273,7 +274,9 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve the selected plan, section record, manuscript artifact, claims, and evidence.
 2. Run acceptance, scope, citation, argument, and decision-fidelity checks without editing the subject.
-3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions; reconcile status only from the result.
+3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions.
+4. When the validation is complete, create one pending blocking `decision` checkpoint scoped to that validation's URI, with options `accept` and `revise` and `resume_action` `verify-work`, and ask the author. Only an author's `accept` marks the section `complete`; `revise` leaves it `reviewing`, and `plan-revision` owns the fix. The validation result alone never completes a section.
+5. When a rerun finds the acceptance checkpoint for the current validation already resolved, apply its resolution to the section and state instead of asking again.
 
 ## Safety and completion
 
@@ -325,6 +328,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "mode": "update"
     },
     {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
       "uri": "project://sections/{section}",
       "mode": "update"
     },
@@ -338,7 +345,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "effects": [
     {
       "id": "filesystem.create",
-      "scope": "selected section verification artifact"
+      "scope": "selected section verification artifact and its acceptance checkpoint"
     },
     {
       "id": "filesystem.modify",
@@ -350,7 +357,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "user.gate",
-      "scope": "each failed or disputed verification check"
+      "scope": "each failed or disputed verification check, and the author's acceptance of the section"
     }
   ]
 }
@@ -391,6 +398,143 @@ Report the logical resources read, created, updated, archived, or deleted; the g
       "enum": ["high", "medium", "low", "unknown"]
     }
   }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/checkpoint.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/checkpoint.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/checkpoint/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["kind"],
+        "properties": { "kind": { "const": "state-snapshot" } }
+      },
+      "then": {
+        "required": ["snapshot"],
+        "properties": {
+          "status": { "enum": ["available", "restored", "expired"] },
+          "blocking": { "const": false }
+        }
+      },
+      "else": {
+        "not": { "required": ["snapshot"] },
+        "properties": {
+          "status": { "enum": ["pending", "resolved", "waived", "expired"] }
+        }
+      }
+    }
+  ],
+  "required": [
+    "schema",
+    "id",
+    "project_id",
+    "kind",
+    "status",
+    "blocking",
+    "scope_uri",
+    "request",
+    "options",
+    "resume_action",
+    "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.checkpoint/v1" },
+    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "kind": { "enum": ["human-verify", "decision", "human-action", "safety-authorization", "state-snapshot"] },
+    "status": { "enum": ["pending", "resolved", "waived", "expired", "available", "restored"] },
+    "blocking": { "type": "boolean" },
+    "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "request": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "context": { "type": "string" },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "implication"],
+        "properties": {
+          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+          "label": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "implication": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+        }
+      }
+    },
+    "resume_action": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archive_uri", "resources"],
+      "properties": {
+        "archive_uri": {
+          "type": "string",
+          "pattern": "^project://archives/checkpoints/[A-Za-z0-9._~-]+$"
+        },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["uri", "sha256"],
+            "properties": {
+              "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+              "revision": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolved_by", "summary", "resolved_at"],
+      "properties": {
+        "resolved_by": { "enum": ["author", "policy"] },
+        "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+        "resolved_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/checkpoint.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/checkpoint.json</summary>
+
+{
+  "schema": "wtfp.project.checkpoint/v1",
+  "id": "checkpoint-contribution-framing",
+  "project_id": "portable-research-demo",
+  "kind": "decision",
+  "status": "pending",
+  "blocking": true,
+  "scope_uri": "project://sections/introduction",
+  "request": "Choose the primary contribution framing before the introduction is drafted.",
+  "context": "The choice changes the order and strength of the contribution claims.",
+  "options": [
+    {
+      "id": "protocol-contribution",
+      "label": "Protocol contribution",
+      "implication": "Lead with interoperability and evidence fidelity."
+    },
+    {
+      "id": "workflow-contribution",
+      "label": "Workflow contribution",
+      "implication": "Lead with the end-to-end academic process."
+    }
+  ],
+  "resume_action": "write-section",
+  "created_at": "2026-08-28T12:40:00Z"
 }
 
 </details>

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "6a68dfddd16eeddefcc53e29dd41d0ee8760a4d1f7fdab5e6f745fc64de51109",
+  "sourceHash": "4f055b3eb0d149742f9763c02f868a3d1c37f3dd5ce5c29693fa81cf255e64cc",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -10,7 +10,7 @@
     },
     {
       "path": "actions/advance.json",
-      "sha256": "4469c11c8a77b1ec7000744c60d10bb71ba204528473e82e43ba61dcbccf67d3"
+      "sha256": "7d141296842be6ae5fc5e231280a7d3533ea18b8537d8567fb9a498e0f44348c"
     },
     {
       "path": "actions/analyze-bib.json",
@@ -146,7 +146,7 @@
     },
     {
       "path": "actions/verify-work.json",
-      "sha256": "edbb22a79f0bf8cc7c6ed7a2810ba53452ade20520d3c3462ab68bb4da2b3cc0"
+      "sha256": "9d25d3c74dec643816cf9684cdd55b99958ad96d0b46c0defa65c298ceddb4fc"
     },
     {
       "path": "actions/write-section.json",
@@ -278,7 +278,7 @@
     },
     {
       "path": "runtime/write-guard.json",
-      "sha256": "33d15bd44078db14b40407083d5e00136d8a95591151e3c303df37a75be27c50"
+      "sha256": "f5a3cfeb38486f5c0d9e920e02f99647f86daa0575ab0dbf6e23bed9571e1214"
     },
     {
       "path": "skins/wtfp.json",

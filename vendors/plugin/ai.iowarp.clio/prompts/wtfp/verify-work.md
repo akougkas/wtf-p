@@ -25,7 +25,7 @@ Before acting, load the `wtfp-review-manuscript` skill with `context(scope="skil
 ## Record contract
 
 Read: `project://state`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://evidence/{evidence}`, `project://paper/{artifact}`, `project://validations/{validation}`.
-Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://sections/{section}` (update), `project://state` (update).
+Produce: `project://validations/{validation}` (create), `project://validations/{validation}` (update), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 
@@ -35,7 +35,9 @@ Write prose and linked artifacts with native file tools; keep their authored for
 
 1. Resolve the selected plan, section record, manuscript artifact, claims, and evidence.
 2. Run acceptance, scope, citation, argument, and decision-fidelity checks without editing the subject.
-3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions; reconcile status only from the result.
+3. Write a validation, updating it after each answered check, with passed/failed checks, issues, evidence, limitations, and next actions.
+4. When the validation is complete, create one pending blocking `decision` checkpoint scoped to that validation's URI, with options `accept` and `revise` and `resume_action` `verify-work`, and ask the author. Only an author's `accept` marks the section `complete`; `revise` leaves it `reviewing`, and `plan-revision` owns the fix. The validation result alone never completes a section.
+5. When a rerun finds the acceptance checkpoint for the current validation already resolved, apply its resolution to the section and state instead of asking again.
 
 ## Safety and completion
 
@@ -62,7 +64,7 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_wtfp__gate` only for a pending checkpoint `extension_wtfp__status` lists in the gate's exact scope, and never create one. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
 
 Every question `ask_user` puts to the author here is the author's to answer: ask exactly one question per `ask_user` call, with its options and `operator_only: true`; Clio refuses an `operator_only` question sent with others. Clio never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.
 
