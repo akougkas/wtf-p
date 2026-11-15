@@ -1189,7 +1189,7 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 	const record = input.record;
 	if (record === null || typeof record !== "object" || Array.isArray(record)) throw new Error(`${uri}: record must be a JSON object`);
 	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
-	if (!route) throw new Error(`${uri} is not a logical record URI this adapter maps`);
+	if (!route) throw new Error(notARecord(uri));
 	if (route.type === "interaction" && origin === "agent")
 		throw new Error(`${uri}: only the desk records an author's answer; ask with extension_wtfp__gate`);
 	const id = route.pattern.exec(uri)?.[1] ?? "";
@@ -1200,7 +1200,11 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 	const manifest = readRecord(workspace, ".planning/project.json");
 	const projectId = route.type === "manifest" ? record.id : record.project_id;
 	if (manifest && typeof manifest.id === "string" && projectId !== manifest.id)
-		throw new Error(`${uri} belongs to project ${String(projectId)}, not ${manifest.id}`);
+		throw new Error(
+			projectId === undefined
+				? `${uri} needs project_id "${manifest.id}"`
+				: `${uri} belongs to project ${String(projectId)}, not ${manifest.id}`,
+		);
 	const bytes = readBytes(workspace, file);
 	if (bytes === null && existsSync(path.join(workspace, file))) throw new Error(`${file} is not a regular file the desk can replace`);
 	const priorSha = bytes === null ? null : sha256(bytes);
@@ -1249,7 +1253,11 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 	}
 	if (STAMPED.has(route.type)) next.updated_at = timestamp();
 	const errors = validateRecord(next);
-	if (errors.length > 0) throw new Error(`${uri} would not validate: ${errors[0]}`);
+	// Every error at once: a model fixing one per call resends its whole context each time.
+	if (errors.length > 0)
+		throw new Error(
+			`${uri} would not validate: ${errors.slice(0, 8).join("; ")}${errors.length > 8 ? `; and ${errors.length - 8} more` : ""}`,
+		);
 	const serialized = `${JSON.stringify(next, null, 2)}\n`;
 	return {
 		write: { uri, file, text: serialized, sha256: sha256(serialized), revision },
@@ -2142,10 +2150,32 @@ async function recordTool(ctx: ExtensionContextV2, input: Json): Promise<{ text:
 	};
 }
 
+/**
+ * Authored artifacts keep their own format and are read and written with
+ * Clio's file tools; a refusal names the conventional file so the model does
+ * not search the workspace for it.
+ */
+const ARTIFACT_URIS: ReadonlyArray<{ pattern: RegExp; file: (match: RegExpExecArray) => string }> = [
+	{ pattern: new RegExp(`^project://sections/(${IDENTIFIER})/(context|research|summary|handoff)$`, "u"), file: (m) => `.planning/sections/${m[1]}/${m[2]}.md` },
+	{ pattern: new RegExp(`^project://sections/(${IDENTIFIER})/(plans|reviews)/(${IDENTIFIER})$`, "u"), file: (m) => `.planning/sections/${m[1]}/${m[2]}/${m[3]}.md` },
+	{ pattern: /^project:\/\/paper\/([^\s]+)$/u, file: (m) => `paper/${m[1]}` },
+];
+
+function notARecord(uri: string): string {
+	for (const artifact of ARTIFACT_URIS) {
+		const match = artifact.pattern.exec(uri);
+		if (match) return `${uri} is an authored artifact, not a JSON record; read or write ${artifact.file(match)} with the file tools`;
+	}
+	const family = /^project:\/\/(sections|sources|evidence|checkpoints|validations)\/([^/]+)$/u.exec(uri);
+	if (family && !new RegExp(`^${IDENTIFIER}$`, "u").test(family[2] ?? ""))
+		return `${uri} has an invalid id; record ids are lowercase letters and digits joined by single hyphens, such as ${(family[2] ?? "").toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "") || "outline-gate"}`;
+	return `${uri} is not a logical record URI this adapter maps`;
+}
+
 function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: string; data: unknown } {
 	const workspace = ctx.snapshot.workspace;
 	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
-	if (!route) throw new Error(`${uri} is not a logical record URI this adapter maps`);
+	if (!route) throw new Error(notARecord(uri));
 	const file = route.file(route.pattern.exec(uri)?.[1] ?? "");
 	const bytes = readBytes(workspace, file);
 	if (bytes === null) {

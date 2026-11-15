@@ -475,6 +475,9 @@ test("record refuses wrong type, id, project and unknown fields without touching
 			[{ ...section, id: "methods" }, /whose id is introduction/],
 			[{ ...section, project_id: "another-project" }, /belongs to project another-project/],
 			[{ ...section, surprise: true }, /would not validate: .*unknown property surprise|surprise/],
+			// A model fixes what it is told; it is told the missing project_id and every schema error at once.
+			[(({ project_id: _omitted, ...rest }) => rest)(section), /needs project_id "desk-test"/],
+			[{ ...section, surprise: true, other: 1 }, /would not validate: .*surprise.*; .*other/],
 		];
 		for (const [record, pattern] of cases) {
 			const refused = await host.tool("record", { uri: "project://sections/introduction", record, expect_sha256 });
@@ -482,6 +485,13 @@ test("record refuses wrong type, id, project and unknown fields without touching
 			assert.match(refused.text, pattern);
 		}
 		assert.equal(sha(workspace, ".planning/sections/introduction/section.json"), before);
+		// An authored artifact is not a record; the refusal names its file instead of leaving the model to search.
+		const artifact = await host.tool("read_record", { uri: "project://sections/introduction/context" });
+		assert.match(artifact.text, /authored artifact, not a JSON record; read or write \.planning\/sections\/introduction\/context\.md with the file tools/);
+		const plan = await host.tool("read_record", { uri: "project://sections/introduction/plans/initial" });
+		assert.match(plan.text, /\.planning\/sections\/introduction\/plans\/initial\.md/);
+		const snake = await host.tool("read_record", { uri: "project://checkpoints/confirm_outline" });
+		assert.match(snake.text, /invalid id; record ids are lowercase .* such as confirm-outline/);
 	}));
 
 test("no record write or file write escapes through a symbolic link", () =>
