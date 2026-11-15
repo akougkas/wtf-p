@@ -1291,9 +1291,16 @@ record('research handoff declares incremental state and preserves native decisio
   }
   for (const role of EXPECTED_ROLES) {
     const body = planText(clio, `agents/wtfp-${role}.md`);
-    assert.match(body, /entry named wtfp.role-result/);
-    assert.match(body, /status needs_input/);
-    assert.match(body, /Portable result object \(wtfp.role-result\/v1\): \{"schema":"wtfp.role-result\/v1"/);
+    if (['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'].includes(role)) {
+      // A verifier returns verdict and checks only: a local model failed every review that nested a serialized role result.
+      assert.doesNotMatch(body, /wtfp\.role-result/, `${role}: a verifier carries no nested role result`);
+      assert.match(body, /Example: \{"verdict":"fail","checks":\[/, `${role}: a verifier sees one concrete example`);
+      assert.match(body, /a failed check is a finding, and fail means revise/);
+    } else {
+      assert.match(body, /entry named wtfp.role-result/);
+      assert.match(body, /status needs_input/);
+      assert.match(body, /Portable result object \(wtfp.role-result\/v1\): \{"schema":"wtfp.role-result\/v1"/);
+    }
     // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
     const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
     assert.ok(tools, `${role}: Clio recipe declares its tools`);
