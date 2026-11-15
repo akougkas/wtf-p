@@ -1168,7 +1168,7 @@ const CLIO_ROLE_TUNING = Object.freeze({
 // The role-result schema as the object a worker writes. A recipe is resent
 // with every worker request, and the shape carries what the schema constrains
 // in a quarter of its bytes: fields, constants, enums, and which are optional.
-function clioRoleResultShape(schema) {
+function clioRoleResultShape(schema, slug) {
   const optional = [];
   const shape = (node, at) => {
     const unstated = ['minItems', 'maxItems', 'maxLength', 'pattern', 'format', 'oneOf', 'anyOf', '$ref'].filter((key) => key in node);
@@ -1188,7 +1188,8 @@ function clioRoleResultShape(schema) {
     if (node.type === 'string') return node.minLength ? '...' : '';
     throw new Error(`role-result shape: unsupported schema at ${at || 'root'}`);
   };
-  const object = JSON.stringify(shape(schema, ''));
+  // The role field names this recipe's role, never the worker's own identity.
+  const object = JSON.stringify({ ...shape(schema, ''), role: slug });
   return `Portable result object (${schema.$id}): ${object}. Values with | are enums; every field is required${optional.length ? ` except ${optional.map((name) => `\`${name}\``).join(', ')}` : ''}; strings are non-empty unless shown empty; arrays may be empty; add no other field.`;
 }
 
@@ -1235,7 +1236,7 @@ function renderClioRole(role, slug) {
     ] : []),
     // A verifier's verdict and checks already determine its role result; nesting a
     // serialized result inside one check failed every local-model review live.
-    ...(verifier ? [] : [clioRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json'))), '']),
+    ...(verifier ? [] : [clioRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json')), slug), '']),
     ...(verifier ? [] : ['Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string is that object serialized as JSON. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.']),
     ''
   ].join('\n');

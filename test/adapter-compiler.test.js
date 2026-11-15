@@ -1314,6 +1314,8 @@ record('research handoff declares incremental state and preserves native decisio
       assert.match(body, /entry named wtfp.role-result/);
       assert.match(body, /status needs_input/);
       assert.match(body, /Portable result object \(wtfp.role-result\/v1\): \{"schema":"wtfp.role-result\/v1"/);
+      // Live, a worker filled the role with its own identity ("Clio Coder"), and the orchestrator stopped on it.
+      assert.ok(body.includes(`"role":"${role}"`), `${role}: the result form names the role exactly`);
     }
     // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
     const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
