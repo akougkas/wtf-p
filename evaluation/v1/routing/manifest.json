@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "8f9c9ed17fbf2a1dd49cf521215bd33f6200cec9",
+  "wtfp_commit": "db51fed38103bc88f888fcd0b50fdc7573f229d7",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -31,20 +31,20 @@
     {
       "target": "antigravity",
       "path": "vendors/antigravity/.wtfp-generated.json",
-      "manifest_sha256": "1d8196f954159191bf92c564ac40f107c410c9becaf77147792aa36712b4a018",
-      "source_sha256": "1ad9029574c76299f2ec3fe3e96aed5dec8367ec46ad379d2e19c38493be2968"
+      "manifest_sha256": "338675d85f80e0b707364331f4d8ffc0330506013cef8937a3b2e59b1d89d056",
+      "source_sha256": "72ed24299b3e866334e4fdaf7fa6b99f5091c72f1ca4b0966a72ae49ca673ee4"
     },
     {
       "target": "claude",
       "path": "vendors/claude/.wtfp-generated.json",
-      "manifest_sha256": "a0fb6680c85c2b82f3c7b6006b0820f3f78189f8f70b2bc9b06b132b2c04dce4",
-      "source_sha256": "e68ac7b354ab0d89d9c0a808e418145fd514f3ef72dca787fbbbde6f60ec1f15"
+      "manifest_sha256": "af711d2407d90fd439f641759369321ade641798c1a723ea8b04d26a0f9a8315",
+      "source_sha256": "412087c2efe20e5c3f5a5476934411ccab1ce3e30c624b69a6a71c2eded9957c"
     },
     {
       "target": "clio",
       "path": "vendors/plugin/.wtfp-generated.json",
-      "manifest_sha256": "273a0840589fb03093a4d186b796c38835c56d143d72900240407feed879b239",
-      "source_sha256": "163d08f8b7ba6bf12bb3e221b9434291d375406d25a1e379d9edebf90e2f3cc5"
+      "manifest_sha256": "3a6e91fff48084243252abb2cd3f5c041d72cec1d241215ddc959e548e0f010a",
+      "source_sha256": "a249113d0150bed2fe7481b2fddd1ae1e1675041c074d8fcfe31d2b269539ca9"
     },
     {
       "target": "codex-marketplace",
@@ -55,32 +55,32 @@
     {
       "target": "codex",
       "path": "vendors/codex/plugins/wtfp/.wtfp-generated.json",
-      "manifest_sha256": "6454a324043926a655fa7578051e8761a6df421d65b954a8fc7f8df99d485638",
-      "source_sha256": "025b28122dcf31df8a0f149844756eaa9fc4836361efabebf74b5dd7cf0de4f4"
+      "manifest_sha256": "74574ca0580b4844457d12369d20e6d3fa69329643ff8f9dda833e3d2d246ef1",
+      "source_sha256": "ecbbf9b8cb310ce9a66414c1fcd32b3cbb5147e05b6f252de90812ad99c764de"
     },
     {
       "target": "copilot-marketplace",
       "path": "vendors/copilot/.wtfp-generated.json",
-      "manifest_sha256": "6251f2704efcf6294d56df4ca6e51bfb773a458268fb223c6927b9f6fa670035",
-      "source_sha256": "9ee1adf7d94ec5fb96819399996006186c4794f511e348768640b1993d601c3f"
+      "manifest_sha256": "e111d1c6136a3921c5b7742c20cf71554c0a4f3af2eec9865f58a8f283fd493b",
+      "source_sha256": "1a7fdd42fb9c5ed2f29b0e5ef4c576a0491aacb41e46700078bf64e37fabdae2"
     },
     {
       "target": "copilot",
       "path": "vendors/copilot/plugins/wtfp/.wtfp-generated.json",
-      "manifest_sha256": "0eec94005e7145fb79f64c96683b43a761188c5df4617d1294737c79c814ebab",
-      "source_sha256": "68ceb7ac65b53447e038b9bc7a11de7fe473b58aa5963ed87f3b3be82ab7b065"
+      "manifest_sha256": "ced22e2a0e75746ef49d50cc46ccb9b71c9fd5c09b590dae7e75d99ad35e13af",
+      "source_sha256": "21b3e1034e68217f5192f8aaa2db78007d1adb750264eeeaf96e1149da99eebc"
     },
     {
       "target": "gemini",
       "path": "vendors/gemini/.wtfp-generated.json",
-      "manifest_sha256": "a6a9cde6ca09b09c108df0c2c97cfc62ccbb3c8ecd3e21377ed7cebab40b3687",
-      "source_sha256": "9973f5ca40f7aa814ff3eb5af597fffe0cf4a2d183059a0ba53364c6dfa0ec75"
+      "manifest_sha256": "48efe539ad073b612c0c50ee34d3d2c2df1161918aafa8524a0c80ffb00b187a",
+      "source_sha256": "44403c9da84190626169238cc100b1015ee79c67ecab63ddeb4a5ec097152963"
     },
     {
       "target": "opencode",
       "path": "vendors/opencode/.wtfp-generated.json",
-      "manifest_sha256": "7e66f4f6d42c68e604e95eed96dd2253bff97aa534f51f8fcb19bdfe5188f415",
-      "source_sha256": "7bf390657d68145071598f388d140e8fe48c3b056b089f99fddd5de66fb398ef"
+      "manifest_sha256": "dc2cdbc02498f3b10024b687adad3661ae1d1f060fd7ae2a0d80301bdd586f23",
+      "source_sha256": "aa28964b94caba4d3dce72668c9fdb0713e20acc11f08f2246c0290f757f7c83"
     }
   ]
 }
