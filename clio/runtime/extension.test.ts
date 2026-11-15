@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { createHash, createHmac } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, realpathSync, rmSync, statSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import os, { homedir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -870,7 +870,15 @@ test("an armed action writes only what its contract declares, for the section it
 // by the progress ladder and arms the write guard for that action alone; a gate
 // stops the run until the author answers it at the desk.
 
-const DRIVEN_PLUGIN = { id: "wtfp", prompts: [...SERVED.prompts, "wtfp:advance", "wtfp:review-section", "wtfp:discuss-section", "wtfp:create-outline"] };
+const DRIVEN_PLUGIN = {
+	id: "wtfp",
+	prompts: [...SERVED.prompts, "wtfp:advance", "wtfp:review-section", "wtfp:discuss-section", "wtfp:create-outline", "wtfp:verify-work", "wtfp:plan-revision"],
+};
+/** Stamps the manuscript as written `offsetMs` from the desk's clock, after or before the plan's approval. */
+const drafted = (host: Host, workspace: string, offsetMs: number): void => {
+	const at = new Date(host.now + offsetMs);
+	utimesSync(path.join(workspace, "paper/introduction.md"), at, at);
+};
 const nextStep = async (host: Host): Promise<{ text: string; data: Json; isError?: boolean }> => {
 	const result = await host.tool("next_step", {});
 	return { text: result.text, data: (result.data ?? {}) as Json, ...(result.isError ? { isError: true } : {}) };
@@ -998,6 +1006,131 @@ test("advance creates the section records an outline lists before any section st
 		const step = await nextStep(host);
 		assert.deepEqual([step.data.kind, step.data.action, step.data.section], ["step", "create-outline", null], step.text);
 		assert.match(step.text, /lists introduction without a section record/);
+	}, DRIVEN_PLUGIN));
+
+test("after review the author accepts a section or sends it back, and advance follows the sealed answer", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		drafted(host, workspace, 60_000);
+		const sectionFile = ".planning/sections/introduction/section.json";
+		const validation = (id: string, action: string, at: string): Json => ({
+			schema: "wtfp.project.validation/v1",
+			id,
+			project_id: PROJECT,
+			subject_uri: "project://paper/introduction",
+			validator_role: action === "review-section" ? "section-reviewer" : "author",
+			action_id: action,
+			status: "passed",
+			checks: [{ id: "plan-criteria", status: "passed", summary: "Every plan criterion holds.", evidence: ["The bottleneck and contribution are stated."] }],
+			issues: [],
+			next_actions: [],
+			effects_applied: [],
+			executed_at: at,
+		});
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "reviewing" });
+		put(workspace, ".planning/validations/introduction-review.json", validation("introduction-review", "review-section", "2026-09-01T10:00:00Z"));
+		// Review is critique only; the author's acceptance is verify-work's.
+		const verify = await nextStep(host);
+		assert.deepEqual([verify.data.kind, verify.data.action, verify.data.section], ["step", "verify-work", "introduction"], verify.text);
+		assert.match(verify.text, /is reviewed; the author checks it against its plan/);
+		put(workspace, ".planning/validations/introduction-verified.json", validation("introduction-verified", "verify-work", "2026-09-01T11:00:00Z"));
+		put(workspace, ".planning/checkpoints/accept-introduction.json", {
+			schema: "wtfp.project.checkpoint/v1",
+			id: "accept-introduction",
+			project_id: PROJECT,
+			kind: "decision",
+			status: "pending",
+			blocking: true,
+			scope_uri: "project://validations/introduction-verified",
+			request: "Accept the introduction as written?",
+			options: [
+				{ id: "accept", label: "Revise", implication: "A checkpoint may label its options as it likes." },
+				{ id: "revise", label: "Accept", implication: "The desk's own words decide what reads as acceptance." },
+			],
+			resume_action: "verify-work",
+			created_at: "2026-09-01T11:00:00Z",
+		});
+		const gate = await nextStep(host);
+		assert.deepEqual([gate.data.kind, gate.data.checkpoint], ["gate", "accept-introduction"], gate.text);
+		const asked = await host.tool("gate", { checkpoint: "accept-introduction" });
+		const options = asked.interview?.step.questions[0]?.options ?? [];
+		assert.match(options.find((option) => option.value === "accept")?.label ?? "", /^Accept this section as written/);
+		assert.ok(!options.some((option) => option.value !== "accept" && /^accept/iu.test(option.label)), "no other option may read as acceptance");
+		await host.interview({ id: "gate-one", step: asked.interview?.step.key as string, nav: "next", answers: { choice: "revise" } });
+		const revise = await nextStep(host);
+		assert.deepEqual([revise.data.kind, revise.data.action, revise.data.section], ["step", "plan-revision", "introduction"], revise.text);
+		// A later review supersedes that verification, so the author is asked again.
+		put(workspace, ".planning/validations/introduction-review-2.json", validation("introduction-review-2", "review-section", "2026-09-01T12:00:00Z"));
+		const again = await nextStep(host);
+		assert.deepEqual([again.data.action, again.data.section], ["verify-work", "introduction"], again.text);
+		assert.match(again.text, /is reviewed; the author checks it against its plan/);
+	}, DRIVEN_PLUGIN));
+
+test("a reviewed section whose approved revision plan no draft has applied goes back to write-section", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		// The draft predates the plan the author approves now: live, plan-02 was approved and advance armed review again.
+		await host.advance(7_200_000);
+		drafted(host, workspace, -3_600_000);
+		await answer(host, PLAN_GATE, "approve");
+		const sectionFile = ".planning/sections/introduction/section.json";
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "reviewing", artifacts: { ...(read(workspace, sectionFile).artifacts as Json), reviews: ["project://sections/introduction/reviews/review-01"] } });
+		const rewrite = await nextStep(host);
+		assert.deepEqual([rewrite.data.kind, rewrite.data.action, rewrite.data.section], ["step", "write-section", "introduction"], rewrite.text);
+		assert.match(rewrite.text, /approved revision plan that no draft has applied yet/);
+		// Once the draft is written after the approval, review comes next.
+		drafted(host, workspace, 60_000);
+		const review = await nextStep(host);
+		assert.deepEqual([review.data.action, review.data.section], ["verify-work", "introduction"], review.text);
+	}, DRIVEN_PLUGIN));
+
+test("an accepted section is handed back to verify-work, which marks it complete", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		drafted(host, workspace, 60_000);
+		const sectionFile = ".planning/sections/introduction/section.json";
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "reviewing" });
+		for (const [id, action, at] of [["introduction-review", "review-section", "2026-09-01T10:00:00Z"], ["introduction-verified", "verify-work", "2026-09-01T11:00:00Z"]])
+			put(workspace, `.planning/validations/${id}.json`, {
+				schema: "wtfp.project.validation/v1",
+				id,
+				project_id: PROJECT,
+				subject_uri: "project://sections/introduction",
+				validator_role: "author",
+				action_id: action,
+				status: "passed",
+				checks: [],
+				issues: [],
+				next_actions: [],
+				effects_applied: [],
+				executed_at: at,
+			});
+		put(workspace, ".planning/checkpoints/accept-introduction.json", {
+			schema: "wtfp.project.checkpoint/v1",
+			id: "accept-introduction",
+			project_id: PROJECT,
+			kind: "decision",
+			status: "pending",
+			blocking: true,
+			scope_uri: "project://validations/introduction-verified",
+			request: "Accept the introduction as written?",
+			options: [
+				{ id: "accept", label: "Accept", implication: "Mark it complete." },
+				{ id: "revise", label: "Revise", implication: "Plan a revision." },
+			],
+			resume_action: "verify-work",
+			created_at: "2026-09-01T11:00:00Z",
+		});
+		assert.equal((await nextStep(host)).data.kind, "gate");
+		await answer(host, "accept-introduction", "accept");
+		const apply = await nextStep(host);
+		assert.deepEqual([apply.data.kind, apply.data.action, apply.data.section], ["step", "verify-work", "introduction"], apply.text);
+		assert.match(apply.text, /accepted Introduction; verify-work marks it complete/);
 	}, DRIVEN_PLUGIN));
 
 test("the desk's advance key fills the advance prompt only while the plugin serves it", () =>

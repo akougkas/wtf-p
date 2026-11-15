@@ -170,6 +170,8 @@ interface PlanState {
 	file: string | null;
 	sha256: string | null;
 	reason: string;
+	/** When the author's sealed approval of these bytes was given. */
+	approvedAt?: string;
 }
 
 interface SectionRow {
@@ -189,6 +191,19 @@ interface SectionRow {
 	plan: PlanState;
 	unsupported: string[];
 	record: Json | null;
+	/** The author's acceptance after review, from verify-work and its sealed checkpoint. */
+	acceptance: Acceptance;
+	/** When the manuscript file was last written, in epoch milliseconds, or null when it does not exist. */
+	writtenAt: number | null;
+}
+
+interface Acceptance {
+	/** A review validation or linked review exists for the section. */
+	reviewed: boolean;
+	/** A verify-work validation is at least as new as the latest review. */
+	verified: boolean;
+	/** The attested author answer on that validation's acceptance checkpoint, if any. */
+	decision: "accept" | "revise" | null;
 }
 
 interface Finding {
@@ -474,6 +489,60 @@ function sectionGates(checkpoints: Checkpoint[], id: string, manuscript: string 
 	);
 }
 
+// --- the author's acceptance after review -------------------------------------
+
+function writtenAt(workspace: string, manuscript: string | null): number | null {
+	if (manuscript === null || contained(workspace, manuscript) === null) return null;
+	try {
+		return statSync(path.join(workspace, manuscript)).mtimeMs;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * A plan the author approved after the manuscript was last written has not
+ * been applied yet: a revision plan approved for a reviewed section is drafted
+ * before anything reviews or accepts the section again. Answers are stamped to
+ * the second, so a write later in the same second counts as applying it.
+ */
+function unappliedPlan(section: SectionRow): boolean {
+	if (section.plan.state !== "approved" || !section.plan.approvedAt) return false;
+	const approved = Date.parse(section.plan.approvedAt);
+	return Number.isFinite(approved) && (section.writtenAt === null || section.writtenAt < approved);
+}
+
+const ACCEPT = "accept";
+const REVISE = "revise";
+
+/** Whether a validation's subject is this section, one of its artifacts, or its manuscript. */
+function validates(record: Json, id: string, manuscriptUri: string): boolean {
+	const subject = text(record.subject_uri);
+	const section = `project://sections/${id}`;
+	return subject === section || subject.startsWith(`${section}/`) || subject === manuscriptUri || subject.startsWith(`${manuscriptUri}/`);
+}
+
+/**
+ * Where a reviewed section stands with its author. Review is critique only;
+ * verify-work records the acceptance checks and closes with a checkpoint scoped
+ * to its validation, and only an attested answer on that checkpoint counts.
+ */
+function acceptanceOf(validations: Json[], checkpoints: Checkpoint[], id: string, manuscriptUri: string, reviewsLinked: boolean): Acceptance {
+	const mine = validations.filter((record) => validates(record, id, manuscriptUri));
+	const latest = (action: string): Json | undefined =>
+		mine.filter((record) => record.action_id === action).sort((a, b) => text(b.executed_at).localeCompare(text(a.executed_at)))[0];
+	const review = latest("review-section");
+	const verify = latest("verify-work");
+	const reviewed = review !== undefined || reviewsLinked;
+	const verified = verify !== undefined && (review === undefined || text(verify.executed_at) >= text(review.executed_at));
+	if (!verified || verify === undefined) return { reviewed, verified: false, decision: null };
+	const answered = checkpoints
+		.filter((checkpoint) => checkpoint.scope_uri === `project://validations/${text(verify.id)}` && checkpoint.trust === "attested" && checkpoint.status === "resolved")
+		.sort((a, b) => text(b.answer?.answered_at).localeCompare(text(a.answer?.answered_at)))[0];
+	const picked = answered?.resolution?.selected_option;
+	return { reviewed, verified: true, decision: picked === ACCEPT || picked === REVISE ? picked : null };
+}
+
 // --- the approved-plan predicate ---------------------------------------------
 
 /**
@@ -506,7 +575,7 @@ function planState(workspace: string, id: string, record: Json | null, checkpoin
 		const shown = ((latest.answer?.presented as Json | undefined)?.artifact as Json | undefined)?.sha256;
 		if (shown !== digest)
 			return confirmPlan ? { state: "changed", uri, file, sha256: digest, reason: `the plan changed after the author approved it on ${latest.id}` } : policy;
-		return { state: "approved", uri, file, sha256: digest, reason: `approved by the author on ${latest.id}` };
+		return { state: "approved", uri, file, sha256: digest, reason: `approved by the author on ${latest.id}`, approvedAt: text(latest.answer?.answered_at) };
 	}
 	if (!confirmPlan) return policy;
 	if (asked.some((checkpoint) => checkpoint.trust === "pending"))
@@ -589,6 +658,10 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	const sourceRecords = indexed("sources");
 	const evidenceRecords = indexed("evidence");
 
+	const validations = listJson(workspace, ".planning/validations")
+		.map((file) => readRecord(workspace, file))
+		.filter((record): record is Json => record !== null);
+
 	const outlined = Array.isArray(outline?.sections) ? (outline.sections as Json[]) : [];
 	const loaded = outlined.map((entry) => {
 		const id = text(entry.id, "section");
@@ -667,6 +740,8 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 			plan: planState(workspace, id, record, checkpoints, confirmPlan),
 			unsupported,
 			record,
+			acceptance: acceptanceOf(validations, checkpoints, id, text(artifacts.manuscript, `project://paper/${id}`), reviews.length > 0),
+			writtenAt: writtenAt(workspace, manuscript),
 		};
 	});
 	const issues = { blocker: 0, error: 0, warning: 0, info: 0 };
@@ -1376,8 +1451,20 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 			return step(served, "review-section", id, `${section.title} is complete; review it again if it changed.`);
 		case "blocked":
 			return step(served, "check-todos", "", `${section.title} is blocked.`);
-		case "reviewing":
-			return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
+		case "reviewing": {
+			const acceptance = section.acceptance;
+			if (unappliedPlan(section)) return step(served, "write-section", id, `${section.title} has an approved revision plan that no draft has applied yet.`);
+			if (!acceptance.reviewed) return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
+			if (!acceptance.verified)
+				return step(served, "verify-work", id, `${section.title} is reviewed; the author checks it against its plan and accepts it or sends it back.`);
+			if (acceptance.decision === REVISE) return step(served, "plan-revision", id, `The author sent ${section.title} back for revision.`);
+			return step(
+				served,
+				"verify-work",
+				id,
+				acceptance.decision === ACCEPT ? `The author accepted ${section.title}; verify-work marks it complete.` : `${section.title} waits for the author's acceptance.`,
+			);
+		}
 		case "writing":
 		case "planned":
 			if (section.research.required && section.unsupported.length > 0)
@@ -1400,7 +1487,7 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
  * driver never runs an action that starts, maps or reshapes the project, since
  * those are the author's to begin.
  */
-const DRIVEN = new Set(["create-outline", "discuss-section", "research-gap", "plan-section", "write-section", "review-section", "audit-milestone", "submit-milestone"]);
+const DRIVEN = new Set(["create-outline", "discuss-section", "research-gap", "plan-section", "write-section", "review-section", "verify-work", "plan-revision", "audit-milestone", "submit-milestone"]);
 /** Steps one advance run may take before it hands the session back. */
 const MAX_DRIVE_STEPS = 24;
 
@@ -1432,6 +1519,7 @@ function driveFingerprint(desk: Desk): string {
 				section.research,
 				section.words,
 				section.recorded,
+				section.acceptance,
 				section.gates.map((gate) => [gate.id, gate.status, gate.trust]),
 			]),
 			checkpoints: desk.checkpoints.map((checkpoint) => [checkpoint.id, checkpoint.status, checkpoint.trust]),
@@ -1887,6 +1975,11 @@ function planGate(checkpoint: Checkpoint): boolean {
 	return new RegExp(`^project://sections/${IDENTIFIER}/plans/${IDENTIFIER}$`, "u").test(checkpoint.scope_uri);
 }
 
+/** verify-work's closing question: an acceptance checkpoint scoped to its validation. */
+function acceptanceGate(checkpoint: Checkpoint): boolean {
+	return new RegExp(`^project://validations/${IDENTIFIER}$`, "u").test(checkpoint.scope_uri) && (checkpoint.options ?? []).some((option) => option.id === ACCEPT);
+}
+
 /**
  * The words the author sees for an option. On a plan gate the desk owns them:
  * `approve` is what authorizes drafting, so it always reads as approval and
@@ -1896,6 +1989,12 @@ function shown(checkpoint: Checkpoint, option: { id: string; label: string; impl
 	if (planGate(checkpoint)) {
 		if (option.id === APPROVE) return { label: "Approve this plan as shown", detail: "Drafting may start from exactly these plan bytes; any later change asks you again." };
 		if (/approv/iu.test(option.label)) return { label: `Do not draft from this plan yet (${option.id})`, detail: "Any answer but approval leaves the plan unapproved." };
+	}
+	// Only `accept` completes a section, so only it reads as acceptance.
+	if (acceptanceGate(checkpoint)) {
+		if (option.id === ACCEPT) return { label: "Accept this section as written", detail: "It is marked complete; a later change needs review and your acceptance again." };
+		if (option.id === REVISE) return { label: "Send it back for revision", detail: "The next step plans a revision for you to approve." };
+		if (/accept/iu.test(option.label)) return { label: `Do not accept it yet (${option.id})`, detail: "Any answer but accept leaves the section unaccepted." };
 	}
 	return { label: option.label, ...(option.implication ? { detail: option.implication } : {}) };
 }
