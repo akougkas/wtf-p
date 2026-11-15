@@ -1426,7 +1426,7 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 	// Every error at once: a model fixing one per call resends its whole context each time.
 	if (errors.length > 0)
 		throw new Error(
-			`${uri} would not validate: ${errors.slice(0, 8).join("; ")}${errors.length > 8 ? `; and ${errors.length - 8} more` : ""}`,
+			`${uri} would not validate: ${errors.slice(0, 8).join("; ")}${errors.length > 8 ? `; and ${errors.length - 8} more` : ""}. Fix these and send the write again; a record that does not validate is not a refusal and does not end the step`,
 		);
 	const serialized = `${JSON.stringify(next, null, 2)}\n`;
 	return {
