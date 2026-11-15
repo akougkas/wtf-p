@@ -835,6 +835,24 @@ test("an author's note on a gate answer reaches the next step, and typed text as
 		assert.match(ready.text, /not approve, with this note for the next plan: Split the claim in two\./);
 	}, SERVED));
 
+test("a complete draft goes to submit-milestone on a fresh audit with no errors, and back to audit after any later write", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		put(workspace, ".planning/sections/introduction/section.json", { ...read(workspace, ".planning/sections/introduction/section.json"), status: "complete" });
+		const nextOf = async () => (((await host.tool("status", {})).data as Json).next as Json).action;
+		assert.equal(await nextOf(), "audit-milestone");
+		const audit = { schema: "wtfp.project.validation/v1", id: "milestone-audit-01", project_id: PROJECT, subject_uri: "project://state", validator_role: "coherence-checker", action_id: "audit-milestone", status: "issues-found", checks: [{ id: "readiness", status: "passed", summary: "Every section is complete.", evidence: ["Stated."] }], issues: [{ severity: "warning", summary: "One source is metadata-only." }], next_actions: [], effects_applied: [], executed_at: AT };
+		put(workspace, ".planning/validations/milestone-audit-01.json", audit);
+		assert.equal(await nextOf(), "submit-milestone", "warnings alone do not hold delivery");
+		put(workspace, ".planning/validations/milestone-audit-01.json", { ...audit, issues: [{ severity: "error", summary: "A citation does not resolve." }] });
+		assert.equal(await nextOf(), "plan-milestone-gaps");
+		put(workspace, ".planning/validations/milestone-audit-01.json", audit);
+		const later = Date.now() / 1000 + 60;
+		utimesSync(path.join(workspace, "paper/introduction.md"), later, later);
+		assert.equal(await nextOf(), "audit-milestone", "an audit of an earlier draft does not stand for this one");
+	}, SERVED));
+
 test("the author's approval links the plan it approves, in the same commit", () =>
 	withDesk(async (host, workspace) => {
 		const section = read(workspace, ".planning/sections/introduction/section.json");

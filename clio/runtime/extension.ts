@@ -241,6 +241,8 @@ interface Desk {
 	paperExists: boolean;
 	journal: boolean;
 	coverage: CoverageReport;
+	/** The latest milestone audit: fresh when nothing the desk tracks was recorded after it; errors counts its error and blocker issues. */
+	audit: { fresh: boolean; errors: number } | null;
 	/** The WTF-P plugin while Clio serves it; null when it is not installed and enabled. */
 	served: ServedPlugin;
 }
@@ -822,6 +824,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 		deadline: typeof target.deadline === "string" ? target.deadline : null,
 		argument: text(manifest?.core_argument),
 		phase: text(state?.phase, manifest ? "initialized" : "none"),
+		audit: auditOf(validations, sections),
 		status: text(state?.status, "active"),
 		confirmPlan,
 		outputFormat,
@@ -1502,8 +1505,26 @@ function nextAction(desk: Desk): Next {
 		return sectionNext(served, section);
 	}
 	if (desk.phase === "delivered") return { command: null, reason: "Delivered." };
-	if (desk.phase === "ready") return step(served, "submit-milestone", "", "Every section is complete and audited.");
+	// audit-milestone writes only its validation, so the audit itself, not a phase it cannot set, says the draft is ready.
+	if (desk.phase === "ready" || (desk.audit?.fresh && desk.audit.errors === 0)) return step(served, "submit-milestone", "", "Every section is complete and audited.");
+	if (desk.audit?.fresh)
+		return step(served, "plan-milestone-gaps", "", `The milestone audit found ${desk.audit.errors} ${desk.audit.errors === 1 ? "error" : "errors"} to close before delivery.`);
 	return step(served, "audit-milestone", "", "Every section is complete; audit before delivery.");
+}
+
+/**
+ * The latest audit-milestone validation, by the desk's file time. It is fresh
+ * when no other validation and no manuscript was written after it, so an audit
+ * of an earlier draft never stands for the current one.
+ */
+function auditOf(validations: Json[], sections: SectionRow[]): Desk["audit"] {
+	const at = (record: Json): number => recordedAt.get(record) ?? 0;
+	const audits = validations.filter((record) => record.action_id === "audit-milestone").sort((a, b) => at(b) - at(a));
+	const latest = audits[0];
+	if (!latest) return null;
+	const later = validations.some((record) => record.action_id !== "audit-milestone" && at(record) > at(latest)) || sections.some((section) => (section.writtenAt ?? 0) > at(latest));
+	const errors = (Array.isArray(latest.issues) ? (latest.issues as Json[]) : []).filter((issue) => issue.severity === "error" || issue.severity === "blocker").length;
+	return { fresh: !later && latest.status !== "failed", errors: latest.status === "failed" ? Math.max(errors, 1) : errors };
 }
 
 /** A drafted section's next step: review the current draft, then the author's acceptance or a revision. */
