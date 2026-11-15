@@ -993,8 +993,18 @@ test("only an advance turn may ask the desk for a step, and the turn's end ends 
 		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
 		assert.equal((await nextStep(host)).isError, true, "the drive ends with its turn");
 		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		// Clio continuing the turn after its tool budget or loop guard resumes the drive the turn had.
+		assert.equal((await nextStep(host)).data.kind, "gate");
+		await host.observe({ event: "turn_end", turnId: "t2", outcome: "completed", usage: null });
+		assert.equal((await nextStep(host)).isError, true, "between turns nothing drives");
+		await host.hook({ point: "prompt_submit", text: "Continue.", origin: "continuation", continuation: { index: 1, cap: 3 } } as never);
+		const resumed = await nextStep(host);
+		assert.notEqual(resumed.isError, true, resumed.text);
 		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
 		assert.equal((await nextStep(host)).isError, true, "any other prompt ends the drive");
+		await host.observe({ event: "turn_end", turnId: "t3", outcome: "completed", usage: null });
+		await host.hook({ point: "prompt_submit", text: "Continue.", origin: "continuation", continuation: { index: 1, cap: 3 } } as never);
+		assert.equal((await nextStep(host)).isError, true, "a continuation resumes only the drive its own turn had");
 	}, DRIVEN_PLUGIN));
 
 test("advance puts each gate to the author, then arms exactly the step the ladder names", () =>

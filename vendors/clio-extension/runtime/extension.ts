@@ -3715,6 +3715,16 @@ export default function extension(api: ExtensionApiV2): void {
 	});
 
 	api.hook("prompt_submit", async (event, ctx) => {
+		// Clio continuing a stopped yolo turn (tool budget, loop guard, a failure) resumes that turn's drive and armed step.
+		const held = (await ctx.state.get<{ armed?: Armed; drive?: Drive; workspace: string }>("held")).value;
+		await ctx.state.delete("held");
+		if (event.point === "prompt_submit" && (event as { origin?: string }).origin === "continuation") {
+			if (held && held.workspace === ctx.snapshot.workspace) {
+				if (held.armed) await ctx.state.set("armed", held.armed);
+				if (held.drive) await ctx.state.set("drive", held.drive);
+			}
+			return {};
+		}
 		const typed = event.point === "prompt_submit" ? (event.text ?? "") : "";
 		const desk = loadDesk(ctx.snapshot.workspace);
 		const armed = arm(typed, desk, ctx.snapshot.workspace);
@@ -3770,7 +3780,11 @@ export default function extension(api: ExtensionApiV2): void {
 		return { text: recovered ?? "", ...(recovered ? { toast: { text: recovered, tone: "warning" as const } } : {}), ...(await picture(ctx)) };
 	});
 	api.on("turn_end", async (_event, ctx) => {
-		// An action arms for the turn its command starts; nothing it allowed outlives that turn.
+		// An action arms for the turn its command starts; nothing it allowed outlives that turn. Clio's own
+		// continuation of the turn may resume it, so the desk holds what it had until the next prompt says whose it is.
+		const armed = (await ctx.state.get<Armed>("armed")).value;
+		const drive = (await ctx.state.get<Drive>("drive")).value;
+		if (armed || drive) await ctx.state.set("held", { ...(armed ? { armed } : {}), ...(drive ? { drive } : {}), workspace: ctx.snapshot.workspace });
 		await ctx.state.delete("armed");
 		await ctx.state.delete("drive");
 		await ctx.state.delete("measure-noted");
