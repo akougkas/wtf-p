@@ -27,6 +27,18 @@ with Clio 0.8's two autonomy levels.
   an action the plugin does not serve, a missing project, or 24 steps. Nothing
   is armed between steps, at a gate, or after a stop
 - Desk key `a` fills `/wtfp:advance`
+- Desk tool `status`: the whole project in one read (phase, each section's
+  status, words, plan state, unsupported claims and blockers, open gates,
+  evidence counts, record issues, and the next step). Every Clio-available
+  action gets the desk projection; read-only actions hold only `status`,
+  `read_record`, `readiness`, and `gate` where they declare one
+- Desk `turn_start` hook: when a prompt arms a WTF-P action or advance in a
+  project, the desk injects its status as a model reminder within Clio's
+  2,000-character effect limit
+- Desk `after_tool` hook on `write` and `edit`: a successful write to the
+  manuscript of a section the armed action may update is noted, once per
+  section until measured, with the exact `measure_section` call. It spends none
+  of the turn's shared continuation budget
 
 ### Changed
 
@@ -41,8 +53,25 @@ with Clio 0.8's two autonomy levels.
   `yolo` on Clio and to a session started without per-call approvals in the
   host-neutral protocol
 - Clio availability records `certificationAutonomy: ["default"]`
+- Clio desk prompts load their method skill through `context(scope="skills")`,
+  which Clio keeps across compaction, instead of inlining it; state each desk
+  tool's argument shape, so the model calls it without a gateway `describe`
+  that resends the whole context; and name the bound contract for lookup
+  instead of reading it before acting. `advance` drops its union record
+  contract, since each step's prompt carries its own
+- Every `next_step` result restates the driver rule and where its step's
+  prompt lives, so a compacted advance turn can continue from the last result
+- Clio recipes carry per-role `latencyClass` and tool-call budgets, the four
+  read-only checkers load no project context, and each carries the role-result
+  object shape instead of the embedded schema. The 11 recipes total 67587
+  bytes, down from 79061 in 0.8.1
 - `clio/README.md` no longer says a `fleet run` runs no desk hook; Clio 0.6.3
   and later run the desk's tool hooks for its workers
+
+### Fixed
+
+- The desk's status reminder could reach 2,003 characters on a long project,
+  which Clio refuses as an effect; it is now cut within the limit
 
 ## [0.8.1] - 2026-11-08
 

@@ -80,7 +80,24 @@ author keeps pending or cannot be asked, a step that changed nothing the ladder
 reads, an action the plugin does not serve, a missing project, or 24 steps.
 The driver never starts or reshapes a project. Its turn holds the union of the
 chained actions' tools, so a step's tool scope is the driver's; its writes are
-confined to the step's contract all the same.
+confined to the step's contract all the same. Clio can compact a long run and
+drop the advance prompt, so every `next_step` result ends with the same
+one-sentence driver rule, and a step names its prompt file relative to the
+plugin root, found from the `base_dir` of the loaded `wtfp-manage-project`
+skill, which Clio keeps across compaction.
+
+An action orients from the desk rather than from record reads. The `status`
+tool returns the whole project in one call. When a prompt arms a WTF-P action
+or advance in a project, a `turn_start` hook injects the same status as a model
+reminder, cut to Clio's 2,000-character effect limit with a pointer to
+`status`. Clio fires `turn_start` once per operator prompt, so an advance step
+calls `status` instead. An `after_tool` hook on `write` and `edit` notes a
+successful write to the manuscript of a section the armed action may update
+with the exact `measure_section` call, once per section until it is measured.
+The note rides on the tool result and spends none of the turn's continuation
+budget, which Clio shares with its own nudges. Clio also hooks a dispatched
+worker's writes, so the note says the call belongs to the dispatching action.
+The desk declares no `turn_end` hook.
 
 Inside a WTF-P action or advance run every `ask_user` question is the
 author's. The write guard also hooks `ask_user`: it marks a lone question
@@ -100,7 +117,9 @@ the desk's hooks, which is the limit of every guarantee above.
 `clio-coder extensions test vendors/clio-extension` runs the package tests: the
 record contract, symbolic-link containment, each gate scenario, plan approval,
 evidence coverage, control weakening, arming, dispatch confinement, journal
-recovery, fresh-process trust, and the desk with and without its plugin. All
+recovery, fresh-process trust, the advance driver and its compaction-safe
+results, the status tool and reminder, the manuscript write note, and the desk
+with and without its plugin. All
 package resources come from its own install root. The manifest names emitted
 paths, so it does not load from this source directory. The other six host
 projections remain unchanged.

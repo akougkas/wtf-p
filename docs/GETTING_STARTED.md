@@ -174,7 +174,7 @@ cd /path/to/proposal
 clio-coder --autonomy yolo
 ```
 
-Clio narrows each WTF-P prompt's turn to the tools its action declares (`allowed-tools`) and caps its workers (`delegated-tools`). Every question WTF-P puts to you is sent as one only you may answer, so Clio never takes a recommended option for you when a question waits past `safety.unattendedAfterSeconds`; an unanswered one ends the turn instead. The desk's gate interviews never time out. Use `default` when you also want Clio's own approval card before plan-scale dispatch and unrecognized commands.
+Clio narrows each WTF-P prompt's turn to the tools its action declares (`allowed-tools`) and caps its workers (`delegated-tools`). Every question WTF-P puts to you is sent as one only you may answer, so Clio never takes a recommended option for you when a question waits past `safety.unattendedAfterSeconds`; an unanswered one ends the turn instead. The desk's gate interviews never time out. A prompt that starts a WTF-P action in a project begins from the desk's project status, so the action does not reread every record to find its place. Use `default` when you also want Clio's own approval card before plan-scale dispatch and unrecognized commands.
 
 `/wtfp:advance` runs the next actions in one turn. The desk, not the model, picks each step from the project records and arms its write guard for that action alone; it stops at the first gate only you can answer, asks it, and continues after your answer. A gate you keep pending, a step that changes nothing, an action this host cannot run, or 24 steps end the run. It never starts a project: run `/wtfp:new-paper` or `/wtfp:map-project` first.
 
