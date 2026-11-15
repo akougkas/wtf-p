@@ -1636,7 +1636,7 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 				action: next.action,
 				section,
 				prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`,
-				reason: `${next.command} is not finished: it recorded nothing the next step depends on. Record its outputs for what this step found, whatever the outcome (${creates.join(", ")}), then call extension_wtfp__next_step. Do not repeat its work.`,
+				reason: `Continue ${next.command}; it has not failed. It recorded nothing the next step depends on, so record its outputs for what it found, whatever the outcome (${creates.join(", ")}), then call extension_wtfp__next_step. Do not repeat its work.`,
 				finish: true,
 			};
 		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };

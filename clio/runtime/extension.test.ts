@@ -1037,7 +1037,7 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		// A step that changed nothing the ladder reads is handed back once to record its outputs, then not run again.
 		const finish = await nextStep(host);
 		assert.deepEqual([finish.data.kind, finish.data.action, finish.data.finish], ["step", "review-section", true]);
-		assert.match(finish.text, /review-section introduction is not finished: it recorded nothing.*project:\/\/sections\/introduction\/reviews\/\{review\}/);
+		assert.match(finish.text, /Continue \/wtfp:review-section introduction; it has not failed\. It recorded nothing.*project:\/\/sections\/introduction\/reviews\/\{review\}/);
 		const again = await nextStep(host);
 		assert.equal(again.data.kind, "stop");
 		assert.match(again.text, /changed nothing/);
