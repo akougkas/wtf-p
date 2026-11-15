@@ -18,8 +18,8 @@ with Clio 0.8's two autonomy levels.
   desk-less Clio copy in the Claude envelope fail closed with
   `WTFP_ACTION_UNAVAILABLE`. In one turn it runs `create-outline`,
   `discuss-section`, `research-gap`, `plan-section`, `write-section`,
-  `review-section`, `audit-milestone` and `submit-milestone` as the project
-  needs them, and stops at the first gate only the author can answer
+  `review-section`, `verify-work`, `plan-revision`, `audit-milestone` and
+  `submit-milestone` as the project needs them, and stops at the first gate only the author can answer
 - Desk tool `next_step`, answering only inside an advance turn: it picks each
   step by the ladder `progress` follows and arms the write guard for that
   action and section alone, puts a pending gate to the author through `gate`,
@@ -67,11 +67,50 @@ with Clio 0.8's two autonomy levels.
   bytes, down from 79061 in 0.8.1
 - `clio/README.md` no longer says a `fleet run` runs no desk hook; Clio 0.6.3
   and later run the desk's tool hooks for its workers
+- `/wtfp:advance` drives the author's acceptance loop: after a section is
+  reviewed it runs `verify-work`, which closes on one sealed accept/revise
+  checkpoint; revise routes to `plan-revision`, an approved revision plan to
+  `write-section`, and accept marks the section complete. A review counts
+  only for the draft it read, judged by the desk's own file times, and a
+  drafted section follows this ladder whatever its status field says. On
+  every host, `verify-work` declares the checkpoint and `plan-revision` sets
+  the section to `planned` when it links the plan
+- The ladder, portable and desk, creates the outline's section records with
+  `create-outline` before any section step; `new-paper` writes none
+- Clio prompts ask one question per `ask_user` call with its options, state
+  only the gate branch an action can take, map authored-artifact URIs to
+  their files, ask every dispatch for an agent and workspace-relative
+  `intent.read_roots`, keep every record field inside `record`, and tell a
+  record-only action (`create-outline`, `analyze-bib`) to do its writing
+  role's work in the turn
+- `research-gap` and `advance` hold the four read-only CiteNexus MCP lookups
+  (`mcp_cite-nexus__search-papers`, `resolve-paper`, `verify-citation`,
+  `get-citation`) and call them directly; the bundled dispatcher is the
+  fallback only when no `cite-nexus` server is declared
+- The four read-only reviewer recipes return only a verdict and checks, lead
+  with that output form, and end on an example; action prompts read a
+  reviewer's failed checks as its findings
+- The protocol's workflow rules, on every host, say an author's request never
+  widens an action's outputs, and to read a large source by section;
+  `write-section` sets a satisfied draft to `reviewing` and
+  `discuss-section` leaves the status alone
 
 ### Fixed
 
 - The desk's status reminder could reach 2,003 characters on a long project,
   which Clio refuses as an effect; it is now cut within the limit
+- Desk refusals say what to send instead: a missing `project_id`, every
+  schema error at once (up to eight), an authored artifact's file, the
+  kebab-case id rule, a writer's accepted roots, and, between advance steps,
+  to call `next_step`. A missing record's read and a refused create return
+  the record type's example
+- The record tool stamps a validation's `executed_at`, a checkpoint's
+  `created_at` and an evidence record's `verified_at` on create when the
+  writer leaves them out, and folds a record's own fields back in when they
+  arrive beside `record`
+- `measure_section` gives an action that may not record a count the desk's
+  count without writing, so no action counts words by hand
+- A `next_step` result carries its prompt's path relative to the plugin root
 
 ## [0.8.1] - 2026-11-08
 
