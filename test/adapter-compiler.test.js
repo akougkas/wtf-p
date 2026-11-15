@@ -1187,7 +1187,7 @@ record('Clio desk prompts load their method as a skill and call desk tools witho
     if (DRIVER_ACTIONS.includes(id)) {
       assert.match(body, /The driver writes nothing itself/, `${id}: the driver carries no union record contract`);
       assert.doesNotMatch(body, /^Produce:/m, `${id}: each step's own prompt states what it produces`);
-      assert.match(body, /next_step \{\}/);
+      assert.match(body, /next_step \{after\}/);
       assert.match(body, /Every `extension_wtfp__next_step` result restates this rule/);
     } else {
       assert.match(body, /^Produce: /m, `${id}: keeps its record contract`);

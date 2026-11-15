@@ -1650,7 +1650,7 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
  * dropping the advance prompt can still continue from the last result alone.
  */
 const DRIVER_RULE =
-	"Driver rule for this /wtfp:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_wtfp__next_step, call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
+	"Driver rule for this /wtfp:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_wtfp__next_step with after naming that step (\"start\" for the first call), call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
 
 /** Where a step's prompt lives, stated so it survives the loss of the advance prompt's resolved plugin root. */
 function stepPrompt(prompt: string): string {
