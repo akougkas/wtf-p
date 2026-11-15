@@ -3271,6 +3271,15 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 				.map((entry, index) => `task ${index + 1} (${entry.agent}): ${(narrowed[index] ?? []).join(", ") || "none, it only reads"}`)
 				.join("; ")}.`,
 		);
+	// Clio admits an extension's rewrite only as a narrowing, and reads a declared empty write_roots as an empty
+	// ceiling it may not widen, although the worker itself treats that list as no boundary. Name the roots instead.
+	const declaresEmpty = (item: unknown): boolean => isObject(item) && isObject(item.intent) && Array.isArray(item.intent.write_roots) && item.intent.write_roots.length === 0;
+	if (declaresEmpty(args) || (Array.isArray(args.tasks) && args.tasks.some(declaresEmpty)))
+		return block(
+			`WTF-P dispatch guard: an empty intent.write_roots bounds nothing for the worker, and Clio will not let the desk fill it in. Send ${entries
+				.map((entry, index) => `${entries.length > 1 ? `task ${index + 1} (${entry.agent}) ` : ""}intent.write_roots ${(needed[index] ?? []).join(", ") || "omitted, since it only reads"}`)
+				.join("; ")}, or leave write_roots out for the desk to confine it.`,
+		);
 	const rewritten = confineCall(args, needed);
 	return {
 		effects: [
