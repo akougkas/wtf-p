@@ -11,7 +11,7 @@ emits a standalone extension into `vendors/clio-extension/`:
 | generated from the action contracts | `runtime/write-guard.json` |
 | `evaluation/lib/json-schema.js` | `runtime/json-schema.cjs` |
 | `evaluation/lib/claim-coverage.js` | `runtime/claim-coverage.cjs` |
-| `protocol/project/schemas/`, `protocol/actions/` | `project/schemas/`, `actions/` |
+| `protocol/project/schemas/`, `protocol/project/templates/`, `protocol/actions/` | `project/schemas/`, `project/templates/`, `actions/` |
 | generated Clio action availability | `compatibility/action-availability.json` |
 
 Install the content plugin from `vendors/plugin/` and the extension separately.

@@ -1,0 +1,35 @@
+{
+  "schema": "wtfp.project.decisions/v1",
+  "project_id": "portable-research-demo",
+  "revision": 1,
+  "items": [
+    {
+      "id": "decision-host-neutral-core",
+      "authority": "author",
+      "disposition": "locked",
+      "statement": "The project record remains independent of any one runtime.",
+      "rationale": "Portability is the central contribution under evaluation.",
+      "scope_uri": "project://manifest",
+      "recorded_at": "2026-08-28T12:05:00Z"
+    },
+    {
+      "id": "decision-runtime-benchmarks",
+      "authority": "author",
+      "disposition": "deferred",
+      "statement": "Comparative runtime performance benchmarks are reserved for later work.",
+      "rationale": "The current paper evaluates protocol fidelity rather than runtime speed.",
+      "scope_uri": "project://structure/outline",
+      "recorded_at": "2026-08-28T12:06:00Z"
+    },
+    {
+      "id": "decision-example-order",
+      "authority": "author",
+      "disposition": "discretion",
+      "statement": "The editor may choose the order of the two implementation examples.",
+      "rationale": "Either order preserves the argument and venue constraints.",
+      "scope_uri": "project://sections/implementation",
+      "recorded_at": "2026-08-28T12:07:00Z"
+    }
+  ],
+  "updated_at": "2026-08-28T12:07:00Z"
+}

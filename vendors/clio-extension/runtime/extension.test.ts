@@ -491,6 +491,13 @@ test("record refuses wrong type, id, project and unknown fields without touching
 		assert.match(artifact.text, /authored artifact, not a JSON record; read or write \.planning\/sections\/introduction\/context\.md with the file tools/);
 		const plan = await host.tool("read_record", { uri: "project://sections/introduction/plans/initial" });
 		assert.match(plan.text, /\.planning\/sections\/introduction\/plans\/initial\.md/);
+		// A record that does not exist yet comes with its example, and so does a refused create (live: four calls, one field each).
+		const missing = await host.tool("read_record", { uri: "project://sections/methods" });
+		assert.match(missing.text, /does not exist yet[\s\S]*A section record looks like this example[\s\S]*"outline_uri"/);
+		const bare = await host.tool("record", { uri: "project://sections/methods", record: { schema: "wtfp.project.section/v1", id: "methods", project_id: PROJECT, title: "Methods" } });
+		assert.match(bare.text, /would not validate[\s\S]*A section record looks like this example[\s\S]*"word_target"/);
+		const update = await host.tool("record", { uri: "project://sections/introduction", record: { ...section, surprise: true }, expect_sha256 });
+		assert.doesNotMatch(update.text, /looks like this example/, "an update is refused without the example");
 		const snake = await host.tool("read_record", { uri: "project://checkpoints/confirm_outline" });
 		assert.match(snake.text, /invalid id; record ids are lowercase .* such as confirm-outline/);
 	}));

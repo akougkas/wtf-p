@@ -83,6 +83,24 @@ interface CoverageReport {
 
 const PACKAGE_ROOT = fileURLToPath(new URL("../", import.meta.url));
 const SCHEMAS = path.join(PACKAGE_ROOT, "project", "schemas");
+const TEMPLATES = path.join(PACKAGE_ROOT, "project", "templates");
+
+/**
+ * The example record of a type, so a model creating one sees every field it
+ * needs at once instead of learning them from one refusal per call.
+ */
+function templateFor(type: string): string {
+	try {
+		return JSON.stringify(JSON.parse(readFileSync(path.join(TEMPLATES, `${type}.json`), "utf8")));
+	} catch {
+		return "";
+	}
+}
+
+function withTemplate(message: string, type: string): string {
+	const template = templateFor(type);
+	return template ? `${message}\nA ${type} record looks like this example; replace its ids, project_id and content, and omit updated_at, which the desk sets: ${template}` : message;
+}
 interface GuardAction {
 	produces: Array<{ uri: string; mode: string }>;
 }
@@ -1184,6 +1202,19 @@ interface Prepared {
  * answers and its derived counts.
  */
 function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk", armed: Armed | null): Prepared {
+	try {
+		return prepareRecord(workspace, input, origin, armed);
+	} catch (error) {
+		// A create refused for its content carries the record's example, so the next call can succeed.
+		const route = RECORD_URIS.find((entry) => entry.pattern.test(input.uri));
+		const creating = route !== undefined && !existsSync(path.join(workspace, route.file(route.pattern.exec(input.uri)?.[1] ?? "")));
+		const content = error instanceof Error && /holds wtfp\.project|whose id is|project_id|belongs to project|would not validate/u.test(error.message);
+		if (creating && content && route) throw new Error(withTemplate((error as Error).message, route.type));
+		throw error;
+	}
+}
+
+function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | "desk", armed: Armed | null): Prepared {
 	const { uri } = input;
 	const record = input.record;
 	if (record === null || typeof record !== "object" || Array.isArray(record)) throw new Error(`${uri}: record must be a JSON object`);
@@ -2179,7 +2210,7 @@ function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: str
 	const bytes = readBytes(workspace, file);
 	if (bytes === null) {
 		if (contained(workspace, file) === null) throw new Error(`${uri} is reached through a symbolic link; the desk does not follow links`);
-		return { text: `${uri} does not exist yet; create it without expect_revision or expect_sha256.`, data: { uri, file, exists: false } };
+		return { text: withTemplate(`${uri} does not exist yet; create it without expect_revision or expect_sha256.`, route.type), data: { uri, file, exists: false } };
 	}
 	let record: unknown;
 	try {

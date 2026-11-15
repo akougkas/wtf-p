@@ -1,0 +1,18 @@
+{
+  "schema": "wtfp.project.evidence/v1",
+  "id": "evidence-portability-boundaries",
+  "project_id": "portable-research-demo",
+  "source_uri": "project://sources/source-portable-protocols-2026",
+  "claim_id": "claim-portable-state",
+  "relation": "supports",
+  "statement": "Separating portable project state from runtime adapters reduces host-specific workflow coupling.",
+  "locator": {
+    "kind": "section",
+    "value": "4.2"
+  },
+  "interpretation": "The source supports the architectural direction but does not establish performance benefits.",
+  "limitations": ["The evaluation covers three runtime families rather than every available runtime."],
+  "confidence": "high",
+  "inspection_depth": "full-text",
+  "verified_at": "2026-08-28T12:25:00Z"
+}

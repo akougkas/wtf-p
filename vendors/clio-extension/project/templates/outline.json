@@ -1,0 +1,38 @@
+{
+  "schema": "wtfp.project.outline/v1",
+  "project_id": "portable-research-demo",
+  "revision": 1,
+  "thesis": "A host-neutral project protocol makes academic workflows portable without weakening evidence and decision fidelity.",
+  "target_words": 6000,
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "goal": "Establish the portability problem, the evidence-fidelity requirement, and the paper's contribution.",
+      "argument_role": "setup",
+      "word_target": 1500,
+      "wave": 1,
+      "depends_on": [],
+      "claim_ids": ["claim-portable-state"],
+      "research": {
+        "required": true,
+        "topics": ["Portable workflow protocols", "Evidence provenance in research systems"]
+      }
+    },
+    {
+      "id": "implementation",
+      "title": "Protocol Design",
+      "goal": "Define the portable records, safety boundaries, and adapter responsibilities.",
+      "argument_role": "method",
+      "word_target": 4500,
+      "wave": 2,
+      "depends_on": ["introduction"],
+      "claim_ids": ["claim-adapter-boundary"],
+      "research": {
+        "required": false,
+        "topics": []
+      }
+    }
+  ],
+  "updated_at": "2026-08-28T12:30:00Z"
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "wtfp.project.interaction/v1",
+  "id": "interaction-contribution-framing",
+  "project_id": "portable-research-demo",
+  "kind": "checkpoint-answer",
+  "subject_uri": "project://checkpoints/checkpoint-contribution-framing",
+  "channel": "host-prompt",
+  "outcome": "selected",
+  "selected_option": "protocol-contribution",
+  "presented": {
+    "content_sha256": "e7f2159eb2d8e77524833d50f6967684954ddec0ca5af53b05867da46ddf26e0",
+    "options": ["protocol-contribution", "workflow-contribution"]
+  },
+  "asked_at": "2026-08-28T12:45:00Z",
+  "answered_at": "2026-08-28T12:52:00Z"
+}

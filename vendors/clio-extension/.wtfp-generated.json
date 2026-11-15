@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "792b2397648eb1646fc9a114cd2c820af10de166d1de2bea31939ffa641034cc",
+  "sourceHash": "141718772171456879f72c08f88dc5180447ca65f6cc63e086622ba2569e9885",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -209,6 +209,50 @@
       "sha256": "89e8bdc850474d557e816a4db5e5e46cf401fb73b98863a1e49a42af33689fa1"
     },
     {
+      "path": "project/templates/checkpoint.json",
+      "sha256": "f993221d00fa3938a02958eed91d368f0468d45612cfe22bfce56f558640f309"
+    },
+    {
+      "path": "project/templates/config.json",
+      "sha256": "2df6d5c96d4ec074ec70348ae5a5bff29c034c92f5814d285c73576f70998016"
+    },
+    {
+      "path": "project/templates/decisions.json",
+      "sha256": "73a4f4dac5db9dcf9d339b2cc2dafc55714f7c35f46d28412b5949bc871a43b3"
+    },
+    {
+      "path": "project/templates/evidence.json",
+      "sha256": "640adf3f0031084d9f715bba9138857ad83f8481ed126588f953e4feea25031e"
+    },
+    {
+      "path": "project/templates/interaction.json",
+      "sha256": "ef4f2393d52da7568601025c705c9180fac3d8b45503bcfde9caadcb9f4f992a"
+    },
+    {
+      "path": "project/templates/manifest.json",
+      "sha256": "f2beaa64e1fb853e40282e36f35edcb17f463b53af217c0fcd8a9716f402790c"
+    },
+    {
+      "path": "project/templates/outline.json",
+      "sha256": "e754a9604c4f9f74980d58082e5216ff2ddad16b31e472649e6c000c6650255e"
+    },
+    {
+      "path": "project/templates/section.json",
+      "sha256": "600956c46c93279a682312020bdcd8049182c9eb18c35c4983dece40fd246d0d"
+    },
+    {
+      "path": "project/templates/source.json",
+      "sha256": "35caa0b9f028fccf6b8da426add83866c3205f200dfc7a87a11aef9942726a51"
+    },
+    {
+      "path": "project/templates/state.json",
+      "sha256": "70f769d813914a036036cf9171c9ec28b15a3e4821524d43ade9c721a225c84b"
+    },
+    {
+      "path": "project/templates/validation.json",
+      "sha256": "0df96fe5e0f0bafff69bc6b999c0bf2d6a01749a9acb17a17e241e3b72e4a89d"
+    },
+    {
       "path": "runtime/claim-coverage.cjs",
       "sha256": "8de239c70454ffe3b267c251ba3344129f350903374a544fa686cf804c1993ca"
     },
@@ -218,11 +262,11 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "df85815810a699deb4d9dd8ae671eb500c3bac088c72971befaf4310929029a5"
+      "sha256": "3a6083121c255d972ba3d5b19f150bac5d20936de8c202664e1959442a710786"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "69adccf6c54b289af0b5bbd9aea165c7a572ddf01cceee12ec77b97da66c359a"
+      "sha256": "44cdf7be38e65c8673ef7af058ecae3c9195a04e1a38511c49de21765c1a3944"
     },
     {
       "path": "runtime/json-schema.cjs",
