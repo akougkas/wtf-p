@@ -1421,7 +1421,8 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 	}
 	if (STAMPED.has(route.type)) next.updated_at = timestamp();
 	const createdAt = CREATED_AT[route.type];
-	if (bytes === null && createdAt && next[createdAt] === undefined) next[createdAt] = timestamp();
+	// A model has no clock: an invented time can order a validation before the answer it follows, so the desk's time stands.
+	if (bytes === null && createdAt && (origin === "agent" || next[createdAt] === undefined)) next[createdAt] = timestamp();
 	const errors = validateRecord(next);
 	// Every error at once: a model fixing one per call resends its whole context each time.
 	if (errors.length > 0)
