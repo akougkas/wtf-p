@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "8e6b3f955437a94e4bd4854a66dda2626dc9f6d164232488ee6b92ba2016bab6",
+  "sourceHash": "3b49d7b57fcaf8c67bde4f00e11cd3937409a5e0e26cb548302a8eb0279d62c9",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -374,7 +374,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
-      "sha256": "0214d8d7ad64252ee99ca8b0163e80911055cd3fca1333a7a37a7c1cad9d6650"
+      "sha256": "27d76707639dd77fb6af23213720fa5977301d57f6238ceb44c9c1c55f91d5ec"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",

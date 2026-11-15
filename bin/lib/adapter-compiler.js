@@ -750,7 +750,7 @@ function clioResearchConnectionBody(action) {
   return [
     '## Clio CiteNexus binding',
     '',
-    'At yolo autonomy, the main agent first calls `gateway(op="find", query="cite-nexus")`. If a CiteNexus server is present and its tools are admitted as read-class through the operator\'s user configuration, call `gateway(op="describe", capability="<search-papers capability>")`, then `gateway(op="call", capability="<search-papers capability>", args={...})` with bounded public metadata queries. Use the capability name and argument schema returned by the gateway, not a guessed name. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. If no read-class CiteNexus connection is available and no gateway call has been refused, yolo may instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
+    'At yolo autonomy, search through the operator\'s CiteNexus MCP server, declared as `cite-nexus` with read-class tools in their user configuration. This prompt admits its four lookup capabilities, so call them directly without a gateway `find` or `describe`, each of which resends the whole context: `gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})` with a bounded public metadata query, `providers` drawn from `crossref`, `datacite`, `europe_pmc` and `arxiv`, and `limit` at most 10 per provider; results are compact, without abstracts. Check a candidate with `mcp_cite-nexus__resolve-paper` `{identifier}` or `mcp_cite-nexus__verify-citation` `{citation, expected_title, expected_year}`, and fetch a reference with `mcp_cite-nexus__get-citation` `{identifier, format}`. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. Only if the gateway reports no MCP server named `cite-nexus` may yolo instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
   ].join('\n');
 }
 
@@ -1078,6 +1078,8 @@ function clioToolList(entries) {
 const CLIO_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
 // Held only by actions that require workflow.drive: the desk arms each step itself.
 const CLIO_DRIVER_TOOL = 'extension_wtfp__next_step';
+// The CiteNexus lookups the research binding calls, under the server id CiteNexus documents.
+const CLIO_CITE_NEXUS_TOOLS = Object.freeze(['search-papers', 'resolve-paper', 'verify-citation', 'get-citation'].map((tool) => `mcp_cite-nexus__${tool}`));
 
 // The tools one Clio prompt's turn may hold (allowed-tools), from the Clio
 // bindings of the action's declared capabilities. Clio 0.6.3 narrows a
@@ -1094,6 +1096,9 @@ function clioActionTools(action, deskTools) {
   if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
   if (deskTools) tools.push(...clioDeskTools(action));
   if (deskTools && capabilities.has('workflow.drive')) tools.push(CLIO_DRIVER_TOOL);
+  // Clio admits an MCP server's tools only when the turn names each capability;
+  // the CiteNexus binding would otherwise be refused by the prompt's own scope.
+  if (action.id === 'research-gap' || capabilities.has('workflow.drive')) tools.push(...CLIO_CITE_NEXUS_TOOLS);
   return tools;
 }
 

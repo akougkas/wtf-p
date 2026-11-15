@@ -20,6 +20,10 @@ allowed-tools:
   - extension_wtfp__readiness
   - extension_wtfp__measure_section
   - extension_wtfp__gate
+  - mcp_cite-nexus__search-papers
+  - mcp_cite-nexus__resolve-paper
+  - mcp_cite-nexus__verify-citation
+  - mcp_cite-nexus__get-citation
 delegated-tools:
   - context
   - edit
@@ -91,7 +95,7 @@ Every question `ask_user` puts to the author here is the author's to answer: ask
 
 ## Clio CiteNexus binding
 
-At yolo autonomy, the main agent first calls `gateway(op="find", query="cite-nexus")`. If a CiteNexus server is present and its tools are admitted as read-class through the operator's user configuration, call `gateway(op="describe", capability="<search-papers capability>")`, then `gateway(op="call", capability="<search-papers capability>", args={...})` with bounded public metadata queries. Use the capability name and argument schema returned by the gateway, not a guessed name. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. If no read-class CiteNexus connection is available and no gateway call has been refused, yolo may instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.
+At yolo autonomy, search through the operator's CiteNexus MCP server, declared as `cite-nexus` with read-class tools in their user configuration. This prompt admits its four lookup capabilities, so call them directly without a gateway `find` or `describe`, each of which resends the whole context: `gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})` with a bounded public metadata query, `providers` drawn from `crossref`, `datacite`, `europe_pmc` and `arxiv`, and `limit` at most 10 per provider; results are compact, without abstracts. Check a candidate with `mcp_cite-nexus__resolve-paper` `{identifier}` or `mcp_cite-nexus__verify-citation` `{citation, expected_title, expected_year}`, and fetch a reference with `mcp_cite-nexus__get-citation` `{identifier, format}`. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. Only if the gateway reports no MCP server named `cite-nexus` may yolo instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.
 
 ## Clio role-result binding
 

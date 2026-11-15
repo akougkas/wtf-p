@@ -823,11 +823,13 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
   const lifecycleGuards = {
     'prompts/wtfp/research-gap.md': [
       '## Clio CiteNexus binding',
-      'gateway(op="find", query="cite-nexus")',
-      'gateway(op="describe", capability="<search-papers capability>")',
+      'call them directly without a gateway `find` or `describe`',
+      'gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})',
+      '  - mcp_cite-nexus__search-papers\n  - mcp_cite-nexus__resolve-paper\n  - mcp_cite-nexus__verify-citation\n  - mcp_cite-nexus__get-citation\n',
+      'Only if the gateway reports no MCP server named `cite-nexus`',
       'MCP connections are session-owned and unavailable in delegated workers',
       'do not call `ask_user` again for each query',
-      'yolo may instead run the bundled `citation-search --backend=cite-nexus`',
+      'may yolo instead run the bundled `citation-search --backend=cite-nexus`',
       'An operator-set offline flag, unavailable companion, or host refusal stops this route',
       'Never bypass a gateway refusal by rerunning the same denied request through `bash`'
     ],

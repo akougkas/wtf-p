@@ -21,6 +21,10 @@ allowed-tools:
   - extension_wtfp__measure_section
   - extension_wtfp__gate
   - extension_wtfp__next_step
+  - mcp_cite-nexus__search-papers
+  - mcp_cite-nexus__resolve-paper
+  - mcp_cite-nexus__verify-citation
+  - mcp_cite-nexus__get-citation
 delegated-tools:
   - context
   - edit

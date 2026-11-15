@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "1608c9fc8949820e4e9a289af58c0810bb9866e62bb56b1866cb96c826b5c3b6",
+  "sourceHash": "b94d4822929e0080c1407e294de8d1f3dfd67544b8dc7344cd40df56ee16e624",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,7 +210,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/advance.md",
-      "sha256": "ca2fc71259900495d90eb51f48b377f1a34a3838f5afcaa67fe117ed07b6998c"
+      "sha256": "5019a7e042ca2d636f43cc300da9ac00814e0e8ab93c7145323bd4ee1a51cdfb"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
@@ -322,7 +322,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
-      "sha256": "5739a639b79ed4d5ce53b6122c41876bd4251b3c0ac3bef601b565b4fbd6c293"
+      "sha256": "8fcd66f0456832856503729739141352888841cbab3f5f217d25f424a49a0f98"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",
