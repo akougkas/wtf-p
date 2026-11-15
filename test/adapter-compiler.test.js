@@ -1300,6 +1300,7 @@ record('research handoff declares incremental state and preserves native decisio
       assert.doesNotMatch(body, /wtfp\.role-result/, `${role}: a verifier carries no nested role result`);
       assert.match(body, /Example: \{"verdict":"fail","checks":\[/, `${role}: a verifier sees one concrete example`);
       assert.match(body, /a failed check is a finding, and fail means revise/);
+      assert.ok(body.indexOf('**Output:** your final message is one JSON object') < body.indexOf('## Purpose'), `${role}: the output form comes before the role body`);
     } else {
       assert.match(body, /entry named wtfp.role-result/);
       assert.match(body, /status needs_input/);

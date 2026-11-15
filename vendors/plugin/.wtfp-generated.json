@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "ccf24b25b5c9f842fea25676950e8b56da05fc660e7f0422194d3ecb379186fc",
+  "sourceHash": "cc0bd8478f27121633724365d05d3d40aba2d569c8cfe26730a598971818a34c",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -154,7 +154,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-argument-verifier.md",
-      "sha256": "1382256faccced7ee87b1a5e49471db82fb4b70df79b9d1203d913ae068d68ca"
+      "sha256": "ad734f46881d8a5ebe06324ee20e32e2279b91b3c96a30b20dbf07c495eef646"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-citation-expert.md",
@@ -166,7 +166,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-coherence-checker.md",
-      "sha256": "7c9204d475674bfa1f026836864264b11578a946d34de0cc814298196b972676"
+      "sha256": "3203b86118e1ca7d1a73d54308a4f722e8d6240dca211eb96db4d4573d9ed947"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-outliner.md",
@@ -174,7 +174,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-plan-checker.md",
-      "sha256": "42b646bf4383b356bc98a46391e37556f7d6478e9afabb937a973874c5a7855f"
+      "sha256": "bbe9e9b817bfeec1f310cf162ff2c49e6ddac25d773c91106d4861d1abb1a770"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-prose-polisher.md",
@@ -190,7 +190,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-reviewer.md",
-      "sha256": "07fb36204e5c84859822a92733ee8b8e79c6f8a56b397080ad29ce1801c1fc8e"
+      "sha256": "3970c8f186ee30eb7e90bca91589538e0b6d3ac60e63bdfb935f2a56e54f6770"
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-writer.md",

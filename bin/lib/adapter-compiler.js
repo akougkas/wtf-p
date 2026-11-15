@@ -1215,6 +1215,8 @@ function renderClioRole(role, slug) {
     '',
     generatedBanner('protocol/roles', slug),
     '',
+    // A small model writes the review its long body describes; it reads the output form first.
+    ...(verifier ? ['**Output:** your final message is one JSON object, `{"verdict":"pass|fail","checks":[...]}`, and nothing else. Do every step below as checks in that object, not as a Markdown review; the exact form is in the Clio result contract at the end.', ''] : []),
     nativeWorkflowBody(roleBodyWithoutPortableResult(role), 'clio'),
     '',
     '## Clio result contract',
