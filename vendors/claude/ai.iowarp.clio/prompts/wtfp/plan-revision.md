@@ -20,8 +20,8 @@ allowed-tools:
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -48,6 +48,8 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${pluginRoot}/project/templates/checkpoint.json
 @${pluginRoot}/project/schemas/section.schema.json
 @${pluginRoot}/project/templates/section.json
+@${pluginRoot}/project/schemas/state.schema.json
+@${pluginRoot}/project/templates/state.json
 
 ## Invocation input
 

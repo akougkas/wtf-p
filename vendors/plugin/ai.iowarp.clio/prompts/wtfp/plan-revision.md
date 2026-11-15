@@ -24,8 +24,8 @@ Before acting, load the `wtfp-plan-section` skill with `context(scope="skills", 
 
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.
 

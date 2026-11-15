@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "163d08f8b7ba6bf12bb3e221b9434291d375406d25a1e379d9edebf90e2f3cc5",
+  "sourceHash": "a249113d0150bed2fe7481b2fddd1ae1e1675041c074d8fcfe31d2b269539ca9",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -90,7 +90,7 @@
     },
     {
       "path": "actions/plan-revision.json",
-      "sha256": "43bbeb67e1fdbf55d4ecec28fd681d8747dd044d5080879e21854741340fe213"
+      "sha256": "ca4091b4c2e2de9da18278a0ce463d187081012f19fac9667f06a520a4954af0"
     },
     {
       "path": "actions/plan-section.json",
@@ -290,7 +290,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-revision.md",
-      "sha256": "57c6175b56eeff34954b9edfe2888247f28f22305bb8ea5c1f25cb3f2a99de5e"
+      "sha256": "32a75d0a9fb55f2e61bd6e8155d44b8db47bdeaf9485de20a5b93f24c1cf7ec3"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
@@ -778,7 +778,7 @@
     },
     {
       "path": "workflows/plan-revision.md",
-      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
+      "sha256": "7b5547b8556fe6727a70dc5873a584bc166f80fbc64beeea9b8bb545349c305f"
     },
     {
       "path": "workflows/plan-section.md",

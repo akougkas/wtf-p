@@ -22,6 +22,7 @@
   "reads": [
     "project://manifest",
     "project://config",
+    "project://state",
     "project://decisions",
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
@@ -42,6 +43,10 @@
     {
       "uri": "project://sections/{section}",
       "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -53,15 +58,15 @@
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sections/{section}"
+      "scope": "project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}, project://state"
     },
     {
       "id": "user.gate",

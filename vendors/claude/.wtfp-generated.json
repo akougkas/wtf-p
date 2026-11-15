@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "e68ac7b354ab0d89d9c0a808e418145fd514f3ef72dca787fbbbde6f60ec1f15",
+  "sourceHash": "412087c2efe20e5c3f5a5476934411ccab1ce3e30c624b69a6a71c2eded9957c",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -98,7 +98,7 @@
     },
     {
       "path": "actions/plan-revision.json",
-      "sha256": "43bbeb67e1fdbf55d4ecec28fd681d8747dd044d5080879e21854741340fe213"
+      "sha256": "ca4091b4c2e2de9da18278a0ce463d187081012f19fac9667f06a520a4954af0"
     },
     {
       "path": "actions/plan-section.json",
@@ -342,7 +342,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-revision.md",
-      "sha256": "4ad72e37b31d20cc39186fc3c0a42b2f07edd2184ea1ed4bcdce235126662d77"
+      "sha256": "27db8fe385e202993efefb8ff9b0c0c773c82043003921a066bf9739b729ffcc"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
@@ -498,7 +498,7 @@
     },
     {
       "path": "commands/plan-revision.md",
-      "sha256": "7b35d037afa6c16fff2a247139dbf8c9231dcc01786089aa7effab2b24e7641a"
+      "sha256": "90197f3144078d19d7b652076aa493ebb2c5ea61154d0c95f9b6e59d4a20289b"
     },
     {
       "path": "commands/plan-section.md",
@@ -1002,7 +1002,7 @@
     },
     {
       "path": "workflows/plan-revision.md",
-      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
+      "sha256": "7b5547b8556fe6727a70dc5873a584bc166f80fbc64beeea9b8bb545349c305f"
     },
     {
       "path": "workflows/plan-section.md",

@@ -377,6 +377,10 @@
         {
           "uri": "project://sections/{section}",
           "mode": "update"
+        },
+        {
+          "uri": "project://state",
+          "mode": "update"
         }
       ]
     },

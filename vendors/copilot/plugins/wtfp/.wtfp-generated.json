@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "68ceb7ac65b53447e038b9bc7a11de7fe473b58aa5963ed87f3b3be82ab7b065",
+  "sourceHash": "21b3e1034e68217f5192f8aaa2db78007d1adb750264eeeaf96e1149da99eebc",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -94,7 +94,7 @@
     },
     {
       "path": "actions/plan-revision.json",
-      "sha256": "43bbeb67e1fdbf55d4ecec28fd681d8747dd044d5080879e21854741340fe213"
+      "sha256": "ca4091b4c2e2de9da18278a0ce463d187081012f19fac9667f06a520a4954af0"
     },
     {
       "path": "actions/plan-section.json",
@@ -294,7 +294,7 @@
     },
     {
       "path": "commands/wtfp-plan-revision.md",
-      "sha256": "a4361c4f9499e25fceba3662a276b41e8ea28a5380ef651fbd476b426e6696d3"
+      "sha256": "7276d0fed0dfe4e0a4b13d362fd1c1d2c7dd6ea8b3c6342a155d4ab964a33d0a"
     },
     {
       "path": "commands/wtfp-plan-section.md",
@@ -778,7 +778,7 @@
     },
     {
       "path": "workflows/plan-revision.md",
-      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
+      "sha256": "7b5547b8556fe6727a70dc5873a584bc166f80fbc64beeea9b8bb545349c305f"
     },
     {
       "path": "workflows/plan-section.md",

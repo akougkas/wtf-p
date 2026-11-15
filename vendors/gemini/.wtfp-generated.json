@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "9973f5ca40f7aa814ff3eb5af597fffe0cf4a2d183059a0ba53364c6dfa0ec75",
+  "sourceHash": "44403c9da84190626169238cc100b1015ee79c67ecab63ddeb4a5ec097152963",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -90,7 +90,7 @@
     },
     {
       "path": "actions/plan-revision.json",
-      "sha256": "43bbeb67e1fdbf55d4ecec28fd681d8747dd044d5080879e21854741340fe213"
+      "sha256": "ca4091b4c2e2de9da18278a0ce463d187081012f19fac9667f06a520a4954af0"
     },
     {
       "path": "actions/plan-section.json",
@@ -290,7 +290,7 @@
     },
     {
       "path": "commands/wtfp/plan-revision.toml",
-      "sha256": "4a241926d7270c129f975f1c7c59bd74c9ed359b48ad0770d9958b3259db07e1"
+      "sha256": "5a8462d0392fa5e34691fb615aec84a69f810799a011d00252a33f94b883881a"
     },
     {
       "path": "commands/wtfp/plan-section.toml",
@@ -782,7 +782,7 @@
     },
     {
       "path": "workflows/plan-revision.md",
-      "sha256": "27611249b7ce3d8fb0dba8065d07a14075550e372d022f2acd1638591c83aae1"
+      "sha256": "7b5547b8556fe6727a70dc5873a584bc166f80fbc64beeea9b8bb545349c305f"
     },
     {
       "path": "workflows/plan-section.md",

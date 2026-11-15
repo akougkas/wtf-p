@@ -280,8 +280,8 @@ Completion requires preservation of all authored work and consistent outline/sta
 </details>
 ## Record contract
 
-Read: `project://manifest`, `project://config`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
-Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update).
+Read: `project://manifest`, `project://config`, `project://state`, `project://decisions`, `project://sections/{section}`, `project://sections/{section}/plans/{plan}`, `project://sections/{section}/reviews/{review}`, `project://sections/{section}/summary`, `project://validations/{validation}`, `project://paper/{artifact}`.
+Produce: `project://sections/{section}/plans/{plan}` (create), `project://checkpoints/{checkpoint}` (create), `project://sections/{section}` (update), `project://state` (update).
 
 Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
 
@@ -329,6 +329,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "reads": [
     "project://manifest",
     "project://config",
+    "project://state",
     "project://decisions",
     "project://sections/{section}",
     "project://sections/{section}/plans/{plan}",
@@ -349,6 +350,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "uri": "project://sections/{section}",
       "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
     }
   ],
   "delegation": [],
@@ -360,15 +365,15 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     },
     {
       "id": "filesystem.modify",
-      "scope": "project://sections/{section}"
+      "scope": "project://sections/{section}, project://state"
     },
     {
       "id": "filesystem.read",
-      "scope": "project://manifest, project://config, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://validations/{validation}, project://paper/{artifact}"
     },
     {
       "id": "filesystem.write",
-      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}"
+      "scope": "project://sections/{section}/plans/{plan}, project://checkpoints/{checkpoint}, project://sections/{section}, project://state"
     },
     {
       "id": "user.gate",
@@ -687,6 +692,96 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "checkpoint_uris": [],
   "validation_uris": [],
   "updated_at": "2026-08-28T12:35:00Z"
+}
+
+</details>
+<details data-wtfp-source="protocol://project/schemas/state.schema.json" open>
+<summary>Bundled WTF-P protocol resource: project/schemas/state.schema.json</summary>
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.wtf-p.dev/project/state/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project_id",
+    "revision",
+    "phase",
+    "status",
+    "current_section_uri",
+    "progress",
+    "active_checkpoint_uris",
+    "updated_at"
+  ],
+  "properties": {
+    "schema": { "const": "wtfp.project.state/v1" },
+    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "revision": { "type": "integer", "minimum": 0 },
+    "phase": {
+      "enum": ["initialized", "mapped", "outlining", "planning", "writing", "reviewing", "ready", "delivered"]
+    },
+    "status": { "enum": ["active", "paused", "blocked", "complete"] },
+    "current_section_uri": {
+      "type": ["string", "null"],
+      "pattern": "^project://sections/[A-Za-z0-9._~-]+$"
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections_total", "sections_complete", "word_target", "word_count"],
+      "properties": {
+        "sections_total": { "type": "integer", "minimum": 0 },
+        "sections_complete": { "type": "integer", "minimum": 0 },
+        "word_target": { "type": "integer", "minimum": 0 },
+        "word_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "active_checkpoint_uris": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^project://checkpoints/[A-Za-z0-9._~-]+$" },
+      "uniqueItems": true
+    },
+    "last_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "reason", "at"],
+      "properties": {
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 },
+        "at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+      }
+    },
+    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+  }
+}
+
+</details>
+<details data-wtfp-source="protocol://project/templates/state.json" open>
+<summary>Bundled WTF-P protocol resource: project/templates/state.json</summary>
+
+{
+  "schema": "wtfp.project.state/v1",
+  "project_id": "portable-research-demo",
+  "revision": 0,
+  "phase": "outlining",
+  "status": "active",
+  "current_section_uri": "project://sections/introduction",
+  "progress": {
+    "sections_total": 2,
+    "sections_complete": 0,
+    "word_target": 6000,
+    "word_count": 0
+  },
+  "active_checkpoint_uris": [],
+  "last_transition": {
+    "from": "initialized",
+    "to": "outlining",
+    "reason": "The project brief and author decisions are recorded.",
+    "at": "2026-08-28T12:10:00Z"
+  },
+  "updated_at": "2026-08-28T12:10:00Z"
 }
 
 </details>
