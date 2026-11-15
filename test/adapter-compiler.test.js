@@ -1129,6 +1129,33 @@ record('every bundled native resource reference resolves inside its target envel
   }
 });
 
+record('Clio desk prompts load their method as a skill and call desk tools without a describe or contract round trip', () => {
+  // Clio resends an inlined file with every request and the whole context on each
+  // gateway describe or file read; a skill loaded through context survives compaction.
+  const portable = plansById.get('portable-plugin');
+  const desk = actionIds
+    .map((id) => [id, planText(portable, `ai.iowarp.clio/prompts/wtfp/${id}.md`)])
+    .filter(([, body]) => /extension_wtfp__read_record|extension_wtfp__next_step/.test(body));
+  assert.ok(desk.length >= 30, `expected the desk-bound prompts, found ${desk.length}`);
+  for (const [id, body] of desk) {
+    assert.match(body, /load the `wtfp-[a-z-]+` skill with `context\(scope="skills", name="wtfp-[a-z-]+"\)`/, `${id}: loads its skill`);
+    assert.doesNotMatch(body, /^@protocol:/m, `${id}: inlines no protocol file`);
+    assert.doesNotMatch(body, /gateway\(op="describe", capability="extension_wtfp__/, `${id}: describes no desk tool before calling it`);
+    assert.match(body, /without a describe first; args: status \{\}/, `${id}: states the desk tools' argument shapes`);
+    assert.match(body, new RegExp(`The desk enforces \`\\$\\{pluginRoot\\}/actions/${id}\\.json\`.*Read it only when a refusal needs its exact terms\\.`), `${id}: reads its contract only on demand`);
+    assert.doesNotMatch(body, /with `read` before acting/, `${id}: no mandatory contract read`);
+    if (DRIVER_ACTIONS.includes(id)) {
+      assert.match(body, /The driver writes nothing itself/, `${id}: the driver carries no union record contract`);
+      assert.doesNotMatch(body, /^Produce:/m, `${id}: each step's own prompt states what it produces`);
+      assert.match(body, /next_step \{\}/);
+      assert.match(body, /Every `extension_wtfp__next_step` result restates this rule/);
+    } else {
+      assert.match(body, /^Produce: /m, `${id}: keeps its record contract`);
+      assert.match(body, /`extension_wtfp__status` inside an advance run or after this action writes/, `${id}: names status where the turn_start reminder is stale`);
+    }
+  }
+});
+
 record('the Claude envelope keeps its pre-playbook Clio namespace under the legacy fleet names', () => {
   const claude = plansById.get('claude');
   const portable = plansById.get('portable-plugin');
