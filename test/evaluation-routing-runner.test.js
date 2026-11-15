@@ -193,7 +193,7 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'dcc0f8320caf308f0a0f335d632074f49854144449f7c39665e17df3f4c38574');
+    assert.strictEqual(suite.manifest_sha256, '55f8f3776f98ce7cfc6f73573f4b66407acad56f70a68e712d0198492215a4d0');
     assert.strictEqual(suite.client_surfaces_sha256,
       'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
     assert.strictEqual(suite.rows.length, 3);
@@ -1231,10 +1231,10 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      '973a9937536b48c0f063ec3ff139ce068888ed6c');
+      'baeb170e723207a67122b691960a1e00c8a33399');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      '7e155d2a420c79ad50b03d0c7716a6debf46bdddcaa73a1bb874f4ce71580754');
+      '317fa94ee95a901ef984e82446d868a288c1a7ed4e2f7043c5438790f936203a');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
     assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1703);
   });
