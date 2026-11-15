@@ -835,6 +835,18 @@ test("an author's note on a gate answer reaches the next step, and typed text as
 		assert.match(ready.text, /not approve, with this note for the next plan: Split the claim in two\./);
 	}, SERVED));
 
+test("the author's approval links the plan it approves, in the same commit", () =>
+	withDesk(async (host, workspace) => {
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, status: "not-started", artifacts: { ...(section.artifacts as Json), plans: [] } });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const linked = read(workspace, ".planning/sections/introduction/section.json");
+		assert.deepEqual((linked.artifacts as Json).plans, [PLAN_URI]);
+		assert.equal(linked.status, "planned");
+		assert.equal(((await host.tool("readiness", { section: "introduction" })).data as Json).ready, true);
+	}, SERVED));
+
 test("a family URI reads every record of that family in one call, and names what it leaves out", () =>
 	withDesk(async (host, workspace) => {
 		const source = (id: string, title: string) => ({

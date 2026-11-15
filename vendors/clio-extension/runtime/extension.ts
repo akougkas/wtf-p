@@ -2220,6 +2220,29 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 					record: { ...state, active_checkpoint_uris: (state.active_checkpoint_uris as string[]).filter((entry) => entry !== uri) },
 				},
 			});
+		// The author's approval links the plan in the same commit: live, the model asked the desk for its next
+		// step before linking, and the approved plan sat unlinked while the driver planned again.
+		const planned = option?.id === APPROVE && planGate(checkpoint) ? /^project:\/\/sections\/([^/]+)\/plans\//u.exec(checkpoint.scope_uri)?.[1] : undefined;
+		const sectionFile = planned ? `.planning/sections/${planned}/section.json` : null;
+		const section = sectionFile ? readRecord(workspace, sectionFile) : null;
+		if (planned && sectionFile && section) {
+			const artifacts = isObject(section.artifacts) ? section.artifacts : {};
+			const plans = Array.isArray(artifacts.plans) ? (artifacts.plans as unknown[]) : [];
+			if (plans[plans.length - 1] !== checkpoint.scope_uri) {
+				const status = text(section.status, "not-started");
+				writes.push({
+					input: {
+						uri: `project://sections/${planned}`,
+						expect_sha256: sha256(readBytes(workspace, sectionFile) ?? ""),
+						record: {
+							...section,
+							status: status === "not-started" ? "planned" : status,
+							artifacts: { ...artifacts, plans: [...plans.filter((entry) => entry !== checkpoint.scope_uri), checkpoint.scope_uri] },
+						},
+					},
+				});
+			}
+		}
 	}
 	withLock(workspace, () => {
 		recover(workspace);
