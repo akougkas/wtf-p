@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "ddcf14dc897791e13f871c1fac414f6930fc8006",
+  "wtfp_commit": "4e96556e5bba86d55dafbd17fedca57839a7e340",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
@@ -43,8 +43,8 @@
     {
       "target": "clio",
       "path": "vendors/plugin/.wtfp-generated.json",
-      "manifest_sha256": "c23365f684b08895abe948626849d390dc2375efba9a2ae78fa17ad0ce944978",
-      "source_sha256": "634ad7cdd28a4f7bf49e30ad44958cd15dcf726eaed871ba8803105b9f371b41"
+      "manifest_sha256": "444a4fde936be5e8fc2fb5e055cc4c510608f99d9f5f33af5a518cdcd56d330a",
+      "source_sha256": "8c405a1da6f4320c189b18c793f680dcefed5529c01ed8dee231b79778839738"
     },
     {
       "target": "codex-marketplace",
