@@ -1158,7 +1158,7 @@ record('the Claude envelope keeps its pre-playbook Clio namespace under the lega
         `${item.path} must not call desk tools outside the canonical plugin`);
       const canonical = planText(portable, item.path);
       if (canonical !== carried && item.id !== 'help') {
-        assert.match(canonical, /extension_wtfp__record/, `${item.path} must bind the desk record tool`);
+        assert.match(canonical, /extension_wtfp__read_record/, `${item.path} must bind the desk's record tools`);
         assert.match(canonical, DRIVER_ACTIONS.includes(item.id) ? /If `extension_wtfp__next_step` is absent, the WTF-P desk extension is not running/ : /If desk tools are absent, follow/,
           `${item.path} must retain its absence fallback`);
       }
@@ -1265,7 +1265,7 @@ record('research handoff declares incremental state and preserves native decisio
     const declared = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(planText(clio, `agents/wtfp-${role}.md`));
     return `${declared[1]}, ${declared[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
   };
-  const deskTools = ['record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`);
+  const deskTools = ['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`);
   for (const entry of availability.actions.filter((item) => item.status === 'available' && item.id !== 'help')) {
     const action = readJson(path.join(ROOT, 'protocol/actions', `${entry.id}.json`));
     const capabilities = new Set(action.requirements.capabilities);
@@ -1287,8 +1287,14 @@ record('research handoff declares incremental state and preserves native decisio
         assert.deepStrictEqual(delegated, expected, `${label} ${entry.id}: worker ceiling`);
         assert.ok(!delegated.includes('bash') && !delegated.includes('verify'), `${label} ${entry.id}: no worker runs a program`);
       }
+      // A record writer holds every desk tool; a reader holds what reads, and the gate where it declares one.
       const desked = deskTools.filter((tool) => allowed.includes(tool));
-      assert.ok(desked.length === 0 || desked.length === deskTools.length, `${label} ${entry.id}: the desk tools travel together`);
+      const writes = action.produces.some((output) =>
+        /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
+      const gated = action.effects.some((effect) => effect.id === 'user.gate');
+      const reader = ['status', 'read_record', 'readiness', ...(gated ? ['gate'] : [])].map((tool) => `extension_wtfp__${tool}`);
+      assert.ok(desked.length === 0 || (writes ? desked.length === deskTools.length : JSON.stringify(desked.sort()) === JSON.stringify(reader.sort())),
+        `${label} ${entry.id}: a record writer holds every desk tool, a reader only what reads`);
       if (label === 'clio') assert.strictEqual(desked.length, 0, `${entry.id}: the desk-free projection names no desk tool`);
     }
   }

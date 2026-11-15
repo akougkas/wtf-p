@@ -10,6 +10,7 @@ allowed-tools:
   - write
   - edit
   - ask_user
+  - extension_wtfp__status
   - extension_wtfp__record
   - extension_wtfp__read_record
   - extension_wtfp__readiness
@@ -42,7 +43,8 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__status")` (and likewise `extension_wtfp__record`, `extension_wtfp__read_record`, `extension_wtfp__readiness`, `extension_wtfp__measure_section`, `extension_wtfp__gate`), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Call `extension_wtfp__status` first. One call returns the phase, every section's status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step; do not reconstruct them from individual records. Then read only the records and artifacts this action will change, quote or check in detail. Without that tool, read the records the procedure names.
 If desk tools are absent, follow `${pluginRoot}/workflows/insert-section.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
 
 ## Bound action contract

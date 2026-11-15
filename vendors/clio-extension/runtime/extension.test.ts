@@ -952,6 +952,23 @@ test("the desk's advance key fills the advance prompt only while the plugin serv
 		assert.equal(filled.text, "/wtfp:advance");
 	}, DRIVEN_PLUGIN));
 
+test("status gives an agent the whole project in one read, matching what the desk draws", () =>
+	withDesk(async (host, workspace) => {
+		const status = await host.tool("status", {});
+		const data = status.data as Json;
+		assert.equal(data.present, true);
+		assert.equal(data.phase, "writing");
+		const [section] = data.sections as Json[];
+		assert.equal(section?.id, "introduction");
+		assert.equal((section?.plan as Json).state, "awaiting");
+		assert.ok((section?.blockers as string[]).length > 0, "a gated section reports why it cannot be drafted");
+		assert.deepEqual((data.open_gates as Json[]).map((gate) => gate.id).sort(), [GATE, PLAN_GATE].sort());
+		assert.ok(((data.next as Json).gate as string) !== null);
+		assert.match(status.text, /introduction: planned/);
+		rmSync(path.join(workspace, ".planning"), { recursive: true, force: true });
+		assert.equal(((await host.tool("status", {})).data as Json).present, false);
+	}, SERVED));
+
 test("inside a WTF-P action every question goes to the author as one only the author may answer", () =>
 	withDesk(async (host) => {
 		const ask = (args: Json) => host.hook({ point: "before_tool", tool: "ask_user", turnId: "t1", args });

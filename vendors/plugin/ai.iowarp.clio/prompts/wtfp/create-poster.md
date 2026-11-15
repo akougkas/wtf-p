@@ -10,22 +10,24 @@ allowed-tools:
   - write
   - edit
   - ask_user
+  - extension_wtfp__status
+  - extension_wtfp__read_record
+  - extension_wtfp__readiness
+  - extension_wtfp__gate
 ---
 
 # Create a research poster
 
-@${pluginRoot}/project/README.md
 @${pluginRoot}/skills/wtfp-deliver-research/SKILL.md
-@${pluginRoot}/skills/wtfp-deliver-research/references/actions.md
 
 ## Record contract
 
 Read: `project://manifest`, `project://structure/outline`, `project://paper/{artifact}`.
 Produce: `project://deliverables/poster/{artifact}` (create).
 
-Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+Read each JSON record with `extension_wtfp__read_record` at its logical URI; it returns the record, its revision and SHA-256, and for a checkpoint whether the author's answer is attested. This action writes no JSON record.
 
-Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.
 
 ## Procedure
 
@@ -40,14 +42,13 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+Discover the named tools with `gateway(op="describe", capability="extension_wtfp__status")` (and likewise `extension_wtfp__read_record`, `extension_wtfp__readiness`, `extension_wtfp__gate`), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
+Call `extension_wtfp__status` first. One call returns the phase, every section's status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step; do not reconstruct them from individual records. Then read only the records and artifacts this action will change, quote or check in detail. Without that tool, read the records the procedure names.
+If desk tools are absent, follow `${pluginRoot}/workflows/create-poster.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
+
+## Bound action contract
 
 @${pluginRoot}/actions/create-poster.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
-@${pluginRoot}/project/schemas/outline.schema.json
-@${pluginRoot}/project/templates/outline.json
 
 ## Invocation input
 
@@ -59,7 +60,7 @@ $ARGUMENTS
 
 ## Clio user-gate binding
 
-Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
+For a pending checkpoint in the declared gate's exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan's URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author's confirmation, which the record tool asks for itself.
 
 Every question `ask_user` puts to the author here is the author's to answer: send each with `operator_only: true`, alone in its call. Clio never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.
 

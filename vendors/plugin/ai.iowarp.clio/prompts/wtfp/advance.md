@@ -14,6 +14,7 @@ allowed-tools:
   - monitor
   - web_fetch
   - bash
+  - extension_wtfp__status
   - extension_wtfp__record
   - extension_wtfp__read_record
   - extension_wtfp__readiness

@@ -639,14 +639,32 @@ function clioUserGateBody(action, deskTools = false) {
   ].join('\n');
 }
 
+// Whether an action writes portable JSON records, which on Clio only the desk's
+// record tool may do. An action that writes none reads records through the desk
+// and needs neither the record tool nor the schemas a writer validates against.
+function clioRecordWriter(action) {
+  return action.produces.some((output) =>
+    /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
+}
+
+// The desk tools one Clio prompt's turn holds: a record writer gets every
+// record tool, a reader only what reads, and a gate only where it declares one.
+function clioDeskTools(action) {
+  if (clioRecordWriter(action)) return [...CLIO_DESK_TOOLS];
+  const tools = ['status', 'read_record', 'readiness'];
+  if (action.effects.some((effect) => effect.id === 'user.gate')) tools.push('gate');
+  return tools.map((tool) => `extension_wtfp__${tool}`);
+}
+
 // Only the canonical Clio namespace prefers the optional desk. The unrooted
 // phase-1 projection remains intact for the Claude envelope and other hosts.
 function clioDeskWorkflowBody(action, workflowBody) {
+  const writer = clioRecordWriter(action);
   let body = workflowBody
     .replace(/^@protocol:\/\/project\/README\.md\n/gm, '')
     .replace(/^@protocol:\/\/skills\/[^\n]+\/references\/actions\.md\n/gm, '')
-    .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m,
-      'Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.')
+    .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m, writer ? 'Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.'
+      : 'Read each JSON record with `extension_wtfp__read_record` at its logical URI; it returns the record, its revision and SHA-256, and for a checkpoint whether the author\'s answer is attested. This action writes no JSON record.')
     .replace(/^Manuscript prose and supporting context,[^\n]+$/m,
       'Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.');
   if (action.id === 'write-section') body = body.replace(/^3\. Read the persisted manuscript text back[^\n]+$/m,
@@ -656,7 +674,8 @@ function clioDeskWorkflowBody(action, workflowBody) {
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
   if (action.requirements.capabilities.includes('workflow.drive')) return `${body}\n\n${clioDriverBinding()}`;
   const bindings = [
-    'Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool\'s error or refusal stops the action; never bypass it with a manual write or shell script.',
+    `Discover the named tools with \`gateway(op="describe", capability="${clioDeskTools(action)[0]}")\` (and likewise ${clioDeskTools(action).slice(1).map((tool) => `\`${tool}\``).join(', ')}), then use \`gateway(op="call", capability="<exact name>", args={...})\`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.`,
+    'Call `extension_wtfp__status` first. One call returns the phase, every section\'s status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step; do not reconstruct them from individual records. Then read only the records and artifacts this action will change, quote or check in detail. Without that tool, read the records the procedure names.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
       ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
@@ -1014,7 +1033,7 @@ function clioToolList(entries) {
   return `[${entries.map((entry) => (typeof entry === 'string' ? entry : `{anyOf: [${entry.anyOf.join(', ')}]}`)).join(', ')}]`;
 }
 
-const CLIO_DESK_TOOLS = Object.freeze(['record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
+const CLIO_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
 // Held only by actions that require workflow.drive: the desk arms each step itself.
 const CLIO_DRIVER_TOOL = 'extension_wtfp__next_step';
 
@@ -1031,7 +1050,7 @@ function clioActionTools(action, deskTools) {
   if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.push('dispatch', 'monitor');
   if (capabilities.has('network.fetch')) tools.push('web_fetch');
   if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
-  if (deskTools) tools.push(...CLIO_DESK_TOOLS);
+  if (deskTools) tools.push(...clioDeskTools(action));
   if (deskTools && capabilities.has('workflow.drive')) tools.push(CLIO_DRIVER_TOOL);
   return tools;
 }
@@ -2166,9 +2185,8 @@ function compilePlans(options = {}) {
     const native = /^(prompts|agents|playbooks)\//.test(file);
     const actionId = /^prompts\/wtfp\/([a-z-]+)\.md$/.exec(file)?.[1];
     const action = actionId && model.actions.find((entry) => entry.id === actionId);
-    const usesRecords = action && action.produces.some((output) =>
-      /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
-    const projected = usesRecords && availabilityByTarget.get('clio').get(actionId).available
+    // Every action Clio can run reads records through the desk, so none needs the schema dump a desk-less host gets.
+    const projected = action && action.id !== 'help' && availabilityByTarget.get('clio').get(actionId).available
       ? renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(actionId), true, reviewers)
       : content;
     addFile(portable, native ? `ai.iowarp.clio/${file}` : file, projected);

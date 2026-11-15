@@ -2253,6 +2253,48 @@ function progressText(desk: Desk): string {
 	].join("\n");
 }
 
+/**
+ * The project as one compact record for an agent: what an action would
+ * otherwise reconstruct from many record reads. It reports, never decides;
+ * an action still reads the records it will change or quote.
+ */
+function statusDigest(desk: Desk): Json {
+	const next = nextAction(desk);
+	return {
+		present: desk.present,
+		...(desk.present
+			? {
+					project: { id: desk.projectId, title: desk.title, document_type: desk.documentType, venue: desk.venue, deadline: desk.deadline, argument: desk.argument },
+					phase: desk.phase,
+					status: desk.status,
+					words: { total: totalWords(desk), target: desk.targetWords, method: WORD_METHOD },
+					sections: desk.sections.map((section) => ({
+						id: section.id,
+						title: section.title,
+						wave: section.wave,
+						status: section.status,
+						depends_on: section.dependsOn,
+						words: section.words,
+						target: section.target,
+						manuscript: section.manuscript,
+						stages: section.stages,
+						plan: { state: section.plan.state, uri: section.plan.uri, reason: section.plan.reason },
+						research_required: section.research.required,
+						claims: section.claims,
+						unsupported_claims: section.unsupported,
+						blockers: blockers(desk, section),
+					})),
+					open_gates: openGates(desk).map((gate) => ({ id: gate.id, kind: gate.kind, scope: gate.scope_uri, request: gate.request, trust: gate.trust })),
+					evidence: { sources: desk.sources, evidence: desk.evidence },
+					issues: desk.issues,
+					invalid_records: desk.invalid.map((entry) => entry.file),
+					interrupted_write: desk.journal,
+				}
+			: {}),
+		next: { action: next.action ?? null, section: next.section ?? null, gate: next.gate ?? null, command: next.command, reason: next.reason },
+	};
+}
+
 function helpCard(served: ServedPlugin): { text: string; card: View } {
 	const availability = JSON.parse(
 		readFileSync(path.join(PACKAGE_ROOT, "compatibility", "action-availability.json"), "utf8"),
@@ -2971,6 +3013,10 @@ export default function extension(api: ExtensionApiV2): void {
 		} catch (error) {
 			return { text: failure("Not written", error), isError: true };
 		}
+	});
+	api.tool("status", async (_input, ctx) => {
+		const desk = await deskFor(ctx);
+		return { text: progressText(desk), data: statusDigest(desk) };
 	});
 	api.tool("read_record", async (input, ctx) => {
 		try {

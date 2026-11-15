@@ -362,7 +362,8 @@ process.exit(0);`);
     const manifest = fs.readFileSync(path.join(ROOT, 'clio/clio-coder-extension.yaml'), 'utf8');
     const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)]
       .map(match => `extension_wtfp__${match[1]}`)
-      .filter(tool => tool !== 'extension_wtfp__next_step');
+      // The v2 campaign was prepared before status existed; its prompts fall back to reading records.
+      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__status'].includes(tool));
     assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
   });
 

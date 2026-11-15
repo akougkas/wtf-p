@@ -41,6 +41,10 @@ runtime:
               required: [uri, record]
               additionalProperties: false
         additionalProperties: false
+    - name: status
+      description: "The whole project in one read: phase, every section's status, words, plan state, unsupported claims and blockers, open gates, evidence counts, record issues, and the next step by the progress ladder. Call it first instead of reading records to orient; then read only the records you will change or quote."
+      actionClass: execute
+      inputSchema: { type: object, properties: {}, additionalProperties: false }
     - name: read_record
       description: "Read one .planning record at its logical URI with the revision and sha256 to pass back to record, and, for a checkpoint, whether the author's answer is attested by the desk."
       actionClass: execute
