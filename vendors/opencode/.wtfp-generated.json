@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "opencode",
-  "sourceHash": "f7467afd6e34c91abcb8a9b4cf7ac5b4639748a41b67b4d3fb21fe52fd7e551b",
+  "sourceHash": "67290531ba1847457666dc54413ffa3cdd855b84be74266282fac6ef011c667f",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -350,7 +350,7 @@
     },
     {
       "path": "commands/wtfp/write-section.md",
-      "sha256": "811bf12450317b0db4360b6ada64d89afcff8dec554eb45da6fb3b6e273bd918"
+      "sha256": "eae9c96ada6043fa6a0b8f2ae511f5aca4f71a55c93c38d1546fd3ce3a484929"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -834,7 +834,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "a68c897aa9634fde061e3b6e472335b4b9ffeb432ffaae8b8c8fd2f1f42856e2"
+      "sha256": "3d4be608e02aa2d9d531e9e1e8d6486f402ef874e55a5f03266088f4ca62de54"
     }
   ]
 }

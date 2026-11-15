@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "4fcd17e0eef36cb3bbb743cba2172da515a7f344cfa438dd98f4c0df678b31fa",
+  "sourceHash": "ffe5976edf14ba0c77e0e58501362d6337c5e866bf8c1b189197e0edb3056f4d",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -402,7 +402,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "f033573fd29f1d47935068e8db852e13271efa0d3c409bf1e4cb1528eadf4cb1"
+      "sha256": "547cc0c55ac86f61d374048164e7797b3edaa6735142ffa9ce6bf2fec99cadbc"
     },
     {
       "path": "aliases.lock.json",
@@ -558,7 +558,7 @@
     },
     {
       "path": "commands/write-section.md",
-      "sha256": "f199a8b9f69284c1501126c8c83700584899b8980477ffda62497ef6acd87b18"
+      "sha256": "cd3ee4c832e193f91435059b6443d44c463df802b2c68149a998e7ff9300a084"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -1062,7 +1062,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "a68c897aa9634fde061e3b6e472335b4b9ffeb432ffaae8b8c8fd2f1f42856e2"
+      "sha256": "3d4be608e02aa2d9d531e9e1e8d6486f402ef874e55a5f03266088f4ca62de54"
     }
   ]
 }

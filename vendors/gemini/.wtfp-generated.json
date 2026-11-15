@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "6ff997051b64f8237a88f3729863af212c121c72ea382f11abcd0d4f304c3248",
+  "sourceHash": "7cdcc3730efb7a01f14fecd9c32d485f02c6d7c10f244333ba363063987a612a",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -350,7 +350,7 @@
     },
     {
       "path": "commands/wtfp/write-section.toml",
-      "sha256": "86b5c244f23f07f9a097f031c2e0978245db43a6bdbeafa4c2c97390a46e8100"
+      "sha256": "b7f2e4487a6517f5f736516744a4a8e2bc1de93a3811f64043bde6bf91b98d8f"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -842,7 +842,7 @@
     },
     {
       "path": "workflows/write-section.md",
-      "sha256": "a68c897aa9634fde061e3b6e472335b4b9ffeb432ffaae8b8c8fd2f1f42856e2"
+      "sha256": "3d4be608e02aa2d9d531e9e1e8d6486f402ef874e55a5f03266088f4ca62de54"
     }
   ]
 }
