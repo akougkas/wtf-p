@@ -2983,6 +2983,43 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 	return effects.length === 0 ? result : { ...result, effects: [...effects, ...(result.effects ?? [])] };
 }
 
+/**
+ * A note on a successful write or edit that changed a manuscript the armed
+ * action may measure: its recorded word count is stale until measure_section
+ * runs. It rides on the tool result, so it spends none of the turn's shared
+ * continuation budget, and it reaches a dispatched worker too, whose writes
+ * Clio hooks, so it says whose call the measurement is. Each section is noted
+ * once until it is measured again.
+ */
+async function noteManuscriptWrite(ctx: ExtensionContextV2, event: unknown): Promise<ExtensionHookResult> {
+	const armed = await armedFor(ctx);
+	if (!armed || !armed.produces.some((output) => output.uri.startsWith("project://paper/"))) return {};
+	const target = hostLanding(event).target;
+	if (!target) return {};
+	const landed = writeLanding("", ctx.snapshot.workspace, target);
+	if ("refused" in landed || landed.relative === null || !under("paper", landed.relative)) return {};
+	const desk = loadDesk(ctx.snapshot.workspace);
+	const noted = (await ctx.state.get<string[]>("measure-noted")).value ?? [];
+	const sections = sectionsForPaper(desk, landed.relative)
+		.map((section) => section.id)
+		.filter((id) => !noted.includes(id) && declares(armed, `project://sections/${id}`, "update"));
+	if (sections.length === 0) return {};
+	await ctx.state.set("measure-noted", [...noted, ...sections]);
+	const calls = sections.map((id) => `gateway(op="call", capability="extension_wtfp__measure_section", args={section: "${id}"})`).join(" and ");
+	return {
+		effects: [
+			{
+				kind: "annotate_tool_result",
+				severity: "info",
+				message: clip(
+					`WTF-P: ${landed.relative} is the manuscript of ${sections.join(", ")}, so the desk's recorded word count is stale. When drafting it is done, the WTF-P action records the count with ${calls}; never count words by hand. A dispatched worker leaves this call to the action that dispatched it.`,
+					"…",
+				),
+			},
+		],
+	};
+}
+
 function arm(text: string, desk: Desk, workspace: string): Armed | null {
 	const match = /^\s*\/wtfp:([a-z][a-z0-9-]*)(?:\s+(\S+))?/u.exec(text);
 	if (!match) return null;
@@ -3077,7 +3114,10 @@ export default function extension(api: ExtensionApiV2): void {
 	});
 	api.tool("measure_section", async (input, ctx) => {
 		try {
-			const measured = measureSection(ctx.snapshot.workspace, String((input as Json).section ?? ""), await storedKey(ctx, false), await armedFor(ctx));
+			const sectionId = String((input as Json).section ?? "");
+			const measured = measureSection(ctx.snapshot.workspace, sectionId, await storedKey(ctx, false), await armedFor(ctx));
+			const noted = (await ctx.state.get<string[]>("measure-noted")).value ?? [];
+			if (noted.includes(sectionId)) await ctx.state.set("measure-noted", noted.filter((id) => id !== sectionId));
 			const share = measured.target > 0 ? Math.round((measured.words / measured.target) * 100) : null;
 			return {
 				text: `${measured.file ?? "the manuscript"} has ${measured.words} body words${share === null ? "" : ` (${share}% of ${measured.target}; within 15% counts as on target)`}. Recorded in the section and state records, which committed together; the paper totals ${measured.total}. ${WORD_METHOD}`,
@@ -3255,6 +3295,7 @@ export default function extension(api: ExtensionApiV2): void {
 		const armed = arm(typed, desk, ctx.snapshot.workspace);
 		// Only a prompt that starts an advance run starts a drive; any other prompt ends one.
 		await ctx.state.delete("drive");
+		await ctx.state.delete("measure-noted");
 		if (!armed) {
 			await ctx.state.delete("armed");
 			return {};
@@ -3284,6 +3325,7 @@ export default function extension(api: ExtensionApiV2): void {
 		};
 	});
 	api.hook("before_tool", async (event, ctx) => (event.point === "before_tool" ? guard(ctx, event.tool, event.args, event) : {}));
+	api.hook("after_tool", async (event, ctx) => (event.point === "after_tool" && event.outcome === "ok" ? noteManuscriptWrite(ctx, event) : {}));
 	// A WTF-P turn starts from the desk's picture of the project, so the action need not rebuild it from records.
 	api.hook("turn_start", async (event, ctx) => {
 		if (event.point !== "turn_start" || !(await armedFor(ctx))) return {};
@@ -3306,6 +3348,7 @@ export default function extension(api: ExtensionApiV2): void {
 		// An action arms for the turn its command starts; nothing it allowed outlives that turn.
 		await ctx.state.delete("armed");
 		await ctx.state.delete("drive");
+		await ctx.state.delete("measure-noted");
 		return undefined;
 	});
 	api.on("workspace_enter", async (_event, ctx) => ({ text: "", ...(await picture(ctx)) }));

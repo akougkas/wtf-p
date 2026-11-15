@@ -387,7 +387,8 @@ function clioPlan(prepared: Json, workspace: string): Json {
 
 /** A before_tool event as Clio 0.6.3 sends it, unless the test sent its own facts. */
 function withFacts(event: Json, workspace: string): Json {
-	if (event.point !== "before_tool" || "target" in event || "dispatch" in event) return event;
+	// Clio sends the same landing at after_tool as at before_tool.
+	if ((event.point !== "before_tool" && event.point !== "after_tool") || "target" in event || "dispatch" in event) return event;
 	const args = (event.args ?? {}) as Json;
 	if (event.tool === "dispatch") {
 		const prepared = clioPrepare(args);
@@ -1040,6 +1041,47 @@ test("a status too long for one Clio effect is cut to 2,000 characters and point
 		assert.match(message, /… \(truncated; call extension_wtfp__status\)$/);
 		assert.equal(((await host.tool("status", {})).data as { sections: Json[] }).sections.length, 61, "the full status stays one call away");
 	}, SERVED));
+
+// --- the manuscript write note ------------------------------------------------------
+// A write that changes a manuscript the armed action may measure gets one note on
+// its result naming the measure_section call. It spends none of the turn's shared
+// continuation budget, and the desk declares no turn_end hook at all.
+
+const wrote = (host: Host, target: string, outcome: "ok" | "error" = "ok") =>
+	host.hook({ point: "after_tool", tool: "write", turnId: "t1", outcome, durationMs: 1, args: { path: target } } as never);
+const noteOf = (result: { effects?: Array<{ kind: string }> }): string | null =>
+	(result.effects?.find((effect) => effect.kind === "annotate_tool_result") as { message?: string } | undefined)?.message ?? null;
+
+test("a manuscript write inside an action that may measure it is noted once with the exact measure_section call", () =>
+	withDesk(async (host) => {
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "nothing armed, no note");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "an action that declares no manuscript gets no note");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md", "error")), null, "a failed write changed nothing");
+		assert.equal(noteOf(await wrote(host, ".planning/sections/introduction/summary.md")), null, "only a manuscript is measured");
+		const note = noteOf(await wrote(host, "paper/introduction.md")) ?? "";
+		assert.match(note, /^WTF-P: paper\/introduction\.md is the manuscript of introduction/);
+		assert.match(note, /gateway\(op="call", capability="extension_wtfp__measure_section", args=\{section: "introduction"\}\)/);
+		assert.match(note, /A dispatched worker leaves this call to the action that dispatched it/);
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "noted once per section");
+		assert.match((await host.tool("measure_section", { section: "introduction" })).text, /has 11 body words/);
+		assert.ok(noteOf(await wrote(host, "paper/introduction.md")), "a write after measuring is noted again");
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "the turn's end disarms the note");
+	}, SERVED));
+
+test("inside an advance run only the armed step's manuscript writes are noted", () =>
+	withDesk(async (host) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "an idle run measures nothing");
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		assert.equal((await nextStep(host)).data.action, "write-section");
+		assert.match(noteOf(await wrote(host, "paper/introduction.md")) ?? "", /args=\{section: "introduction"\}/);
+		assert.equal((await nextStep(host)).data.kind, "stop");
+		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "after a stop nothing is armed to measure");
+	}, DRIVEN_PLUGIN));
 
 test("inside a WTF-P action every question goes to the author as one only the author may answer", () =>
 	withDesk(async (host) => {
