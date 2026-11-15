@@ -864,7 +864,9 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     assert.match(source, /^---\nversion: 1\n/);
     assert.ok(source.includes(`\nskills: [${verifier ? '' : CLIO_ROLE_SKILLS[role]}]\n`), `${sourcePath}: incorrect skill binding`);
     assert.match(source, /^audience: custom$/m);
-    assert.match(source, /^projectContextTier: bounded$/m);
+    // A read-only checker judges only what it is handed, so it gets no project orientation.
+    assert.match(source, new RegExp(`^projectContextTier: ${verifier ? 'none' : 'bounded'}$`, 'm'));
+    assert.match(source, /^latencyClass: (?:fast|balanced|deep)$/m);
     assert.match(source, /^budget: \{toolCalls: \d+, readReserve: \d+, synthesis: true\}$/m);
     assert.match(source, new RegExp(`^resultContract: \\{kind: ${verifier ? 'verifier-report' : 'mutation-report'}\\}$`, 'm'));
     assert.match(source, /^## Clio result contract$/m);

@@ -8,7 +8,7 @@ audience: custom
 category: quality
 capabilityClass: read-only
 latencyClass: fast
-projectContextTier: bounded
+projectContextTier: none
 budget: {toolCalls: 24, readReserve: 4, synthesis: true}
 resultContract: {kind: verifier-report}
 tags: [wtfp, research, portable-protocol]

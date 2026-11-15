@@ -9,7 +9,7 @@ category: implement
 capabilityClass: workspace-edit
 latencyClass: balanced
 projectContextTier: bounded
-budget: {toolCalls: 64, readReserve: 8, synthesis: true}
+budget: {toolCalls: 48, readReserve: 6, synthesis: true}
 resultContract: {kind: mutation-report}
 tags: [wtfp, research, portable-protocol]
 ---

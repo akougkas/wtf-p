@@ -20,6 +20,7 @@ runtime:
   watch: [".planning/**", "paper/**"]
   hooks:
     - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
+    - { on: turn_start, timeoutMs: 1000, onTimeout: pass, onError: pass }
     - { on: before_tool, tools: [write, edit, artifact, dispatch, bash, run_script, job, ask_user], timeoutMs: 1500, onTimeout: block, onError: block }
   tools:
     - name: record

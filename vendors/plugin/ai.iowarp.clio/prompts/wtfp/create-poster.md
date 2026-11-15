@@ -18,7 +18,7 @@ allowed-tools:
 
 # Create a research poster
 
-@${pluginRoot}/skills/wtfp-deliver-research/SKILL.md
+Before acting, load the `wtfp-deliver-research` skill with `context(scope="skills", name="wtfp-deliver-research")`; it carries this action's method and stays loaded across compaction.
 
 ## Record contract
 
@@ -43,12 +43,12 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
 Discover the named tools with `gateway(op="describe", capability="extension_wtfp__status")` (and likewise `extension_wtfp__read_record`, `extension_wtfp__readiness`, `extension_wtfp__gate`), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.
-Call `extension_wtfp__status` first. One call returns the phase, every section's status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step; do not reconstruct them from individual records. Then read only the records and artifacts this action will change, quote or check in detail. Without that tool, read the records the procedure names.
+Start from the desk's status, not from individual records: the desk puts it in a reminder at the start of this turn, and `extension_wtfp__status` returns it as structured data with every section's status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step. Then read only the records and artifacts this action will change, quote or check in detail. Without the desk, read the records the procedure names.
 If desk tools are absent, follow `${pluginRoot}/workflows/create-poster.md` and `${pluginRoot}/project/README.md` with native tools and `ask_user` gates.
 
 ## Bound action contract
 
-@${pluginRoot}/actions/create-poster.json
+Read the bound contract, `${pluginRoot}/actions/create-poster.json`, with `read` before acting: its reads, outputs, effects and conditions are what the desk enforces.
 
 ## Invocation input
 

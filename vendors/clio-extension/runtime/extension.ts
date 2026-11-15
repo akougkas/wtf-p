@@ -2296,6 +2296,18 @@ function statusDigest(desk: Desk): Json {
 	};
 }
 
+/** The desk's status as one reminder within Clio's 2,000-character effect limit. */
+function statusReminder(desk: Desk): string {
+	const gates = openGates(desk);
+	const lines = [
+		"WTF-P desk status at the start of this turn (extension_wtfp__status returns it as structured data):",
+		progressText(desk),
+		...(gates.length > 0 ? [`Open gates: ${gates.map((gate) => `${gate.id} (${gate.scope_uri.replace(/^project:\/\//u, "")})`).join(", ")}`] : []),
+	];
+	const message = lines.join("\n");
+	return message.length <= 2000 ? message : `${message.slice(0, 1960)}\n… (truncated; call extension_wtfp__status)`;
+}
+
 function helpCard(served: ServedPlugin): { text: string; card: View } {
 	const availability = JSON.parse(
 		readFileSync(path.join(PACKAGE_ROOT, "compatibility", "action-availability.json"), "utf8"),
@@ -3249,6 +3261,13 @@ export default function extension(api: ExtensionApiV2): void {
 		};
 	});
 	api.hook("before_tool", async (event, ctx) => (event.point === "before_tool" ? guard(ctx, event.tool, event.args, event) : {}));
+	// A WTF-P turn starts from the desk's picture of the project, so the action need not rebuild it from records.
+	api.hook("turn_start", async (event, ctx) => {
+		if (event.point !== "turn_start" || !(await armedFor(ctx))) return {};
+		const desk = await deskFor(ctx);
+		if (!desk.present) return {};
+		return { effects: [{ kind: "inject_reminder", audience: "model", severity: "info", message: statusReminder(desk) }] };
+	});
 
 	api.on("session_open", async (_event, ctx) => {
 		const workspace = ctx.snapshot.workspace;

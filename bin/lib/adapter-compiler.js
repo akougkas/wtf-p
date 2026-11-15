@@ -525,7 +525,9 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
       : '$ARGUMENTS';
   const schemas = projectSchemasForAction(action);
   const protocolIncludes = [
-    `@protocol://actions/${action.id}.json`,
+    deskTools
+      ? `Read the bound contract, \`protocol://actions/${action.id}.json\`, with \`read\` before acting: its reads, outputs, effects and conditions are what the desk enforces.`
+      : `@protocol://actions/${action.id}.json`,
     ...(!deskTools && schemas.length > 0 ? ['@protocol://project/schemas/common.schema.json'] : []),
     ...(!deskTools ? schemas : []).flatMap((schema) => [
       `@protocol://project/schemas/${schema}.schema.json`,
@@ -660,9 +662,14 @@ function clioDeskTools(action) {
 // phase-1 projection remains intact for the Claude envelope and other hosts.
 function clioDeskWorkflowBody(action, workflowBody) {
   const writer = clioRecordWriter(action);
+  // Clio re-sends an inlined file with every request and never pins it across
+  // compaction; a skill loaded through context survives compaction, and a file
+  // read with the read tool can be evicted once used.
   let body = workflowBody
     .replace(/^@protocol:\/\/project\/README\.md\n/gm, '')
     .replace(/^@protocol:\/\/skills\/[^\n]+\/references\/actions\.md\n/gm, '')
+    .replace(/^@protocol:\/\/skills\/([a-z0-9-]+)\/SKILL\.md$/gm,
+      'Before acting, load the `$1` skill with `context(scope="skills", name="$1")`; it carries this action\'s method and stays loaded across compaction.')
     .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m, writer ? 'Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.'
       : 'Read each JSON record with `extension_wtfp__read_record` at its logical URI; it returns the record, its revision and SHA-256, and for a checkpoint whether the author\'s answer is attested. This action writes no JSON record.')
     .replace(/^Manuscript prose and supporting context,[^\n]+$/m,
@@ -675,7 +682,7 @@ function clioDeskWorkflowBody(action, workflowBody) {
   if (action.requirements.capabilities.includes('workflow.drive')) return `${body}\n\n${clioDriverBinding()}`;
   const bindings = [
     `Discover the named tools with \`gateway(op="describe", capability="${clioDeskTools(action)[0]}")\` (and likewise ${clioDeskTools(action).slice(1).map((tool) => `\`${tool}\``).join(', ')}), then use \`gateway(op="call", capability="<exact name>", args={...})\`. A present tool's error or refusal stops the action; never bypass it with a manual write or shell script.`,
-    'Call `extension_wtfp__status` first. One call returns the phase, every section\'s status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step; do not reconstruct them from individual records. Then read only the records and artifacts this action will change, quote or check in detail. Without that tool, read the records the procedure names.',
+    'Start from the desk\'s status, not from individual records: the desk puts it in a reminder at the start of this turn, and `extension_wtfp__status` returns it as structured data with every section\'s status, words, plan state, unsupported claims and blockers, the open gates, evidence counts, record issues and the next step. Then read only the records and artifacts this action will change, quote or check in detail. Without the desk, read the records the procedure names.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
       ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
@@ -695,7 +702,7 @@ function clioDriverBinding() {
     '',
     'Call `extension_wtfp__next_step` with no arguments. Its result names exactly one of:',
     '',
-    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Read the files its `@` lines name before acting. When the action completes, call `extension_wtfp__next_step` again.',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names and read the contract it binds before acting. When the action completes, call `extension_wtfp__next_step` again.',
     '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
     '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
     '',
@@ -1070,7 +1077,30 @@ function clioDelegatedTools(action, reviewers) {
   return [...tools].sort();
 }
 
+// How each role runs on Clio. `latencyClass` is the routing prior for how long
+// a run takes; `budget` is the advisory tool-call notice, under Clio's hard
+// per-run ceiling. Roles that read a whole manuscript or a literature set get
+// the deep prior and room to read; quick checks stay fast. A read-only checker
+// gets no project orientation (`projectContextTier: none`): it judges the
+// artifacts it is handed, so a code-oriented repository summary is only noise
+// and a source of claims it did not read.
+const CLIO_ROLE_TUNING = Object.freeze({
+  'argument-verifier': { latency: 'fast', toolCalls: 24, readReserve: 4 },
+  'plan-checker': { latency: 'fast', toolCalls: 24, readReserve: 4 },
+  'section-reviewer': { latency: 'balanced', toolCalls: 40, readReserve: 6 },
+  'coherence-checker': { latency: 'deep', toolCalls: 64, readReserve: 12 },
+  'research-synthesizer': { latency: 'deep', toolCalls: 96, readReserve: 12 },
+  'citation-expert': { latency: 'deep', toolCalls: 96, readReserve: 12 },
+  'citation-formatter': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
+  'outliner': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
+  'section-planner': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
+  'section-writer': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
+  'prose-polisher': { latency: 'balanced', toolCalls: 48, readReserve: 6 }
+});
+
 function renderClioRole(role, slug) {
+  const tuning = CLIO_ROLE_TUNING[slug];
+  if (!tuning) throw new Error(`no Clio tuning for role ${slug}`);
   const verifier = role.fields.execution_class === 'verifier-report';
   const declared = clioRoleTools(verifier);
   const required = clioToolList(declared.required);
@@ -1088,9 +1118,9 @@ function renderClioRole(role, slug) {
     'audience: custom',
     `category: ${verifier ? 'quality' : slug.includes('citation') || slug.includes('research') ? 'research' : slug.includes('plan') || slug === 'outliner' ? 'plan' : 'implement'}`,
     `capabilityClass: ${verifier ? 'read-only' : 'workspace-edit'}`,
-    `latencyClass: ${verifier ? 'fast' : 'balanced'}`,
-    'projectContextTier: bounded',
-    `budget: {toolCalls: ${verifier ? 24 : 64}, readReserve: ${verifier ? 4 : 8}, synthesis: true}`,
+    `latencyClass: ${tuning.latency}`,
+    `projectContextTier: ${verifier ? 'none' : 'bounded'}`,
+    `budget: {toolCalls: ${tuning.toolCalls}, readReserve: ${tuning.readReserve}, synthesis: true}`,
     `resultContract: {kind: ${verifier ? 'verifier-report' : 'mutation-report'}}`,
     'tags: [wtfp, research, portable-protocol]',
     '---',

@@ -7,9 +7,9 @@ skills: [wtfp-research-literature]
 audience: custom
 category: research
 capabilityClass: workspace-edit
-latencyClass: balanced
+latencyClass: deep
 projectContextTier: bounded
-budget: {toolCalls: 64, readReserve: 8, synthesis: true}
+budget: {toolCalls: 96, readReserve: 12, synthesis: true}
 resultContract: {kind: mutation-report}
 tags: [wtfp, research, portable-protocol]
 ---
