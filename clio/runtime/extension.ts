@@ -1310,6 +1310,11 @@ function nextAction(desk: Desk): Next {
 			gate.id,
 		);
 	if (desk.sections.length === 0) return step(served, "create-outline", "", "No outline yet.");
+	// new-paper writes an outline but no section records, and only create-outline
+	// declares creating one; every later action may only update it.
+	const unrecorded = desk.sections.filter((section) => section.record === null).map((section) => section.id);
+	if (unrecorded.length > 0)
+		return step(served, "create-outline", "", `The outline lists ${unrecorded.join(", ")} without a section record; create-outline creates them.`);
 	const complete = new Set(desk.sections.filter((section) => section.status === "complete").map((section) => section.id));
 	const ordered = [...desk.sections].sort((a, b) => a.wave - b.wave);
 	for (const section of ordered) {
@@ -1420,7 +1425,7 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 	const last = drive.steps[drive.steps.length - 1];
 	if (last && last.action === next.action && last.section === section && last.fingerprint === fingerprint)
 		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };
-	return { kind: "step", action: next.action, section, prompt: `${next.action}.md`, reason: next.reason };
+	return { kind: "step", action: next.action, section, prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`, reason: next.reason };
 }
 
 /**
@@ -1432,7 +1437,7 @@ const DRIVER_RULE =
 
 /** Where a step's prompt lives, stated so it survives the loss of the advance prompt's resolved plugin root. */
 function stepPrompt(prompt: string): string {
-	return `ai.iowarp.clio/prompts/wtfp/${prompt} under the WTF-P plugin root (two directories above the base_dir of the loaded wtfp-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
+	return `<plugin root>/${prompt}, where <plugin root> is the WTF-P plugin root (two directories above the base_dir of the loaded wtfp-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
 }
 
 /** The arming of an advance run between steps: nothing may be written until the desk arms a step. */

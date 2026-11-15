@@ -737,7 +737,7 @@ function clioDriverBinding() {
     '',
     'Call `extension_wtfp__next_step` with no arguments. Its result names exactly one of:',
     '',
-    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt path relative to the plugin root. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/` followed by that whole path, such as `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/write-section.md`, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
     '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
     '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
     '',

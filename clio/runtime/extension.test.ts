@@ -890,7 +890,7 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		}
 		assert.deepEqual(asked.sort(), [GATE, PLAN_GATE].sort());
 		const step = await nextStep(host);
-		assert.deepEqual([step.data.kind, step.data.action, step.data.section, step.data.prompt], ["step", "write-section", "introduction", "write-section.md"]);
+		assert.deepEqual([step.data.kind, step.data.action, step.data.section, step.data.prompt], ["step", "write-section", "introduction", "ai.iowarp.clio/prompts/wtfp/write-section.md"]);
 		assert.match(step.text, /armed for write-section introduction only/);
 		assert.equal(blocked(await write(host, "paper/introduction.md")), null, "the armed step may write its manuscript");
 		assert.ok(blocked(await write(host, ".planning/sections/introduction/plans/second.md")), "but nothing write-section does not declare");
@@ -926,7 +926,7 @@ test("every next_step result restates the driver rule, so a compacted turn can c
 		const step = await nextStep(host);
 		assert.equal(step.data.kind, "step");
 		assert.match(step.text, /^Step 1: \/wtfp:write-section introduction\./);
-		assert.match(step.text, /ai\.iowarp\.clio\/prompts\/wtfp\/write-section\.md under the WTF-P plugin root \(two directories above the base_dir of the loaded wtfp-manage-project skill/);
+		assert.match(step.text, /Read and follow <plugin root>\/ai\.iowarp\.clio\/prompts\/wtfp\/write-section\.md, where <plugin root> is the WTF-P plugin root \(two directories above the base_dir of the loaded wtfp-manage-project skill/);
 		assert.match(step.text, /invocation input introduction/);
 		assert.equal(ruleOf(step.text), rule);
 		const stop = await nextStep(host);
@@ -970,6 +970,18 @@ test("advance never starts a project and never runs an action the plugin does no
 		assert.equal(empty.data.kind, "stop");
 		assert.match(empty.text, /never starts one/);
 	}, { id: "wtfp", prompts: ["wtfp:advance"] }));
+
+test("advance creates the section records an outline lists before any section step", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		// new-paper leaves an outline with no section records; only create-outline may create one.
+		rmSync(path.join(workspace, ".planning/sections/introduction/section.json"));
+		const step = await nextStep(host);
+		assert.deepEqual([step.data.kind, step.data.action, step.data.section], ["step", "create-outline", null], step.text);
+		assert.match(step.text, /lists introduction without a section record/);
+	}, DRIVEN_PLUGIN));
 
 test("the desk's advance key fills the advance prompt only while the plugin serves it", () =>
 	withDesk(async (host) => {
