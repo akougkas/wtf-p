@@ -1520,8 +1520,9 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		// A declared empty write_roots is no boundary to the worker, and Clio refuses a rewrite that fills it, so the desk names the roots.
 		assert.match(
 			blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { read_roots: [".planning"], write_roots: [] } }, plan(task("wtfp-section-writer")))) ?? "",
-			/empty intent\.write_roots bounds nothing.*Send intent\.write_roots \.planning\/sections\/introduction\/summary\.md, paper\/introduction\.md, paper\/introduction\//,
+			/intent without write_roots bounds nothing.*Send intent\.write_roots \.planning\/sections\/introduction\/summary\.md, paper\/introduction\.md, paper\/introduction\//,
 		);
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { read_roots: [".planning"] } }, plan(task("wtfp-section-writer")))) ?? "", /intent without write_roots/);
 		// A task Clio keeps as a string is confined as a task object, and Clio's private keys are left for Clio to recompute.
 		const spelled = await dispatch({ agent: "wtfp-section-writer", tasks: ["Draft."], __clio_resolved_dispatch_plan: { resolvedBy: "clio" } }, plan(task("wtfp-section-writer")));
 		assert.deepEqual(rewriteOf(spelled), { agent: "wtfp-section-writer", tasks: [{ task: "Draft.", intent: { write_roots: roots } }] });
