@@ -1107,7 +1107,19 @@ test("a section drafted from its approved plan goes to review even if its record
 		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "writing" });
 		const review = await nextStep(host);
 		assert.deepEqual([review.data.kind, review.data.action, review.data.section], ["step", "review-section", "introduction"], review.text);
-		assert.match(review.text, /drafted from its approved plan and waits for review/);
+		assert.match(review.text, /is drafted and waits for review/);
+		// Live, the review was recorded but the status stayed writing, and the desk named the review again.
+		const reviewFile = ".planning/validations/introduction-review.json";
+		put(workspace, reviewFile, {
+			schema: "wtfp.project.validation/v1", id: "introduction-review", project_id: PROJECT, subject_uri: "project://paper/introduction",
+			validator_role: "section-reviewer", action_id: "review-section", status: "passed",
+			checks: [{ id: "plan-criteria", status: "passed", summary: "Every plan criterion holds.", evidence: ["Stated."] }],
+			issues: [], next_actions: [], effects_applied: [], executed_at: "2026-09-01T10:00:00Z",
+		});
+		const after = new Date(host.now + 120_000);
+		utimesSync(path.join(workspace, reviewFile), after, after);
+		const verify = await nextStep(host);
+		assert.deepEqual([verify.data.action, verify.data.section], ["verify-work", "introduction"], verify.text);
 	}, DRIVEN_PLUGIN));
 
 test("a review counts only for the draft it read", () =>

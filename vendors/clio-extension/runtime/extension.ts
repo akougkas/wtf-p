@@ -1455,6 +1455,23 @@ function nextAction(desk: Desk): Next {
 	return step(served, "audit-milestone", "", "Every section is complete; audit before delivery.");
 }
 
+/** A drafted section's next step: review the current draft, then the author's acceptance or a revision. */
+function reviewNext(served: ServedPlugin, section: SectionRow): Next {
+	const id = section.id;
+	const acceptance = section.acceptance;
+	if (unappliedPlan(section)) return step(served, "write-section", id, `${section.title} has an approved revision plan that no draft has applied yet.`);
+	if (!acceptance.reviewed) return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
+	if (!acceptance.verified)
+		return step(served, "verify-work", id, `${section.title} is reviewed; the author checks it against its plan and accepts it or sends it back.`);
+	if (acceptance.decision === REVISE) return step(served, "plan-revision", id, `The author sent ${section.title} back for revision.`);
+	return step(
+		served,
+		"verify-work",
+		id,
+		acceptance.decision === ACCEPT ? `The author accepted ${section.title}; verify-work marks it complete.` : `${section.title} waits for the author's acceptance.`,
+	);
+}
+
 /** The next step for one section, by the same ladder the band follows. */
 function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 	const id = section.id;
@@ -1464,29 +1481,17 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 			return step(served, "review-section", id, `${section.title} is complete; review it again if it changed.`);
 		case "blocked":
 			return step(served, "check-todos", "", `${section.title} is blocked.`);
-		case "reviewing": {
-			const acceptance = section.acceptance;
-			if (unappliedPlan(section)) return step(served, "write-section", id, `${section.title} has an approved revision plan that no draft has applied yet.`);
-			if (!acceptance.reviewed) return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
-			if (!acceptance.verified)
-				return step(served, "verify-work", id, `${section.title} is reviewed; the author checks it against its plan and accepts it or sends it back.`);
-			if (acceptance.decision === REVISE) return step(served, "plan-revision", id, `The author sent ${section.title} back for revision.`);
-			return step(
-				served,
-				"verify-work",
-				id,
-				acceptance.decision === ACCEPT ? `The author accepted ${section.title}; verify-work marks it complete.` : `${section.title} waits for the author's acceptance.`,
-			);
-		}
+		case "reviewing":
+			return reviewNext(served, section);
 		case "writing":
 		case "planned":
 			if (section.research.required && section.unsupported.length > 0)
 				return step(served, "research-gap", id, `${section.title} has required claims without verified evidence.`);
 			if (!planReady(section.plan))
 				return step(served, "plan-section", id, `${section.title} cannot be drafted: ${section.plan.reason}.`);
-			// A draft written after its plan's approval goes to review even when the record still says writing.
+			// A draft written after its plan's approval is past drafting even when the record still says writing.
 			if (section.plan.state === "approved" && section.plan.approvedAt && section.writtenAt !== null && Date.parse(section.plan.approvedAt) <= section.writtenAt)
-				return step(served, "review-section", id, `${section.title} is drafted from its approved plan and waits for review.`);
+				return reviewNext(served, section);
 			return step(served, "write-section", id, `${section.title} has an approved plan.`);
 		default:
 			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
