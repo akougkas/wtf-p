@@ -161,6 +161,8 @@ function project(): string {
 		"paper/introduction.md",
 		"---\ntitle: Introduction\n---\n# Introduction\n\nShared memory changes the cost of logging [@smith2024]. It's a well-known trade-off.\n\n```c\nint flush = 1;\n```\n",
 	);
+	// The desk test clock starts at the epoch; the existing draft is a day older than any approval a test gives.
+	utimesSync(path.join(workspace, "paper/introduction.md"), new Date(-86_400_000), new Date(-86_400_000));
 	return workspace;
 }
 
@@ -923,6 +925,7 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		const undeclared = await host.tool("record", { uri: "project://structure/outline", record: { ...outline, thesis: "Changed." }, expect_revision: 1 });
 		assert.match(undeclared.text, /write-section does not declare updating project:\/\/structure\/outline/);
 		// The drafted section moves to review, and the desk arms the review next, not the draft.
+		drafted(host, workspace, 60_000);
 		put(workspace, ".planning/sections/introduction/section.json", { ...read(workspace, ".planning/sections/introduction/section.json"), status: "reviewing" });
 		const review = await nextStep(host);
 		assert.deepEqual([review.data.kind, review.data.action, review.data.section], ["step", "review-section", "introduction"]);
@@ -1081,10 +1084,49 @@ test("a reviewed section whose approved revision plan no draft has applied goes 
 		const rewrite = await nextStep(host);
 		assert.deepEqual([rewrite.data.kind, rewrite.data.action, rewrite.data.section], ["step", "write-section", "introduction"], rewrite.text);
 		assert.match(rewrite.text, /approved revision plan that no draft has applied yet/);
-		// Once the draft is written after the approval, review comes next.
+		// Once the draft is written after the approval, it is reviewed again: the earlier review read the earlier draft.
 		drafted(host, workspace, 60_000);
 		const review = await nextStep(host);
-		assert.deepEqual([review.data.action, review.data.section], ["verify-work", "introduction"], review.text);
+		assert.deepEqual([review.data.action, review.data.section], ["review-section", "introduction"], review.text);
+	}, DRIVEN_PLUGIN));
+
+test("a section drafted from its approved plan goes to review even if its record still says writing", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		// Live, write-section drafted method-admission but left status writing, and the desk re-armed the draft.
+		drafted(host, workspace, 60_000);
+		const sectionFile = ".planning/sections/introduction/section.json";
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "writing" });
+		const review = await nextStep(host);
+		assert.deepEqual([review.data.kind, review.data.action, review.data.section], ["step", "review-section", "introduction"], review.text);
+		assert.match(review.text, /drafted from its approved plan and waits for review/);
+	}, DRIVEN_PLUGIN));
+
+test("a review counts only for the draft it read", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		drafted(host, workspace, 60_000);
+		const sectionFile = ".planning/sections/introduction/section.json";
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), status: "reviewing" });
+		const reviewFile = ".planning/validations/introduction-review.json";
+		put(workspace, reviewFile, {
+			schema: "wtfp.project.validation/v1", id: "introduction-review", project_id: PROJECT, subject_uri: "project://paper/introduction",
+			validator_role: "section-reviewer", action_id: "review-section", status: "passed",
+			checks: [{ id: "plan-criteria", status: "passed", summary: "Every plan criterion holds.", evidence: ["Stated."] }],
+			issues: [], next_actions: [], effects_applied: [], executed_at: "2026-09-01T10:00:00Z",
+		});
+		// The desk recorded the review after the draft, so it covers it: the author checks it next.
+		const after = new Date(host.now + 120_000);
+		utimesSync(path.join(workspace, reviewFile), after, after);
+		assert.equal((await nextStep(host)).data.action, "verify-work");
+		// A revision written after that review waits for a new one, whatever the review claims as its time.
+		drafted(host, workspace, 180_000);
+		const again = await nextStep(host);
+		assert.deepEqual([again.data.action, again.data.section], ["review-section", "introduction"], again.text);
 	}, DRIVEN_PLUGIN));
 
 test("an accepted section is handed back to verify-work, which marks it complete", () =>

@@ -527,13 +527,17 @@ function validates(record: Json, id: string, manuscriptUri: string): boolean {
  * verify-work records the acceptance checks and closes with a checkpoint scoped
  * to its validation, and only an attested answer on that checkpoint counts.
  */
-function acceptanceOf(validations: Json[], checkpoints: Checkpoint[], id: string, manuscriptUri: string, reviewsLinked: boolean): Acceptance {
+/** When the desk wrote each validation record, by file time. */
+const recordedAt = new WeakMap<Json, number>();
+
+function acceptanceOf(validations: Json[], checkpoints: Checkpoint[], id: string, manuscriptUri: string, reviewsLinked: boolean, drafted: number | null): Acceptance {
 	const mine = validations.filter((record) => validates(record, id, manuscriptUri));
 	const latest = (action: string): Json | undefined =>
 		mine.filter((record) => record.action_id === action).sort((a, b) => text(b.executed_at).localeCompare(text(a.executed_at)))[0];
 	const review = latest("review-section");
 	const verify = latest("verify-work");
-	const reviewed = review !== undefined || reviewsLinked;
+	// A review counts only for the draft it read: a revision written after it waits for a new review.
+	const reviewed = review !== undefined ? drafted === null || (recordedAt.get(review) ?? 0) >= drafted : reviewsLinked && drafted === null;
 	const verified = verify !== undefined && (review === undefined || text(verify.executed_at) >= text(review.executed_at));
 	if (!verified || verify === undefined) return { reviewed, verified: false, decision: null };
 	const answered = checkpoints
@@ -659,7 +663,12 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	const evidenceRecords = indexed("evidence");
 
 	const validations = listJson(workspace, ".planning/validations")
-		.map((file) => readRecord(workspace, file))
+		.map((file) => {
+			const record = readRecord(workspace, file);
+			// The desk writes every record itself, so the file's time is a clock the model cannot set.
+			if (record) recordedAt.set(record, writtenAt(workspace, file) ?? 0);
+			return record;
+		})
 		.filter((record): record is Json => record !== null);
 
 	const outlined = Array.isArray(outline?.sections) ? (outline.sections as Json[]) : [];
@@ -740,7 +749,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 			plan: planState(workspace, id, record, checkpoints, confirmPlan),
 			unsupported,
 			record,
-			acceptance: acceptanceOf(validations, checkpoints, id, text(artifacts.manuscript, `project://paper/${id}`), reviews.length > 0),
+			acceptance: acceptanceOf(validations, checkpoints, id, text(artifacts.manuscript, `project://paper/${id}`), reviews.length > 0, writtenAt(workspace, manuscript)),
 			writtenAt: writtenAt(workspace, manuscript),
 		};
 	});
@@ -1471,6 +1480,9 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 				return step(served, "research-gap", id, `${section.title} has required claims without verified evidence.`);
 			if (!planReady(section.plan))
 				return step(served, "plan-section", id, `${section.title} cannot be drafted: ${section.plan.reason}.`);
+			// A draft written after its plan's approval goes to review even when the record still says writing.
+			if (section.plan.state === "approved" && section.plan.approvedAt && section.writtenAt !== null && Date.parse(section.plan.approvedAt) <= section.writtenAt)
+				return step(served, "review-section", id, `${section.title} is drafted from its approved plan and waits for review.`);
 			return step(served, "write-section", id, `${section.title} has an approved plan.`);
 		default:
 			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
