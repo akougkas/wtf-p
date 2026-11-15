@@ -40,8 +40,8 @@
     "project_protocol_version": 1,
     "catalog_schema": "wtfp.catalog/v1",
     "adapter_compiler_version": 5,
-    "canonical_source_commit": "6edcdc2c30fa8b82399ec16efe2a383d8549554e",
-    "canonical_source_sha256": "01f20079ac8ae6229bbb4e42c4cc0a585053451d2cdea9e2ab05456fc51ab5f9"
+    "canonical_source_commit": "855077c953328a74db5cdc71de0971f5c5b273c5",
+    "canonical_source_sha256": "319d31076153726fdb8f146d3ac4bf29ea85e8ec939359736ad97f181966aed4"
   },
   "expected_invariants": [
     {
