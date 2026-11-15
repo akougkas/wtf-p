@@ -909,6 +909,31 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "a stop disarms the last step");
 	}, DRIVEN_PLUGIN));
 
+test("every next_step result restates the driver rule, so a compacted turn can continue from the last result alone", () =>
+	withDesk(async (host) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		const ruleOf = (text: string): string => /Driver rule for this \/wtfp:advance run: .*$/u.exec(text)?.[0] ?? "";
+		const gate = await nextStep(host);
+		assert.equal(gate.data.kind, "gate");
+		assert.match(gate.text, new RegExp(`Call extension_wtfp__gate with checkpoint ${gate.data.checkpoint as string}\\.`));
+		const rule = ruleOf(gate.text);
+		assert.match(rule, /the desk, not you, picks every step/);
+		assert.match(rule, /call extension_wtfp__next_step/);
+		assert.match(rule, /call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step/);
+		assert.match(rule, /on a stop, a failed step or a refused call report the steps taken and end the turn/);
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const step = await nextStep(host);
+		assert.equal(step.data.kind, "step");
+		assert.match(step.text, /^Step 1: \/wtfp:write-section introduction\./);
+		assert.match(step.text, /ai\.iowarp\.clio\/prompts\/wtfp\/write-section\.md under the WTF-P plugin root \(two directories above the base_dir of the loaded wtfp-manage-project skill/);
+		assert.match(step.text, /invocation input introduction/);
+		assert.equal(ruleOf(step.text), rule);
+		const stop = await nextStep(host);
+		assert.equal(stop.data.kind, "stop");
+		assert.equal(ruleOf(stop.text), rule);
+	}, DRIVEN_PLUGIN));
+
 test("a gate the author keeps pending, or that no author can answer, stops the run with the gate open", () =>
 	withDesk(async (host, workspace) => {
 		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });

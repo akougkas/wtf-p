@@ -1424,6 +1424,18 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 	return { kind: "step", action: next.action, section, prompt: `${next.action}.md`, reason: next.reason };
 }
 
+/**
+ * Every next_step result ends with this rule, so a turn Clio compacted after
+ * dropping the advance prompt can still continue from the last result alone.
+ */
+const DRIVER_RULE =
+	"Driver rule for this /wtfp:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_wtfp__next_step, call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
+
+/** Where a step's prompt lives, stated so it survives the loss of the advance prompt's resolved plugin root. */
+function stepPrompt(prompt: string): string {
+	return `ai.iowarp.clio/prompts/wtfp/${prompt} under the WTF-P plugin root (two directories above the base_dir of the loaded wtfp-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
+}
+
 /** The arming of an advance run between steps: nothing may be written until the desk arms a step. */
 function idleArm(workspace: string): Armed {
 	return { action: "advance", produces: [], section: null, workspace };
@@ -3087,7 +3099,7 @@ export default function extension(api: ExtensionApiV2): void {
 				recovered = withLock(workspace, () => recover(workspace));
 			} catch (error) {
 				await ctx.state.set("armed", idleArm(workspace));
-				return { text: failure("An interrupted record write could not be completed, so the run stops", error), data: { kind: "stop" }, isError: true };
+				return { text: `${failure("An interrupted record write could not be completed, so the run stops", error)} ${DRIVER_RULE}`, data: { kind: "stop" }, isError: true };
 			}
 			desk = await deskFor(ctx);
 		}
@@ -3098,9 +3110,9 @@ export default function extension(api: ExtensionApiV2): void {
 			await ctx.state.set("armed", idleArm(workspace));
 			if (decision.kind === "gate") {
 				await ctx.state.set("drive", { ...drive, asked: [...drive.asked, decision.checkpoint] } satisfies Drive);
-				return { text: `${lead}Gate ${decision.checkpoint}: ${decision.reason} Call extension_wtfp__gate with checkpoint ${decision.checkpoint}.`, data: decision };
+				return { text: `${lead}Gate ${decision.checkpoint}: ${decision.reason} Call extension_wtfp__gate with checkpoint ${decision.checkpoint}. ${DRIVER_RULE}`, data: decision };
 			}
-			return { text: `${lead}Stop: ${decision.reason}`, data: decision };
+			return { text: `${lead}Stop: ${decision.reason} ${DRIVER_RULE}`, data: decision };
 		}
 		const contract = GUARD.actions[decision.action] as GuardAction;
 		await ctx.state.set("armed", { action: decision.action, produces: contract.produces, section: decision.section, workspace } satisfies Armed);
@@ -3110,7 +3122,7 @@ export default function extension(api: ExtensionApiV2): void {
 		} satisfies Drive);
 		const invocation = `/wtfp:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
 		return {
-			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Follow prompts/wtfp/${decision.prompt} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}, then call extension_wtfp__next_step again.`,
+			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Read and follow ${stepPrompt(decision.prompt)} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}. ${DRIVER_RULE}`,
 			data: decision,
 		};
 	});

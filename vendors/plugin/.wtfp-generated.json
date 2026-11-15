@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "d109ecf0897e6bc01615fd5bf774ae84d49316a05e9629251dfd9a0714a17d33",
+  "sourceHash": "b6d3be0f18cfbe710e6aeaa2e959927bcf3b1df0ba16b12b3e6513e3a509ae3b",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,7 +210,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/advance.md",
-      "sha256": "20da2622c404f49c4f36c35f8cbf04eb1657d0ab4d8587b85d583640b1e8fbc6"
+      "sha256": "3ec8e2fbcf20c55d97595c2db68367d04f92bb544b4053135ba03a309e78ede2"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",

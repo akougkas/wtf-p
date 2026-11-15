@@ -74,7 +74,7 @@ Call `extension_wtfp__next_step` with no arguments. Its result names exactly one
 - `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.
 - `stop`: the reason the run ends. Report it with the steps taken and end the turn.
 
-Never choose, skip, repeat or reorder an action, invoke another `/wtfp:` prompt, or dispatch a WTF-P role outside a step the desk armed. If a step fails, is blocked, or its tools refuse a call, stop and report it; do not call `extension_wtfp__next_step` to get past a failure. The desk stops a step that would repeat with no change, a gate the author kept pending or declined, and a run past its step limit.
+Never choose, skip, repeat or reorder an action, invoke another `/wtfp:` prompt, or dispatch a WTF-P role outside a step the desk armed. If a step fails, is blocked, or its tools refuse a call, stop and report it; do not call `extension_wtfp__next_step` to get past a failure. The desk stops a step that would repeat with no change, a gate the author kept pending or declined, and a run past its step limit. Every `extension_wtfp__next_step` result restates this rule and where its step's prompt lives, so if the conversation was compacted, continue from the last result.
 
 ## Bound action contract
 
