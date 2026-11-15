@@ -1391,7 +1391,7 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 		if (expectation) throw new Error(`${uri} no longer exists; read the project again before writing`);
 	} else if (!expectation) {
 		throw new Error(
-			`${uri} already exists; read it with extension_wtfp__read_record and pass ${REVISIONED.has(route.type) ? "the revision you read as expect_revision" : "the sha256 you read as expect_sha256"} so a newer change is never overwritten`,
+			`${uri} already exists; read it with extension_wtfp__read_record and pass ${REVISIONED.has(route.type) ? "the revision you read as expect_revision" : "the sha256 you read as expect_sha256"} so a newer change is never overwritten, then send the write again. A missing version is not a refusal and does not end the step`,
 		);
 	} else {
 		const byRevision = input.expect_revision !== undefined && REVISIONED.has(route.type) && input.expect_revision === priorRevision;
