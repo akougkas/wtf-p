@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "d327a44be4c53a487ad0e264e36f4ac83298b3e296a07904c78b624d96f86fc0",
+  "sourceHash": "9ee1adf7d94ec5fb96819399996006186c4794f511e348768640b1993d601c3f",
   "files": [
     {
       "path": "marketplace.json",
@@ -822,7 +822,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "project/.github/wtfp/workflows/polish-prose.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "1d1711885f29f34021737afabb47c1d30c7905138b35863936d5812b008642ac",
+  "sourceHash": "025b28122dcf31df8a0f149844756eaa9fc4836361efabebf74b5dd7cf0de4f4",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -638,7 +638,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",

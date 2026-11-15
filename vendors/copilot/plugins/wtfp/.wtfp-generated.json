@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "23722a9011f32dfc8ef7631c776c856f29d054301859265f564a90b909193a7a",
+  "sourceHash": "68ceb7ac65b53447e038b9bc7a11de7fe473b58aa5963ed87f3b3be82ab7b065",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -298,7 +298,7 @@
     },
     {
       "path": "commands/wtfp-plan-section.md",
-      "sha256": "726e668c6a21bab4f2da53d2960e686a0e132618d7e4670e9bacb4d4a343bceb"
+      "sha256": "3b6c1cc79f6a9f4ffc64763104be07b3cdf686f385cbc29d6a5390d8ccb1f165"
     },
     {
       "path": "commands/wtfp-polish-prose.md",
@@ -782,7 +782,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "bfbfe02a7331f7a2cb8d4f8598c761b5ffe9f9c465c22f011bfd8ff3d50e3f8a",
+  "sourceHash": "b8cd53ea07c3b1815a8b95d1b060ad4d33a4572642aa278cb73c422335c6aa57",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -294,7 +294,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "42155ef43e53680ac6d43412ec13e87c8cfd428ce1c6d0d9fd807bc20ed04ee5"
+      "sha256": "bb0ebe6da0e0a3c5775d2842e5f1ed442ce42458aeffc3032c551ffd616a8586"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
@@ -782,7 +782,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",

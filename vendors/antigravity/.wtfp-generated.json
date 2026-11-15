@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "0e2152904fbb2c9a6da54a504b4a3f090b4d20619a9f2fad7e6fa1da13f8e24e",
+  "sourceHash": "1ad9029574c76299f2ec3fe3e96aed5dec8367ec46ad379d2e19c38493be2968",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -778,7 +778,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "ac678c84760270e74e78270e0e7586983b1a8eead3e1adfb36a78a10b7f89e81",
+  "sourceHash": "9973f5ca40f7aa814ff3eb5af597fffe0cf4a2d183059a0ba53364c6dfa0ec75",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -294,7 +294,7 @@
     },
     {
       "path": "commands/wtfp/plan-section.toml",
-      "sha256": "a129aab8f8dbb49764e8397bc368deffbfc6d32d8b03655ff83f7e3462821c86"
+      "sha256": "77edbec1a4222fabf0ead2aeabb14d357f23e164c894e00814b250bfcda8dc5d"
     },
     {
       "path": "commands/wtfp/polish-prose.toml",
@@ -786,7 +786,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",

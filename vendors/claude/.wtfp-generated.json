@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "b4b35b23f7519ae26ffd71507df81f1fd283cc36f8620e4ecab1da06644bc77f",
+  "sourceHash": "73fd223748e59d426e976e2ccb2f11a7f388891fc4fc3dd6bc3c55ca94ba6612",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -346,7 +346,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "542cfe6774eaebb428f7a9a58ff104937f9f36e5208490e503e5a91040cdf251"
+      "sha256": "f5a2752a11caae87acda0ff767b7f613c8d37b940aa0aaf7e79e7f61ec9c5000"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
@@ -502,7 +502,7 @@
     },
     {
       "path": "commands/plan-section.md",
-      "sha256": "461c41ed5ea3c30b10238a7671e926984000a11568ca2a68b34e7a9cb20716c7"
+      "sha256": "7771c39fe61e984471ab0eb17825ab3c7de924ce7d796e6284e863a725f55af3"
     },
     {
       "path": "commands/polish-prose.md",
@@ -1006,7 +1006,7 @@
     },
     {
       "path": "workflows/plan-section.md",
-      "sha256": "53ee95bd148893f5dd9e643abadeee941acc9ac4bc78b4f58278318c875104fb"
+      "sha256": "a7e25b5e0593cf872e7e9ce356416706496b71267661e261f3efae1a796690f1"
     },
     {
       "path": "workflows/polish-prose.md",
