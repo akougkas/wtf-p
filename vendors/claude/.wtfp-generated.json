@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "ede1e999072df21cfd5acd50b5c56e3b4cda1822fdae97b5be928f25b7ba0260",
+  "sourceHash": "9b7bfc9dfbe4065e38b69bf659beab7adfe1f86ef861382153acec60a51ca712",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -782,7 +782,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "0e1725367470249e57fceaa9be84c68f486e7b548e7d3b3b1d4ed2d71e3e2129"
+      "sha256": "0ab24c8a9a5ba60314bc9f1a8c8d66c26c4ec3c58d29ea0a1aece158a235718f"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",

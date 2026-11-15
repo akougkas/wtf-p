@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "b2b6f2b74abc2f8d4a87f8354269f3a5c5ae737f8d2027294fc7c737c678509a",
+  "sourceHash": "035db8829d5cf36e7a490903e75edfe22612f3e876a06eb380486c31318ff817",
   "files": [
     {
       "path": "marketplace.json",
@@ -222,7 +222,7 @@
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "6b024bb73f3fccd4255e7ed6cc7520d55efcd9efe56a88d4336cb6dbc2004561"
+      "sha256": "3e301a3229cdfff6201ab7ea14e9120a00d1524a746c11862c3b30c6ac2ef936"
     },
     {
       "path": "project/.github/skills/wtfp-manage-project/SKILL.md",
@@ -642,7 +642,7 @@
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/references/actions.md",
-      "sha256": "d6bc6c81c057bee980b497b6518f93d40b70d33f46e6151146b428e17a2cdb1c"
+      "sha256": "fb756da31f16cfaa7fc1584aa10d323b2f6fded38952ad1efc30ef859c584285"
     },
     {
       "path": "project/.github/wtfp/skills/wtfp-manage-project/SKILL.md",

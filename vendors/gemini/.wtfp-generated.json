@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "1d2334d0277aba198183721abd0441feff3b15d6cf7b0edda2e71ebd298c4c9a",
+  "sourceHash": "8d3583c53cebf1e8b2a8171ba3fef07b98299bf5332e83d03903f6334fedce2b",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -206,7 +206,7 @@
     },
     {
       "path": "commands/wtfp/add-todo.toml",
-      "sha256": "5f370a9656df92f1e991deec6f60de838bcfc737cca4fbe0a1035e74ccc0b538"
+      "sha256": "1393ad1ae83815db7b7801f7cd12ffe596fa5e6c0d23500eb935d98effc6cfe5"
     },
     {
       "path": "commands/wtfp/advance.toml",
@@ -226,11 +226,11 @@
     },
     {
       "path": "commands/wtfp/check-todos.toml",
-      "sha256": "38c5a307b5ee07835725aa76c7a0834774e61f71b89692a9879d4e744851e1ff"
+      "sha256": "7aa6abcb347be15004900144a556f77be20f40e5940f1bb1bda0448ac2c1ca88"
     },
     {
       "path": "commands/wtfp/checkpoint.toml",
-      "sha256": "9352d8a20b42d471c7b68999e5d2d759dd78d413212f8fc9bc1c65b9d0b970ae"
+      "sha256": "af03925c66dff3f83830ea7af4c6457b5aa36f234ef4c491f3934bd23dbe9729"
     },
     {
       "path": "commands/wtfp/contribute.toml",
@@ -282,7 +282,7 @@
     },
     {
       "path": "commands/wtfp/pause-writing.toml",
-      "sha256": "bc83ca9f245abb5628be1502648e81d4dff1b6cd6d3555ff24d8cd3074daf930"
+      "sha256": "f5cfe8de6d9372e91423eb589e1762e6c1c51586508af83329817cb31e33dd91"
     },
     {
       "path": "commands/wtfp/plan-milestone-gaps.toml",
@@ -302,7 +302,7 @@
     },
     {
       "path": "commands/wtfp/progress.toml",
-      "sha256": "7746006903d6d56026e7fd9821287e74468ac9da0b9013a1654fe11d41958569"
+      "sha256": "46ddbfcfb59582836b196d0f313858f88481f5b93c1c3d07420205a06b0cd2da"
     },
     {
       "path": "commands/wtfp/quick.toml",
@@ -326,7 +326,7 @@
     },
     {
       "path": "commands/wtfp/resume-writing.toml",
-      "sha256": "283df856d5c8421c96ac7cdec5bb58cbfa7e68207a2429ca69a85cbbfca9db44"
+      "sha256": "64a33abfeec2ce6c22ec7c81396db6b111508979d2c77871ce1aac1b4efa3c79"
     },
     {
       "path": "commands/wtfp/review-section.toml",
@@ -334,7 +334,7 @@
     },
     {
       "path": "commands/wtfp/settings.toml",
-      "sha256": "bb1700391661461a88b8f4b360de6efa6f43b9c6e3dbd4718f6cbd9c514aaa44"
+      "sha256": "ae910d120fd8c3e432fbe0d1b5a9d27e11364d4c71eda7c2237dfdf2b5280dee"
     },
     {
       "path": "commands/wtfp/submit-milestone.toml",
@@ -562,7 +562,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "4a26961bbbb1ca80e4f3b2a47a27c00e693a634184c7ed3ff22fe2a442a70421"
+      "sha256": "a88116831fd3a67cb3dbb017af857adeb7c5e65c8bb75008c2b26edf7d18abdc"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",

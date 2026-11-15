@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "05596ba51f39b31ff79c65cd86d5d109e32ba598a1d1faef25ef6a42e68efbed",
+  "sourceHash": "959001e8879d09ff620619f6909fd5f01a31945b7c5b7eeeb321b4bff916345a",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -558,7 +558,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "d6bc6c81c057bee980b497b6518f93d40b70d33f46e6151146b428e17a2cdb1c"
+      "sha256": "fb756da31f16cfaa7fc1584aa10d323b2f6fded38952ad1efc30ef859c584285"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",

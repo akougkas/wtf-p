@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "c1962f9ae0fef1a8f2248d923f839616ebc6f2233a0a218b1a618d5e46068169",
+  "sourceHash": "0ff36fe2f5fb3e0b8a3779a6f6757ad3f5ad4f2185fc964628a7c2d6b234fc61",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -482,7 +482,7 @@
     },
     {
       "path": "skills/wtfp-manage-project/references/actions.md",
-      "sha256": "a2398f7501395aeaa7d93234411ec9f10e32c22c8eb05204adb1be3cf75a6c0f"
+      "sha256": "c9146c861302168761027d37e02cb4af599034dbc0ca3fc27ebfd4f4a4d6e1a9"
     },
     {
       "path": "skills/wtfp-manage-project/SKILL.md",
