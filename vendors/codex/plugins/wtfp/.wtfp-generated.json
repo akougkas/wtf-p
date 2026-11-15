@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "cda6b4e0ef40580ae0c4baef51b24af3963640dc0080ed123b4040a3fe994f06",
+  "sourceHash": "f853ffe8294fa8484c95a397add1e98d425862e12ab1405f1e4406747cefea3f",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -594,7 +594,7 @@
     },
     {
       "path": "workflows/discuss-section.md",
-      "sha256": "083bf0a72e5c07c9f64fb3a565ac88b44b607a876d9b855e6cfe806d32b6a1b2"
+      "sha256": "d1ae41ca206344fcc250110dd51d6bb11f9adb82c943b070abc7dbf5b0907769"
     },
     {
       "path": "workflows/execute-outline.md",

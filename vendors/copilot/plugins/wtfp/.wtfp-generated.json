@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "54e4f990abf311b80f39ce1b4c4c35bb17765fa3bec27ee0cbf99e70bc2fbaba",
+  "sourceHash": "025f465263fa6bd4d478519f534261806a95a313135def705ba266c5a322edee",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -254,7 +254,7 @@
     },
     {
       "path": "commands/wtfp-discuss-section.md",
-      "sha256": "13327be89c56bbecec25284a9c8767d373dbc64425459e0e02c141947abd6ff6"
+      "sha256": "1eeb2c1b6362474e122079059380b51c6e1df6c3c9a7664e1bb42875b6072307"
     },
     {
       "path": "commands/wtfp-execute-outline.md",
@@ -738,7 +738,7 @@
     },
     {
       "path": "workflows/discuss-section.md",
-      "sha256": "083bf0a72e5c07c9f64fb3a565ac88b44b607a876d9b855e6cfe806d32b6a1b2"
+      "sha256": "d1ae41ca206344fcc250110dd51d6bb11f9adb82c943b070abc7dbf5b0907769"
     },
     {
       "path": "workflows/execute-outline.md",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "d1ec2fa81fce8e324e5c48f4f95929520d57cef4e157e4b1b1828d9d0bcf72d6",
+  "sourceHash": "e4d591492a8953e27c2f2eea54f13a677c5fbd26fe23cdd6344dfbd4d04a6ce4",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -302,7 +302,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/discuss-section.md",
-      "sha256": "07c746194392e99436b30b30c11a7136407b2f5d7b67b1b7f0c98c38fa4ccfcf"
+      "sha256": "3bcdf0087fbd70921c766a9fedf84a930868485352aab14baaad62ca5a9fb94c"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
@@ -458,7 +458,7 @@
     },
     {
       "path": "commands/discuss-section.md",
-      "sha256": "fe2dd8114c4cf10fb88312242e30aed9fdeac32ef9d2baa1bbdfd49e104f998a"
+      "sha256": "de75bb6e6a14b4a6d123b04189e21fdec8f1bf16ff702533a5624019ea90e65c"
     },
     {
       "path": "commands/execute-outline.md",
@@ -962,7 +962,7 @@
     },
     {
       "path": "workflows/discuss-section.md",
-      "sha256": "083bf0a72e5c07c9f64fb3a565ac88b44b607a876d9b855e6cfe806d32b6a1b2"
+      "sha256": "d1ae41ca206344fcc250110dd51d6bb11f9adb82c943b070abc7dbf5b0907769"
     },
     {
       "path": "workflows/execute-outline.md",

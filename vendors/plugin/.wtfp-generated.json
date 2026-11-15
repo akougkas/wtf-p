@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "5156861e72f86ba41f5c2fc42dfcf592fa2f886072ef18c2af36a3b8e8fe6b52",
+  "sourceHash": "319d31076153726fdb8f146d3ac4bf29ea85e8ec939359736ad97f181966aed4",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -250,7 +250,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/discuss-section.md",
-      "sha256": "2eb21d76f8590a724d2dbf655c8949a529b021bd96f34bcaaf2bac43de0c6846"
+      "sha256": "fd8e321a3340e6d4f77305c43c9b60e626a736548dced9fbe4e555a5e0ad62cb"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
@@ -738,7 +738,7 @@
     },
     {
       "path": "workflows/discuss-section.md",
-      "sha256": "083bf0a72e5c07c9f64fb3a565ac88b44b607a876d9b855e6cfe806d32b6a1b2"
+      "sha256": "d1ae41ca206344fcc250110dd51d6bb11f9adb82c943b070abc7dbf5b0907769"
     },
     {
       "path": "workflows/execute-outline.md",

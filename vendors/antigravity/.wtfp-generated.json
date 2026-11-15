@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "eae17d4e85c59e6179a06b74d822c2e892c8ad42810a81e90e0b3808533cec7d",
+  "sourceHash": "ab3e69a989ec4362a434ed98a7352b72e3faf08562f230e0c133dbc2f82d5abc",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -454,7 +454,7 @@
     },
     {
       "path": "skills/wtfp-discuss-section/SKILL.md",
-      "sha256": "5746b64b95a47d2efe23287e2616f9e54199137b49e1a20ebe8df3aefc06f79c"
+      "sha256": "1603a2a047051637926b82d6c7e47c52e62f485c592cb47b9a0570faa54b4f97"
     },
     {
       "path": "skills/wtfp-execute-outline/SKILL.md",
@@ -734,7 +734,7 @@
     },
     {
       "path": "workflows/discuss-section.md",
-      "sha256": "083bf0a72e5c07c9f64fb3a565ac88b44b607a876d9b855e6cfe806d32b6a1b2"
+      "sha256": "d1ae41ca206344fcc250110dd51d6bb11f9adb82c943b070abc7dbf5b0907769"
     },
     {
       "path": "workflows/execute-outline.md",

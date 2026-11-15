@@ -35,7 +35,7 @@ Write prose and linked artifacts with native file tools; keep their authored for
 
 1. Resolve one section ID from the outline and read its prior context, summary, and decisions before proposing updates; reject ambiguity.
 2. Elicit the section purpose, boundaries, claims, examples, evidence needs, exclusions, and discretionary choices.
-3. Store prose guidance as the section context artifact, decisions as decision records, and unresolved blocking choices as checkpoints; link artifacts from the section record.
+3. Store prose guidance as the section context artifact, decisions as decision records, and unresolved blocking choices as checkpoints; link artifacts from the section record. The linked context marks the discussion as done: leave the section's status as it is, since no status means discussed.
 
 ## Safety and completion
 
