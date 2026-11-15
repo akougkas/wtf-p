@@ -363,7 +363,8 @@ process.exit(0);`);
     const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)]
       .map(match => `extension_wtfp__${match[1]}`)
       // The v2 campaign was prepared before status existed; its prompts fall back to reading records.
-      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__status'].includes(tool));
+      // Its steps never archive a milestone, so they hold no archive tool either.
+      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__status', 'extension_wtfp__archive'].includes(tool));
     assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
   });
 
