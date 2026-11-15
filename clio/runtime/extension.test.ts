@@ -853,6 +853,22 @@ test("a complete draft goes to submit-milestone on a fresh audit with no errors,
 		assert.equal(await nextOf(), "audit-milestone", "an audit of an earlier draft does not stand for this one");
 	}, SERVED));
 
+test("submit-milestone archives the whole project once, by digest, and nothing else may", () =>
+	withDesk(async (host, workspace) => {
+		const refused = await host.tool("archive", { archive: "draft-01" });
+		assert.match(refused.text, /nothing armed does not declare archiving project:\/\/archives\/draft-01/);
+		await host.hook({ point: "prompt_submit", text: "/wtfp:submit-milestone" });
+		const made = await host.tool("archive", { archive: "draft-01" });
+		assert.equal(made.isError, undefined, made.text);
+		const manifest = read(workspace, ".planning/archives/draft-01/manifest.json");
+		const files = manifest.files as Array<{ path: string; sha256: string }>;
+		assert.ok(files.some((file) => file.path === ".planning/project.json") && files.some((file) => file.path === "paper/introduction.md"));
+		for (const file of files) assert.equal(sha(workspace, `.planning/archives/draft-01/${file.path}`), file.sha256, file.path);
+		assert.match((await host.tool("archive", { archive: "draft-01" })).text, /already exists, and an archive is immutable/);
+		const again = await host.tool("archive", { archive: "draft-02" });
+		assert.ok(!(read(workspace, ".planning/archives/draft-02/manifest.json").files as Array<{ path: string }>).some((file) => file.path.startsWith(".planning/archives/")), again.text);
+	}, { id: "wtfp", prompts: [...SERVED.prompts, "wtfp:submit-milestone"] }));
+
 test("the author's approval links the plan it approves, in the same commit", () =>
 	withDesk(async (host, workspace) => {
 		const section = read(workspace, ".planning/sections/introduction/section.json");

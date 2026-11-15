@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "5f0ed1b74e34c73dbf4ecc1ef7043c378787b9534ac7004ee8ff5e8475e6150c",
+  "sourceHash": "d43b261b19dbf2b24038a9405962a1f6f03492c641d4ba3c8d9c89c97e182e7f",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -154,7 +154,7 @@
     },
     {
       "path": "clio-coder-extension.yaml",
-      "sha256": "1c7dcb7a4625b0516d6a38c43af915a0403a1cdd692827f418e7047dfb280b38"
+      "sha256": "3ae0ea762a3cb4800c06367c1010aeaa107ccbee8c06eb0f94f97d72f5dd90c3"
     },
     {
       "path": "compatibility/action-availability.json",
@@ -262,11 +262,11 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "5eea80ef63e33de2f6702b6c4039809452fda0966d2bfa9932f46c369b142ab7"
+      "sha256": "9073be0b4135b0c030a54ede19a0ed54f038ee5775be3a4176b6538021a59112"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "d35b7bedad06c0b77f91930a1a6fda2837c57630041a9fbe0d5979d3ae986916"
+      "sha256": "fada8bf590aa802c6a92c9b52d399adc14d09dbddf244912b63300c05637e882"
     },
     {
       "path": "runtime/json-schema.cjs",

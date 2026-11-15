@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "400c78fea5dc445a00c3b558e2c1666479319a4c5788199f74004ec3887eaff8",
+  "sourceHash": "d7a9f981c17d1bac2253f376174fa26e34f690d8431a30816c3bbabf07c9c2d3",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,7 +210,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/advance.md",
-      "sha256": "8219518fd56a5bbb73f8bd51749f0b9c303cdb93e0c979817ad6cd22531458fe"
+      "sha256": "1229f7714a73c7bc1840971533f19f65a8bbe5fd305550f013ac6501cc6fb163"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
@@ -338,7 +338,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/submit-milestone.md",
-      "sha256": "16c46d54524897a99a0321ce555bc8220a01715f374d4b700b15a45cfb3cd673"
+      "sha256": "992789623f3358baeb107fb789fc055058c1f76299d96fb7191fce2896fd7e63"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/update.md",

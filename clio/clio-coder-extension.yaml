@@ -59,6 +59,10 @@ runtime:
       description: "Count a section's manuscript body words by the desk's one method and record the count in the section and state records, committed together."
       actionClass: execute
       inputSchema: { type: object, properties: { section: { type: string } }, required: [section], additionalProperties: false }
+    - name: archive
+      description: "Inside an action that declares a milestone archive: copy every .planning record and artifact and every paper/ file into .planning/archives/<archive>/ with a sha256 manifest. An archive is immutable; an existing id is refused."
+      actionClass: execute
+      inputSchema: { type: object, properties: { archive: { type: string } }, required: [archive], additionalProperties: false }
     - name: next_step
       description: "Only inside a /wtfp:advance turn: the desk picks the next step from the project by the progress ladder and arms the write guard for that action and section alone. Returns a step to run, a gate to put to the author with gate, or the reason the run stops."
       actionClass: execute

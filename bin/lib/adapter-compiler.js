@@ -682,8 +682,10 @@ function clioInlineRoles(action, reviewers, deskTools) {
 
 // The desk tools one Clio prompt's turn holds: a record writer gets every
 // record tool, a reader only what reads, and a gate only where it declares one.
+const archives = (action) => action.produces.some((output) => output.mode === 'archive' && output.uri.startsWith('project://archives/'));
+
 function clioDeskTools(action) {
-  if (clioRecordWriter(action)) return [...CLIO_DESK_TOOLS];
+  if (clioRecordWriter(action)) return [...CLIO_DESK_TOOLS, ...(archives(action) ? ['extension_wtfp__archive'] : [])];
   const tools = ['status', 'read_record', 'readiness'];
   if (action.effects.some((effect) => effect.id === 'user.gate')) tools.push('gate');
   return tools.map((tool) => `extension_wtfp__${tool}`);
@@ -722,6 +724,8 @@ function clioDeskWorkflowBody(action, workflowBody) {
     'Start from the desk\'s status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
       ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
+    ...(archives(action)
+      ? ['Make the milestone archive with `extension_wtfp__archive` and its archive id: it copies every `.planning` record and artifact and every `paper/` file into `.planning/archives/<archive>/` with a sha256 manifest, so never copy files by hand. Then record the archive in the manifest and state and write the validation, as the procedure says.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
       ? ['After changing a linked section manuscript, call `extension_wtfp__measure_section` with that section ID; it persists the desk\'s body-word count in the section and state.'] : []),
     `If desk tools are absent, follow \`\${pluginRoot}/workflows/${action.id}.md\` and \`\${pluginRoot}/project/README.md\` with native tools and \`ask_user\` gates.`
@@ -737,6 +741,7 @@ const CLIO_DESK_ARGS = Object.freeze({
   read_record: '{uri}',
   readiness: '{section}',
   measure_section: '{section}',
+  archive: '{archive}',
   gate: '{checkpoint}',
   record: '{uri, record: {<every field of the record>}, expect_revision|expect_sha256} or {writes:[{uri, record, expect_...}]}, with no record field outside `record`'
 });

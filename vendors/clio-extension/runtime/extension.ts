@@ -27,6 +27,7 @@ import {
 	renameSync,
 	statSync,
 	unlinkSync,
+	writeFileSync,
 	writeSync,
 } from "node:fs";
 import { createRequire } from "node:module";
@@ -2572,6 +2573,56 @@ function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: str
 	};
 }
 
+/**
+ * An immutable milestone snapshot: every `.planning` file outside the archives
+ * and every `paper/` file, copied byte for byte under
+ * `.planning/archives/<archive>/` beside a manifest of their sha256 digests.
+ * Live, a model could not copy a whole project by hand within a turn. Only an
+ * armed action that declares the archive may make one, links are never
+ * followed, and an existing archive is never touched.
+ */
+function archiveProject(workspace: string, archive: string, armed: Armed | null, projectId: string | null): { uri: string; files: number; manifest: string; sha256: string } {
+	if (!new RegExp(`^${IDENTIFIER}$`, "u").test(archive)) throw new Error(`${archive} is not a valid archive id; use lowercase letters and digits joined by single hyphens`);
+	const uri = `project://archives/${archive}`;
+	if (!armed || !declares(armed, `${uri}/manifest.json`, "archive"))
+		throw new Error(`${armed ? armed.action : "nothing armed"} does not declare archiving ${uri}; only the action that owns a milestone archive may make one`);
+	return withLock(workspace, () => {
+		recover(workspace);
+		const target = `.planning/archives/${archive}`;
+		const destination = contained(workspace, target);
+		if (destination === null) throw new Error(`${target} is reached through a symbolic link; the desk does not follow links`);
+		if (existsSync(destination)) throw new Error(`${uri} already exists, and an archive is immutable; choose another id`);
+		const files: Array<{ path: string; sha256: string; bytes: number }> = [];
+		const walk = (relative: string): void => {
+			const directory = contained(workspace, relative);
+			if (directory === null || !existsSync(directory) || !lstatSync(directory).isDirectory()) return;
+			for (const entry of readdirSync(directory, { withFileTypes: true })) {
+				const child = path.posix.join(relative, entry.name);
+				if (entry.name.startsWith(".") || child === ".planning/archives" || entry.isSymbolicLink()) continue;
+				if (entry.isDirectory()) walk(child);
+				else if (entry.isFile()) {
+					const bytes = readBytes(workspace, child);
+					if (bytes === null) throw new Error(`${child} could not be read whole, so the archive would be incomplete`);
+					files.push({ path: child, sha256: sha256(bytes), bytes: bytes.length });
+				}
+			}
+		};
+		walk(".planning");
+		walk("paper");
+		const staging = `${destination}.staging-${randomBytes(4).toString("hex")}`;
+		mkdirSync(staging, { recursive: true });
+		for (const file of files) {
+			const out = path.join(staging, file.path);
+			mkdirSync(path.dirname(out), { recursive: true });
+			writeFileSync(out, readFileSync(path.join(workspace, file.path)));
+		}
+		const manifest = `${JSON.stringify({ archive: uri, project_id: projectId, created_at: timestamp(), files }, null, 2)}\n`;
+		writeFileSync(path.join(staging, "manifest.json"), manifest);
+		renameSync(staging, destination);
+		return { uri, files: files.length, manifest: `${target}/manifest.json`, sha256: sha256(manifest) };
+	});
+}
+
 function measureSection(workspace: string, sectionId: string, key: Buffer | null, armed: Armed | null): { words: number; target: number; file: string | null; total: number; recorded: boolean } {
 	return withLock(workspace, () => {
 		recover(workspace);
@@ -3545,6 +3596,18 @@ export default function extension(api: ExtensionApiV2): void {
 			};
 		} catch (error) {
 			return { text: `No readiness: ${error instanceof Error ? error.message : String(error)}`, isError: true };
+		}
+	});
+	api.tool("archive", async (input, ctx) => {
+		try {
+			const desk = await deskFor(ctx);
+			const made = archiveProject(ctx.snapshot.workspace, String((input as Json).archive ?? ""), await armedFor(ctx), desk.projectId);
+			return {
+				text: `Archived ${made.files} files to ${made.uri}; its manifest ${made.manifest} has sha256 ${made.sha256} and lists each file's sha256. Record the archive in the manifest and state as the procedure says.`,
+				data: made,
+			};
+		} catch (error) {
+			return { text: failure("Not archived", error), isError: true };
 		}
 	});
 	api.tool("measure_section", async (input, ctx) => {
