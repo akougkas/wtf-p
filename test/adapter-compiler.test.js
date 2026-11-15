@@ -1304,6 +1304,7 @@ record('research handoff declares incremental state and preserves native decisio
     const declared = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(planText(clio, `agents/wtfp-${role}.md`));
     return `${declared[1]}, ${declared[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
   };
+  const VERIFIER_ROLES = ['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'];
   const deskTools = ['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`);
   for (const entry of availability.actions.filter((item) => item.status === 'available' && item.id !== 'help')) {
     const action = readJson(path.join(ROOT, 'protocol/actions', `${entry.id}.json`));
@@ -1317,12 +1318,20 @@ record('research handoff declares incremental state and preserves native decisio
       for (const tool of ['run_script', 'job', 'git', 'verify', 'configure_clio', 'web_read']) assert.ok(!allowed.includes(tool), `${label} ${entry.id}: never ${tool}`);
       assert.strictEqual(allowed.includes('bash'), capabilities.has('tool.execute') || capabilities.has('network.search'), `${label} ${entry.id}: a shell only for the bundled tool dispatcher`);
       assert.strictEqual(allowed.includes('write'), capabilities.has('filesystem.write') || capabilities.has('filesystem.delete'), `${label} ${entry.id}: writes only where declared`);
-      assert.strictEqual(allowed.includes('dispatch'), action.delegation.length > 0 || capabilities.has('agent.parallel'), `${label} ${entry.id}: dispatch only where delegation is declared`);
+      // On the desk a record-only action's writing roles have no root they may hold, so the turn does their work.
+      const recordOnly = action.produces.every((output) => /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
+      const inlined = label === 'portable' && recordOnly ? action.delegation.filter((role) => !VERIFIER_ROLES.includes(role.role)) : [];
+      const dispatchedRoles = action.delegation.filter((role) => !inlined.includes(role));
+      if (inlined.length > 0) {
+        assert.ok(text.includes('## Clio role binding') && text.includes('Do not dispatch'), `${label} ${entry.id}: record-only roles run in the turn`);
+        assert.ok(!text.includes('## Clio role-result binding') || dispatchedRoles.length > 0, `${label} ${entry.id}: no dispatch binding for inline roles`);
+      }
+      assert.strictEqual(allowed.includes('dispatch'), dispatchedRoles.length > 0, `${label} ${entry.id}: dispatch only where a role can be dispatched`);
       const delegated = listField(text, 'delegated-tools');
-      if (action.delegation.length === 0) assert.strictEqual(delegated, null, `${label} ${entry.id}: no worker ceiling without delegation`);
+      if (dispatchedRoles.length === 0) assert.strictEqual(delegated, null, `${label} ${entry.id}: no worker ceiling without delegation`);
       else {
         // The ceiling is exactly what the delegated recipes declare, so Clio admits each of them and nothing wider.
-        const expected = [...new Set(action.delegation.flatMap((role) => recipeTools(role.role)))].sort();
+        const expected = [...new Set(dispatchedRoles.flatMap((role) => recipeTools(role.role)))].sort();
         assert.deepStrictEqual(delegated, expected, `${label} ${entry.id}: worker ceiling`);
         assert.ok(!delegated.includes('bash') && !delegated.includes('verify'), `${label} ${entry.id}: no worker runs a program`);
       }

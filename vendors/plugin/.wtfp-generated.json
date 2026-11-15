@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "b94d4822929e0080c1407e294de8d1f3dfd67544b8dc7344cd40df56ee16e624",
+  "sourceHash": "87b7441864ef896b64d183e2050c7959569f1c544aab17073e2070f5cdba5cca",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -214,7 +214,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
-      "sha256": "a102c821e7b286a83078d4124b76fa99263eab80ed0cd0f8c5757b0ce9343cf5"
+      "sha256": "b1110752efaef12c844b13f1f89889a11fef18765dffa935cf4cb79932f6282f"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/audit-milestone.md",
@@ -238,7 +238,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/create-outline.md",
-      "sha256": "c5399b3f78706cdd829163622da3224f7a5118d2d9fe1ba6d8a86c57fa4f9813"
+      "sha256": "7af6bf2ad21318cacad4ab8f0c7c8995707dc797720a38658406cd07bb39b0c1"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/create-poster.md",

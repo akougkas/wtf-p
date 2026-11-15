@@ -659,6 +659,17 @@ function clioRecordWriter(action) {
     /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
 }
 
+// On the desk only the record tool writes JSON records, so a writing role of an
+// action that produces no file has no root it may hold: Clio reads an empty
+// write_roots as unbounded and the desk refuses it. The main agent does that
+// role's work itself. Read-only reviewers still dispatch.
+function clioInlineRoles(action, reviewers, deskTools) {
+  if (!deskTools) return [];
+  const recordOnly = action.produces.every((output) =>
+    /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
+  return recordOnly ? action.delegation.map((entry) => entry.role).filter((role) => !reviewers.has(role)) : [];
+}
+
 // The desk tools one Clio prompt's turn holds: a record writer gets every
 // record tool, a reader only what reads, and a gate only where it declares one.
 function clioDeskTools(action) {
@@ -876,8 +887,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   }
   if (target === 'clio') {
     lines.push('allowed-tools:');
-    for (const tool of clioActionTools(action, deskTools)) lines.push(`  - ${tool}`);
-    const delegated = clioDelegatedTools(action, reviewers);
+    const inline = new Set(clioInlineRoles(action, reviewers, deskTools));
+    const dispatched = { ...action, delegation: action.delegation.filter((entry) => !inline.has(entry.role)) };
+    for (const tool of clioActionTools(dispatched, deskTools)) lines.push(`  - ${tool}`);
+    const delegated = clioDelegatedTools(dispatched, reviewers);
     if (delegated.length > 0) {
       lines.push('delegated-tools:');
       for (const tool of delegated) lines.push(`  - ${tool}`);
@@ -888,7 +901,9 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   // Clio refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
   const clioReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`wtfp-${entry.role}\``);
   const reviewerPhrasing = clioReviewers.length ? ` ${clioReviewers.join(', ')} ${clioReviewers.length === 1 ? 'is' : 'are'} read-only: begin each task for ${clioReviewers.length === 1 ? 'it' : 'them'} with "Review", because Clio refuses a read-only agent a task it reads as a change.` : '';
-  const userGateBody = target === 'clio' ? [clioUserGateBody(action, deskTools), clioResearchConnectionBody(action), action.delegation.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
+  const inlineRoles = target === 'clio' ? clioInlineRoles(action, reviewers, deskTools) : [];
+  const inlineBody = inlineRoles.length ? `## Clio role binding\n\nThis action writes only JSON records, which on Clio only \`extension_wtfp__record\` writes, so a dispatched ${inlineRoles.map((role) => `\`wtfp-${role}\``).join(', ')} would have nothing it may write and the desk refuses it. Do ${inlineRoles.length === 1 ? 'that role\'s' : 'those roles\''} work in this turn yourself, following the skill loaded above, and write each record through \`extension_wtfp__record\`. Do not dispatch ${inlineRoles.length === 1 ? 'it' : 'them'}.` : '';
+  const userGateBody = target === 'clio' ? [clioUserGateBody(action, deskTools), clioResearchConnectionBody(action), inlineBody, action.delegation.length > inlineRoles.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations/checks and parse its evidence string as portable role-result JSON. Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -1091,7 +1106,7 @@ function clioActionTools(action, deskTools) {
   const tools = ['read', 'grep', 'find', 'ls', 'context'];
   if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) tools.push('write', 'edit');
   if (capabilities.has('user.interaction')) tools.push('ask_user');
-  if (capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) tools.push('dispatch', 'monitor');
+  if ((capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) && action.delegation.length > 0) tools.push('dispatch', 'monitor');
   if (capabilities.has('network.fetch')) tools.push('web_fetch');
   if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
   if (deskTools) tools.push(...clioDeskTools(action));
@@ -1722,6 +1737,7 @@ function addClioRuntime(plan, model, availabilityById) {
   addFile(plan, 'runtime/write-guard.json', clioWriteGuard(model, availabilityById));
   addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');
+  copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'templates'), 'project/templates');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'actions'), 'actions');
 }
 
