@@ -1570,12 +1570,13 @@ const MAX_DRIVE_STEPS = 24;
 /** One `/wtfp:advance` run: the steps the desk armed and the gates it put to the author. */
 interface Drive {
 	workspace: string;
-	steps: Array<{ action: string; section: string | null; fingerprint: string }>;
+	/** `finish`: the step was handed back once to record outputs it skipped. */
+	steps: Array<{ action: string; section: string | null; fingerprint: string; finish?: boolean }>;
 	asked: string[];
 }
 
 type DriveDecision =
-	| { kind: "step"; action: string; section: string | null; prompt: string; reason: string }
+	| { kind: "step"; action: string; section: string | null; prompt: string; reason: string; finish?: boolean }
 	| { kind: "gate"; checkpoint: string; reason: string }
 	| { kind: "stop"; reason: string };
 
@@ -1627,8 +1628,20 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 	const section = next.section ?? null;
 	const fingerprint = driveFingerprint(desk);
 	const last = drive.steps[drive.steps.length - 1];
-	if (last && last.action === next.action && last.section === section && last.fingerprint === fingerprint)
+	if (last && last.action === next.action && last.section === section && last.fingerprint === fingerprint) {
+		// Live, review-section reported findings and skipped its review record; one hand-back names what to record.
+		const creates = (GUARD.actions[next.action]?.produces ?? []).filter((output) => output.mode === "create").map((output) => output.uri.replace("{section}", section ?? "{section}"));
+		if (!last.finish && creates.length > 0)
+			return {
+				kind: "step",
+				action: next.action,
+				section,
+				prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`,
+				reason: `${next.command} is not finished: it recorded nothing the next step depends on. Record its outputs for what this step found, whatever the outcome (${creates.join(", ")}), then call extension_wtfp__next_step. Do not repeat its work.`,
+				finish: true,
+			};
 		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };
+	}
 	return { kind: "step", action: next.action, section, prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`, reason: next.reason };
 }
 
@@ -3550,7 +3563,7 @@ export default function extension(api: ExtensionApiV2): void {
 		await ctx.state.set("armed", { action: decision.action, produces: contract.produces, section: decision.section, workspace } satisfies Armed);
 		await ctx.state.set("drive", {
 			...drive,
-			steps: [...drive.steps, { action: decision.action, section: decision.section, fingerprint: driveFingerprint(desk) }],
+			steps: [...drive.steps, { action: decision.action, section: decision.section, fingerprint: driveFingerprint(desk), ...(decision.finish ? { finish: true } : {}) }],
 		} satisfies Drive);
 		const invocation = `/wtfp:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
 		return {

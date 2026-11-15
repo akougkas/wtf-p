@@ -1024,7 +1024,10 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		const review = await nextStep(host);
 		assert.deepEqual([review.data.kind, review.data.action, review.data.section], ["step", "review-section", "introduction"]);
 		assert.ok(blocked(await write(host, "paper/introduction.md")), "the review step may not touch the manuscript the draft step could");
-		// A step that changed nothing the ladder reads is not run again.
+		// A step that changed nothing the ladder reads is handed back once to record its outputs, then not run again.
+		const finish = await nextStep(host);
+		assert.deepEqual([finish.data.kind, finish.data.action, finish.data.finish], ["step", "review-section", true]);
+		assert.match(finish.text, /review-section introduction is not finished: it recorded nothing.*project:\/\/sections\/introduction\/reviews\/\{review\}/);
 		const again = await nextStep(host);
 		assert.equal(again.data.kind, "stop");
 		assert.match(again.text, /changed nothing/);
@@ -1051,6 +1054,9 @@ test("every next_step result restates the driver rule, so a compacted turn can c
 		assert.match(step.text, /Read and follow <plugin root>\/ai\.iowarp\.clio\/prompts\/wtfp\/write-section\.md, where <plugin root> is the WTF-P plugin root \(two directories above the base_dir of the loaded wtfp-manage-project skill/);
 		assert.match(step.text, /invocation input introduction/);
 		assert.equal(ruleOf(step.text), rule);
+		const finish = await nextStep(host);
+		assert.equal(finish.data.finish, true);
+		assert.equal(ruleOf(finish.text), rule);
 		const stop = await nextStep(host);
 		assert.equal(stop.data.kind, "stop");
 		assert.equal(ruleOf(stop.text), rule);
@@ -1389,6 +1395,7 @@ test("inside an advance run only the armed step's manuscript writes are noted", 
 		await answer(host, PLAN_GATE, "approve");
 		assert.equal((await nextStep(host)).data.action, "write-section");
 		assert.match(noteOf(await wrote(host, "paper/introduction.md")) ?? "", /args=\{section: "introduction"\}/);
+		assert.equal((await nextStep(host)).data.finish, true, "an unchanged step is handed back once");
 		assert.equal((await nextStep(host)).data.kind, "stop");
 		assert.equal(noteOf(await wrote(host, "paper/introduction.md")), null, "after a stop nothing is armed to measure");
 	}, DRIVEN_PLUGIN));
