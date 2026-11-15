@@ -2872,7 +2872,9 @@ async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTa
 		const roots = writeRoots(desk, armed);
 		if (!roots.some((allowed) => under(allowed, relative)))
 			return block(
-				`WTF-P write guard: ${actionName(served, armed.action)}${armed.section ? ` ${armed.section}` : ""} may write only under ${roots.join(", ") || "nothing (it declares no file outputs)"}; refused ${relative}. Record other changes as a handoff instead.`,
+				armed.action === "advance"
+					? `WTF-P write guard: nothing is armed between /wtfp:advance steps; refused ${relative}. Call extension_wtfp__next_step; it arms the step that may write, and that step's own prompt says what it writes.`
+					: `WTF-P write guard: ${actionName(served, armed.action)}${armed.section ? ` ${armed.section}` : ""} may write only under ${roots.join(", ") || "nothing (it declares no file outputs)"}; refused ${relative}. Record other changes as a handoff instead.`,
 			);
 	}
 	for (const section of desk.sections) {

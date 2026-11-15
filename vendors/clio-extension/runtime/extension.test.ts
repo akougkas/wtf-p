@@ -894,7 +894,7 @@ test("only an advance turn may ask the desk for a step, and the turn's end ends 
 		assert.equal((await nextStep(host)).isError, true, "an ordinary action cannot drive");
 		const armed = await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
 		assert.match(JSON.stringify(armed.effects), /WTF-P driver armed/);
-		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "nothing is writable before the desk arms a step");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /nothing is armed between \/wtfp:advance steps.*Call extension_wtfp__next_step/, "nothing is writable before the desk arms a step, and the refusal says how to get one");
 		assert.equal((await nextStep(host)).data.kind, "gate");
 		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
 		assert.equal((await nextStep(host)).isError, true, "the drive ends with its turn");
@@ -913,7 +913,7 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 			const gate = await nextStep(host);
 			assert.equal(gate.data.kind, "gate", gate.text);
 			asked.push(gate.data.checkpoint as string);
-			assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "a gate leaves nothing armed");
+			assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /nothing is armed between \/wtfp:advance steps/, "a gate leaves nothing armed");
 			await answer(host, gate.data.checkpoint as string, choices[gate.data.checkpoint as string] as string);
 		}
 		assert.deepEqual(asked.sort(), [GATE, PLAN_GATE].sort());
@@ -935,7 +935,7 @@ test("advance puts each gate to the author, then arms exactly the step the ladde
 		const again = await nextStep(host);
 		assert.equal(again.data.kind, "stop");
 		assert.match(again.text, /changed nothing/);
-		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "a stop disarms the last step");
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /nothing is armed between \/wtfp:advance steps/, "a stop disarms the last step");
 	}, DRIVEN_PLUGIN));
 
 test("every next_step result restates the driver rule, so a compacted turn can continue from the last result alone", () =>
