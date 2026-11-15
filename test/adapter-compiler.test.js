@@ -855,6 +855,14 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     const source = planText(plan, sourcePath);
     for (const guard of guards) assert.ok(source.includes(guard), `${sourcePath}: missing lifecycle guard: ${guard}`);
   }
+  // A local model read "alone in its call" as leave to batch questions into one
+  // round, which Clio refuses for operator_only questions; the rule is literal.
+  for (const sourcePath of [...plan.files.keys()].filter((file) => file.startsWith('prompts/wtfp/'))) {
+    const source = planText(plan, sourcePath);
+    if (!source.includes('operator_only')) continue;
+    assert.ok(source.includes('ask exactly one question per `ask_user` call, with its options and `operator_only: true`'), `${sourcePath}: author questions are not one per call`);
+    assert.ok(!source.includes('alone in its call'), `${sourcePath}: ambiguous author-question rule`);
+  }
 
   assert.ok([...plan.files.keys()].every((file) => !file.split('/').some((segment) => segment.includes(':'))), 'Clio generated a colon-bearing filename');
   for (const role of EXPECTED_ROLES) {

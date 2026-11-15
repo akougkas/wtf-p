@@ -2942,7 +2942,7 @@ async function guardQuestions(ctx: ExtensionContextV2, input: Json): Promise<Ext
 	if (questions.length === 0 || questions.every((question) => (question as Json | null)?.operator_only === true)) return {};
 	if (!(await armedFor(ctx))) return {};
 	if (questions.length > 1)
-		return block("WTF-P: inside a WTF-P action each question is the author's to answer. Ask them one call at a time, each with operator_only: true, so Clio never answers one for an absent author.");
+		return block("WTF-P: inside a WTF-P action each question is the author's to answer. Ask them one call at a time, each with operator_only: true and its own options, so Clio never answers one for an absent author.");
 	return {
 		effects: [
 			{

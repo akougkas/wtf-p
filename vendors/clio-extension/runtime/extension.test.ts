@@ -1092,7 +1092,7 @@ test("inside a WTF-P action every question goes to the author as one only the au
 		await host.hook({ point: "prompt_submit", text: "/wtfp:discuss-section introduction" });
 		const marked = rewriteOf(await ask({ action: "ask", questions: [question] }));
 		assert.deepEqual((marked?.questions as Json[] | undefined)?.[0], { ...question, operator_only: true });
-		assert.match(blocked(await ask({ action: "ask", questions: [question, { question: "And the venue?" }] })) ?? "", /one call at a time, each with operator_only/);
+		assert.match(blocked(await ask({ action: "ask", questions: [question, { question: "And the venue?" }] })) ?? "", /one call at a time, each with operator_only: true and its own options/);
 		assert.equal(rewriteOf(await ask({ action: "ask", questions: [{ ...question, operator_only: true }] })), null, "a question already marked passes unchanged");
 		assert.equal(blocked(await ask({ action: "complete", decisions: [] })), null);
 		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
