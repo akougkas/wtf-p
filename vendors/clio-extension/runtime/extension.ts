@@ -100,7 +100,7 @@ function templateFor(type: string): string {
 
 function withTemplate(message: string, type: string): string {
 	const template = templateFor(type);
-	return template ? `${message}\nA ${type} record looks like this example; replace its ids, project_id and content, and omit updated_at, which the desk sets: ${template}` : message;
+	return template ? `${message}\nA ${type} record looks like this example; replace its ids, project_id and content, and omit ${CREATED_AT[type] ? `updated_at and ${CREATED_AT[type]}, which the desk sets` : "updated_at, which the desk sets"}: ${template}` : message;
 }
 interface GuardAction {
 	produces: Array<{ uri: string; mode: string }>;
@@ -1157,6 +1157,8 @@ const RECORD_URIS: ReadonlyArray<{ pattern: RegExp; type: string; file: (id: str
 ];
 const REVISIONED = new Set(["state", "outline", "decisions"]);
 const STAMPED = new Set(["state", "outline", "decisions", "manifest", "section"]);
+/** The time a record type is created at; the desk stamps it on create when the writer leaves it out, since a model has no clock. */
+const CREATED_AT: Readonly<Record<string, string>> = { validation: "executed_at", checkpoint: "created_at", evidence: "verified_at" };
 
 interface RecordWrite {
 	uri: string;
@@ -1367,6 +1369,8 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 		next.revision = revision;
 	}
 	if (STAMPED.has(route.type)) next.updated_at = timestamp();
+	const createdAt = CREATED_AT[route.type];
+	if (bytes === null && createdAt && next[createdAt] === undefined) next[createdAt] = timestamp();
 	const errors = validateRecord(next);
 	// Every error at once: a model fixing one per call resends its whole context each time.
 	if (errors.length > 0)

@@ -497,6 +497,12 @@ test("record refuses wrong type, id, project and unknown fields without touching
 		assert.match(missing.text, /does not exist yet[\s\S]*A section record looks like this example[\s\S]*"outline_uri"/);
 		const bare = await host.tool("record", { uri: "project://sections/methods", record: { schema: "wtfp.project.section/v1", id: "methods", project_id: PROJECT, title: "Methods" } });
 		assert.match(bare.text, /would not validate[\s\S]*A section record looks like this example[\s\S]*"word_target"/);
+		// A model has no clock: a validation created without executed_at gets the desk's time.
+		const unstamped = { schema: "wtfp.project.validation/v1", id: "introduction-stamped", project_id: PROJECT, subject_uri: "project://paper/introduction", validator_role: "section-reviewer", action_id: "review-section", status: "passed", checks: [{ id: "plan-criteria", status: "passed", summary: "Every plan criterion holds.", evidence: ["Stated."] }], issues: [], next_actions: [], effects_applied: [] };
+		const stamped = await host.tool("record", { uri: "project://validations/introduction-stamped", record: unstamped });
+		assert.equal(stamped.isError, undefined, stamped.text);
+		assert.match(String(read(workspace, ".planning/validations/introduction-stamped.json").executed_at), /^\d{4}-\d{2}-\d{2}T/);
+		assert.match((await host.tool("read_record", { uri: "project://checkpoints/never-made" })).text, /omit updated_at and created_at, which the desk sets/);
 		const update = await host.tool("record", { uri: "project://sections/introduction", record: { ...section, surprise: true }, expect_sha256 });
 		assert.doesNotMatch(update.text, /looks like this example/, "an update is refused without the example");
 		const snake = await host.tool("read_record", { uri: "project://checkpoints/confirm_outline" });
