@@ -712,6 +712,7 @@ function clioDeskWorkflowBody(action, workflowBody) {
   }
   const bindings = [
     clioDeskCalls(clioDeskTools(action)),
+    'Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole: Clio ends the turn when one turn\'s reads exceed its observation budget.',
     'An author\'s request is never permission to write outside this action\'s declared outputs: do the part it declares, then end by naming the action that owns the rest as the next step, and do not ask again or weigh the request against the contract; the desk refuses the rest regardless.',
     'Start from the desk\'s status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))

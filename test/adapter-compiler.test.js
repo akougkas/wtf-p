@@ -870,6 +870,9 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     assert.strictEqual(source.includes('This action creates no checkpoint, so ask its gate question with `ask_user`'), !creates, `${id}: ask_user branch`);
     assert.strictEqual(source.includes('When none exists yet, create it pending through `extension_wtfp__record`'), creates, `${id}: checkpoint branch`);
   }
+  // Live, a discuss step read a 172 KB snapshot doc whole and Clio ended the turn on its observation budget.
+  assert.ok(planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/discuss-section.md').includes('Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole'), 'desk prompts bound large reads');
+  assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/project/README.md'), 'utf8').includes('Read a large source or manuscript by section'), 'the protocol bounds large reads');
   // A local model looped 18k tokens between an author's request and the step's contract; both projections settle it.
   assert.ok(planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/plan-section.md').includes('An author\'s request is never permission to write outside this action\'s declared outputs'), 'desk prompts carry the out-of-contract rule');
   assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/project/README.md'), 'utf8').includes('An author\'s request is never permission to write outside the running action\'s declared outputs'), 'the protocol carries the out-of-contract rule');

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "c63bf4d21f4f9e3a939df7724da9df35e98b692cab61d2eba95b6976b47d5991",
+  "sourceHash": "05be5f85142cd312357b8a9e3ba0f1a0416a348d4cf6c8aae3d10ff812ccc540",
   "files": [
     {
       "path": "marketplace.json",
@@ -462,7 +462,7 @@
     },
     {
       "path": "project/.github/wtfp/project/README.md",
-      "sha256": "36c5a77278ada6ab6d057fb62489c5f31e485926f288a7a0e1f5ae5b77119696"
+      "sha256": "e3052b7a3552a81c3283d3155bc57ff0dd5dcc9462d650a69fe0af651afd062b"
     },
     {
       "path": "project/.github/wtfp/project/schemas/checkpoint.schema.json",
