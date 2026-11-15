@@ -826,10 +826,10 @@ function testRoutingScorer(tempRoot) {
   const score = scoreObservations(document);
   assert.strictEqual(score.disposition, 'pass');
   assert.strictEqual(score.passing, true);
-  assert.strictEqual(score.counts.definitions, 76);
-  assert.strictEqual(score.counts.observed, 76);
+  assert.strictEqual(score.counts.definitions, 77);
+  assert.strictEqual(score.counts.observed, 77);
   assert.strictEqual(score.implicit.counts.observed, 40);
-  assert.strictEqual(score.explicit.counts.observed, 36);
+  assert.strictEqual(score.explicit.counts.observed, 37);
   assert.strictEqual(score.implicit.metrics.micro_skill_route_accuracy, 1);
   assert.strictEqual(score.implicit.metrics.macro_skill_route_accuracy, 1);
   assert.strictEqual(score.implicit.metrics.observable_route_accuracy, 1);
