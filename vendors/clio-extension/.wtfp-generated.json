@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "ca1d63fbc702d689887c754d1594fc0c6bada1be45a13682aed646a8a39b773d",
+  "sourceHash": "17ee1f9478235558b62272485becc4adf1056a91bebb012476955ed064d1e6f9",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -218,11 +218,11 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "5ffb784c85be5f1b83d55697fbcfbe89b1883b219e7f3cedb504a8c5b29ca1d1"
+      "sha256": "e7dcc483a47142032eba89085cca1889ca119e1db12d4286bc5febb698d346ff"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "6a5d9ad518aa586fd1e1a5851ea7f01e927533caccda03c72a378d89af063c22"
+      "sha256": "f9a8e3495852bbb4d408652ff0b09a2bc081e6c76047ced635e4ca0f8d37f022"
     },
     {
       "path": "runtime/json-schema.cjs",

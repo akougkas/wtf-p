@@ -968,6 +968,54 @@ test("status gives an agent the whole project in one read, matching what the des
 		assert.equal(((await host.tool("status", {})).data as Json).present, false);
 	}, SERVED));
 
+// --- the turn_start status reminder ------------------------------------------------
+// Clio fires turn_start once per operator prompt; the desk answers with its status
+// only when that prompt armed a WTF-P action or advance in a project.
+
+const turnStart = (host: Host) => host.hook({ point: "turn_start", turnId: "t1" });
+const reminderOf = (result: { effects?: Array<{ kind: string }> }): string | null =>
+	(result.effects?.find((effect) => effect.kind === "inject_reminder") as { message?: string } | undefined)?.message ?? null;
+
+test("a WTF-P turn starts from the desk's status, and no other turn does", () =>
+	withDesk(async (host, workspace) => {
+		assert.equal(reminderOf(await turnStart(host)), null, "nothing armed, nothing injected");
+		await host.hook({ point: "prompt_submit", text: "explain the flush bottleneck" });
+		assert.equal(reminderOf(await turnStart(host)), null, "an ordinary prompt gets no reminder");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:plan-section introduction" });
+		const armed = await turnStart(host);
+		const message = reminderOf(armed) ?? "";
+		assert.match(message, /^WTF-P desk status at the start of this turn/);
+		assert.match(message, /introduction: planned/);
+		assert.match(message, new RegExp(`Open gates: .*${GATE}`));
+		assert.ok(message.length <= 2000);
+		assert.equal((armed.effects as Array<{ kind: string; audience?: string }>)[0]?.audience, "model");
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		assert.equal(reminderOf(await turnStart(host)), null, "the turn's end disarms the reminder");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.match(reminderOf(await turnStart(host)) ?? "", /WTF-P desk status/, "an advance run starts from the status too");
+		rmSync(path.join(workspace, ".planning"), { recursive: true, force: true });
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.equal(reminderOf(await turnStart(host)), null, "no project, no reminder");
+	}, DRIVEN_PLUGIN));
+
+test("a status too long for one Clio effect is cut to 2,000 characters and points at the status tool", () =>
+	withDesk(async (host, workspace) => {
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const extra = Array.from({ length: 60 }, (_, index) => ({
+			...((outline.sections as Json[])[0] as Json),
+			id: `appendix-measurement-detail-${String(index).padStart(2, "0")}`,
+			title: `Appendix ${index}`,
+			wave: 2,
+			depends_on: ["introduction"],
+		}));
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [...(outline.sections as Json[]), ...extra] });
+		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
+		const message = reminderOf(await turnStart(host)) ?? "";
+		assert.ok(message.length > 1990 && message.length <= 2000, `length ${message.length}`);
+		assert.match(message, /… \(truncated; call extension_wtfp__status\)$/);
+		assert.equal(((await host.tool("status", {})).data as { sections: Json[] }).sections.length, 61, "the full status stays one call away");
+	}, SERVED));
+
 test("inside a WTF-P action every question goes to the author as one only the author may answer", () =>
 	withDesk(async (host) => {
 		const ask = (args: Json) => host.hook({ point: "before_tool", tool: "ask_user", turnId: "t1", args });

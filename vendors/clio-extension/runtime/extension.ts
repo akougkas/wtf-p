@@ -2296,7 +2296,19 @@ function statusDigest(desk: Desk): Json {
 	};
 }
 
-/** The desk's status as one reminder within Clio's 2,000-character effect limit. */
+/** Clio refuses effect text longer than this many UTF-16 code units. */
+const EFFECT_TEXT_LIMIT = 2000;
+
+/** Text cut to Clio's effect limit with `tail` appended, never splitting a surrogate pair. */
+function clip(message: string, tail: string): string {
+	if (message.length <= EFFECT_TEXT_LIMIT) return message;
+	let end = EFFECT_TEXT_LIMIT - tail.length;
+	const last = message.charCodeAt(end - 1);
+	if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+	return `${message.slice(0, end)}${tail}`;
+}
+
+/** The desk's status as one reminder within Clio's effect limit. */
 function statusReminder(desk: Desk): string {
 	const gates = openGates(desk);
 	const lines = [
@@ -2304,8 +2316,7 @@ function statusReminder(desk: Desk): string {
 		progressText(desk),
 		...(gates.length > 0 ? [`Open gates: ${gates.map((gate) => `${gate.id} (${gate.scope_uri.replace(/^project:\/\//u, "")})`).join(", ")}`] : []),
 	];
-	const message = lines.join("\n");
-	return message.length <= 2000 ? message : `${message.slice(0, 1960)}\n… (truncated; call extension_wtfp__status)`;
+	return clip(lines.join("\n"), "\n… (truncated; call extension_wtfp__status)");
 }
 
 function helpCard(served: ServedPlugin): { text: string; card: View } {
