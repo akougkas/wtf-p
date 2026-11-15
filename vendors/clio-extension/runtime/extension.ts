@@ -2199,6 +2199,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 		key,
 	);
 	const writes: Array<{ input: RecordWrite }> = [{ input: { uri: `project://interactions/${String(interaction.id)}`, record: interaction } }];
+	let linkedIn: string | null = null;
 	if (!stale && picked !== KEEP) {
 		const { file: _file, trust: _trust, answer: _answer, ...stored } = checkpoint;
 		writes.push({
@@ -2242,6 +2243,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 			const artifacts = isObject(section.artifacts) ? section.artifacts : {};
 			const plans = Array.isArray(artifacts.plans) ? (artifacts.plans as unknown[]) : [];
 			if (plans[plans.length - 1] !== checkpoint.scope_uri) {
+				linkedIn = `project://sections/${planned}`;
 				const status = text(section.status, "not-started");
 				writes.push({
 					input: {
@@ -2273,7 +2275,9 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 	if (picked === KEEP) return { kind: "kept", text: `${checkpoint.id}: kept pending`, checkpoint: checkpoint.id };
 	return {
 		kind: "recorded",
-		text: option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`,
+		text: `${option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`}${
+			linkedIn ? `. The desk linked ${checkpoint.scope_uri} in ${linkedIn} with this answer; do not link it again` : ""
+		}`,
 		checkpoint: checkpoint.id,
 	};
 }
