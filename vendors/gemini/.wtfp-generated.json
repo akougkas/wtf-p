@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "gemini",
-  "sourceHash": "9850a41f712bc88bda2bd96dda0497c6dfc2e84ca8088c6d177c0b2e6e633e45",
+  "sourceHash": "0d58fedc94d06740780b2cd8c54c6cb82cd6842e248099f277ea202c4b2bda4c",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -814,7 +814,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",

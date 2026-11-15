@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "e4d591492a8953e27c2f2eea54f13a677c5fbd26fe23cdd6344dfbd4d04a6ce4",
+  "sourceHash": "5a9b86ae9dc6949f0f6607f0e6fb2c2e448a0265d68171d39d6fdf631a06aa5c",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -374,7 +374,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/research-gap.md",
-      "sha256": "484b2ffc5565e994052c5fb02ebff8b67e271ae76ec86cdbacd3ade7e10afb55"
+      "sha256": "af085635b3993d7c6fa5f803359e04c91298644aac9598221d52a1e206e0bed8"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/resume-writing.md",
@@ -530,7 +530,7 @@
     },
     {
       "path": "commands/research-gap.md",
-      "sha256": "ffa4c97642e518dee848403b19276317aa40478f5eee4defb9cbcbf7c515134b"
+      "sha256": "e21d15056df43f8f372063bbbba2cf4dd623949cc7c59500d7b3dfcd31b59bb6"
     },
     {
       "path": "commands/resume-writing.md",
@@ -1034,7 +1034,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",

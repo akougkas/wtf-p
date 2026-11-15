@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "025f465263fa6bd4d478519f534261806a95a313135def705ba266c5a322edee",
+  "sourceHash": "76e499bfce947d97d3f2a81ed348e3f00522a965b1eaeef3e61d4d6427c0f7d5",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -810,7 +810,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",

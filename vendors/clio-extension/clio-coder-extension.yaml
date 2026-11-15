@@ -47,7 +47,7 @@ runtime:
       actionClass: execute
       inputSchema: { type: object, properties: {}, additionalProperties: false }
     - name: read_record
-      description: "Read one .planning record at its logical URI with the revision and sha256 to pass back to record, and, for a checkpoint, whether the author's answer is attested by the desk."
+      description: "Read one .planning record at its logical URI with the revision and sha256 to pass back to record, and, for a checkpoint, whether the author's answer is attested by the desk. A family URI (project://sections, project://sources, project://evidence, project://checkpoints, project://validations, project://interactions) returns all its records in one call."
       actionClass: execute
       inputSchema: { type: object, properties: { uri: { type: string } }, required: [uri], additionalProperties: false }
     - name: readiness

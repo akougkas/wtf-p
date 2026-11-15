@@ -23,7 +23,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 
 1. Resolve the research question and section scope against locked/deferred decisions; agree on depth and source constraints.
 2. Prefer an operator-configured, trusted read-only CiteNexus MCP connection for bounded public metadata searches when the host has already authorized it. In a host session the operator explicitly started without per-call approval cards, for this research action, the bundled CiteNexus dispatcher may also search the free no-key public indexes `crossref`, `datacite`, `europe_pmc`, and `arxiv` without a second per-query author gate; use only selected relevant indexes with an explicit `--providers` list. Record provider IDs, queries, date, and result limits; never send unpublished manuscript text or private notes as search terms. For any other route, first obtain explicit author approval naming the providers and bounded query set. Results remain candidates and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
-3. Synthesize supported, conflicting, and missing evidence into a Markdown research artifact; link new records and disclose limitations.
+3. Synthesize supported, conflicting, and missing evidence into a Markdown research artifact; link new records and disclose limitations. Record every claim the section must support in `project://sections/{section}` with `evidence_required: true` and its `evidence_uris`; a literature-heavy section that records no such claim has no coverage to check and cannot be planned.
 
 ## Bundled tool execution
 

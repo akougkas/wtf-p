@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "antigravity",
-  "sourceHash": "ab3e69a989ec4362a434ed98a7352b72e3faf08562f230e0c133dbc2f82d5abc",
+  "sourceHash": "c12dc54b0ce734dfed1c687a6c07bb651aa19530915937e978fd0f89a69b3b2c",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -806,7 +806,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",

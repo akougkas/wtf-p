@@ -102,6 +102,8 @@ function withTemplate(message: string, type: string): string {
 	return template ? `${message}\nA ${type} record looks like this example; replace its ids, project_id and content, and omit ${CREATED_AT[type] ? `updated_at and ${CREATED_AT[type]}, which the desk sets` : "updated_at, which the desk sets"}: ${template}` : message;
 }
 interface GuardAction {
+	/** The Clio agent IDs of the roles the action's contract delegates to. */
+	agents: string[];
 	produces: Array<{ uri: string; mode: string }>;
 }
 const GUARD = JSON.parse(readFileSync(new URL("./write-guard.json", import.meta.url), "utf8")) as {
@@ -185,7 +187,8 @@ interface SectionRow {
 	claims: { total: number; verified: number; unsupported: number };
 	stages: { discuss: boolean; plan: boolean; write: boolean; review: boolean };
 	gates: Checkpoint[];
-	research: { required: boolean; present: boolean };
+	/** `claimless`: the record names no live claim that requires evidence, so coverage is vacuous. */
+	research: { required: boolean; present: boolean; claimless: boolean };
 	dependsOn: string[];
 	plan: PlanState;
 	unsupported: string[];
@@ -203,6 +206,8 @@ interface Acceptance {
 	verified: boolean;
 	/** The attested author answer on that validation's acceptance checkpoint, if any. */
 	decision: "accept" | "revise" | null;
+	/** The note the author attached to that answer, if any. */
+	note?: string;
 }
 
 interface Finding {
@@ -555,7 +560,20 @@ function acceptanceOf(validations: Json[], checkpoints: Checkpoint[], id: string
 		.filter((checkpoint) => checkpoint.scope_uri === `project://validations/${text(verify.id)}` && checkpoint.trust === "attested" && checkpoint.status === "resolved")
 		.sort((a, b) => text(b.answer?.answered_at).localeCompare(text(a.answer?.answered_at)))[0];
 	const picked = answered?.resolution?.selected_option;
-	return { reviewed, verified: true, decision: picked === ACCEPT || picked === REVISE ? picked : null };
+	const note = authorNote(answered);
+	return { reviewed, verified: true, decision: picked === ACCEPT || picked === REVISE ? picked : null, ...(note ? { note } : {}) };
+}
+
+/** How the desk records the text an author attaches to a gate answer, inside the checkpoint's resolution summary. */
+const NOTE_LEAD = " The author's note: ";
+const NOTE_LIMIT = 4000;
+
+/** The note an author attached to an answer this desk attested; null when there is none or the answer is not the author's. */
+function authorNote(checkpoint: Checkpoint | undefined): string | null {
+	if (!checkpoint || checkpoint.trust !== "attested") return null;
+	const summary = checkpoint.resolution?.summary ?? "";
+	const at = summary.indexOf(NOTE_LEAD);
+	return at < 0 ? null : summary.slice(at + NOTE_LEAD.length).trim() || null;
 }
 
 // --- the approved-plan predicate ---------------------------------------------
@@ -585,8 +603,16 @@ function planState(workspace: string, id: string, record: Json | null, checkpoin
 	const latest = answered[0];
 	// An author's explicit answer on this plan decides even when confirm_plan is off: a rejection is never overridden by policy.
 	if (latest) {
-		if (latest.resolution?.selected_option !== APPROVE || latest.status !== "resolved")
-			return { state: "declined", uri, file, sha256: digest, reason: `the author answered "${latest.resolution?.selected_option ?? latest.status}" on ${latest.id}, not approve` };
+		if (latest.resolution?.selected_option !== APPROVE || latest.status !== "resolved") {
+			const note = authorNote(latest);
+			return {
+				state: "declined",
+				uri,
+				file,
+				sha256: digest,
+				reason: `the author answered "${latest.resolution?.selected_option ?? latest.status}" on ${latest.id}, not approve${note ? `, with this note for the next plan: ${note}` : ""}`,
+			};
+		}
 		const shown = ((latest.answer?.presented as Json | undefined)?.artifact as Json | undefined)?.sha256;
 		if (shown !== digest)
 			return confirmPlan ? { state: "changed", uri, file, sha256: digest, reason: `the plan changed after the author approved it on ${latest.id}` } : policy;
@@ -614,9 +640,18 @@ function blockers(desk: Desk, section: SectionRow): string[] {
 				: `the recorded answer to ${gate.id} was not observed by this desk and must be confirmed`,
 		);
 	if (!planReady(section.plan)) reasons.push(`${section.plan.reason}`);
-	if (section.research.required && section.unsupported.length > 0)
-		reasons.push(`${section.unsupported.length} required ${section.unsupported.length === 1 ? "claim lacks" : "claims lack"} verified evidence (${section.unsupported.slice(0, 3).join(", ")}); run research-gap first`);
+	const gap = evidenceGap(section);
+	if (gap) reasons.push(`${gap}; run research-gap first`);
 	return reasons;
+}
+
+/** Why a literature-heavy section's evidence does not cover it yet; null when it does or when it needs no research. */
+function evidenceGap(section: SectionRow): string | null {
+	if (!section.research.required) return null;
+	if (section.unsupported.length > 0)
+		return `${section.unsupported.length} required ${section.unsupported.length === 1 ? "claim lacks" : "claims lack"} verified evidence (${section.unsupported.slice(0, 3).join(", ")})`;
+	if (section.research.claimless) return "it requires research but records no claim that needs evidence, so no source can be shown to cover it";
+	return null;
 }
 
 // --- loading -----------------------------------------------------------------
@@ -755,7 +790,11 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 				review: reviews.length > 0 || status === "complete",
 			},
 			gates: sectionGates(checkpoints, id, manuscript),
-			research: { required: research.required === true, present: readBytes(workspace, `${base}/research.md`) !== null },
+			research: {
+				required: research.required === true,
+				present: readBytes(workspace, `${base}/research.md`) !== null,
+				claimless: !claims.some((claim) => claim.evidence_required === true && claim.status !== "rejected"),
+			},
 			dependsOn: Array.isArray(entry.depends_on) ? entry.depends_on.filter((dep): dep is string => typeof dep === "string") : [],
 			plan: planState(workspace, id, record, checkpoints, confirmPlan),
 			unsupported,
@@ -1474,7 +1513,8 @@ function reviewNext(served: ServedPlugin, section: SectionRow): Next {
 	if (!acceptance.reviewed) return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
 	if (!acceptance.verified)
 		return step(served, "verify-work", id, `${section.title} is reviewed; the author checks it against its plan and accepts it or sends it back.`);
-	if (acceptance.decision === REVISE) return step(served, "plan-revision", id, `The author sent ${section.title} back for revision.`);
+	if (acceptance.decision === REVISE)
+		return step(served, "plan-revision", id, `The author sent ${section.title} back for revision${acceptance.note ? `, with this note: ${acceptance.note}` : "."}`);
 	return step(
 		served,
 		"verify-work",
@@ -1496,8 +1536,8 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 			return reviewNext(served, section);
 		case "writing":
 		case "planned":
-			if (section.research.required && section.unsupported.length > 0)
-				return step(served, "research-gap", id, `${section.title} has required claims without verified evidence.`);
+			if (evidenceGap(section))
+				return step(served, "research-gap", id, `${section.title}: ${evidenceGap(section)}.`);
 			if (!planReady(section.plan))
 				return step(served, "plan-section", id, `${section.title} cannot be drafted: ${section.plan.reason}.`);
 			// A draft written after its plan's approval is past drafting even when the record still says writing.
@@ -1506,8 +1546,10 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 			return step(served, "write-section", id, `${section.title} has an approved plan.`);
 		default:
 			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
-			if (section.research.required && (!section.research.present || section.unsupported.length > 0))
+			if (section.research.required && !section.research.present)
 				return step(served, "research-gap", id, `${section.title} needs verified evidence first.`);
+			if (evidenceGap(section))
+				return step(served, "research-gap", id, `${section.title}: ${evidenceGap(section)}.`);
 			return step(served, "plan-section", id, `${section.title} is ready to plan.`);
 	}
 }
@@ -2046,7 +2088,7 @@ function subjectOf(workspace: string, desk: Desk, checkpoint: Checkpoint): { uri
 	return bytes === null ? null : { uri: checkpoint.scope_uri, sha256: sha256(bytes) };
 }
 
-async function ask(ctx: ExtensionContextV2, desk: Desk, checkpoint: Checkpoint): Promise<InterviewStep> {
+async function ask(ctx: ExtensionContextV2, desk: Desk, checkpoint: Checkpoint, hint?: string): Promise<InterviewStep> {
 	const nonce = randomBytes(6).toString("hex");
 	const artifact = subjectOf(ctx.snapshot.workspace, desk, checkpoint);
 	const offered = [...choices(checkpoint), { value: KEEP, label: "Keep it pending", detail: "Answer later; its writes stay blocked." }];
@@ -2070,6 +2112,7 @@ async function ask(ctx: ExtensionContextV2, desk: Desk, checkpoint: Checkpoint):
 			t: "box",
 			dir: "col",
 			children: [
+				...(hint ? [{ t: "text", text: hint, tone: "warning", wrap: "wrap" } as View] : []),
 				...(checkpoint.context ? [{ t: "text", text: checkpoint.context, wrap: "wrap" } as View] : []),
 				...(confirming
 					? [{ t: "text", text: `Recorded as "${recorded}" by the author, but this desk did not see that answer. Confirm it or choose again.`, tone: "warning", wrap: "wrap" } as View]
@@ -2100,7 +2143,7 @@ type AnswerResult = { kind: "recorded" | "kept" | "stale" | "refused"; text: str
  * author was offered for this exact checkpoint, project and subject, and only
  * once: the binding is consumed before anything is written.
  */
-async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown): Promise<AnswerResult> {
+async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown, note: string | null = null): Promise<AnswerResult> {
 	const workspace = ctx.snapshot.workspace;
 	const nonce = /^gate\.([a-f0-9]{12})$/u.exec(stepKey)?.[1];
 	const asked = nonce ? (await ctx.state.get<Asked>(`ask:${nonce}`)).value : undefined;
@@ -2153,11 +2196,13 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown)
 					resolution: {
 						resolved_by: "author",
 						...(option ? { selected_option: option.id } : {}),
-						summary: option
-							? `The author chose "${shown(checkpoint, option).label}" at the Clio WTF-P desk.`
-							: picked === WAIVE
-								? "The author waived this gate at the Clio WTF-P desk."
-								: "The author marked this done at the Clio WTF-P desk.",
+						summary: `${
+							option
+								? `The author chose "${shown(checkpoint, option).label}" at the Clio WTF-P desk.`
+								: picked === WAIVE
+									? "The author waived this gate at the Clio WTF-P desk."
+									: "The author marked this done at the Clio WTF-P desk."
+						}${note ? `${NOTE_LEAD}${note}` : ""}`,
 						resolved_at: now,
 					},
 				},
@@ -2214,6 +2259,31 @@ async function startGates(ctx: ExtensionContextV2): Promise<ExtensionOutputV2> {
 function choiceOf(answers: Record<string, string | string[]>): unknown {
 	const choice = answers.choice;
 	return Array.isArray(choice) ? (choice.length === 1 ? choice[0] : undefined) : choice;
+}
+
+/** The text the author attached to their chosen option, bounded; null when none. */
+function noteOf(event: { notes?: Record<string, string> }): string | null {
+	const note = event.notes?.choice?.replace(/\s+/gu, " ").trim() ?? "";
+	return note ? note.slice(0, NOTE_LIMIT) : null;
+}
+
+const FREE_TEXT = "A typed answer names no option, so nothing was recorded. Choose an option and attach your text to it with [n] note.";
+
+/**
+ * A gate answered with free text instead of an option. Nothing is recorded and
+ * the question's binding is spent; the text goes back with how to send it.
+ */
+async function freeText(ctx: ExtensionContextV2, event: { step: string; answers: Record<string, string | string[]>; other?: Record<string, true> }): Promise<AnswerResult | null> {
+	if (event.other?.choice !== true) return null;
+	const nonce = /^gate\.([a-f0-9]{12})$/u.exec(event.step)?.[1];
+	const asked = nonce ? (await ctx.state.get<Asked>(`ask:${nonce}`)).value : undefined;
+	if (nonce) await ctx.state.delete(`ask:${nonce}`);
+	const typed = String(choiceOf(event.answers) ?? "").replace(/\s+/gu, " ").trim().slice(0, NOTE_LIMIT);
+	return {
+		kind: "refused",
+		text: `The author typed an answer instead of choosing an option, so nothing was recorded and the gate stays pending. Ask again; the author chooses an option and attaches their text with [n] note.${typed ? ` They wrote: "${typed}"` : ""}`,
+		...(asked ? { checkpoint: asked.checkpoint } : {}),
+	};
 }
 
 // --- confirmations of weakening record writes --------------------------------
@@ -2349,8 +2419,69 @@ function notARecord(uri: string): string {
 	return `${uri} is not a logical record URI this adapter maps`;
 }
 
+/** How much record JSON one family read returns before it names the rest by id. */
+const FAMILY_LIMIT = 48 * 1024;
+
+/**
+ * Every record of one family, such as `project://sources`, in one call: each
+ * as a single read returns it, until the family outgrows FAMILY_LIMIT; the
+ * rest are named so they can be read one at a time.
+ */
+function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string): { text: string; data: unknown } {
+	const workspace = ctx.snapshot.workspace;
+	const identifier = new RegExp(`^${IDENTIFIER}$`, "u");
+	let ids: string[];
+	if (collection === "sections") {
+		const directory = contained(workspace, ".planning/sections");
+		ids =
+			directory === null || !existsSync(directory) || !lstatSync(directory).isDirectory()
+				? []
+				: readdirSync(directory, { withFileTypes: true })
+						.filter((entry) => entry.isDirectory() && identifier.test(entry.name) && readBytes(workspace, `.planning/sections/${entry.name}/section.json`) !== null)
+						.map((entry) => entry.name)
+						.sort();
+	} else ids = listJson(workspace, `.planning/${collection}`).map((file) => path.posix.basename(file, ".json")).filter((id) => identifier.test(id));
+	const records: unknown[] = [];
+	const omitted: string[] = [];
+	const failed: string[] = [];
+	let size = 0;
+	for (const id of ids) {
+		if (omitted.length > 0) {
+			omitted.push(id);
+			continue;
+		}
+		let one: { data: unknown };
+		try {
+			one = readTool(ctx, desk, `project://${collection}/${id}`);
+		} catch (error) {
+			failed.push(`${id} (${error instanceof Error ? error.message : String(error)})`);
+			continue;
+		}
+		const length = JSON.stringify(one.data).length;
+		if (records.length > 0 && size + length > FAMILY_LIMIT) {
+			omitted.push(id);
+			continue;
+		}
+		records.push(one.data);
+		size += length;
+	}
+	const uri = `project://${collection}`;
+	return {
+		text: [
+			ids.length === 0 ? `${uri} holds no records yet.` : `${uri} holds ${ids.length} ${ids.length === 1 ? "record" : "records"}; ${records.length} returned in full, each with the revision and sha256 to pass back to record.`,
+			omitted.length > 0 ? `Not returned, to keep this read small: ${omitted.join(", ")}; read each with its own URI.` : "",
+			failed.length > 0 ? `Not readable: ${failed.join("; ")}.` : "",
+		]
+			.filter(Boolean)
+			.join(" "),
+		data: { uri, records, omitted, ...(failed.length > 0 ? { failed } : {}) },
+	};
+}
+
 function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: string; data: unknown } {
 	const workspace = ctx.snapshot.workspace;
+	const family = /^project:\/\/(sections|sources|evidence|checkpoints|validations|interactions)\/?\*?$/u.exec(uri);
+	if (family) return readFamily(ctx, desk, family[1] as string);
 	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
 	if (!route) throw new Error(notARecord(uri));
 	const file = route.file(route.pattern.exec(uri)?.[1] ?? "");
@@ -3079,6 +3210,13 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		return {};
 	}
 	const name = actionName(served, armed.action);
+	// Inside an action that delegates, a writing worker is one of its roles; a call without agent falls to Clio's default worker.
+	const agents = GUARD.actions[armed.action]?.agents ?? [];
+	const stranger = agents.length > 0 ? entries.find((entry) => !entry.readOnly && !agents.includes(entry.agent)) : undefined;
+	if (stranger)
+		return block(
+			`WTF-P dispatch guard: ${name} delegates only to ${agents.join(", ")}, and this call would start ${stranger.agent}; name the role with agent (for example agent: "${agents.find((agent) => GUARD.paperWriters.includes(agent)) ?? agents[0]}").`,
+		);
 	// A worker never gets a root that holds records: the record tool is the only way records change.
 	const base = writeRoots(desk, armed).filter((root) => ![".", ".planning", ".planning/sections"].includes(root.replace(/\/$/u, "")));
 	const held = heldManuscripts(desk);
@@ -3403,7 +3541,13 @@ export default function extension(api: ExtensionApiV2): void {
 						: "The author did not answer; the gate stays pending.",
 			};
 		try {
-			const result = await answer(ctx, event.step, choiceOf(event.answers));
+			const typed = await freeText(ctx, event);
+			if (typed?.checkpoint) {
+				const desk = await deskFor(ctx);
+				const current = desk.checkpoints.find((entry) => entry.id === typed.checkpoint);
+				if (current && askable(desk, []).includes(current)) return { step: await ask(ctx, desk, current, FREE_TEXT), total: 1 };
+			}
+			const result = typed ?? (await answer(ctx, event.step, choiceOf(event.answers), noteOf(event)));
 			if (result.kind === "stale" && result.checkpoint) {
 				const desk = await deskFor(ctx);
 				const current = desk.checkpoints.find((entry) => entry.id === result.checkpoint);
@@ -3428,7 +3572,14 @@ export default function extension(api: ExtensionApiV2): void {
 		const recorded = (await ctx.state.get<string[]>("gate-recorded")).value ?? [];
 		let note = "";
 		try {
-			const result = await answer(ctx, event.step, choiceOf(event.answers));
+			const typed = await freeText(ctx, event);
+			if (typed?.checkpoint) {
+				const desk = await deskFor(ctx);
+				const current = desk.checkpoints.find((entry) => entry.id === typed.checkpoint);
+				const remaining = askable(desk, kept);
+				if (current && remaining.includes(current)) return { step: await ask(ctx, desk, current, FREE_TEXT), total: remaining.length + recorded.length + kept.length };
+			}
+			const result = typed ?? (await answer(ctx, event.step, choiceOf(event.answers), noteOf(event)));
 			if (result.kind === "recorded") recorded.push(result.text);
 			else if (result.kind === "kept" && result.checkpoint) kept.push(result.checkpoint);
 			else if (result.kind === "refused") {

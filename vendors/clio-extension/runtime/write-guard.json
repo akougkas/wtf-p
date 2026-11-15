@@ -2,6 +2,7 @@
   "schema": "wtfp.clio-write-guard/v4",
   "actions": {
     "add-todo": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://checkpoints/{checkpoint}",
@@ -14,9 +15,13 @@
       ]
     },
     "advance": {
+      "agents": [],
       "produces": []
     },
     "analyze-bib": {
+      "agents": [
+        "wtfp-citation-expert"
+      ],
       "produces": [
         {
           "uri": "project://sources/{source}",
@@ -41,6 +46,7 @@
       ]
     },
     "audit-milestone": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://validations/{validation}",
@@ -49,6 +55,9 @@
       ]
     },
     "check-refs": {
+      "agents": [
+        "wtfp-citation-formatter"
+      ],
       "produces": [
         {
           "uri": "project://deliverables/bibliography/{artifact}",
@@ -61,6 +70,7 @@
       ]
     },
     "check-todos": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://checkpoints/{checkpoint}",
@@ -73,6 +83,7 @@
       ]
     },
     "checkpoint": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://checkpoints/{checkpoint}",
@@ -101,6 +112,9 @@
       ]
     },
     "create-outline": {
+      "agents": [
+        "wtfp-outliner"
+      ],
       "produces": [
         {
           "uri": "project://structure/outline",
@@ -125,6 +139,7 @@
       ]
     },
     "create-poster": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://deliverables/poster/{artifact}",
@@ -133,6 +148,7 @@
       ]
     },
     "create-slides": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://deliverables/slides/{artifact}",
@@ -141,6 +157,7 @@
       ]
     },
     "discuss-section": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://sections/{section}/context",
@@ -165,6 +182,10 @@
       ]
     },
     "execute-outline": {
+      "agents": [
+        "wtfp-coherence-checker",
+        "wtfp-section-writer"
+      ],
       "produces": [
         {
           "uri": "project://paper/{artifact}",
@@ -209,6 +230,7 @@
       ]
     },
     "export-latex": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://deliverables/latex/{artifact}",
@@ -225,9 +247,11 @@
       ]
     },
     "help": {
+      "agents": [],
       "produces": []
     },
     "insert-section": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://structure/outline",
@@ -244,9 +268,11 @@
       ]
     },
     "list-assumptions": {
+      "agents": [],
       "produces": []
     },
     "map-project": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://sources/{source}",
@@ -275,6 +301,7 @@
       ]
     },
     "new-paper": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://manifest",
@@ -299,6 +326,7 @@
       ]
     },
     "pause-writing": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://sections/{section}/handoff",
@@ -323,6 +351,7 @@
       ]
     },
     "plan-milestone-gaps": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://sections/{section}/plans/{plan}",
@@ -335,6 +364,7 @@
       ]
     },
     "plan-revision": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://sections/{section}/plans/{plan}",
@@ -351,6 +381,10 @@
       ]
     },
     "plan-section": {
+      "agents": [
+        "wtfp-plan-checker",
+        "wtfp-section-planner"
+      ],
       "produces": [
         {
           "uri": "project://sections/{section}/plans/{plan}",
@@ -375,6 +409,9 @@
       ]
     },
     "polish-prose": {
+      "agents": [
+        "wtfp-prose-polisher"
+      ],
       "produces": [
         {
           "uri": "project://paper/{artifact}",
@@ -395,9 +432,13 @@
       ]
     },
     "progress": {
+      "agents": [],
       "produces": []
     },
     "quick": {
+      "agents": [
+        "wtfp-section-writer"
+      ],
       "produces": [
         {
           "uri": "project://paper/{artifact}",
@@ -414,6 +455,9 @@
       ]
     },
     "research-gap": {
+      "agents": [
+        "wtfp-research-synthesizer"
+      ],
       "produces": [
         {
           "uri": "project://sources/{source}",
@@ -446,6 +490,7 @@
       ]
     },
     "resume-writing": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://checkpoints/{checkpoint}",
@@ -458,6 +503,9 @@
       ]
     },
     "review-section": {
+      "agents": [
+        "wtfp-section-reviewer"
+      ],
       "produces": [
         {
           "uri": "project://sections/{section}/reviews/{review}",
@@ -474,6 +522,7 @@
       ]
     },
     "settings": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://config",
@@ -482,6 +531,7 @@
       ]
     },
     "submit-milestone": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://archives/{archive}/{artifact}",
@@ -502,6 +552,7 @@
       ]
     },
     "verify-work": {
+      "agents": [],
       "produces": [
         {
           "uri": "project://validations/{validation}",
@@ -526,6 +577,10 @@
       ]
     },
     "write-section": {
+      "agents": [
+        "wtfp-argument-verifier",
+        "wtfp-section-writer"
+      ],
       "produces": [
         {
           "uri": "project://paper/{artifact}",

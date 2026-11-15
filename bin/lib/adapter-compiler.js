@@ -742,7 +742,7 @@ function clioDeskCalls(tools) {
     if (!(name in CLIO_DESK_ARGS)) throw new Error(`no Clio argument shape for desk tool ${tool}`);
     return `${name} ${CLIO_DESK_ARGS[name]}`;
   });
-  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` serves JSON records only; read authored artifacts directly: \`project://sections/{s}/context\`, \`research\`, \`summary\` and \`handoff\` are \`.planning/sections/{s}/<name>.md\`, plans and reviews are \`.planning/sections/{s}/plans/<id>.md\` and \`reviews/<id>.md\`, and \`project://paper/{a}\` is \`paper/{a}.md\`.`;
+  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns all of that family's records in one call; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: \`project://sections/{s}/context\`, \`research\`, \`summary\` and \`handoff\` are \`.planning/sections/{s}/<name>.md\`, plans and reviews are \`.planning/sections/{s}/plans/<id>.md\` and \`reviews/<id>.md\`, and \`project://paper/{a}\` is \`paper/{a}.md\`.`;
 }
 
 // The Clio projection of the workflow.drive capability. The desk, not the
@@ -1563,7 +1563,9 @@ function manuscriptGuardActions(model, availabilityById, host) {
 // substitutes the section an invocation names, and refuses record writes the
 // contract does not declare. `paperWriters` are the Clio agent IDs of the
 // writing roles that manuscript-producing actions dispatch; the desk confines
-// them to manuscripts whose sections are ready to draft. Clio reports which
+// them to manuscripts whose sections are ready to draft. `agents` are the
+// Clio agent IDs an action's contract delegates to; inside that action the
+// desk refuses a worker that is none of them. Clio reports which
 // workers run read-only, the verifier roles' read-only recipes among them, so
 // the guard names none.
 function clioWriteGuard(model, availabilityById) {
@@ -1584,6 +1586,7 @@ function clioWriteGuard(model, availabilityById) {
   return stableJson({
     schema: 'wtfp.clio-write-guard/v4',
     actions: Object.fromEntries(available.map((action) => [action.id, {
+      agents: drives(action) ? [] : [...new Set(action.delegation.map((entry) => `wtfp-${entry.role}`))].sort(),
       produces: drives(action) ? [] : action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
     }])),
     paperWriters: [...paperWriters].sort()

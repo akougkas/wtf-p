@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "opencode",
-  "sourceHash": "20e4c334146df0944ba42798aec4d61dcdbf6be0d46e39297e57f44d9b41d710",
+  "sourceHash": "f7d90e5633f5eaf5725bb0262c3f92b14b6eb9c878f7604b74327e61a4190b5e",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -806,7 +806,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",

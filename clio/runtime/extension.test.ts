@@ -813,6 +813,72 @@ test("literature-heavy sections wait for verified evidence behind their required
 		assert.match((await host.command("validate")).text, /manuscript-unread project:\/\/sections\/introduction: project:\/\/materials\/notes could not be checked/);
 	}, SERVED));
 
+test("an author's note on a gate answer reaches the next step, and typed text asks again instead of answering", () =>
+	withDesk(async (host, workspace) => {
+		await answer(host, GATE, "protocol-first");
+		// Free text names no option: the same gate comes back with how to attach the text, and nothing is recorded.
+		const key = await ask(host, PLAN_GATE);
+		const typed = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice: "Split the claim in two." }, other: { choice: true } } as never);
+		assert.ok(!("done" in typed), "the gate is asked again");
+		assert.match(JSON.stringify(typed.step.intro), /attach your text to it with \[n\] note/);
+		assert.equal((read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`) as Json).status, "pending");
+		// An option with a note records both; the note is the author's own, inside the sealed answer's checkpoint.
+		const done = await host.interview({ id: "gate-one", step: typed.step.key, nav: "next", answers: { choice: "revise" }, notes: { choice: "Split   the claim\nin two." } } as never);
+		assert.ok("done" in done, JSON.stringify(done));
+		const resolved = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);
+		assert.equal((resolved.resolution as Json).selected_option, "revise");
+		assert.match(String((resolved.resolution as Json).summary), /The author's note: Split the claim in two\.$/);
+		const ready = await host.tool("readiness", { section: "introduction" });
+		assert.match(ready.text, /not approve, with this note for the next plan: Split the claim in two\./);
+	}, SERVED));
+
+test("a family URI reads every record of that family in one call, and names what it leaves out", () =>
+	withDesk(async (host, workspace) => {
+		const source = (id: string, title: string) => ({
+			schema: "wtfp.project.source/v1", id, project_id: PROJECT, kind: "journal-article", title, creators: ["A. Author"], year: 2025,
+			identifiers: { doi: `10.1234/${id}` }, citation_key: id.replace(/-/gu, ""), status: "verified",
+			provenance: { discovered_via: "scholarly-index", inspection_depth: "full-text", verified_at: AT },
+		});
+		const empty = await host.tool("read_record", { uri: "project://sources" });
+		assert.match(empty.text, /project:\/\/sources holds no records yet/);
+		put(workspace, ".planning/sources/source-a.json", source("source-a", "A"));
+		put(workspace, ".planning/sources/source-b.json", source("source-b", "B"));
+		const both = await host.tool("read_record", { uri: "project://sources/*" });
+		assert.match(both.text, /holds 2 records; 2 returned in full/);
+		const records = (both.data as Json).records as Json[];
+		assert.deepEqual(records.map((entry) => (entry.record as Json).id), ["source-a", "source-b"]);
+		assert.equal(records[0]?.sha256, (await host.tool("read_record", { uri: "project://sources/source-a" }) as { data: Json }).data.sha256);
+		// A family past the read's budget returns what fits and names the rest.
+		put(workspace, ".planning/sources/source-c.json", source("source-c", "C".repeat(60 * 1024)));
+		const capped = await host.tool("read_record", { uri: "project://sources" });
+		assert.deepEqual((capped.data as Json).omitted, ["source-c"]);
+		assert.match(capped.text, /Not returned, to keep this read small: source-c/);
+		// Sections are a family too, read from each section's own directory.
+		const sections = await host.tool("read_record", { uri: "project://sections" });
+		assert.deepEqual(((sections.data as Json).records as Json[]).map((entry) => entry.uri), ["project://sections/introduction"]);
+	}, SERVED));
+
+test("a literature-heavy section that records no claim needing evidence is not covered", () =>
+	withDesk(async (host, workspace) => {
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const [entry] = outline.sections as Json[];
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [{ ...entry, research: { required: true, topics: ["logging"] } }] });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		const ready = await host.tool("readiness", { section: "introduction" });
+		assert.equal((ready.data as Json).ready, false, "no claims means nothing shows the sources cover it");
+		assert.match(ready.text, /records no claim that needs evidence.*run research-gap first/);
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /research-gap/);
+		// A rejected claim, or one that needs no evidence, covers nothing either.
+		const section = read(workspace, ".planning/sections/introduction/section.json");
+		const claim = { id: "claim-flush", statement: "Flushes dominate logging cost.", status: "rejected", evidence_required: true, evidence_uris: [] };
+		put(workspace, ".planning/sections/introduction/section.json", { ...section, claims: [claim, { ...claim, id: "claim-scope", status: "planned", evidence_required: false }] });
+		assert.equal(((await host.tool("readiness", { section: "introduction" })).data as Json).ready, false);
+		// Turning research off is the author's way to draft without it.
+		put(workspace, ".planning/structure/outline.json", { ...outline, sections: [{ ...entry, research: { required: false, topics: [] } }] });
+		assert.equal(((await host.tool("readiness", { section: "introduction" })).data as Json).ready, true);
+	}, SERVED));
+
 test("a section file counts only for the section whose id names its directory", () =>
 	withDesk(async (host, workspace) => {
 		const outline = read(workspace, ".planning/structure/outline.json");
@@ -1351,7 +1417,7 @@ test("WTF-P workers are dispatched only inside their action and only to manuscri
 			blocked(await dispatch({ tasks: [{ agent: "wtfp-section-writer", task: "a" }, { agent: "wtfp-section-writer", task: "b" }] })) ?? "",
 			/Clio: parallel writers need disjoint intent\.write_roots/,
 		);
-		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src"] } })) ?? "", /lie outside what write-section may write/);
+		assert.match(blocked(await dispatch({ agent: "coder", task: "x", intent: { write_roots: ["src"] } })) ?? "", /delegates only to wtfp-argument-verifier, wtfp-section-writer, and this call would start coder/);
 		assert.ok(existsSync(path.join(workspace, "paper/introduction.md")));
 		// A root the action itself grants is refused when a link makes it lead somewhere else.
 		symlinkSync(path.join(workspace, ".planning/sections"), path.join(workspace, "paper/introduction"));
@@ -1441,8 +1507,15 @@ test("where Clio resolves a call's landing and dispatch plan, the desk judges wh
 		const reader = await dispatch({ agent: "auto", tasks: [{ task: "Review the introduction." }] }, plan(task("scout", { readOnly: true })));
 		assert.equal(blocked(reader), null);
 		assert.equal(rewriteOf(reader), null);
-		// The desk takes that from Clio: a reviewer Clio does not report read-only is confined like any writer.
-		assert.deepEqual(rootsOf(rewriteOf(await dispatch({ agent: "wtfp-section-reviewer", tasks: [{ task: "Review." }] }, plan(task("wtfp-section-reviewer"))))), roots);
+		// The desk takes that from Clio: a verifier Clio does not report read-only is confined like any writer.
+		assert.deepEqual(rootsOf(rewriteOf(await dispatch({ agent: "wtfp-argument-verifier", tasks: [{ task: "Verify." }] }, plan(task("wtfp-argument-verifier"))))), roots);
+		// A writer the action does not delegate to is refused by name, as is Clio's default worker when the call names no agent.
+		assert.match(blocked(await dispatch({ agent: "wtfp-section-reviewer", tasks: [{ task: "Review." }] }, plan(task("wtfp-section-reviewer")))) ?? "", /delegates only to wtfp-argument-verifier, wtfp-section-writer, and this call would start wtfp-section-reviewer/);
+		assert.match(blocked(await dispatch({ tasks: [{ task: "Draft." }] }, plan(task("coder")))) ?? "", /would start coder; name the role with agent \(for example agent: "wtfp-section-writer"\)/);
+		assert.match(
+			blocked(await dispatch({ agent: "wtfp-argument-verifier", task: "x", intent: { write_roots: ["src"] } }, plan(task("wtfp-argument-verifier", { writeRoots: ["src"], writeBoundaries: [path.join(real, "src")] })))) ?? "",
+			/src lie outside what write-section may write/,
+		);
 		// A task Clio keeps as a string is confined as a task object, and Clio's private keys are left for Clio to recompute.
 		const spelled = await dispatch({ agent: "wtfp-section-writer", tasks: ["Draft."], __clio_resolved_dispatch_plan: { resolvedBy: "clio" } }, plan(task("wtfp-section-writer")));
 		assert.deepEqual(rewriteOf(spelled), { agent: "wtfp-section-writer", tasks: [{ task: "Draft.", intent: { write_roots: roots } }] });

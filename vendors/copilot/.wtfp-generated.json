@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "2707e6228a0a7f33639a1901b8e7ef73d5c90a81ecee36406498477a85fadb60",
+  "sourceHash": "945f39ef1f18d995aabd1c631c337bc65233e564326cd055e0ac5f7f8c3b229e",
   "files": [
     {
       "path": "marketplace.json",
@@ -850,7 +850,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "project/.github/wtfp/workflows/resume-writing.md",

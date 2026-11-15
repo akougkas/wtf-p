@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "f853ffe8294fa8484c95a397add1e98d425862e12ab1405f1e4406747cefea3f",
+  "sourceHash": "1d1711885f29f34021737afabb47c1d30c7905138b35863936d5812b008642ac",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
@@ -666,7 +666,7 @@
     },
     {
       "path": "workflows/research-gap.md",
-      "sha256": "45358263de23edd8d9d11fcf713821a7a396881ed35fd5ab32e73cfd8e579e4d"
+      "sha256": "9568fce21fb38a9e562f3fe564a1f9a6fc5011b4512596604ca43249990b70f0"
     },
     {
       "path": "workflows/resume-writing.md",
