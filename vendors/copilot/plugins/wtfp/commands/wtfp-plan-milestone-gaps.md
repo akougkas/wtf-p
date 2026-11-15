@@ -44,12 +44,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/common.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/checkpoint.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/outline.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/section.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/section.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/validation.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/validation.json
 
 ## Invocation input
 

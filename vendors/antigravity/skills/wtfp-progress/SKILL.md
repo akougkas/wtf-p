@@ -37,30 +37,9 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+## Bound action contract
 
 @${PLUGIN_ROOT}/actions/progress.json
-@${PLUGIN_ROOT}/project/schemas/common.schema.json
-@${PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
-@${PLUGIN_ROOT}/project/templates/checkpoint.json
-@${PLUGIN_ROOT}/project/schemas/config.schema.json
-@${PLUGIN_ROOT}/project/templates/config.json
-@${PLUGIN_ROOT}/project/schemas/decisions.schema.json
-@${PLUGIN_ROOT}/project/templates/decisions.json
-@${PLUGIN_ROOT}/project/schemas/evidence.schema.json
-@${PLUGIN_ROOT}/project/templates/evidence.json
-@${PLUGIN_ROOT}/project/schemas/manifest.schema.json
-@${PLUGIN_ROOT}/project/templates/manifest.json
-@${PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${PLUGIN_ROOT}/project/templates/outline.json
-@${PLUGIN_ROOT}/project/schemas/section.schema.json
-@${PLUGIN_ROOT}/project/templates/section.json
-@${PLUGIN_ROOT}/project/schemas/source.schema.json
-@${PLUGIN_ROOT}/project/templates/source.json
-@${PLUGIN_ROOT}/project/schemas/state.schema.json
-@${PLUGIN_ROOT}/project/templates/state.json
-@${PLUGIN_ROOT}/project/schemas/validation.schema.json
-@${PLUGIN_ROOT}/project/templates/validation.json
 
 ## Invocation input
 

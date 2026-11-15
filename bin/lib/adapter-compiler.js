@@ -496,23 +496,28 @@ function nativeWorkflowBody(workflowBody, target) {
   return body;
 }
 
+// Schemas and templates shape writes. A record an action only reads describes
+// itself, so a read-only action carries none, and an action carries only the
+// record types it creates or updates. Authored artifacts under a section, such
+// as plans and reviews, are Markdown and have no record schema.
+const RECORD_SCHEMAS = [
+  [/^project:\/\/manifest$/, 'manifest'],
+  [/^project:\/\/config$/, 'config'],
+  [/^project:\/\/state$/, 'state'],
+  [/^project:\/\/decisions$/, 'decisions'],
+  [/^project:\/\/structure\/outline$/, 'outline'],
+  [/^project:\/\/sections\/[^/]+$/, 'section'],
+  [/^project:\/\/sources\/[^/]+$/, 'source'],
+  [/^project:\/\/evidence\/[^/]+$/, 'evidence'],
+  [/^project:\/\/checkpoints\/[^/]+$/, 'checkpoint'],
+  [/^project:\/\/validations\/[^/]+$/, 'validation']
+];
+
 function projectSchemasForAction(action) {
   const schemas = new Set();
-  const uris = [
-    ...action.reads,
-    ...action.produces.map((output) => output.uri)
-  ];
-  for (const uri of uris) {
-    if (uri === 'project://manifest') schemas.add('manifest');
-    else if (uri === 'project://config') schemas.add('config');
-    else if (uri === 'project://state') schemas.add('state');
-    else if (uri === 'project://decisions') schemas.add('decisions');
-    else if (uri === 'project://structure/outline') schemas.add('outline');
-    else if (uri.startsWith('project://sections/')) schemas.add('section');
-    else if (uri.startsWith('project://sources/')) schemas.add('source');
-    else if (uri.startsWith('project://evidence/')) schemas.add('evidence');
-    else if (uri.startsWith('project://checkpoints/')) schemas.add('checkpoint');
-    else if (uri.startsWith('project://validations/')) schemas.add('validation');
+  for (const output of action.produces) {
+    const match = RECORD_SCHEMAS.find(([pattern]) => pattern.test(output.uri));
+    if (match) schemas.add(match[1]);
   }
   return [...schemas].sort((left, right) => left.localeCompare(right));
 }
@@ -548,7 +553,7 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
     nativeWorkflowBody([
       deskTools ? clioDeskWorkflowBody(action, workflowBody) : workflowBody,
       '',
-      deskTools ? '## Bound action contract' : '## Bound action contract and schemas',
+      deskTools || schemas.length === 0 ? '## Bound action contract' : '## Bound action contract and schemas',
       '',
       ...protocolIncludes
     ].join('\n'), target),

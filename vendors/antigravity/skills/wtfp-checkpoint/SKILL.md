@@ -45,24 +45,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${PLUGIN_ROOT}/project/schemas/common.schema.json
 @${PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
 @${PLUGIN_ROOT}/project/templates/checkpoint.json
-@${PLUGIN_ROOT}/project/schemas/config.schema.json
-@${PLUGIN_ROOT}/project/templates/config.json
-@${PLUGIN_ROOT}/project/schemas/decisions.schema.json
-@${PLUGIN_ROOT}/project/templates/decisions.json
-@${PLUGIN_ROOT}/project/schemas/evidence.schema.json
-@${PLUGIN_ROOT}/project/templates/evidence.json
 @${PLUGIN_ROOT}/project/schemas/manifest.schema.json
 @${PLUGIN_ROOT}/project/templates/manifest.json
-@${PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${PLUGIN_ROOT}/project/templates/outline.json
-@${PLUGIN_ROOT}/project/schemas/section.schema.json
-@${PLUGIN_ROOT}/project/templates/section.json
-@${PLUGIN_ROOT}/project/schemas/source.schema.json
-@${PLUGIN_ROOT}/project/templates/source.json
 @${PLUGIN_ROOT}/project/schemas/state.schema.json
 @${PLUGIN_ROOT}/project/templates/state.json
-@${PLUGIN_ROOT}/project/schemas/validation.schema.json
-@${PLUGIN_ROOT}/project/templates/validation.json
 
 ## Invocation input
 

@@ -40,14 +40,9 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+## Bound action contract
 
 @${pluginRoot}/actions/create-slides.json
-@${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
-@${pluginRoot}/project/schemas/outline.schema.json
-@${pluginRoot}/project/templates/outline.json
 
 ## Invocation input
 

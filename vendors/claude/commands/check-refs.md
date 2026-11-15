@@ -54,12 +54,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 @${CLAUDE_PLUGIN_ROOT}/actions/check-refs.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/common.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/config.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/config.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/evidence.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/evidence.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/source.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/source.json
 @${CLAUDE_PLUGIN_ROOT}/project/schemas/validation.schema.json
 @${CLAUDE_PLUGIN_ROOT}/project/templates/validation.json
 

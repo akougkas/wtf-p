@@ -66,12 +66,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 @${pluginRoot}/actions/check-refs.json
 @${pluginRoot}/project/schemas/common.schema.json
-@${pluginRoot}/project/schemas/config.schema.json
-@${pluginRoot}/project/templates/config.json
-@${pluginRoot}/project/schemas/evidence.schema.json
-@${pluginRoot}/project/templates/evidence.json
-@${pluginRoot}/project/schemas/source.schema.json
-@${pluginRoot}/project/templates/source.json
 @${pluginRoot}/project/schemas/validation.schema.json
 @${pluginRoot}/project/templates/validation.json
 

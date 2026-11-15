@@ -36,18 +36,9 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+## Bound action contract
 
 @${PLUGIN_ROOT}/actions/list-assumptions.json
-@${PLUGIN_ROOT}/project/schemas/common.schema.json
-@${PLUGIN_ROOT}/project/schemas/decisions.schema.json
-@${PLUGIN_ROOT}/project/templates/decisions.json
-@${PLUGIN_ROOT}/project/schemas/manifest.schema.json
-@${PLUGIN_ROOT}/project/templates/manifest.json
-@${PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${PLUGIN_ROOT}/project/templates/outline.json
-@${PLUGIN_ROOT}/project/schemas/section.schema.json
-@${PLUGIN_ROOT}/project/templates/section.json
 
 ## Invocation input
 

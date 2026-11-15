@@ -38,8 +38,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 [project/schemas/common.schema.json](../wtfp/project/schemas/common.schema.json)
 [project/schemas/checkpoint.schema.json](../wtfp/project/schemas/checkpoint.schema.json)
 [project/templates/checkpoint.json](../wtfp/project/templates/checkpoint.json)
-[project/schemas/manifest.schema.json](../wtfp/project/schemas/manifest.schema.json)
-[project/templates/manifest.json](../wtfp/project/templates/manifest.json)
 [project/schemas/state.schema.json](../wtfp/project/schemas/state.schema.json)
 [project/templates/state.json](../wtfp/project/templates/state.json)
 

@@ -602,7 +602,7 @@ record('every command-capable host exposes the same stable aliases', () => {
         continue;
       }
       assert.match(source, /^## Invocation input$/m, `${target}:${sourcePath}: invocation input is not forwarded`);
-      assert.match(source, /^## Bound action contract and schemas$/m, `${target}:${sourcePath}: action contract binding is missing`);
+      assert.match(source, /^## Bound action contract( and schemas)?$/m, `${target}:${sourcePath}: action contract binding is missing`);
       assert.ok(source.includes(`actions/${actionIds[index]}.json`), `${target}:${sourcePath}: exact action contract is not bound`);
       assert.ok(
         source.includes(target === 'gemini' ? '{{args}}' : '$ARGUMENTS'),
@@ -622,15 +622,17 @@ record('every command-capable host exposes the same stable aliases', () => {
         assert.doesNotMatch(source, /targetWords/,
           `${target}:${sourcePath}: non-schema targetWords spelling leaked into the contract`);
       }
+      // Schemas and templates shape writes: an action carries those of the records it writes, never of the ones it only reads.
       if (actionIds[index] === 'analyze-bib') {
-        assert.ok(
-          source.includes('project/schemas/section.schema.json'),
-          `${target}:${sourcePath}: missing relevant section schema`
-        );
-        assert.ok(
-          source.includes('project/templates/section.json'),
-          `${target}:${sourcePath}: missing relevant section template`
-        );
+        for (const schema of ['evidence', 'source', 'validation']) {
+          assert.ok(source.includes(`project/schemas/${schema}.schema.json`), `${target}:${sourcePath}: missing written ${schema} schema`);
+          assert.ok(source.includes(`project/templates/${schema}.json`), `${target}:${sourcePath}: missing written ${schema} template`);
+        }
+        assert.ok(!source.includes('project/schemas/section.schema.json'), `${target}:${sourcePath}: binds the schema of a record it only reads`);
+      }
+      if (actionIds[index] === 'progress') {
+        assert.match(source, /^## Bound action contract$/m, `${target}:${sourcePath}: a read-only action is bound without schemas`);
+        assert.ok(!source.includes('project/schemas/') && !source.includes('project/templates/'), `${target}:${sourcePath}: a read-only action carries no record schema or template`);
       }
     }
   }

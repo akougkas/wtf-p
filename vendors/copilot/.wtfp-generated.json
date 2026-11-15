@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "945f39ef1f18d995aabd1c631c337bc65233e564326cd055e0ac5f7f8c3b229e",
+  "sourceHash": "d327a44be4c53a487ad0e264e36f4ac83298b3e296a07904c78b624d96f86fc0",
   "files": [
     {
       "path": "marketplace.json",
@@ -58,7 +58,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-add-todo.prompt.md",
-      "sha256": "ef8f0a5f6158451dc226dec01cdf1bade4e27f7971d4ddfd6ec61cab2daa917c"
+      "sha256": "de94ff83fc801f28e1545bac87f2b75d1af933852a512e99b0daee4ad71c8a87"
     },
     {
       "path": "project/.github/prompts/wtfp-advance.prompt.md",
@@ -114,7 +114,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-help.prompt.md",
-      "sha256": "dfa941b05cc4f035b576c6468e8662675807a4e643ae28929c766b218a462f83"
+      "sha256": "b698e01d3811b7114850ccb2f9c9991fe36bdfed5c715dfcdcbb83fb8818e197"
     },
     {
       "path": "project/.github/prompts/wtfp-insert-section.prompt.md",
@@ -122,7 +122,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-list-assumptions.prompt.md",
-      "sha256": "4ad9852e61f2226fcd080663434713584bdb76c4e4b7d68d0e4b3d1a156c17b2"
+      "sha256": "c807faa2993e44fbb23125f9e068e652a48fd22a71d3ca7fc02ceb3a865bdab4"
     },
     {
       "path": "project/.github/prompts/wtfp-map-project.prompt.md",
@@ -134,7 +134,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-pause-writing.prompt.md",
-      "sha256": "d9d34b038292278016b81e7e2cfb95c9a283a28c3842a4adeb532beea95884cf"
+      "sha256": "3ceed10f1d206be775f7a9258d7f3893207419dc1687fed06d3d9fc593544c9b"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-milestone-gaps.prompt.md",

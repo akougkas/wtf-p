@@ -47,10 +47,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${PLUGIN_ROOT}/project/templates/checkpoint.json
 @${PLUGIN_ROOT}/project/schemas/decisions.schema.json
 @${PLUGIN_ROOT}/project/templates/decisions.json
-@${PLUGIN_ROOT}/project/schemas/manifest.schema.json
-@${PLUGIN_ROOT}/project/templates/manifest.json
-@${PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${PLUGIN_ROOT}/project/templates/outline.json
 @${PLUGIN_ROOT}/project/schemas/section.schema.json
 @${PLUGIN_ROOT}/project/templates/section.json
 

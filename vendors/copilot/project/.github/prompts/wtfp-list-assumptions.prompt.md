@@ -32,18 +32,9 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+## Bound action contract
 
 [actions/list-assumptions.json](../wtfp/actions/list-assumptions.json)
-[project/schemas/common.schema.json](../wtfp/project/schemas/common.schema.json)
-[project/schemas/decisions.schema.json](../wtfp/project/schemas/decisions.schema.json)
-[project/templates/decisions.json](../wtfp/project/templates/decisions.json)
-[project/schemas/manifest.schema.json](../wtfp/project/schemas/manifest.schema.json)
-[project/templates/manifest.json](../wtfp/project/templates/manifest.json)
-[project/schemas/outline.schema.json](../wtfp/project/schemas/outline.schema.json)
-[project/templates/outline.json](../wtfp/project/templates/outline.json)
-[project/schemas/section.schema.json](../wtfp/project/schemas/section.schema.json)
-[project/templates/section.json](../wtfp/project/templates/section.json)
 
 ## Invocation input
 

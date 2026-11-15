@@ -38,16 +38,10 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 [project/schemas/common.schema.json](../wtfp/project/schemas/common.schema.json)
 [project/schemas/checkpoint.schema.json](../wtfp/project/schemas/checkpoint.schema.json)
 [project/templates/checkpoint.json](../wtfp/project/templates/checkpoint.json)
-[project/schemas/decisions.schema.json](../wtfp/project/schemas/decisions.schema.json)
-[project/templates/decisions.json](../wtfp/project/templates/decisions.json)
-[project/schemas/outline.schema.json](../wtfp/project/schemas/outline.schema.json)
-[project/templates/outline.json](../wtfp/project/templates/outline.json)
 [project/schemas/section.schema.json](../wtfp/project/schemas/section.schema.json)
 [project/templates/section.json](../wtfp/project/templates/section.json)
 [project/schemas/state.schema.json](../wtfp/project/schemas/state.schema.json)
 [project/templates/state.json](../wtfp/project/templates/state.json)
-[project/schemas/validation.schema.json](../wtfp/project/schemas/validation.schema.json)
-[project/templates/validation.json](../wtfp/project/templates/validation.json)
 
 ## Invocation input
 

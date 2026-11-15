@@ -44,8 +44,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${pluginRoot}/project/schemas/common.schema.json
 @${pluginRoot}/project/schemas/checkpoint.schema.json
 @${pluginRoot}/project/templates/checkpoint.json
-@${pluginRoot}/project/schemas/manifest.schema.json
-@${pluginRoot}/project/templates/manifest.json
 @${pluginRoot}/project/schemas/state.schema.json
 @${pluginRoot}/project/templates/state.json
 

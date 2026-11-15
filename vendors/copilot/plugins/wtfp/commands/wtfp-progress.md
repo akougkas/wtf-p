@@ -36,30 +36,9 @@ Do not initialize a repository or run branch, stage, commit, merge, push, or pub
 
 Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.
 
-## Bound action contract and schemas
+## Bound action contract
 
 @${CLAUDE_PLUGIN_ROOT}/actions/progress.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/common.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/checkpoint.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/checkpoint.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/config.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/config.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/decisions.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/decisions.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/evidence.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/evidence.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/manifest.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/manifest.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/outline.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/outline.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/section.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/section.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/source.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/source.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/state.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/state.json
-@${CLAUDE_PLUGIN_ROOT}/project/schemas/validation.schema.json
-@${CLAUDE_PLUGIN_ROOT}/project/templates/validation.json
 
 ## Invocation input
 

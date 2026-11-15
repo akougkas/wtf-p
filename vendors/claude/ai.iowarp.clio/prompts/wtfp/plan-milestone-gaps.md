@@ -45,12 +45,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 @${pluginRoot}/project/schemas/common.schema.json
 @${pluginRoot}/project/schemas/checkpoint.schema.json
 @${pluginRoot}/project/templates/checkpoint.json
-@${pluginRoot}/project/schemas/outline.schema.json
-@${pluginRoot}/project/templates/outline.json
-@${pluginRoot}/project/schemas/section.schema.json
-@${pluginRoot}/project/templates/section.json
-@${pluginRoot}/project/schemas/validation.schema.json
-@${pluginRoot}/project/templates/validation.json
 
 ## Invocation input
 

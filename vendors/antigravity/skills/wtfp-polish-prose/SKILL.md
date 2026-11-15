@@ -44,12 +44,6 @@ Report the logical resources read, created, updated, archived, or deleted; the g
 
 @${PLUGIN_ROOT}/actions/polish-prose.json
 @${PLUGIN_ROOT}/project/schemas/common.schema.json
-@${PLUGIN_ROOT}/project/schemas/config.schema.json
-@${PLUGIN_ROOT}/project/templates/config.json
-@${PLUGIN_ROOT}/project/schemas/decisions.schema.json
-@${PLUGIN_ROOT}/project/templates/decisions.json
-@${PLUGIN_ROOT}/project/schemas/manifest.schema.json
-@${PLUGIN_ROOT}/project/templates/manifest.json
 @${PLUGIN_ROOT}/project/schemas/section.schema.json
 @${PLUGIN_ROOT}/project/templates/section.json
 @${PLUGIN_ROOT}/project/schemas/state.schema.json
