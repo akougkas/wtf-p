@@ -2492,7 +2492,7 @@ const FAMILY_LIMIT = 48 * 1024;
  * as a single read returns it, until the family outgrows FAMILY_LIMIT; the
  * rest are named so they can be read one at a time.
  */
-function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string): { text: string; data: unknown } {
+function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string, after: string | null = null): { text: string; data: unknown } {
 	const workspace = ctx.snapshot.workspace;
 	const identifier = new RegExp(`^${IDENTIFIER}$`, "u");
 	let ids: string[];
@@ -2510,6 +2510,8 @@ function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string): { 
 	const omitted: string[] = [];
 	const failed: string[] = [];
 	let size = 0;
+	const total = ids.length;
+	if (after !== null) ids = ids.filter((id) => id > after);
 	for (const id of ids) {
 		if (omitted.length > 0) {
 			omitted.push(id);
@@ -2533,8 +2535,8 @@ function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string): { 
 	const uri = `project://${collection}`;
 	return {
 		text: [
-			ids.length === 0 ? `${uri} holds no records yet.` : `${uri} holds ${ids.length} ${ids.length === 1 ? "record" : "records"}; ${records.length} returned in full, each with the revision and sha256 to pass back to record.`,
-			omitted.length > 0 ? `Not returned, to keep this read small: ${omitted.join(", ")}; read each with its own URI.` : "",
+			total === 0 ? `${uri} holds no records yet.` : `${uri} holds ${total} ${total === 1 ? "record" : "records"}; ${records.length}${after !== null ? ` after ${after}` : ""} returned in full, each with the revision and sha256 to pass back to record.`,
+			omitted.length > 0 ? `${omitted.length} more not returned, to keep this read small; read the next page with ${uri}?after=${String((records[records.length - 1] as Json | undefined)?.uri ?? "").split("/").pop()}.` : "",
 			failed.length > 0 ? `Not readable: ${failed.join("; ")}.` : "",
 		]
 			.filter(Boolean)
@@ -2545,8 +2547,8 @@ function readFamily(ctx: ExtensionContextV2, desk: Desk, collection: string): { 
 
 function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: string; data: unknown } {
 	const workspace = ctx.snapshot.workspace;
-	const family = /^project:\/\/(sections|sources|evidence|checkpoints|validations|interactions)\/?\*?$/u.exec(uri);
-	if (family) return readFamily(ctx, desk, family[1] as string);
+	const family = new RegExp(`^project://(sections|sources|evidence|checkpoints|validations|interactions)/?\\*?(?:\\?after=(${IDENTIFIER}))?$`, "u").exec(uri);
+	if (family) return readFamily(ctx, desk, family[1] as string, family[2] ?? null);
 	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
 	if (!route) throw new Error(notARecord(uri));
 	const file = route.file(route.pattern.exec(uri)?.[1] ?? "");

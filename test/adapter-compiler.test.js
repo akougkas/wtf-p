@@ -882,7 +882,7 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
   const portableReview = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/review-section.md');
   assert.ok(portableReview.includes('It serves JSON records only; read authored artifacts directly'), 'desk prompts map artifact URIs to files');
   // Live, listing sources and evidence took a shell find and nine serial reads.
-  assert.ok(portableReview.includes('`read_record` on a family URI, such as `project://sources` or `project://evidence`, returns all of that family\'s records in one call'), 'desk prompts name the family read');
+  assert.ok(portableReview.includes('`read_record` on a family URI, such as `project://sources` or `project://evidence`, returns that family\'s records in one call, and names a `?after=` page'), 'desk prompts name the family read');
   assert.ok(portableReview.includes('Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`'), 'dispatch bindings declare scope explicitly');
   // Live, the model twice put record fields beside `record`, which Clio's gateway rejects before the desk sees them.
   assert.ok(portableReview.includes('with no record field outside `record`'), 'the record shape keeps fields inside record');

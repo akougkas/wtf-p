@@ -886,7 +886,9 @@ test("a family URI reads every record of that family in one call, and names what
 		put(workspace, ".planning/sources/source-c.json", source("source-c", "C".repeat(60 * 1024)));
 		const capped = await host.tool("read_record", { uri: "project://sources" });
 		assert.deepEqual((capped.data as Json).omitted, ["source-c"]);
-		assert.match(capped.text, /Not returned, to keep this read small: source-c/);
+		assert.match(capped.text, /1 more not returned, to keep this read small; read the next page with project:\/\/sources\?after=source-b/);
+		const next = await host.tool("read_record", { uri: "project://sources?after=source-b" });
+		assert.deepEqual(((next.data as Json).records as Json[]).map((entry) => (entry.record as Json).id), ["source-c"]);
 		// Sections are a family too, read from each section's own directory.
 		const sections = await host.tool("read_record", { uri: "project://sections" });
 		assert.deepEqual(((sections.data as Json).records as Json[]).map((entry) => entry.uri), ["project://sections/introduction"]);
