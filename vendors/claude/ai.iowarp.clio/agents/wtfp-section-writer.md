@@ -3,7 +3,7 @@ version: 1
 name: "Section Writer"
 description: "Execute an approved section plan into evidence-grounded academic prose or the explicitly requested scaffold. Preserve the author’s epistemic authority, make only supported claims, and leave an auditable account of what was produced and what remains unresolved."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-write-section]
+skills: []
 audience: custom
 category: implement
 capabilityClass: workspace-edit

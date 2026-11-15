@@ -1209,7 +1209,8 @@ function renderClioRole(role, slug) {
     `name: ${yamlScalar(role.fields.name)}`,
     `description: ${yamlScalar(roleDescription(role))}`,
     `tools: {required: ${required}, optional: ${optional}}`,
-    `skills: [${verifier ? '' : ROLE_SKILLS[slug]}]`,
+    // A worker gets its role body; the action skills are the orchestrator's and tell their reader to dispatch roles.
+    'skills: []',
     'audience: custom',
     `category: ${verifier ? 'quality' : slug.includes('citation') || slug.includes('research') ? 'research' : slug.includes('plan') || slug === 'outliner' ? 'plan' : 'implement'}`,
     `capabilityClass: ${verifier ? 'read-only' : 'workspace-edit'}`,

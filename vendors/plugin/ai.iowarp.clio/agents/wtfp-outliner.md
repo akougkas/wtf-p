@@ -3,7 +3,7 @@ version: 1
 name: "Outliner"
 description: "Turn the approved project brief into the structural foundation for an academic document. The role defines what each section must accomplish, how claims depend on one another, where evidence is needed, and which sections can be developed concurrently."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-start-project]
+skills: []
 audience: custom
 category: plan
 capabilityClass: workspace-edit

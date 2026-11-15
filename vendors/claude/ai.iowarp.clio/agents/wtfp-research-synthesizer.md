@@ -3,7 +3,7 @@ version: 1
 name: "Research Synthesizer"
 description: "Investigate the literature needed to plan and write a specific section well. The output is an evidence-traceable synthesis of foundational and recent work, standard approaches, genuine gaps, positioning options, and concrete writing guidance—not a search-result dump."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-research-literature]
+skills: []
 audience: custom
 category: research
 capabilityClass: workspace-edit

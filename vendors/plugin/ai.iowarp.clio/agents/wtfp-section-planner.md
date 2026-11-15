@@ -3,7 +3,7 @@ version: 1
 name: "Section Planner"
 description: "Convert one approved section goal into small, executable writing plans. A plan is a precise writing contract: it connects claims, evidence, word budgets, sequencing, author decisions, and measurable completion criteria without pre-writing the section."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-plan-section]
+skills: []
 audience: custom
 category: plan
 capabilityClass: workspace-edit

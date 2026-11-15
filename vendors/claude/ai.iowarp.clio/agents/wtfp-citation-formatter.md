@@ -3,7 +3,7 @@ version: 1
 name: "Citation Formatter"
 description: "Audit bibliography integrity and produce deterministic corrections without touching the primary bibliography. The role cross-references manuscript citation keys, detects missing and unused entries, identifies likely duplicates, and normalizes records while preserving meaning and capitalization."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-research-literature]
+skills: []
 audience: custom
 category: research
 capabilityClass: workspace-edit

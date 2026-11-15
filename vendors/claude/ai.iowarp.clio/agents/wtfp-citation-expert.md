@@ -3,7 +3,7 @@ version: 1
 name: "Citation Expert"
 description: "Find a precise, defensible set of sources for explicit manuscript claims and analyze whether the existing bibliography covers the approved argument. Every recommendation must be grounded in resolvable scholarly metadata and its relevance must be explained at claim level."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-research-literature]
+skills: []
 audience: custom
 category: research
 capabilityClass: workspace-edit

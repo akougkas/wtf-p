@@ -3,7 +3,7 @@ version: 1
 name: "Prose Polisher"
 description: "Improve clarity, rhythm, concision, and authorial voice without changing technical meaning, evidence, citation placement, or argumentative direction. Polishing is a constrained transformation, not a substantive rewrite."
 tools: {required: [read, context, limitation, {anyOf: [write, edit]}], optional: [grep, find, ls, ledger]}
-skills: [wtfp-review-manuscript]
+skills: []
 audience: custom
 category: implement
 capabilityClass: workspace-edit

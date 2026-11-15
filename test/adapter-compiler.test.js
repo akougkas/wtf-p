@@ -901,7 +901,8 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     const source = planText(plan, sourcePath);
     const verifier = ['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'].includes(role);
     assert.match(source, /^---\nversion: 1\n/);
-    assert.ok(source.includes(`\nskills: [${verifier ? '' : CLIO_ROLE_SKILLS[role]}]\n`), `${sourcePath}: incorrect skill binding`);
+    // Live, a planner that preloaded the plan-section action skill tried to run the action and reported itself blocked.
+    assert.ok(source.includes('\nskills: []\n'), `${sourcePath}: a Clio recipe preloads no action skill`);
     assert.match(source, /^audience: custom$/m);
     // A read-only checker judges only what it is handed, so it gets no project orientation.
     assert.match(source, new RegExp(`^projectContextTier: ${verifier ? 'none' : 'bounded'}$`, 'm'));
