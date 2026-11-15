@@ -45,7 +45,7 @@ For Clio Coder 0.6.3 or newer:
 ```bash
 npx --yes --package=wtf-p@0.8.1 -- wtf-p install clio
 cd /path/to/nsf25-531-clio-trust
-clio-coder --autonomy suggest
+clio-coder --autonomy default
 ```
 
 Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
@@ -182,7 +182,7 @@ Start a fresh process in the same project directory:
 
 ```bash
 cd /path/to/nsf25-531-clio-trust
-clio-coder --autonomy suggest
+clio-coder --autonomy default
 ```
 
 Resume from disk:

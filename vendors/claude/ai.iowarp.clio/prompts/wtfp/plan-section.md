@@ -91,6 +91,8 @@ $ARGUMENTS
 
 Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.
 
+Every question `ask_user` puts to the author here is the author's to answer: send each with `operator_only: true`, alone in its call. Clio never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.
+
 ## Clio role-result binding
 
 Dispatch the declared specialist roles using these exact Clio agent IDs: `wtfp-section-planner`, `wtfp-plan-checker`. Do not substitute generic coder or verifier agents. If a named agent is unavailable, report that blocker and stop instead of silently changing roles. `wtfp-plan-checker` is read-only: begin each task for it with "Review", because Clio refuses a read-only agent a task it reads as a change.

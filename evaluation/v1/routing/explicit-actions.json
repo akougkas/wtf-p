@@ -17,6 +17,12 @@
       "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "add-todo" }
     },
     {
+      "id": "advance",
+      "invocation": "/wtfp:advance until the next decision is mine",
+      "arguments": "until the next decision is mine",
+      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "advance" }
+    },
+    {
       "id": "analyze-bib",
       "invocation": "/wtfp:analyze-bib references/checkpointing.bib",
       "arguments": "references/checkpointing.bib",

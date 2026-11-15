@@ -48,8 +48,8 @@ assert.strictEqual(catalog.schema, 'wtfp.catalog/v1');
 // from protocol content; change this block deliberately when the public
 // action surface changes.
 assert.deepStrictEqual(catalog.counts, {
-  actions: 36,
-  domainActions: 31,
+  actions: 37,
+  domainActions: 32,
   operations: 5,
   skills: 7,
 });

@@ -1268,7 +1268,7 @@ function main() {
   try {
     const counts = lintEvaluation();
     assert.strictEqual(counts.routingCases, 40);
-    assert.strictEqual(counts.explicitActions, 36);
+    assert.strictEqual(counts.explicitActions, 37);
     assert.strictEqual(counts.matrixRows, 5);
     assert.strictEqual(checkFixture(fixtureRoot).valid, true);
     testFixtureAudienceSplit();

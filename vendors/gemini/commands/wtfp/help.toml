@@ -178,13 +178,14 @@ Report the logical resources read, created, updated, archived, or deleted; the g
   "version": 1,
   "namespace": "wtfp",
   "counts": {
-    "actions": 36,
-    "domainActions": 31,
+    "actions": 37,
+    "domainActions": 32,
     "operations": 5,
     "skills": 7
   },
   "actions": [
     { "contract": "protocol://actions/add-todo.json", "id": "add-todo" },
+    { "contract": "protocol://actions/advance.json", "id": "advance" },
     { "contract": "protocol://actions/analyze-bib.json", "id": "analyze-bib" },
     { "contract": "protocol://actions/audit-milestone.json", "id": "audit-milestone" },
     { "contract": "protocol://actions/check-refs.json", "id": "check-refs" },
@@ -244,6 +245,7 @@ Report the logical resources read, created, updated, archived, or deleted; the g
     {
       "actions": [
         "add-todo",
+        "advance",
         "check-todos",
         "checkpoint",
         "pause-writing",

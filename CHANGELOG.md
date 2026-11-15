@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Makes WTF-P on Clio automatic between author gates without making it
+autonomous across them, and brings the Clio documentation and prompts in line
+with Clio 0.8's two autonomy levels.
+
+### Added
+
+- `advance` (`/wtfp:advance`), action 37. It requires the new `workflow.drive`
+  capability, which only the Clio desk binds; every other host and the
+  desk-less Clio copy in the Claude envelope fail closed with
+  `WTFP_ACTION_UNAVAILABLE`. In one turn it runs `create-outline`,
+  `discuss-section`, `research-gap`, `plan-section`, `write-section`,
+  `review-section`, `audit-milestone` and `submit-milestone` as the project
+  needs them, and stops at the first gate only the author can answer
+- Desk tool `next_step`, answering only inside an advance turn: it picks each
+  step by the ladder `progress` follows and arms the write guard for that
+  action and section alone, puts a pending gate to the author through `gate`,
+  and stops on a gate kept pending or unaskable, a step that changed nothing,
+  an action the plugin does not serve, a missing project, or 24 steps. Nothing
+  is armed between steps, at a gate, or after a stop
+- Desk key `a` fills `/wtfp:advance`
+
+### Changed
+
+- The desk's write guard also hooks `ask_user` inside a WTF-P action or advance
+  run: it marks a lone question `operator_only`, which Clio 0.8 never answers
+  with a recommended option after `safety.unattendedAfterSeconds`, and refuses a
+  round of several unmarked questions. Every Clio prompt now asks the same of
+  the model
+- Clio launch instructions use `--autonomy yolo` (README) and `default`;
+  Clio rejects the retired `read-only`, `suggest`, `auto-edit` and `full-auto`
+  spellings since 0.5.6. The CiteNexus public-index allowance is keyed to
+  `yolo` on Clio and to a session started without per-call approvals in the
+  host-neutral protocol
+- Clio availability records `certificationAutonomy: ["default"]`
+- `clio/README.md` no longer says a `fleet run` runs no desk hook; Clio 0.6.3
+  and later run the desk's tool hooks for its workers
+
 ## [0.8.1] - 2026-11-08
 
 Makes the Clio desk the reference implementation of WTF-P's author gates and

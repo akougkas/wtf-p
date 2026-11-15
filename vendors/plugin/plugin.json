@@ -30,6 +30,20 @@
         },
         {
           "kind": "prompt",
+          "id": "advance",
+          "path": "ai.iowarp.clio/prompts/wtfp/advance.md",
+          "requires": [
+            "agent:outliner",
+            "agent:research-synthesizer",
+            "agent:section-planner",
+            "agent:plan-checker",
+            "agent:section-writer",
+            "agent:argument-verifier",
+            "agent:section-reviewer"
+          ]
+        },
+        {
+          "kind": "prompt",
           "id": "analyze-bib",
           "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
           "requires": [

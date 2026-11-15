@@ -15,7 +15,8 @@
     "tool.execute": null,
     "user.interaction": "codex:conversation",
     "vcs.branch": null,
-    "vcs.commit": null
+    "vcs.commit": null,
+    "workflow.drive": null
   },
   "approvalBindings": {
     "none": "codex:sandbox-policy",
@@ -47,6 +48,17 @@
       "status": "available",
       "unavailableCapabilities": [],
       "unavailableEffects": []
+    },
+    {
+      "id": "advance",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute",
+        "workflow.drive"
+      ],
+      "unavailableEffects": [
+        "tool.execute"
+      ]
     },
     {
       "id": "analyze-bib",

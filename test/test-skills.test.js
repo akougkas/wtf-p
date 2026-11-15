@@ -30,6 +30,7 @@ const expected = {
     'plan-milestone-gaps'
   ],
   'wtfp-manage-project': [
+    'advance',
     'progress',
     'pause-writing',
     'resume-writing',
@@ -141,7 +142,7 @@ for (const [skill, actions] of Object.entries(expected)) {
 
 const expectedActions = Object.values(expected).flat().sort();
 assert.deepStrictEqual([...actionOwners.keys()].sort(), expectedActions);
-assert.strictEqual(expectedActions.length, 31, 'the seven skills must own all 31 academic actions');
+assert.strictEqual(expectedActions.length, 32, 'the seven skills must own all 32 academic actions');
 
 console.log(`✓ validated ${Object.keys(expected).length} canonical skills`);
 console.log(`✓ validated ${expectedActions.length} uniquely owned academic actions`);

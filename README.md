@@ -79,7 +79,7 @@ the old executable instead.
 ```bash
 npx --yes --package=wtf-p@0.8.1 -- wtf-p install clio
 cd /path/to/your-paper-or-proposal
-clio-coder --autonomy full-auto
+clio-coder --autonomy yolo
 ```
 
 ```text
@@ -88,12 +88,26 @@ clio-coder --autonomy full-auto
 ```
 
 The agent interviews you, previews the five initial project records, and waits
-for your approval before writing anything. Every host uses the same
+for your approval before writing anything. Clio 0.8 has two autonomy levels,
+`default` and `yolo`; `yolo` removes Clio's approval cards, while every WTF-P
+gate and interview question still waits for you, because WTF-P asks them as
+questions only you may answer. Every host uses the same
 `/wtfp:<action>` names except Codex, which exposes the same actions through
 seven native skills: mention `$wtfp-start-project` and ask for the
 `new-paper` action with the same brief.
 
-A normal project then moves one action at a time:
+On Clio, one command then carries the project forward:
+
+```text
+/wtfp:advance            run the next actions until a decision is yours
+```
+
+The desk picks each step from the project records, by the same ladder
+`/wtfp:progress` reports, and arms its write guard for that action alone. It
+stops at the first gate only you can answer, asks it, and continues after your
+answer; a gate you keep pending ends the run. Press `a` in the desk to start
+it. Every other host, and any step you want to run yourself, moves one action
+at a time:
 
 ```text
 /wtfp:map-project        inventory the materials you supplied
@@ -120,7 +134,7 @@ Four document types share the same action set and differ in their scaffold:
 | Poster | `protocol/templates/poster.md` | `create-poster` |
 | Presentation | `protocol/templates/slides.md` | `create-slides` |
 
-The catalog has 36 stable actions across seven skills: start a project,
+The catalog has 37 stable actions across seven skills: start a project,
 research the literature, plan a section, write a section, review the
 manuscript, manage the project, and deliver. Availability is decided per host
 by the generated `compatibility/action-availability.json`, and an unavailable
@@ -128,13 +142,14 @@ action returns `WTFP_ACTION_UNAVAILABLE` instead of improvising:
 
 | Host | Available | Fails closed |
 | --- | ---: | --- |
-| Clio Coder, Claude Code | 31 / 36 | `contribute`, `report-bug`, `request-feature` (no `external.issue` binding); `remove-section` (no `filesystem.delete`); `update` (no `package.update`) |
-| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26 / 36 | the five above plus `research-gap`, `analyze-bib`, `check-refs`, `audit-milestone`, `export-latex`, whose `tool.execute` effect is bound only to Clio `bash` and Claude `Bash` |
-| Copilot cloud projection (`.github`) | 5 / 36 | everything that needs an explicit approval gate |
+| Clio Coder | 32 / 37 | `contribute`, `report-bug`, `request-feature` (no `external.issue` binding); `remove-section` (no `filesystem.delete`); `update` (no `package.update`) |
+| Claude Code | 31 / 37 | the five above plus `advance`, whose `workflow.drive` capability only the Clio desk binds |
+| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26 / 37 | the six above plus `research-gap`, `analyze-bib`, `check-refs`, `audit-milestone`, `export-latex`, whose `tool.execute` effect is bound only to Clio `bash` and Claude `Bash` |
+| Copilot cloud projection (`.github`) | 5 / 37 | everything that needs an explicit approval gate |
 
 Where the research routes are available, `tool.execute` authorizes exactly one
 command, the bundled `tools/wtfp-tool.js` dispatcher over seven bibliography
-and citation tools. On Clio full-auto, `research-gap` can search free no-key
+and citation tools. On Clio at `yolo` autonomy, `research-gap` can search free no-key
 public indexes through CiteNexus without another approval for each bounded
 query. An operator-configured read-class CiteNexus MCP connection is preferred
 when the Clio build supports it. Other network routes keep their author gate;
@@ -166,7 +181,7 @@ action requires.
 
 ```mermaid
 flowchart LR
-  P["protocol/<br/>36 action contracts, 36 workflows,<br/>11 roles, 7 skills, .planning v1 schemas,<br/>templates, tools.json"] --> C["adapter compiler<br/>bin/lib/adapter-compiler.js"]
+  P["protocol/<br/>37 action contracts, 37 workflows,<br/>11 roles, 7 skills, .planning v1 schemas,<br/>templates, tools.json"] --> C["adapter compiler<br/>bin/lib/adapter-compiler.js"]
   C --> B["vendors/plugin<br/>canonical Agent Plugins 1.0.0 bundle<br/>(Clio route)"]
   C --> H["vendors/claude · codex · copilot ·<br/>opencode · antigravity · gemini<br/>native projections"]
   B --> I["npx wtf-p install &lt;host&gt;<br/>exact-file receipts, native registration"]

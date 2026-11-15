@@ -3,6 +3,7 @@
   "namespace": "wtfp",
   "aliases": [
     { "action": "add-todo", "alias": "wtfp:add-todo" },
+    { "action": "advance", "alias": "wtfp:advance" },
     { "action": "analyze-bib", "alias": "wtfp:analyze-bib" },
     { "action": "audit-milestone", "alias": "wtfp:audit-milestone" },
     { "action": "check-refs", "alias": "wtfp:check-refs" },

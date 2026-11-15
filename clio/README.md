@@ -37,7 +37,7 @@ operator's user and can read the key, as can any process the operator lets
 read Clio's state directory.
 
 The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
-`run_script` and `job` calls. It judges only what Clio 0.6.3 and later send
+`run_script` and `job` calls, and `ask_user` calls inside a WTF-P action. It judges only what Clio 0.6.3 and later send
 each hook: the landing Clio resolved for a path, which Clio refuses to change
 before the tool runs, and for `dispatch` the plan its admission parsed, with
 each worker's resolved agent, `cwd`, write boundaries and worktree. The desk
@@ -69,6 +69,26 @@ the gated manuscripts. A worker Clio runs read-only, as it runs every
 read-only recipe including the WTF-P reviewers, needs none.
 Changes that loosen what the desk holds, such as a re-pointed manuscript or
 rewritten plan history, wait for the author at the desk.
+`/wtfp:advance` is the driver. Its prompt arms nothing; the desk's
+`next_step` tool, which answers only inside that turn, picks each step by the
+same ladder `progress` follows and arms the write guard for that action and
+section alone, exactly as if the author had typed the step's own command. A
+gate comes back for the `gate` tool, whose interview has no unattended
+fallback, so it waits for the author at either autonomy level. Between steps,
+at a gate and after a stop nothing is armed. The run stops at a gate the
+author keeps pending or cannot be asked, a step that changed nothing the ladder
+reads, an action the plugin does not serve, a missing project, or 24 steps.
+The driver never starts or reshapes a project. Its turn holds the union of the
+chained actions' tools, so a step's tool scope is the driver's; its writes are
+confined to the step's contract all the same.
+
+Inside a WTF-P action or advance run every `ask_user` question is the
+author's. The write guard also hooks `ask_user`: it marks a lone question
+`operator_only`, which Clio never answers with a recommended option after
+`safety.unattendedAfterSeconds`, and refuses a round of several unmarked
+questions, since an `operator_only` question is asked alone. An unanswered one
+ends the turn. Outside a WTF-P action the desk leaves questions alone.
+
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
 when they name the desk's own records; Clio's default autonomy asks the
 operator before running an unrecognized command, but runs recognized test
@@ -88,7 +108,9 @@ projections remain unchanged.
 The plugin's Clio namespace carries the two playbooks under the `playbooks`
 resource key in `ai.iowarp.clio/playbooks/`. Their write boundaries are literal
 paths, so section artifacts project to `.planning/sections/`. An explicit
-`fleet run` is a worker pipeline: it runs no desk hook and asks no author, so
-the desk reports any manuscript text it finds without an approved plan. The
+`fleet run` is a worker pipeline that asks no author. Since Clio 0.6.3 the
+extension host `fleet run` starts runs the desk's tool hooks for its workers,
+which the desk judges as calls outside a WTF-P action, since a playbook arms
+none. The desk reports any manuscript text it finds without an approved plan. The
 Claude envelope keeps its older Clio copy under `fleets`; Clio no longer adopts
 it and points to `vendors/plugin` instead.

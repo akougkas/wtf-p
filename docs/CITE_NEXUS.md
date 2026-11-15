@@ -54,7 +54,7 @@ For the bundled dispatcher, ask for `--backend=cite-nexus` with an explicit `--p
 /wtfp:check-refs Audit references with --backend=cite-nexus --providers=crossref,datacite,europe_pmc
 ```
 
-For `research-gap` on Clio full-auto, the bundled dispatcher can search the free, no-key public indexes `crossref`, `datacite`, `europe_pmc`, and `arxiv` without a second approval for each query. The author already selected full-auto for this research action. Only relevant indexes are selected, queries and result limits are bounded, and the workflow records provider IDs, queries, date, limits, and provenance. `WTFP_TOOL_OFFLINE=1`, a host refusal, or an unavailable CiteNexus companion stops the route; the workflow never sends unpublished manuscript text or private notes as search terms. Other provider choices and non-full-auto runs still require an author gate naming the providers and bounded query set.
+For `research-gap` on Clio at `yolo` autonomy, the bundled dispatcher can search the free, no-key public indexes `crossref`, `datacite`, `europe_pmc`, and `arxiv` without a second approval for each query. The operator already started the session at `yolo` for this research action. Whether the contained sandbox lets the dispatcher reach these indexes was not observed on Clio 0.8; a refused request falls back to the declared author network gate. Only relevant indexes are selected, queries and result limits are bounded, and the workflow records provider IDs, queries, date, limits, and provenance. `WTFP_TOOL_OFFLINE=1`, a host refusal, or an unavailable CiteNexus companion stops the route; the workflow never sends unpublished manuscript text or private notes as search terms. Other provider choices and non-full-auto runs still require an author gate naming the providers and bounded query set.
 
 On a Clio build with user MCP `actionClass: read` support, an operator can also register CiteNexus as a trusted, read-class **user** connection. The generated Clio workflow discovers `search-papers` through `gateway`, reads its schema, and prefers that already authorized connection. This path does not require the bundled dispatcher. If the gateway refuses a call, the agent must not retry the same denied request through the dispatcher.
 
@@ -78,7 +78,7 @@ Use `--providers=crossref,arxiv` for a focused preprint search, or explicitly se
 `semantic_scholar`, `openalex`, `serpapi`, `scopus` or `wos`. Optional or required
 credentials use the names documented in the
 [CiteNexus 0.2.0 provider guide](https://github.com/akougkas/cite-nexus-mcp/blob/v0.2.0/docs/providers.md).
-Declare the chosen providers and query scope in the workflow's network approval for any route outside the full-auto public-index allowance or a host-authorized read-class MCP connection. Every route records that scope in the research artifact.
+Declare the chosen providers and query scope in the workflow's network approval for any route outside the `yolo` public-index allowance or a host-authorized read-class MCP connection. Every route records that scope in the research artifact.
 Commercial/institutional APIs may incur cost or require an entitlement.
 
 Only runtime essentials (`PATH`, locale and temporary-directory variables) and

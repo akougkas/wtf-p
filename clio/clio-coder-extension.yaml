@@ -20,7 +20,7 @@ runtime:
   watch: [".planning/**", "paper/**"]
   hooks:
     - { on: prompt_submit, timeoutMs: 1000, onTimeout: pass, onError: pass }
-    - { on: before_tool, tools: [write, edit, artifact, dispatch, bash, run_script, job], timeoutMs: 1500, onTimeout: block, onError: block }
+    - { on: before_tool, tools: [write, edit, artifact, dispatch, bash, run_script, job, ask_user], timeoutMs: 1500, onTimeout: block, onError: block }
   tools:
     - name: record
       description: "Write .planning records at their logical URIs: each validated against its canonical schema, checked against the version you read (expect_revision for state, outline and decisions; expect_sha256 for the rest; neither when creating), its revision bumped, and committed under the project lock. Pass several as writes to commit them together. Refuses author resolutions and anything the running action does not declare."
@@ -53,6 +53,10 @@ runtime:
       description: "Count a section's manuscript body words by the desk's one method and record the count in the section and state records, committed together."
       actionClass: execute
       inputSchema: { type: object, properties: { section: { type: string } }, required: [section], additionalProperties: false }
+    - name: next_step
+      description: "Only inside a /wtfp:advance turn: the desk picks the next step from the project by the progress ladder and arms the write guard for that action and section alone. Returns a step to run, a gate to put to the author with gate, or the reason the run stops."
+      actionClass: execute
+      inputSchema: { type: object, properties: {}, additionalProperties: false }
     - name: gate
       description: "Ask the author a pending checkpoint, or confirm a recorded answer the desk never saw, as an interview; only the author's answer resolves it, and the desk seals what was asked and answered."
       actionClass: execute
@@ -66,6 +70,7 @@ runtime:
       skin: skins/wtfp.json
       keys:
         - { key: f, action: next, label: "Fill the next writing action" }
+        - { key: a, action: advance, label: "Advance to the next gate only you can answer" }
         - { key: c, action: gates, label: "Answer the pending gate" }
         - { key: v, action: validate, label: "Validate planning records" }
         - { key: h, action: help, label: "WTF-P action reference" }

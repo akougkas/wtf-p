@@ -28,26 +28,26 @@ The same round exercised the CiteNexus backend by invoking the dispatcher from t
 
 | Host | Projection (`vendors/...`) | What is native there |
 | --- | --- | --- |
-| Claude Code | `vendors/claude` | 36 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus an older Clio namespace (root `plugin.json` and the `ai.iowarp.clio/` prompts, agents, and fleets it names) that Clio no longer adopts |
+| Claude Code | `vendors/claude` | 37 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus an older Clio namespace (root `plugin.json` and the `ai.iowarp.clio/` prompts, agents, and fleets it names) that Clio no longer adopts |
 | Codex | `vendors/codex` | root `plugin.json` with `extensions["com.openai"]`, `.codex-plugin/plugin.json` fallback, 7 skills, 11 TOML custom agents (installed to `$CODEX_HOME/agents/`), local marketplace |
-| OpenCode | `vendors/opencode` | 36 commands (`name: wtfp:<action>`), 11 subagents (`mode: subagent`, verifier roles deny edit/bash), 7 skills |
-| Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json` with `version`, 11 agents (`subagent: true`), 7 router skills plus 34 explicit action skills (`disable-model-invocation: true`; `write-section` and `plan-section` are served by the router skill of that name), `rules/wtfp-project-state.md` with `trigger: always_on` |
-| Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 36 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
-| Copilot CLI | `vendors/copilot` | Claude-compatible plugin (`.claude-plugin/plugin.json`, 36 commands, 11 agents, 7 skills) in a local marketplace, plus the copyable `.github` repository projection |
-| Clio Coder | `vendors/plugin`, `vendors/clio-extension` | the canonical bundle itself: 36 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks; and the desk extension, installed separately |
+| OpenCode | `vendors/opencode` | 37 commands (`name: wtfp:<action>`), 11 subagents (`mode: subagent`, verifier roles deny edit/bash), 7 skills |
+| Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json` with `version`, 11 agents (`subagent: true`), 7 router skills plus 35 explicit action skills (`disable-model-invocation: true`; `write-section` and `plan-section` are served by the router skill of that name), `rules/wtfp-project-state.md` with `trigger: always_on` |
+| Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 37 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
+| Copilot CLI | `vendors/copilot` | Claude-compatible plugin (`.claude-plugin/plugin.json`, 37 commands, 11 agents, 7 skills) in a local marketplace, plus the copyable `.github` repository projection |
+| Clio Coder | `vendors/plugin`, `vendors/clio-extension` | the canonical bundle itself: 37 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks; and the desk extension, installed separately |
 
 No projection declares an MCP server: the repository contains no MCP server implementation (the untracked `vendors/claude/mcp/research-server/` directory holds empty directories and is excluded from the package).
 
 ## Action availability per host
 
-Derived from each envelope's generated `compatibility/action-availability.json` (36 catalog actions). An unavailable action is compiled to a `WTFP_ACTION_UNAVAILABLE` stub without its workflow, arguments, or tools.
+Derived from each envelope's generated `compatibility/action-availability.json` (37 catalog actions). An unavailable action is compiled to a `WTFP_ACTION_UNAVAILABLE` stub without its workflow, arguments, or tools.
 
 | Target | Available | Unavailable (blocking capability) |
 | --- | ---: | --- |
-| `clio` (`vendors/plugin`) | 31 / 36 | `contribute` (`external.issue`, `vcs.branch`, `vcs.commit`), `remove-section` (`filesystem.delete`), `report-bug` (`external.issue`), `request-feature` (`external.issue`), `update` (`package.update`) |
-| `claude` | 31 / 36 | the same five |
-| `codex`, `copilot`, `opencode`, `antigravity`, `gemini` | 26 / 36 | the five above plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, `research-gap` (`tool.execute` unbound) |
-| `copilot-cloud` (`vendors/copilot/project/.github`) | 5 / 36 | every action that needs an explicit approval gate, plus the ten above |
+| `clio` (`vendors/plugin`) | 32 / 37 | `contribute` (`external.issue`, `vcs.branch`, `vcs.commit`), `remove-section` (`filesystem.delete`), `report-bug` (`external.issue`), `request-feature` (`external.issue`), `update` (`package.update`) |
+| `claude` | 31 / 37 | the same five, plus `advance` (`workflow.drive`, which only the Clio desk binds) |
+| `codex`, `copilot`, `opencode`, `antigravity`, `gemini` | 26 / 37 | the six above plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, `research-gap` (`tool.execute` unbound) |
+| `copilot-cloud` (`vendors/copilot/project/.github`) | 5 / 37 | every action that needs an explicit approval gate, plus the eleven above |
 
 `tool.execute` is bound to `clio:bash` and `claude:Bash`, in both cases authorizing only the generated `tools/wtfp-tool.js` dispatcher. `network.search` is `clio:bash-bundled-citation-tools` on Clio (the same dispatcher running the bundled scholarly clients) and the host's own web search elsewhere. To regenerate this table:
 
@@ -185,6 +185,15 @@ Read from that build's source and not exercised with a model:
 | A seal cannot be forged | Tamper evidence against workers and hand edits, not against the main agent: its shell runs unsandboxed as the operator's user and can read the key, as on 0.6.2. | Clio maintainer's decision |
 | A model-backed run or an author-led session | Not yet observed on 0.6.3. | none |
 
+Read from Clio's `v082` source at `8d531328e` (0.8.1 plus docs) and the desk package tests; not exercised with a model:
+
+| Guarantee | On Clio 0.8.1 with the desk | Evidence |
+| --- | --- | --- |
+| The launch names a level Clio accepts | Clio accepts only `default` and `yolo`; `read-only`, `suggest`, `auto-edit` and `full-auto` are rejected (`--autonomy must be default\|yolo`). The docs launch at `yolo`, and `default` where Clio's own approval cards are wanted. | `src/core/config.ts` retired values; `clio-coder --autonomy full-auto` on `0.8.2-dev e0c37ee` |
+| A waiting author question is never answered for the author | Enforced for desk gates: an extension interview has no unattended fallback, so it waits at both levels; only `ask_user` takes a recommended option after `safety.unattendedAfterSeconds` (300 s at `yolo`). Enforced for `ask_user` inside a WTF-P action or advance run: the write guard hooks `ask_user`, marks a lone question `operator_only`, which Clio never auto-answers and ends the turn on instead, and refuses a round of several unmarked questions. The prompts also instruct it. Outside an action questions are untouched. | `src/tools/ask-user.ts` (`unattendedFallback`), `src/interactive/interactive-application.ts` (`runParkedInterview`); desk package test |
+| `advance` runs only steps the desk selects | Enforced: `extension_wtfp__next_step` answers only inside a `/wtfp:advance` turn, picks the step by the `progress` ladder, and arms the write guard for that action and section alone; between steps, at a gate and after a stop nothing is armed. The turn holds the union of the chained actions' tools, so a step's tool scope is the driver's, not its own prompt's; its writes stay confined. | desk package tests, mutation-checked |
+| `advance` stops where only the author can decide | Enforced: a gate is put to the author through `extension_wtfp__gate`; a gate kept pending or cancelled headless, a step that changed nothing, an action the plugin does not serve, a missing project, and 24 steps each stop the run. | desk package tests |
+
 ## Clio Coder 0.6.2 reference (verified 2026-10-14)
 
 This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.8.1 both Clio packages require Clio 0.6.3, which Clio 0.6.2 enforces by refusing them, so the rows below describe the earlier desk.
@@ -316,7 +325,7 @@ node bin/install.js uninstall clio --yes --no-color           # removed; registr
 
 *Note: The recorded invocations above reflect historical execution under Fable at SHA `31a0600`. The 203-file uninstall dry-run count belongs to this inherited Fable run (the modern native suite validates library-install dry-run, not WTF-P uninstall dry-run).*
 
-The `--autonomy read-only|suggest|auto-edit|full-auto` flag is parsed for both the interactive launcher and `clio-coder run` (confirmed in `clio-coder run --help` and `src/cli/args.ts`).
+The `--autonomy read-only|suggest|auto-edit|full-auto` flag is parsed for both the interactive launcher and `clio-coder run` (confirmed in `clio-coder run --help` and `src/cli/args.ts`). Since Clio 0.5.6 the flag takes only `default|yolo` and rejects these spellings.
 
 Format facts, from `docs/guide/authoring-plugins.md` and `src/domains/resources/prompts/loader.ts` in the 0.4.7 source: prompts are discovered recursively beneath the declared prompts root and named by path (`/wtfp:<action>`); the prompt loader reads `description`, `argument-hint`, and `display-only`; a display-only template is answered by `clio-coder run` and the TUI with its first fenced block and no provider, session, or model. The help prompt is that card. Component kinds are `skill`, `prompt`, `agent`, `fleet`, `script`, `resource`, `tool`; MCP files are preserved but not executed; hooks are a harness-extension concern, not a plugin one.
 

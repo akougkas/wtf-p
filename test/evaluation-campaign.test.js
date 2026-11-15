@@ -358,8 +358,11 @@ process.exit(0);`);
     }
     assert.deepStrictEqual(run.step_environment.tools, { main: [...runner.MAIN_TOOLS], delegated: [...runner.WORKER_TOOLS] });
     // The main agent holds every desk tool by the name Clio gives it, and nothing the desk does not declare.
+    // A campaign step runs one action, never an advance run, so it holds no driver tool.
     const manifest = fs.readFileSync(path.join(ROOT, 'clio/clio-coder-extension.yaml'), 'utf8');
-    const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)].map(match => `extension_wtfp__${match[1]}`);
+    const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)]
+      .map(match => `extension_wtfp__${match[1]}`)
+      .filter(tool => tool !== 'extension_wtfp__next_step');
     assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
   });
 

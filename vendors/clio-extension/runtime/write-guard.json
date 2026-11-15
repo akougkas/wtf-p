@@ -13,6 +13,9 @@
         }
       ]
     },
+    "advance": {
+      "produces": []
+    },
     "analyze-bib": {
       "produces": [
         {

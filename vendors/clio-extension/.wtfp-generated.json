@@ -2,11 +2,15 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "clio-extension",
-  "sourceHash": "85235b6983d78af1c701b8936dbc3231e7d4ed1c57b5ae0c87f05fc19e199050",
+  "sourceHash": "9261f7dedfba76688895fc4711803ac7c51a0c7d465dd33d85c08837310fef21",
   "files": [
     {
       "path": "actions/add-todo.json",
       "sha256": "ab5c1b0fcc9c7957f367af18f66378cf21bdab1d66cfd1da1afaff853715d8ac"
+    },
+    {
+      "path": "actions/advance.json",
+      "sha256": "4469c11c8a77b1ec7000744c60d10bb71ba204528473e82e43ba61dcbccf67d3"
     },
     {
       "path": "actions/analyze-bib.json",
@@ -150,11 +154,11 @@
     },
     {
       "path": "clio-coder-extension.yaml",
-      "sha256": "7ce107d983b8734b0652028fc3e7cf39c29ff3df57d5e240afdbb45692b4463d"
+      "sha256": "83b14b569a5e31f59fbee08abc458eaa940ffe133d387dc2e2d7486bf15999a6"
     },
     {
       "path": "compatibility/action-availability.json",
-      "sha256": "d72a554453f6a22378b5daf48bcc20eb48668ca637e27739ed9610122f6998d4"
+      "sha256": "4172fda1698631f0577ec93c379f446f5a57d53861f03a74495a0e90b17254f5"
     },
     {
       "path": "project/schemas/checkpoint.schema.json",
@@ -214,11 +218,11 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "fac2bbaeb150724cd828e4c17287aa4af78cd597ac56b49a6f859806b2e01ff7"
+      "sha256": "4efedffefe0a924207137afe259b3ee6fcae30a3a5f8a8cdf66b7246cf000703"
     },
     {
       "path": "runtime/extension.ts",
-      "sha256": "ce0a9a266d5be9e8324920d6ead8649e4a51347dcc871277dfef36cf427d4623"
+      "sha256": "95e934d44199c43e1d6897d559aab3dd2c890f6b24b3156c4c2754819de79fd4"
     },
     {
       "path": "runtime/json-schema.cjs",
@@ -230,7 +234,7 @@
     },
     {
       "path": "runtime/write-guard.json",
-      "sha256": "cf1a0ca101c0818d689a690fb838ba02dd837188371de218caec34b9a4f3bbe2"
+      "sha256": "33d15bd44078db14b40407083d5e00136d8a95591151e3c303df37a75be27c50"
     },
     {
       "path": "skins/wtfp.json",

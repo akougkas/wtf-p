@@ -848,6 +848,125 @@ test("an armed action writes only what its contract declares, for the section it
 		assert.match(blocked(await write(host, ".planning/sections/introduction/notes.md")) ?? "", /declares no file outputs/);
 	}, SERVED));
 
+// --- the advance driver ------------------------------------------------------------
+// `/wtfp:advance` runs one long turn. The desk, never the model, picks each step
+// by the progress ladder and arms the write guard for that action alone; a gate
+// stops the run until the author answers it at the desk.
+
+const DRIVEN_PLUGIN = { id: "wtfp", prompts: [...SERVED.prompts, "wtfp:advance", "wtfp:review-section", "wtfp:discuss-section", "wtfp:create-outline"] };
+const nextStep = async (host: Host): Promise<{ text: string; data: Json; isError?: boolean }> => {
+	const result = await host.tool("next_step", {});
+	return { text: result.text, data: (result.data ?? {}) as Json, ...(result.isError ? { isError: true } : {}) };
+};
+
+test("only an advance turn may ask the desk for a step, and the turn's end ends the run", () =>
+	withDesk(async (host) => {
+		assert.equal((await nextStep(host)).isError, true, "no drive outside an advance turn");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:write-section introduction" });
+		assert.equal((await nextStep(host)).isError, true, "an ordinary action cannot drive");
+		const armed = await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.match(JSON.stringify(armed.effects), /WTF-P driver armed/);
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "nothing is writable before the desk arms a step");
+		assert.equal((await nextStep(host)).data.kind, "gate");
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		assert.equal((await nextStep(host)).isError, true, "the drive ends with its turn");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await host.hook({ point: "prompt_submit", text: "/wtfp:progress" });
+		assert.equal((await nextStep(host)).isError, true, "any other prompt ends the drive");
+	}, DRIVEN_PLUGIN));
+
+test("advance puts each gate to the author, then arms exactly the step the ladder names", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		// The desk names the gates in its own order; each is answered as the author would.
+		const choices: Record<string, string> = { [GATE]: "protocol-first", [PLAN_GATE]: "approve" };
+		const asked: string[] = [];
+		for (let round = 0; round < 2; round += 1) {
+			const gate = await nextStep(host);
+			assert.equal(gate.data.kind, "gate", gate.text);
+			asked.push(gate.data.checkpoint as string);
+			assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "a gate leaves nothing armed");
+			await answer(host, gate.data.checkpoint as string, choices[gate.data.checkpoint as string] as string);
+		}
+		assert.deepEqual(asked.sort(), [GATE, PLAN_GATE].sort());
+		const step = await nextStep(host);
+		assert.deepEqual([step.data.kind, step.data.action, step.data.section, step.data.prompt], ["step", "write-section", "introduction", "write-section.md"]);
+		assert.match(step.text, /armed for write-section introduction only/);
+		assert.equal(blocked(await write(host, "paper/introduction.md")), null, "the armed step may write its manuscript");
+		assert.ok(blocked(await write(host, ".planning/sections/introduction/plans/second.md")), "but nothing write-section does not declare");
+		const outline = read(workspace, ".planning/structure/outline.json");
+		const undeclared = await host.tool("record", { uri: "project://structure/outline", record: { ...outline, thesis: "Changed." }, expect_revision: 1 });
+		assert.match(undeclared.text, /write-section does not declare updating project:\/\/structure\/outline/);
+		// The drafted section moves to review, and the desk arms the review next, not the draft.
+		put(workspace, ".planning/sections/introduction/section.json", { ...read(workspace, ".planning/sections/introduction/section.json"), status: "reviewing" });
+		const review = await nextStep(host);
+		assert.deepEqual([review.data.kind, review.data.action, review.data.section], ["step", "review-section", "introduction"]);
+		assert.ok(blocked(await write(host, "paper/introduction.md")), "the review step may not touch the manuscript the draft step could");
+		// A step that changed nothing the ladder reads is not run again.
+		const again = await nextStep(host);
+		assert.equal(again.data.kind, "stop");
+		assert.match(again.text, /changed nothing/);
+		assert.match(blocked(await write(host, "paper/introduction.md")) ?? "", /declares no file outputs/, "a stop disarms the last step");
+	}, DRIVEN_PLUGIN));
+
+test("a gate the author keeps pending, or that no author can answer, stops the run with the gate open", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		const first = (await nextStep(host)).data.checkpoint as string;
+		assert.ok([GATE, PLAN_GATE].includes(first));
+		await answer(host, first, "__keep");
+		const kept = await nextStep(host);
+		assert.equal(kept.data.kind, "stop");
+		assert.match(kept.text, new RegExp(`${first} is still waiting on you`));
+		assert.equal((read(workspace, `.planning/checkpoints/${first}.json`) as Json).status, "pending");
+		await host.observe({ event: "turn_end", turnId: "t1", outcome: "completed", usage: null });
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.equal((await nextStep(host)).data.checkpoint, first, "a new run asks the kept gate again");
+		const recorded = interactions(workspace).length;
+		const key = await ask(host, first);
+		await host.interview({ id: "gate-one", step: key, nav: "cancel", answers: {}, reason: "headless" });
+		const headless = await nextStep(host);
+		assert.equal(headless.data.kind, "stop");
+		assert.equal((read(workspace, `.planning/checkpoints/${first}.json`) as Json).status, "pending");
+		assert.equal(interactions(workspace).length, recorded, "no answer was recorded for an author who was never asked");
+	}, DRIVEN_PLUGIN));
+
+test("advance never starts a project and never runs an action the plugin does not serve", () =>
+	withDesk(async (host, workspace) => {
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		await answer(host, GATE, "protocol-first");
+		await answer(host, PLAN_GATE, "approve");
+		// write-section is next, but this plugin serves only advance.
+		const unserved = await nextStep(host);
+		assert.equal(unserved.data.kind, "stop");
+		assert.match(unserved.text, /needs the WTF-P plugin/);
+		rmSync(path.join(workspace, ".planning"), { recursive: true, force: true });
+		const empty = await nextStep(host);
+		assert.equal(empty.data.kind, "stop");
+		assert.match(empty.text, /never starts one/);
+	}, { id: "wtfp", prompts: ["wtfp:advance"] }));
+
+test("the desk's advance key fills the advance prompt only while the plugin serves it", () =>
+	withDesk(async (host) => {
+		const filled = await host.action("advance");
+		assert.equal(filled.text, "/wtfp:advance");
+	}, DRIVEN_PLUGIN));
+
+test("inside a WTF-P action every question goes to the author as one only the author may answer", () =>
+	withDesk(async (host) => {
+		const ask = (args: Json) => host.hook({ point: "before_tool", tool: "ask_user", turnId: "t1", args });
+		const question = { question: "Lead with the protocol?", options: [{ label: "Yes" }, { label: "No" }] };
+		assert.equal(rewriteOf(await ask({ action: "ask", questions: [question] })), null, "outside an action the desk leaves questions alone");
+		await host.hook({ point: "prompt_submit", text: "/wtfp:discuss-section introduction" });
+		const marked = rewriteOf(await ask({ action: "ask", questions: [question] }));
+		assert.deepEqual((marked?.questions as Json[] | undefined)?.[0], { ...question, operator_only: true });
+		assert.match(blocked(await ask({ action: "ask", questions: [question, { question: "And the venue?" }] })) ?? "", /one call at a time, each with operator_only/);
+		assert.equal(rewriteOf(await ask({ action: "ask", questions: [{ ...question, operator_only: true }] })), null, "a question already marked passes unchanged");
+		assert.equal(blocked(await ask({ action: "complete", decisions: [] })), null);
+		await host.hook({ point: "prompt_submit", text: "/wtfp:advance" });
+		assert.ok(rewriteOf(await ask({ action: "ask", questions: [question] })), "an advance turn marks them too");
+	}, DRIVEN_PLUGIN));
+
 test("WTF-P workers are dispatched only inside their action and only to manuscripts that are ready (W3)", () =>
 	withDesk(async (host, workspace) => {
 		const dispatch = (args: Json) => host.hook({ point: "before_tool", tool: "dispatch", turnId: "t1", args });

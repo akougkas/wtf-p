@@ -1,0 +1,228 @@
+{
+  "schema": "wtfp.action/v1",
+  "id": "advance",
+  "title": "Advance to the next author gate",
+  "description": "Run the next writing actions automatically and stop when only the author can decide.",
+  "alias": "wtfp:advance",
+  "surface": {
+    "kind": "skill",
+    "skill": "wtfp-manage-project"
+  },
+  "workflow": "wtfp://workflows/advance",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "network.fetch",
+      "network.search",
+      "tool.execute",
+      "user.interaction",
+      "workflow.drive"
+    ],
+    "conditions": [
+      "Portable project state has been initialized",
+      "The host provides a driver that selects each step from project state and confines it to that step's contract"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://state",
+    "project://decisions",
+    "project://structure/outline",
+    "project://sections/{section}",
+    "project://sections/{section}/plans/{plan}",
+    "project://sections/{section}/reviews/{review}",
+    "project://sections/{section}/summary",
+    "project://sections/{section}/handoff",
+    "project://sources/{source}",
+    "project://evidence/{evidence}",
+    "project://checkpoints/{checkpoint}",
+    "project://validations/{validation}",
+    "project://paper/{artifact}",
+    "project://sections/{section}/context",
+    "project://sections/{section}/research",
+    "project://validations/*"
+  ],
+  "produces": [
+    {
+      "uri": "project://structure/outline",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://decisions",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/context",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/context",
+      "mode": "update"
+    },
+    {
+      "uri": "project://checkpoints/{checkpoint}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sources/{source}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sources/{source}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://evidence/{evidence}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/research",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/research",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/plans/{plan}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://manifest",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}/summary",
+      "mode": "update"
+    },
+    {
+      "uri": "project://sections/{section}/reviews/{review}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://archives/{archive}/{artifact}",
+      "mode": "archive"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "outliner",
+      "mode": "optional",
+      "purpose": "Design a coherent section and argument structure from the project evidence when the driver selects create-outline"
+    },
+    {
+      "role": "research-synthesizer",
+      "mode": "optional",
+      "purpose": "Synthesize existing and newly discovered evidence into a section research brief when the driver selects research-gap"
+    },
+    {
+      "role": "section-planner",
+      "mode": "optional",
+      "purpose": "Create an executable plan grounded in project intent and evidence when the driver selects plan-section"
+    },
+    {
+      "role": "plan-checker",
+      "mode": "optional",
+      "purpose": "Check plan completeness, traceability, and feasibility before approval when the driver selects plan-section"
+    },
+    {
+      "role": "section-writer",
+      "mode": "optional",
+      "purpose": "Draft the section from its approved plan and evidence when the driver selects write-section"
+    },
+    {
+      "role": "argument-verifier",
+      "mode": "optional",
+      "purpose": "Independently verify claim, evidence, and requirement coverage when the driver selects write-section"
+    },
+    {
+      "role": "section-reviewer",
+      "mode": "optional",
+      "purpose": "Independently assess the section against its plan, evidence, and selected review perspective when the driver selects review-section"
+    }
+  ],
+  "tools": [
+    "bibliography.index",
+    "citation.fetch",
+    "citation.rank",
+    "citation.scholar-lookup",
+    "citation.semantic-scholar"
+  ],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://outliner, role://research-synthesizer, role://section-planner, role://plan-checker, role://section-writer, role://argument-verifier, role://section-reviewer"
+    },
+    {
+      "id": "artifact.archive",
+      "scope": "selected paper milestone and portable project state, only when the driver selects submit-milestone"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://sections/{section}, project://validations/{validation}, project://sections/{section}/context, project://checkpoints/{checkpoint}, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research, project://sections/{section}/plans/{plan}, project://paper/{artifact}, project://sections/{section}/summary, project://sections/{section}/reviews/{review}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://structure/outline, project://decisions, project://state, project://sections/{section}/context, project://sections/{section}, project://sources/{source}, project://evidence/{evidence}, project://sections/{section}/research, project://paper/{artifact}, project://manifest, project://sections/{section}/summary"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://state, project://decisions, project://structure/outline, project://sections/{section}, project://sections/{section}/plans/{plan}, project://sections/{section}/reviews/{review}, project://sections/{section}/summary, project://sections/{section}/handoff, project://sources/{source}, project://evidence/{evidence}, project://checkpoints/{checkpoint}, project://validations/{validation}, project://paper/{artifact}, project://sections/{section}/context, project://sections/{section}/research, project://validations/*"
+    },
+    {
+      "id": "filesystem.write",
+      "scope": "only the resources the selected step's own action contract declares, for the section the driver names"
+    },
+    {
+      "id": "network.fetch",
+      "scope": "selected scholarly records, only when the driver selects research-gap"
+    },
+    {
+      "id": "network.search",
+      "scope": "declared scholarly indexes, only when the driver selects research-gap"
+    },
+    {
+      "id": "tool.execute",
+      "scope": "declared bibliography and citation tools through tools/wtfp-tool.js, only for the selected step's declared tools"
+    },
+    {
+      "id": "user.gate",
+      "scope": "every gate the selected steps raise, each answered by the author through the host's gate interaction"
+    }
+  ]
+}

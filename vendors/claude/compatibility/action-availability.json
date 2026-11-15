@@ -15,7 +15,8 @@
     "tool.execute": "claude:Bash",
     "user.interaction": "claude:AskUserQuestion",
     "vcs.branch": null,
-    "vcs.commit": null
+    "vcs.commit": null,
+    "workflow.drive": null
   },
   "approvalBindings": {
     "none": "claude:allowed-tools",
@@ -46,6 +47,14 @@
       "id": "add-todo",
       "status": "available",
       "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "advance",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "workflow.drive"
+      ],
       "unavailableEffects": []
     },
     {

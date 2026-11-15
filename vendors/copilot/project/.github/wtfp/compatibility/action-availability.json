@@ -15,7 +15,8 @@
     "tool.execute": null,
     "user.interaction": "copilot-cloud:input-approval",
     "vcs.branch": null,
-    "vcs.commit": null
+    "vcs.commit": null,
+    "workflow.drive": null
   },
   "approvalBindings": {
     "none": "copilot-cloud:tool-policy",
@@ -47,6 +48,18 @@
       "status": "available",
       "unavailableCapabilities": [],
       "unavailableEffects": []
+    },
+    {
+      "id": "advance",
+      "status": "unavailable",
+      "unavailableCapabilities": [
+        "tool.execute",
+        "workflow.drive"
+      ],
+      "unavailableEffects": [
+        "tool.execute",
+        "user.gate"
+      ]
     },
     {
       "id": "analyze-bib",

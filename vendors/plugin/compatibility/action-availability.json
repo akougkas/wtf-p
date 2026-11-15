@@ -6,8 +6,7 @@
     "actionScoped": true,
     "surface": "clio:template-allowed-tools",
     "certificationAutonomy": [
-      "read-only",
-      "suggest"
+      "default"
     ],
     "undeclaredToolCall": "fail"
   },
@@ -24,7 +23,8 @@
     "tool.execute": "clio:bash",
     "user.interaction": "clio:ask_user",
     "vcs.branch": null,
-    "vcs.commit": null
+    "vcs.commit": null,
+    "workflow.drive": "clio:wtfp-desk-driver"
   },
   "approvalBindings": {
     "none": "clio:permission-policy",
@@ -53,6 +53,12 @@
   "actions": [
     {
       "id": "add-todo",
+      "status": "available",
+      "unavailableCapabilities": [],
+      "unavailableEffects": []
+    },
+    {
+      "id": "advance",
       "status": "available",
       "unavailableCapabilities": [],
       "unavailableEffects": []

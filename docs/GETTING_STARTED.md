@@ -58,7 +58,7 @@ Start the client from the project directory after installation:
 
 | Client | Launch | Explicit first action |
 | --- | --- | --- |
-| Clio Coder | `clio-coder --autonomy suggest` | `/wtfp:new-paper <exact brief>` |
+| Clio Coder | `clio-coder --autonomy yolo` | `/wtfp:new-paper <exact brief>`, then `/wtfp:advance` |
 | Claude Code | `claude` | `/wtfp:new-paper <exact brief>` |
 | Codex | `codex` | `$wtfp-start-project Run the new-paper action. <exact brief>` |
 | GitHub Copilot CLI | `copilot` | `/wtfp:new-paper <exact brief>` |
@@ -167,14 +167,16 @@ clio-coder run '/wtfp:help'
 
 `clio-coder run '/wtfp:help'` prints a static operator card without a model call: the start-here sequence, every action in workflow order with its argument hint, the actions this adapter cannot execute, and the two playbooks. In the TUI, `/prompts` reports each prompt's source. A pre-existing user-level prompt can take precedence over a plugin prompt; Clio reports that source so the shadowing is visible. Back up and remove a stale prompt deliberately if you want the plugin copy to win. WTF-P will not overwrite it silently.
 
-Use supervised `suggest` autonomy for ordinary work:
+Clio 0.8 has two autonomy levels. `yolo` runs without Clio's approval cards inside its contained sandbox; `default` asks before calls Clio cannot classify as routine. WTF-P's author gates are the same at both, so `yolo` is the usual launch:
 
 ```bash
 cd /path/to/proposal
-clio-coder --autonomy suggest
+clio-coder --autonomy yolo
 ```
 
-Clio slash prompts inherit the session's tool surface; the host does not narrow tools per action. Deny and stop any shell, network, filesystem, or delegation call outside the displayed WTF-P action contract. Read-only mode is appropriate for previews. A Full Auto run can be useful for exploratory model testing, but it is non-certifying and does not remove the action's interviews or author gates.
+Clio narrows each WTF-P prompt's turn to the tools its action declares (`allowed-tools`) and caps its workers (`delegated-tools`). Every question WTF-P puts to you is sent as one only you may answer, so Clio never takes a recommended option for you when a question waits past `safety.unattendedAfterSeconds`; an unanswered one ends the turn instead. The desk's gate interviews never time out. Use `default` when you also want Clio's own approval card before plan-scale dispatch and unrecognized commands.
+
+`/wtfp:advance` runs the next actions in one turn. The desk, not the model, picks each step from the project records and arms its write guard for that action alone; it stops at the first gate only you can answer, asks it, and continues after your answer. A gate you keep pending, a step that changes nothing, an action this host cannot run, or 24 steps end the run. It never starts a project: run `/wtfp:new-paper` or `/wtfp:map-project` first.
 
 ### Optional Clio playbooks
 
@@ -236,7 +238,7 @@ run_isolated_clio() {
 
 run_isolated_clio npx --yes --package=wtf-p@0.8.1 -- wtf-p install clio --advanced
 cd /path/to/disposable-proposal
-run_isolated_clio clio-coder --autonomy suggest
+run_isolated_clio clio-coder --autonomy default
 ```
 
 `env -i` prevents ambient provider keys, npm credentials, and unrelated client variables from leaking into the run. The empty profile therefore has no model credentials unless you deliberately configure a Clio-supported isolated credential mechanism. Never copy, print, or embed credentials in a fixture or evidence trace. Remove the disposable root after preserving any non-secret evidence you need.
@@ -258,9 +260,9 @@ Remove WTF-P from Clio with the WTF-P uninstaller rather than `clio-coder librar
 
 ## Boundaries of this candidate
 
-All seven host adapters discover the same 36 stable action routes. Availability is a complete adapter mapping, not a successful model run, and is recorded per host in each generated `compatibility/action-availability.json`. Clio Coder and Claude Code project 31 of 36 actions as available; Codex, Copilot CLI, OpenCode, Antigravity, and Gemini project 26 of 36. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) lists which actions fail closed on which host and why.
+All seven host adapters discover the same 37 stable action routes. Availability is a complete adapter mapping, not a successful model run, and is recorded per host in each generated `compatibility/action-availability.json`. Clio Coder projects 32 of 37 actions as available and Claude Code 31 of 37, since only the Clio desk drives `advance`; Codex, Copilot CLI, OpenCode, Antigravity, and Gemini project 26 of 37. [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md) lists which actions fail closed on which host and why.
 
-Where a research route is available, `tool.execute` authorises exactly one command, the bundled `tools/wtfp-tool.js` dispatcher. To reach its CiteNexus backend, invoke `research-gap` for literature discovery or `check-refs` for citation audit (for example, `/wtfp:research-gap related-work Find related work with --backend=cite-nexus --providers=crossref,datacite,europe_pmc` or `/wtfp:check-refs Audit references with --backend=cite-nexus --providers=crossref,datacite,europe_pmc`). `research-gap` on Clio full-auto may search bounded public metadata through that dispatcher using only free no-key indexes without per-query approval; it still honors offline mode. On a Clio build with user MCP `actionClass: read` support, it prefers an operator-configured CiteNexus connection through `gateway`. Other provider choices and `check-refs` still require the declared author network gate; see [CITE_NEXUS.md](CITE_NEXUS.md). `create-poster`, `create-slides`, and `export-latex` emit source and return the render or compile step as an author handoff; none of them runs a renderer or LaTeX. `submit-milestone` creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
+Where a research route is available, `tool.execute` authorises exactly one command, the bundled `tools/wtfp-tool.js` dispatcher. To reach its CiteNexus backend, invoke `research-gap` for literature discovery or `check-refs` for citation audit (for example, `/wtfp:research-gap related-work Find related work with --backend=cite-nexus --providers=crossref,datacite,europe_pmc` or `/wtfp:check-refs Audit references with --backend=cite-nexus --providers=crossref,datacite,europe_pmc`). `research-gap` on Clio at `yolo` autonomy may search bounded public metadata through that dispatcher using only free no-key indexes without per-query approval; it still honors offline mode. On a Clio build with user MCP `actionClass: read` support, it prefers an operator-configured CiteNexus connection through `gateway`. Other provider choices and `check-refs` still require the declared author network gate; see [CITE_NEXUS.md](CITE_NEXUS.md). `create-poster`, `create-slides`, and `export-latex` emit source and return the render or compile step as an author handoff; none of them runs a renderer or LaTeX. `submit-milestone` creates a reproducible local archive; despite its historical command name, it does not submit to a journal, funder, or external service.
 
 If an action returns `WTFP_ACTION_UNAVAILABLE`, do not ask the model to improvise around the refusal. If a project has materials but no portable manifest, initialize it with `new-paper` before `map-project`. If records disagree, stop, preserve them, and use `progress` or `verify-work` to inspect the mismatch before approving a repair. Deny and stop an unexpected shell, network, Git, broad-filesystem, or external-service request.
 

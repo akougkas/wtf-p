@@ -15,6 +15,18 @@ Contract: [protocol/actions/progress.json](../../../actions/progress.json)
 
 Completion requires evidence-backed status, surfaced inconsistencies, and a reasoned next action without state mutation.
 
+## `advance`
+
+Contract: [protocol/actions/advance.json](../../../actions/advance.json)
+
+1. Require initialized project state; otherwise name `new-paper` or `map-project` and stop.
+2. Ask the host's driver for the next step. Only the driver selects the action and section, from project state by the `progress` ladder, and it confines the step to that action's declared outputs.
+3. For a pending gate, put it to the author through the host's gate interaction. Continue only after the author's answer; a kept, declined, or unaskable gate ends the run.
+4. For an action, follow that action's own procedure and contract with the named section, including its author gates and interviews. Ask the driver again when it completes.
+5. Stop on the driver's stop reason, a failed or blocked step, or a step limit. Report each step, each author answer, and the stop reason.
+
+Completion requires that every step ran under its own contract, that no gate was crossed without the author's answer, and an exact stop reason.
+
 ## `pause-writing`
 
 Contract: [protocol/actions/pause-writing.json](../../../actions/pause-writing.json)

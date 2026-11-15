@@ -1,6 +1,6 @@
 ---
 name: wtfp-manage-project
-description: This skill coordinates the durable state of a research-writing project. It activates when an agent needs to report progress, pause or resume work, save or restore a checkpoint, edit project settings, capture or review todos, choose the next workflow, or perform the WTF-P progress, pause-writing, resume-writing, checkpoint, settings, add-todo, or check-todos actions.
+description: This skill coordinates the durable state of a research-writing project. It activates when an agent needs to report progress, pause or resume work, save or restore a checkpoint, edit project settings, capture or review todos, choose the next workflow, run the next writing actions automatically until the author must decide, or perform the WTF-P advance, progress, pause-writing, resume-writing, checkpoint, settings, add-todo, or check-todos actions.
 ---
 
 # Manage a WTF-P Project
@@ -10,6 +10,7 @@ Keep project state honest, resumable, and useful for routing the next academic a
 ## Select the action
 
 - Use `progress` to reconcile artifacts and recommend the next step.
+- Use `advance` to run the next writing actions automatically, one driver-selected step at a time, until a gate needs the author.
 - Use `pause-writing` or `resume-writing` to create and consume a session handoff.
 - Use `checkpoint` to save, list, or restore named snapshots.
 - Use `settings` to inspect and edit project policy.

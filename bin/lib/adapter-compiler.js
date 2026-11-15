@@ -39,7 +39,8 @@ const CAPABILITY_IDS = Object.freeze([
   'tool.execute',
   'user.interaction',
   'vcs.branch',
-  'vcs.commit'
+  'vcs.commit',
+  'workflow.drive'
 ]);
 
 // Effects are portable semantic declarations. Each effect must have one exact
@@ -77,6 +78,11 @@ const EFFECT_CAPABILITY_BINDINGS = Object.freeze({
 // Clio's `network.search` is bound to the same executor because the only
 // scholarly search WTF-P declares is the bundled Semantic Scholar / Google
 // Scholar client; Clio exposes `web_fetch` but no native web-search tool.
+//
+// `workflow.drive` is a host driver that selects each next step from portable
+// project state and confines that step to its own action contract. Only the
+// Clio desk provides one (`extension_wtfp__next_step`), so `advance` fails
+// closed everywhere else instead of letting a model choose its own steps.
 const TARGET_POLICIES = Object.freeze({
   clio: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'clio:plugin-agent',
@@ -91,7 +97,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': 'clio:bash',
     'user.interaction': 'clio:ask_user',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': 'clio:wtfp-desk-driver'
   }), approvals: Object.freeze({ none: 'clio:permission-policy', implicit: 'clio:permission-policy', explicit: 'clio:ask_user' }) }),
   claude: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'claude:Task',
@@ -106,7 +113,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': 'claude:Bash',
     'user.interaction': 'claude:AskUserQuestion',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'claude:allowed-tools', implicit: 'claude:allowed-tools', explicit: 'claude:AskUserQuestion' }) }),
   codex: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'codex:subagent',
@@ -121,7 +129,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'codex:conversation',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'codex:sandbox-policy', implicit: 'codex:sandbox-policy', explicit: 'codex:conversation-confirmation' }) }),
   copilot: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'copilot:Task',
@@ -136,7 +145,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'copilot:AskUserQuestion',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'copilot:allowed-tools', implicit: 'copilot:allowed-tools', explicit: 'copilot:AskUserQuestion' }) }),
   'copilot-cloud': Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'copilot-cloud:agent',
@@ -151,7 +161,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'copilot-cloud:input-approval',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'copilot-cloud:tool-policy', implicit: 'copilot-cloud:tool-policy', explicit: null }) }),
   opencode: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'opencode:agent',
@@ -166,7 +177,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'opencode:conversation',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'opencode:permission-policy', implicit: 'opencode:permission-policy', explicit: 'opencode:conversation-confirmation' }) }),
   antigravity: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'antigravity:Task',
@@ -181,7 +193,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'antigravity:AskUserQuestion',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'antigravity:allowed-tools', implicit: 'antigravity:allowed-tools', explicit: 'antigravity:AskUserQuestion' }) }),
   gemini: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'gemini:agent',
@@ -196,7 +209,8 @@ const TARGET_POLICIES = Object.freeze({
     'tool.execute': null,
     'user.interaction': 'gemini:conversation',
     'vcs.branch': null,
-    'vcs.commit': null
+    'vcs.commit': null,
+    'workflow.drive': null
   }), approvals: Object.freeze({ none: 'gemini:permission-policy', implicit: 'gemini:permission-policy', explicit: 'gemini:conversation-confirmation' }) })
 });
 
@@ -210,7 +224,9 @@ const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
   clio: Object.freeze({
     actionScoped: true,
     surface: 'clio:template-allowed-tools',
-    certificationAutonomy: Object.freeze(['read-only', 'suggest']),
+    // Clio 0.8 has two levels; the 0.6.3 read-only and suggest spellings it was
+    // certified under now read as `default`.
+    certificationAutonomy: Object.freeze(['default']),
     undeclaredToolCall: 'fail'
   })
 });
@@ -603,17 +619,23 @@ function generatedScriptBanner(kind, id) {
   return `// Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit.`;
 }
 
+const CLIO_AUTHOR_QUESTIONS = 'Every question `ask_user` puts to the author here is the author\'s to answer: send each with `operator_only: true`, alone in its call. Clio never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.';
+
 function clioUserGateBody(action, deskTools = false) {
   if (!action.effects.some((effect) => effect.id === 'user.gate')) return '';
   if (deskTools) return [
     '## Clio user-gate binding',
     '',
-    'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.'
+    'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. Create a missing pending checkpoint through `extension_wtfp__record` only when this action declares checkpoint creation; otherwise use `ask_user` for the unpersisted author decision and do not invent an undeclared output. Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
+    '',
+    CLIO_AUTHOR_QUESTIONS
   ].join('\n');
   return [
     '## Clio user-gate binding',
     '',
-    'Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.'
+    'Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.',
+    '',
+    CLIO_AUTHOR_QUESTIONS
   ].join('\n');
 }
 
@@ -632,6 +654,7 @@ function clioDeskWorkflowBody(action, workflowBody) {
   if (action.id === 'check-todos') body = body
     .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_wtfp__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
+  if (action.requirements.capabilities.includes('workflow.drive')) return `${body}\n\n${clioDriverBinding()}`;
   const bindings = [
     'Discover the named tools with `gateway(op="describe", capability="extension_wtfp__record")` (and the corresponding `read_record`, `readiness`, `measure_section` or `gate` name), then use `gateway(op="call", capability="<exact name>", args={...})`. A present tool\'s error or refusal stops the action; never bypass it with a manual write or shell script.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
@@ -643,12 +666,30 @@ function clioDeskWorkflowBody(action, workflowBody) {
   return `${body}\n\n${bindings.join('\n')}`;
 }
 
+// The Clio projection of the workflow.drive capability. The desk, not the
+// model, picks each step and arms the write guard for exactly that action.
+function clioDriverBinding() {
+  return [
+    '## Clio driver binding',
+    '',
+    'Discover `extension_wtfp__next_step` with `gateway(op="describe", capability="extension_wtfp__next_step")` and the other desk tools the same way, then call them with `gateway(op="call", capability="<exact name>", args={...})`. If `extension_wtfp__next_step` is absent, the WTF-P desk extension is not running: report that `advance` needs it and stop without running any action.',
+    '',
+    'Call `extension_wtfp__next_step` with no arguments. Its result names exactly one of:',
+    '',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt file. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/` followed by that file name, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Read the files its `@` lines name before acting. When the action completes, call `extension_wtfp__next_step` again.',
+    '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
+    '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
+    '',
+    'Never choose, skip, repeat or reorder an action, invoke another `/wtfp:` prompt, or dispatch a WTF-P role outside a step the desk armed. If a step fails, is blocked, or its tools refuse a call, stop and report it; do not call `extension_wtfp__next_step` to get past a failure. The desk stops a step that would repeat with no change, a gate the author kept pending or declined, and a run past its step limit.'
+  ].join('\n');
+}
+
 function clioResearchConnectionBody(action) {
   if (action.id !== 'research-gap') return '';
   return [
     '## Clio CiteNexus binding',
     '',
-    'In full-auto, the main agent first calls `gateway(op="find", query="cite-nexus")`. If a CiteNexus server is present and its tools are admitted as read-class through the operator\'s user configuration, call `gateway(op="describe", capability="<search-papers capability>")`, then `gateway(op="call", capability="<search-papers capability>", args={...})` with bounded public metadata queries. Use the capability name and argument schema returned by the gateway, not a guessed name. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. If no read-class CiteNexus connection is available and no gateway call has been refused, full-auto may instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
+    'At yolo autonomy, the main agent first calls `gateway(op="find", query="cite-nexus")`. If a CiteNexus server is present and its tools are admitted as read-class through the operator\'s user configuration, call `gateway(op="describe", capability="<search-papers capability>")`, then `gateway(op="call", capability="<search-papers capability>", args={...})` with bounded public metadata queries. Use the capability name and argument schema returned by the gateway, not a guessed name. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. If no read-class CiteNexus connection is available and no gateway call has been refused, yolo may instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
   ].join('\n');
 }
 
@@ -707,7 +748,13 @@ function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
     `WTF-P ${model.version} on Clio Coder: evidence-grounded academic writing`,
     '',
     'Start here',
-    ...HELP_START_SEQUENCE.map((id) => `  /wtfp:${id} ${helpArgumentHint(byId.get(id))}`),
+    ...HELP_START_SEQUENCE.flatMap((id) => [
+      `  /wtfp:${id} ${helpArgumentHint(byId.get(id))}`,
+      // Once there is an outline, the desk can run the steps that follow until a decision is the author's.
+      ...(id === 'create-outline' && availabilityById.get('advance')?.available
+        ? [`  /wtfp:advance ${helpArgumentHint(byId.get('advance'))}   or let the desk run the steps below until a decision is yours`]
+        : [])
+    ]),
     '',
     ...HELP_GROUP_ORDER.flatMap(([skillId, title]) => {
       const skill = model.catalog.skills.find((entry) => entry.id === skillId);
@@ -747,6 +794,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   // /wtfp:wtfp:new-paper in current Claude Code releases.
   if (target !== 'clio' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
+  // Without the desk there is no driver to select steps; never let a model drive itself.
+  if (availability.available && target === 'clio' && !deskTools && action.requirements.capabilities.includes('workflow.drive')) {
+    availability = { ...availability, available: false, unavailableCapabilities: ['workflow.drive'], unavailableEffects: [] };
+  }
   if (!availability.available) {
     if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
       lines.push('allowed-tools: []');
@@ -964,6 +1015,8 @@ function clioToolList(entries) {
 }
 
 const CLIO_DESK_TOOLS = Object.freeze(['record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
+// Held only by actions that require workflow.drive: the desk arms each step itself.
+const CLIO_DRIVER_TOOL = 'extension_wtfp__next_step';
 
 // The tools one Clio prompt's turn may hold (allowed-tools), from the Clio
 // bindings of the action's declared capabilities. Clio 0.6.3 narrows a
@@ -979,6 +1032,7 @@ function clioActionTools(action, deskTools) {
   if (capabilities.has('network.fetch')) tools.push('web_fetch');
   if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
   if (deskTools) tools.push(...CLIO_DESK_TOOLS);
+  if (deskTools && capabilities.has('workflow.drive')) tools.push(CLIO_DRIVER_TOOL);
   return tools;
 }
 
@@ -1377,15 +1431,19 @@ function clioWriteGuard(model, availabilityById) {
     throw new Error('no manuscript-writing action is available on Clio');
   }
   const verifiers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
+  // A driver action writes nothing under its own name: the desk arms each step
+  // it selects with that step's contract, so it adds no writers and no outputs.
+  const drives = (action) => action.requirements.capabilities.includes('workflow.drive');
   const paperWriters = new Set();
   for (const action of available) {
+    if (drives(action)) continue;
     if (!action.produces.some((output) => output.uri.startsWith('project://paper'))) continue;
     for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
   }
   return stableJson({
     schema: 'wtfp.clio-write-guard/v4',
     actions: Object.fromEntries(available.map((action) => [action.id, {
-      produces: action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
+      produces: drives(action) ? [] : action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
     }])),
     paperWriters: [...paperWriters].sort()
   });
@@ -1947,7 +2005,7 @@ function addToolBundle(plan) {
     '',
     ...TOOL_COMMANDS.map((entry) => `- \`${entry.usage}\` → \`${entry.tool}\` (${effectsByToolId.get(entry.tool).length > 0 ? effectsByToolId.get(entry.tool).join(', ') : 'no declared effects'})`),
     '',
-    'For declared scholarly discovery, `citation-search --backend=cite-nexus --query="<topic>"` uses the separately installed `cite-nexus-wtfp` companion and its real MCP stdio server. Defaults are Crossref, DataCite and Europe PMC. Select providers explicitly with `--providers`. The `research-gap` full-auto route may use only free no-key public indexes (`crossref`, `datacite`, `europe_pmc`, `arxiv`) without another per-query gate; other routes require action approval naming providers and query scope. CiteNexus supports only balanced provider ordering, so omit `--intent` or use `--intent=balanced`. Results remain candidates: retain `citeNexus.sources`, field attribution, metrics, warnings and `metadata.errors`; do not infer verification or combine citation counts. The result limit is a displayed total; `metadata.total` counts the fetched deduplicated page, not the full corpus. Unavailable enrichment fails explicitly without falling back to another vendor. `WTFP_CITE_NEXUS_COMMAND` may name an absolute installed companion executable; it is operator configuration, never source content. No package is installed, server registered, or user profile changed by a tool call. Offline mode refuses this backend before process launch. Host capability blockers still apply.',
+    'For declared scholarly discovery, `citation-search --backend=cite-nexus --query="<topic>"` uses the separately installed `cite-nexus-wtfp` companion and its real MCP stdio server. Defaults are Crossref, DataCite and Europe PMC. Select providers explicitly with `--providers`. The `research-gap` yolo route may use only free no-key public indexes (`crossref`, `datacite`, `europe_pmc`, `arxiv`) without another per-query gate; other routes require action approval naming providers and query scope. CiteNexus supports only balanced provider ordering, so omit `--intent` or use `--intent=balanced`. Results remain candidates: retain `citeNexus.sources`, field attribution, metrics, warnings and `metadata.errors`; do not infer verification or combine citation counts. The result limit is a displayed total; `metadata.total` counts the fetched deduplicated page, not the full corpus. Unavailable enrichment fails explicitly without falling back to another vendor. `WTFP_CITE_NEXUS_COMMAND` may name an absolute installed companion executable; it is operator configuration, never source content. No package is installed, server registered, or user profile changed by a tool call. Offline mode refuses this backend before process launch. Host capability blockers still apply.',
     '',
     'Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `WTFP_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Each network command has a hard wall clock, `--timeout=<seconds>` (default 20, maximum 600); on expiry it reports `{"error": "<command> timed out after N s"}` on stderr and exits 124. `bib-impact` reports batch progress on stderr. `bib-index` flags repeated keys with `duplicate: true` and lists them under `duplicates`; `--key` refuses an ambiguous key. `bib-format` emits a standard BibTeX entry (`@article`, `@inproceedings`, ...) by default; `--style=al-folio` selects the Jekyll al-folio projection, which is not valid BibTeX. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.',
     ''
@@ -2214,7 +2272,7 @@ function compilePlans(options = {}) {
     '',
     'Copy the contents of this directory into a repository root when GitHub Copilot coding agents must discover WTF-P without a user-level plugin installation.',
     '',
-    'The `.github/` tree is generated from the canonical protocol. It contains 36 prompt files, 11 custom agents, seven Agent Skills, and the bound portable protocol resources. Do not edit the projection directly; change `protocol/` or the adapter compiler and regenerate.',
+    `The \`.github/\` tree is generated from the canonical protocol. It contains ${model.actions.length} prompt files, 11 custom agents, seven Agent Skills, and the bound portable protocol resources. Do not edit the projection directly; change \`protocol/\` or the adapter compiler and regenerate.`,
     ''
   ].join('\n'));
   plans.push(copilotMarketplace);

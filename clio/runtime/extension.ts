@@ -1274,12 +1274,19 @@ function normalizeWrites(input: Json): RecordWrite[] {
 interface Next {
 	command: string | null;
 	reason: string;
+	/** The catalog action this step runs, when one does. */
+	action?: string;
+	/** The section the action takes as its input, when it takes one. */
+	section?: string | null;
+	/** The checkpoint that must be answered first, when a gate holds the way. */
+	gate?: string;
 }
 
 /** One rung of the ladder; a step only the absent plugin can run says so instead of naming it. */
-function step(served: ServedPlugin, action: string, args: string, reason: string): Next {
+function step(served: ServedPlugin, action: string, args: string, reason: string, gate?: string): Next {
 	const command = commandFor(served, action, args);
-	return command ? { command, reason } : { command: null, reason: `${reason} Its next step, ${action}, needs the WTF-P plugin.` };
+	const named = { action, section: args || null, ...(gate ? { gate } : {}) };
+	return command ? { command, reason, ...named } : { command: null, reason: `${reason} Its next step, ${action}, needs the WTF-P plugin.`, ...named };
 }
 
 function openGates(desk: Desk): Checkpoint[] {
@@ -1300,6 +1307,7 @@ function nextAction(desk: Desk): Next {
 			"check-todos",
 			"",
 			gate.trust === "pending" ? `Gate waiting on you: ${gate.request}` : `Confirm the recorded answer to ${gate.id}: ${gate.request}`,
+			gate.id,
 		);
 	if (desk.sections.length === 0) return step(served, "create-outline", "", "No outline yet.");
 	const complete = new Set(desk.sections.filter((section) => section.status === "complete").map((section) => section.id));
@@ -1317,7 +1325,7 @@ function nextAction(desk: Desk): Next {
 /** The next step for one section, by the same ladder the band follows. */
 function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 	const id = section.id;
-	if (section.gates.length > 0) return step(served, "check-todos", "", `${section.title} waits on a gate.`);
+	if (section.gates.length > 0) return step(served, "check-todos", "", `${section.title} waits on a gate.`, section.gates[0]?.id);
 	switch (section.status) {
 		case "complete":
 			return step(served, "review-section", id, `${section.title} is complete; review it again if it changed.`);
@@ -1338,6 +1346,86 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 				return step(served, "research-gap", id, `${section.title} needs verified evidence first.`);
 			return step(served, "plan-section", id, `${section.title} is ready to plan.`);
 	}
+}
+
+// --- driver --------------------------------------------------------------------
+
+/**
+ * The actions `/wtfp:advance` may chain. Each runs under its own contract; the
+ * driver never runs an action that starts, maps or reshapes the project, since
+ * those are the author's to begin.
+ */
+const DRIVEN = new Set(["create-outline", "discuss-section", "research-gap", "plan-section", "write-section", "review-section", "audit-milestone", "submit-milestone"]);
+/** Steps one advance run may take before it hands the session back. */
+const MAX_DRIVE_STEPS = 24;
+
+/** One `/wtfp:advance` run: the steps the desk armed and the gates it put to the author. */
+interface Drive {
+	workspace: string;
+	steps: Array<{ action: string; section: string | null; fingerprint: string }>;
+	asked: string[];
+}
+
+type DriveDecision =
+	| { kind: "step"; action: string; section: string | null; prompt: string; reason: string }
+	| { kind: "gate"; checkpoint: string; reason: string }
+	| { kind: "stop"; reason: string };
+
+/** What the project looks like to the ladder; an unchanged fingerprint means a step changed nothing it reads. */
+function driveFingerprint(desk: Desk): string {
+	return sha256(
+		JSON.stringify({
+			phase: desk.phase,
+			status: desk.status,
+			sections: desk.sections.map((section) => [
+				section.id,
+				section.status,
+				section.stages,
+				section.plan.state,
+				section.plan.sha256,
+				section.unsupported,
+				section.research,
+				section.words,
+				section.recorded,
+				section.gates.map((gate) => [gate.id, gate.status, gate.trust]),
+			]),
+			checkpoints: desk.checkpoints.map((checkpoint) => [checkpoint.id, checkpoint.status, checkpoint.trust]),
+			sources: desk.sources,
+			evidence: desk.evidence,
+		}),
+	);
+}
+
+/**
+ * The driver's next move, chosen by the same ladder `progress` follows. The
+ * desk, never the model, picks the action and section; the model only runs it.
+ */
+function driveStep(desk: Desk, drive: Drive): DriveDecision {
+	if (!desk.present)
+		return { kind: "stop", reason: "There is no WTF-P project here yet. Start one with new-paper, or map-project for an existing manuscript; advance continues a project, it never starts one." };
+	const next = nextAction(desk);
+	if (next.gate) {
+		if (drive.asked.includes(next.gate)) return { kind: "stop", reason: `${next.gate} is still waiting on you. ${next.reason}` };
+		return { kind: "gate", checkpoint: next.gate, reason: next.reason };
+	}
+	if (!next.action || next.action === "check-todos") return { kind: "stop", reason: next.reason };
+	if (!DRIVEN.has(next.action))
+		return { kind: "stop", reason: `${next.reason} The next action, ${next.command ?? next.action}, starts or reshapes the project, so it is yours to run.` };
+	if (next.command === null) return { kind: "stop", reason: next.reason };
+	if (!GUARD.actions[next.action]) return { kind: "stop", reason: `${next.action} is not available on this host, so the desk cannot arm it.` };
+	if (drive.steps.length >= MAX_DRIVE_STEPS)
+		return { kind: "stop", reason: `This run took ${MAX_DRIVE_STEPS} steps, its limit. Run advance again to continue from ${next.command}.` };
+	const section = next.section ?? null;
+	const fingerprint = driveFingerprint(desk);
+	const last = drive.steps[drive.steps.length - 1];
+	if (last && last.action === next.action && last.section === section && last.fingerprint === fingerprint)
+		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };
+	return { kind: "step", action: next.action, section, prompt: `${next.action}.md`, reason: next.reason };
+}
+
+/** The arming of an advance run between steps: nothing may be written until the desk arms a step. */
+function idleArm(workspace: string): Armed {
+	return { action: "advance", produces: [], section: null, workspace };
 }
 
 function meter(words: number, target: number, cells = 8): string {
@@ -2763,6 +2851,31 @@ const BASH_DESK_PATHS = /\.planning\/(?:interactions\b|\.wtfp-)/u;
 /** Tools that run a command or script; the desk can only refuse ones that name its own records. */
 const COMMAND_TOOLS = new Set(["bash", "run_script", "job"]);
 
+/**
+ * Inside a WTF-P action every question is the author's. Clio answers an
+ * unanswered `ask_user` round with its recommended option after
+ * `safety.unattendedAfterSeconds`, unless the question is `operator_only`, so
+ * the desk marks a lone question that way and refuses a round that would need
+ * splitting, since an `operator_only` question is asked alone.
+ */
+async function guardQuestions(ctx: ExtensionContextV2, input: Json): Promise<ExtensionHookResult> {
+	if (input.action === "complete") return {};
+	const questions = Array.isArray(input.questions) ? (input.questions as unknown[]) : [];
+	if (questions.length === 0 || questions.every((question) => (question as Json | null)?.operator_only === true)) return {};
+	if (!(await armedFor(ctx))) return {};
+	if (questions.length > 1)
+		return block("WTF-P: inside a WTF-P action each question is the author's to answer. Ask them one call at a time, each with operator_only: true, so Clio never answers one for an absent author.");
+	return {
+		effects: [
+			{
+				kind: "rewrite_tool_input",
+				args: { ...input, questions: [{ ...(questions[0] as Json), operator_only: true }] },
+				reason: "WTF-P asks the author, and only the author may answer: Clio never takes a recommended option for this question.",
+			},
+		],
+	};
+}
+
 async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event: unknown = {}): Promise<ExtensionHookResult> {
 	const input = args !== null && typeof args === "object" ? (args as Json) : {};
 	const effects: ExtensionEffect[] = [];
@@ -2777,6 +2890,7 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 		// A host that sends facts once sends them for every call it can resolve, so a later call without them failed in Clio.
 		if ((host.target || host.dispatch) && !(await ctx.state.get<boolean>("host-facts")).value) await ctx.state.set("host-facts", true);
 		if (tool === "dispatch") result = await guardDispatch(ctx, input, host.dispatch, host.malformed);
+		else if (tool === "ask_user") result = await guardQuestions(ctx, input);
 		else if (COMMAND_TOOLS.has(tool)) {
 			if (BASH_DESK_PATHS.test(JSON.stringify(input))) result = block("WTF-P write guard: commands may not touch the desk's own records under .planning.");
 		} else {
@@ -2794,6 +2908,8 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 function arm(text: string, desk: Desk, workspace: string): Armed | null {
 	const match = /^\s*\/wtfp:([a-z][a-z0-9-]*)(?:\s+(\S+))?/u.exec(text);
 	if (!match) return null;
+	// The driver arms nothing itself; next_step arms each step it selects.
+	if (match[1] === "advance") return GUARD.actions.advance ? idleArm(workspace) : null;
 	const action = GUARD.actions[match[1] as string];
 	if (!action) return null;
 	const candidate = match[2] ?? "";
@@ -2829,6 +2945,12 @@ export default function extension(api: ExtensionApiV2): void {
 		return next.command ? { text: next.command, prompt: { fill: next.command } } : { text: next.reason, toast: { text: next.reason } };
 	});
 	api.action("gates", async (_event, ctx) => startGates(ctx));
+	api.action("advance", async (_event, ctx) => {
+		const command = commandFor(ctx.snapshot.plugin ?? null, "advance");
+		return command
+			? { text: command, prompt: { fill: command } }
+			: { text: "advance needs the WTF-P plugin.", toast: { text: "advance needs the WTF-P plugin." } };
+	});
 	api.action("validate", async (_event, ctx) => validateAll(ctx));
 	api.action("help", async (_event, ctx) => helpCard(ctx.snapshot.plugin ?? null));
 	api.action("section", async (event, ctx) => {
@@ -2882,6 +3004,45 @@ export default function extension(api: ExtensionApiV2): void {
 		} catch (error) {
 			return { text: failure("Not measured", error), isError: true };
 		}
+	});
+	api.tool("next_step", async (_input, ctx) => {
+		const workspace = ctx.snapshot.workspace;
+		const drive = (await ctx.state.get<Drive>("drive")).value;
+		if (!drive || drive.workspace !== workspace)
+			return { text: "Only a /wtfp:advance turn can ask the desk for its next step; nothing was armed.", isError: true };
+		let desk = await deskFor(ctx);
+		let recovered: string | null = null;
+		if (desk.journal) {
+			try {
+				recovered = withLock(workspace, () => recover(workspace));
+			} catch (error) {
+				await ctx.state.set("armed", idleArm(workspace));
+				return { text: failure("An interrupted record write could not be completed, so the run stops", error), data: { kind: "stop" }, isError: true };
+			}
+			desk = await deskFor(ctx);
+		}
+		const decision = driveStep(desk, drive);
+		const lead = recovered ? `${recovered} ` : "";
+		if (decision.kind !== "step") {
+			// Between steps and after the last one, nothing stays armed for writing.
+			await ctx.state.set("armed", idleArm(workspace));
+			if (decision.kind === "gate") {
+				await ctx.state.set("drive", { ...drive, asked: [...drive.asked, decision.checkpoint] } satisfies Drive);
+				return { text: `${lead}Gate ${decision.checkpoint}: ${decision.reason} Call extension_wtfp__gate with checkpoint ${decision.checkpoint}.`, data: decision };
+			}
+			return { text: `${lead}Stop: ${decision.reason}`, data: decision };
+		}
+		const contract = GUARD.actions[decision.action] as GuardAction;
+		await ctx.state.set("armed", { action: decision.action, produces: contract.produces, section: decision.section, workspace } satisfies Armed);
+		await ctx.state.set("drive", {
+			...drive,
+			steps: [...drive.steps, { action: decision.action, section: decision.section, fingerprint: driveFingerprint(desk) }],
+		} satisfies Drive);
+		const invocation = `/wtfp:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
+		return {
+			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Follow prompts/wtfp/${decision.prompt} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}, then call extension_wtfp__next_step again.`,
+			data: decision,
+		};
 	});
 	api.tool("gate", async (input, ctx) => {
 		const id = String((input as Json).checkpoint ?? "");
@@ -3010,11 +3171,25 @@ export default function extension(api: ExtensionApiV2): void {
 		const typed = event.point === "prompt_submit" ? (event.text ?? "") : "";
 		const desk = loadDesk(ctx.snapshot.workspace);
 		const armed = arm(typed, desk, ctx.snapshot.workspace);
+		// Only a prompt that starts an advance run starts a drive; any other prompt ends one.
+		await ctx.state.delete("drive");
 		if (!armed) {
 			await ctx.state.delete("armed");
 			return {};
 		}
 		await ctx.state.set("armed", armed);
+		if (armed.action === "advance") {
+			await ctx.state.set("drive", { workspace: ctx.snapshot.workspace, steps: [], asked: [] } satisfies Drive);
+			return {
+				effects: [
+					{
+						kind: "notify_operator",
+						key: "wtfp-guard",
+						message: "WTF-P driver armed: the desk picks each step from the project and confines it to that action's contract; it stops at the first gate only you can answer.",
+					},
+				],
+			};
+		}
 		const roots = writeRoots(desk, armed);
 		return {
 			effects: [
@@ -3041,6 +3216,7 @@ export default function extension(api: ExtensionApiV2): void {
 	api.on("turn_end", async (_event, ctx) => {
 		// An action arms for the turn its command starts; nothing it allowed outlives that turn.
 		await ctx.state.delete("armed");
+		await ctx.state.delete("drive");
 		return undefined;
 	});
 	api.on("workspace_enter", async (_event, ctx) => ({ text: "", ...(await picture(ctx)) }));

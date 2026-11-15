@@ -10,6 +10,7 @@ Start here
   /wtfp:new-paper [input]
   /wtfp:map-project [input]
   /wtfp:create-outline [input]
+  /wtfp:advance [input]   or let the desk run the steps below until a decision is yours
   /wtfp:discuss-section <section>
   /wtfp:plan-section <section>
   /wtfp:write-section <section>
@@ -71,6 +72,8 @@ Review the manuscript (skill wtfp-review-manuscript)
 Manage the project (skill wtfp-manage-project)
   /wtfp:add-todo [input]
       Capture a bounded note or task without disrupting the active research flow.
+  /wtfp:advance [input]
+      Run the next writing actions automatically and stop when only the author can decide.
   /wtfp:check-todos [input]
       Review pending tasks and explicitly act on, defer, complete, or dismiss each one.
   /wtfp:checkpoint [input]
