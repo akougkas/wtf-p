@@ -1142,6 +1142,11 @@ test("WTF-P workers are dispatched only inside their action and only to manuscri
 		assert.deepEqual(rootsOf(rewriteOf(narrowed)), [".planning/sections/introduction/summary.md", "paper/introduction.md", "paper/introduction/"]);
 		// Roots that already are the confinement, in any order, need no rewrite.
 		assert.equal(rewriteOf(await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { write_roots: ["paper/introduction/", "paper/introduction.md", ".planning/sections/introduction/summary.md"] } })), null);
+		// Live, a local model named project:// URIs and a .planning/paper path; the refusal names the workspace roots it would accept.
+		assert.match(
+			blocked(await dispatch({ agent: "wtfp-section-writer", task: "Draft.", intent: { write_roots: ["project://paper/introduction", ".planning/paper/introduction.md"] } })) ?? "",
+			/names write_roots .*\.planning\/paper\/introduction\.md.*project:.*which reach no manuscript .* give it intent\.write_roots .*paper\/introduction\.md.* \(workspace paths, not project:\/\/ URIs\)/,
+		);
 		assert.match(
 			blocked(await dispatch({ tasks: [{ agent: "wtfp-section-writer", task: "a" }, { agent: "wtfp-section-writer", task: "b" }] })) ?? "",
 			/Clio: parallel writers need disjoint intent\.write_roots/,

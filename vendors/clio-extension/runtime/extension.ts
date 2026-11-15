@@ -2951,7 +2951,9 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		const roots = entry.roots === null ? allowed : narrow(entry.roots, allowed);
 		if (paperWriters.has(entry.agent) && !roots.some((root) => root.startsWith("paper/")))
 			throw new Error(
-				`WTF-P dispatch guard: ${entry.agent} would have no manuscript it may write. ${notes.length > 0 ? notes.join(" · ") : "Name the section and approve its plan first."}`,
+				entry.roots !== null && allowed.some((root) => root.startsWith("paper/"))
+					? `WTF-P dispatch guard: ${entry.agent} names write_roots ${entry.roots.join(", ")}, which reach no manuscript ${name} may write; give it intent.write_roots ${allowed.join(", ")} (workspace paths, not project:// URIs).`
+					: `WTF-P dispatch guard: ${entry.agent} would have no manuscript it may write. ${notes.length > 0 ? notes.join(" · ") : "Name the section and approve its plan first."}`,
 			);
 		if (roots.length > 0) return roots;
 		// Clio reads an empty write_roots as no boundary at all, so an empty list is refused, never sent.
