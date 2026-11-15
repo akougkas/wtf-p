@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "1a7fdd42fb9c5ed2f29b0e5ef4c576a0491aacb41e46700078bf64e37fabdae2",
+  "sourceHash": "ff7c17446a9526798c45649dba33eb3ad6ffd42cac21f274ea4bd2bddb0fe5b3",
   "files": [
     {
       "path": "marketplace.json",
@@ -878,7 +878,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/write-section.md",
-      "sha256": "3d4be608e02aa2d9d531e9e1e8d6486f402ef874e55a5f03266088f4ca62de54"
+      "sha256": "9d15e5e1270aff6f4254e39ca0beff142ef770a840507092ecc3ab8a3d172511"
     },
     {
       "path": "project/README.md",
