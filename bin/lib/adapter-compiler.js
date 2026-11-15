@@ -732,7 +732,7 @@ const CLIO_DESK_ARGS = Object.freeze({
   readiness: '{section}',
   measure_section: '{section}',
   gate: '{checkpoint}',
-  record: '{uri, record, expect_revision|expect_sha256} or {writes:[...]}'
+  record: '{uri, record: {<every field of the record>}, expect_revision|expect_sha256} or {writes:[{uri, record, expect_...}]}, with no record field outside `record`'
 });
 
 function clioDeskCalls(tools) {

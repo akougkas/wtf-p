@@ -877,6 +877,8 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
   const portableReview = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/review-section.md');
   assert.ok(portableReview.includes('`read_record` serves JSON records only; read authored artifacts directly'), 'desk prompts map artifact URIs to files');
   assert.ok(portableReview.includes('Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`'), 'dispatch bindings declare scope explicitly');
+  // Live, the model twice put record fields beside `record`, which Clio's gateway rejects before the desk sees them.
+  assert.ok(portableReview.includes('with no record field outside `record`'), 'the record shape keeps fields inside record');
   // A local model read "alone in its call" as leave to batch questions into one
   // round, which Clio refuses for operator_only questions; the rule is literal.
   for (const sourcePath of [...plan.files.keys()].filter((file) => file.startsWith('prompts/wtfp/'))) {
