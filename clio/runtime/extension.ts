@@ -2337,7 +2337,7 @@ function readTool(ctx: ExtensionContextV2, desk: Desk, uri: string): { text: str
 	};
 }
 
-function measureSection(workspace: string, sectionId: string, key: Buffer | null, armed: Armed | null): { words: number; target: number; file: string | null; total: number } {
+function measureSection(workspace: string, sectionId: string, key: Buffer | null, armed: Armed | null): { words: number; target: number; file: string | null; total: number; recorded: boolean } {
 	return withLock(workspace, () => {
 		recover(workspace);
 		const desk = loadDesk(workspace, key);
@@ -2357,9 +2357,12 @@ function measureSection(workspace: string, sectionId: string, key: Buffer | null
 				expect_revision: typeof state.revision === "number" ? state.revision : 0,
 				record: { ...state, progress: { ...(state.progress as Json), word_count: recorded } },
 			});
+		// An action that may not update these records still gets the desk's count, so it never counts by hand.
+		if (armed && !writes.every((write) => declares(armed, write.uri, "update")))
+			return { words: section.words, target: section.target, file: section.manuscript, total: recorded, recorded: false };
 		const prepared = writes.map((write) => prepare(workspace, write, "agent", armed));
 		commit(workspace, prepared.map((entry) => entry.write));
-		return { words: section.words, target: section.target, file: section.manuscript, total: recorded };
+		return { words: section.words, target: section.target, file: section.manuscript, total: recorded, recorded: true };
 	});
 }
 
@@ -3298,7 +3301,7 @@ export default function extension(api: ExtensionApiV2): void {
 			if (noted.includes(sectionId)) await ctx.state.set("measure-noted", noted.filter((id) => id !== sectionId));
 			const share = measured.target > 0 ? Math.round((measured.words / measured.target) * 100) : null;
 			return {
-				text: `${measured.file ?? "the manuscript"} has ${measured.words} body words${share === null ? "" : ` (${share}% of ${measured.target}; within 15% counts as on target)`}. Recorded in the section and state records, which committed together; the paper totals ${measured.total}. ${WORD_METHOD}`,
+				text: `${measured.file ?? "the manuscript"} has ${measured.words} body words${share === null ? "" : ` (${share}% of ${measured.target}; within 15% counts as on target)`}. ${measured.recorded ? `Recorded in the section and state records, which committed together; the paper totals ${measured.total}.` : `Not recorded: ${actionName(ctx.snapshot.plugin ?? null, (await armedFor(ctx))?.action ?? "this action")} does not update the section's word count; use this count instead of counting by hand.`} ${WORD_METHOD}`,
 				data: measured,
 			};
 		} catch (error) {

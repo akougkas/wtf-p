@@ -1765,11 +1765,24 @@ test("measure_section counts body words by the desk's one method and commits the
 	withDesk(async (host, workspace) => {
 		const measured = await host.tool("measure_section", { section: "introduction" });
 		assert.equal(measured.isError, undefined, measured.text);
-		assert.deepEqual(measured.data, { words: 11, target: 100, file: "paper/introduction.md", total: 11 });
+		assert.deepEqual(measured.data, { words: 11, target: 100, file: "paper/introduction.md", total: 11, recorded: true });
 		assert.equal(read(workspace, ".planning/sections/introduction/section.json").word_count, 11);
 		assert.equal((read(workspace, ".planning/state.json").progress as Json).word_count, 11);
 		assert.equal(read(workspace, ".planning/state.json").revision, 4);
 	}));
+
+test("an action that may not record a count still gets the desk's count instead of counting by hand", () =>
+	withDesk(async (host, workspace) => {
+		// Live, review-section was refused measure_section and the model counted words with a script.
+		await host.hook({ point: "prompt_submit", text: "/wtfp:review-section introduction" });
+		const before = read(workspace, ".planning/state.json").revision;
+		const measured = await host.tool("measure_section", { section: "introduction" });
+		assert.equal(measured.isError, undefined, measured.text);
+		assert.equal((measured.data as Json).words, 11);
+		assert.equal((measured.data as Json).recorded, false);
+		assert.match(measured.text, /Not recorded: .*review-section does not update the section's word count; use this count instead of counting by hand/);
+		assert.equal(read(workspace, ".planning/state.json").revision, before, "nothing was written");
+	}, DRIVEN_PLUGIN));
 
 test("a failure between paired writes leaves a journal the next write completes; one before the commit point leaves nothing (R2)", () =>
 	withDesk(async (host, workspace) => {
