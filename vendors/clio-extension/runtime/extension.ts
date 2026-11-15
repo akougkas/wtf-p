@@ -245,6 +245,8 @@ interface Desk {
 	coverage: CoverageReport;
 	/** The latest milestone audit: fresh when nothing the desk tracks was recorded after it; errors counts its error and blocker issues. */
 	audit: { fresh: boolean; errors: number } | null;
+	/** A passed submit-milestone validation that no later draft or record outdates. */
+	delivered: boolean;
 	/** The WTF-P plugin while Clio serves it; null when it is not installed and enabled. */
 	served: ServedPlugin;
 }
@@ -827,6 +829,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 		argument: text(manifest?.core_argument),
 		phase: text(state?.phase, manifest ? "initialized" : "none"),
 		audit: auditOf(validations, sections),
+		delivered: deliveredOf(validations, sections),
 		status: text(state?.status, "active"),
 		confirmPlan,
 		outputFormat,
@@ -1506,7 +1509,7 @@ function nextAction(desk: Desk): Next {
 		if (!section.dependsOn.every((dep) => complete.has(dep)) && section.status === "not-started") continue;
 		return sectionNext(served, section);
 	}
-	if (desk.phase === "delivered") return { command: null, reason: "Delivered." };
+	if (desk.phase === "delivered" || desk.delivered) return { command: null, reason: "Delivered: every section is complete, audited and archived; a later change reopens review." };
 	// audit-milestone writes only its validation, so the audit itself, not a phase it cannot set, says the draft is ready.
 	if (desk.phase === "ready" || (desk.audit?.fresh && desk.audit.errors === 0)) return step(served, "submit-milestone", "", "Every section is complete and audited.");
 	if (desk.audit?.fresh)
@@ -1527,6 +1530,15 @@ function auditOf(validations: Json[], sections: SectionRow[]): Desk["audit"] {
 	const later = validations.some((record) => record.action_id !== "audit-milestone" && at(record) > at(latest)) || sections.some((section) => (section.writtenAt ?? 0) > at(latest));
 	const errors = (Array.isArray(latest.issues) ? (latest.issues as Json[]) : []).filter((issue) => issue.severity === "error" || issue.severity === "blocker").length;
 	return { fresh: !later && latest.status !== "failed", errors: latest.status === "failed" ? Math.max(errors, 1) : errors };
+}
+
+/** Whether the latest passed milestone submission still stands: nothing but audits and submissions came after it. */
+function deliveredOf(validations: Json[], sections: SectionRow[]): boolean {
+	const at = (record: Json): number => recordedAt.get(record) ?? 0;
+	const submitted = validations.filter((record) => record.action_id === "submit-milestone" && record.status === "passed").sort((a, b) => at(b) - at(a))[0];
+	if (!submitted) return false;
+	const delivery = new Set(["audit-milestone", "submit-milestone"]);
+	return !validations.some((record) => !delivery.has(text(record.action_id)) && at(record) > at(submitted)) && !sections.some((section) => (section.writtenAt ?? 0) > at(submitted));
 }
 
 /** A drafted section's next step: review the current draft, then the author's acceptance or a revision. */

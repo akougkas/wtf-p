@@ -849,6 +849,11 @@ test("a complete draft goes to submit-milestone on a fresh audit with no errors,
 		put(workspace, ".planning/validations/milestone-audit-01.json", { ...audit, issues: [{ severity: "error", summary: "A citation does not resolve." }] });
 		assert.equal(await nextOf(), "plan-milestone-gaps");
 		put(workspace, ".planning/validations/milestone-audit-01.json", audit);
+		// A passed submission delivers the draft; an audit after it keeps it delivered.
+		put(workspace, ".planning/validations/milestone-01.json", { ...audit, id: "milestone-01", action_id: "submit-milestone", status: "passed", issues: [] });
+		put(workspace, ".planning/validations/milestone-audit-02.json", { ...audit, id: "milestone-audit-02" });
+		assert.equal(await nextOf(), null, "delivered");
+		assert.match(String(((((await host.tool("status", {})).data as Json).next as Json).reason)), /^Delivered/);
 		const later = Date.now() / 1000 + 60;
 		utimesSync(path.join(workspace, "paper/introduction.md"), later, later);
 		assert.equal(await nextOf(), "audit-milestone", "an audit of an earlier draft does not stand for this one");
