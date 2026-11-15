@@ -4,7 +4,7 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "wtfp_commit": "db51fed38103bc88f888fcd0b50fdc7573f229d7",
+  "wtfp_commit": "1c22e7a8606a0c63a8140b740ae4143ef5b38a4c",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
