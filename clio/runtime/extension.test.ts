@@ -1257,8 +1257,12 @@ test("a reviewed section whose approved revision plan no draft has applied goes 
 		// A manuscript saved after the approval without write-section's validation is not drafted yet: live, a writer
 		// saved the revision, could not count it, and the desk sent the section to review with a stale count and summary.
 		saved(host, workspace, 30_000);
+		put(workspace, sectionFile, { ...read(workspace, sectionFile), word_count: 286 });
 		const unfinished = await nextStep(host);
 		assert.deepEqual([unfinished.data.action, unfinished.data.section], ["write-section", "introduction"], unfinished.text);
+		assert.match(unfinished.text, /draft for its approved plan is saved, but write-section has not finished it/);
+		// The same step armed again after progress says so, instead of reading like the first arming.
+		assert.match(unfinished.text, /Continue \/wtfp:write-section introduction: it made progress but has not finished, so the desk arms it again on purpose; this is not a loop/);
 		// Once the draft is written after the approval, it is reviewed again: the earlier review read the earlier draft.
 		drafted(host, workspace, 60_000);
 		const review = await nextStep(host);

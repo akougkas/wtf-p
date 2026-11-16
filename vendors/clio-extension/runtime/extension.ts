@@ -540,6 +540,13 @@ function unappliedPlan(section: SectionRow): boolean {
 	return section.writeValidatedAt === null || section.writeValidatedAt < Math.floor(approved / 1000) * 1000;
 }
 
+/** Why write-section is next for a section whose approved plan is not applied: no draft yet, or a saved draft write-section has not finished. */
+function unappliedReason(section: SectionRow): string {
+	const approved = Date.parse(section.plan.approvedAt ?? "");
+	if (section.writtenAt === null || !(section.writtenAt >= approved)) return `${section.title} has an approved revision plan that no draft has applied yet.`;
+	return `${section.title}'s draft for its approved plan is saved, but write-section has not finished it: measure it, write the summary with that count, record its validation and set the section status, without redrafting it.`;
+}
+
 /** When write-section last recorded a validation for this section, from its executed_at, or null. */
 function writeValidatedAt(validations: Json[], id: string, manuscriptUri: string): number | null {
 	const times = validations
@@ -1561,7 +1568,7 @@ function deliveredOf(validations: Json[], sections: SectionRow[]): boolean {
 function reviewNext(served: ServedPlugin, section: SectionRow): Next {
 	const id = section.id;
 	const acceptance = section.acceptance;
-	if (unappliedPlan(section)) return step(served, "write-section", id, `${section.title} has an approved revision plan that no draft has applied yet.`);
+	if (unappliedPlan(section)) return step(served, "write-section", id, unappliedReason(section));
 	if (!acceptance.reviewed) return step(served, "review-section", id, `${section.title} is drafted and waits for review.`);
 	if (!acceptance.verified)
 		return step(served, "verify-work", id, `${section.title} is reviewed; the author checks it against its plan and accepts it or sends it back.`);
@@ -1594,7 +1601,7 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 				return step(served, "plan-section", id, `${section.title} cannot be drafted: ${section.plan.reason}.`);
 			// A draft written and validated after its plan's approval is past drafting even when the record still says writing.
 			if (section.plan.state === "approved" && section.plan.approvedAt && !unappliedPlan(section)) return reviewNext(served, section);
-			return step(served, "write-section", id, `${section.title} has an approved plan.`);
+			return step(served, "write-section", id, section.plan.state === "approved" && section.writtenAt !== null && section.plan.approvedAt && section.writtenAt >= Date.parse(section.plan.approvedAt) ? unappliedReason(section) : `${section.title} has an approved plan.`);
 		default:
 			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
 			if (section.research.required && !section.research.present)
@@ -1691,6 +1698,15 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 			};
 		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };
 	}
+	// Live, write-section measured its draft and the desk armed it again with the same words, which the model took for a loop.
+	if (last && last.action === next.action && last.section === section)
+		return {
+			kind: "step",
+			action: next.action,
+			section,
+			prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`,
+			reason: `Continue ${next.command}: it made progress but has not finished, so the desk arms it again on purpose; this is not a loop. ${next.reason}`,
+		};
 	return { kind: "step", action: next.action, section, prompt: `ai.iowarp.clio/prompts/wtfp/${next.action}.md`, reason: next.reason };
 }
 
