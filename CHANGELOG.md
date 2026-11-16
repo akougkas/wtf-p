@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.3] - 2026-11-16
+
+Takes WTF-P on Clio from a fresh drive to brownfield revision: re-reviewing
+delivered sections, sending one back with an author note, approving the
+revision plan, rewriting, accepting, and re-delivering the milestone. Each fix
+below came from a stall in that run on Clio Coder 0.8.3 (a pre-release build
+of `f7c151449`, then the official release), with `gpt-6-luna` as the
+orchestrator and writer and `gpt-6.1-terra` as the reviewers. The desk
+extension tests pass 61/61 on the official Clio 0.8.3. The other six hosts
+were not requalified; their projections change only in `review-section`'s
+shared workflow text.
+
+### Fixed
+
+- `review-section` judges the current draft against the section's goal,
+  claims, decisions and the plans that shaped its content; a revision plan's
+  preservation or no-change criteria govern that revision alone. Live, a
+  re-review of a delivered section failed only on an earlier title-only
+  plan's "body unchanged" rule
+- A reviewer's fail verdict is the review's result: `review-section` records
+  the review and an `issues-found` validation. On Clio the binding says
+  Clio's "validation failed" label on such a run is the finding, not a
+  failed run; the action had recorded nothing
+- On Clio a section writer leaves the word count to the action that
+  measures with the desk, and a count it cannot take never blocks it.
+  Live, the Introduction writer saved its revision and returned blocked
+  because a Clio worker holds no counter
+- The desk counts an approved plan as applied only when its draft is
+  written and `write-section` has validated it since the approval; a saved
+  but unvalidated draft goes back to `write-section`, whose step names what
+  it still owes. Live, the half-finished revision went straight to review
+- A step the desk arms again after progress says it continues on purpose
+  instead of repeating the first arming's words, which the model took for
+  a loop
+- An action that creates its own checkpoint asks its gate question only
+  through the desk gate, never first with `ask_user`, so the author answers
+  once
+- Every driven step says it is a procedure, not a capability. Live, the
+  model looked for a tool named `audit-milestone`, found none, and stopped
+  the drive
+
 ## [0.8.2] - 2026-11-16
 
 Makes WTF-P on Clio automatic between author gates without making it
@@ -955,6 +996,7 @@ Initial public release.
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
 [Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.8.3]: https://github.com/akougkas/wtf-p/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/akougkas/wtf-p/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/akougkas/wtf-p/compare/v0.7.4...v0.8.0
