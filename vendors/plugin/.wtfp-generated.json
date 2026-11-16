@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "d7a9f981c17d1bac2253f376174fa26e34f690d8431a30816c3bbabf07c9c2d3",
+  "sourceHash": "6ecc235a879fc42cfd6771e3c73b99c3bd8f917f92e94e2ecd16c2dcdad69313",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -262,7 +262,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
-      "sha256": "0323f513f200505e17e56352cd994659c2fb3b94c96d0e7f235d94233c4a5b98"
+      "sha256": "f4d62aac0149e073db13f748b3cf9dc465c8e6311e7ce03cc7bf6dc55c3bd559"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
@@ -370,7 +370,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "5f42d94e3bf5325f86e209115ade7875011c9db7b17020a5069972c0ee241d46"
+      "sha256": "50c17365c3046daa167b197cbbe42a2882bef2c66d25fa96509b29ff3c7e8f4c"
     },
     {
       "path": "project/README.md",

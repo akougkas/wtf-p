@@ -5,11 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.2] - 2026-11-16
 
 Makes WTF-P on Clio automatic between author gates without making it
 autonomous across them, and brings the Clio documentation and prompts in line
 with Clio 0.8's two autonomy levels.
+
+`/wtfp:advance` drove a seven-section technical report from outline to an
+archived, delivered milestone on the released Clio Coder 0.8.2, with OpenAI
+Codex models (`gpt-6-luna` as the orchestrator and writers, `gpt-6.1-terra`
+as the plan checker, reviewers and polisher). Each fix below marked live came
+from a stall in that run. The desk extension tests pass 61/61 on Clio 0.8.2.
+Both Clio packages still require Clio 0.6.3; resuming a drive after a
+continued turn needs the turn origin Clio 0.8.2 reports, and an older Clio
+ends the drive there as before. The other six hosts were not requalified for
+this release: their projections change only where shared protocol text and
+action contracts changed (`research-gap`, `plan-section`, `write-section`,
+`plan-revision`) and in the smaller record-schema bindings.
 
 ### Added
 
@@ -39,6 +51,18 @@ with Clio 0.8's two autonomy levels.
   manuscript of a section the armed action may update is noted, once per
   section until measured, with the exact `measure_section` call. It spends none
   of the turn's shared continuation budget
+- Desk tool `archive`, held only by an armed action that declares the
+  archive (`submit-milestone`): it copies every `.planning` record and
+  artifact and every `paper/` file into `.planning/archives/<archive>/` with a
+  sha256 `manifest.json`, never follows links, and refuses an archive that
+  exists. Live, the model could not copy a whole project with its record and
+  file tools within a turn
+- `read_record` takes a family URI such as `project://sources` and returns its
+  records in one call, up to 48 KB, with `?after=<id>` for the next page
+- A gate answer may carry the author's note on the chosen option; the desk
+  records it in the checkpoint's resolution summary, where the next step
+  reads it, and asks again with how to attach it when the author types text
+  instead of choosing
 
 ### Changed
 
@@ -94,6 +118,41 @@ with Clio 0.8's two autonomy levels.
   widens an action's outputs, and to read a large source by section;
   `write-section` sets a satisfied draft to `reviewing` and
   `discuss-section` leaves the status alone
+- `research-gap` records each claim its section must support with that
+  claim's evidence, and the desk routes a literature-heavy section whose
+  record names no live claim to `research-gap` before planning and holds its
+  manuscript
+- `plan-section` returns a failing plan check's findings to the planner and
+  checks the revision afresh, at most twice; a finding that contradicts an
+  author decision goes to the author, each check is recorded as a
+  validation, and a plan still failing ends on a checkpoint naming its open
+  findings. Live, a failed check ended the action with nothing recorded
+- `write-section` opens a manuscript with the outline title as its only
+  level-one heading; numbering stays with document assembly
+- `plan-revision` reads and updates `project://state`, so its blocking plan
+  checkpoint can be listed as active, as `plan-section` already did
+- Every non-Clio host binds the schema and template only of the records an
+  action creates or updates. Read-only `progress` drops from 25 includes to 4
+  on Claude Code and Copilot CLI, and from about 73 KB to 32 KB inlined on
+  OpenCode and Gemini CLI
+- Clio recipes bind no action skill, and each recipe's role-result form names
+  its role id. Live, a section planner preloaded the `plan-section` skill and
+  tried to run the whole action, and another returned role "Clio Coder"
+- The advance ladder reads the latest milestone audit: a fresh one with no
+  error or blocker issue leads to `submit-milestone`, one with errors to
+  `plan-milestone-gaps`, and any later write back to the audit. A passed
+  submission that only audits followed ends the ladder as delivered. Live,
+  the ladder waited for a phase no driven action writes
+- `next_step` takes `after`, the step just finished, which the desk ignores;
+  Clio 0.8.2's loop guard blocked a third identical call although each
+  result differs
+- On Clio 0.8.2 a continued advance turn resumes its drive: at turn end the
+  desk holds the armed step and drive, a prompt whose origin is
+  `continuation` restores them, and any other prompt drops them. Live, a
+  yolo continuation after the per-turn tool budget ended the drive
+- Inside an action, the desk refuses a writing dispatch to any agent other
+  than the action's own roles and names the role to use; a dispatch without
+  an agent fell to Clio's default worker
 
 ### Fixed
 
@@ -111,6 +170,22 @@ with Clio 0.8's two autonomy levels.
 - `measure_section` gives an action that may not record a count the desk's
   count without writing, so no action counts words by hand
 - A `next_step` result carries its prompt's path relative to the plugin root
+- A dispatch intent that declares no `write_roots`, missing or empty, gets
+  the exact roots in the desk's refusal. Clio reads such an intent as an
+  empty write ceiling, so the desk's own rewrite was refused too
+- The desk stamps the creation time of every record an agent creates,
+  replacing the agent's value. Live, an invented `executed_at` four minutes
+  ahead made a validation read as older than the review it followed
+- The author's approval of a plan appends it to the section's
+  `artifacts.plans`, marks a not-started section planned, and the answer says
+  what the desk wrote. Live, the driver armed `plan-revision` again
+- A driven step that changed nothing the ladder reads is handed back once,
+  naming the records the action creates, before the desk stops, and the
+  hand-back says to continue. Live, `review-section` recorded neither its
+  review nor its validation
+- A stale read, a missing record version, and a schema failure on a record
+  write are fixed and resent after a fresh read, in both the binding and the
+  desk's reply; the model had ended steps on each as if refused by policy
 
 ## [0.8.1] - 2026-11-08
 
@@ -880,6 +955,7 @@ Initial public release.
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
 [Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.8.2]: https://github.com/akougkas/wtf-p/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/akougkas/wtf-p/compare/v0.7.4...v0.8.0
 [0.7.4]: https://github.com/akougkas/wtf-p/compare/v0.7.3...v0.7.4

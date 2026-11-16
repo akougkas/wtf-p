@@ -2,15 +2,15 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "ebc3c04a94b347428fa1bc218c7838b3da7d9807b3d14f1cc026270951670244",
+  "sourceHash": "e740e85578efd95b7f513ea03bbed267f7162b9b87be5bd7d8619ffa59b2772c",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
-      "sha256": "6824e671399fc671c35d7c967eb46c66011d0f995456e1d0538eeb064caef2ca"
+      "sha256": "063da18d0ced5cf4db507391744622918eed9db9a68a71a48ea4710fd5092748"
     },
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "e906df8fb75efc31e41107654b3ba950d9ef4217dab49d30be9673aaec764a3d"
+      "sha256": "d3a5ab8f021de345bc8b3a5c85630bce486473e913eab2d3c31db59caa7050fd"
     },
     {
       "path": "actions/add-todo.json",
@@ -314,7 +314,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/help.md",
-      "sha256": "eba9870c8decfdc9c09643851ce1c545acc8bced0c8484e0e38ba2ba1881923d"
+      "sha256": "3a95981adc65700fa2c73693eca40e3c1e725f47969e52a3612188c9a29aeb92"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/insert-section.md",
@@ -586,7 +586,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "0d36af03f7c089c86914b59e00bd01094727dd8cb83016e8dbdda805c9699627"
+      "sha256": "c4c1b76d59d4a7f8fa42dc68f3350cf0697774f07ee5500af700e3bf089b5b5b"
     },
     {
       "path": "project/README.md",
