@@ -1012,9 +1012,28 @@ const DRIVEN_PLUGIN = {
 	prompts: [...SERVED.prompts, "wtfp:advance", "wtfp:review-section", "wtfp:discuss-section", "wtfp:create-outline", "wtfp:verify-work", "wtfp:plan-revision"],
 };
 /** Stamps the manuscript as written `offsetMs` from the desk's clock, after or before the plan's approval. */
-const drafted = (host: Host, workspace: string, offsetMs: number): void => {
+/** The writer saves the manuscript at this offset without finishing write-section. */
+const saved = (host: Host, workspace: string, offsetMs: number): void => {
 	const at = new Date(host.now + offsetMs);
 	utimesSync(path.join(workspace, "paper/introduction.md"), at, at);
+};
+/** write-section drafts the manuscript at this offset and records its validation. */
+const drafted = (host: Host, workspace: string, offsetMs: number): void => {
+	saved(host, workspace, offsetMs);
+	put(workspace, ".planning/validations/introduction-written.json", {
+		schema: "wtfp.project.validation/v1",
+		id: "introduction-written",
+		project_id: PROJECT,
+		subject_uri: "project://paper/introduction",
+		validator_role: "section-writer",
+		action_id: "write-section",
+		status: "passed",
+		checks: [{ id: "plan-criteria", status: "passed", summary: "The draft satisfies its plan.", evidence: ["paper/introduction.md"] }],
+		issues: [],
+		next_actions: [],
+		effects_applied: [],
+		executed_at: new Date(host.now + offsetMs).toISOString().replace(/\.\d{3}Z$/u, "Z"),
+	});
 };
 const nextStep = async (host: Host): Promise<{ text: string; data: Json; isError?: boolean }> => {
 	const result = await host.tool("next_step", {});
@@ -1235,6 +1254,11 @@ test("a reviewed section whose approved revision plan no draft has applied goes 
 		const rewrite = await nextStep(host);
 		assert.deepEqual([rewrite.data.kind, rewrite.data.action, rewrite.data.section], ["step", "write-section", "introduction"], rewrite.text);
 		assert.match(rewrite.text, /approved revision plan that no draft has applied yet/);
+		// A manuscript saved after the approval without write-section's validation is not drafted yet: live, a writer
+		// saved the revision, could not count it, and the desk sent the section to review with a stale count and summary.
+		saved(host, workspace, 30_000);
+		const unfinished = await nextStep(host);
+		assert.deepEqual([unfinished.data.action, unfinished.data.section], ["write-section", "introduction"], unfinished.text);
 		// Once the draft is written after the approval, it is reviewed again: the earlier review read the earlier draft.
 		drafted(host, workspace, 60_000);
 		const review = await nextStep(host);

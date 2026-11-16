@@ -199,6 +199,8 @@ interface SectionRow {
 	acceptance: Acceptance;
 	/** When the manuscript file was last written, in epoch milliseconds, or null when it does not exist. */
 	writtenAt: number | null;
+	/** When write-section last validated a draft of this section, in epoch milliseconds, or null. */
+	writeValidatedAt: number | null;
 }
 
 interface Acceptance {
@@ -531,7 +533,20 @@ function writtenAt(workspace: string, manuscript: string | null): number | null 
 function unappliedPlan(section: SectionRow): boolean {
 	if (section.plan.state !== "approved" || !section.plan.approvedAt) return false;
 	const approved = Date.parse(section.plan.approvedAt);
-	return Number.isFinite(approved) && (section.writtenAt === null || section.writtenAt < approved);
+	if (!Number.isFinite(approved)) return false;
+	if (section.writtenAt === null || section.writtenAt < approved) return true;
+	// Saving the manuscript is not drafting it: write-section ends on its validation, after the measured
+	// count and summary. Live, a writer saved the revision, could not count it, and the section went to review.
+	return section.writeValidatedAt === null || section.writeValidatedAt < Math.floor(approved / 1000) * 1000;
+}
+
+/** When write-section last recorded a validation for this section, from its executed_at, or null. */
+function writeValidatedAt(validations: Json[], id: string, manuscriptUri: string): number | null {
+	const times = validations
+		.filter((record) => record.action_id === "write-section" && validates(record, id, manuscriptUri))
+		.map((record) => Date.parse(text(record.executed_at)))
+		.filter(Number.isFinite);
+	return times.length > 0 ? Math.max(...times) : null;
 }
 
 const ACCEPT = "accept";
@@ -807,6 +822,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 			record,
 			acceptance: acceptanceOf(validations, checkpoints, id, text(artifacts.manuscript, `project://paper/${id}`), reviews.length > 0, writtenAt(workspace, manuscript)),
 			writtenAt: writtenAt(workspace, manuscript),
+			writeValidatedAt: writeValidatedAt(validations, id, text(artifacts.manuscript, `project://paper/${id}`)),
 		};
 	});
 	const issues = { blocker: 0, error: 0, warning: 0, info: 0 };
@@ -1576,9 +1592,8 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 				return step(served, "research-gap", id, `${section.title}: ${evidenceGap(section)}.`);
 			if (!planReady(section.plan))
 				return step(served, "plan-section", id, `${section.title} cannot be drafted: ${section.plan.reason}.`);
-			// A draft written after its plan's approval is past drafting even when the record still says writing.
-			if (section.plan.state === "approved" && section.plan.approvedAt && section.writtenAt !== null && Date.parse(section.plan.approvedAt) <= section.writtenAt)
-				return reviewNext(served, section);
+			// A draft written and validated after its plan's approval is past drafting even when the record still says writing.
+			if (section.plan.state === "approved" && section.plan.approvedAt && !unappliedPlan(section)) return reviewNext(served, section);
 			return step(served, "write-section", id, `${section.title} has an approved plan.`);
 		default:
 			if (!section.stages.discuss) return step(served, "discuss-section", id, `Settle what ${section.title} must argue.`);
