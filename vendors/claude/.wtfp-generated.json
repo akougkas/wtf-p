@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "e740e85578efd95b7f513ea03bbed267f7162b9b87be5bd7d8619ffa59b2772c",
+  "sourceHash": "172cc52fcba0894342c39e03a8c3b557fabe2c788e29462e26a03f8078c582d5",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -306,7 +306,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
-      "sha256": "f651f7dc4c955ca39abee380e21066ca6a4e9282ca19cd797c08354609409d43"
+      "sha256": "c801d659c1967d1b02feab52419c87ec7f60d09cd158140c791ec75b5f4e93ca"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/export-latex.md",
@@ -346,7 +346,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "f5a2752a11caae87acda0ff767b7f613c8d37b940aa0aaf7e79e7f61ec9c5000"
+      "sha256": "44b0da325e40538bc09a21ed1fcd66368f7877beb7d55ac76eff248c70d40874"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
@@ -382,7 +382,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/review-section.md",
-      "sha256": "1bdd3f82371af2929d84bf69ee6b7237a7c4c3f05b5e7473332b779fe20e9137"
+      "sha256": "375a3964fef8c0b98bf3a72d0aa0b0a2928fbed14dd13d8e432141e65b078e49"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/settings.md",
@@ -402,7 +402,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "bf370d5b6da54a39899850b9a65f3db79f38ae80e89223df82f80ee9beea19d0"
+      "sha256": "36b466919863e7c145f39183659d5e2fac790c04aef174281da42c0dfdbc09eb"
     },
     {
       "path": "aliases.lock.json",
@@ -538,7 +538,7 @@
     },
     {
       "path": "commands/review-section.md",
-      "sha256": "3a763302db3e4e68795747319c7eab6a07354cab6358df8eef75942c00101e80"
+      "sha256": "53e3b14e89b901606e08684d93af9ab4d947a41ee6892906049c3a4952c9cfae"
     },
     {
       "path": "commands/settings.md",
@@ -1042,7 +1042,7 @@
     },
     {
       "path": "workflows/review-section.md",
-      "sha256": "a85252f9bf6067602548c0355817f27e3689fc10ec9292441da09a5351045a6a"
+      "sha256": "a3df01d14a7fe0480bb8663347496acdeeed967042f189e25c8b017aa7e01c0c"
     },
     {
       "path": "workflows/settings.md",

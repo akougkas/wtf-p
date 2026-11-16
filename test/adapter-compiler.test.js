@@ -1388,6 +1388,10 @@ record('research handoff declares incremental state and preserves native decisio
   }
   assert.deepStrictEqual(listField(planText(portablePlan, 'ai.iowarp.clio/prompts/wtfp/write-section.md'), 'allowed-tools').filter((tool) => tool.startsWith('extension_')), deskTools);
   assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
+  // Live on Clio 0.8.3, review-section read a reviewer's fail verdict, which Clio labels "validation failed", as a failed run and recorded nothing.
+  assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run/);
+  assert.match(planText(clio, 'workflows/review-section.md'), /A reviewer's fail verdict is the review's result, not a failed run/);
+  assert.match(planText(clio, 'workflows/review-section.md'), /A revision plan's preservation or no-change criteria governed that revision and its verification; they are not criteria for a later review/);
   assert.doesNotMatch(planText(clio, 'prompts/wtfp/create-outline.md'), /is read-only: begin each task/);
   assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
   for (const role of EXPECTED_ROLES) {

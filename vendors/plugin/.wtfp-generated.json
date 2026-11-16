@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "6ecc235a879fc42cfd6771e3c73b99c3bd8f917f92e94e2ecd16c2dcdad69313",
+  "sourceHash": "598cd6821a21c91cbe54524b4e504af2e65f77649962bcf7731d8579ac69647e",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -210,7 +210,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/advance.md",
-      "sha256": "1229f7714a73c7bc1840971533f19f65a8bbe5fd305550f013ac6501cc6fb163"
+      "sha256": "702e27bb303cd01d4b9b76582038f93c00fef817aa692022422c6a4be393ee88"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/analyze-bib.md",
@@ -254,7 +254,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/execute-outline.md",
-      "sha256": "e045894ed4fc284c8ea979191f981c2076704db8c2e4e03015468ad59c5738ac"
+      "sha256": "0102d55089851cc78765896b41345a423255feb317ebdcd851080a5283e6a639"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/export-latex.md",
@@ -294,7 +294,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/plan-section.md",
-      "sha256": "0851abdbb26c2bd61cef5c321c627c7f04a197074337308742e05c54e6a3a674"
+      "sha256": "6ddd064cf1220f6c53c1de07f5f4b70f431949a48f535d1d597181ebab0a9f23"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/polish-prose.md",
@@ -330,7 +330,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/review-section.md",
-      "sha256": "faa85c32aa2544774d310e5d253d443c01b7fa603f3fef85fffed63240746ee1"
+      "sha256": "a719589d2165ced249671b2ad85a0fd5db87be0759938f80f8081aae83e96f28"
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/settings.md",
@@ -350,7 +350,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "868dae33ac9b3cbfa18a69dbd76431dcf5c1ce7e644858c7df09a4ba2bac8527"
+      "sha256": "e2258b56c78a68284247787778ae05728b7257c2401b140264312967ad83ee3a"
     },
     {
       "path": "aliases.lock.json",
@@ -818,7 +818,7 @@
     },
     {
       "path": "workflows/review-section.md",
-      "sha256": "a85252f9bf6067602548c0355817f27e3689fc10ec9292441da09a5351045a6a"
+      "sha256": "a3df01d14a7fe0480bb8663347496acdeeed967042f189e25c8b017aa7e01c0c"
     },
     {
       "path": "workflows/settings.md",
