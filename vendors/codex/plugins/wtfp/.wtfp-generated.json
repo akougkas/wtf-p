@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "0fb9aea2244de5e00fe420c3f841308c20226cacdbd1e9fb7d0039f4d1dd5151",
+  "sourceHash": "44668138082405e0d15bea07cbddbc5660ba0213b39a1a90c575559bd93f48d4",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "812e3c6f4ab20c15e659b123bc904bc7d595b2c7c1188f41311de63b944a66f7"
+      "sha256": "a119daff97ad53f30fe0e4a3a7a9538860fa344943bc1ff3a91138233daac071"
     },
     {
       "path": "actions/add-todo.json",
@@ -226,7 +226,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "9e9946ab2875a35a9e65703030e4416caa3736bdc4c536db432451d389014ee5"
+      "sha256": "eb20bc2e6f9173b4c79b835c35b4ccb2e1750940c76e5dbd1d2bfd8dd3356004"
     },
     {
       "path": "project/README.md",

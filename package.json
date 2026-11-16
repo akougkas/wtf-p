@@ -1,6 +1,6 @@
 {
   "name": "wtf-p",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Portable, evidence-grounded academic writing workflows (papers, proposals, posters, presentations) for Clio Coder, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.",
   "bin": {
     "wtfp": "bin/install.js",
@@ -20,6 +20,7 @@
     "test:all": "npm test && npm run test:integration",
     "preflight": "node scripts/preflight.js",
     "prepack": "npm run check:adapters",
+    "prepublishOnly": "node scripts/publish-guard.js",
     "release": "node scripts/release.js"
   },
   "files": [

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.4] - 2026-11-16
+
+Republishes 0.8.3 as tagged. The `wtf-p@0.8.3` package on npm was packed
+from a working tree that held uncommitted desk work, so three of its 1,956
+files differ from the `v0.8.3` tag: `vendors/clio-extension/runtime/extension.ts`,
+its test file, and `vendors/clio-extension/.wtfp-generated.json`. 0.8.4 ships
+exactly the 0.8.3 sources; no protocol, prompt or desk behavior changes.
+Install 0.8.4 instead of 0.8.3.
+
+### Fixed
+
+- `npm publish` runs `scripts/publish-guard.js` as `prepublishOnly`, so a
+  bare publish can no longer skip the release checks. It refuses a working
+  tree with any change or untracked file, a `HEAD` without the exact
+  `v<version>` tag, and an archive that would include a file git does not
+  track. The `prepack` adapter check alone passed for 0.8.3 because the
+  generated files matched their uncommitted sources
+
 ## [0.8.3] - 2026-11-16
 
 Takes WTF-P on Clio from a fresh drive to brownfield revision: re-reviewing
@@ -996,6 +1014,7 @@ Initial public release.
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
 [Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.8.4]: https://github.com/akougkas/wtf-p/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/akougkas/wtf-p/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/akougkas/wtf-p/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.8.1

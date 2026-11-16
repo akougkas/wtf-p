@@ -81,7 +81,7 @@ if (packageJson.bin?.wtfp === 'bin/install.js' && packageJson.bin?.['wtf-p-unins
   fail('package binary declarations are incomplete');
 }
 
-for (const relativePath of ['bin/install.js', 'bin/uninstall.js', 'scripts/preflight.js', 'scripts/release.js']) {
+for (const relativePath of ['bin/install.js', 'bin/uninstall.js', 'scripts/preflight.js', 'scripts/release.js', 'scripts/publish-guard.js']) {
   const absolutePath = path.join(ROOT, relativePath);
   if (!fs.existsSync(absolutePath)) {
     fail(`${relativePath} exists`);
