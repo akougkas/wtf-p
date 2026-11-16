@@ -1717,6 +1717,13 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 const DRIVER_RULE =
 	"Driver rule for this /wtfp:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_wtfp__next_step with after naming that step (\"start\" for the first call), call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
 
+/**
+ * Live on Clio 0.8.3, the model looked for a capability named after the step's action, found none in the
+ * turn's list, and stopped the drive as if the step were forbidden.
+ */
+const STEP_IS_A_PROCEDURE =
+	"A step is a procedure, not a capability: there is no tool named after its action, so do it with this turn's tools as its prompt says.";
+
 /** Where a step's prompt lives, stated so it survives the loss of the advance prompt's resolved plugin root. */
 function stepPrompt(prompt: string): string {
 	return `<plugin root>/${prompt}, where <plugin root> is the WTF-P plugin root (two directories above the base_dir of the loaded wtfp-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
@@ -3703,7 +3710,7 @@ export default function extension(api: ExtensionApiV2): void {
 		} satisfies Drive);
 		const invocation = `/wtfp:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
 		return {
-			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Read and follow ${stepPrompt(decision.prompt)} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}. ${DRIVER_RULE}`,
+			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Read and follow ${stepPrompt(decision.prompt)} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}. ${STEP_IS_A_PROCEDURE} ${DRIVER_RULE}`,
 			data: decision,
 		};
 	});

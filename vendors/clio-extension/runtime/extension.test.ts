@@ -1123,6 +1123,8 @@ test("every next_step result restates the driver rule, so a compacted turn can c
 		assert.equal(step.data.kind, "step");
 		assert.match(step.text, /^Step 1: \/wtfp:write-section introduction\./);
 		assert.match(step.text, /Read and follow <plugin root>\/ai\.iowarp\.clio\/prompts\/wtfp\/write-section\.md, where <plugin root> is the WTF-P plugin root \(two directories above the base_dir of the loaded wtfp-manage-project skill/);
+		// Live on Clio 0.8.3, the model looked for a tool named audit-milestone and stopped the drive.
+		assert.match(step.text, /A step is a procedure, not a capability: there is no tool named after its action/);
 		assert.match(step.text, /invocation input introduction/);
 		assert.equal(ruleOf(step.text), rule);
 		const finish = await nextStep(host);
