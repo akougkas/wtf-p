@@ -643,7 +643,7 @@ function clioUserGateBody(action, deskTools = false) {
   // A local model tried every branch of a two-way rule in turn; state only the one this action can take.
   const createsCheckpoint = action.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create');
   const route = createsCheckpoint
-    ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID.'
+    ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID. The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`, or the author answers twice.'
     : 'This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_wtfp__gate` only for a pending checkpoint `extension_wtfp__status` lists in the gate\'s exact scope, and never create one.';
   if (deskTools) return [
     '## Clio user-gate binding',

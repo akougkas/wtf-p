@@ -1391,6 +1391,8 @@ record('research handoff declares incremental state and preserves native decisio
   // Live on Clio 0.8.3, review-section read a reviewer's fail verdict, which Clio labels "validation failed", as a failed run and recorded nothing.
   assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run/);
   assert.match(planText(clio, 'workflows/review-section.md'), /A reviewer's fail verdict is the review's result, not a failed run/);
+  // F-W31, live on Clio 0.8.3: verify-work asked its acceptance with ask_user before the desk gate, so the author answered twice.
+  for (const actionId of ['verify-work', 'plan-section', 'plan-revision']) assert.match(planText(portablePlan, `ai.iowarp.clio/prompts/wtfp/${actionId}.md`), /The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`/, actionId);
   // Live on Clio 0.8.3, the section writer could not count words, returned blocked, and stopped the drive.
   for (const role of ['section-writer']) assert.match(planText(clio, `agents/wtfp-${role}.md`), /On Clio a worker holds no word counter\..*never blocks this role/, `${role}: the count is the orchestrator's`);
   for (const role of ['section-planner', 'prose-polisher']) assert.doesNotMatch(planText(clio, `agents/wtfp-${role}.md`), /holds no word counter/);
