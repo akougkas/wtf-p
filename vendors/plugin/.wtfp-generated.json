@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "portable-plugin",
-  "sourceHash": "598cd6821a21c91cbe54524b4e504af2e65f77649962bcf7731d8579ac69647e",
+  "sourceHash": "9389aff9e734ab43043e7155837825a1b21defab090c2e59c60df8d03d68f340",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -194,7 +194,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-writer.md",
-      "sha256": "d85a1b9af18c376cbcc2e5930ff74f880661865234509319a0e3b61eb9f73cd4"
+      "sha256": "e0247578c03b442fb97b86116e172f00be77b5aa3a52973e6a6a227572b81d8b"
     },
     {
       "path": "ai.iowarp.clio/playbooks/wtfp-draft-review.md",
@@ -350,7 +350,7 @@
     },
     {
       "path": "ai.iowarp.clio/prompts/wtfp/write-section.md",
-      "sha256": "e2258b56c78a68284247787778ae05728b7257c2401b140264312967ad83ee3a"
+      "sha256": "87f1737758afa96f2e71712d0f534cf2c7f9290d514e863a9c2c9f629cbcd735"
     },
     {
       "path": "aliases.lock.json",

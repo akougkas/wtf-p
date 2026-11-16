@@ -708,7 +708,9 @@ function clioDeskWorkflowBody(action, workflowBody) {
     .replace(/^Manuscript prose and supporting context,[^\n]+$/m,
       'Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.');
   if (action.id === 'write-section') body = body.replace(/^3\. Read the persisted manuscript text back[^\n]+$/m,
-    '3. Read back the persisted manuscript, call `extension_wtfp__measure_section` with its section ID, and use the returned body count and target tolerance for validation and the summary; never use a worker self-report or hand-count words.');
+    '3. Read back the persisted manuscript, call `extension_wtfp__measure_section` with its section ID, and use the returned body count and target tolerance for validation and the summary; never use a worker self-report or hand-count words.')
+    .replace(/^4\. Create or update the required Markdown summary with that measured count,[^\n]+$/m,
+      '4. A dispatched writer has no word counter, so tell it to write the summary without a count; then add the measured count to the summary yourself and read back both manuscript and summary. Missing, empty, or inconsistent output is a failed completion condition, not permission to link a path that does not exist.');
   if (action.id === 'check-todos') body = body
     .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_wtfp__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
@@ -1232,6 +1234,8 @@ function renderClioRole(role, slug) {
     ...(verifier ? ['**Output:** your final message is one JSON object, `{"verdict":"pass|fail","checks":[...]}`, and nothing else. Do every step below as checks in that object, not as a Markdown review; the exact form is in the Clio result contract at the end.', ''] : []),
     nativeWorkflowBody(roleBodyWithoutPortableResult(role), 'clio'),
     '',
+    // Live on Clio 0.8.3, a writer that could not count words returned blocked and stopped the drive.
+    ...(/word count/i.test(roleBodyWithoutPortableResult(role)) ? ['On Clio a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.', ''] : []),
     '## Clio result contract',
     '',
     nativeResult,

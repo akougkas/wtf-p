@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "172cc52fcba0894342c39e03a8c3b557fabe2c788e29462e26a03f8078c582d5",
+  "sourceHash": "d814fe0d82c53075b5364668c7e6cef2b764b7d19fc016de8e7861973f6864f4",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -246,7 +246,7 @@
     },
     {
       "path": "ai.iowarp.clio/agents/wtfp-section-writer.md",
-      "sha256": "d85a1b9af18c376cbcc2e5930ff74f880661865234509319a0e3b61eb9f73cd4"
+      "sha256": "e0247578c03b442fb97b86116e172f00be77b5aa3a52973e6a6a227572b81d8b"
     },
     {
       "path": "ai.iowarp.clio/fleets/wtfp-draft-review.md",

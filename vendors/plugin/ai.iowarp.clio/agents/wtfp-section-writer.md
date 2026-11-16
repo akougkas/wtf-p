@@ -59,6 +59,8 @@ Execute an approved section plan into evidence-grounded academic prose or the ex
 - Do not commit, delete, rename, publish, or perform destructive operations unless the exact effect is granted by the action contract.
 - Do not initiate human interaction. Encode checkpoint needs in the result for the orchestrator.
 
+On Clio a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.
+
 ## Clio result contract
 
 Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.
