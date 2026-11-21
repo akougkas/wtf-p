@@ -1154,22 +1154,24 @@ function clioDelegatedTools(action, reviewers) {
 // How each role runs on Clio. `latencyClass` is the routing prior for how long
 // a run takes; `budget` is the advisory tool-call notice, under Clio's hard
 // per-run ceiling. Roles that read a whole manuscript or a literature set get
-// the deep prior and room to read; quick checks stay fast. A read-only checker
-// gets no project orientation (`projectContextTier: none`): it judges the
-// artifacts it is handed, so a code-oriented repository summary is only noise
-// and a source of claims it did not read.
+// the deep prior and a larger tool-call budget; quick checks stay fast. A
+// read-only checker gets no project orientation (`projectContextTier: none`):
+// it judges the artifacts it is handed, so a code-oriented repository summary
+// is only noise and a source of claims it did not read. Recipes declare only
+// toolCalls and synthesis: CLIO Coder 0.8.5 removed the read-reserve key with no
+// alias, so a recipe that still declares it fails to parse.
 const CLIO_ROLE_TUNING = Object.freeze({
-  'argument-verifier': { latency: 'fast', toolCalls: 24, readReserve: 4 },
-  'plan-checker': { latency: 'fast', toolCalls: 24, readReserve: 4 },
-  'section-reviewer': { latency: 'balanced', toolCalls: 40, readReserve: 6 },
-  'coherence-checker': { latency: 'deep', toolCalls: 64, readReserve: 12 },
-  'research-synthesizer': { latency: 'deep', toolCalls: 96, readReserve: 12 },
-  'citation-expert': { latency: 'deep', toolCalls: 96, readReserve: 12 },
-  'citation-formatter': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
-  'outliner': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
-  'section-planner': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
-  'section-writer': { latency: 'balanced', toolCalls: 64, readReserve: 8 },
-  'prose-polisher': { latency: 'balanced', toolCalls: 48, readReserve: 6 }
+  'argument-verifier': { latency: 'fast', toolCalls: 24 },
+  'plan-checker': { latency: 'fast', toolCalls: 24 },
+  'section-reviewer': { latency: 'balanced', toolCalls: 40 },
+  'coherence-checker': { latency: 'deep', toolCalls: 64 },
+  'research-synthesizer': { latency: 'deep', toolCalls: 96 },
+  'citation-expert': { latency: 'deep', toolCalls: 96 },
+  'citation-formatter': { latency: 'balanced', toolCalls: 64 },
+  'outliner': { latency: 'balanced', toolCalls: 64 },
+  'section-planner': { latency: 'balanced', toolCalls: 64 },
+  'section-writer': { latency: 'balanced', toolCalls: 64 },
+  'prose-polisher': { latency: 'balanced', toolCalls: 48 }
 });
 
 // The role-result schema as the object a worker writes. A recipe is resent
@@ -1223,7 +1225,7 @@ function renderClioRole(role, slug) {
     `capabilityClass: ${verifier ? 'read-only' : 'workspace-edit'}`,
     `latencyClass: ${tuning.latency}`,
     `projectContextTier: ${verifier ? 'none' : 'bounded'}`,
-    `budget: {toolCalls: ${tuning.toolCalls}, readReserve: ${tuning.readReserve}, synthesis: true}`,
+    `budget: {toolCalls: ${tuning.toolCalls}, synthesis: true}`,
     `resultContract: {kind: ${verifier ? 'verifier-report' : 'mutation-report'}}`,
     'tags: [wtfp, research, portable-protocol]',
     '---',

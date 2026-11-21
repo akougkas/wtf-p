@@ -9,7 +9,7 @@ category: quality
 capabilityClass: read-only
 latencyClass: deep
 projectContextTier: none
-budget: {toolCalls: 64, readReserve: 12, synthesis: true}
+budget: {toolCalls: 64, synthesis: true}
 resultContract: {kind: verifier-report}
 tags: [wtfp, research, portable-protocol]
 ---
