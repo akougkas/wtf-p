@@ -4,7 +4,7 @@ display-only: true
 ---
 
 ```text
-WTF-P 0.8.4 on Clio Coder: evidence-grounded academic writing
+WTF-P 0.8.5 on Clio Coder: evidence-grounded academic writing
 
 Start here
   /wtfp:new-paper [input]

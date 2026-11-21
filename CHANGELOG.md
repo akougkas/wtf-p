@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2026-11-21
+
+Generated CLIO Coder agents no longer declare `readReserve`. CLIO Coder 0.8.5
+removed that recipe key with no alias, so a recipe that still named it failed
+to parse. The 11 generated agents under `vendors/plugin/ai.iowarp.clio/agents/`
+and `vendors/claude/ai.iowarp.clio/agents/` now declare
+`budget: {toolCalls, synthesis}` only. Tool-call limits are unchanged.
+
+### Fixed
+
+- The adapter compiler no longer emits `readReserve` in the `budget` of Clio
+  role recipes
+
+### Changed
+
+- The evaluation routing matrix and the `hpc-checkpointing` baseline were
+  resealed for the new adapter hash
+
 ## [0.8.4] - 2026-11-16
 
 Republishes 0.8.3 as tagged. The `wtf-p@0.8.3` package on npm was packed
@@ -1014,6 +1032,7 @@ Initial public release.
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
 [Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.8.5]: https://github.com/akougkas/wtf-p/compare/v0.8.4...v0.8.5
 [0.8.4]: https://github.com/akougkas/wtf-p/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/akougkas/wtf-p/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/akougkas/wtf-p/compare/v0.8.1...v0.8.2

@@ -1,6 +1,6 @@
 # WTF-P documentation
 
-Version `0.8.4`. Start with the [README](../README.md) for the two-screen
+Version `0.8.5`. Start with the [README](../README.md) for the two-screen
 overview, then use the guide that matches your role.
 
 ## For scientists and operators
