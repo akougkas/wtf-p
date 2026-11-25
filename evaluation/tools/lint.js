@@ -241,7 +241,7 @@ function lintFixtureAndBaseline(rubric, expected, baseline, registry) {
   assert.strictEqual(baseline.protocol.adapter_compiler_version, GENERATOR_VERSION);
   assert.strictEqual(
     baseline.protocol.canonical_source_sha256,
-    readJson(path.join(repositoryRoot, 'vendors', 'plugin', '.wtfp-generated.json')).sourceHash,
+    readJson(path.join(repositoryRoot, 'pancode', 'plugin', '.wtfp-generated.json')).sourceHash,
     'baseline must bind the exact current canonical source hash'
   );
   lintBaselineEvidenceState(baseline, registry);
@@ -435,7 +435,7 @@ function lintRoutingManifest(manifest) {
   const expectedEnvelopePaths = [
     'vendors/antigravity/.wtfp-generated.json',
     'vendors/claude/.wtfp-generated.json',
-    'vendors/plugin/.wtfp-generated.json',
+    'pancode/plugin/.wtfp-generated.json',
     'vendors/codex/.wtfp-generated.json',
     'vendors/codex/plugins/wtfp/.wtfp-generated.json',
     'vendors/copilot/.wtfp-generated.json',
@@ -537,7 +537,7 @@ function lintEvaluation() {
 // 2020-12 dialect with a unique $id, and each campaign must load: valid,
 // bound to its fixture's current model inputs, and naming only real actions.
 function lintCampaigns() {
-  const { loadCampaign } = require('./run-clio-campaign');
+  const { loadCampaign } = require('./run-pancode-campaign');
   const { loadStudy } = require('../lib/study');
   const ids = new Set();
   let schemas = 0;

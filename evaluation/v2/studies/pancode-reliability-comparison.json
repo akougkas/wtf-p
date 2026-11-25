@@ -1,18 +1,18 @@
 {
   "schema": "wtfp.evaluation.study/v2",
-  "id": "clio-reliability-comparison",
+  "id": "pancode-reliability-comparison",
   "version": 1,
   "status": "draft",
-  "question": "On matched manuscript tasks, do explicit author decisions, claim-level evidence records, checked plans, separate review and durable state make Clio's manuscript production more reliable, and at what author effort and runtime cost?",
+  "question": "On matched manuscript tasks, do explicit author decisions, claim-level evidence records, checked plans, separate review and durable state make PanCode's manuscript production more reliable, and at what author effort and runtime cost?",
   "hypotheses": [
-    { "id": "H1", "statement": "Clio with the WTF-P plugin and desk produces fewer externally checkable claims without inspected support than the same Clio and model without WTF-P.", "primary_outcome": "unsupported-claim-rate", "direction": "lower-is-better" },
-    { "id": "H2", "statement": "Clio with the WTF-P plugin and desk violates fewer recorded author decisions than the same Clio and model given an expert checklist prompt.", "primary_outcome": "author-decision-violations", "direction": "lower-is-better" },
+    { "id": "H1", "statement": "PanCode with the WTF-P plugin and desk produces fewer externally checkable claims without inspected support than the same PanCode and model without WTF-P.", "primary_outcome": "unsupported-claim-rate", "direction": "lower-is-better" },
+    { "id": "H2", "statement": "PanCode with the WTF-P plugin and desk violates fewer recorded author decisions than the same PanCode and model given an expert checklist prompt.", "primary_outcome": "author-decision-violations", "direction": "lower-is-better" },
     { "id": "H3", "statement": "Runs interrupted mid-write recover to a consistent state more often with WTF-P than without it.", "primary_outcome": "recovery-success", "direction": "higher-is-better" }
   ],
   "conditions": [
-    { "id": "wtfp-desk", "role": "treatment", "description": "Clio 0.6.2 pinned build with the WTF-P plugin and desk extension; author answers at the desk.", "host": "clio-0.6.2-reference", "wtfp": "plugin-and-desk", "author_gates": "desk-attested" },
-    { "id": "clio-plain", "role": "baseline", "description": "The same Clio build and model with no WTF-P package; the same task statement and materials; the author answers the agent's questions in the session.", "host": "clio-0.6.2-reference", "wtfp": "none", "author_gates": "host-prompted" },
-    { "id": "clio-checklist", "role": "baseline", "description": "The same Clio build and model with no WTF-P package and an expert writing checklist prompt covering evidence, decisions, review and recovery; the author answers in the session.", "host": "clio-0.6.2-reference", "wtfp": "none", "author_gates": "author-instructed" }
+    { "id": "wtfp-desk", "role": "treatment", "description": "PanCode 0.9.0 pinned build with the WTF-P plugin and desk extension; author answers at the desk.", "host": "pancode-0.9.0-reference", "wtfp": "plugin-and-desk", "author_gates": "desk-attested" },
+    { "id": "pancode-plain", "role": "baseline", "description": "The same PanCode build and model with no WTF-P package; the same task statement and materials; the author answers the agent's questions in the session.", "host": "pancode-0.9.0-reference", "wtfp": "none", "author_gates": "host-prompted" },
+    { "id": "pancode-checklist", "role": "baseline", "description": "The same PanCode build and model with no WTF-P package and an expert writing checklist prompt covering evidence, decisions, review and recovery; the author answers in the session.", "host": "pancode-0.9.0-reference", "wtfp": "none", "author_gates": "author-instructed" }
   ],
   "ablations": [
     { "id": "no-desk", "of": "wtfp-desk", "removes": "the desk extension: the plugin's prompts carry the same rules as instructions only", "keeps_production_author_gates": true, "isolates": "runtime-enforcement" },

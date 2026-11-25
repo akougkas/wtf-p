@@ -2,9 +2,9 @@
 
 'use strict';
 
-// Deterministic checks of the versioned Clio campaign runner. A fake Clio stands
-// in for the real CLI, so nothing here needs credentials, a model, or a built
-// Clio; the opt-in native integration test covers the real build.
+// Deterministic checks of the versioned PanCode campaign runner. A fake PanCode
+// stands in for the real CLI, so nothing here needs credentials, a model, or a
+// built PanCode; the opt-in native integration test covers the real build.
 
 const assert = require('assert');
 const crypto = require('crypto');
@@ -13,10 +13,10 @@ const os = require('os');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const runner = require('../evaluation/tools/run-clio-campaign');
+const runner = require('../evaluation/tools/run-pancode-campaign');
 const deskTrust = require('../evaluation/lib/desk-trust');
 
-const CAMPAIGN_FILE = path.join(ROOT, 'evaluation/v2/campaigns/clio-0.6.2-reference.json');
+const CAMPAIGN_FILE = path.join(ROOT, 'evaluation/v2/campaigns/pancode-0.9.0-reference.json');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-campaign-test-'));
 let passed = 0;
 
@@ -44,21 +44,35 @@ function tree(directory) {
   return out.sort();
 }
 
-/** A fake built Clio whose `run` behavior is chosen by FAKE_CLIO_MODE. */
-function fakeClio(name, body) {
-  const dist = path.join(scratch, name, 'dist');
-  fs.mkdirSync(path.join(dist, 'cli'), { recursive: true });
-  const entry = path.join(dist, 'cli', 'index.js');
+/**
+ * A fake installed PanCode package, <name>/bin/pancode.cjs beside <name>/dist,
+ * whose `run` does what `body` says. Its `telemetry ... --json` answers come
+ * from the records a fake run sealed into the profile (see `sealed`), and a
+ * query it holds no record for fails, as PanCode's does.
+ */
+function fakePanCode(name, body, version = 'PanCode 0.9.0-dev (unreleased · 224f908)') {
+  fs.mkdirSync(path.join(scratch, name, 'dist'), { recursive: true });
+  fs.writeFileSync(path.join(scratch, name, 'dist', 'cli.js'), '// the built bundle\n');
+  fs.mkdirSync(path.join(scratch, name, 'bin'), { recursive: true });
+  const entry = path.join(scratch, name, 'bin', 'pancode.cjs');
   fs.writeFileSync(entry, `'use strict';
 const args = process.argv.slice(2);
-if (args[0] === '--version') { console.log('Clio Coder 0.6.2'); process.exit(0); }
+if (args[0] === '--version') { console.log(${JSON.stringify(version)}); console.log('Panes powered by herdr 0.9.5 (Apache-2.0)'); process.exit(0); }
+if (args[0] === 'telemetry') {
+  const file = require('path').join(process.env.PANCODE_STATE_DIR, 'fake-telemetry.json');
+  const answers = require('fs').existsSync(file) ? JSON.parse(require('fs').readFileSync(file, 'utf8')) : {};
+  const answer = answers[args.slice(1).filter(arg => arg !== '--json').join(' ')];
+  if (answer === undefined || answer === null) process.exit(1);
+  console.log(JSON.stringify(answer));
+  process.exit(0);
+}
 ${body}
 `);
   return entry;
 }
 
 /**
- * A root as prepare leaves it, bound to this checkout, the fake Clio and the
+ * A root as prepare leaves it, bound to this checkout, the fake PanCode and the
  * fixture. The fake build is unpinned, and the test tree may be dirty, so the
  * record says both, as prepare does when the operator allows them.
  */
@@ -72,16 +86,17 @@ function preparedRoot(name, entry, change = (prepared) => prepared, campaignFile
     }
   }
   fs.writeFileSync(path.join(root, 'workspace', 'project-brief.md'), 'A brief.\n');
-  fs.writeFileSync(path.join(root, 'clio', 'bin', 'clio-coder'), `#!${process.execPath}\n// launches ${entry}\n`, { mode: 0o755 });
-  const identity = runner.clioIdentity(entry, campaign);
+  fs.mkdirSync(path.join(root, 'pancode', 'bin'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'pancode', 'bin', 'pancode'), `#!${process.execPath}\n// launches ${entry}\n`, { mode: 0o755 });
+  const identity = runner.pancodeIdentity(entry, campaign);
   const wtfp = runner.wtfpIdentity();
   fs.writeFileSync(path.join(root, 'prepared.json'), `${JSON.stringify(change({
-    schema: 'wtfp.evaluation.campaign-prepared/v2',
+    schema: 'wtfp.evaluation.campaign-prepared/v3',
     campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(campaignFile)) },
     wtfp,
     allow_dirty: wtfp.package_tree !== 'clean',
-    clio: identity.observed,
-    clio_unpinned: identity.mismatches,
+    pancode: identity.observed,
+    pancode_unpinned: identity.mismatches,
     fixture: { ...runner.fixtureIdentity(campaign), evaluator_oracles_copied: false },
     workspace: 'workspace',
     workspace_sha256: runner.workspaceDigest(path.join(root, 'workspace')),
@@ -92,13 +107,41 @@ function preparedRoot(name, entry, change = (prepared) => prepared, campaignFile
   return root;
 }
 
-/** Lines a fake Clio prints and records it writes into its workspace, as JavaScript source. */
+/** Lines a fake PanCode prints and records it writes into its workspace, as JavaScript source. */
 const frame = (value) => `console.log(${JSON.stringify(JSON.stringify(value))});`;
 const planningWrite = (relative, value) => `{ const f = require('path').join(process.cwd(), '.planning', ${JSON.stringify(relative)}); require('fs').mkdirSync(require('path').dirname(f), { recursive: true }); require('fs').writeFileSync(f, ${JSON.stringify(JSON.stringify(value))}); }`;
 const measured = (costUsd) => frame({ type: 'agent_end', messageCount: 2, usage: { input: 10, output: 5, cacheRead: 0, cacheWrite: 0, reasoning: 0, totalTokens: 15, costUsd, apiCalls: 1, measured: true } });
-/** A receipt as Clio seals one into the run's state directory. */
-const receiptWrite = (name, receipt) => `{ const dir = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'receipts'); require('fs').mkdirSync(dir, { recursive: true }); require('fs').writeFileSync(require('path').join(dir, ${JSON.stringify(`${name}.json`)}), ${JSON.stringify(JSON.stringify(receipt))}); }`;
-const mainReceipt = (costUsd, costProvenance = 'known') => receiptWrite(`main-${costUsd}`, { runId: `main-${costUsd}`, agentId: 'main-agent', targetId: 'operator-target', wireModelId: 'operator-model', costUsd, costProvenance, runtimeResolution: { requestedThinkingLevel: 'medium', effectiveThinkingLevel: 'medium' } });
+/** A telemetry FactSum, as `pancode telemetry cost` folds one. */
+const sum = (measured, estimated = 0, unknownCount = 0, absentCount = 0) => ({ fact: { measured, estimated, unknownCount, absentCount, coverage: { measured: measured > 0 ? 1 : 0, estimated: estimated > 0 ? 1 : 0, unknown: unknownCount } } });
+/** A call row of `pancode telemetry calls --run`, reporting `model` as the provider's answer or reporting none. */
+const callRow = (model, fields = {}) => ({ disposition: 'settled', responseId: 'resp', target: { reportedModel: { fact: model === null ? { kind: 'unknown', reason: 'not-reported' } : { kind: 'measured', value: model } } }, ...fields });
+/** A worker run as `telemetry inspect --run` returns it once PanCode verified its seal. */
+const workerRun = (settled, calls = []) => ({ inspect: { seal: { status: 'verified' }, settled: { agentId: 'wtfp-section-writer', tools: [], ...settled } }, calls: { calls } });
+/**
+ * A step's sealed telemetry as a fake PanCode run leaves it: the session frame
+ * the stream opens with, a main-agent run record and each worker's under
+ * telemetry/runs, and the answers `telemetry cost|inspect|calls` give for
+ * them. The session total covers every worker, so `costUsd` is the step's cost;
+ * an unknown total stands for a call PanCode could not price.
+ */
+const sealed = (costUsd, { workers = {}, unknown = false } = {}) => `{ const fs = require('fs'); const path = require('path');
+const session = 'sess-' + process.pid + '-' + Math.random().toString(16).slice(2);
+console.log(JSON.stringify({ type: 'session', schemaVersion: 3, id: session }));
+const state = process.env.PANCODE_STATE_DIR;
+const file = path.join(state, 'fake-telemetry.json');
+const answers = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
+const runs = { ['main-' + session]: { inspect: { seal: { status: 'verified' }, settled: { agentId: 'main-agent' } } } };
+for (const [id, run] of Object.entries(${JSON.stringify(workers)})) runs[id + '-' + session] = run;
+for (const [id, run] of Object.entries(runs)) {
+  fs.mkdirSync(path.join(state, 'telemetry', 'runs', id), { recursive: true });
+  answers['inspect --run ' + id] = run.inspect;
+  if (run.calls) answers['calls --run ' + id] = run.calls;
+}
+answers['cost ' + session] = { total: ${JSON.stringify({ calls: sum(1 + Object.keys(workers).length), usd: unknown ? sum(0, 0, 1) : sum(costUsd), pricedBy: { 'target-rates': 1 } })} };
+answers['inspect ' + session] = { runs: { count: ${Object.keys(workers).length}, unresolved: 0 } };
+fs.writeFileSync(file, JSON.stringify(answers)); }`;
+/** Telemetry for a step judged directly: its worker runs, as the runner reads them, and the session's total. */
+const telemetryOf = (workers, cost = null) => ({ session: cost ? 'sess' : null, cost, workers, unreadable: [] });
 const checkpointTemplate = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/checkpoint.json'), 'utf8'));
 const manifestTemplate = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/manifest.json'), 'utf8'));
 /** A fake step that raises one blocking gate and leaves it pending, as a headless gated step should. */
@@ -129,8 +172,8 @@ async function main() {
   const campaign = runner.loadCampaign(CAMPAIGN_FILE);
   const executeEnv = {
     WTFP_CAMPAIGN_CONFIRM: runner.confirmValue(campaign),
-    WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE: privateSource('settings.yaml', 'targets: {}\n'),
-    WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: privateSource('credentials.yaml', 'secret-value-that-must-be-wiped\n')
+    WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: privateSource('settings.yaml', 'targets: {}\n'),
+    WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: privateSource('credentials.yaml', 'secret-value-that-must-be-wiped\n')
   };
   const selection = { target: 'operator-target', model: 'operator-model', effort: 'medium', budgetUsd: 5 };
   /** The campaign with only ungated steps, for cases a gated first step would stop before they are reached. */
@@ -138,10 +181,12 @@ async function main() {
   fs.writeFileSync(ungatedFile, JSON.stringify({ ...campaign, lifecycle: campaign.lifecycle.filter(step => step.author_gate === null).slice(0, 2) }));
   const ungated = runner.loadCampaign(ungatedFile);
 
-  await test('the campaign validates, pins the qualified Clio build, and keeps the v1 fixture meaning', async () => {
+  await test('the campaign validates, pins the qualified PanCode build, and keeps the v1 fixture meaning', async () => {
     assert.strictEqual(campaign.status, 'awaiting-resources');
     assert.deepStrictEqual([campaign.model.target, campaign.model.model, campaign.model.effort, campaign.budget.ceiling], [null, null, null, null]);
-    assert.strictEqual(campaign.clio.source.commit, 'e4b3c7b18e20db767cdc92139b85dac6d1219d1a');
+    assert.strictEqual(campaign.pancode.source.commit, '224f9081ea2d07f032b74b8b6b72d3eb7a58f22c');
+    assert.deepStrictEqual([campaign.pancode.version, campaign.pancode.build.entry], ['0.9.0-dev', 'bin/pancode.cjs']);
+    assert.deepStrictEqual(campaign.wtfp.packages.map(pkg => [pkg.path, pkg.inventory_target]), [['pancode/plugin', 'pancode-plugin'], ['pancode/extension', 'pancode-extension']]);
     const v1 = JSON.parse(fs.readFileSync(path.join(ROOT, campaign.fixture.path, 'manifest.json'), 'utf8'));
     assert.strictEqual(campaign.fixture.model_inputs_sha256, v1.model_inputs_sha256);
     const drifted = path.join(scratch, 'drifted.json');
@@ -157,39 +202,68 @@ async function main() {
   });
 
   await test('plan is credential-free, writes nothing, and names what the operator still has to select', async () => {
-    const entry = fakeClio('fake-plan', 'process.exit(3);');
+    const entry = fakePanCode('fake-plan', 'process.exit(3);');
     const before = tree(path.join(scratch, 'fake-plan'));
-    const planned = await withEnv({ WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: '/nonexistent/credentials.yaml' }, () => runner.plan(campaign, { entry }));
+    const planned = await withEnv({ WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: '/nonexistent/credentials.yaml' }, () => runner.plan(campaign, { entry }));
     assert.strictEqual(planned.credential_free, true);
     assert.deepStrictEqual(planned.resources_missing, ['model.target', 'model.model', 'model.effort', 'budget.ceiling']);
-    assert.ok(planned.clio.mismatches.some(item => /entry sha256/.test(item)), 'a build other than the pinned one is reported');
+    assert.ok(planned.pancode.mismatches.some(item => /entry sha256/.test(item)), 'a build other than the pinned one is reported');
+    assert.deepStrictEqual(planned.pancode.pinned, campaign.pancode, 'the plan names the build the campaign pins beside the one it found');
     assert.strictEqual(planned.steps.find(step => step.step === 'plan').headless_expectation, 'author-unavailable');
     assert.strictEqual(planned.steps.find(step => step.step === 'resume').session, 'S2');
     assert.deepStrictEqual(tree(path.join(scratch, 'fake-plan')), before);
   });
 
-  await test('prepare refuses an unpinned Clio build before it creates anything', async () => {
-    const entry = fakeClio('fake-unpinned', '');
+  await test('the plan command names the campaign, the pinned build, the WTF-P candidate and every step, reading no credential and writing nothing', async () => {
+    const { execFileSync } = require('child_process');
+    const entry = fakePanCode('fake-plan-cli', 'process.exit(3);');
+    const cwd = path.join(scratch, 'plan-cwd');
+    fs.mkdirSync(cwd);
+    const locked = privateSource('locked-credentials.yaml', 'secret\n');
+    fs.chmodSync(locked, 0);
+    const status = () => execFileSync('git', ['-C', ROOT, 'status', '--porcelain', '--untracked-files=all'], { encoding: 'utf8' });
+    const before = [status(), tree(cwd), tree(path.join(scratch, 'fake-plan-cli'))];
+    const stdout = execFileSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'plan', '--pancode-entry', entry], {
+      cwd,
+      encoding: 'utf8',
+      env: { ...process.env, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: locked, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: path.join(scratch, 'nonexistent', 'settings.yaml') }
+    });
+    fs.chmodSync(locked, 0o600);
+    const planned = JSON.parse(stdout);
+    assert.deepStrictEqual(planned.campaign, { id: 'pancode-0.9.0-reference', version: campaign.version, status: 'awaiting-resources' });
+    assert.strictEqual(planned.pancode.pinned.source.commit, '224f9081ea2d07f032b74b8b6b72d3eb7a58f22c');
+    assert.strictEqual(planned.pancode.observed.version, 'PanCode 0.9.0-dev (unreleased · 224f908)');
+    assert.deepStrictEqual(Object.keys(planned.wtfp.packages), ['pancode/plugin', 'pancode/extension']);
+    assert.match(planned.wtfp.commit, /^[0-9a-f]{40}$/);
+    assert.deepStrictEqual(planned.steps.map(step => step.step), campaign.lifecycle.map(step => step.step));
+    assert.strictEqual(planned.steps.length, 12);
+    assert.strictEqual(planned.credential_free, true);
+    assert.deepStrictEqual([status(), tree(cwd), tree(path.join(scratch, 'fake-plan-cli'))], before, 'plan leaves the checkout, its working directory and the build as they were');
+    assert.ok(!fs.existsSync(path.join(ROOT, 'evaluation/v2/campaigns/clio-0.6.2-reference.json')), 'the PanCode campaign replaces the old one');
+  });
+
+  await test('prepare refuses an unpinned PanCode build before it creates anything', async () => {
+    const entry = fakePanCode('fake-unpinned', '');
     const root = path.join(scratch, 'never-created');
-    assert.throws(() => runner.prepare(campaign, { entry, root }), /unpinned Clio build/);
+    assert.throws(() => runner.prepare(campaign, { entry, root }), /unpinned PanCode build/);
     assert.ok(!fs.existsSync(root));
   });
 
   await test('execute refuses without the operator\'s selection, acknowledgement and private resources', async () => {
-    const entry = fakeClio('fake-refusals', 'process.exit(0);');
+    const entry = fakePanCode('fake-refusals', 'process.exit(0);');
     const root = preparedRoot('refusals', entry);
     await assert.rejects(runner.execute(campaign, { root, entry }), /operator's --target/);
     await assert.rejects(runner.execute(campaign, { root, entry, ...selection, budgetUsd: undefined }), /--budget-usd/);
     await assert.rejects(runner.execute(campaign, { root, entry, ...selection }), /set WTFP_CAMPAIGN_CONFIRM=/);
     const inside = path.join(root, 'credentials.yaml');
     fs.writeFileSync(inside, 'x');
-    await assert.rejects(withEnv({ ...executeEnv, WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: inside }, () => runner.execute(campaign, { root, entry, ...selection })), /outside the run root/);
+    await assert.rejects(withEnv({ ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: inside }, () => runner.execute(campaign, { root, entry, ...selection })), /outside the run root/);
     assert.ok(!fs.existsSync(path.join(root, 'run.json')));
     assert.throws(() => runner.parseArgs(['execute', '--api-key', 'x']), /unknown option|credentials only/);
   });
 
   await test('a headless author gate stops the run as a typed unavailable result and the credential is wiped', async () => {
-    const entry = fakeClio('fake-gate', `${raisesGate}
+    const entry = fakePanCode('fake-gate', `${raisesGate}
 console.log(JSON.stringify({ type: 'session' }));
 process.exit(0);`);
     const root = preparedRoot('gate', entry);
@@ -199,9 +273,9 @@ process.exit(0);`);
     assert.deepStrictEqual([run.cost.status, run.cost.usd], ['unavailable', null], 'missing cost is unavailable, never zero');
     assert.strictEqual(run.evidence_level, 'no-model-call-observed', 'no model call seen, so no model evidence is claimed');
     assert.match(run.isolation.model_code_execution, /^withheld: /, 'every run record says what it cannot vouch for');
-    assert.match(run.isolation.record_integrity, /rest on Clio enforcing the tool limits/);
+    assert.match(run.isolation.record_integrity, /rest on PanCode enforcing the tool limits/);
     assert.strictEqual(run.credentials_removed, true);
-    assert.ok(!fs.existsSync(path.join(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
+    assert.ok(!fs.existsSync(path.join(runner.profilePaths(root).PANCODE_CONFIG_DIR, 'credentials.yaml')));
     const recorded = fs.readFileSync(path.join(root, 'run.json'), 'utf8');
     assert.doesNotMatch(recorded, /secret-value-that-must-be-wiped/);
     assert.deepStrictEqual(run.selection, { target: 'operator-target', model: 'operator-model', effort: 'medium', budget_usd: 5, selected_by: 'operator' });
@@ -209,7 +283,7 @@ process.exit(0);`);
 
   await test('a step that outlives its timeout is stopped with its process group and recorded as partial', async () => {
     const marker = path.join(scratch, 'grandchild.pid');
-    const entry = fakeClio('fake-slow', `
+    const entry = fakePanCode('fake-slow', `
 const { spawn } = require('child_process');
 const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 60000)'], { stdio: 'ignore' });
 require('fs').writeFileSync(${JSON.stringify(marker)}, String(child.pid));
@@ -224,81 +298,80 @@ setTimeout(() => {}, 60000);`);
     assert.strictEqual(run.credentials_removed, true);
   });
 
-  await test('cost comes only from sealed receipts by their provenance, and unknown cost is never zero', async () => {
+  await test('cost comes only from the session total PanCode sealed, and unknown cost is never zero', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
     const segment = `${JSON.stringify({ type: 'agent_end', usage: { costUsd: 0.25, measured: true } })}\n`;
-    const main = (costUsd, costProvenance) => ({ file: 'main.json', receipt: { agentId: 'main-agent', costUsd, costProvenance } });
-    const worker = (costUsd, costProvenance) => ({ file: 'worker.json', receipt: { agentId: 'wtfp-section-writer', costUsd, costProvenance } });
-    const cost = (receipts) => { const result = runner.classifyStep(ok, segment, '', { receipts }).cost; return [result.status, result.usd]; };
-    assert.deepStrictEqual(cost([]), ['unavailable', null], 'a measured segment without a receipt is not a cost');
-    assert.deepStrictEqual(cost([main(0.25, 'known')]), ['reported', 0.25], 'the main receipt already covers the segment; it is not added twice');
-    assert.deepStrictEqual(cost([main(0.25, 'known'), worker(0.5, 'known_free')]), ['reported', 0.75]);
-    assert.deepStrictEqual(cost([main(0.25, 'estimated')]), ['estimated', 0.25]);
-    assert.deepStrictEqual(cost([main(0, 'unknown')]), ['unavailable', null]);
-    assert.deepStrictEqual(cost([worker(0.5, 'known')]), ['unavailable', null], 'without the main agent\'s receipt the step is not accounted for');
+    const cost = (total) => { const result = runner.classifyStep(ok, segment, '', { telemetry: telemetryOf([], total) }).cost; return [result.status, result.usd]; };
+    assert.deepStrictEqual(runner.classifyStep(ok, segment, '', {}).cost.status, 'unavailable', 'a measured segment without sealed telemetry is not a cost');
+    assert.deepStrictEqual(cost(null), ['unavailable', null], 'a session PanCode cannot cost is not accounted for');
+    assert.deepStrictEqual(cost({ calls: sum(1), usd: sum(0.25) }), ['reported', 0.25], 'the session total already covers the segment; it is not added twice');
+    assert.deepStrictEqual(cost({ calls: sum(2), usd: sum(0) }), ['reported', 0], 'a priced free call is zero because it was priced so');
+    assert.deepStrictEqual(cost({ calls: sum(1), usd: sum(0, 0.25) }), ['estimated', 0.25]);
+    assert.deepStrictEqual(cost({ calls: sum(1), usd: sum(0, 0, 1) }), ['unavailable', null]);
+    assert.deepStrictEqual(cost({ calls: sum(1), usd: sum(0.25, 0, 0, 1) }), ['unavailable', null], 'a call with no price captured is not free');
+    assert.deepStrictEqual(cost({ calls: sum(1, 0, 1), usd: sum(0.25) }), ['unavailable', null], 'a call PanCode could not count makes the total unknown');
     const failed = runner.classifyStep({ ...ok, exitCode: 1 }, 'a headless session was mentioned', 'boom');
     assert.strictEqual(failed.outcome, 'failed', 'text in the output never decides an outcome');
   });
 
-  await test('from Clio 0.6.6 a step is judged from sealed telemetry: session cost, worker run records and the session\'s references', async () => {
+  await test('a step is judged from sealed telemetry: session cost, worker run records and the session\'s references', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
-    const sum = (measured, estimated = 0, unknownCount = 0) => ({ fact: { measured, estimated, unknownCount, absentCount: 0, coverage: { measured: measured > 0 ? 1 : 0, estimated: estimated > 0 ? 1 : 0, unknown: unknownCount } } });
     const stream = [
-      { type: 'session', id: 'sess1', clioCoderVersion: '0.7.0' },
-      { type: 'message_end', message: { role: 'assistant', model: 'm', thinkingLevel: 'low', stopReason: 'stop', responseModelIdObservation: { state: 'reported', reportedModelId: 'm' } } }
+      { type: 'session', schemaVersion: 3, id: 'sess1' },
+      { type: 'message_end', message: { role: 'assistant', model: 'm', thinkingLevel: 'low', stopReason: 'stop', responseModelIdObservation: { state: 'reported', reportedModelId: 'm' } } },
+      { type: 'run_end', sessionId: 'sess1', exitCode: 0, outcome: 'completed', causes: [] }
     ].map(value => JSON.stringify(value)).join('\n');
     const runs = path.join(scratch, 'telemetry-runs');
     fs.mkdirSync(path.join(runs, 'old'), { recursive: true });
     const before = new Set(fs.readdirSync(runs));
     for (const id of ['main1', 'w1']) fs.mkdirSync(path.join(runs, id));
-    const sealed = { status: 'verified' };
+    const sealedRun = { status: 'verified' };
     const records = {
-      'inspect --run main1': { seal: sealed, settled: { agentId: 'main-agent', tools: null } },
-      'inspect --run w1': { seal: sealed, settled: { agentId: 'wtfp-section-writer', route: { wireModelId: 'm' }, tools: [{ tool: 'read', calls: 2, blocked: 0 }, { tool: 'bash', calls: 1, blocked: 1 }] } },
-      'calls --run w1': { calls: [
-        { disposition: 'settled', responseId: 'r1', target: { reportedModel: { fact: { kind: 'measured', value: 'm' } } } },
-        { disposition: 'failed', responseId: null, target: { reportedModel: { fact: { kind: 'unknown' } } } }
-      ] },
-      'cost sess1': { total: { calls: sum(3), usd: sum(0.02) , pricedBy: { 'target-rates': 3 } } },
+      'inspect --run main1': { seal: sealedRun, settled: { agentId: 'main-agent', tools: null } },
+      'inspect --run w1': { seal: sealedRun, settled: { agentId: 'wtfp-section-writer', route: { wireModelId: 'm' }, tools: [{ tool: 'read', calls: 2, blocked: 0 }, { tool: 'bash', calls: 1, blocked: 1 }] } },
+      'calls --run w1': { calls: [callRow('m', { responseId: 'r1' }), callRow(null, { disposition: 'sent_unsettled', responseId: null })] },
+      'cost sess1': { total: { calls: sum(3), usd: sum(0.02), pricedBy: { 'target-rates': 3 } } },
       'inspect sess1': { runs: { count: 1, unresolved: 0 } }
     };
-    const judge = (overrides = {}) => {
+    const judge = (overrides = {}, stdout = stream) => {
       const read = (args) => { const key = args.join(' '); return key in overrides ? overrides[key] : records[key] ?? null; };
-      const telemetry = runner.stepTelemetry(stream, runs, before, read);
-      return runner.classifyStep(ok, stream, '', { telemetry, selection: { model: 'm', effort: 'low' } });
+      const telemetry = runner.stepTelemetry(stdout, runs, before, read);
+      return runner.classifyStep(ok, stdout, '', { telemetry, selection: { model: 'm', effort: 'low' } });
     };
     const step = judge();
-    assert.deepStrictEqual([step.outcome, step.telemetry_session, step.receipts], ['completed', 'sess1', ['run:main1', 'run:w1']]);
+    assert.deepStrictEqual([step.outcome, step.telemetry_session, step.telemetry_runs], ['completed', 'sess1', ['run:main1', 'run:w1']]);
     assert.deepStrictEqual([step.cost.status, step.cost.usd], ['reported', 0.02], 'the session total already folds its worker runs');
-    assert.strictEqual(step.tools.execution_calls, 0, 'a program-running call Clio blocked in a worker is not counted');
-    assert.deepStrictEqual([step.model_observation.status, step.model_observation.calls, step.model_calls], ['matches', 2, 2], 'a call Clio did not settle served nothing');
+    assert.strictEqual(step.tools.execution_calls, 0, 'a program-running call PanCode blocked in a worker is not counted');
+    assert.deepStrictEqual([step.model_observation.status, step.model_observation.calls, step.model_calls], ['matches', 2, 2], 'a call PanCode did not settle served nothing');
     assert.deepStrictEqual([step.effort_observation.requested, step.effort_observation.effective], [['low'], ['low']]);
+    assert.strictEqual(judge({}, stream.split('\n').slice(1).join('\n')).telemetry_session, 'sess1', 'a stream whose session frame is missing still names its session in run_end');
     const cost = (total) => { const result = judge({ 'cost sess1': total }).cost; return [result.status, result.usd]; };
     assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0.01) } }), ['estimated', 0.02]);
     assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0, 1) } }), ['unavailable', null], 'one unpriced call makes the step\'s cost unknown, never partial');
     assert.deepStrictEqual(cost(null), ['unavailable', null]);
-    const ran = judge({ 'inspect --run w1': { seal: sealed, settled: { agentId: 'wtfp-section-writer', tools: [{ tool: 'bash', calls: 1, blocked: 0 }] } } });
+    const ran = judge({ 'inspect --run w1': { seal: sealedRun, settled: { agentId: 'wtfp-section-writer', tools: [{ tool: 'bash', calls: 1, blocked: 0 }] } } });
     assert.deepStrictEqual([ran.outcome, ran.tools.execution_calls], ['policy-violation', 1]);
-    const judged = (overrides) => { const result = judge(overrides); return [result.outcome, result.unreadable_worker_receipts]; };
-    assert.deepStrictEqual(judged({ 'inspect --run w1': { seal: { status: 'broken' }, settled: records['inspect --run w1'].settled } }), ['integrity-violation', ['run:w1']], 'a run whose seal Clio does not verify vouches for nothing');
+    const judged = (overrides) => { const result = judge(overrides); return [result.outcome, result.unreadable_worker_runs]; };
+    assert.deepStrictEqual(judged({ 'inspect --run w1': { seal: { status: 'broken' }, settled: records['inspect --run w1'].settled } }), ['integrity-violation', ['run:w1']], 'a run whose seal PanCode does not verify vouches for nothing');
     assert.deepStrictEqual(judged({ 'calls --run w1': null }), ['integrity-violation', ['run:w1']]);
     assert.deepStrictEqual(judged({ 'inspect sess1': { runs: { count: 2, unresolved: 0 } } }), ['integrity-violation', ['session:sess1']], 'a worker run the session references but the runner cannot find');
     assert.deepStrictEqual(judged({ 'inspect sess1': { runs: { count: 1, unresolved: 1 } } }), ['integrity-violation', ['session:sess1']]);
+    assert.deepStrictEqual(judged({ 'inspect sess1': null }), ['integrity-violation', ['session:sess1']], 'a session PanCode cannot inspect vouches for nothing');
   });
 
-  await test('the Clio version is the first line of --version, so 0.7.0\'s pane runtime line does not unpin a build', async () => {
-    const dist = path.join(scratch, 'fake-070', 'dist');
-    fs.mkdirSync(path.join(dist, 'cli'), { recursive: true });
-    const entry = path.join(dist, 'cli', 'index.js');
-    fs.writeFileSync(entry, "console.log('Clio Coder 0.6.2\\nPanes powered by herdr 0.9.5 (Apache-2.0)');\n");
-    const identity = runner.clioIdentity(entry, campaign);
-    assert.strictEqual(identity.observed.version, 'Clio Coder 0.6.2');
+  await test('the PanCode version is the first line of --version, so the pane runtime line does not unpin a build, and the commit it names must be the pinned one', async () => {
+    const entry = fakePanCode('fake-version', 'process.exit(0);');
+    const identity = runner.pancodeIdentity(entry, campaign);
+    assert.strictEqual(identity.observed.version, 'PanCode 0.9.0-dev (unreleased · 224f908)');
     assert.ok(!identity.mismatches.some(item => item.startsWith('version')));
-    assert.deepStrictEqual([runner.readsTelemetry(campaign), runner.readsTelemetry({ clio: { version: '0.6.6' } }), runner.readsTelemetry({ clio: { version: '0.7.0' } })], [false, true, true]);
+    const other = runner.pancodeIdentity(fakePanCode('fake-other-commit', 'process.exit(0);', 'PanCode 0.9.0-dev (unreleased · 588f283)'), campaign);
+    assert.ok(other.mismatches.some(item => /names a commit other than 224f908/.test(item)), 'a build from another commit is unpinned even at the same version');
+    const release = runner.pancodeIdentity(fakePanCode('fake-release', 'process.exit(0);', 'PanCode 0.9.1'), campaign);
+    assert.ok(release.mismatches.some(item => /is not PanCode 0\.9\.0-dev/.test(item)));
   });
 
   await test('execute runs only on the campaign, build, candidate, checks and workspace that prepare bound', async () => {
-    const entry = fakeClio('fake-bound', 'process.exit(0);');
+    const entry = fakePanCode('fake-bound', 'process.exit(0);');
     const attempt = (root, extra = {}) => withEnv(executeEnv, () => runner.execute(campaign, { root, entry, ...selection, ...extra }));
     const edited = path.join(scratch, 'edited-campaign.json');
     fs.writeFileSync(edited, `${fs.readFileSync(CAMPAIGN_FILE, 'utf8')} `);
@@ -312,8 +385,8 @@ setTimeout(() => {}, 60000);`);
     fs.mkdirSync(path.join(moved, 'workspace', 'empty'));
     await assert.rejects(attempt(moved), /workspace changed since prepare/, 'an empty directory counts');
     await assert.rejects(attempt(preparedRoot('bound-candidate', entry, (prepared) => ({ ...prepared, wtfp: { ...prepared.wtfp, commit: '0'.repeat(40) } }))), /WTF-P candidate changed/);
-    await assert.rejects(attempt(preparedRoot('bound-build', entry, (prepared) => ({ ...prepared, clio: { ...prepared.clio, dist_sha256: '0'.repeat(64) } }))), /Clio build changed since prepare/);
-    await assert.rejects(attempt(preparedRoot('bound-pinned', entry, (prepared) => ({ ...prepared, clio_unpinned: [] }))), /unpinned Clio build/);
+    await assert.rejects(attempt(preparedRoot('bound-build', entry, (prepared) => ({ ...prepared, pancode: { ...prepared.pancode, dist_sha256: '0'.repeat(64) } }))), /PanCode build changed since prepare/);
+    await assert.rejects(attempt(preparedRoot('bound-pinned', entry, (prepared) => ({ ...prepared, pancode_unpinned: [] }))), /unpinned PanCode build/);
     await assert.rejects(attempt(preparedRoot('bound-timeout', entry), { timeoutMinutes: campaign.budget.timeout_minutes_per_step + 1 }), /at most the campaign's/);
     // Entry names cannot forge another entry: a file named like two listing lines digests differently from the two files.
     const twoFiles = path.join(scratch, 'digest-two');
@@ -326,23 +399,23 @@ setTimeout(() => {}, 60000);`);
     assert.notStrictEqual(runner.workspaceDigest(oneFile), runner.workspaceDigest(twoFiles));
     for (const name of ['bound-campaign', 'bound-checks', 'bound-workspace', 'bound-candidate', 'bound-build', 'bound-pinned', 'bound-timeout']) {
       assert.ok(!fs.existsSync(path.join(scratch, name, 'run.json')), `${name} ran nothing`);
-      assert.ok(!fs.existsSync(path.join(runner.profilePaths(path.join(scratch, name)).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')), `${name} copied no credential`);
+      assert.ok(!fs.existsSync(path.join(runner.profilePaths(path.join(scratch, name)).PANCODE_CONFIG_DIR, 'credentials.yaml')), `${name} copied no credential`);
     }
   });
 
   await test('every step runs without retrieval tools inside the run home, and a network tool call is a policy violation', async () => {
     const envFile = path.join(scratch, 'step-env.json');
     const argvFile = path.join(scratch, 'step-argv.json');
-    const entry = fakeClio('fake-network', `require('fs').writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(process.env));
+    const entry = fakePanCode('fake-network', `require('fs').writeFileSync(${JSON.stringify(envFile)}, JSON.stringify(process.env));
 require('fs').writeFileSync(${JSON.stringify(argvFile)}, JSON.stringify(args));
 ${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'web_fetch', args: { url: 'https://example.invalid' } })}
 ${measured(0.01)}
 process.exit(0);`);
     const run = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('network', entry), entry, ...selection }));
     const env = JSON.parse(fs.readFileSync(envFile, 'utf8'));
-    assert.strictEqual(env.CLIO_CODER_DISABLE_RETRIEVE_TOOLS, '1');
-    assert.strictEqual(env.CLIO_CODER_REQUIRE_HOME_PREFIX, '1');
-    assert.strictEqual(env.CLIO_CODER_INTEROP_HOME, 'none', 'no other agent\'s home feeds a step');
+    assert.strictEqual(env.PANCODE_DISABLE_RETRIEVE_TOOLS, '1');
+    assert.strictEqual(env.PANCODE_REQUIRE_HOME_PREFIX, '1');
+    assert.strictEqual(env.PANCODE_INTEROP_HOME, 'none', 'no other agent\'s home feeds a step');
     assert.ok(!('CLAUDE_CONFIG_DIR' in env), 'an agent home variable never reaches a step');
     assert.strictEqual(run.outcome, 'policy-violation');
     assert.deepStrictEqual(run.steps[0].tools, { calls: { web_fetch: 1 }, network_calls: 1, store_calls: 0, execution_calls: 0, blocked_calls: 0 });
@@ -351,67 +424,70 @@ process.exit(0);`);
     const listed = (flag) => { const at = argv.indexOf(flag); assert.ok(at > 0, `the step passes ${flag}`); return argv[at + 1].split(','); };
     assert.deepStrictEqual(listed('--allow-tools'), [...runner.MAIN_TOOLS]);
     assert.deepStrictEqual(listed('--delegate-tools'), [...runner.WORKER_TOOLS]);
-    assert.ok(!argv.includes('--max-cost-usd'), 'Clio 0.6.2 takes no cost ceiling');
-    assert.strictEqual(run.budget_enforcement, 'between steps');
-    for (const tool of [...runner.EXECUTION_TOOLS, 'web_fetch', 'web_read', 'configure_clio', 'consult']) {
+    assert.strictEqual(argv[argv.indexOf('--max-cost-usd') + 1], '5', 'the step runs under the budget as its cost ceiling');
+    assert.strictEqual(argv[argv.indexOf('--output-format') + 1], 'stream-json');
+    assert.strictEqual(argv[argv.length - 1], '/wtfp:new-paper durable workflows', 'the action prompt is the last argument');
+    assert.strictEqual(run.budget_enforcement, 'per-step PanCode ceiling (--max-cost-usd) and between steps');
+    for (const tool of [...runner.EXECUTION_TOOLS, 'web_fetch', 'web_read', 'configure_pancode', 'consult', 'browser', 'restart_session']) {
       assert.ok(!runner.MAIN_TOOLS.includes(tool) && !runner.WORKER_TOOLS.includes(tool), `no step holds ${tool}`);
     }
     assert.deepStrictEqual(run.step_environment.tools, { main: [...runner.MAIN_TOOLS], delegated: [...runner.WORKER_TOOLS] });
-    // The main agent holds every desk tool by the name Clio gives it, and nothing the desk does not declare.
-    // A campaign step runs one action, never an advance run, so it holds no driver tool.
-    const manifest = fs.readFileSync(path.join(ROOT, 'clio/clio-coder-extension.yaml'), 'utf8');
+    // The main agent holds every desk tool by the name PanCode gives it, and nothing the desk does not declare.
+    // A campaign step runs one action, never an advance run, so it holds no driver tool,
+    // and its steps never archive a milestone, so they hold no archive tool either.
+    const manifest = fs.readFileSync(path.join(ROOT, 'pancode/extension/pancode-extension.yaml'), 'utf8');
     const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)]
       .map(match => `extension_wtfp__${match[1]}`)
-      // The v2 campaign was prepared before status existed; its prompts fall back to reading records.
-      // Its steps never archive a milestone, so they hold no archive tool either.
-      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__status', 'extension_wtfp__archive'].includes(tool));
+      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__archive'].includes(tool));
     assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
   });
 
   await test('a step that runs a program violates the campaign policy, whether the main agent or a worker ran it', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
-    const main = { file: 'main.json', receipt: { agentId: 'main-agent', costUsd: 0.01, costProvenance: 'known' } };
+    const main = runner.telemetryWorker('main', { seal: { status: 'verified' }, settled: { agentId: 'main-agent' } }, null);
     const lines = (...events) => events.map(event => JSON.stringify(event)).join('\n');
     const start = (id, toolName) => ({ type: 'tool_execution_start', toolCallId: id, toolName, args: { command: 'node --test planted.test.js' } });
-    const outcome = (stdout, receipts = [main]) => { const step = runner.classifyStep(ok, stdout, '', { receipts }); return [step.outcome, step.tools.execution_calls]; };
+    const outcome = (stdout, workers = [main]) => { const step = runner.classifyStep(ok, stdout, '', { telemetry: telemetryOf(workers) }); return [step.outcome, step.tools.execution_calls]; };
     assert.deepStrictEqual(outcome(lines(start('c1', 'read'))), ['completed', 0]);
     for (const tool of runner.EXECUTION_TOOLS) assert.deepStrictEqual(outcome(lines(start('c1', tool))), ['policy-violation', 1], `${tool} by the main agent`);
-    assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'blocked' })), ['completed', 0], 'a call Clio blocked did not run');
+    assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'blocked' })), ['completed', 0], 'a call PanCode blocked did not run');
     assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c2', outcome: 'blocked' })), ['policy-violation', 1], 'another call\'s block does not excuse this one');
-    const worker = (toolStats) => ({ file: 'worker.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free', toolStats } });
-    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'verify', count: 2, ok: 2, errors: 0, blocked: 0 }])]), ['policy-violation', 2], 'a worker that ran verify');
-    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'bash', count: 1, ok: 0, errors: 0, blocked: 1 }, { tool: 'read', count: 3, ok: 3, errors: 0, blocked: 0 }])]), ['completed', 0], 'a worker call Clio blocked did not run');
-    // A gateway call keeps the name gateway in every form Clio accepts but `op: call` with `capability`.
+    const worker = (tools) => { const run = workerRun({ tools }); return runner.telemetryWorker('worker', run.inspect, run.calls.calls); };
+    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'verify', calls: 2, ok: 2, errors: 0, blocked: 0 }])]), ['policy-violation', 2], 'a worker that ran verify');
+    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'bash', calls: 1, ok: 0, errors: 0, blocked: 1 }, { tool: 'read', calls: 3, ok: 3, errors: 0, blocked: 0 }])]), ['completed', 0], 'a worker call PanCode blocked did not run');
+    assert.deepStrictEqual(outcome('', [main, worker([{ tool: 'bash', calls: 1, ok: 0, errors: 1, blocked: 0 }])]), ['policy-violation', 1], 'a worker call that errored is not a blocked one');
+    // A gateway call keeps the name gateway in every form PanCode accepts but `op: call` with `capability`.
     const via = (args) => ({ type: 'tool_execution_start', toolCallId: 'g1', toolName: 'gateway', args });
     assert.deepStrictEqual(outcome(lines(via({ name: 'bash', args: { command: 'node --test x.js' } }))), ['policy-violation', 1], 'gateway call by name');
     assert.deepStrictEqual(outcome(lines(via({ tool: 'run_script', args: {} }))), ['policy-violation', 1], 'gateway call by tool');
     assert.deepStrictEqual(outcome(lines(via({ op: 'chain', steps: [{ id: 'a', capability: 'read', args: {} }, { id: 'b', capability: 'verify', args: {} }] }))), ['policy-violation', 1], 'a chain step');
     assert.deepStrictEqual(outcome(lines(via({ op: 'find', query: 'tests' }))), ['completed', 0], 'discovery names no capability');
-    const fetched = runner.classifyStep(ok, lines(via({ name: 'web_fetch', args: { url: 'https://example.invalid' } })), '', { receipts: [main] });
+    const fetched = runner.classifyStep(ok, lines(via({ name: 'web_fetch', args: { url: 'https://example.invalid' } })), '', { telemetry: telemetryOf([main]) });
     assert.deepStrictEqual([fetched.outcome, fetched.tools.network_calls], ['policy-violation', 1], 'a retrieval call through the gateway');
-    // Clio's event stream does not tell a refusal from a failed run, so only a blocked outcome clears a call.
+    // PanCode's event stream does not tell a refusal from a failed run, so only a blocked outcome clears a call.
     assert.deepStrictEqual(outcome(lines(start('c1', 'bash'), { type: 'tool_execution_end', toolCallId: 'c1', outcome: 'error' })), ['policy-violation', 1]);
   });
 
-  await test('on Clio 0.6.3 each step runs with the budget left as its cost ceiling, and a ceiling stop is stopped-budget', async () => {
-    const later = path.join(scratch, 'ceiling.campaign.json');
-    fs.writeFileSync(later, JSON.stringify({ ...ungated, clio: { ...ungated.clio, version: '0.6.3' } }));
-    const campaign063 = runner.loadCampaign(later);
+  await test('each step runs with the budget left as its cost ceiling, and a ceiling stop is stopped-budget', async () => {
     const calls = path.join(scratch, 'ceiling-calls');
-    const entry = fakeClio('fake-ceiling', `const fs = require('fs');
+    const entry = fakePanCode('fake-ceiling', `const fs = require('fs');
 const log = ${JSON.stringify(calls)};
 const seen = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').split('\\n').filter(Boolean) : [];
 fs.appendFileSync(log, JSON.stringify(args) + '\\n');
-${mainReceipt(0.01)}
+${sealed(0.01)}
+if (seen.length > 0) console.log(JSON.stringify({ type: 'run_end', exitCode: 4, outcome: 'limit', causes: [{ code: 'max_cost_usd', message: 'cost ceiling reached' }] }));
 process.exit(seen.length === 0 ? 0 : 4);`);
-    const run = await withEnv(executeEnv, () => runner.execute(campaign063, { root: preparedRoot('ceiling', entry, undefined, later), entry, ...selection, campaignFile: later }));
+    const run = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('ceiling', entry, undefined, ungatedFile), entry, ...selection, campaignFile: ungatedFile }));
     const ceilings = fs.readFileSync(calls, 'utf8').split('\n').filter(Boolean).map(line => { const argv = JSON.parse(line); return argv[argv.indexOf('--max-cost-usd') + 1]; });
     assert.deepStrictEqual(ceilings, ['5', '4.99'], 'each step gets the budget the earlier steps left');
     assert.deepStrictEqual([run.outcome, run.steps.map(step => step.outcome)], ['stopped-budget', ['completed', 'stopped-budget']]);
-    assert.match(run.budget_enforcement, /per-step Clio ceiling/);
-    assert.match(run.cost.scope, /compaction and every worker/);
-    const ok = { exitCode: 4, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
-    assert.strictEqual(runner.classifyStep(ok, '', '', {}).outcome, 'failed', 'without a ceiling, exit 4 is a failure');
+    assert.match(run.budget_enforcement, /per-step PanCode ceiling/);
+    assert.match(run.cost.scope, /compaction included, and every worker run/);
+    const limited = { exitCode: 4, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
+    const ended = (code) => JSON.stringify({ type: 'run_end', exitCode: 4, causes: [{ code }] });
+    assert.strictEqual(runner.classifyStep(limited, ended('max_cost_usd'), '', {}).outcome, 'stopped-budget');
+    assert.strictEqual(runner.classifyStep(limited, '', '', {}).outcome, 'failed', 'exit 4 with no run_end naming the ceiling is a failure');
+    assert.strictEqual(runner.classifyStep(limited, ended('max_tool_calls'), '', {}).outcome, 'failed', 'another limit is not the budget');
   });
 
   await test('every digest reads files in chunks, so a file past one read\'s limit is hashed, not a runner error', async () => {
@@ -430,56 +506,60 @@ process.exit(seen.length === 0 ? 0 : 4);`);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  await test('a worker receipt the runner cannot read vouches for nothing, so its step fails integrity', async () => {
+  await test('a worker run the runner cannot read vouches for nothing, so its step fails integrity', async () => {
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
-    const main = { file: 'main.json', receipt: { agentId: 'main-agent', costUsd: 0.01, costProvenance: 'known' } };
-    const judged = (receipts) => { const step = runner.classifyStep(ok, '', '', { receipts }); return [step.outcome, step.unreadable_worker_receipts]; };
-    assert.deepStrictEqual(judged([main, { file: 'w.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free', toolStats: [] } }]), ['completed', []]);
-    assert.deepStrictEqual(judged([main, { file: 'torn.json', receipt: null }]), ['integrity-violation', ['torn.json']]);
-    assert.deepStrictEqual(judged([main, { file: 'bare.json', receipt: { agentId: 'wtfp-section-writer', costUsd: 0, costProvenance: 'known_free' } }]), ['integrity-violation', ['bare.json']]);
+    const main = runner.telemetryWorker('main', { seal: { status: 'verified' }, settled: { agentId: 'main-agent' } }, null);
+    const judged = (workers) => { const step = runner.classifyStep(ok, '', '', { telemetry: telemetryOf(workers) }); return [step.outcome, step.unreadable_worker_runs]; };
+    const worker = workerRun({ tools: [] });
+    assert.deepStrictEqual(judged([main, runner.telemetryWorker('w', worker.inspect, worker.calls.calls)]), ['completed', []]);
+    assert.deepStrictEqual(judged([main, runner.telemetryWorker('torn', null, [])]), ['integrity-violation', ['run:torn']]);
+    const bare = { seal: { status: 'verified' }, settled: { agentId: 'wtfp-section-writer' } };
+    assert.deepStrictEqual(judged([main, runner.telemetryWorker('bare', bare, [])]), ['integrity-violation', ['run:bare']], 'a run that records no tool counts');
+    assert.deepStrictEqual(judged([main, runner.telemetryWorker('uncalled', worker.inspect, null)]), ['integrity-violation', ['run:uncalled']], 'a run whose calls cannot be read');
+    assert.deepStrictEqual(judged([runner.telemetryWorker('main', { seal: { status: 'unsealed' }, settled: { agentId: 'main-agent' } }, null)]), ['integrity-violation', ['run:main']], 'even the main agent\'s run must be sealed');
   });
 
-  await test('a step that changes the Clio configuration later steps load fails integrity; Clio\'s own runtime output does not', async () => {
+  await test('a step that changes the PanCode configuration later steps load fails integrity; PanCode\'s own runtime output does not', async () => {
     const fileWrite = (relative, text) => `{ const f = require('path').join(process.cwd(), ${JSON.stringify(relative)}); require('fs').mkdirSync(require('path').dirname(f), { recursive: true }); require('fs').writeFileSync(f, ${JSON.stringify(text)}); }`;
-    const outputs = fakeClio('fake-outputs', `${fileWrite('.clio-coder/runs/r1/stdout.log', 'ran')}
-${fileWrite('.clio-coder/state.json', '{}')}
-${fileWrite('.clio-coder/artifacts/plan.md', 'a plan')}
-${fileWrite('.clio-coder/handoffs/h.md', 'notes')}
-${mainReceipt(0.01)}
+    const outputs = fakePanCode('fake-outputs', `${fileWrite('.pancode/runs/r1/stdout.log', 'ran')}
+${fileWrite('.pancode/state.json', '{}')}
+${fileWrite('.pancode/artifacts/plan.md', 'a plan')}
+${fileWrite('.pancode/handoffs/h.md', 'notes')}
+${sealed(0.01)}
 process.exit(0);`);
     const clean = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('outputs', outputs, undefined, ungatedFile), entry: outputs, ...selection, campaignFile: ungatedFile }));
-    assert.deepStrictEqual(clean.steps.map(step => [step.outcome, step.clio_config_changed]), [['completed', []], ['completed', []]]);
-    const recipe = fakeClio('fake-recipe', `${fileWrite('.clio-coder/agents/wtfp-section-reviewer.md', '---\nname: always pass\n---\n')}
-${mainReceipt(0.01)}
+    assert.deepStrictEqual(clean.steps.map(step => [step.outcome, step.pancode_config_changed]), [['completed', []], ['completed', []]]);
+    const recipe = fakePanCode('fake-recipe', `${fileWrite('.pancode/agents/wtfp-section-reviewer.md', '---\nname: always pass\n---\n')}
+${sealed(0.01)}
 process.exit(0);`);
     const overridden = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('recipe', recipe, undefined, ungatedFile), entry: recipe, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(overridden.outcome, 'integrity-violation');
-    assert.deepStrictEqual(overridden.steps[0].clio_config_changed, ['.clio-coder/agents', '.clio-coder/agents/wtfp-section-reviewer.md']);
+    assert.deepStrictEqual(overridden.steps[0].pancode_config_changed, ['.pancode/agents', '.pancode/agents/wtfp-section-reviewer.md']);
     // A link inside the configuration counts by its target, so retargeting it is a change.
     const config = path.join(scratch, 'config-links');
-    fs.mkdirSync(path.join(config, '.clio-coder', 'wiki'), { recursive: true });
-    fs.symlinkSync('wiki', path.join(config, '.clio-coder', 'agents'));
-    const linkedBefore = runner.clioProjectConfig(config);
-    fs.rmSync(path.join(config, '.clio-coder', 'agents'));
-    fs.symlinkSync('../elsewhere', path.join(config, '.clio-coder', 'agents'));
-    assert.deepStrictEqual(runner.configChanges(linkedBefore, runner.clioProjectConfig(config)), ['.clio-coder/agents']);
-    const linked = fakeClio('fake-linked-config', `require('fs').symlinkSync(require('os').tmpdir(), require('path').join(process.cwd(), '.clio-coder'));
-${mainReceipt(0.01)}
+    fs.mkdirSync(path.join(config, '.pancode', 'wiki'), { recursive: true });
+    fs.symlinkSync('wiki', path.join(config, '.pancode', 'agents'));
+    const linkedBefore = runner.pancodeProjectConfig(config);
+    fs.rmSync(path.join(config, '.pancode', 'agents'));
+    fs.symlinkSync('../elsewhere', path.join(config, '.pancode', 'agents'));
+    assert.deepStrictEqual(runner.configChanges(linkedBefore, runner.pancodeProjectConfig(config)), ['.pancode/agents']);
+    const linked = fakePanCode('fake-linked-config', `require('fs').symlinkSync(require('os').tmpdir(), require('path').join(process.cwd(), '.pancode'));
+${sealed(0.01)}
 process.exit(0);`);
     const relinked = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('linked-config', linked, undefined, ungatedFile), entry: linked, ...selection, campaignFile: ungatedFile }));
-    assert.deepStrictEqual([relinked.outcome, relinked.steps[0].clio_config_changed], ['integrity-violation', ['.clio-coder']]);
+    assert.deepStrictEqual([relinked.outcome, relinked.steps[0].pancode_config_changed], ['integrity-violation', ['.pancode']]);
   });
 
   await test('prepare refuses a WTF-P recipe that declares a tool a step\'s workers may not hold', async () => {
-    assert.deepStrictEqual(runner.recipeToolsOutside(path.join(ROOT, 'vendors/plugin')), [], 'the shipped recipes fit the delegated tools');
+    assert.deepStrictEqual(runner.recipeToolsOutside(path.join(ROOT, 'pancode/plugin')), [], 'the shipped recipes fit the delegated tools');
     const plugin = path.join(scratch, 'grown-plugin');
-    fs.cpSync(path.join(ROOT, 'vendors/plugin/ai.iowarp.clio/agents'), path.join(plugin, 'ai.iowarp.clio/agents'), { recursive: true });
-    const recipe = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-reviewer.md');
+    fs.cpSync(path.join(ROOT, 'pancode/plugin/dev.pancode/agents'), path.join(plugin, 'dev.pancode/agents'), { recursive: true });
+    const recipe = path.join(plugin, 'dev.pancode/agents/wtfp-section-reviewer.md');
     const grown = fs.readFileSync(recipe, 'utf8').replace(/optional: \[/, 'optional: [verify, ');
     assert.notStrictEqual(grown, fs.readFileSync(recipe, 'utf8'), 'the recipe declares optional tools to extend');
     fs.writeFileSync(recipe, grown);
     assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify']);
-    const writer = path.join(plugin, 'ai.iowarp.clio/agents/wtfp-section-writer.md');
+    const writer = path.join(plugin, 'dev.pancode/agents/wtfp-section-writer.md');
     fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace('{anyOf: [write, edit]}', '{anyOf: [write, edit, bash]}'));
     assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify', 'wtfp-section-writer: bash']);
     fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace(/^tools: .*$/m, 'tools:\n  required: [bash]'));
@@ -490,14 +570,14 @@ process.exit(0);`);
   await test('a gated step is never completed while its gate is pending or answered without a sealed author answer', async () => {
     const checkpoint = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/checkpoint.json'), 'utf8'));
     const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/project/templates/manifest.json'), 'utf8'));
-    const pending = fakeClio('fake-pending', `${planningWrite('project.json', manifest)}
+    const pending = fakePanCode('fake-pending', `${planningWrite('project.json', manifest)}
 ${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'pending' })}
 ${measured(0.01)}
 process.exit(0);`);
     const waiting = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('pending', pending), entry: pending, ...selection }));
     assert.strictEqual(waiting.outcome, 'blocked-author-unavailable');
     assert.deepStrictEqual(waiting.steps[0].gates, { pending: [checkpoint.id], unconfirmed: [] });
-    const forged = fakeClio('fake-forged', `${planningWrite('project.json', manifest)}
+    const forged = fakePanCode('fake-forged', `${planningWrite('project.json', manifest)}
 ${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'resolved', resolution: { resolved_by: 'author', selected_option: checkpoint.options[0].id, summary: 'Written by the agent.', resolved_at: '2026-10-14T12:00:00Z' } })}
 ${measured(0.01)}
 process.exit(0);`);
@@ -505,7 +585,7 @@ process.exit(0);`);
     assert.strictEqual(violated.outcome, 'integrity-violation');
     assert.deepStrictEqual(violated.steps[0].gates, { pending: [], unconfirmed: [checkpoint.id] });
     // A gated step that raises no gate skipped its author.
-    const skipper = fakeClio('fake-skipper', `${mainReceipt(0.01)}
+    const skipper = fakePanCode('fake-skipper', `${sealed(0.01)}
 process.exit(0);`);
     const skipped = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('skipped', skipper), entry: skipper, ...selection }));
     assert.deepStrictEqual([skipped.outcome, skipped.steps.length], ['gate-not-raised', 1]);
@@ -519,12 +599,12 @@ process.exit(0);`);
       subject_uri: `project://checkpoints/${checkpoint.id}`, channel: 'attested-interview', outcome: 'selected', selected_option: checkpoint.options[0].id,
       presented: { content_sha256: sha256(runner.canonical(asked)), options: checkpoint.options.map(option => option.id) }, asked_at: '2026-10-14T12:00:00Z', answered_at: '2026-10-14T12:01:00Z'
     }, key);
-    const minted = fakeClio('fake-minted', `${planningWrite('project.json', manifest)}
+    const minted = fakePanCode('fake-minted', `${planningWrite('project.json', manifest)}
 ${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: true, status: 'resolved', resolution })}
 ${planningWrite('interactions/interaction-minted.json', sealedAnswer)}
 process.exit(0);`);
     const mintedRoot = preparedRoot('minted', minted);
-    const store = path.join(runner.profilePaths(mintedRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(mintedRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, JSON.stringify({ version: 1, entries: { 'seal-key': { value: key.toString('hex'), version: 1 } } }));
     const mintedRun = await withEnv(executeEnv, () => runner.execute(campaign, { root: mintedRoot, entry: minted, ...selection }));
@@ -535,7 +615,7 @@ process.exit(0);`);
     assert.deepStrictEqual(mintedReport.decisions.map(item => [item.checkpoint, item.trust, item.attested_by]), [[checkpoint.id, 'sealed-during-headless-step', null]]);
     assert.ok(!mintedReport.evidence_levels.includes('observed-author'), 'a seal minted with no author present is not author evidence');
     // Reaching for the seal store is a policy violation whatever tool does it.
-    const reaching = fakeClio('fake-reaching', `${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'bash', args: { command: 'cat ../clio/state/extensions/wtfp/store.json' } })}
+    const reaching = fakePanCode('fake-reaching', `${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'bash', args: { command: 'cat ../pancode/state/extensions/wtfp/store.json' } })}
 process.exit(0);`);
     const reached = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('reaching', reaching), entry: reaching, ...selection }));
     assert.deepStrictEqual([reached.outcome, reached.steps[0].tools.store_calls], ['policy-violation', 1]);
@@ -543,7 +623,7 @@ process.exit(0);`);
 
   await test('a signal during a step records it cancelled, and an unmeasurable cost stops the run', async () => {
     // The step exits cleanly when the runner stops it, so only the runner knows it was interrupted.
-    const entry = fakeClio('fake-signal', `${measured(0.01)}
+    const entry = fakePanCode('fake-signal', `${measured(0.01)}
 process.on('SIGTERM', () => process.exit(0));
 process.kill(process.ppid, 'SIGINT');
 setTimeout(() => process.exit(0), 2000);`);
@@ -554,12 +634,12 @@ setTimeout(() => process.exit(0), 2000);`);
     // A second signal exits the runner, and the run is still on record. A detached grandchild keeps the
     // step's output open, so the step never returns and only the runner's own exit can record the run.
     const started = path.join(scratch, 'stubborn.started');
-    const stubborn = fakeClio('fake-stubborn', `process.on('SIGTERM', () => {});
+    const stubborn = fakePanCode('fake-stubborn', `process.on('SIGTERM', () => {});
 const holder = require('child_process').spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: true, stdio: ['ignore', 'inherit', 'inherit'] });
 require('fs').writeFileSync(${JSON.stringify(started)}, String(holder.pid));
 setInterval(() => {}, 1000);`);
     const root = preparedRoot('stubborn', stubborn);
-    const child = require('child_process').spawn(process.execPath, [path.join(ROOT, 'evaluation/tools/run-clio-campaign.js'), 'execute', '--root', root, '--clio-entry', stubborn,
+    const child = require('child_process').spawn(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'execute', '--root', root, '--pancode-entry', stubborn,
       '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
     { env: { ...process.env, ...executeEnv }, stdio: 'ignore' });
     const closed = new Promise(resolve => child.on('close', code => resolve(code)));
@@ -573,7 +653,7 @@ setInterval(() => {}, 1000);`);
     const recorded = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(recorded.outcome, 'cancelled');
     assert.strictEqual(recorded.credentials_removed, true);
-    const unmetered = fakeClio('fake-unmetered', `${mainReceipt(0, 'unknown')}
+    const unmetered = fakePanCode('fake-unmetered', `${sealed(0, { unknown: true })}
 process.exit(0);`);
     const stopped = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('unmetered', unmetered, undefined, ungatedFile), entry: unmetered, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(stopped.outcome, 'stopped-cost-unavailable');
@@ -581,11 +661,11 @@ process.exit(0);`);
     assert.strictEqual(stopped.steps.length, 1);
   });
 
-  await test('the run records the models providers reported, never the ones requested, and the effort Clio resolved', async () => {
-    const entry = fakeClio('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', responseModel: 'operator-model-2026', providerThinkingLevel: 'medium', content: [] } })}
-${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', content: [] } })}
-${mainReceipt(0.02)}
-${receiptWrite('worker-1', { runId: 'worker-1', agentId: 'wtfp-section-writer', targetId: 'worker-target', wireModelId: 'operator-model', costUsd: 0.03, costProvenance: 'known', toolStats: [{ tool: 'read', count: 2, ok: 2, errors: 0, blocked: 0 }], upstreamResponses: [{ requestedModelId: 'operator-model', providerResponseId: 'resp-1', responseModelIdObservation: { state: 'not-observed' } }] })}
+  await test('the run records the models providers reported, never the ones requested, and the effort PanCode resolved', async () => {
+    const writer = workerRun({ route: { wireModelId: 'operator-model' }, tools: [{ tool: 'read', calls: 2, ok: 2, errors: 0, blocked: 0 }] }, [callRow(null, { responseId: 'resp-1' })]);
+    const entry = fakePanCode('fake-models', `${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', responseModel: 'operator-model-2026', thinkingLevel: 'medium', providerThinkingLevel: 'medium', content: [] } })}
+${frame({ type: 'message_end', message: { role: 'assistant', provider: 'operator-target', model: 'operator-model', thinkingLevel: 'medium', responseModelIdObservation: { state: 'not-reported' }, content: [] } })}
+${sealed(0.05, { workers: { 'worker-1': writer } })}
 process.exit(0);`);
     const root = preparedRoot('models', entry, undefined, ungatedFile);
     const run = await withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, budgetUsd: 0.04, campaignFile: ungatedFile }));
@@ -605,37 +685,36 @@ process.exit(0);`);
     const ok = { exitCode: 0, signal: null, timedOut: false, latencyMs: 1, processGroup: {} };
     const lines = [
       { type: 'message_end', message: { role: 'assistant', model: 'm', responseModelIdObservation: { state: 'reported', reportedModelId: 'm-responses' }, content: [] } },
-      { type: 'message_end', message: { role: 'assistant', model: 'm', stopReason: 'error', content: [] } }
+      { type: 'message_end', message: { role: 'assistant', model: 'm', responseModel: 'm-fallback', responseModelIdObservation: { state: 'not-observed' }, content: [] } },
+      { type: 'message_end', message: { role: 'assistant', model: 'm', responseModelIdObservation: { state: 'legacy-difference-only', differingModelId: 'm-legacy' }, content: [] } },
+      { type: 'message_end', message: { role: 'assistant', model: 'm', stopReason: 'error', responseModelIdObservation: { state: 'reported', reportedModelId: 'm-err' }, content: [] } }
     ].map(line => JSON.stringify(line)).join('\n');
-    const worker = { file: 'w.json', receipt: { agentId: 'wtfp-section-writer', wireModelId: 'm', upstreamResponses: [
-      { requestedModelId: 'm', providerResponseId: 'r1', responseModelIdObservation: { state: 'not-observed' }, differingResponseModelId: 'm-fallback' },
-      { requestedModelId: 'm', providerResponseId: 'r2', responseModelIdObservation: { state: 'legacy-difference-only', differingModelId: 'm-legacy' } },
-      { requestedModelId: 'm', usageScope: 'run-aggregate', responseModelIdObservation: { state: 'not-observed' } },
-      { requestedModelId: 'm', usage: { input: 0, output: 0, totalTokens: 0 }, responseModelIdObservation: { state: 'reported', reportedModelId: 'm-err' } }
-    ] } };
-    const step = runner.classifyStep(ok, lines, '', { receipts: [worker], selection: { model: 'm' } });
+    const worker = (calls) => { const run = workerRun({ route: { wireModelId: 'm' } }, calls); return runner.telemetryWorker('w', run.inspect, run.calls.calls); };
+    const judged = (stdout, calls) => runner.classifyStep(ok, stdout, '', { telemetry: telemetryOf([worker(calls)]), selection: { model: 'm' } });
+    const step = judged(lines, [
+      callRow('m-responses', { responseId: 'r1' }),
+      callRow('m-err', { responseId: 'r2', stop: { reason: 'error' } }),
+      callRow(null, { disposition: 'sent_unsettled', responseId: null }),
+      callRow(null, { disposition: 'never_sent', responseId: null })
+    ]);
     assert.deepStrictEqual(step.model_observation.reported, ['m-fallback', 'm-legacy', 'm-responses']);
-    assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [3, 0], 'neither the aggregate row nor a provider error is a call');
-    assert.strictEqual(step.model_calls, 2, 'a provider error is not an observed model call');
-    const failedWorker = { file: 'f.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [{ requestedModelId: 'm', usage: { input: 120, output: 0, totalTokens: 120 }, responseModelIdObservation: { state: 'not-observed' } }] } };
-    assert.strictEqual(runner.classifyStep(ok, '', '', { receipts: [failedWorker] }).model_calls, 0, 'a worker whose only call failed served nothing');
-    const usageless = { file: 'u.json', receipt: { agentId: 'wtfp-section-writer', upstreamResponses: [
-      { requestedModelId: 'm', providerResponseId: 'r1', responseModelIdObservation: { state: 'reported', reportedModelId: 'm' } },
-      { requestedModelId: 'm', responseModelIdObservation: { state: 'reported', reportedModelId: 'other-model' } }
-    ] } };
-    assert.strictEqual(runner.classifyStep(ok, '', '', { receipts: [usageless], selection: { model: 'm' } }).model_observation.status, 'differs', 'a reply Clio recorded without usage is still a call that counts');
+    assert.deepStrictEqual([step.model_observation.calls, step.model_observation.unreported_calls], [4, 0], 'neither an unsettled call nor a provider error is a call');
+    assert.strictEqual(step.model_calls, 4, 'a provider error is not an observed model call');
+    assert.strictEqual(judged('', [callRow(null, { stop: { reason: 'error' } })]).model_calls, 0, 'a worker whose only call failed served nothing');
+    assert.strictEqual(judged('', [callRow(null, { disposition: 'sent_unsettled' })]).model_calls, 0, 'a worker whose only call never settled served nothing');
+    assert.strictEqual(judged('', [callRow('m'), callRow('other-model', { disposition: 'settled_no_usage', responseId: null })]).model_observation.status, 'differs', 'a reply PanCode recorded without usage is still a call that counts');
   });
 
   await test('the seal key is out of reach while headless steps run, and nothing a step leaves running outlives the run', async () => {
     const probe = path.join(scratch, 'store-probe.json');
     const late = path.join(scratch, 'late-interaction.json');
-    const entry = fakeClio('fake-keyless', `${mainReceipt(0.01)}
-const store = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const entry = fakePanCode('fake-keyless', `${sealed(0.01)}
+const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
 require('fs').writeFileSync(${JSON.stringify(probe)}, JSON.stringify({ present: require('fs').existsSync(store) }));
 require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(`setTimeout(() => require('fs').writeFileSync(${JSON.stringify(late)}, 'minted'), 1500)`)}], { detached: true, stdio: 'ignore' }).unref();
 process.exit(0);`);
     const root = preparedRoot('keyless', entry, undefined, ungatedFile);
-    const store = path.join(runner.profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     const stored = JSON.stringify({ version: 1, entries: { 'seal-key': { value: 'a'.repeat(64), version: 1 } } });
     fs.writeFileSync(store, stored);
@@ -647,8 +726,8 @@ process.exit(0);`);
     await new Promise(resolve => setTimeout(resolve, 2000));
     assert.ok(!fs.existsSync(late), 'the swept process wrote nothing after the step');
     // A store a step creates is not the author's key: it is set aside and the run fails integrity.
-    const maker = fakeClio('fake-store-maker', `${mainReceipt(0.01)}
-const store = require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const maker = fakePanCode('fake-store-maker', `${sealed(0.01)}
+const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
 require('fs').mkdirSync(require('path').dirname(store), { recursive: true });
 require('fs').writeFileSync(store, '{}');
 process.exit(0);`);
@@ -660,11 +739,11 @@ process.exit(0);`);
   await test('the key returns to a real file, the build\'s dependencies are bound, and the run record survives a hostile step', async () => {
     // A step that plants a dangling link at the store path, or replaces its directory with a link, gets neither the key nor a clean run.
     const landing = path.join(scratch, 'store-landing.json');
-    const planter = fakeClio('fake-planter', `${mainReceipt(0.01)}
-require('fs').symlinkSync(${JSON.stringify(landing)}, require('path').join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
+    const planter = fakePanCode('fake-planter', `${sealed(0.01)}
+require('fs').symlinkSync(${JSON.stringify(landing)}, require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
 process.exit(0);`);
     const plantRoot = preparedRoot('planter', planter, undefined, ungatedFile);
-    const store = path.join(runner.profilePaths(plantRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(plantRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, 'held-key');
     const planted = await withEnv(executeEnv, () => runner.execute(ungated, { root: plantRoot, entry: planter, ...selection, campaignFile: ungatedFile }));
@@ -673,14 +752,14 @@ process.exit(0);`);
     assert.ok(fs.lstatSync(store).isFile() && fs.readFileSync(store, 'utf8') === 'held-key');
     const elsewhere = path.join(scratch, 'store-dir-elsewhere');
     fs.mkdirSync(elsewhere);
-    const mover = fakeClio('fake-dir-mover', `${mainReceipt(0.01)}
+    const mover = fakePanCode('fake-dir-mover', `${sealed(0.01)}
 const fs = require('fs'); const path = require('path');
-const dir = path.join(process.env.CLIO_CODER_STATE_DIR, 'extensions', 'wtfp');
+const dir = path.join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp');
 fs.renameSync(dir, dir + '-old');
 fs.symlinkSync(${JSON.stringify(elsewhere)}, dir);
 process.exit(0);`);
     const moveRoot = preparedRoot('dir-mover', mover, undefined, ungatedFile);
-    const moveStore = path.join(runner.profilePaths(moveRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const moveStore = path.join(runner.profilePaths(moveRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(moveStore), { recursive: true });
     fs.writeFileSync(moveStore, 'held-key');
     const moved = await withEnv(executeEnv, () => runner.execute(ungated, { root: moveRoot, entry: mover, ...selection, campaignFile: ungatedFile }));
@@ -688,10 +767,10 @@ process.exit(0);`);
     assert.deepStrictEqual(fs.readdirSync(elsewhere), [], 'the key was never written into the linked directory');
     assert.strictEqual(fs.readFileSync(moveStore, 'utf8'), 'held-key');
     // A step that changes anything the build loads from its package root, dependencies or rules beside dist/, is caught before the next step.
-    const dependent = fakeClio('fake-dependent', `const dep = require(require('path').join(__dirname, '..', '..', 'node_modules', 'dep.js'));
+    const dependent = fakePanCode('fake-dependent', `const dep = require(require('path').join(__dirname, '..', 'node_modules', 'dep.js'));
 console.log(JSON.stringify({ type: 'note', dep }));
-${mainReceipt(0.01)}
-require('fs').writeFileSync(require('path').join(__dirname, '..', '..', 'damage-control-rules.yaml'), 'packs: []\\n');
+${sealed(0.01)}
+require('fs').writeFileSync(require('path').join(__dirname, '..', 'damage-control-rules.yaml'), 'packs: []\\n');
 process.exit(0);`);
     fs.mkdirSync(path.join(scratch, 'fake-dependent', 'node_modules'));
     fs.writeFileSync(path.join(scratch, 'fake-dependent', 'node_modules', 'dep.js'), 'module.exports = "original";');
@@ -699,10 +778,10 @@ process.exit(0);`);
     const dependentRoot = preparedRoot('dependent', dependent, undefined, ungatedFile);
     await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: dependentRoot, entry: dependent, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(package_sha256\)/);
     // A step that makes the runner's own files unreadable still leaves a run record, failing closed.
-    const locker = fakeClio('fake-locker', `${mainReceipt(0.01)}
-require('fs').chmodSync(require('path').join(process.env.CLIO_CODER_HOME, '..', 'prepared.json'), 0);
-require('fs').chmodSync(process.env.CLIO_CODER_CONFIG_DIR, 0);
-require('fs').chmodSync(require('path').join(process.env.CLIO_CODER_HOME, '..'), 0o500);
+    const locker = fakePanCode('fake-locker', `${sealed(0.01)}
+require('fs').chmodSync(require('path').join(process.env.PANCODE_HOME, '..', 'prepared.json'), 0);
+require('fs').chmodSync(process.env.PANCODE_CONFIG_DIR, 0);
+require('fs').chmodSync(require('path').join(process.env.PANCODE_HOME, '..'), 0o500);
 process.exit(0);`);
     const lockRoot = preparedRoot('locker', locker, undefined, ungatedFile);
     try {
@@ -713,18 +792,18 @@ process.exit(0);`);
     } finally {
       fs.chmodSync(lockRoot, 0o700);
       fs.chmodSync(path.join(lockRoot, 'prepared.json'), 0o600);
-      fs.chmodSync(runner.profilePaths(lockRoot).CLIO_CODER_CONFIG_DIR, 0o700);
+      fs.chmodSync(runner.profilePaths(lockRoot).PANCODE_CONFIG_DIR, 0o700);
     }
   });
 
   await test('a step that swaps the run root or carries off a credential copy gets neither the key nor the secret', async () => {
     // Swapping the run root for a link is caught, and the key is not restored into the stand-in.
     const landing = path.join(scratch, 'root-landing');
-    const swapper = fakeClio('fake-root-swapper', `${mainReceipt(0.01)}
+    const swapper = fakePanCode('fake-root-swapper', `${sealed(0.01)}
 const fs = require('fs'); const path = require('path');
-const root = path.resolve(process.env.CLIO_CODER_HOME, '..');
+const root = path.resolve(process.env.PANCODE_HOME, '..');
 const landing = ${JSON.stringify(landing)};
-fs.mkdirSync(path.join(landing, 'clio', 'config'), { recursive: true });
+fs.mkdirSync(path.join(landing, 'pancode', 'config'), { recursive: true });
 fs.copyFileSync(path.join(root, 'prepared.json'), path.join(landing, 'prepared.json'));
 fs.renameSync(root, root + '-old');
 fs.symlinkSync(path.join(root + '-old', 'logs'), path.join(landing, 'logs'));
@@ -735,20 +814,20 @@ process.exit(0);`);
     fs.writeFileSync(oneStepFile, JSON.stringify({ ...ungated, lifecycle: ungated.lifecycle.slice(0, 1) }));
     const oneStep = runner.loadCampaign(oneStepFile);
     const swapRoot = preparedRoot('root-swapper', swapper, undefined, oneStepFile);
-    const store = path.join(runner.profilePaths(swapRoot).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(swapRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, 'held-key');
     const swapped = await withEnv(executeEnv, () => runner.execute(oneStep, { root: swapRoot, entry: swapper, ...selection, campaignFile: oneStepFile }));
     assert.strictEqual(swapped.outcome, 'integrity-violation');
     assert.match(swapped.integrity.join(' '), /run root was replaced/);
     assert.deepStrictEqual(swapped.seal_store, { held_during_run: true, restored: false }, 'a key not restored is never recorded as restored');
-    assert.ok(!fs.existsSync(path.join(landing, 'clio', 'state', 'extensions', 'wtfp', 'store.json')), 'the key is not written into the stand-in root');
+    assert.ok(!fs.existsSync(path.join(landing, 'pancode', 'state', 'extensions', 'wtfp', 'store.json')), 'the key is not written into the stand-in root');
     assert.strictEqual(swapped.credentials_removed, false);
-    assert.ok(fs.readFileSync(path.join(`${swapRoot}-old`, 'clio', 'config', 'credentials.yaml')).every(byte => byte === 0), 'the copy left behind was zeroed');
+    assert.ok(fs.readFileSync(path.join(`${swapRoot}-old`, 'pancode', 'config', 'credentials.yaml')).every(byte => byte === 0), 'the copy left behind was zeroed');
     // A copy a step moves elsewhere is zeroed through the descriptor the runner kept, and never reported removed.
     const stash = path.join(scratch, 'stashed-credentials.yaml');
-    const mover = fakeClio('fake-copy-mover', `${mainReceipt(0.01)}
-require('fs').renameSync(require('path').join(process.env.CLIO_CODER_CONFIG_DIR, 'credentials.yaml'), ${JSON.stringify(stash)});
+    const mover = fakePanCode('fake-copy-mover', `${sealed(0.01)}
+require('fs').renameSync(require('path').join(process.env.PANCODE_CONFIG_DIR, 'credentials.yaml'), ${JSON.stringify(stash)});
 process.exit(0);`);
     const moved = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('copy-mover', mover, undefined, ungatedFile), entry: mover, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(moved.credentials_removed, false);
@@ -779,15 +858,15 @@ process.exit(0);`);
   });
 
   await test('a step cannot rewrite the build, prepare the next step\'s logs, forge the run record, or block cleanup', async () => {
-    const swapper = fakeClio('fake-swapper', `${mainReceipt(0.01)}
+    const swapper = fakePanCode('fake-swapper', `${sealed(0.01)}
 require('fs').appendFileSync(__filename, '\\n// rewritten by a step\\n');
 process.exit(0);`);
     const swapRoot = preparedRoot('swapper', swapper, undefined, ungatedFile);
     await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: swapRoot, entry: swapper, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(entry_sha256\)/);
     assert.strictEqual(JSON.parse(fs.readFileSync(path.join(swapRoot, 'run.json'), 'utf8')).outcome, 'runner-error');
     const next = ungated.lifecycle[1].step;
-    const trapper = fakeClio('fake-trapper', `${mainReceipt(0.01)}
-const logs = require('path').join(process.env.CLIO_CODER_HOME, '..', 'logs', ${JSON.stringify(next)});
+    const trapper = fakePanCode('fake-trapper', `${sealed(0.01)}
+const logs = require('path').join(process.env.PANCODE_HOME, '..', 'logs', ${JSON.stringify(next)});
 require('fs').mkdirSync(logs, { recursive: true });
 require('fs').writeFileSync(require('path').join(logs, 'stdout.jsonl'), 'planted');
 process.exit(0);`);
@@ -795,9 +874,9 @@ process.exit(0);`);
     await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root: trapRoot, entry: trapper, ...selection, campaignFile: ungatedFile })), /EEXIST/);
     const trapped = JSON.parse(fs.readFileSync(path.join(trapRoot, 'run.json'), 'utf8'));
     assert.deepStrictEqual([trapped.outcome, trapped.steps.length, trapped.credentials_removed], ['runner-error', 1, true]);
-    const forger = fakeClio('fake-forger', `${mainReceipt(0.01)}
-require('fs').writeFileSync(require('path').join(process.env.CLIO_CODER_HOME, '..', 'run.json'), JSON.stringify({ outcome: 'completed', steps: [] }));
-require('fs').mkdirSync(require('path').join(process.env.CLIO_CODER_CONFIG_DIR, 'credentials.yaml.d'));
+    const forger = fakePanCode('fake-forger', `${sealed(0.01)}
+require('fs').writeFileSync(require('path').join(process.env.PANCODE_HOME, '..', 'run.json'), JSON.stringify({ outcome: 'completed', steps: [] }));
+require('fs').mkdirSync(require('path').join(process.env.PANCODE_CONFIG_DIR, 'credentials.yaml.d'));
 process.exit(0);`);
     const forgeRoot = preparedRoot('forger', forger, undefined, ungatedFile);
     const forged = await withEnv(executeEnv, () => runner.execute(ungated, { root: forgeRoot, entry: forger, ...selection, campaignFile: ungatedFile }));
@@ -809,18 +888,18 @@ process.exit(0);`);
   });
 
   await test('every step launches the build and packages prepare bound, and a runner failure is recorded as one', async () => {
-    const entry = fakeClio('fake-launcher', `${mainReceipt(0.01)}
-require('fs').appendFileSync(require('path').join(process.env.CLIO_CODER_HOME, 'bin', 'clio-coder'), '// swapped\\n');
+    const entry = fakePanCode('fake-launcher', `${sealed(0.01)}
+require('fs').appendFileSync(require('path').join(process.env.PANCODE_HOME, 'bin', 'pancode'), '// swapped\\n');
 process.exit(0);`);
     const root = preparedRoot('launcher', entry, undefined, ungatedFile);
     await assert.rejects(withEnv(executeEnv, () => runner.execute(ungated, { root, entry, ...selection, campaignFile: ungatedFile })), /launcher changed since prepare \(wrapper_sha256\)/);
     const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.deepStrictEqual([run.outcome, run.steps.length], ['runner-error', 1], 'the step that ran is kept and the run is not called cancelled');
     assert.strictEqual(run.credentials_removed, true);
-    const moved = preparedRoot('launcher-entry', entry, (prepared) => ({ ...prepared, launcher: { ...prepared.launcher, entry: '/elsewhere/dist/cli/index.js' } }));
+    const moved = preparedRoot('launcher-entry', entry, (prepared) => ({ ...prepared, launcher: { ...prepared.launcher, entry: '/elsewhere/bin/pancode.cjs' } }));
     await assert.rejects(withEnv(executeEnv, () => runner.execute(campaign, { root: moved, entry, ...selection })), /launcher changed since prepare \(entry\)/);
     assert.ok(!fs.existsSync(path.join(moved, 'run.json')), 'a moved launcher is refused before anything runs');
-    assert.ok(!fs.existsSync(path.join(runner.profilePaths(moved).CLIO_CODER_CONFIG_DIR, 'credentials.yaml')));
+    assert.ok(!fs.existsSync(path.join(runner.profilePaths(moved).PANCODE_CONFIG_DIR, 'credentials.yaml')));
     // Prepare counts the desk's package tests as passed only on a clean exit that ran and failed nothing.
     assert.strictEqual(runner.deskTestsPassed({ status: 0, stdout: 'ℹ pass 31\nℹ fail 0\n', stderr: '' }), true);
     assert.strictEqual(runner.deskTestsPassed({ status: 1, stdout: 'ℹ pass 31\nℹ fail 0\n', stderr: '' }), false);
@@ -835,8 +914,8 @@ process.exit(0);`);
     const settings = privateSource('leaky-settings.yaml', `targets:\n  t:\n    model: operator-model-long-identifier-2026\n    auth:\n      headers:\n        Authorization: ${header}\n`);
     const outside = path.join(scratch, 'outside-target.txt');
     fs.writeFileSync(outside, 'keep me');
-    const entry = fakeClio('fake-leak', `const fs = require('fs'); const path = require('path');
-const config = process.env.CLIO_CODER_CONFIG_DIR;
+    const entry = fakePanCode('fake-leak', `const fs = require('fs'); const path = require('path');
+const config = process.env.PANCODE_CONFIG_DIR;
 fs.copyFileSync(path.join(config, 'credentials.yaml'), path.join(config, 'credentials.yaml.bak'));
 fs.copyFileSync(path.join(config, 'settings.yaml'), path.join(config, '.settings.yaml.tmp-1'));
 fs.symlinkSync(${JSON.stringify(outside)}, path.join(config, 'credentials.yaml.link'));
@@ -846,14 +925,14 @@ fs.writeFileSync(path.join(process.cwd(), 'leaked.md'), ${JSON.stringify(header)
 ${measured(0.01)}
 process.exit(1);`);
     const root = preparedRoot('leak', entry);
-    const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-clio-campaign.js'), 'execute', '--root', root, '--clio-entry', entry,
+    const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'execute', '--root', root, '--pancode-entry', entry,
       '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
-    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE: settings }, encoding: 'utf8', timeout: 60000 });
+    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: settings }, encoding: 'utf8', timeout: 60000 });
     assert.strictEqual(cli.status, 3, cli.stderr);
     const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(run.outcome, 'failed');
     assert.strictEqual(run.credentials_removed, true);
-    assert.deepStrictEqual(fs.readdirSync(runner.profilePaths(root).CLIO_CODER_CONFIG_DIR).filter(name => /credentials|settings/.test(name)), []);
+    assert.deepStrictEqual(fs.readdirSync(runner.profilePaths(root).PANCODE_CONFIG_DIR).filter(name => /credentials|settings/.test(name)), []);
     assert.strictEqual(fs.readFileSync(outside, 'utf8'), 'keep me', 'a link is removed, never written through');
     assert.ok(run.secrets.redacted_files.includes(path.join('logs', 'initialize', 'stdout.jsonl')));
     const log = fs.readFileSync(path.join(root, 'logs', 'initialize', 'stdout.jsonl'), 'utf8');
@@ -877,7 +956,7 @@ process.exit(1);`);
   });
 
   await test('collect verifies desk seals independently and never writes into the workspace', async () => {
-    const entry = fakeClio('fake-collect', 'process.exit(0);');
+    const entry = fakePanCode('fake-collect', 'process.exit(0);');
     const root = preparedRoot('collect', entry);
     const workspace = path.join(root, 'workspace');
     const planning = path.join(workspace, '.planning');
@@ -893,7 +972,7 @@ process.exit(1);`);
     const asked = { ...checkpoint };
     delete asked.status;
     const key = crypto.randomBytes(32);
-    const store = path.join(runner.profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, JSON.stringify({ version: 1, entries: { 'seal-key': { value: key.toString('hex'), version: 1 } } }));
     const interaction = {
@@ -957,7 +1036,7 @@ process.exit(1);`);
 
   await test('the comparative study stays a draft until every owner decision is made, and its rules are enforced', async () => {
     const { loadStudy } = require('../evaluation/lib/study');
-    const file = path.join(ROOT, 'evaluation/v2/studies/clio-reliability-comparison.json');
+    const file = path.join(ROOT, 'evaluation/v2/studies/pancode-reliability-comparison.json');
     const { study, pending } = loadStudy(file);
     assert.strictEqual(study.status, 'draft');
     assert.deepStrictEqual(pending.sort(), ['analysis.thresholds', 'assessment.assessors', 'comparators', 'execution.budget_per_run_usd', 'execution.models', 'execution.repetitions', 'tasks.count']);
@@ -979,7 +1058,7 @@ process.exit(1);`);
     assert.throws(() => loadStudy(variant('hidden-null', value => ({ ...value, analysis: { ...value.analysis, null_results: 'omitted' } }))), /not a valid study/);
     assert.throws(() => loadStudy(variant('no-baseline', value => ({ ...value, conditions: value.conditions.map(condition => (condition.wtfp === 'none' ? { ...condition, wtfp: 'plugin-only' } : condition)) }))), /baseline without WTF-P/);
     assert.throws(() => loadStudy(variant('secondary-primary', value => ({ ...value, hypotheses: [{ ...value.hypotheses[0], primary_outcome: 'latency' }] }))), /declared primary outcome/);
-    assert.throws(() => loadStudy(variant('unknown-host', value => ({ ...value, conditions: value.conditions.map(condition => ({ ...condition, host: 'clio-9.9.9' })) }))), /unknown campaign/);
+    assert.throws(() => loadStudy(variant('unknown-host', value => ({ ...value, conditions: value.conditions.map(condition => ({ ...condition, host: 'pancode-9.9.9-reference' })) }))), /unknown campaign/);
   });
 
   fs.rmSync(scratch, { recursive: true, force: true });

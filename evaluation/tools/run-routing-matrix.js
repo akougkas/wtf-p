@@ -57,10 +57,19 @@ const EXPECTED_SKILLS = Object.freeze([
   'wtfp-write-section'
 ]);
 
+// The sealed routing profile `clio` predates the rename of the native host; its
+// generated envelope is now the PanCode plugin. This is the one place that maps
+// that historical profile id to a live compiler target.
+const NATIVE_TARGET_BY_PROFILE = Object.freeze({ clio: 'pancode' });
+
+const PROJECTION_ROOTS = Object.freeze(['protocol', 'vendors', NATIVE_TARGET_BY_PROFILE.clio]);
+const GENERATED_ROOTS = PROJECTION_ROOTS.slice(1);
+const underRoot = (relative, roots) => roots.some(root => relative === root || relative.startsWith(`${root}/`));
+
 const GENERATED_INVENTORY_BINDINGS = Object.freeze([
   ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
   ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'vendors/plugin/.wtfp-generated.json'],
+  ['clio', `${NATIVE_TARGET_BY_PROFILE.clio}/plugin/.wtfp-generated.json`],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
   ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
@@ -114,7 +123,7 @@ const CLIENT_SURFACES = Object.freeze({
     expectedDistTreeSha256: '27472f9b7253dc6608d70fbe623e4953896a9f0899ead00aa5faad1c783acae7',
     versionPattern: /^Clio Coder 0\.3\.8(?:\s|$)/u,
     envelopeTarget: 'clio',
-    adapterRoot: 'vendors/plugin'
+    adapterRoot: `${NATIVE_TARGET_BY_PROFILE.clio}/plugin`
   }
 });
 
@@ -447,7 +456,7 @@ function verifyCanonicalSourceProjection(root, manifest) {
   });
   if (new Set(toolSources).size !== toolSources.length) throw new Error('canonical tool sources are not unique');
   const explicitSources = [...new Set([...GENERATOR_SOURCE_PATHS, ...toolSources])].sort();
-  const canonical = gitTreeEntries(root, canonicalCommit, ['protocol', 'vendors', ...explicitSources]);
+  const canonical = gitTreeEntries(root, canonicalCommit, [...PROJECTION_ROOTS, ...explicitSources]);
   for (const relative of explicitSources) {
     if (!canonical.has(relative)) throw new Error(`canonical generator source is missing: ${relative}`);
   }
@@ -492,13 +501,10 @@ function verifyCanonicalSourceProjection(root, manifest) {
   }
 
   const canonicalPrefixPaths = [...canonical.keys()]
-    .filter(relative => relative === 'protocol' || relative.startsWith('protocol/') ||
-      relative === 'vendors' || relative.startsWith('vendors/'))
+    .filter(relative => underRoot(relative, PROJECTION_ROOTS))
     .sort();
-  const currentPrefixPaths = [
-    ...walkProjectionFiles(root, 'protocol'),
-    ...walkProjectionFiles(root, 'vendors')
-  ].filter(relative => !SOURCE_PROJECTION_EXCLUSIONS.has(relative)).sort();
+  const currentPrefixPaths = PROJECTION_ROOTS.flatMap(prefix => walkProjectionFiles(root, prefix))
+    .filter(relative => !SOURCE_PROJECTION_EXCLUSIONS.has(relative)).sort();
   if (canonicalBytes(currentPrefixPaths).compare(canonicalBytes(canonicalPrefixPaths)) !== 0) {
     throw new Error('protocol/vendor source projection file set drifted from the canonical source commit');
   }
@@ -539,7 +545,7 @@ function verifyCanonicalSourceProjection(root, manifest) {
     sha256: projectionSha256,
     files: inventory.length,
     protocol_files: canonicalPrefixPaths.filter(item => item.startsWith('protocol/')).length,
-    vendor_files: canonicalPrefixPaths.filter(item => item.startsWith('vendors/')).length,
+    vendor_files: canonicalPrefixPaths.filter(item => underRoot(item, GENERATED_ROOTS)).length,
     generator_source_files: GENERATOR_SOURCE_PATHS.length,
     tool_source_files: toolSources.length,
     generated_inventories: GENERATED_INVENTORY_BINDINGS.length,

@@ -139,7 +139,7 @@ function validatePlanningPaths(inputs, options = {}) {
 }
 
 // Structural claim coverage for one planning root, from the same validator the
-// Clio desk ships. Archived records are history, never live support, and a
+// PanCode desk ships. Archived records are history, never live support, and a
 // record that fails its schema supports nothing; both are left out, the
 // second with a finding. Manuscripts are read only for citation keys, from
 // the project's paper/ directory beside .planning, and never through a link.

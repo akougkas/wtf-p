@@ -98,7 +98,7 @@ function rowByClient(suite, client) {
 const fixtureInventoryBindings = [
   ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
   ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'vendors/plugin/.wtfp-generated.json'],
+  ['clio', 'pancode/plugin/.wtfp-generated.json'],
   ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
   ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
   ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
@@ -155,7 +155,7 @@ function canonicalProjectionFixture() {
       source_sha256: sourceHash
     });
   }
-  fixtureGit(root, ['add', '--', 'CONTRIBUTING.md', 'package.json', 'scripts', 'bin', 'protocol', 'vendors']);
+  fixtureGit(root, ['add', '--', 'CONTRIBUTING.md', 'package.json', 'scripts', 'bin', 'protocol', 'vendors', 'pancode']);
   fixtureGit(root, ['commit', '--quiet', '-m', 'canonical source']);
   const canonical = fixtureGit(root, ['rev-parse', 'HEAD']);
   const manifest = {
@@ -1102,7 +1102,7 @@ async function main() {
       ['compiler', 'bin/lib/adapter-compiler.js'],
       ['tool', 'bin/lib/fixture-tool.js'],
       ['generated inventory', 'vendors/claude/.wtfp-generated.json'],
-      ['generated entry', 'vendors/plugin/payload.txt']
+      ['generated entry', 'pancode/plugin/payload.txt']
     ];
     for (const [label, relative] of mutations) {
       const fixture = canonicalProjectionFixture();

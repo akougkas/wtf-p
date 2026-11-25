@@ -2,10 +2,10 @@
 
 'use strict';
 
-// Runner for versioned Clio campaigns (evaluation/v2). `plan` and `prepare`
+// Runner for versioned PanCode campaigns (evaluation/v2). `plan` and `prepare`
 // need no credentials and run no model. `execute` runs the campaign lifecycle
 // headless with resources the operator selects for that run, on exactly the
-// campaign, Clio build, WTF-P candidate and workspace that `prepare` bound;
+// campaign, PanCode build, WTF-P candidate and workspace that `prepare` bound;
 // every author gate it reaches is reported as a typed unavailable result,
 // never answered. `collect` verifies a prepared workspace independently of the
 // desk with the desk's own trust rules (evaluation/lib/desk-trust.js),
@@ -31,74 +31,59 @@ const {
 } = require('./run-clio-lifecycle');
 
 const ROOT = path.resolve(__dirname, '../..');
-const DEFAULT_CAMPAIGN = path.join(ROOT, 'evaluation/v2/campaigns/clio-0.6.2-reference.json');
+const DEFAULT_CAMPAIGN = path.join(ROOT, 'evaluation/v2/campaigns/pancode-0.9.0-reference.json');
 const CAMPAIGN_SCHEMA = path.join(ROOT, 'evaluation/v2/schemas/campaign.schema.json');
 const CONFIRM_ENV = 'WTFP_CAMPAIGN_CONFIRM';
-const CREDENTIALS_ENV = 'WTFP_CAMPAIGN_CLIO_CREDENTIALS_SOURCE';
-const SETTINGS_ENV = 'WTFP_CAMPAIGN_CLIO_SETTINGS_SOURCE';
+const CREDENTIALS_ENV = 'WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE';
+const SETTINGS_ENV = 'WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE';
 // A tool call naming the desk's seal store is an attempt on the key that makes answers attestable.
 const STORE_ACCESS = /extensions[\\/]+wtfp[\\/]+store\.json|seal-key/u;
-// What a step's cost covers: Clio's sealed receipts, the main agent's and every dispatched worker's.
-const COST_SCOPE = 'Clio run receipts: the main agent and every worker it dispatched. Model calls Clio records outside receipts, such as compaction, are not counted, and Clio 0.6.2 takes no cost ceiling, so the budget is enforced between steps.';
-// From Clio 0.6.3 a run takes a priced ceiling (--max-cost-usd, exit 4 when it stops the run) and its receipts count compaction.
-const CEILING_COST_SCOPE = 'Clio run receipts: the main agent, compaction and every worker it dispatched. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
-// From Clio 0.6.6 sealed telemetry journals replace receipt files, and a session's spend folds its own calls and every worker run it referenced.
-const TELEMETRY_COST_SCOPE = 'Clio sealed telemetry (clio-coder telemetry cost): every call the step\'s session journal owns, compaction included, and every worker run it referenced. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
+// What a step's cost covers: the session's own calls and every worker run it referenced, as PanCode's sealed telemetry folds them.
+const TELEMETRY_COST_SCOPE = 'PanCode sealed telemetry (pancode telemetry cost): every call the step\'s session journal owns, compaction included, and every worker run it referenced. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
+// PanCode's exit code when a limit stopped the run (src/cli/kit/exit-codes.ts, limitReached), and the
+// run_end cause that names the step's own --max-cost-usd ceiling as the limit (src/cli/modes/run-json-schema-v2.ts).
 const CEILING_EXIT = 4;
-
-/** Whether the campaign's Clio is at least major.minor.patch. */
-function clioAtLeast(campaign, [wantMajor, wantMinor, wantPatch]) {
-  const [major, minor, patch] = String(campaign.clio.version).split('.').map(Number);
-  if (major !== wantMajor) return major > wantMajor;
-  if (minor !== wantMinor) return minor > wantMinor;
-  return patch >= wantPatch;
-}
-
-/** Whether the campaign's Clio takes a per-run cost ceiling: 0.6.3 and later. */
-function takesCostCeiling(campaign) {
-  return clioAtLeast(campaign, [0, 6, 3]);
-}
-
-/** Whether the campaign's Clio accounts runs in sealed telemetry instead of receipt files: 0.6.6 and later. */
-function readsTelemetry(campaign) {
-  return clioAtLeast(campaign, [0, 6, 6]);
-}
-// Operator-selected Clio files a run copies in; they and any copy Clio makes of them are wiped at the end.
+const CEILING_CAUSE = 'max_cost_usd';
+// Operator-selected PanCode files a run copies in; they and any copy PanCode makes of them are wiped at the end.
 const PRIVATE_FILES = /^\.?(?:credentials|settings)\.yaml/u;
 const SCAN_LIMIT = 64 * 1024 * 1024;
 // Everything that decides what a campaign run means: the packages, the
 // desk, the evaluator and its campaign definitions, and the build scripts.
-const PACKAGE_PATHS = ['bin', 'protocol', 'vendors', 'clio', 'evaluation', 'scripts', 'package.json'];
-// Clio's retrieval tools; disabled for every step, and any call to one is a policy violation.
+const PACKAGE_PATHS = ['bin', 'protocol', 'vendors', 'pancode', 'hosts', 'evaluation', 'scripts', 'package.json'];
+// PanCode's retrieval tools; disabled for every step, and any call to one is a policy violation.
 const NETWORK_TOOLS = new Set(['web_fetch', 'web_read']);
-// Clio's switches for a step: no retrieval tools, and every Clio directory under the run's CLIO_CODER_HOME.
-const STEP_GUARDS = { CLIO_CODER_DISABLE_RETRIEVE_TOOLS: '1', CLIO_CODER_REQUIRE_HOME_PREFIX: '1' };
-// Tools that run a program. At default autonomy Clio runs recognized test
+// PanCode's switches for a step: no retrieval tools, and every PanCode directory under the run's PANCODE_HOME.
+const STEP_GUARDS = { PANCODE_DISABLE_RETRIEVE_TOOLS: '1', PANCODE_REQUIRE_HOME_PREFIX: '1' };
+// Tools that run a program. At default autonomy PanCode runs recognized test
 // runners on files the model wrote without asking, and verify runs whatever
 // check files declare, so no step holds one; a call to one is a policy violation.
 const EXECUTION_TOOLS = new Set(['bash', 'run_script', 'job', 'verify', 'git']);
 // The main agent's tools in a step (--allow-tools): reading, the desk-guarded
-// writes, orchestration, the author's interview and the desk's own tools.
+// writes, orchestration, the author's interview and the desk's own tools. A
+// step runs one action, never an advance run, so it holds no next_step, and
+// never archives a milestone, so it holds no archive.
 const MAIN_TOOLS = Object.freeze([
-  'read', 'evidence', 'grep', 'find', 'ls', 'code_nav', 'context', 'self_compact', 'clio_docs', 'clio_library', 'memory_recall',
+  'read', 'evidence', 'grep', 'find', 'ls', 'code_nav', 'context', 'self_compact', 'pancode_docs', 'pancode_hub', 'memory_recall',
   'write', 'edit', 'artifact', 'dispatch', 'monitor', 'steer', 'tasks', 'ledger', 'limitation', 'decide', 'ask_user', 'gateway',
-  ...['record', 'read_record', 'readiness', 'measure_section', 'gate'].map(tool => `extension_wtfp__${tool}`)
+  ...['record', 'status', 'read_record', 'readiness', 'measure_section', 'gate'].map(tool => `extension_wtfp__${tool}`)
 ]);
 // The tools a dispatched worker may hold (--delegate-tools): exactly what the
-// WTF-P recipes declare. Clio refuses a worker whose recipe declares more.
+// WTF-P recipes declare. PanCode holds every dispatched worker to this ceiling.
 const WORKER_TOOLS = Object.freeze(['read', 'grep', 'find', 'ls', 'context', 'ledger', 'limitation', 'write', 'edit']);
-// What Clio writes for itself under a project's .clio-coder. Everything else
-// there is configuration a later step loads: agent recipes, which override the
-// plugin's without a trust gate, prompts, rules, playbooks, skills, settings
-// and the model catalog. A step that changes it fails integrity.
-const CLIO_RUNTIME_OUTPUTS = new Set(['artifacts', 'codemap.json', 'codewiki.json', 'exports', 'handoffs', 'proposals', 'prototypes', 'runs', 'state.json', 'wiki', 'worktrees']);
+// What PanCode writes for itself under a project's .pancode: the entries its
+// own .pancode/.gitignore keeps out of Git (src/core/project-root.ts) and
+// docs/architecture/artifact-placement.md lists. Everything else there is
+// configuration a later step loads: agent recipes, which override the
+// plugin's without a trust gate, prompts, rules, playbooks, skills, plugins,
+// extensions, settings and the model catalog. A step that changes it fails integrity.
+const PANCODE_RUNTIME_OUTPUTS = new Set(['.gitignore', 'arena', 'artifacts', 'codemap.json', 'codewiki.json', 'exports', 'handoffs', 'proposals', 'prototypes', 'research', 'runs', 'scratch', 'state', 'state.json', 'user-tasks.json', 'wiki', 'wiki.lock', 'worktrees']);
 const GIT_ENV = { GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
 
 function sha256(data) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
-/** A file's SHA-256, read in chunks: a Clio checkout or a step's workspace can hold files larger than one read allows. */
+/** A file's SHA-256, read in chunks: a PanCode checkout or a step's workspace can hold files larger than one read allows. */
 function fileDigest(file, chunk = 8 * 1024 * 1024) {
   const hash = crypto.createHash('sha256');
   const buffer = Buffer.allocUnsafe(chunk);
@@ -173,7 +158,7 @@ function wtfpIdentity() {
   return {
     commit: head.status === 0 ? head.stdout.trim() : null,
     package_tree: status.status !== 0 ? 'unknown' : status.stdout.trim() === '' ? 'clean' : 'dirty',
-    packages: Object.fromEntries(['vendors/plugin', 'vendors/clio-extension'].map(relative => {
+    packages: Object.fromEntries(['pancode/plugin', 'pancode/extension'].map(relative => {
       const inventory = readJson(path.join(ROOT, relative, '.wtfp-generated.json'));
       return [relative, { target: inventory.target, source_sha256: inventory.sourceHash }];
     }))
@@ -201,34 +186,57 @@ function workspaceHead(workspace) {
   return head.status === 0 ? head.stdout.trim() : null;
 }
 
-/** The identity of a built Clio entry, compared with what the campaign pins. */
-function clioIdentity(entry, campaign) {
-  if (!entry || !path.isAbsolute(entry)) throw new Error('the Clio entry must be an absolute path to a built dist/cli/index.js');
+/** The installed pancode package an entry such as <package>/bin/pancode.cjs launches. */
+function packageRootOf(entry) {
+  return path.dirname(path.dirname(entry));
+}
+
+/** The built dist/ directory beside a PanCode entry. */
+function distOf(entry) {
+  return path.join(packageRootOf(entry), 'dist');
+}
+
+/** The release a `pancode --version` first line names: `PanCode 0.9.0-dev (unreleased · 588f283)` is 0.9.0-dev. */
+function versionOf(line) {
+  const match = /^PanCode (\S+)/.exec(line || '');
+  return match ? match[1] : null;
+}
+
+/** The commit a `pancode --version` first line names, such as 588f283 in `(unreleased · 588f283)`, or null when it names none. */
+function commitOf(line) {
+  const match = /·\s*([0-9a-f]{7,40})\)/u.exec(line || '');
+  return match ? match[1] : null;
+}
+
+/** The identity of an installed PanCode entry, compared with what the campaign pins. */
+function pancodeIdentity(entry, campaign) {
+  if (!entry || !path.isAbsolute(entry)) throw new Error('the PanCode entry must be an absolute path to an installed bin/pancode.cjs');
   const stat = fs.lstatSync(entry);
   if (!stat.isFile()) throw new Error(`${entry} is not a regular file`);
-  const dist = path.dirname(path.dirname(entry));
+  const dist = distOf(entry);
   // A throwaway home keeps the probe from ever resolving the operator's profile.
   const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'wtfp-campaign-probe-'));
   let version;
   try {
     version = spawnSync(process.execPath, [entry, '--version'], {
       encoding: 'utf8', timeout: 30000,
-      env: { PATH: '/usr/bin:/bin', HOME: scratch, XDG_CONFIG_HOME: scratch, XDG_DATA_HOME: scratch, XDG_STATE_HOME: scratch, XDG_CACHE_HOME: scratch, CLIO_CODER_HOME: scratch }
+      env: { PATH: '/usr/bin:/bin', HOME: scratch, XDG_CONFIG_HOME: scratch, XDG_DATA_HOME: scratch, XDG_STATE_HOME: scratch, XDG_CACHE_HOME: scratch, PANCODE_HOME: scratch }
     });
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });
   }
   const observed = {
     entry,
-    // Clio 0.7.0 adds a second line naming its pane runtime; the first line is Clio's own version.
+    // Later lines name the pane runtime; the first line is PanCode's own version.
     version: version.status === 0 ? version.stdout.trim().split('\n')[0].trim() : null,
     entry_sha256: fileDigest(entry),
     dist_sha256: directoryDigest(dist),
     node: process.version
   };
-  const pinned = campaign.clio.build;
+  const pinned = campaign.pancode.build;
   const mismatches = [
-    ...(observed.version === `Clio Coder ${campaign.clio.version}` ? [] : [`version ${observed.version} is not Clio Coder ${campaign.clio.version}`]),
+    ...(versionOf(observed.version) === campaign.pancode.version ? [] : [`version ${observed.version} is not PanCode ${campaign.pancode.version}`]),
+    ...(commitOf(observed.version) === null || campaign.pancode.source.commit.startsWith(commitOf(observed.version)) ? [] : [`version ${observed.version} names a commit other than ${campaign.pancode.source.commit}`]),
     ...(observed.entry_sha256 === pinned.entry_sha256 ? [] : [`entry sha256 ${observed.entry_sha256} is not ${pinned.entry_sha256}`]),
     ...(observed.dist_sha256 === pinned.dist_sha256 ? [] : [`dist sha256 ${observed.dist_sha256} is not ${pinned.dist_sha256}`]),
     ...(observed.node === pinned.node ? [] : [`node ${observed.node} is not ${pinned.node}`])
@@ -247,10 +255,10 @@ function plan(campaign, options = {}) {
     ...(options.budgetUsd === undefined && campaign.budget.ceiling === null ? ['budget.ceiling'] : [])
   ];
   return {
-    schema: 'wtfp.evaluation.campaign-plan/v2',
+    schema: 'wtfp.evaluation.campaign-plan/v3',
     campaign: { id: campaign.id, version: campaign.version, status: campaign.status },
     wtfp: wtfpIdentity(),
-    clio: options.entry ? clioIdentity(options.entry, campaign) : { pinned: campaign.clio, observed: null },
+    pancode: { pinned: campaign.pancode, ...(options.entry ? pancodeIdentity(options.entry, campaign) : { observed: null }) },
     fixture: campaign.fixture,
     permissions: campaign.permissions,
     steps: campaign.lifecycle.map(step => ({
@@ -277,25 +285,23 @@ function profilePaths(root, session = 'S1') {
     XDG_STATE_HOME: path.join(root, second ? 'xdg-s2' : 'xdg', 'state'),
     XDG_CACHE_HOME: path.join(root, second ? 'xdg-s2' : 'xdg', 'cache'),
     TMPDIR: path.join(root, second ? 'tmp-s2' : 'tmp'),
-    CLIO_CODER_HOME: path.join(root, 'clio'),
-    CLIO_CODER_CONFIG_DIR: path.join(root, 'clio', 'config'),
+    PANCODE_HOME: path.join(root, 'pancode'),
+    PANCODE_CONFIG_DIR: path.join(root, 'pancode', 'config'),
     // The extension store, and with it the desk's seal key, lives in the
     // state directory both sessions share; their data and caches stay apart.
-    CLIO_CODER_STATE_DIR: path.join(root, 'clio', 'state'),
-    CLIO_CODER_DATA_DIR: path.join(root, 'clio', second ? 'data-s2' : 'data'),
-    CLIO_CODER_CACHE_DIR: path.join(root, 'clio', second ? 'cache-s2' : 'cache'),
-    CLIO_CODER_BIN_DIR: path.join(root, 'clio', 'bin'),
+    PANCODE_STATE_DIR: path.join(root, 'pancode', 'state'),
+    PANCODE_DATA_DIR: path.join(root, 'pancode', second ? 'data-s2' : 'data'),
+    PANCODE_CACHE_DIR: path.join(root, 'pancode', second ? 'cache-s2' : 'cache'),
     // No other agent's user home, not even one CLAUDE_CONFIG_DIR names, feeds
-    // skills, prompts or credentials into a run. Clio 0.6.3 reads this; 0.6.2
-    // ignores it, and HOME is the run's own on both.
-    CLIO_CODER_INTEROP_HOME: 'none',
+    // skills, prompts or credentials into a run, and HOME is the run's own.
+    PANCODE_INTEROP_HOME: 'none',
     NO_COLOR: '1'
   };
 }
 
 function nativeRunner(root, entry, session = 'S1') {
   const env = { ...sanitizedChildEnv(profilePaths(root, session)) };
-  env.PATH = [path.join(root, 'clio', 'bin'), env.PATH].join(path.delimiter);
+  env.PATH = [path.join(root, 'pancode', 'bin'), env.PATH].join(path.delimiter);
   return (args, cwd, timeout = 120000) => {
     const result = spawnSync(process.execPath, [entry, ...args], { cwd, env, encoding: 'utf8', timeout });
     return { args, status: result.status, stdout: result.stdout || '', stderr: result.stderr || '', error: result.error ? result.error.message : null };
@@ -334,18 +340,18 @@ function deskTestsPassed(result) {
 }
 
 /**
- * What steps actually launch: the Clio entry, the `clio-coder` wrapper the
+ * What steps actually launch: the PanCode entry, the `pancode` wrapper the
  * desk and installer find on PATH, and the two installed WTF-P packages.
  */
 function launcherIdentity(root, entry, pluginRoot, deskRoot) {
-  const wrapper = path.join(root, 'clio', 'bin', 'clio-coder');
+  const wrapper = path.join(root, 'pancode', 'bin', 'pancode');
   const digest = (directory) => (directory && fs.existsSync(directory) ? directoryDigest(directory) : null);
   return {
     entry,
     entry_sha256: entry && fs.existsSync(entry) ? fileDigest(entry) : null,
-    dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(path.dirname(path.dirname(entry))) : null,
-    // Clio loads more than dist/ from its package root: dependencies, the extension host bootstrap, safety rules, prompts.
-    package_sha256: entry ? treeDigest(path.dirname(path.dirname(path.dirname(entry)))) : null,
+    dist_sha256: entry && fs.existsSync(entry) ? directoryDigest(distOf(entry)) : null,
+    // PanCode loads more than dist/ from its package root: the bundled hub, safety rules, schemas, prompts.
+    package_sha256: entry ? treeDigest(packageRootOf(entry)) : null,
     wrapper_sha256: fs.existsSync(wrapper) ? sha256(fs.readFileSync(wrapper)) : null,
     plugin_root: pluginRoot,
     plugin_sha256: digest(pluginRoot),
@@ -354,9 +360,9 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   };
 }
 
-/** Each installed WTF-P Clio recipe tool that a campaign step's workers may not hold, as `agent: tool`. */
+/** Each installed WTF-P PanCode recipe tool that a campaign step's workers may not hold, as `agent: tool`. */
 function recipeToolsOutside(pluginRoot) {
-  const agents = path.join(pluginRoot, 'ai.iowarp.clio', 'agents');
+  const agents = path.join(pluginRoot, 'dev.pancode', 'agents');
   const files = fs.existsSync(agents) ? fs.readdirSync(agents).filter(name => /^wtfp-.+\.md$/u.test(name)).sort() : [];
   if (files.length === 0) return [`no WTF-P recipes under ${agents}`];
   const outside = [];
@@ -371,9 +377,9 @@ function recipeToolsOutside(pluginRoot) {
 }
 
 function prepare(campaign, options) {
-  const identity = clioIdentity(options.entry, campaign);
+  const identity = pancodeIdentity(options.entry, campaign);
   if (identity.mismatches.length > 0 && !options.allowUnpinned) {
-    throw new Error(`refusing to prepare on an unpinned Clio build: ${identity.mismatches.join('; ')}`);
+    throw new Error(`refusing to prepare on an unpinned PanCode build: ${identity.mismatches.join('; ')}`);
   }
   const wtfp = wtfpIdentity();
   if (wtfp.package_tree !== 'clean' && !options.allowDirty) {
@@ -386,8 +392,9 @@ function prepare(campaign, options) {
       if (directory.startsWith(root)) fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
     }
   }
-  // The product installer and the desk find Clio as `clio-coder` on PATH.
-  fs.writeFileSync(path.join(root, 'clio', 'bin', 'clio-coder'),
+  // The product installer and the desk find PanCode as `pancode` on PATH.
+  fs.mkdirSync(path.join(root, 'pancode', 'bin'), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(path.join(root, 'pancode', 'bin', 'pancode'),
     `#!${process.execPath}\nconst r = require('child_process').spawnSync(process.execPath, [${JSON.stringify(options.entry)}, ...process.argv.slice(2)], { stdio: 'inherit' });\nprocess.exit(r.status ?? 1);\n`,
     { mode: 0o755 });
   const workspace = path.join(root, 'workspace');
@@ -406,17 +413,17 @@ function prepare(campaign, options) {
   }
   const native = nativeRunner(root, options.entry);
   const installEnv = { ...sanitizedChildEnv(profilePaths(root)) };
-  installEnv.PATH = [path.join(root, 'clio', 'bin'), installEnv.PATH].join(path.delimiter);
-  const install = spawnSync(process.execPath, [path.join(ROOT, 'bin/install.js'), 'install', 'clio', '--config-dir', profilePaths(root).CLIO_CODER_CONFIG_DIR, '--advanced', '--force', '--no-color'],
+  installEnv.PATH = [path.join(root, 'pancode', 'bin'), installEnv.PATH].join(path.delimiter);
+  const install = spawnSync(process.execPath, [path.join(ROOT, 'bin/install.js'), 'install', 'pancode', '--config-dir', profilePaths(root).PANCODE_CONFIG_DIR, '--advanced', '--force', '--no-color'],
     { cwd: workspace, env: installEnv, encoding: 'utf8', timeout: 300000 });
-  const observations = [{ args: ['wtf-p', 'install', 'clio'], status: install.status, stdout_sha256: sha256(install.stdout || ''), stderr_tail: (install.stderr || '').slice(-400) }];
+  const observations = [{ args: ['wtf-p', 'install', 'pancode'], status: install.status, stdout_sha256: sha256(install.stdout || ''), stderr_tail: (install.stderr || '').slice(-400) }];
   if (install.status !== 0) throw new Error(`WTF-P installation failed in the campaign profile: ${(install.stdout || '') + (install.stderr || '')}`);
   const checks = [];
   const record = (name, result, ok, detail) => {
     observations.push({ args: result.args, status: result.status, stdout_sha256: sha256(result.stdout) });
     checks.push({ name, passed: Boolean(ok), detail });
   };
-  const inspected = native(['library', 'inspect', 'plugin:wtfp', '--user', '--json'], workspace);
+  const inspected = native(['hub', 'inspect', 'plugin:wtfp', '--user', '--json'], workspace);
   const plugin = inspected.status === 0 ? JSON.parse(inspected.stdout) : null;
   record('plugin-registered', inspected, plugin && plugin.valid && plugin.enabled && plugin.diagnostics.length === 0, plugin ? `${plugin.version} ${plugin.rootPath}` : inspected.stderr);
   const extensions = native(['extensions', 'list', '--user', '--json'], workspace);
@@ -431,21 +438,21 @@ function prepare(campaign, options) {
     const graph = native(['playbook', 'graph', playbook, '--json'], workspace);
     record(`playbook-graph-${playbook}`, graph, graph.status === 0 && !/"\.planning\/"/u.test(graph.stdout), null);
   }
-  // Clio refuses a worker whose recipe declares a tool beyond --delegate-tools, so a recipe that outgrew them fails here, not mid-run.
+  // --delegate-tools is the ceiling every worker runs under, so a recipe that outgrew it is caught here, not mid-run.
   const outside = plugin ? recipeToolsOutside(plugin.rootPath) : ['plugin root unavailable'];
   checks.push({ name: 'worker-recipes-within-delegated-tools', passed: outside.length === 0, detail: outside.length ? outside.join('; ') : `${WORKER_TOOLS.join(',')}` });
-  const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).CLIO_CODER_CONFIG_DIR, 'extensions', 'wtfp');
+  const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).PANCODE_CONFIG_DIR, 'extensions', 'wtfp');
   const deskTests = native(['extensions', 'test', deskRoot], workspace, 600000);
   const passed = deskTestsPassed(deskTests);
   record('desk-package-tests', deskTests, passed, (deskTests.stdout.match(/ℹ (?:tests|pass|fail) \d+/gu) || []).join(', '));
   const prepared = {
-    schema: 'wtfp.evaluation.campaign-prepared/v2',
+    schema: 'wtfp.evaluation.campaign-prepared/v3',
     campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(options.campaignFile || DEFAULT_CAMPAIGN)) },
     prepared_at: new Date().toISOString(),
     evidence_level: 'native-discovery',
     wtfp,
-    clio: identity.observed,
-    clio_unpinned: identity.mismatches,
+    pancode: identity.observed,
+    pancode_unpinned: identity.mismatches,
     allow_dirty: wtfp.package_tree !== 'clean',
     fixture: { ...fixture, evaluator_oracles_copied: false },
     workspace: path.relative(root, workspace),
@@ -455,7 +462,7 @@ function prepare(campaign, options) {
     checks,
     native_observations: observations,
     interactive_session: {
-      note: 'Run Clio interactively in this profile to answer author gates; collect verifies what the desk sealed.',
+      note: 'Run PanCode interactively in this profile to answer author gates; collect verifies what the desk sealed.',
       environment: profilePaths(root, 'S1'),
       command: `${options.entry} (cwd ${workspace})`
     }
@@ -507,27 +514,27 @@ function readJsonQuietly(file) {
   }
 }
 
-/** The project's Clio configuration, path by path, as its kind and content digest; Clio's own runtime outputs are left out. */
-function clioProjectConfig(workspace) {
+/** The project's PanCode configuration, path by path, as its kind and content digest; PanCode's own runtime outputs are left out. */
+function pancodeProjectConfig(workspace) {
   const entries = new Map();
-  const root = path.join(workspace, '.clio-coder');
+  const root = path.join(workspace, '.pancode');
   let top;
   try { top = fs.lstatSync(root); } catch { return entries; }
   if (!top.isDirectory()) {
-    entries.set('.clio-coder', top.isSymbolicLink() ? `link:${fs.readlinkSync(root)}` : 'other');
+    entries.set('.pancode', top.isSymbolicLink() ? `link:${fs.readlinkSync(root)}` : 'other');
     return entries;
   }
   const visit = (relative) => {
     for (const entry of fs.readdirSync(path.join(root, relative), { withFileTypes: true })) {
-      if (relative === '' && CLIO_RUNTIME_OUTPUTS.has(entry.name)) continue;
+      if (relative === '' && PANCODE_RUNTIME_OUTPUTS.has(entry.name)) continue;
       const child = relative ? `${relative}/${entry.name}` : entry.name;
       const absolute = path.join(root, child);
-      if (entry.isSymbolicLink()) entries.set(`.clio-coder/${child}`, `link:${fs.readlinkSync(absolute)}`);
+      if (entry.isSymbolicLink()) entries.set(`.pancode/${child}`, `link:${fs.readlinkSync(absolute)}`);
       else if (entry.isDirectory()) {
-        entries.set(`.clio-coder/${child}`, 'dir');
+        entries.set(`.pancode/${child}`, 'dir');
         visit(child);
-      } else if (entry.isFile()) entries.set(`.clio-coder/${child}`, `file:${fileDigest(absolute)}`);
-      else entries.set(`.clio-coder/${child}`, 'other');
+      } else if (entry.isFile()) entries.set(`.pancode/${child}`, `file:${fileDigest(absolute)}`);
+      else entries.set(`.pancode/${child}`, 'other');
     }
   };
   visit('');
@@ -549,7 +556,7 @@ function readRecords(directory) {
 
 /** The desk's seal key from the run's extension store, read the way the desk stores it. */
 function sealKey(root) {
-  const stored = readJsonQuietly(path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
+  const stored = readJsonQuietly(path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
   const value = stored && stored.entries && stored.entries['seal-key'] && stored.entries['seal-key'].value;
   return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value) ? Buffer.from(value, 'hex') : null;
 }
@@ -579,57 +586,7 @@ function gateSummary(state) {
   };
 }
 
-function listReceipts(directory) {
-  if (!fs.existsSync(directory)) return new Set();
-  return new Set(fs.readdirSync(directory).filter(name => name.endsWith('.json')));
-}
-
-/** Receipts of the workers a step dispatched: the ones that appeared while it ran. */
-function newReceipts(directory, before) {
-  return [...listReceipts(directory)].filter(name => !before.has(name)).sort()
-    .map(name => ({ file: name, receipt: readJsonQuietly(path.join(directory, name)) }));
-}
-
-/**
- * Cost from Clio's sealed receipts and the provenance each one carries: the
- * main agent's receipt, which `clio-coder run` writes for the whole turn, and
- * every dispatched worker's. A stream's `measured` flag says only that token
- * usage was reported, never what it cost, so it is not used. No main-agent
- * receipt, or any unknown provenance, makes the step's cost unavailable,
- * never zero; an estimate is reported as one.
- */
-function stepCost(receipts, scope = COST_SCOPE) {
-  const parts = receipts.map(({ receipt }) => ({
-    main: Boolean(receipt && receipt.agentId === 'main-agent'),
-    usd: receipt ? receipt.costUsd : null,
-    provenance: receipt ? receipt.costProvenance : 'unknown'
-  }));
-  const usable = parts.some(part => part.main) &&
-    parts.every(part => Number.isFinite(part.usd) && part.usd >= 0 && ['known', 'known_free', 'estimated'].includes(part.provenance));
-  const status = !usable ? 'unavailable' : parts.some(part => part.provenance === 'estimated') ? 'estimated' : 'reported';
-  return {
-    status,
-    usd: status === 'unavailable' ? null : parts.reduce((sum, part) => sum + part.usd, 0),
-    sources: { main_receipts: parts.filter(part => part.main).length, worker_receipts: parts.filter(part => !part.main).length },
-    scope
-  };
-}
-
-/**
- * The models that served a step as the providers reported them, never as
- * requested: a main-agent message's `responseModel` and each worker call's
- * `responseModelIdObservation`. A call without a report is counted, not
- * assumed to be the requested model.
- */
-/** A worker receipt's upstream rows that a model actually served. */
-function servedRows(receipt) {
-  return (Array.isArray(receipt.upstreamResponses) ? receipt.upstreamResponses : []).filter(response =>
-    response && response.usageScope !== 'run-aggregate' &&
-    // Clio counts a reply without usage as a real call; a row with usage, no output and no response id is a provider error.
-    (typeof response.providerResponseId === 'string' || !response.usage || (response.usage.output ?? 0) > 0));
-}
-
-/** The model id a Clio response-model observation reports, or null when it reports none. */
+/** The model id a PanCode response-model observation reports, or null when it reports none. */
 function reportedModel(observation) {
   if (!observation || typeof observation !== 'object') return null;
   if (observation.state === 'reported' && typeof observation.reportedModelId === 'string') return observation.reportedModelId;
@@ -637,20 +594,25 @@ function reportedModel(observation) {
   return null;
 }
 
-function modelObservation(messages, receipts, selected) {
-  const workers = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId !== 'main-agent');
+/**
+ * The models that served a step as the providers reported them, never as
+ * requested: each main-agent message's `responseModelIdObservation` or
+ * `responseModel`, and the reported model of each call a worker run settled.
+ * A call without a report is counted, not assumed to be the requested model.
+ */
+function modelObservation(messages, workers, selected) {
+  // The main agent's calls are its stream's messages; only worker runs add their own.
+  const records = workers.map(({ record }) => record).filter(record => record && record.agentId !== 'main-agent');
   const calls = [
-    // Clio records a provider's report on the message itself for some API families and as responseModel for others.
+    // PanCode records a provider's report as responseModelIdObservation for some API families and as responseModel for others.
     // A provider error is not a served call.
     ...messages.filter(message => message.stopReason !== 'error').map(message => reportedModel(message.responseModelIdObservation) ?? (typeof message.responseModel === 'string' ? message.responseModel : null)),
-    // A run-aggregate row sums a worker's calls, and a row with no response id and no output is a provider error.
-    ...workers.flatMap(receipt => servedRows(receipt))
-      .map(response => reportedModel(response.responseModelIdObservation) ?? (typeof response.differingResponseModelId === 'string' ? response.differingResponseModelId : null))
+    ...records.flatMap(record => record.served)
   ];
   const reported = [...new Set(calls.filter(model => typeof model === 'string'))].sort();
   const unreported = calls.filter(model => model === null).length;
   return {
-    requested: [...new Set([...messages.map(message => message.model), ...workers.map(receipt => receipt.wireModelId)].filter(model => typeof model === 'string'))].sort(),
+    requested: [...new Set([...messages.map(message => message.model), ...records.map(record => record.wireModelId)].filter(model => typeof model === 'string'))].sort(),
     reported,
     calls: calls.length,
     unreported_calls: unreported,
@@ -658,25 +620,12 @@ function modelObservation(messages, receipts, selected) {
   };
 }
 
-/** The thinking level Clio resolved for the main agent and what providers reported they used. */
-function effortObservation(messages, receipts) {
-  const main = receipts.map(({ receipt }) => receipt).filter(receipt => receipt && receipt.agentId === 'main-agent' && receipt.runtimeResolution);
-  const distinct = (values) => [...new Set(values.filter(value => typeof value === 'string'))].sort();
-  const effective = distinct(main.map(receipt => receipt.runtimeResolution.effectiveThinkingLevel));
-  return {
-    requested: distinct(main.map(receipt => receipt.runtimeResolution.requestedThinkingLevel)),
-    effective,
-    provider_reported: distinct(messages.map(message => message.providerThinkingLevel)),
-    status: effective.length > 0 ? 'observed' : 'unobserved'
-  };
-}
-
 /**
- * Cost from the sealed telemetry Clio 0.6.6 and later folds for a step's
- * session: `clio-coder telemetry cost`, whose total covers the session's own
- * calls and every worker run it referenced. Any unknown or absent price, or
- * any call Clio could not count, makes the step's cost unavailable, never
- * zero; an estimate is reported as one.
+ * Cost from the sealed telemetry PanCode folds for a step's session:
+ * `pancode telemetry cost`, whose total covers the session's own calls and
+ * every worker run it referenced. Any unknown or absent price, or any call
+ * PanCode could not count, makes the step's cost unavailable, never zero; an
+ * estimate is reported as one.
  */
 function telemetryCost(total, scope = TELEMETRY_COST_SCOPE) {
   const usd = total && total.usd && total.usd.fact;
@@ -694,7 +643,11 @@ function telemetryCost(total, scope = TELEMETRY_COST_SCOPE) {
   };
 }
 
-/** The thinking level the step asked for and the level Clio's main-agent messages carried (0.6.6 and later). */
+/**
+ * The thinking level the step asked for, the level PanCode stamped on each
+ * main-agent message after clamping it to the route, and any level a provider
+ * reported it used.
+ */
 function telemetryEffort(messages, selection) {
   const distinct = (values) => [...new Set(values.filter(value => typeof value === 'string'))].sort();
   const effective = distinct(messages.map(message => message.thinkingLevel));
@@ -708,8 +661,9 @@ function telemetryEffort(messages, selection) {
 
 /**
  * A run's sealed telemetry record in the shape the classifier judges: its
- * agent, its tool counts and the calls it settled. A run whose seal Clio does
- * not verify, or whose tool counts or calls cannot be read, vouches for nothing.
+ * agent, its tool counts and the model each call it settled reported. A run
+ * whose seal PanCode does not verify, or whose tool counts or calls cannot be
+ * read, vouches for nothing and its record is null.
  */
 function telemetryWorker(runId, inspected, calls) {
   const settled = inspected && inspected.settled;
@@ -718,32 +672,33 @@ function telemetryWorker(runId, inspected, calls) {
   const readable = Boolean(inspected && inspected.seal && inspected.seal.status === 'verified' &&
     settled && (main || (Array.isArray(settled.tools) && Array.isArray(calls))));
   const reported = call => {
-    const fact = call && call.target && call.target.reportedModel && call.target.reportedModel.fact;
-    return fact && fact.kind === 'measured' && typeof fact.value === 'string' ? { state: 'reported', reportedModelId: fact.value } : null;
+    const fact = call.target && call.target.reportedModel && call.target.reportedModel.fact;
+    return fact && fact.kind === 'measured' && typeof fact.value === 'string' ? fact.value : null;
   };
   return {
-    file: `run:${runId}`,
-    receipt: !readable ? null : main ? { agentId: 'main-agent' } : {
+    run: `run:${runId}`,
+    record: !readable ? null : main ? { agentId: 'main-agent' } : {
       agentId: settled.agentId,
       wireModelId: settled.route ? settled.route.wireModelId : undefined,
-      toolStats: settled.tools.map(stat => ({ tool: stat && stat.tool, count: stat && stat.calls, blocked: stat && stat.blocked })),
-      // A call Clio did not settle is a provider error, never a served call.
-      upstreamResponses: calls.filter(call => call && call.disposition === 'settled')
-        .map(call => ({ providerResponseId: typeof call.responseId === 'string' ? call.responseId : null, responseModelIdObservation: reported(call) }))
+      tools: settled.tools.map(stat => ({ tool: stat && stat.tool, calls: stat && stat.calls, blocked: stat && stat.blocked })),
+      // A call that never reached a terminal response, or ended in a provider error, served nothing.
+      served: calls.filter(call => call && ['settled', 'settled_no_usage'].includes(call.disposition) && !(call.stop && call.stop.reason === 'error')).map(reported)
     }
   };
 }
 
-/** The session a `clio-coder run --json` stream opened, from its first session frame. */
+/** The session a `pancode run --output-format stream-json` stream opened: its first session frame, or the run_end envelope. */
 function streamSession(stdoutText) {
+  let ended = null;
   for (const line of stdoutText.split('\n')) {
     if (!line.trim()) continue;
     try {
       const frame = JSON.parse(line);
       if (frame && frame.type === 'session' && typeof frame.id === 'string') return frame.id;
+      if (frame && frame.type === 'run_end' && typeof frame.sessionId === 'string' && ended === null) ended = frame.sessionId;
     } catch { /* non-JSON progress lines are kept only in the raw log */ }
   }
-  return null;
+  return ended;
 }
 
 function listRuns(directory) {
@@ -751,7 +706,7 @@ function listRuns(directory) {
   return new Set(fs.readdirSync(directory));
 }
 
-/** One `clio-coder telemetry ... --json` query in a step's profile; its DTO, or null when Clio cannot answer it. */
+/** One `pancode telemetry ... --json` query in a step's profile; its DTO, or null when PanCode cannot answer it. */
 function readTelemetry(entry, env, cwd, args) {
   const result = spawnSync(process.execPath, [entry, 'telemetry', ...args, '--json'], {
     cwd, env, encoding: 'utf8', timeout: 120000, maxBuffer: SCAN_LIMIT
@@ -761,11 +716,12 @@ function readTelemetry(entry, env, cwd, args) {
 }
 
 /**
- * What Clio's sealed telemetry says about one step: the session's folded
+ * What PanCode's sealed telemetry says about one step: the session's folded
  * spend, and the run records that appeared while it ran. `read` runs one
- * `clio-coder telemetry ... --json` query in the step's profile and returns
- * its DTO, or null. A worker run the session references but the runner cannot
- * find, or that Clio cannot resolve, is unreadable like a torn receipt.
+ * `pancode telemetry ... --json` query in the step's profile and returns
+ * its DTO, or null. A step whose session the runner cannot identify, or that
+ * references a worker run the runner cannot find or PanCode cannot resolve,
+ * is unreadable.
  */
 function stepTelemetry(stdoutText, runsDirectory, before, read) {
   const session = streamSession(stdoutText);
@@ -780,7 +736,7 @@ function stepTelemetry(stdoutText, runsDirectory, before, read) {
     cost = costed && costed.total ? { ...costed.total, session } : null;
     const inspected = read(['inspect', session]);
     const referenced = inspected && inspected.runs;
-    const found = workers.filter(({ receipt }) => !receipt || receipt.agentId !== 'main-agent').length;
+    const found = workers.filter(({ record }) => !record || record.agentId !== 'main-agent').length;
     if (!referenced || !Number.isInteger(referenced.count) || referenced.unresolved !== 0 || referenced.count > found) {
       unreadable.push(`session:${session}`);
     }
@@ -788,25 +744,31 @@ function stepTelemetry(stdoutText, runsDirectory, before, read) {
   return { session, cost, workers, unreadable };
 }
 
-/**
- * One step's outcome from its process result, its JSON event stream, the
- * receipts Clio sealed for it and the project state it left, all judged
- * structurally. A step that ran a network tool, ran a program, or reached for
- * the seal store violated the campaign's policy. A step that changed the Clio
- * configuration later steps load, or left a worker receipt the runner cannot
- * read, fails integrity. A recorded answer no sealed author answer
- * stands behind, or an interaction record added by a headless step, which no
- * author could have given, is an integrity violation. A step that failed is
- * failed whatever else it left. A blocking gate still pending is an author the
- * session could not ask, and a gated step that raised no gate skipped its
- * author; neither is ever a completed action.
- */
-/** The capabilities a gateway call names, in every argument form Clio accepts: call by capability, name or tool, and each chain step. */
+/** The capabilities a gateway call names, in every argument form PanCode accepts: call by capability, name or tool, and each chain step. */
 function gatewayCapabilities(name, args) {
   if (name !== 'gateway' || args === null || typeof args !== 'object') return [];
   const named = [args.capability, args.name, args.tool].filter(value => typeof value === 'string');
   const steps = Array.isArray(args.steps) ? args.steps.filter(step => step && typeof step === 'object').map(step => step.capability).filter(value => typeof value === 'string') : [];
   return [...named, ...steps].map(value => value.trim());
+}
+
+/**
+ * One step's outcome from its process result, its stream-json frames, the run
+ * records PanCode's telemetry sealed for it and the project state it left, all
+ * judged structurally. A step that ran a network tool, ran a program, or
+ * reached for the seal store violated the campaign's policy. A step that
+ * changed the PanCode configuration later steps load, or left a worker run the
+ * runner cannot read, fails integrity. A recorded answer no sealed author
+ * answer stands behind, or an interaction record added by a headless step,
+ * which no author could have given, is an integrity violation. A step that
+ * failed is failed whatever else it left. A blocking gate still pending is an
+ * author the session could not ask, and a gated step that raised no gate
+ * skipped its author; neither is ever a completed action.
+ */
+/** Whether the run_end envelope, the stream's last frame, names the --max-cost-usd ceiling as the cause that won. */
+function ceilingCause(events) {
+  const ended = events.filter(event => event.type === 'run_end').pop();
+  return Boolean(ended && Array.isArray(ended.causes) && ended.causes[0] && ended.causes[0].code === CEILING_CAUSE);
 }
 
 function classifyStep(result, stdoutText, stderrText, context = {}) {
@@ -816,9 +778,8 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     try { frames.push(JSON.parse(line)); } catch { /* non-JSON progress lines are kept only in the raw log */ }
   }
   const events = frames.filter(frame => frame !== null && typeof frame === 'object');
-  // Clio 0.6.6 and later seal runs in telemetry journals; earlier builds write receipt files.
-  const telemetry = context.telemetry || null;
-  const receipts = telemetry ? telemetry.workers : context.receipts || [];
+  const telemetry = context.telemetry || { session: null, cost: null, workers: [], unreadable: [] };
+  const workers = telemetry.workers;
   const gates = context.gates || { pending: [], unconfirmed: [] };
   const added = context.interactionsAdded || [];
   const configChanged = context.configChanged || [];
@@ -826,9 +787,9 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
   let networkCalls = 0;
   let storeCalls = 0;
   let blockedCalls = 0;
-  // A program-running call counts unless Clio's own event says it blocked it,
-  // so a call Clio refused with an error counts too. A worker's calls come from
-  // its sealed receipt, and a worker receipt the runner cannot read vouches for nothing.
+  // A program-running call counts unless PanCode's own event says it blocked it,
+  // so a call PanCode refused with an error counts too. A worker's calls come from
+  // its sealed run record, and a worker run the runner cannot read vouches for nothing.
   const executing = new Map();
   for (const event of events) {
     if (event.type === 'tool_execution_start') {
@@ -844,12 +805,12 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     }
   }
   let executionCalls = executing.size;
-  const unreadableReceipts = telemetry ? [...telemetry.unreadable] : [];
-  for (const { file, receipt } of receipts) {
-    if (receipt && receipt.agentId === 'main-agent') continue;
-    if (!receipt || !Array.isArray(receipt.toolStats)) { unreadableReceipts.push(file); continue; }
-    for (const stat of receipt.toolStats) {
-      if (stat && EXECUTION_TOOLS.has(stat.tool)) executionCalls += Math.max(0, (Number(stat.count) || 0) - (Number(stat.blocked) || 0));
+  const unreadableRuns = [...telemetry.unreadable];
+  for (const { run, record } of workers) {
+    if (record && record.agentId === 'main-agent') continue;
+    if (!record || !Array.isArray(record.tools)) { unreadableRuns.push(run); continue; }
+    for (const stat of record.tools) {
+      if (stat && EXECUTION_TOOLS.has(stat.tool)) executionCalls += Math.max(0, (Number(stat.calls) || 0) - (Number(stat.blocked) || 0));
     }
   }
   const messages = events.filter(event => event.type === 'message_end' && event.message && event.message.role === 'assistant').map(event => event.message);
@@ -858,13 +819,13 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
   if (context.cancelled || (result.signal && !result.timedOut)) outcome = 'cancelled';
   else if (result.timedOut) outcome = 'timed-out';
   else if (networkCalls > 0 || storeCalls > 0 || executionCalls > 0) outcome = 'policy-violation';
-  else if (gates.unconfirmed.length > 0 || added.length > 0 || configChanged.length > 0 || unreadableReceipts.length > 0) outcome = 'integrity-violation';
-  else if (context.ceiling && result.exitCode === CEILING_EXIT) outcome = 'stopped-budget';
+  else if (gates.unconfirmed.length > 0 || added.length > 0 || configChanged.length > 0 || unreadableRuns.length > 0) outcome = 'integrity-violation';
+  else if (result.exitCode === CEILING_EXIT && ceilingCause(events)) outcome = 'stopped-budget';
   else if (result.exitCode !== 0) outcome = 'failed';
   else if (gates.pending.length > 0) outcome = 'author-unavailable';
   else if (gated) outcome = 'gate-not-raised';
-  const cost = telemetry ? telemetryCost(telemetry.cost) : stepCost(receipts, context.ceiling ? CEILING_COST_SCOPE : COST_SCOPE);
-  const models = modelObservation(messages, receipts, context.selection ? context.selection.model : null);
+  const cost = telemetryCost(telemetry.cost);
+  const models = modelObservation(messages, workers, context.selection ? context.selection.model : null);
   return {
     outcome,
     exit_code: result.exitCode,
@@ -874,17 +835,17 @@ function classifyStep(result, stdoutText, stderrText, context = {}) {
     events: events.length,
     // A provider error is not a model's output, so it is not counted as an observed call.
     model_calls: messages.filter(message => message.stopReason !== 'error').length +
-      receipts.filter(({ receipt }) => receipt && receipt.agentId !== 'main-agent' && servedRows(receipt).length > 0).length,
+      workers.filter(({ record }) => record && record.agentId !== 'main-agent' && record.served.length > 0).length,
     tools: { calls: tools, network_calls: networkCalls, store_calls: storeCalls, execution_calls: executionCalls, blocked_calls: blockedCalls },
     gates,
     interactions_added: added,
-    clio_config_changed: configChanged,
-    unreadable_worker_receipts: unreadableReceipts,
+    pancode_config_changed: configChanged,
+    unreadable_worker_runs: unreadableRuns,
     observed_models: models.reported,
     model_observation: models,
-    effort_observation: telemetry ? telemetryEffort(messages, context.selection) : effortObservation(messages, receipts),
-    receipts: receipts.map(({ file }) => file),
-    ...(telemetry ? { telemetry_session: telemetry.session } : {}),
+    effort_observation: telemetryEffort(messages, context.selection),
+    telemetry_runs: workers.map(({ run }) => run),
+    telemetry_session: telemetry.session,
     cost,
     cost_usd: cost.usd,
     cost_status: cost.status
@@ -936,7 +897,7 @@ function zeroHeld(fd) {
   return fs.fstatSync(fd).nlink;
 }
 
-/** The operator's settings and credentials copies, and any backup or temporary sibling Clio left beside them; returns what it could not wipe. */
+/** The operator's settings and credentials copies, and any backup or temporary sibling PanCode left beside them; returns what it could not wipe. */
 function wipePrivate(config) {
   const failures = [];
   if (!fs.existsSync(config)) return failures;
@@ -1059,9 +1020,9 @@ function stripComment(text) {
   }
   return text;
 }
-// Clio's TargetAuth fields that name a secret rather than hold one (src/domains/providers/types/target-descriptor.ts).
+// PanCode's TargetAuth fields that name a secret rather than hold one (src/domains/providers/types/target-descriptor.ts).
 const SETTINGS_REFERENCES = new Set(['apiKeyEnvVar', 'apiKeyRef', 'oauthProfile']);
-// Fields of Clio's credential records that are not secret (src/domains/providers/auth/storage.ts).
+// Fields of PanCode's credential records that are not secret (src/domains/providers/auth/storage.ts).
 const CREDENTIAL_FIELDS_IN_CLEAR = new Set(['type', 'updatedAt', 'expires', 'expiresAt', 'createdAt']);
 
 const unquote = (value) => value.trim().replace(/^(["'])([\s\S]*)\1$/u, '$2');
@@ -1112,7 +1073,7 @@ function flowScalars(text, base, out) {
 /**
  * Every scalar value in a small YAML document with the keys above it: block
  * mappings and sequences by indentation, block scalars (`|`, `>`), and flow
- * collections. Enough for Clio's settings and credentials files; anything it
+ * collections. Enough for PanCode's settings and credentials files; anything it
  * cannot place is kept under the keys it has, never dropped.
  */
 function yamlScalars(text) {
@@ -1182,7 +1143,7 @@ function settingsSecrets(text) {
     .flatMap(entry => secretTokens(entry.value));
 }
 
-/** The values of Clio's credential records, never their provider names, types or timestamps. */
+/** The values of PanCode's credential records, never their provider names, types or timestamps. */
 function credentialSecrets(text) {
   return yamlScalars(text)
     .filter(entry => entry.path.length > 0 && !CREDENTIAL_FIELDS_IN_CLEAR.has(entry.path[entry.path.length - 1]))
@@ -1236,22 +1197,22 @@ function verifyLauncher(root, prepared, entry) {
   }
 }
 
-/** Refuses to run unless the campaign, Clio build, WTF-P candidate, fixture and workspace are the ones prepare bound. */
+/** Refuses to run unless the campaign, PanCode build, WTF-P candidate, fixture and workspace are the ones prepare bound. */
 function boundRun(campaign, options, root, prepared) {
   const campaignFile = options.campaignFile || DEFAULT_CAMPAIGN;
-  if (prepared.schema !== 'wtfp.evaluation.campaign-prepared/v2' || !prepared.campaign || prepared.campaign.id !== campaign.id || prepared.campaign.version !== campaign.version) {
+  if (prepared.schema !== 'wtfp.evaluation.campaign-prepared/v3' || !prepared.campaign || prepared.campaign.id !== campaign.id || prepared.campaign.version !== campaign.version) {
     throw new Error('the prepared root belongs to another campaign');
   }
   if (sha256(fs.readFileSync(campaignFile)) !== prepared.campaign.sha256) throw new Error('the campaign definition changed since prepare; prepare a new root');
   if (!Array.isArray(prepared.checks) || prepared.checks.length === 0 || !prepared.checks.every(check => check.passed === true)) {
     throw new Error('prepare did not pass every native check on this root; prepare a new root');
   }
-  const identity = clioIdentity(options.entry, campaign);
-  if (identity.mismatches.length > 0 && !(Array.isArray(prepared.clio_unpinned) && prepared.clio_unpinned.length > 0)) {
-    throw new Error(`refusing to execute on an unpinned Clio build: ${identity.mismatches.join('; ')}`);
+  const identity = pancodeIdentity(options.entry, campaign);
+  if (identity.mismatches.length > 0 && !(Array.isArray(prepared.pancode_unpinned) && prepared.pancode_unpinned.length > 0)) {
+    throw new Error(`refusing to execute on an unpinned PanCode build: ${identity.mismatches.join('; ')}`);
   }
   for (const key of ['version', 'entry_sha256', 'dist_sha256', 'node']) {
-    if (!prepared.clio || identity.observed[key] !== prepared.clio[key]) throw new Error(`the Clio build changed since prepare (${key})`);
+    if (!prepared.pancode || identity.observed[key] !== prepared.pancode[key]) throw new Error(`the PanCode build changed since prepare (${key})`);
   }
   const wtfp = wtfpIdentity();
   if (!prepared.wtfp || wtfp.commit !== prepared.wtfp.commit || canonical(wtfp.packages) !== canonical(prepared.wtfp.packages)) {
@@ -1282,9 +1243,6 @@ async function execute(campaign, options) {
   if (!Number.isFinite(options.budgetUsd) || options.budgetUsd <= 0) throw new Error('execute needs the operator\'s --budget-usd ceiling');
   const ceiling = campaign.budget.timeout_minutes_per_step;
   const timeoutMinutes = options.timeoutMinutes === undefined ? ceiling : options.timeoutMinutes;
-  const costCeiling = takesCostCeiling(campaign);
-  const telemetered = readsTelemetry(campaign);
-  const costScope = telemetered ? TELEMETRY_COST_SCOPE : costCeiling ? CEILING_COST_SCOPE : COST_SCOPE;
   if (!Number.isFinite(timeoutMinutes) || timeoutMinutes <= 0 || timeoutMinutes > ceiling) {
     throw new Error(`--timeout-minutes must be above 0 and at most the campaign's ${ceiling} minutes per step`);
   }
@@ -1294,7 +1252,7 @@ async function execute(campaign, options) {
   if (fs.existsSync(path.join(root, 'run.json')) || fs.existsSync(path.join(root, 'logs'))) throw new Error('this root already holds a run; prepare a new root');
   const bound = boundRun(campaign, options, root, prepared);
   const { workspace } = bound;
-  const config = profilePaths(root).CLIO_CODER_CONFIG_DIR;
+  const config = profilePaths(root).PANCODE_CONFIG_DIR;
   // The run root as this process made it; a step that swaps it for another directory is caught at the end.
   const rootIdentity = fs.lstatSync(root);
   const copies = [
@@ -1307,21 +1265,20 @@ async function execute(campaign, options) {
     ...credentialSecrets(fs.readFileSync(path.join(config, 'credentials.yaml'), 'utf8')),
     ...settingsSecrets(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'))
   ])];
-  const receipts = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'receipts');
-  const telemetryRuns = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'telemetry', 'runs');
-  const storeFile = path.join(profilePaths(root).CLIO_CODER_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+  const telemetryRuns = path.join(profilePaths(root).PANCODE_STATE_DIR, 'telemetry', 'runs');
+  const storeFile = path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
   const preparedSha = sha256(fs.readFileSync(preparedFile));
   const marker = crypto.randomUUID();
   const run = {
-    schema: 'wtfp.evaluation.campaign-run/v2',
+    schema: 'wtfp.evaluation.campaign-run/v3',
     campaign: prepared.campaign,
     evidence_level: 'pending',
-    clio: bound.identity.observed,
-    clio_unpinned: bound.identity.mismatches,
+    pancode: bound.identity.observed,
+    pancode_unpinned: bound.identity.mismatches,
     wtfp: bound.wtfp,
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
-    budget_enforcement: costCeiling ? 'per-step Clio ceiling (--max-cost-usd) and between steps' : 'between steps',
+    budget_enforcement: 'per-step PanCode ceiling (--max-cost-usd) and between steps',
     step_environment: {
       ...STEP_GUARDS,
       tools: { main: MAIN_TOOLS, delegated: WORKER_TOOLS },
@@ -1331,7 +1288,7 @@ async function execute(campaign, options) {
     isolation: {
       steps_run_as: 'the operator\'s own OS user, with no sandbox',
       model_code_execution: 'withheld: neither the main agent nor any worker holds bash, run_script, job, git or verify (step_environment.tools), and a call to one is a policy violation',
-      record_integrity: 'tamper-evident against accidents and naive tampering; with no OS sandbox these checks rest on Clio enforcing the tool limits'
+      record_integrity: 'tamper-evident against accidents and naive tampering; with no OS sandbox these checks rest on PanCode enforcing the tool limits'
     },
     timeout_minutes: timeoutMinutes,
     resources,
@@ -1359,7 +1316,7 @@ async function execute(campaign, options) {
     persisted = true;
     run.ended_at = new Date().toISOString();
     if (run.outcome === 'running') run.outcome = 'cancelled';
-    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: costScope } : { status: costStatus, usd: spent, scope: costScope };
+    run.cost ??= costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: TELEMETRY_COST_SCOPE } : { status: costStatus, usd: spent, scope: TELEMETRY_COST_SCOPE };
     // Model evidence is claimed only for a run in which a model call was actually seen.
     run.evidence_level = run.steps.some(step => step.model_calls > 0) ? 'observed-model' : 'no-model-call-observed';
     // Nothing a step left running may outlive the run, and the key returns only after it is gone.
@@ -1383,7 +1340,7 @@ async function execute(campaign, options) {
       run.copies_zeroed_elsewhere = 'a private copy is still reachable by a name a step gave it; its bytes were zeroed in place';
     }
     if (unwiped.length > 0) run.unwiped = unwiped;
-    const redacted = [path.join(root, 'logs'), path.join(root, 'clio')].map(directory => attempt('redaction', () => scanSecrets(directory, secrets, true)) ?? { found: [], unscanned: [directory] });
+    const redacted = [path.join(root, 'logs'), path.join(root, 'pancode')].map(directory => attempt('redaction', () => scanSecrets(directory, secrets, true)) ?? { found: [], unscanned: [directory] });
     const workspaceSecrets = attempt('workspace scan', () => scanSecrets(workspace, secrets, false)) ?? { found: [], unscanned: [workspace] };
     run.secrets = {
       redacted_files: redacted.flatMap(item => item.found).map(file => path.relative(root, file)),
@@ -1422,21 +1379,21 @@ async function execute(campaign, options) {
     for (const step of campaign.lifecycle) {
       if (signals.state.signal) { run.outcome = 'cancelled'; break; }
       const env = { ...sanitizedChildEnv(profilePaths(root, step.session)), ...STEP_GUARDS, [RUN_MARKER]: marker };
-      env.PATH = [path.join(root, 'clio', 'bin'), env.PATH].join(path.delimiter);
+      env.PATH = [path.join(root, 'pancode', 'bin'), env.PATH].join(path.delimiter);
       const logs = path.join(root, 'logs', step.step);
       verifyLauncher(root, prepared, options.entry);
       // The step's log directory is new or the run stops: a step may not prepare the next one's logs.
       fs.mkdirSync(path.join(root, 'logs'), { recursive: true, mode: 0o700 });
       fs.mkdirSync(logs, { mode: 0o700 });
-      const before = telemetered ? listRuns(telemetryRuns) : listReceipts(receipts);
+      const before = listRuns(telemetryRuns);
       const interactionsBefore = interactionFiles(workspace);
-      const configBefore = clioProjectConfig(workspace);
+      const configBefore = pancodeProjectConfig(workspace);
       const startDigest = workspaceDigest(workspace);
       const result = await spawnCaptured({
         executable: process.execPath,
         argv: [options.entry, 'run', '--target', options.target, '--model', options.model, '--thinking', options.effort, '--autonomy', campaign.permissions.autonomy,
           '--allow-tools', MAIN_TOOLS.join(','), '--delegate-tools', WORKER_TOOLS.join(','),
-          ...(costCeiling ? ['--max-cost-usd', String(options.budgetUsd - spent)] : []), '--json-events', 'full', prompt(step)],
+          '--max-cost-usd', String(options.budgetUsd - spent), '--output-format', 'stream-json', prompt(step)],
         cwd: workspace,
         env,
         stdoutFile: path.join(logs, 'stdout.jsonl'),
@@ -1445,15 +1402,14 @@ async function execute(campaign, options) {
       });
       const stdoutText = fs.readFileSync(path.join(logs, 'stdout.jsonl'), 'utf8');
       // Telemetry is read in the step's own profile, from the run root, so the query never writes into the workspace.
-      const telemetry = telemetered ? stepTelemetry(stdoutText, telemetryRuns, before, args => readTelemetry(options.entry, env, root, args)) : null;
+      const telemetry = stepTelemetry(stdoutText, telemetryRuns, before, args => readTelemetry(options.entry, env, root, args));
       const classified = classifyStep(result, stdoutText, fs.readFileSync(path.join(logs, 'stderr.log'), 'utf8'), {
-        ...(telemetry ? { telemetry } : { receipts: newReceipts(receipts, before) }),
+        telemetry,
         gates: gateSummary(deskState(root, workspace)),
         interactionsAdded: [...interactionFiles(workspace)].filter(name => !interactionsBefore.has(name)).sort(),
-        configChanged: configChanges(configBefore, clioProjectConfig(workspace)),
+        configChanged: configChanges(configBefore, pancodeProjectConfig(workspace)),
         step,
         selection: options,
-        ceiling: costCeiling,
         cancelled: Boolean(signals.state.signal)
       });
       if (classified.cost.status === 'unavailable') costStatus = 'unavailable';
@@ -1486,7 +1442,7 @@ async function execute(campaign, options) {
     throw error;
   } finally {
     signals.remove();
-    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: costScope } : { status: costStatus, usd: spent, scope: costScope };
+    run.cost = costStatus === 'unavailable' ? { status: 'unavailable', usd: null, scope: TELEMETRY_COST_SCOPE } : { status: costStatus, usd: spent, scope: TELEMETRY_COST_SCOPE };
     persist();
   }
   return run;
@@ -1559,7 +1515,7 @@ function collect(campaign, options) {
   }
   const after = workspaceDigest(workspace);
   const report = {
-    schema: 'wtfp.evaluation.campaign-collect/v2',
+    schema: 'wtfp.evaluation.campaign-collect/v3',
     campaign: prepared.campaign,
     collected_at: new Date().toISOString(),
     evidence_levels: decisions.some(item => item.trust === 'attested') ? ['native-discovery', 'observed-author'] : ['native-discovery'],
@@ -1603,7 +1559,7 @@ function parseArgs(argv) {
     };
     if (argument === '--campaign') options.campaignFile = path.resolve(value());
     else if (argument === '--root') options.root = path.resolve(value());
-    else if (argument === '--clio-entry') options.entry = value();
+    else if (argument === '--pancode-entry') options.entry = value();
     else if (argument === '--target') options.target = value();
     else if (argument === '--model') options.model = value();
     else if (argument === '--effort') options.effort = value();
@@ -1618,11 +1574,11 @@ function parseArgs(argv) {
 
 function usage() {
   return [
-    'Usage: node evaluation/tools/run-clio-campaign.js <plan|prepare|execute|collect> [options]',
+    'Usage: node evaluation/tools/run-pancode-campaign.js <plan|prepare|execute|collect> [options]',
     '',
-    '  plan     [--clio-entry <abs>]                 identities and steps; no credentials, no writes',
-    '  prepare  --root <new dir> --clio-entry <abs>  disposable profile, both packages, native discovery',
-    '  execute  --root <prepared> --clio-entry <abs> --target <t> --model <m> --effort <e> --budget-usd <n>',
+    '  plan     [--pancode-entry <abs>]                 identities and steps; no credentials, no writes',
+    '  prepare  --root <new dir> --pancode-entry <abs>  disposable profile, both packages, native discovery',
+    '  execute  --root <prepared> --pancode-entry <abs> --target <t> --model <m> --effort <e> --budget-usd <n>',
     `           needs ${CONFIRM_ENV}, ${SETTINGS_ENV} and ${CREDENTIALS_ENV}; author gates come back author-unavailable`,
     '  collect  --root <prepared>                    independent verification of records and sealed answers',
     '',
@@ -1660,8 +1616,8 @@ module.exports = {
   WORKER_TOOLS,
   canonical,
   classifyStep,
-  clioIdentity,
-  clioProjectConfig,
+  pancodeIdentity,
+  pancodeProjectConfig,
   configChanges,
   collect,
   confirmValue,
@@ -1677,10 +1633,10 @@ module.exports = {
   plan,
   prepare,
   profilePaths,
-  readsTelemetry,
   recipeToolsOutside,
   settingsSecrets,
   stepTelemetry,
+  telemetryWorker,
   verifySeal,
   workspaceDigest,
   workspaceHead,

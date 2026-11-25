@@ -42,7 +42,7 @@
     },
     {
       "target": "clio",
-      "path": "vendors/plugin/.wtfp-generated.json",
+      "path": "pancode/plugin/.wtfp-generated.json",
       "manifest_sha256": "d5d93d04bff283fdbca3748cac9db0044bd84e8a837579c0f59a0d9932d204ac",
       "source_sha256": "23a4a87c5ef7c25c140114de53002be934345a2dee793de712009f183163973c"
     },

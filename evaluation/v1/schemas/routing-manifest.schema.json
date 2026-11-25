@@ -46,7 +46,7 @@
         "required": ["target", "path", "manifest_sha256", "source_sha256"],
         "properties": {
           "target": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-          "path": { "type": "string", "pattern": "^vendors/[A-Za-z0-9._/-]+/\\.wtfp-generated\\.json$|^vendors/[A-Za-z0-9._-]+/\\.wtfp-generated\\.json$" },
+          "path": { "type": "string", "pattern": "^vendors/[A-Za-z0-9._/-]+/\\.wtfp-generated\\.json$|^vendors/[A-Za-z0-9._-]+/\\.wtfp-generated\\.json$|^pancode/(?:plugin|extension)/\\.wtfp-generated\\.json$" },
           "manifest_sha256": { "$ref": "#/$defs/sha256" },
           "source_sha256": { "$ref": "#/$defs/sha256" }
         }

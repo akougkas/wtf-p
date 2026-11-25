@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/evaluation/campaign/v2",
-  "title": "A versioned Clio evaluation campaign: the exact build, inputs, gates and evidence levels one run is judged against.",
+  "$id": "https://schemas.wtf-p.dev/evaluation/campaign/v3",
+  "title": "A versioned PanCode evaluation campaign: the exact build, inputs, gates and evidence levels one run is judged against.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "version", "status", "purpose", "historical_suites", "wtfp", "clio", "model", "fixture", "permissions", "budget", "lifecycle", "evidence_levels"],
+  "required": ["schema", "id", "version", "status", "purpose", "historical_suites", "wtfp", "pancode", "model", "fixture", "permissions", "budget", "lifecycle", "evidence_levels"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.campaign/v2" },
+    "schema": { "const": "wtfp.evaluation.campaign/v3" },
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 },
     "status": {
@@ -45,26 +45,27 @@
             "additionalProperties": false,
             "required": ["path", "inventory_target"],
             "properties": {
-              "path": { "type": "string", "pattern": "^vendors/[a-z-]+$" },
+              "path": { "type": "string", "pattern": "^pancode/(?:plugin|extension)$" },
               "inventory_target": { "type": "string", "minLength": 1 }
             }
           }
         }
       }
     },
-    "clio": {
+    "pancode": {
+      "description": "The one PanCode build every step launches, pinned by source and by the bytes of the installed package.",
       "type": "object",
       "additionalProperties": false,
       "required": ["version", "source", "build"],
       "properties": {
-        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "version": { "description": "The release `pancode --version` reports on its first line.", "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$" },
         "source": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["repository", "tag", "commit", "tree", "lockfile_sha256"],
+          "required": ["repository", "commit", "tree", "lockfile_sha256"],
           "properties": {
             "repository": { "type": "string", "format": "uri" },
-            "tag": { "type": "string", "minLength": 1 },
+            "tag": { "description": "The release tag, when the pinned commit has one.", "type": "string", "minLength": 1 },
             "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
             "tree": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
             "lockfile_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
@@ -75,7 +76,7 @@
           "additionalProperties": false,
           "required": ["entry", "dist_sha256", "entry_sha256", "node", "byte_reproducible", "procedure"],
           "properties": {
-            "entry": { "const": "dist/cli/index.js" },
+            "entry": { "const": "bin/pancode.cjs" },
             "dist_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
             "entry_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
             "node": { "type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$" },
@@ -115,7 +116,7 @@
         "autonomy": { "const": "default" },
         "network": { "const": "none" },
         "code_execution": {
-          "description": "No step's main agent or worker holds a tool that runs a program; the runner passes Clio's tool allowlists and treats any such call as a policy violation.",
+          "description": "No step's main agent or worker holds a tool that runs a program; the runner passes PanCode's tool allowlists and treats any such call as a policy violation.",
           "const": "denied"
         },
         "headless_author_gates": { "const": "typed-unavailable" }
