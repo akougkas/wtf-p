@@ -88,13 +88,7 @@ Development preflight checks:
 
 The archive check verifies the runtime-critical protocol and seven target entry points are really present. It does not estimate correctness from a file-count regex.
 
-Immediately before registry publication, use the stronger mode:
-
-```bash
-npm run preflight -- --publish
-```
-
-Publish mode additionally requires a clean tree, an exact `v<package-version>` tag on `HEAD`, and working npm authentication (`npm whoami`). Credentials are checked by npm itself and are never read or printed by WTF-P. Before the tag exists, and on a tree with an uncommitted operator-owned file, expect exactly the clean-tree, exact-tag, and (when logged out) authentication checks to fail and nothing else.
+Publish mode, `npm run preflight -- --publish`, additionally requires a clean tree, an exact `v<package-version>` tag on `HEAD`, and working npm authentication (`npm whoami`). Credentials are checked by npm itself and are never read or printed by WTF-P. The publish workflow does not use this mode: Trusted Publishing has no login for `npm whoami` to find, and `scripts/publish-guard.js` enforces the clean tree and exact tag at publish time. Before the tag exists, and on a tree with an uncommitted operator-owned file, expect exactly the clean-tree, exact-tag, and (when logged out) authentication checks to fail and nothing else.
 
 ## Version preparation
 
@@ -139,13 +133,13 @@ Pushing is a separate, explicit operation:
 npm run release -- --tag --push
 ```
 
-The helper never runs `npm publish`. After the tag exists:
+The helper never runs `npm publish`. The publisher is `.github/workflows/publish.yml`, which runs on every pushed `v*` tag:
 
-```bash
-npm run preflight -- --publish
-npm publish --tag next       # prerelease
-# npm publish                # stable release
-```
+1. The `check` job fails unless the tag equals `v<package-version>`, then looks the version up with `npm view wtf-p@<version>`. A version already on npm ends the run there, so pushing the tag of a published release is a no-op.
+2. For a new version, `check` runs `npm run preflight` on the tagged commit.
+3. The `publish` job waits for the owner to approve the `npm` environment. It installs npm 11.21.3 (Trusted Publishing needs npm 11.5.1 or newer), then runs `npm publish --provenance --access public` (with `--tag next` for a prerelease) through npm Trusted Publishing. The job authenticates with a short-lived OIDC credential and reads no npm token. `prepublishOnly` still runs `scripts/publish-guard.js` against the clean tag checkout.
+
+Nobody publishes from a local checkout, and the release needs no npm login: pushing the tag and approving the environment are the two owner actions.
 
 Separating preparation, tagging, pushing, and registry publication keeps each externally visible mutation inspectable and independently authorized.
 
@@ -216,7 +210,7 @@ not merely a valid JSON manifest. PanCode compatibility is declared by
 - [ ] inspect the actual `npm pack --dry-run --json` file list, sizes, and forbidden obsolete paths
 - [ ] normal-profile pre/post hashes match and all disposable credential copies are absent
 - [ ] the tag is annotated and exactly matches `package.json`
-- [ ] `npm run preflight -- --publish` passes before registry publication
+- [ ] the `Publish to npm` run for the tag passes `check`, and the owner approves its `npm` environment
 - [ ] a fresh install from the published tarball passes in disposable homes
 
 Reserve `1.0.0` for a fully observed compatibility matrix with no unresolved high-severity ownership or data-loss defect.

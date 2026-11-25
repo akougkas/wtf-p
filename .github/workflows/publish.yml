@@ -1,0 +1,96 @@
+name: Publish to npm
+
+# A v* tag push checks the release; when the version is not on npm yet, the
+# owner approves the npm environment and npm Trusted Publishing uploads it.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publication
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      published: ${{ steps.registry.outputs.published }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The routing-matrix seal names an ancestor commit that must resolve.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Check the tag matches the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::tag $TAG does not match package.json version $VERSION"
+            exit 1
+          fi
+      - name: Look up the version on npm
+        id: registry
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          if npm view "wtf-p@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::wtf-p@$VERSION is already on npm; nothing to publish"
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run the release preflight
+        if: steps.registry.outputs.published == 'false'
+        run: npm run preflight
+
+  publish:
+    needs: check
+    if: needs.check.outputs.published == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/wtf-p
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # No registry-url: setup-node would write an .npmrc that reads
+      # NODE_AUTH_TOKEN. Publication authenticates through OIDC only.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+      - name: Install npm 11.21.3 for Trusted Publishing
+        run: |
+          npm install -g npm@11.21.3
+          NPM_VERSION=$(npm --version)
+          echo "npm $NPM_VERSION"
+          if [ "$(printf '%s\n' 11.5.1 "$NPM_VERSION" | sort -V | head -n1)" != 11.5.1 ]; then
+            echo "::error::npm $NPM_VERSION cannot use Trusted Publishing"
+            exit 1
+          fi
+      # prepublishOnly runs scripts/publish-guard.js: clean tree, exact tag, tracked files only.
+      - name: Publish with npm Trusted Publishing
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          # The approval wait can be long; skip if the version appeared meanwhile.
+          if npm view "wtf-p@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::wtf-p@$VERSION is already on npm; nothing to publish"
+            exit 0
+          fi
+          case "$VERSION" in
+            *-*) npm publish --provenance --access public --tag next ;;
+            *) npm publish --provenance --access public ;;
+          esac
