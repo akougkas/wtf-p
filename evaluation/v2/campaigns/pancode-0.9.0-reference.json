@@ -22,17 +22,17 @@
     "version": "0.9.0-dev",
     "source": {
       "repository": "https://github.com/akougkas/pancode",
-      "commit": "224f9081ea2d07f032b74b8b6b72d3eb7a58f22c",
-      "tree": "5dced0b4d4e9d97052949ee1602307356a48b667",
+      "commit": "58bd6111b673be0ab4a33f00de8907feb396afea",
+      "tree": "b81f9ad50bfc159017937eba92890c9a0a884a24",
       "lockfile_sha256": "2541bcaa381d58141f9b778ed7a2f84aa0f07c3945fbfc233622df79f2b2678f"
     },
     "build": {
       "entry": "bin/pancode.cjs",
-      "dist_sha256": "7b33f36aa4f5f6c62908337ffad8f181d35e3c2859f745073f5246ecaa5f21c4",
+      "dist_sha256": "e6ebd841c5c0ead6718158d356743d46116ff53e74919a5e84c99ed60a287802",
       "entry_sha256": "69a54da720fda9d1254a19fb29b92460e5a8ed7706dac19baf8392754a7ada01",
       "node": "v24.22.2",
       "byte_reproducible": false,
-      "procedure": "Clone the PanCode repository and check out the pinned commit, which is not tagged and reports itself as `PanCode 0.9.0-dev (unreleased · 224f908)`. Run `corepack pnpm install --frozen-lockfile` against the pinned pnpm-lock.yaml, `corepack pnpm run build`, and `corepack pnpm pack`, then `npm install <tarball>` into a clean prefix. The entry is node_modules/pancode/bin/pancode.cjs under that prefix, and dist/ beside it is pinned by the SHA-256 of its per-file `<sha256>  ./<path>` listing in code-unit path order. Bundle chunk names are not known to be stable between builds, so a rebuild is checked against these digests rather than assumed to match."
+      "procedure": "Clone the PanCode repository and check out the pinned commit, which is not tagged and reports itself as `PanCode 0.9.0-dev (unreleased · 58bd611)`. Run `corepack pnpm install --frozen-lockfile` against the pinned pnpm-lock.yaml, `corepack pnpm run build`, and `corepack pnpm pack`, then `npm install <tarball>` into a clean prefix. The entry is node_modules/pancode/bin/pancode.cjs under that prefix, and dist/ beside it is pinned by the SHA-256 of its per-file `<sha256>  ./<path>` listing in code-unit path order. Bundle chunk names are not known to be stable between builds, so a rebuild is checked against these digests rather than assumed to match."
     }
   },
   "model": {

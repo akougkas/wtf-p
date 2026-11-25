@@ -50,7 +50,7 @@ function tree(directory) {
  * from the records a fake run sealed into the profile (see `sealed`), and a
  * query it holds no record for fails, as PanCode's does.
  */
-function fakePanCode(name, body, version = 'PanCode 0.9.0-dev (unreleased · 224f908)') {
+function fakePanCode(name, body, version = 'PanCode 0.9.0-dev (unreleased · 58bd611)') {
   fs.mkdirSync(path.join(scratch, name, 'dist'), { recursive: true });
   fs.writeFileSync(path.join(scratch, name, 'dist', 'cli.js'), '// the built bundle\n');
   fs.mkdirSync(path.join(scratch, name, 'bin'), { recursive: true });
@@ -184,7 +184,7 @@ async function main() {
   await test('the campaign validates, pins the qualified PanCode build, and keeps the v1 fixture meaning', async () => {
     assert.strictEqual(campaign.status, 'awaiting-resources');
     assert.deepStrictEqual([campaign.model.target, campaign.model.model, campaign.model.effort, campaign.budget.ceiling], [null, null, null, null]);
-    assert.strictEqual(campaign.pancode.source.commit, '224f9081ea2d07f032b74b8b6b72d3eb7a58f22c');
+    assert.strictEqual(campaign.pancode.source.commit, '58bd6111b673be0ab4a33f00de8907feb396afea');
     assert.deepStrictEqual([campaign.pancode.version, campaign.pancode.build.entry], ['0.9.0-dev', 'bin/pancode.cjs']);
     assert.deepStrictEqual(campaign.wtfp.packages.map(pkg => [pkg.path, pkg.inventory_target]), [['pancode/plugin', 'pancode-plugin'], ['pancode/extension', 'pancode-extension']]);
     const v1 = JSON.parse(fs.readFileSync(path.join(ROOT, campaign.fixture.path, 'manifest.json'), 'utf8'));
@@ -231,8 +231,8 @@ async function main() {
     fs.chmodSync(locked, 0o600);
     const planned = JSON.parse(stdout);
     assert.deepStrictEqual(planned.campaign, { id: 'pancode-0.9.0-reference', version: campaign.version, status: 'awaiting-resources' });
-    assert.strictEqual(planned.pancode.pinned.source.commit, '224f9081ea2d07f032b74b8b6b72d3eb7a58f22c');
-    assert.strictEqual(planned.pancode.observed.version, 'PanCode 0.9.0-dev (unreleased · 224f908)');
+    assert.strictEqual(planned.pancode.pinned.source.commit, '58bd6111b673be0ab4a33f00de8907feb396afea');
+    assert.strictEqual(planned.pancode.observed.version, 'PanCode 0.9.0-dev (unreleased · 58bd611)');
     assert.deepStrictEqual(Object.keys(planned.wtfp.packages), ['pancode/plugin', 'pancode/extension']);
     assert.match(planned.wtfp.commit, /^[0-9a-f]{40}$/);
     assert.deepStrictEqual(planned.steps.map(step => step.step), campaign.lifecycle.map(step => step.step));
@@ -362,10 +362,10 @@ setTimeout(() => {}, 60000);`);
   await test('the PanCode version is the first line of --version, so the pane runtime line does not unpin a build, and the commit it names must be the pinned one', async () => {
     const entry = fakePanCode('fake-version', 'process.exit(0);');
     const identity = runner.pancodeIdentity(entry, campaign);
-    assert.strictEqual(identity.observed.version, 'PanCode 0.9.0-dev (unreleased · 224f908)');
+    assert.strictEqual(identity.observed.version, 'PanCode 0.9.0-dev (unreleased · 58bd611)');
     assert.ok(!identity.mismatches.some(item => item.startsWith('version')));
     const other = runner.pancodeIdentity(fakePanCode('fake-other-commit', 'process.exit(0);', 'PanCode 0.9.0-dev (unreleased · 588f283)'), campaign);
-    assert.ok(other.mismatches.some(item => /names a commit other than 224f908/.test(item)), 'a build from another commit is unpinned even at the same version');
+    assert.ok(other.mismatches.some(item => /names a commit other than 58bd611/.test(item)), 'a build from another commit is unpinned even at the same version');
     const release = runner.pancodeIdentity(fakePanCode('fake-release', 'process.exit(0);', 'PanCode 0.9.1'), campaign);
     assert.ok(release.mismatches.some(item => /is not PanCode 0\.9\.0-dev/.test(item)));
   });
