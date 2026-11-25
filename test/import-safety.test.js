@@ -202,8 +202,7 @@ function probeEntrypoint(entrypoint) {
       cwd,
       encoding: 'utf8',
       env: makeIsolatedEnv(fixture),
-      input: '',
-      timeout: 10000
+      input: ''
     });
     const after = snapshotTree(fixture);
     const diagnostic = [result.error && result.error.stack, result.stdout, result.stderr]

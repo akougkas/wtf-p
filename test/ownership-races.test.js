@@ -90,8 +90,7 @@ function spawnNode(args, cwd, env) {
   return spawnSync(process.execPath, args, {
     cwd,
     env,
-    encoding: 'utf8',
-    timeout: 30000
+    encoding: 'utf8'
   });
 }
 

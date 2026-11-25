@@ -44,8 +44,7 @@ function runScript(script, args, opts = {}) {
     encoding: 'utf8',
     env: { ...isolatedEnv, ...opts.env },
     cwd: opts.cwd || root,
-    input: opts.input,
-    timeout: 30000
+    input: opts.input
   });
   if (result.status !== 0 && !opts.expectFail) {
     throw new Error(`${path.basename(script)} failed (${result.status})\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
@@ -58,8 +57,7 @@ function claudePluginList(configDir) {
     encoding: 'utf8',
     env: { ...isolatedEnv, CLAUDE_CONFIG_DIR: configDir },
     cwd: root,
-    input: '',
-    timeout: 30000
+    input: ''
   });
   if (result.error && result.error.code === 'ENOENT') return null;
   if (result.status !== 0) {

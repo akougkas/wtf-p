@@ -62,8 +62,7 @@ function spawnNode(args, options) {
     cwd: options.cwd,
     env: options.env,
     encoding: 'utf8',
-    input: options.input,
-    timeout: 30000
+    input: options.input
   });
 }
 

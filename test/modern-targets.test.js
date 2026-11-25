@@ -102,8 +102,7 @@ function run(entrypoint, argv, overrides = {}) {
     cwd: ROOT,
     encoding: 'utf8',
     env: { ...isolatedEnvironment(), ...overrides },
-    input: '',
-    timeout: 30000
+    input: ''
   });
   return {
     ...result,

@@ -82,7 +82,7 @@ Development preflight checks:
 - package identity, Node.js floor, binary declarations, and executable bits;
 - canonical and native envelope entry points;
 - deterministic generation;
-- every suite file `npm run test:all` runs, each a separate step, with up to half the machine's cores (at most eight) running files side by side. A step is stopped only after 300 s with no output: each suite prints as its cases pass and bounds its own subprocesses, so a busy machine takes longer instead of failing the gate, and a hung suite still fails it;
+- every suite file `npm run test:all` runs, each a separate step, with up to half the machine's cores (at most eight) running files side by side. A step is stopped only after 300 s with no output: each suite prints as its cases pass and sets no time limit on the processes it spawns, so a busy machine takes longer instead of failing the gate, and a hung suite still fails it;
 - the actual `npm pack --dry-run --json` allowlist;
 - whitespace errors in the Git diff.
 

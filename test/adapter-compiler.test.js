@@ -222,8 +222,7 @@ function runCheck(cwd, environment) {
     cwd,
     env: environment,
     encoding: 'utf8',
-    input: '',
-    timeout: 30000
+    input: ''
   });
 }
 

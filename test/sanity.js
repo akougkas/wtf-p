@@ -81,8 +81,7 @@ try {
     const syntax = spawnSync(process.execPath, ['--check', entrypoint], {
       cwd: probeCwd,
       encoding: 'utf8',
-      env: probeEnv,
-      timeout: 10000
+      env: probeEnv
     });
     check(syntax.status === 0 && !syntax.error, `bin/${name} is valid Node.js`);
 
@@ -90,8 +89,7 @@ try {
       cwd: probeCwd,
       encoding: 'utf8',
       env: probeEnv,
-      input: '',
-      timeout: 10000
+      input: ''
     });
     check(imported.status === 0 && !imported.error, `bin/${name} is import-safe`);
   }

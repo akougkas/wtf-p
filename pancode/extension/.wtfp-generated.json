@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "pancode-extension",
-  "sourceHash": "cb22898aa6780059bf75693245fbf20aad25d8dc852b570eb32806561c5d64fd",
+  "sourceHash": "57232427f8bbf3b1910c9cff3dafd97f0907557db93af3708c15e3a35d90d8f2",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -262,7 +262,7 @@
     },
     {
       "path": "runtime/extension.test.ts",
-      "sha256": "854e27ba9fe7bf25a87c71910c824528a2b874c2eec44925527e32e6d1e4f415"
+      "sha256": "4a1d0fe231e02e993f218f98635960ea668a62f87faa267a8da263dfad03497f"
     },
     {
       "path": "runtime/extension.ts",

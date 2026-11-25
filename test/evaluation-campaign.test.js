@@ -927,7 +927,7 @@ process.exit(1);`);
     const root = preparedRoot('leak', entry);
     const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'execute', '--root', root, '--pancode-entry', entry,
       '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
-    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: settings }, encoding: 'utf8', timeout: 60000 });
+    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: settings }, encoding: 'utf8' });
     assert.strictEqual(cli.status, 3, cli.stderr);
     const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(run.outcome, 'failed');

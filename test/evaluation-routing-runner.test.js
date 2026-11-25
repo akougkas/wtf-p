@@ -1201,8 +1201,7 @@ async function main() {
     const result = spawnSync(process.execPath, ['evaluation/tools/run-routing-matrix.js', '--help'], {
       cwd: repositoryRoot,
       env: { PATH: process.env.PATH, LANG: process.env.LANG || 'C' },
-      encoding: 'utf8',
-      timeout: 30000
+      encoding: 'utf8'
     });
     assert.strictEqual(result.status, 0, result.stderr);
     assert.match(result.stdout, /No mode means --dry-run/u);

@@ -22,8 +22,7 @@ function run(args, env = {}) {
   return spawnSync(process.execPath, [DISPATCHER, ...args], {
     cwd: scratch,
     env: { ...process.env, ...env },
-    encoding: 'utf8',
-    timeout: 30000
+    encoding: 'utf8'
   });
 }
 function errorOf(result) {
@@ -58,7 +57,7 @@ try {
     // OpenCode imports every tools/*.js below its config root as a custom tool
     // module; an import must neither print nor exit the host process.
     const result = spawnSync(process.execPath, ['--input-type=module', '-e', `await import(${JSON.stringify(DISPATCHER)}); process.stdout.write('imported');`], {
-      cwd: scratch, encoding: 'utf8', timeout: 30000
+      cwd: scratch, encoding: 'utf8'
     });
     assert.strictEqual(result.status, 0, result.stderr);
     assert.strictEqual(result.stdout, 'imported');
@@ -79,8 +78,7 @@ try {
     fs.cpSync(path.join(ROOT, 'pancode', 'plugin', 'tools'), path.join(plugin, 'tools'), { recursive: true, force: true });
     const result = spawnSync(process.execPath, [path.join(plugin, 'tools', 'wtfp-tool.js'), 'list'], {
       cwd: host,
-      encoding: 'utf8',
-      timeout: 30000
+      encoding: 'utf8'
     });
     assert.strictEqual(result.status, 0, result.stderr);
     assert.strictEqual(JSON.parse(result.stdout).commands.length, registry.tools.length);

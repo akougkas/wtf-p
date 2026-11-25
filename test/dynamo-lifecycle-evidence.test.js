@@ -61,8 +61,7 @@ test('typed blocked evidence validates and compares as an honest regression', ()
     'evaluation/tools/compare-results.js', '--json', baseline, result
   ], {
     cwd: repositoryRoot,
-    encoding: 'utf8',
-    timeout: 30000
+    encoding: 'utf8'
   });
   assert.strictEqual(comparison.status, 1, comparison.stderr);
   assert.deepStrictEqual(JSON.parse(comparison.stdout), readJson('comparison.json'));
@@ -74,8 +73,7 @@ test('all five retained records remain byte-exact and literally schema-valid', (
     'evaluation/tools/validate-planning.js', path.join(evidenceRoot, 'records')
   ], {
     cwd: repositoryRoot,
-    encoding: 'utf8',
-    timeout: 30000
+    encoding: 'utf8'
   });
   assert.strictEqual(validation.status, 0, validation.stderr);
   assert.match(validation.stdout, /PASS: 5 planning record\(s\) checked/u);
@@ -159,8 +157,7 @@ test('current-source Dynamo initialization remains a schema-valid but safety-blo
     'evaluation/tools/validate-planning.js', '--json', path.join(currentEvidenceRoot, 'records')
   ], {
     cwd: repositoryRoot,
-    encoding: 'utf8',
-    timeout: 30000
+    encoding: 'utf8'
   });
   assert.strictEqual(validation.status, 0, validation.stderr);
   assert.deepStrictEqual(

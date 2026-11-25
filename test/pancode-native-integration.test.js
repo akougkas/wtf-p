@@ -62,14 +62,14 @@ process.exit(result.status ?? 1);
 `, { mode: 0o755 });
 const env = { ...probe.environment, PATH: `${wrapperDir}${path.delimiter}/usr/bin:/bin` };
 function run(file, args, cwd) {
-  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8', timeout: 60000 });
+  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8' });
   assert.ifError(result.error);
   assert.strictEqual(result.status, 0, `${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
   result.combined = `${result.stdout}${result.stderr}`;
   return result.stdout;
 }
 function runCombined(file, args, cwd) {
-  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8', timeout: 60000 });
+  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8' });
   assert.ifError(result.error);
   assert.strictEqual(result.status, 0, `${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
   return `${result.stdout}${result.stderr}`;
@@ -282,7 +282,7 @@ try {
   for (const scope of ['user', 'project']) {
     const target = scope === 'user' ? userTarget : projectTarget;
     const failed = spawnSync(process.execPath, [installer, ...installArgs(target)], {
-      cwd: coexist, env: { ...env, WTFP_TEST_INSPECT_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+      cwd: coexist, env: { ...env, WTFP_TEST_INSPECT_FAILURE: '1' }, encoding: 'utf8'
     });
     assert.ifError(failed.error);
     assert.notStrictEqual(failed.status, 0);
@@ -294,7 +294,7 @@ try {
     assert.ok(!installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
     console.log(`PASS ${scope}: real native install/remove compensates injected verification failure; no files, receipt, or registration remain`);
     const second = spawnSync(process.execPath, [installer, ...installArgs(target)], {
-      cwd: coexist, env: { ...env, WTFP_TEST_EXTENSION_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+      cwd: coexist, env: { ...env, WTFP_TEST_EXTENSION_FAILURE: '1' }, encoding: 'utf8'
     });
     assert.ifError(second.error);
     assert.notStrictEqual(second.status, 0);
@@ -330,7 +330,7 @@ try {
   fs.writeFileSync(path.join(nextRoot, 'package.json'), `${JSON.stringify({ ...nextPackage, version: nextVersion }, null, 2)}\n`);
   const progressWorkflow = path.join(nextRoot, 'protocol/workflows/progress.md');
   fs.appendFileSync(progressWorkflow, '\nThis line exists only in the upgrade fixture.\n');
-  const rebuilt = spawnSync(process.execPath, [path.join(nextRoot, 'scripts/build-adapters.js')], { cwd: nextRoot, env, encoding: 'utf8', timeout: 120000 });
+  const rebuilt = spawnSync(process.execPath, [path.join(nextRoot, 'scripts/build-adapters.js')], { cwd: nextRoot, env, encoding: 'utf8' });
   assert.strictEqual(rebuilt.status, 0, rebuilt.stdout + rebuilt.stderr);
   run(installer, installArgs(userTarget), coexist);
   native(['hub', 'disable', 'plugin:wtfp', '--user', '--json'], coexist);

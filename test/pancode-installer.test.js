@@ -109,7 +109,7 @@ function context(name, project = false) {
  return { cwd,target,env:{...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,PANCODE_CONFIG_DIR:project?path.join(cwd,'user-profile'):target,FAKE_PANCODE_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'} };
 }
 function run(ctx, entry, args, env={}) {
- return spawnSync(process.execPath,[path.join(ROOT,'bin',entry),...args],{cwd:ctx.cwd,env:{...ctx.env,...env},encoding:'utf8',timeout:30000});
+ return spawnSync(process.execPath,[path.join(ROOT,'bin',entry),...args],{cwd:ctx.cwd,env:{...ctx.env,...env},encoding:'utf8'});
 }
 function install(ctx, env={}) { return run(ctx,'install.js',['install','pancode','--config-dir',ctx.target,'--advanced','--force'],env); }
 function uninstall(ctx) { return run(ctx,'uninstall.js',['--pancode','--config-dir',ctx.target,'--yes']); }
@@ -156,14 +156,14 @@ try {
   const xdg=path.join(cwd,'xdg-config');const target=path.join(xdg,'pancode');
   const env={...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,XDG_CONFIG_HOME:xdg,FAKE_PANCODE_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'};
   delete env.PANCODE_CONFIG_DIR;delete env.PANCODE_HOME;
-  const result=spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env,encoding:'utf8',timeout:30000});
+  const result=spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env,encoding:'utf8'});
   ok(result);
   assert.ok(fs.existsSync(path.join(target,'plugins/wtfp/plugin.json')),'bundle must land under $XDG_CONFIG_HOME/pancode');
   assert.ok(!fs.existsSync(path.join(cwd,'.config')),'must not fall back to ~/.config when XDG_CONFIG_HOME is set');
   const ctx={cwd,target,env};
   assert.strictEqual(verifyReceipt(ctx).scope,'user');
   for(const call of calls(ctx)) assert.strictEqual(call.config,target,'native CLI must be pointed at the same profile');
-  const removal=spawnSync(process.execPath,[path.join(ROOT,'bin','uninstall.js'),'--pancode','--yes'],{cwd,env,encoding:'utf8',timeout:30000});ok(removal);
+  const removal=spawnSync(process.execPath,[path.join(ROOT,'bin','uninstall.js'),'--pancode','--yes'],{cwd,env,encoding:'utf8'});ok(removal);
   assert.ok(!fs.existsSync(path.join(target,'plugins/wtfp')));
  });
  test('PANCODE_HOME selects <home>/config unless PANCODE_CONFIG_DIR names the root',()=>{
@@ -171,7 +171,7 @@ try {
   const home=path.join(cwd,'home'),explicit=path.join(cwd,'explicit');
   const env={...process.env,PATH:fakeBin,HOME:cwd,USERPROFILE:cwd,XDG_CONFIG_HOME:path.join(cwd,'xdg'),PANCODE_HOME:home,FAKE_PANCODE_LOG:path.join(cwd,'calls.jsonl'),NO_COLOR:'1'};
   delete env.PANCODE_CONFIG_DIR;
-  const installer=(extra)=>spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env:{...env,...extra},encoding:'utf8',timeout:30000});
+  const installer=(extra)=>spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env:{...env,...extra},encoding:'utf8'});
   ok(installer({}));
   for(const root of ['plugins/wtfp/plugin.json','extensions/wtfp/pancode-extension.yaml']) assert.ok(fs.existsSync(path.join(home,'config',root)),`missing ${root} under PANCODE_HOME/config`);
   assert.ok(!fs.existsSync(path.join(cwd,'xdg','pancode')),'PANCODE_HOME must win over XDG_CONFIG_HOME');

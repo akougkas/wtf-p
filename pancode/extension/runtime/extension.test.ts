@@ -1813,7 +1813,7 @@ test("under the read and write access PanCode grants the desk, it judges every c
 		const run = spawnSync(
 			process.execPath,
 			["--permission", ...[directory(ROOT), harness, ...read].map((root) => `--allow-fs-read=${root}`), ...write.map((root) => `--allow-fs-write=${root}`), harness, path.join(ROOT, "runtime/extension.ts"), workspace, JSON.stringify(calls.map(([call]) => withFacts({ point: "before_tool", ...call }, workspace)))],
-			{ cwd: workspace, encoding: "utf8", timeout: 60000 },
+			{ cwd: workspace, encoding: "utf8" },
 		);
 		assert.equal(run.status, 0, run.stderr);
 		const verdicts = JSON.parse(run.stdout) as Array<string | null>;
@@ -1842,7 +1842,7 @@ test("under the write access PanCode grants the desk, which refuses every flush,
 				"[]",
 				JSON.stringify([["record", { uri: "project://state", record: { ...state, phase: "reviewing" }, expect_revision: 3 }]]),
 			],
-			{ cwd: workspace, encoding: "utf8", timeout: 60000 },
+			{ cwd: workspace, encoding: "utf8" },
 		);
 		assert.equal(run.status, 0, run.stderr);
 		const { results } = JSON.parse(run.stdout) as { results: Array<{ isError: boolean; text: string }> };
