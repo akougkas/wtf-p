@@ -37,7 +37,9 @@ model call.
   push and the approval in the "Publish to npm" workflow
 - Preflight ran the whole suite as one 600 s step, which a busy machine
   could exceed. It now runs each suite file as its own step, several at a
-  time, and stops a step only after 300 s with no output
+  time, and stops a step only after 300 s with no output. The suites no
+  longer put a 10 to 120 s limit on the processes they spawn, which killed
+  correct installs on a loaded machine
 - The evaluation routing matrix and the `hpc-checkpointing` baseline were
   resealed for the changed envelopes
 
