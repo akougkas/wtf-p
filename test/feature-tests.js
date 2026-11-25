@@ -184,7 +184,7 @@ for (const id of runtimeIds) {
 }
 check(uninstaller.includes('--dry-run'), 'uninstall supports read-only ownership planning');
 check(installer.includes('Noninteractive installation requires an explicit target or scope'), 'noninteractive installation requires explicit intent');
-check(read('scripts/release.js').includes('--publish'), 'publishing requires an explicit release flag');
+check(!/npm publish|'publish'/.test(read('scripts/release.js')) && read('.github/workflows/publish.yml').includes('tags: ["v*"]'), 'only a pushed v* tag publishes, through the publish workflow');
 check(packageJson.engines.node.startsWith('>=20'), 'package requires a maintained Node.js runtime');
 check(packageJson.scripts.prepack === 'npm run check:adapters', 'package creation refuses stale generated adapters');
 

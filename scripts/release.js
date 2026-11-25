@@ -38,7 +38,7 @@ function run(command, commandArgs, options = {}) {
     encoding: 'utf8',
     input: '',
     maxBuffer: 32 * 1024 * 1024,
-    timeout: options.timeout || 300000,
+    timeout: options.timeout ?? 300000,
     stdio: options.inherit ? 'inherit' : 'pipe'
   });
   if (result.error) throw result.error;
@@ -80,6 +80,7 @@ try {
     throw new Error(`package.json contains an invalid release version: ${version}`);
   }
   const tag = `v${version}`;
+  const publication = `The pushed ${tag} tag starts the "Publish to npm" workflow (.github/workflows/publish.yml). Approve its npm environment there to publish wtf-p@${version}${version.includes('-') ? ' under the next dist-tag' : ''}; nothing is published from this checkout.\n`;
   const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   if (!new RegExp(`^## \\[${escapedVersion}\\](?: - \\d{4}-\\d{2}-\\d{2})?$`, 'm').test(changelog)) {
@@ -87,9 +88,8 @@ try {
   }
 
   process.stdout.write(`Finalizing WTF-P ${version}\n`);
-  // Preflight bounds its own steps (the full suite alone may take 600 s), so
-  // the outer budget must exceed their sum rather than the 300 s default.
-  run('npm', ['run', 'preflight'], { inherit: true, timeout: 1200000 });
+  // Preflight bounds each of its own steps, so this call has no limit of its own.
+  run('npm', ['run', 'preflight'], { inherit: true, timeout: 0 });
 
   const branch = output('git', ['branch', '--show-current']);
   const status = output('git', ['status', '--porcelain']);
@@ -105,7 +105,7 @@ try {
     if (status) process.stdout.write('\nDry-run note: the working tree is not clean yet.\n');
     if (branch !== 'main') process.stdout.write(`Dry-run note: final release tagging must occur on main (currently ${branch || 'detached'}).\n`);
     if (existingTagCommit) process.stdout.write(`Dry-run note: ${tag} already points to ${existingTagCommit}.\n`);
-    process.stdout.write(`\nFinal commands after merge and review:\n  npm run release -- --tag\n  npm run preflight -- --publish\n  npm publish${version.includes('-') ? ' --tag next' : ''}\n`);
+    process.stdout.write(`\nAfter review and merge to main:\n  npm run release -- --tag --push\n${publication}`);
     process.exit(0);
   }
 
@@ -132,7 +132,7 @@ try {
   } else {
     process.stdout.write(`Tag remains local. Push explicitly with:\n  npm run release -- --tag --push\n`);
   }
-  process.stdout.write(`Before publishing:\n  npm run preflight -- --publish\n  npm publish${version.includes('-') ? ' --tag next' : ''}\n`);
+  process.stdout.write(publication);
 } catch (error) {
   process.stderr.write(`Release finalization failed: ${error.message}\n`);
   process.exit(1);
