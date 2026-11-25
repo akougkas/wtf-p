@@ -216,3 +216,5 @@ time for writer's block.
 **No more excuses. Ship the paper.**
 
 </div>
+
+Part of Anthony Kougkas's agentic engineering work: [akougkas.io/work/agentic-engineering](https://akougkas.io/work/agentic-engineering/)
