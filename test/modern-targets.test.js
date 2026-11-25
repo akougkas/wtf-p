@@ -20,10 +20,10 @@ const {
 } = require('../bin/lib/native-registration');
 
 const MODERN_TARGETS = {
-  clio: {
-    configDirEnv: 'CLIO_CODER_CONFIG_DIR',
-    defaultDir: '.config/clio-coder',
-    source: path.join(ROOT, 'vendors', 'plugin'),
+  pancode: {
+    configDirEnv: 'PANCODE_CONFIG_DIR',
+    defaultDir: '.config/pancode',
+    source: path.join(ROOT, 'pancode', 'plugin'),
     destination: 'plugins/wtfp',
     resource: '.',
     component: 'plugin'
@@ -57,11 +57,11 @@ const MODERN_TARGETS = {
 const ALL_TARGETS = [
   'antigravity',
   'claude',
-  'clio',
   'codex',
   'copilot',
   'gemini',
-  'opencode'
+  'opencode',
+  'pancode'
 ];
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-modern-targets-'));
@@ -86,7 +86,7 @@ function isolatedEnvironment() {
     XDG_STATE_HOME: path.join(testRoot, 'xdg', 'state'),
     XDG_CACHE_HOME: path.join(testRoot, 'xdg', 'cache'),
     CLAUDE_CONFIG_DIR: path.join(testRoot, 'clients', 'claude'),
-    CLIO_CODER_CONFIG_DIR: path.join(testRoot, 'clients', 'clio'),
+    PANCODE_CONFIG_DIR: path.join(testRoot, 'clients', 'pancode'),
     CODEX_HOME: path.join(testRoot, 'clients', 'codex'),
     COPILOT_HOME: path.join(testRoot, 'clients', 'copilot'),
     GEMINI_CLI_HOME: path.join(testRoot, 'clients', 'gemini'),
@@ -273,7 +273,7 @@ try {
     const resourceRoots = {
       antigravity: path.join(ROOT, 'vendors', 'antigravity'),
       claude: path.join(ROOT, 'vendors', 'claude'),
-      plugin: path.join(ROOT, 'vendors', 'plugin'),
+      plugin: path.join(ROOT, 'pancode', 'plugin'),
       codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp'),
       copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp'),
       gemini: path.join(ROOT, 'vendors', 'gemini'),
@@ -585,11 +585,11 @@ process.exitCode = 91;
       assert.ok(target, `missing ${runtime} manifest`);
       assert.strictEqual(target.configDirEnv, expected.configDirEnv);
       assert.strictEqual(target.defaultDir, expected.defaultDir);
-      assert.strictEqual(target.components.length, runtime === 'codex' || runtime === 'clio' ? 2 : 1);
-      if (runtime === 'clio') {
+      assert.strictEqual(target.components.length, runtime === 'codex' || runtime === 'pancode' ? 2 : 1);
+      if (runtime === 'pancode') {
         assert.deepStrictEqual(
           { ...target.components[1] },
-          { id: 'extension', src: path.join(path.dirname(expected.source), 'clio-extension'), dest: 'extensions/wtfp', type: 'dir' }
+          { id: 'extension', src: path.join(path.dirname(expected.source), 'extension'), dest: 'extensions/wtfp', type: 'dir' }
         );
       }
       if (runtime === 'codex') {
@@ -628,7 +628,7 @@ process.exitCode = 91;
     for (const target of ALL_TARGETS) {
       assert.match(result.output, new RegExp(`\\b${target}\\b`), `help omits ${target}`);
     }
-    for (const flag of ['--clio', '--claude', '--codex', '--copilot', '--opencode', '--antigravity', '--gemini']) {
+    for (const flag of ['--pancode', '--claude', '--codex', '--copilot', '--opencode', '--antigravity', '--gemini']) {
       assert.ok(result.output.includes(flag) || result.output.includes('--<target>'), `help omits ${flag}`);
     }
     assert.match(result.output, /deprecated alias/);
@@ -643,11 +643,11 @@ process.exitCode = 91;
     const installerHelp = run(INSTALL, ['--help', '--no-color']);
     assert.match(installerHelp.output, /uninstall \[<target>\]/);
     assert.match(installerHelp.output, /Uninstall Options/);
-    assert.ok(!/extension/i.test(installerHelp.output.split('\n').filter((line) => /clio/i.test(line)).join('\n')),
-      'installer help must not describe Clio as an extension');
+    assert.ok(!/extension/i.test(installerHelp.output.split('\n').filter((line) => /pancode/i.test(line)).join('\n')),
+      'installer help must not describe PanCode as an extension');
     const emptyRoot = path.join(testRoot, 'uninstall-positional');
     fs.mkdirSync(emptyRoot, { recursive: true });
-    const positional = run(INSTALL, ['uninstall', 'clio', '--config-dir', emptyRoot, '--dry-run', '--no-color']);
+    const positional = run(INSTALL, ['uninstall', 'pancode', '--config-dir', emptyRoot, '--dry-run', '--no-color']);
     assertSuccess(positional, 'positional uninstall target');
     assert.match(positional.output, /No WTF-P installation receipt found/);
     const unknown = run(INSTALL, ['uninstall', 'bogus', '--dry-run', '--no-color']);
@@ -671,12 +671,12 @@ process.exitCode = 91;
       'unknown positional target'
     );
     assertFailure(
-      run(INSTALL, ['install', 'clio', 'codex', '--advanced', '--quiet']),
+      run(INSTALL, ['install', 'pancode', 'codex', '--advanced', '--quiet']),
       /exactly one target/,
       'duplicate positional targets'
     );
     assertFailure(
-      run(INSTALL, ['install', 'clio', '--clio', '--advanced', '--quiet']),
+      run(INSTALL, ['install', 'pancode', '--pancode', '--advanced', '--quiet']),
       /either `install <target>` or a compatibility target flag/,
       'mixed target forms'
     );
@@ -694,7 +694,7 @@ process.exitCode = 91;
 
   record('modern compatibility target flags dispatch without implicit fallback', () => {
     for (const runtime of ALL_TARGETS) {
-      const nonMatchingComponent = runtime === 'clio' ? 'agents' : 'extension';
+      const nonMatchingComponent = runtime === 'pancode' ? 'agents' : 'extension';
       const targetDir = path.join(testRoot, 'compatibility-flags', runtime);
       const result = run(INSTALL, [
         `--${runtime}`,
@@ -714,7 +714,7 @@ process.exitCode = 91;
   record('all-target planning rejects overlapping client roots before writing', () => {
     const overlapRoot = path.join(testRoot, 'overlap');
     const result = run(INSTALL, ['--all', '--advanced', '--quiet', '--no-color'], {
-      CLIO_CODER_CONFIG_DIR: path.join(overlapRoot, 'client'),
+      PANCODE_CONFIG_DIR: path.join(overlapRoot, 'client'),
       CODEX_HOME: path.join(overlapRoot, 'client', 'nested')
     });
     assertFailure(result, /install roots overlap/i, 'overlapping all-target install');
@@ -729,7 +729,7 @@ process.exitCode = 91;
     assert.strictEqual(uninstallLogic.parseArgs(['--global', '--dry-run']).hasGlobal, true);
     assert.strictEqual(uninstallLogic.parseArgs(['--local', '--dry-run']).hasLocal, true);
     assert.throws(
-      () => uninstallLogic.parseArgs(['--clio', '--codex']),
+      () => uninstallLogic.parseArgs(['--pancode', '--codex']),
       /Choose one target/
     );
   });

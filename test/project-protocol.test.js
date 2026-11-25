@@ -611,7 +611,7 @@ function main() {
     /\bgemini\b/i,
     /\bopencode\b/i,
     /\bantigravity\b/i,
-    /\bclio(?: coder)?\b/i,
+    /\bpancode\b/i,
     /allowed[-_]tools/i,
     /AskUserQuestion/i,
     /~[\\/]\.[A-Za-z0-9_-]+/,

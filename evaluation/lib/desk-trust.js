@@ -1,7 +1,7 @@
 'use strict';
 
 // Whether a checkpoint's recorded answer is the author's, decided from the
-// project's own records and the desk's seal key. The Clio desk and the
+// project's own records and the desk's seal key. The PanCode desk and the
 // campaign collector share this one implementation: the adapter compiler
 // copies it into the desk as runtime/desk-trust.cjs, so it stays pure and
 // depends on nothing but node:crypto.

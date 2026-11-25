@@ -65,7 +65,7 @@ const probeEnv = {
   GEMINI_CLI_HOME: path.join(probeRoot, 'clients', 'gemini'),
   OPENCODE_CONFIG_DIR: path.join(probeRoot, 'clients', 'opencode'),
   CODEX_HOME: path.join(probeRoot, 'clients', 'codex'),
-  CLIO_CODER_CONFIG_DIR: path.join(probeRoot, 'clients', 'clio'),
+  PANCODE_CONFIG_DIR: path.join(probeRoot, 'clients', 'pancode'),
   COPILOT_HOME: path.join(probeRoot, 'clients', 'copilot'),
   ANTIGRAVITY_HOME: path.join(probeRoot, 'clients', 'antigravity'),
   TMPDIR: probeTmp,

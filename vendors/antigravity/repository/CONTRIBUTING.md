@@ -58,8 +58,11 @@ bin/
                             repository-root marketplaces so Claude Code, Codex, and
                             Copilot CLI can install the committed envelopes from Git
 
+pancode/                    generated PanCode packages; do not hand-edit
+  plugin/                   canonical Agent Plugins 1.0.0 bundle; PanCode installs this one
+  extension/                PanCode extension built from hosts/pancode/
+
 vendors/                    generated client resources; do not hand-edit
-  plugin/                   canonical Agent Plugins 1.0.0 bundle; Clio installs this one
   claude/                   Claude Code plugin and marketplace, carrying the same root manifest
   codex/                    Codex plugin and personal-marketplace envelope
   copilot/                  Copilot CLI plugin plus .github project projection
@@ -175,7 +178,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 <type>(optional-scope): <imperative description>
 ```
 
-Common types are `feat`, `fix`, `docs`, `refactor`, `test`, and `chore`. Useful scopes include `protocol`, `skills`, `adapters`, `clio`, `cli`, `installer`, `safety`, and `release`. A scope is encouraged when it makes the ownership boundary clearer, but is not required.
+Common types are `feat`, `fix`, `docs`, `refactor`, `test`, and `chore`. Useful scopes include `protocol`, `skills`, `adapters`, `pancode`, `cli`, `installer`, `safety`, and `release`. A scope is encouraged when it makes the ownership boundary clearer, but is not required.
 
 ## Questions and responsible reports
 

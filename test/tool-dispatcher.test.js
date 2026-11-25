@@ -12,7 +12,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const DISPATCHER = path.join(ROOT, 'vendors', 'plugin', 'tools', 'wtfp-tool.js');
+const DISPATCHER = path.join(ROOT, 'pancode', 'plugin', 'tools', 'wtfp-tool.js');
 const registry = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol', 'tools.json'), 'utf8'));
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-tool-dispatcher-'));
 let passed = 0;
@@ -39,7 +39,7 @@ fs.symlinkSync(bib, link);
 
 try {
   test('every packaged .js carries a // banner, never an HTML comment', () => {
-    const toolsRoot = path.join(ROOT, 'vendors', 'plugin', 'tools');
+    const toolsRoot = path.join(ROOT, 'pancode', 'plugin', 'tools');
     const visit = (dir) => {
       for (const name of fs.readdirSync(dir)) {
         const file = path.join(dir, name);
@@ -76,7 +76,7 @@ try {
     const plugin = path.join(host, 'plugins', 'wtfp');
     fs.mkdirSync(path.join(plugin, 'tools'), { recursive: true });
     fs.writeFileSync(path.join(host, 'package.json'), '{"type":"module"}\n');
-    fs.cpSync(path.join(ROOT, 'vendors', 'plugin', 'tools'), path.join(plugin, 'tools'), { recursive: true, force: true });
+    fs.cpSync(path.join(ROOT, 'pancode', 'plugin', 'tools'), path.join(plugin, 'tools'), { recursive: true, force: true });
     const result = spawnSync(process.execPath, [path.join(plugin, 'tools', 'wtfp-tool.js'), 'list'], {
       cwd: host,
       encoding: 'utf8',
@@ -183,7 +183,7 @@ try {
     // Copy the packaged tools and stub the impact analyzer so the wall clock,
     // not the network, decides the outcome.
     const copy = path.join(scratch, 'tools');
-    fs.cpSync(path.join(ROOT, 'vendors', 'plugin', 'tools'), copy, { recursive: true });
+    fs.cpSync(path.join(ROOT, 'pancode', 'plugin', 'tools'), copy, { recursive: true });
     const stub = path.join(copy, 'bibliography', 'analyze-impact.js');
     assert.ok(fs.existsSync(stub));
     fs.writeFileSync(stub, `module.exports = { analyze: (file, options) => { options.onProgress(5, 10); if (process.env.STUB_RESOLVE) return Promise.resolve({ seminal: [] }); return new Promise(() => {}); } };`);

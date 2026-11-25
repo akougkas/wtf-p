@@ -3,29 +3,29 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '../..');
 
-// Mirror of Clio's own resolution (clio-coder src/core/xdg.ts): the explicit
-// CLIO_CODER_CONFIG_DIR wins, then CLIO_CODER_HOME/config, then the platform
-// default. On Linux that default is ${XDG_CONFIG_HOME:-~/.config}/clio-coder.
+// Mirror of PanCode's own resolution (pancode src/core/xdg.ts): the explicit
+// PANCODE_CONFIG_DIR wins, then PANCODE_HOME/config, then the platform
+// default. On Linux that default is ${XDG_CONFIG_HOME:-~/.config}/pancode.
 // Publishing anywhere else registers the plugin in a profile the operator's
-// normal Clio never reads.
-function clioConfigRoot(env = process.env, platform = process.platform, home = os.homedir()) {
+// normal PanCode never reads.
+function pancodeConfigRoot(env = process.env, platform = process.platform, home = os.homedir()) {
   const value = (key) => {
     const raw = env[key];
     return typeof raw === 'string' && raw.trim().length > 0 ? raw.trim() : null;
   };
-  const explicit = value('CLIO_CODER_CONFIG_DIR');
+  const explicit = value('PANCODE_CONFIG_DIR');
   if (explicit) return explicit;
-  const clioHome = value('CLIO_CODER_HOME');
-  if (clioHome) return path.join(clioHome, 'config');
+  const pancodeHome = value('PANCODE_HOME');
+  if (pancodeHome) return path.join(pancodeHome, 'config');
   if (platform === 'win32') {
     const appData = value('APPDATA') || path.join(home, 'AppData', 'Roaming');
-    return path.join(appData, 'clio-coder', 'config');
+    return path.join(appData, 'pancode', 'config');
   }
   if (platform === 'darwin') {
-    return path.join(home, 'Library', 'Application Support', 'clio-coder', 'config');
+    return path.join(home, 'Library', 'Application Support', 'pancode', 'config');
   }
   const xdgConfig = value('XDG_CONFIG_HOME') || path.join(home, '.config');
-  return path.join(xdgConfig, 'clio-coder');
+  return path.join(xdgConfig, 'pancode');
 }
 
 function generatedBundle(target, selectionRoots = {}, componentIds = {}, dest = '.') {
@@ -67,24 +67,24 @@ const MANIFEST = {
       source: 'marketplaces/wtfp'
     }
   },
-  // Clio consumes the canonical Agent Plugins bundle through its plugin
+  // PanCode consumes the canonical Agent Plugins bundle through its hub
   // lifecycle and the desk through its extension lifecycle: two packages, two
-  // Clio installs, one WTF-P receipt.
-  clio: {
-    name: 'Clio Coder',
-    configDirEnv: 'CLIO_CODER_CONFIG_DIR',
-    defaultDir: '.config/clio-coder',
-    resolveConfigRoot: clioConfigRoot,
+  // PanCode installs, one WTF-P receipt.
+  pancode: {
+    name: 'PanCode',
+    configDirEnv: 'PANCODE_CONFIG_DIR',
+    defaultDir: '.config/pancode',
+    resolveConfigRoot: pancodeConfigRoot,
     components: [
       {
         id: 'plugin',
-        src: path.join(ROOT, 'vendors', 'plugin'),
+        src: path.join(ROOT, 'pancode', 'plugin'),
         dest: 'plugins/wtfp',
         type: 'dir'
       },
       {
         id: 'extension',
-        src: path.join(ROOT, 'vendors', 'clio-extension'),
+        src: path.join(ROOT, 'pancode', 'extension'),
         dest: 'extensions/wtfp',
         type: 'dir'
       }
@@ -94,7 +94,7 @@ const MANIFEST = {
       path: 'plugins/wtfp'
     },
     native: {
-      kind: 'clio-plugin',
+      kind: 'pancode-plugin',
       id: 'wtfp',
       source: 'plugins/wtfp',
       extension: { id: 'wtfp', source: 'extensions/wtfp' }

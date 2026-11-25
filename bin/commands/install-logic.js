@@ -761,7 +761,7 @@ async function install(runtime, isUpdate, options, pkg) {
     if (stats.writtenFiles.length > 0) {
       writeVersionFile(targetDir, pkg.version, stats.writtenFiles, {
         runtime: vendorKey,
-        scope: vendorKey === 'clio' && targetDir === path.join(process.cwd(), '.clio-coder')
+        scope: vendorKey === 'pancode' && targetDir === path.join(process.cwd(), '.pancode')
           ? 'project'
           : isGlobal ? (explicitConfigDir ? 'custom' : 'user') : 'project',
         skipped: stats.skipped,
@@ -810,13 +810,13 @@ async function install(runtime, isUpdate, options, pkg) {
     if (nativeActivation.notice && !hasQuiet) out.warn(nativeActivation.notice);
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
       out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
-      if (vendorKey === 'clio') {
-        // Clio refuses a source that overlaps its managed destination, so the
+      if (vendorKey === 'pancode') {
+        // PanCode refuses a source that overlaps its managed destination, so the
         // published tree itself can never be the install source. Re-running
         // the installer stages a distinct copy and registers it.
-        const scope = targetDir === path.join(process.cwd(), '.clio-coder') ? 'project' : 'user';
+        const scope = targetDir === path.join(process.cwd(), '.pancode') ? 'project' : 'user';
         const configFlag = explicitConfigDir ? ` --config-dir '${targetDir.replaceAll("'", "'\\''")}'` : '';
-        out.warn(`Activation is pending: once clio-coder is on PATH, re-run npx wtf-p install clio${configFlag} from this directory to register the ${scope}-scope plugin and extension.`);
+        out.warn(`Activation is pending: once pancode is on PATH, re-run npx wtf-p install pancode${configFlag} from this directory to register the ${scope}-scope plugin and extension.`);
       }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
       out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);

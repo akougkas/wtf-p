@@ -5,7 +5,7 @@
 // names the claim, rests on a usable source, and was inspected deeply enough
 // to support anything. It never judges whether a passage actually supports a
 // sentence: that semantic question belongs to an independent reviewer, and
-// every report says so. The adapter compiler copies this file into the Clio
+// every report says so. The adapter compiler copies this file into the PanCode
 // desk as runtime/claim-coverage.cjs, so it stays dependency-free and pure.
 
 const STRUCTURAL_SCOPE = 'Structural check of claim, evidence and source records only; whether a cited passage supports its claim needs independent review.';

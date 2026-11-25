@@ -66,7 +66,7 @@ const forbiddenSyntax = [
   ['vendor runtime Gemini', /\bgemini(?:\s+cli)?\b/i],
   ['vendor runtime Copilot', /\b(?:github\s+)?copilot\b/i],
   ['vendor runtime OpenCode', /\bopen[ -]?code\b/i],
-  ['vendor runtime Clio', /\bclio(?:\s+coder)?\b/i],
+  ['vendor runtime PanCode', /\bpancode\b/i],
   ['vendor runtime Antigravity', /\banti[ -]?gravity\b/i],
   ['vendor model OpenAI', /\bopenai\b/i],
   ['vendor model family GPT', /\bgpt(?:-[a-z0-9.]+)?\b/i],

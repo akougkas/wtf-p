@@ -47,7 +47,7 @@ try {
 
 function parseArgs(argv = []) {
   const booleanFlags = new Set([
-    '--global', '-g', '--local', '-l', '--claude', '--clio', '--codex', '--copilot',
+    '--global', '-g', '--local', '-l', '--claude', '--pancode', '--codex', '--copilot',
     '--gemini', '--opencode', '--antigravity', '--all',
     '--force', '-f', '--yes', '-y', '--backup', '-b', '--dry-run', '-n',
     '--clean-backups', '--help', '-h', '--no-color', '--quiet', '-q'
@@ -79,7 +79,7 @@ function parseArgs(argv = []) {
     hasGlobal: has('--global', '-g'),
     hasLocal: has('--local', '-l'),
     hasClaude: has('--claude'),
-    hasClio: has('--clio'),
+    hasPanCode: has('--pancode'),
     hasCodex: has('--codex'),
     hasCopilot: has('--copilot'),
     hasGemini: has('--gemini'),
@@ -114,7 +114,7 @@ function parseArgs(argv = []) {
   }
   const selectedTargetIds = [
     ['claude', options.hasClaude],
-    ['clio', options.hasClio],
+    ['pancode', options.hasPanCode],
     ['codex', options.hasCodex],
     ['copilot', options.hasCopilot],
     ['gemini', options.hasGemini],
@@ -189,7 +189,7 @@ function showHelp(out) {
     ${c.cyan('-g, --global')}              Claude user installation (legacy alias)
     ${c.cyan('-l, --local')}               Claude installation in ./.claude
     ${c.cyan('--claude')}                  Claude Code user installation
-    ${c.cyan('--clio')}                    Clio Coder plugin installation
+    ${c.cyan('--pancode')}                 PanCode plugin and extension installation
     ${c.cyan('--codex')}                   Codex plugin installation
     ${c.cyan('--copilot')}                 GitHub Copilot CLI plugin installation
     ${c.cyan('--gemini')}                  Gemini CLI user installation
@@ -778,9 +778,9 @@ async function uninstall(runtime, options, out) {
       vendorKey,
       targetDir,
       vendorConfig.native,
-      { ...(vendorKey === 'clio' && plan.receipt.scope === 'project'
+      { ...(vendorKey === 'pancode' && plan.receipt.scope === 'project'
         ? { scope: 'project', cwd: path.dirname(targetDir) } : {}),
-      // Receipt paths below the target; Clio checks each package root against them.
+      // Receipt paths below the target; PanCode checks each package root against them.
       ownedFiles: new Map(plan.items
         .filter(item => item.state === 'unchanged')
         .map(item => [item.path, item.entry.sha256])) }
@@ -788,7 +788,7 @@ async function uninstall(runtime, options, out) {
     if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
       out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);
     } else if (nativeRemoval.status === 'deferred') {
-      // A package Clio still registers keeps every owned file and its receipt
+      // A package PanCode still registers keeps every owned file and its receipt
       // entries; removing them would leave a registration with no content.
       for (const root of nativeRemoval.keptRoots || []) {
         for (const item of plan.items) {
@@ -815,7 +815,7 @@ async function uninstall(runtime, options, out) {
   const remaining = plan.items.filter(item => !item.removed && item.state !== 'missing');
   const keptRegistered = remaining.filter(item => item.keptRegistered).length;
   if (keptRegistered > 0) {
-    out.log(`\n  ${c.yellow('Partial uninstall:')} kept ${keptRegistered} owned file(s) of a package Clio still registers, with their receipt entries, so uninstall can finish once the unowned files are moved out.`);
+    out.log(`\n  ${c.yellow('Partial uninstall:')} kept ${keptRegistered} owned file(s) of a package PanCode still registers, with their receipt entries, so uninstall can finish once the unowned files are moved out.`);
   }
   if (remaining.length > keptRegistered) {
     out.log(`\n  ${c.yellow('Partial uninstall:')} preserved ${remaining.length - keptRegistered} modified, untrusted, or unsafe file(s).`);

@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const { activateClio, deactivateClio } = require('./clio-registration');
+const { activatePanCode, deactivatePanCode } = require('./pancode-registration');
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const MAX_OUTPUT_BYTES = 2 * 1024 * 1024;
@@ -27,12 +27,12 @@ function antigravityHome(targetDir) {
 
 function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env, options = {}) {
   const environment = { ...baseEnvironment };
-  if (runtime === 'clio') {
+  if (runtime === 'pancode') {
     // Project destinations are selected by cwd and --project. Repointing the
-    // user config there aliases the two Library scopes, including their locks
+    // user config there aliases the two hub scopes, including their locks
     // and state files. Preserve the caller's independent user profile.
-    const project = path.resolve(targetDir) === path.join(path.resolve(options.cwd || process.cwd()), '.clio-coder');
-    if (!project) environment.CLIO_CODER_CONFIG_DIR = targetDir;
+    const project = path.resolve(targetDir) === path.join(path.resolve(options.cwd || process.cwd()), '.pancode');
+    if (!project) environment.PANCODE_CONFIG_DIR = targetDir;
   } else if (runtime === 'claude') {
     environment.CLAUDE_CONFIG_DIR = targetDir;
   } else if (runtime === 'codex') {
@@ -48,6 +48,21 @@ function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env, op
   return environment;
 }
 
+// A search that met only a directory of the same name, such as the `pancode/`
+// output directory in a WTF-P checkout under an empty PATH entry, reports
+// EACCES; that is no executable at all, unlike a real file without permission.
+function onPathAsFile(command, environment, cwd) {
+  if (command.includes('/') || command.includes(path.sep)) return true;
+  const entries = String((environment && environment.PATH) || '').split(path.delimiter);
+  return entries.some((entry) => {
+    try {
+      return fs.statSync(path.resolve(cwd || process.cwd(), entry, command)).isFile();
+    } catch {
+      return false;
+    }
+  });
+}
+
 function execute(command, args, environment, options = {}) {
   const runner = options.runner || spawnSync;
   const result = runner(command, args, {
@@ -60,7 +75,7 @@ function execute(command, args, environment, options = {}) {
     windowsHide: true
   });
 
-  if (result.error && result.error.code === 'ENOENT') {
+  if (result.error && (result.error.code === 'ENOENT' || (result.error.code === 'EACCES' && !onPathAsFile(command, environment, options.cwd)))) {
     return { status: 'unavailable', command, args, output: '' };
   }
   if (result.error) {
@@ -92,7 +107,7 @@ function execute(command, args, environment, options = {}) {
   };
 }
 
-// Clio is handled entirely by clio-registration.js through its plugin
+// PanCode is handled entirely by pancode-registration.js through its plugin
 // lifecycle and never reaches this marketplace-shaped command table.
 function nativeCommands(runtime, targetDir, native) {
   const source = path.join(targetDir, native.source);
@@ -263,8 +278,8 @@ function verifyRegistration(runtime, native, result) {
 
 function activateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
-  if (runtime === 'clio') {
-    return activateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
+  if (runtime === 'pancode') {
+    return activatePanCode(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
   }
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
@@ -433,7 +448,7 @@ function isAlreadyAbsent(result) {
 
 function deactivateNativeRegistration(runtime, targetDir, native, options = {}) {
   if (!native) return { status: 'not-required', results: [] };
-  if (runtime === 'clio') return deactivateClio(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
+  if (runtime === 'pancode') return deactivatePanCode(targetDir, native, { ...options, execute, environment: nativeEnvironment(runtime, targetDir, options.environment, options) });
   const commands = nativeCommands(runtime, targetDir, native);
   if (!commands) return { status: 'not-required', results: [] };
   const environment = nativeEnvironment(runtime, targetDir, options.environment);

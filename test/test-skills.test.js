@@ -67,7 +67,7 @@ function assertPortable(content, file) {
     /\bGemini\b/i,
     /\bOpenCode\b/i,
     /\bAntigravity\b/i,
-    /\bClio(?: Coder)?\b/i,
+    /\bPanCode\b/i,
     /AskUserQuestion/,
     /Task\s*\(/,
     /~\//,

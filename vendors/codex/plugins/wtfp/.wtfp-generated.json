@@ -2,11 +2,11 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "codex",
-  "sourceHash": "ee303564d0d226e0f0b1b6e8b55c20299a509ee7e3a88ff9d04ee050e273f91f",
+  "sourceHash": "429db40f97bd3f79b39744afb41a419dbe7964b180ba86a1d3e1e77fb3928eb3",
   "files": [
     {
       "path": ".codex-plugin/plugin.json",
-      "sha256": "027be07d7888649d6d6d76b00f66db8c9bebb84c86c27bc55ba8e31be9500b95"
+      "sha256": "9eef32e0204e3cd71a456589f98b8c283f5d28010a45b66d13e331eae69c5c21"
     },
     {
       "path": "actions/add-todo.json",
@@ -226,7 +226,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "b0109f6d12baaaad6ac467cc4ee713618d2bf90c301048e5e55cb3f2adfb2f60"
+      "sha256": "b67119964f1dadc4c60618e66558caf6fb9770697d698bd1119f7d128e4090b7"
     },
     {
       "path": "project/README.md",
@@ -326,7 +326,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "bcd8d3ace1c24f4c4b223015959f2ab5f0c1a7498f1e3a3ff5f8d52754a8f2a2"
+      "sha256": "bc5da3e24afaa10e7e665076b1c5a75a39350feddec69cfb8ea0b73e5a050ffb"
     },
     {
       "path": "roles/argument-verifier.md",

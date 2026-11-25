@@ -135,7 +135,7 @@ const hosts = {
   // Antigravity 1.5 loads actions only as skills; a router skill of the same name serves its action.
   antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'skills'), file: (id) => `wtfp-${id}/SKILL.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json', routers: new Set(readJson(path.join(ROOT, 'protocol', 'catalog.json')).skills.map((skill) => skill.id)) },
   gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
-  clio: { dir: path.join(ROOT, 'vendors', 'plugin', 'ai.iowarp.clio', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/plugin/compatibility/action-availability.json' }
+  pancode: { dir: path.join(ROOT, 'pancode', 'plugin', 'dev.pancode', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'pancode/plugin/compatibility/action-availability.json' }
 };
 
 for (const [host, spec] of Object.entries(hosts)) {

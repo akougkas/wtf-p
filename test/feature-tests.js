@@ -65,14 +65,14 @@ function recursiveCount(relativePath, basename) {
 console.log(`=== Feature Tests for WTF-P ${packageJson.version} ===`);
 
 section('First-class agent hosts');
-const runtimeIds = ['claude', 'clio', 'codex', 'copilot', 'gemini', 'opencode', 'antigravity'];
+const runtimeIds = ['claude', 'pancode', 'codex', 'copilot', 'gemini', 'opencode', 'antigravity'];
 check(Object.keys(MANIFEST).sort().join(',') === runtimeIds.slice().sort().join(','), 'manifest exposes exactly seven runtime ids');
 for (const id of runtimeIds) {
   const runtime = MANIFEST[id];
   check(Boolean(runtime && runtime.name && runtime.defaultDir && runtime.configDirEnv), `${id} has a complete runtime definition`);
   // Codex additionally publishes its generated TOML agents to $CODEX_HOME/agents/,
-  // and Clio its desk extension beside the plugin.
-  const second = { codex: ' plus its native agents', clio: ' plus its desk extension' }[id];
+  // and PanCode its desk extension beside the plugin.
+  const second = { codex: ' plus its native agents', pancode: ' plus its desk extension' }[id];
   check(runtime.components.length === (second ? 2 : 1), `${id} installs one generated, self-contained bundle${second || ''}`);
   check(fs.existsSync(runtime.components[0].src), `${id} bundle source exists`);
 }
@@ -136,7 +136,7 @@ const surfaces = {
   copilot: { path: 'vendors/copilot/plugins/wtfp/commands', suffix: '.md' },
   gemini: { path: 'vendors/gemini/commands/wtfp', suffix: '.toml' },
   opencode: { path: 'vendors/opencode/commands/wtfp', suffix: '.md' },
-  clio: { path: 'vendors/plugin/ai.iowarp.clio/prompts/wtfp', suffix: '.md' }
+  pancode: { path: 'pancode/plugin/dev.pancode/prompts/wtfp', suffix: '.md' }
 };
 for (const [host, spec] of Object.entries(surfaces)) {
   check(filesAt(spec.path, spec.suffix).length === actionCount, `${host} exposes all ${actionCount} native commands`);
@@ -153,21 +153,21 @@ check(fs.existsSync(path.join(ROOT, 'vendors/claude/hooks/hooks.json')), 'Claude
 check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/wtfp-project-state.md')), 'Antigravity ships the project-state rule');
 check(recursiveCount('vendors/antigravity/skills', 'SKILL.md') === skillCount + actionCount - 2, `Antigravity exposes ${skillCount} router skills plus every action as an explicit skill`);
 
-section('Clio-native integration');
-check(json('vendors/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');
-check(filesAt('vendors/plugin/ai.iowarp.clio/prompts/wtfp', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced Clio prompts`);
-check(filesAt('vendors/plugin/ai.iowarp.clio/prompts', '.md').length === 0, 'the canonical plugin publishes no flat prompt aliases');
-check(filesAt('vendors/plugin/ai.iowarp.clio/agents', '.md').length === roleCount, `the canonical plugin exposes all ${roleCount} Clio agents`);
-check(filesAt('vendors/plugin/ai.iowarp.clio/playbooks', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing playbooks');
-check(recursiveCount('vendors/plugin/skills', 'SKILL.md') === skillCount, `the canonical plugin discovers all ${skillCount} skills`);
-const clioPrompt = read('vendors/plugin/ai.iowarp.clio/prompts/wtfp/new-paper.md');
-check(clioPrompt.includes('${pluginRoot}'), 'Clio resolves protocol resources through its plugin root');
-check(clioPrompt.includes('$ARGUMENTS'), 'Clio forwards invocation arguments');
-check(clioPrompt.includes('extension_wtfp__record') &&
-  clioPrompt.includes('Read an existing record first with `extension_wtfp__read_record`') &&
-  clioPrompt.includes('The tool validates, bumps revisions and timestamps, commits under the project lock and reads back') &&
-  clioPrompt.includes('If desk tools are absent, follow `${pluginRoot}/workflows/new-paper.md` and `${pluginRoot}/project/README.md`'),
-  'Clio prompt validates records through the desk tool and retains its absence fallback');
+section('PanCode-native integration');
+check(json('pancode/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');
+check(filesAt('pancode/plugin/dev.pancode/prompts/wtfp', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced PanCode prompts`);
+check(filesAt('pancode/plugin/dev.pancode/prompts', '.md').length === 0, 'the canonical plugin publishes no flat prompt aliases');
+check(filesAt('pancode/plugin/dev.pancode/agents', '.md').length === roleCount, `the canonical plugin exposes all ${roleCount} PanCode agents`);
+check(filesAt('pancode/plugin/dev.pancode/playbooks', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing playbooks');
+check(recursiveCount('pancode/plugin/skills', 'SKILL.md') === skillCount, `the canonical plugin discovers all ${skillCount} skills`);
+const pancodePrompt = read('pancode/plugin/dev.pancode/prompts/wtfp/new-paper.md');
+check(pancodePrompt.includes('${pluginRoot}'), 'PanCode resolves protocol resources through its plugin root');
+check(pancodePrompt.includes('$ARGUMENTS'), 'PanCode forwards invocation arguments');
+check(pancodePrompt.includes('extension_wtfp__record') &&
+  pancodePrompt.includes('Read an existing record first with `extension_wtfp__read_record`') &&
+  pancodePrompt.includes('The tool validates, bumps revisions and timestamps, commits under the project lock and reads back') &&
+  pancodePrompt.includes('If desk tools are absent, follow `${pluginRoot}/workflows/new-paper.md` and `${pluginRoot}/project/README.md`'),
+  'PanCode prompt validates records through the desk tool and retains its absence fallback');
 
 section('Marketplaces and lifecycle metadata');
 check(json('vendors/claude/.claude-plugin/marketplace.json').name === 'wtfp', 'Claude marketplace is native and namespaced');

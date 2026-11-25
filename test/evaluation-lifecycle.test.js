@@ -751,7 +751,7 @@ function testPlaybookBoundaryProbe(root) {
   ].join('\n');
   fs.writeFileSync(moduleFile, boundaryModule);
   for (const playbook of ['wtfp-plan-section.md', 'wtfp-draft-review.md']) {
-    fs.copyFileSync(path.join(repositoryRoot, 'vendors', 'plugin', 'ai.iowarp.clio', 'playbooks', playbook), path.join(installed, 'playbooks', playbook));
+    fs.copyFileSync(path.join(repositoryRoot, 'pancode', 'plugin', 'dev.pancode', 'playbooks', playbook), path.join(installed, 'playbooks', playbook));
   }
   const valid = playbookBoundaryProbe(clioSource, installed);
   assert.strictEqual(valid.valid, true, JSON.stringify(valid, null, 2));

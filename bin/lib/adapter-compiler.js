@@ -7,8 +7,8 @@ const { GENERATOR_VERSION } = require('./adapter-metadata');
 
 const ROOT = path.resolve(__dirname, '../..');
 const PROTOCOL_ROOT = path.join(ROOT, 'protocol');
-// Human-edited source of the standalone Clio extension; see clio/README.md.
-const CLIO_RUNTIME_ROOT = path.join(ROOT, 'clio');
+// Human-edited source of the standalone PanCode extension; see hosts/pancode/README.md.
+const PANCODE_RUNTIME_ROOT = path.join(ROOT, 'hosts', 'pancode');
 const INVENTORY_NAME = '.wtfp-generated.json';
 
 const TARGET_ROOTS = Object.freeze({
@@ -20,11 +20,11 @@ const TARGET_ROOTS = Object.freeze({
   gemini: path.join(ROOT, 'vendors', 'gemini')
 });
 
-// Clio is a capability policy, not a separate on-disk envelope. Its projection
-// is staged in memory and emitted only inside the canonical `vendors/plugin`
-// bundle under `ai.iowarp.clio/`. `copilot-cloud` is likewise a policy for the
+// PanCode is a capability policy, not a separate on-disk envelope. Its projection
+// is staged in memory and emitted only inside the canonical `pancode/plugin`
+// bundle under `dev.pancode/`. `copilot-cloud` is likewise a policy for the
 // repository projection carried by the Copilot marketplace envelope.
-const POLICY_TARGET_IDS = Object.freeze([...Object.keys(TARGET_ROOTS), 'clio', 'copilot-cloud']);
+const POLICY_TARGET_IDS = Object.freeze([...Object.keys(TARGET_ROOTS), 'pancode', 'copilot-cloud']);
 
 const CAPABILITY_IDS = Object.freeze([
   'agent.delegate',
@@ -75,31 +75,31 @@ const EFFECT_CAPABILITY_BINDINGS = Object.freeze({
 // `protocol/tools.json` through the single `tools/wtfp-tool.js` dispatcher that
 // every envelope carries. It is never a grant for an arbitrary external
 // toolchain, so a host binds it only when its shell tool name is verified.
-// Clio's `network.search` is bound to the same executor because the only
+// PanCode's `network.search` is bound to the same executor because the only
 // scholarly search WTF-P declares is the bundled Semantic Scholar / Google
-// Scholar client; Clio exposes `web_fetch` but no native web-search tool.
+// Scholar client; PanCode exposes `web_fetch` but no native web-search tool.
 //
 // `workflow.drive` is a host driver that selects each next step from portable
 // project state and confines that step to its own action contract. Only the
-// Clio desk provides one (`extension_wtfp__next_step`), so `advance` fails
+// PanCode desk provides one (`extension_wtfp__next_step`), so `advance` fails
 // closed everywhere else instead of letting a model choose its own steps.
 const TARGET_POLICIES = Object.freeze({
-  clio: Object.freeze({ capabilities: Object.freeze({
-    'agent.delegate': 'clio:plugin-agent',
-    'agent.parallel': 'clio:fleet',
+  pancode: Object.freeze({ capabilities: Object.freeze({
+    'agent.delegate': 'pancode:plugin-agent',
+    'agent.parallel': 'pancode:fleet',
     'external.issue': null,
     'filesystem.delete': null,
-    'filesystem.read': 'clio:workspace-read',
-    'filesystem.write': 'clio:workspace-write',
-    'network.fetch': 'clio:web_fetch',
-    'network.search': 'clio:bash-bundled-citation-tools',
+    'filesystem.read': 'pancode:workspace-read',
+    'filesystem.write': 'pancode:workspace-write',
+    'network.fetch': 'pancode:web_fetch',
+    'network.search': 'pancode:bash-bundled-citation-tools',
     'package.update': null,
-    'tool.execute': 'clio:bash',
-    'user.interaction': 'clio:ask_user',
+    'tool.execute': 'pancode:bash',
+    'user.interaction': 'pancode:ask_user',
     'vcs.branch': null,
     'vcs.commit': null,
-    'workflow.drive': 'clio:wtfp-desk-driver'
-  }), approvals: Object.freeze({ none: 'clio:permission-policy', implicit: 'clio:permission-policy', explicit: 'clio:ask_user' }) }),
+    'workflow.drive': 'pancode:wtfp-desk-driver'
+  }), approvals: Object.freeze({ none: 'pancode:permission-policy', implicit: 'pancode:permission-policy', explicit: 'pancode:ask_user' }) }),
   claude: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'claude:Task',
     'agent.parallel': 'claude:Task',
@@ -217,15 +217,15 @@ const TARGET_POLICIES = Object.freeze({
 // Availability says that a target has a native binding for every required
 // capability and effect. It does not imply that every host can narrow its
 // main-agent tool surface for one prompt; keep that machine-readable so an
-// evaluation cannot mistake a declaration for enforcement. Clio prompts
-// declare allowed-tools and delegated-tools per action, and Clio 0.6.3, which
+// evaluation cannot mistake a declaration for enforcement. PanCode prompts
+// declare allowed-tools and delegated-tools per action, and PanCode, which
 // the desk requires, narrows a template turn to them and caps its workers.
 const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
-  clio: Object.freeze({
+  pancode: Object.freeze({
     actionScoped: true,
-    surface: 'clio:template-allowed-tools',
-    // Clio 0.8 has two levels; the 0.6.3 read-only and suggest spellings it was
-    // certified under now read as `default`.
+    surface: 'pancode:template-allowed-tools',
+    // PanCode has two autonomy levels; the earlier read-only and suggest
+    // spellings the projection was certified under now read as `default`.
     certificationAutonomy: Object.freeze(['default']),
     undeclaredToolCall: 'fail'
   })
@@ -469,7 +469,7 @@ function nativeWorkflowBody(workflowBody, target) {
       : '$ARGUMENTS';
   body = body.replaceAll('{{arguments}}', argumentToken);
 
-  if (target === 'clio') {
+  if (target === 'pancode') {
     body = body.replaceAll('protocol://', '${pluginRoot}/');
   } else if (target === 'claude' || target === 'copilot') {
     body = body.replaceAll('protocol://', '${CLAUDE_PLUGIN_ROOT}/');
@@ -523,10 +523,10 @@ function projectSchemasForAction(action) {
 }
 
 // The desk enforces an action's contract, and the prompt already states its
-// reads, outputs, conditions, gates and roles. Reading the file would cost Clio
+// reads, outputs, conditions, gates and roles. Reading the file would cost PanCode
 // a round trip that resends the whole context for no new fact, so the prompt
 // names it only for an exact lookup.
-function clioBoundContract(action) {
+function pancodeBoundContract(action) {
   return action.requirements.capabilities.includes('workflow.drive')
     ? `The desk enforces \`protocol://actions/${action.id}.json\`, the union of the actions it drives, through each step's own contract. Read it only when a refusal needs its exact terms.`
     : `The desk enforces \`protocol://actions/${action.id}.json\`; this prompt states its reads, outputs, conditions, gates and roles. Read it only when a refusal needs its exact terms.`;
@@ -541,7 +541,7 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
   const schemas = projectSchemasForAction(action);
   const protocolIncludes = [
     deskTools
-      ? clioBoundContract(action)
+      ? pancodeBoundContract(action)
       : `@protocol://actions/${action.id}.json`,
     ...(!deskTools && schemas.length > 0 ? ['@protocol://project/schemas/common.schema.json'] : []),
     ...(!deskTools ? schemas : []).flatMap((schema) => [
@@ -551,7 +551,7 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
   ];
   return [
     nativeWorkflowBody([
-      deskTools ? clioDeskWorkflowBody(action, workflowBody) : workflowBody,
+      deskTools ? pancodeDeskWorkflowBody(action, workflowBody) : workflowBody,
       '',
       deskTools || schemas.length === 0 ? '## Bound action contract' : '## Bound action contract and schemas',
       '',
@@ -636,9 +636,9 @@ function generatedScriptBanner(kind, id) {
   return `// Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit.`;
 }
 
-const CLIO_AUTHOR_QUESTIONS = 'Every question `ask_user` puts to the author here is the author\'s to answer: ask exactly one question per `ask_user` call, with its options and `operator_only: true`; Clio refuses an `operator_only` question sent with others. Clio never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.';
+const PANCODE_AUTHOR_QUESTIONS = 'Every question `ask_user` puts to the author here is the author\'s to answer: ask exactly one question per `ask_user` call, with its options and `operator_only: true`; PanCode refuses an `operator_only` question sent with others. PanCode never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.';
 
-function clioUserGateBody(action, deskTools = false) {
+function pancodeUserGateBody(action, deskTools = false) {
   if (!action.effects.some((effect) => effect.id === 'user.gate')) return '';
   // A local model tried every branch of a two-way rule in turn; state only the one this action can take.
   const createsCheckpoint = action.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create');
@@ -646,56 +646,56 @@ function clioUserGateBody(action, deskTools = false) {
     ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID. The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`, or the author answers twice.'
     : 'This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_wtfp__gate` only for a pending checkpoint `extension_wtfp__status` lists in the gate\'s exact scope, and never create one.';
   if (deskTools) return [
-    '## Clio user-gate binding',
+    '## PanCode user-gate binding',
     '',
     route + ' Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
     '',
-    CLIO_AUTHOR_QUESTIONS
+    PANCODE_AUTHOR_QUESTIONS
   ].join('\n');
   return [
-    '## Clio user-gate binding',
+    '## PanCode user-gate binding',
     '',
     'Call `ask_user` whenever this workflow reaches a declared `user.gate`; only the structured value returned by that tool satisfies the gate. Invocation arguments, assistant prose, silence, or a report artifact do not count as a selection. Apply no gated mutation before `ask_user` returns. After any permitted mutation, perform the workflow-required readback before reporting success.',
     '',
-    CLIO_AUTHOR_QUESTIONS
+    PANCODE_AUTHOR_QUESTIONS
   ].join('\n');
 }
 
-// Whether an action writes portable JSON records, which on Clio only the desk's
+// Whether an action writes portable JSON records, which on PanCode only the desk's
 // record tool may do. An action that writes none reads records through the desk
 // and needs neither the record tool nor the schemas a writer validates against.
-function clioRecordWriter(action) {
+function pancodeRecordWriter(action) {
   return action.produces.some((output) =>
     /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
 }
 
 // On the desk only the record tool writes JSON records, so a writing role of an
-// action that produces no file has no root it may hold: Clio reads an empty
+// action that produces no file has no root it may hold: PanCode reads an empty
 // write_roots as unbounded and the desk refuses it. The main agent does that
 // role's work itself. Read-only reviewers still dispatch.
-function clioInlineRoles(action, reviewers, deskTools) {
+function pancodeInlineRoles(action, reviewers, deskTools) {
   if (!deskTools) return [];
   const recordOnly = action.produces.every((output) =>
     /^project:\/\/(?:manifest|config|state|decisions|structure\/outline|(?:sections|sources|evidence|checkpoints|validations)\/[^/]+)$/.test(output.uri));
   return recordOnly ? action.delegation.map((entry) => entry.role).filter((role) => !reviewers.has(role)) : [];
 }
 
-// The desk tools one Clio prompt's turn holds: a record writer gets every
+// The desk tools one PanCode prompt's turn holds: a record writer gets every
 // record tool, a reader only what reads, and a gate only where it declares one.
 const archives = (action) => action.produces.some((output) => output.mode === 'archive' && output.uri.startsWith('project://archives/'));
 
-function clioDeskTools(action) {
-  if (clioRecordWriter(action)) return [...CLIO_DESK_TOOLS, ...(archives(action) ? ['extension_wtfp__archive'] : [])];
+function pancodeDeskTools(action) {
+  if (pancodeRecordWriter(action)) return [...PANCODE_DESK_TOOLS, ...(archives(action) ? ['extension_wtfp__archive'] : [])];
   const tools = ['status', 'read_record', 'readiness'];
   if (action.effects.some((effect) => effect.id === 'user.gate')) tools.push('gate');
   return tools.map((tool) => `extension_wtfp__${tool}`);
 }
 
-// Only the canonical Clio namespace prefers the optional desk. The unrooted
+// Only the canonical PanCode namespace prefers the optional desk. The unrooted
 // phase-1 projection remains intact for the Claude envelope and other hosts.
-function clioDeskWorkflowBody(action, workflowBody) {
-  const writer = clioRecordWriter(action);
-  // Clio re-sends an inlined file with every request and never pins it across
+function pancodeDeskWorkflowBody(action, workflowBody) {
+  const writer = pancodeRecordWriter(action);
+  // PanCode re-sends an inlined file with every request and never pins it across
   // compaction; a skill loaded through context survives compaction, and a file
   // read with the read tool can be evicted once used.
   let body = workflowBody
@@ -717,11 +717,11 @@ function clioDeskWorkflowBody(action, workflowBody) {
   if (action.requirements.capabilities.includes('workflow.drive')) {
     const contract = /^## Record contract\n[\s\S]*?(?=^## Procedure$)/m;
     if (!contract.test(body)) throw new Error(`${action.id}: no record contract section to project`);
-    return `${body.replace(contract, '## Record contract\n\nThe driver writes nothing itself. Each step reads and writes only what its own prompt\'s record contract declares, for the section the desk names; the desk arms the write guard for that step alone.\n\n')}\n\n${clioDriverBinding()}`;
+    return `${body.replace(contract, '## Record contract\n\nThe driver writes nothing itself. Each step reads and writes only what its own prompt\'s record contract declares, for the section the desk names; the desk arms the write guard for that step alone.\n\n')}\n\n${pancodeDriverBinding()}`;
   }
   const bindings = [
-    clioDeskCalls(clioDeskTools(action)),
-    'Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole: Clio ends the turn when one turn\'s reads exceed its observation budget.',
+    pancodeDeskCalls(pancodeDeskTools(action)),
+    'Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole: PanCode ends the turn when one turn\'s reads exceed its observation budget.',
     'An author\'s request is never permission to write outside this action\'s declared outputs: do the part it declares, then end by naming the action that owns the rest as the next step, and do not ask again or weigh the request against the contract; the desk refuses the rest regardless.',
     'Start from the desk\'s status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
@@ -737,7 +737,7 @@ function clioDeskWorkflowBody(action, workflowBody) {
 
 // Argument shapes for the desk tools. A gateway describe resends the whole
 // context, so a prompt that states the shapes lets the model call at once.
-const CLIO_DESK_ARGS = Object.freeze({
+const PANCODE_DESK_ARGS = Object.freeze({
   status: '{}',
   next_step: '{after}',
   read_record: '{uri}',
@@ -748,26 +748,26 @@ const CLIO_DESK_ARGS = Object.freeze({
   record: '{uri, record: {<every field of the record>}, expect_revision|expect_sha256} or {writes:[{uri, record, expect_...}]}, with no record field outside `record`'
 });
 
-function clioDeskCalls(tools) {
+function pancodeDeskCalls(tools) {
   const args = tools.map((tool) => {
     const name = tool.replace(/^extension_wtfp__/, '');
-    if (!(name in CLIO_DESK_ARGS)) throw new Error(`no Clio argument shape for desk tool ${tool}`);
-    return `${name} ${CLIO_DESK_ARGS[name]}`;
+    if (!(name in PANCODE_DESK_ARGS)) throw new Error(`no PanCode argument shape for desk tool ${tool}`);
+    return `${name} ${PANCODE_DESK_ARGS[name]}`;
   });
   return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. A record write that would not validate, or reports a stale read or a missing version, asks you to fix the record or read it again and resend; that is not a refusal. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns that family's records in one call, and names a \`?after=\` page for any it holds back; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: \`project://sections/{s}/context\`, \`research\`, \`summary\` and \`handoff\` are \`.planning/sections/{s}/<name>.md\`, plans and reviews are \`.planning/sections/{s}/plans/<id>.md\` and \`reviews/<id>.md\`, and \`project://paper/{a}\` is \`paper/{a}.md\`.`;
 }
 
-// The Clio projection of the workflow.drive capability. The desk, not the
+// The PanCode projection of the workflow.drive capability. The desk, not the
 // model, picks each step and arms the write guard for exactly that action.
-function clioDriverBinding() {
+function pancodeDriverBinding() {
   return [
-    '## Clio driver binding',
+    '## PanCode driver binding',
     '',
-    `${clioDeskCalls([...CLIO_DESK_TOOLS, CLIO_DRIVER_TOOL])} If \`extension_wtfp__next_step\` is absent, the WTF-P desk extension is not running: report that \`advance\` needs it and stop without running any action.`,
+    `${pancodeDeskCalls([...PANCODE_DESK_TOOLS, PANCODE_DRIVER_TOOL])} If \`extension_wtfp__next_step\` is absent, the WTF-P desk extension is not running: report that \`advance\` needs it and stop without running any action.`,
     '',
-    'Call `extension_wtfp__next_step` with `after` set to `"start"`, and on every later call to the step you just finished, such as `"write-section introduction"` or `"gate confirm-plan-introduction"`; Clio\'s loop guard reads repeated identical calls as a loop. Its result names exactly one of:',
+    'Call `extension_wtfp__next_step` with `after` set to `"start"`, and on every later call to the step you just finished, such as `"write-section introduction"` or `"gate confirm-plan-introduction"`; PanCode\'s loop guard reads repeated identical calls as a loop. Its result names exactly one of:',
     '',
-    '- `step`: an action, a section when the action takes one, and the step\'s prompt path relative to the plugin root. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/` followed by that whole path, such as `${pluginRoot}/ai.iowarp.clio/prompts/wtfp/write-section.md`, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt path relative to the plugin root. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/` followed by that whole path, such as `${pluginRoot}/dev.pancode/prompts/wtfp/write-section.md`, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
     '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
     '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
     '',
@@ -775,10 +775,10 @@ function clioDriverBinding() {
   ].join('\n');
 }
 
-function clioResearchConnectionBody(action) {
+function pancodeResearchConnectionBody(action) {
   if (action.id !== 'research-gap') return '';
   return [
-    '## Clio CiteNexus binding',
+    '## PanCode CiteNexus binding',
     '',
     'At yolo autonomy, search through the operator\'s CiteNexus MCP server, declared as `cite-nexus` with read-class tools in their user configuration. This prompt admits its four lookup capabilities, so call them directly without a gateway `find` or `describe`, each of which resends the whole context: `gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})` with a bounded public metadata query, `providers` drawn from `crossref`, `datacite`, `europe_pmc` and `arxiv`, and `limit` at most 10 per provider; results are compact, without abstracts. Check a candidate with `mcp_cite-nexus__resolve-paper` `{identifier}` or `mcp_cite-nexus__verify-citation` `{citation, expected_title, expected_year}`, and fetch a reference with `mcp_cite-nexus__get-citation` `{identifier, format}`. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. Only if the gateway reports no MCP server named `cite-nexus` may yolo instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
   ].join('\n');
@@ -812,11 +812,11 @@ function helpArgumentHint(action) {
   return '[input]';
 }
 
-// Clio renders a display-only prompt by printing its first fenced block to the
+// PanCode renders a display-only prompt by printing its first fenced block to the
 // operator without a model call. The block is a self-contained reference:
 // no includes, no procedure, only what a human needs to pick the next action.
 // `legacyFleetNames` renders the pre-playbook wording the Claude envelope keeps.
-function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
+function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
   const byId = new Map(model.actions.map((action) => [action.id, action]));
   const line = (id) => {
     const action = byId.get(id);
@@ -824,7 +824,7 @@ function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
     const availability = availabilityById.get(id);
     const blocked = availability.available
       ? ''
-      : `  [unavailable on clio: ${[...new Set([...availability.unavailableCapabilities, ...availability.unavailableEffects])].join(', ')}]`;
+      : `  [unavailable on pancode: ${[...new Set([...availability.unavailableCapabilities, ...availability.unavailableEffects])].join(', ')}]`;
     return `  /wtfp:${id} ${helpArgumentHint(action)}\n      ${action.description}${blocked}`;
   };
   const groupIds = new Set(HELP_GROUP_ORDER.map(([id]) => id));
@@ -836,7 +836,7 @@ function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
     .filter((file) => file.endsWith('.json')).sort()
     .map((file) => readJson(path.join(PROTOCOL_ROOT, 'fleets', file)));
   const card = [
-    `WTF-P ${model.version} on Clio Coder: evidence-grounded academic writing`,
+    `WTF-P ${model.version} on PanCode: evidence-grounded academic writing`,
     '',
     'Start here',
     ...HELP_START_SEQUENCE.flatMap((id) => [
@@ -855,8 +855,8 @@ function clioHelpCard(model, availabilityById, legacyFleetNames = false) {
     ...model.catalog.operations.actions.map(line),
     '',
     legacyFleetNames
-      ? 'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)'
-      : 'Playbooks (clio-coder fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
+      ? 'Fleets (pancode fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)'
+      : 'Playbooks (pancode fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
     ...playbooks.map((playbook) => `  ${playbook.id}\n      ${playbook.description}`),
     '',
     'Each action reads .planning/ records and paper/ artifacts, asks before any gated write, and never runs Git or publishes.',
@@ -883,10 +883,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   // Claude derives the stable command name from the plugin id and flat file
   // name. Repeating either in frontmatter creates names such as
   // /wtfp:wtfp:new-paper in current Claude Code releases.
-  if (target !== 'clio' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
+  if (target !== 'pancode' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
   // Without the desk there is no driver to select steps; never let a model drive itself.
-  if (availability.available && target === 'clio' && !deskTools && action.requirements.capabilities.includes('workflow.drive')) {
+  if (availability.available && target === 'pancode' && !deskTools && action.requirements.capabilities.includes('workflow.drive')) {
     availability = { ...availability, available: false, unavailableCapabilities: ['workflow.drive'], unavailableEffects: [] };
   }
   if (!availability.available) {
@@ -904,25 +904,25 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
       for (const tool of tools) lines.push(`  - ${tool}`);
     }
   }
-  if (target === 'clio') {
+  if (target === 'pancode') {
     lines.push('allowed-tools:');
-    const inline = new Set(clioInlineRoles(action, reviewers, deskTools));
+    const inline = new Set(pancodeInlineRoles(action, reviewers, deskTools));
     const dispatched = { ...action, delegation: action.delegation.filter((entry) => !inline.has(entry.role)) };
-    for (const tool of clioActionTools(dispatched, deskTools)) lines.push(`  - ${tool}`);
-    const delegated = clioDelegatedTools(dispatched, reviewers);
+    for (const tool of pancodeActionTools(dispatched, deskTools)) lines.push(`  - ${tool}`);
+    const delegated = pancodeDelegatedTools(dispatched, reviewers);
     if (delegated.length > 0) {
       lines.push('delegated-tools:');
       for (const tool of delegated) lines.push(`  - ${tool}`);
     }
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target, deskTools);
-  const clioRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
-  // Clio refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
-  const clioReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`wtfp-${entry.role}\``);
-  const reviewerPhrasing = clioReviewers.length ? ` ${clioReviewers.join(', ')} ${clioReviewers.length === 1 ? 'is' : 'are'} read-only: begin each task for ${clioReviewers.length === 1 ? 'it' : 'them'} with "Review", because Clio refuses a read-only agent a task it reads as a change.` : '';
-  const inlineRoles = target === 'clio' ? clioInlineRoles(action, reviewers, deskTools) : [];
-  const inlineBody = inlineRoles.length ? `## Clio role binding\n\nThis action writes only JSON records, which on Clio only \`extension_wtfp__record\` writes, so a dispatched ${inlineRoles.map((role) => `\`wtfp-${role}\``).join(', ')} would have nothing it may write and the desk refuses it. Do ${inlineRoles.length === 1 ? 'that role\'s' : 'those roles\''} work in this turn yourself, following the skill loaded above, and write each record through \`extension_wtfp__record\`. Do not dispatch ${inlineRoles.length === 1 ? 'it' : 'them'}.` : '';
-  const userGateBody = target === 'clio' ? [clioUserGateBody(action, deskTools), clioResearchConnectionBody(action), inlineBody, action.delegation.length > inlineRoles.length ? `## Clio role-result binding\n\nDispatch the declared specialist roles using these exact Clio agent IDs: ${clioRoles}. Do not substitute generic coder or verifier agents. Give every dispatched task an \`agent\` and an \`intent\` with workspace-relative \`read_roots\`, and keep absolute paths and \`project://\` URIs out of the task text, so Clio admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations and parse its evidence string as portable role-result JSON.${clioReviewers.length ? ` A read-only reviewer returns only a verdict and checks, no wtfp.role-result entry: treat its report as completed, each failed check as an issue, and a fail verdict as a revise recommendation. Clio's dispatch result calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run, so record it as the action's procedure says.` : ''} Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
+  const pancodeRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
+  // PanCode refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
+  const pancodeReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`wtfp-${entry.role}\``);
+  const reviewerPhrasing = pancodeReviewers.length ? ` ${pancodeReviewers.join(', ')} ${pancodeReviewers.length === 1 ? 'is' : 'are'} read-only: begin each task for ${pancodeReviewers.length === 1 ? 'it' : 'them'} with "Review", because PanCode refuses a read-only agent a task it reads as a change.` : '';
+  const inlineRoles = target === 'pancode' ? pancodeInlineRoles(action, reviewers, deskTools) : [];
+  const inlineBody = inlineRoles.length ? `## PanCode role binding\n\nThis action writes only JSON records, which on PanCode only \`extension_wtfp__record\` writes, so a dispatched ${inlineRoles.map((role) => `\`wtfp-${role}\``).join(', ')} would have nothing it may write and the desk refuses it. Do ${inlineRoles.length === 1 ? 'that role\'s' : 'those roles\''} work in this turn yourself, following the skill loaded above, and write each record through \`extension_wtfp__record\`. Do not dispatch ${inlineRoles.length === 1 ? 'it' : 'them'}.` : '';
+  const userGateBody = target === 'pancode' ? [pancodeUserGateBody(action, deskTools), pancodeResearchConnectionBody(action), inlineBody, action.delegation.length > inlineRoles.length ? `## PanCode role-result binding\n\nDispatch the declared specialist roles using these exact PanCode agent IDs: ${pancodeRoles}. Do not substitute generic coder or verifier agents. Give every dispatched task an \`agent\` and an \`intent\` with workspace-relative \`read_roots\`, and keep absolute paths and \`project://\` URIs out of the task text, so PanCode admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations and parse its evidence string as portable role-result JSON.${pancodeReviewers.length ? ` A read-only reviewer returns only a verdict and checks, no wtfp.role-result entry: treat its report as completed, each failed check as an issue, and a fail verdict as a revise recommendation. PanCode's dispatch result calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run, so record it as the action's procedure says.` : ''} Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -1094,33 +1094,33 @@ function renderCopilotCloudRole(role, slug) {
   ].join('\n');
 }
 
-// The tools a Clio role recipe declares. Verifier roles judge text and run
-// nothing, so their recipes are Clio's read-only class: no write, no shell and
+// The tools a PanCode role recipe declares. Verifier roles judge text and run
+// nothing, so their recipes are PanCode's read-only class: no write, no shell and
 // no verify, whose checks run commands from files a writer could have planted.
-// Clio refuses a skill load in a read-only run, so they bind none; the recipe
+// PanCode refuses a skill load in a read-only run, so they bind none; the recipe
 // body is the role's whole contract, and the orchestrator holds the action's skill.
-function clioRoleTools(verifier) {
+function pancodeRoleTools(verifier) {
   return verifier
     ? { required: ['read'], optional: ['context', 'grep', 'find', 'ls', 'ledger'] }
     : { required: ['read', 'context', 'limitation', { anyOf: ['write', 'edit'] }], optional: ['grep', 'find', 'ls', 'ledger'] };
 }
 
-function clioToolList(entries) {
+function pancodeToolList(entries) {
   return `[${entries.map((entry) => (typeof entry === 'string' ? entry : `{anyOf: [${entry.anyOf.join(', ')}]}`)).join(', ')}]`;
 }
 
-const CLIO_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
+const PANCODE_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
 // Held only by actions that require workflow.drive: the desk arms each step itself.
-const CLIO_DRIVER_TOOL = 'extension_wtfp__next_step';
+const PANCODE_DRIVER_TOOL = 'extension_wtfp__next_step';
 // The CiteNexus lookups the research binding calls, under the server id CiteNexus documents.
-const CLIO_CITE_NEXUS_TOOLS = Object.freeze(['search-papers', 'resolve-paper', 'verify-citation', 'get-citation'].map((tool) => `mcp_cite-nexus__${tool}`));
+const PANCODE_CITE_NEXUS_TOOLS = Object.freeze(['search-papers', 'resolve-paper', 'verify-citation', 'get-citation'].map((tool) => `mcp_cite-nexus__${tool}`));
 
-// The tools one Clio prompt's turn may hold (allowed-tools), from the Clio
-// bindings of the action's declared capabilities. Clio 0.6.3 narrows a
-// template turn to them; 0.6.2 ignores the field. Only the bundled citation
+// The tools one PanCode prompt's turn may hold (allowed-tools), from the PanCode
+// bindings of the action's declared capabilities. PanCode narrows a
+// template turn to them. Only the bundled citation
 // dispatcher needs a shell, so an action holds bash only when it declares
 // tool.execute or network.search, and never run_script, job, git or verify.
-function clioActionTools(action, deskTools) {
+function pancodeActionTools(action, deskTools) {
   const capabilities = new Set(action.requirements.capabilities);
   const tools = ['read', 'grep', 'find', 'ls', 'context'];
   if (capabilities.has('filesystem.write') || capabilities.has('filesystem.delete')) tools.push('write', 'edit');
@@ -1128,22 +1128,22 @@ function clioActionTools(action, deskTools) {
   if ((capabilities.has('agent.delegate') || capabilities.has('agent.parallel')) && action.delegation.length > 0) tools.push('dispatch', 'monitor');
   if (capabilities.has('network.fetch')) tools.push('web_fetch');
   if (capabilities.has('tool.execute') || capabilities.has('network.search')) tools.push('bash');
-  if (deskTools) tools.push(...clioDeskTools(action));
-  if (deskTools && capabilities.has('workflow.drive')) tools.push(CLIO_DRIVER_TOOL);
-  // Clio admits an MCP server's tools only when the turn names each capability;
+  if (deskTools) tools.push(...pancodeDeskTools(action));
+  if (deskTools && capabilities.has('workflow.drive')) tools.push(PANCODE_DRIVER_TOOL);
+  // PanCode admits an MCP server's tools only when the turn names each capability;
   // the CiteNexus binding would otherwise be refused by the prompt's own scope.
-  if (action.id === 'research-gap' || capabilities.has('workflow.drive')) tools.push(...CLIO_CITE_NEXUS_TOOLS);
+  if (action.id === 'research-gap' || capabilities.has('workflow.drive')) tools.push(...PANCODE_CITE_NEXUS_TOOLS);
   return tools;
 }
 
 // The tools the action's workers may hold (delegated-tools): every tool its
-// delegated roles' recipes declare, since Clio refuses a worker whose recipe
+// delegated roles' recipes declare, since PanCode refuses a worker whose recipe
 // declares more than the ceiling, and without this field the turn's own
 // allowed-tools would be that ceiling.
-function clioDelegatedTools(action, reviewers) {
+function pancodeDelegatedTools(action, reviewers) {
   const tools = new Set();
   for (const entry of action.delegation) {
-    const declared = clioRoleTools(reviewers.has(entry.role));
+    const declared = pancodeRoleTools(reviewers.has(entry.role));
     for (const item of [...declared.required, ...declared.optional]) {
       for (const tool of typeof item === 'string' ? [item] : item.anyOf) tools.add(tool);
     }
@@ -1151,16 +1151,16 @@ function clioDelegatedTools(action, reviewers) {
   return [...tools].sort();
 }
 
-// How each role runs on Clio. `latencyClass` is the routing prior for how long
-// a run takes; `budget` is the advisory tool-call notice, under Clio's hard
+// How each role runs on PanCode. `latencyClass` is the routing prior for how long
+// a run takes; `budget` is the advisory tool-call notice, under PanCode's hard
 // per-run ceiling. Roles that read a whole manuscript or a literature set get
 // the deep prior and a larger tool-call budget; quick checks stay fast. A
 // read-only checker gets no project orientation (`projectContextTier: none`):
 // it judges the artifacts it is handed, so a code-oriented repository summary
 // is only noise and a source of claims it did not read. Recipes declare only
-// toolCalls and synthesis: CLIO Coder 0.8.5 removed the read-reserve key with no
+// toolCalls and synthesis: the host removed the read-reserve key with no
 // alias, so a recipe that still declares it fails to parse.
-const CLIO_ROLE_TUNING = Object.freeze({
+const PANCODE_ROLE_TUNING = Object.freeze({
   'argument-verifier': { latency: 'fast', toolCalls: 24 },
   'plan-checker': { latency: 'fast', toolCalls: 24 },
   'section-reviewer': { latency: 'balanced', toolCalls: 40 },
@@ -1177,7 +1177,7 @@ const CLIO_ROLE_TUNING = Object.freeze({
 // The role-result schema as the object a worker writes. A recipe is resent
 // with every worker request, and the shape carries what the schema constrains
 // in a quarter of its bytes: fields, constants, enums, and which are optional.
-function clioRoleResultShape(schema, slug) {
+function pancodeRoleResultShape(schema, slug) {
   const optional = [];
   const shape = (node, at) => {
     const unstated = ['minItems', 'maxItems', 'maxLength', 'pattern', 'format', 'oneOf', 'anyOf', '$ref'].filter((key) => key in node);
@@ -1202,13 +1202,13 @@ function clioRoleResultShape(schema, slug) {
   return `Portable result object (${schema.$id}): ${object}. Values with | are enums; every field is required${optional.length ? ` except ${optional.map((name) => `\`${name}\``).join(', ')}` : ''}; strings are non-empty unless shown empty; arrays may be empty; add no other field.`;
 }
 
-function renderClioRole(role, slug) {
-  const tuning = CLIO_ROLE_TUNING[slug];
-  if (!tuning) throw new Error(`no Clio tuning for role ${slug}`);
+function renderPanCodeRole(role, slug) {
+  const tuning = PANCODE_ROLE_TUNING[slug];
+  if (!tuning) throw new Error(`no PanCode tuning for role ${slug}`);
   const verifier = role.fields.execution_class === 'verifier-report';
-  const declared = clioRoleTools(verifier);
-  const required = clioToolList(declared.required);
-  const optional = clioToolList(declared.optional);
+  const declared = pancodeRoleTools(verifier);
+  const required = pancodeToolList(declared.required);
+  const optional = pancodeToolList(declared.optional);
   const nativeResult = verifier
     ? 'Your entire final response must be one compact JSON object and nothing else: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each evidence value to one short sentence that cites the artifact and location, keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object. Where the procedure asks for findings, a status or a summary, the checks and the verdict are that result: a failed check is a finding, and fail means revise. Example: {"verdict":"fail","checks":[{"name":"claim coverage","passed":true,"evidence":"All five claims map to paragraphs P2-P6 of plan-01."},{"name":"word budget","passed":false,"evidence":"Units sum to 830 words, above the 805 ceiling."}]}'
     : 'Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.';
@@ -1233,12 +1233,12 @@ function renderClioRole(role, slug) {
     generatedBanner('protocol/roles', slug),
     '',
     // A small model writes the review its long body describes; it reads the output form first.
-    ...(verifier ? ['**Output:** your final message is one JSON object, `{"verdict":"pass|fail","checks":[...]}`, and nothing else. Do every step below as checks in that object, not as a Markdown review; the exact form is in the Clio result contract at the end.', ''] : []),
-    nativeWorkflowBody(roleBodyWithoutPortableResult(role), 'clio'),
+    ...(verifier ? ['**Output:** your final message is one JSON object, `{"verdict":"pass|fail","checks":[...]}`, and nothing else. Do every step below as checks in that object, not as a Markdown review; the exact form is in the PanCode result contract at the end.', ''] : []),
+    nativeWorkflowBody(roleBodyWithoutPortableResult(role), 'pancode'),
     '',
-    // Live on Clio 0.8.3, a writer that could not count words returned blocked and stopped the drive.
-    ...(/word count/i.test(roleBodyWithoutPortableResult(role)) ? ['On Clio a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.', ''] : []),
-    '## Clio result contract',
+    // Live on the 0.8.3 host, a writer that could not count words returned blocked and stopped the drive.
+    ...(/word count/i.test(roleBodyWithoutPortableResult(role)) ? ['On PanCode a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.', ''] : []),
+    '## PanCode result contract',
     '',
     nativeResult,
     '',
@@ -1248,13 +1248,13 @@ function renderClioRole(role, slug) {
     ] : []),
     // A verifier's verdict and checks already determine its role result; nesting a
     // serialized result inside one check failed every local-model review live.
-    ...(verifier ? [] : [clioRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json')), slug), '']),
+    ...(verifier ? [] : [pancodeRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json')), slug), '']),
     ...(verifier ? [] : ['Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string is that object serialized as JSON. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.']),
     ''
   ].join('\n');
 }
 
-function standardPluginManifest(version, name = 'wtfp', clioExtension) {
+function standardPluginManifest(version, name = 'wtfp', pancodeExtension) {
   return stableJson({
     $schema: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
     name, version,
@@ -1263,41 +1263,41 @@ function standardPluginManifest(version, name = 'wtfp', clioExtension) {
     homepage: 'https://github.com/akougkas/wtf-p',
     repository: 'https://github.com/akougkas/wtf-p',
     license: 'MIT',
-    ...(clioExtension ? { extensions: { 'ai.iowarp.clio': clioExtension } } : {})
+    ...(pancodeExtension ? { extensions: { 'dev.pancode': pancodeExtension } } : {})
   });
 }
 
-const CLIO_PLAYBOOKS = ['wtfp-plan-section', 'wtfp-draft-review'];
+const PANCODE_PLAYBOOKS = ['wtfp-plan-section', 'wtfp-draft-review'];
 
-// The root manifest with the Clio namespace. Clio runs fleet contracts as
+// The root manifest with the PanCode namespace. PanCode runs fleet contracts as
 // playbooks. `legacyFleetNames` keeps the pre-playbook `fleets` key, kind and
-// directory for the Claude envelope, whose Clio copy Clio no longer adopts.
-function clioPluginManifest(model, legacyFleetNames = false) {
-  const playbookRoot = `ai.iowarp.clio/${legacyFleetNames ? 'fleets' : 'playbooks'}`;
+// directory for the Claude envelope, whose PanCode copy PanCode no longer adopts.
+function pancodePluginManifest(model, legacyFleetNames = false) {
+  const playbookRoot = `dev.pancode/${legacyFleetNames ? 'fleets' : 'playbooks'}`;
   const components = [];
   for (const action of model.actions) components.push({
     kind: 'prompt', id: action.id,
-    path: `ai.iowarp.clio/prompts/wtfp/${action.id}.md`,
+    path: `dev.pancode/prompts/wtfp/${action.id}.md`,
     requires: action.delegation.map(item => `agent:${item.role}`)
   });
   for (const role of model.roles) components.push({
-    kind: 'agent', id: role.slug, path: `ai.iowarp.clio/agents/wtfp-${role.slug}.md`,
+    kind: 'agent', id: role.slug, path: `dev.pancode/agents/wtfp-${role.slug}.md`,
     requires: [`skill:${ROLE_SKILLS[role.slug]}`]
   });
   for (const skill of model.catalog.skills) components.push({
     kind: 'skill', id: skill.id, path: `skills/${skill.id}/SKILL.md`, requires: []
   });
-  for (const id of CLIO_PLAYBOOKS) components.push({
+  for (const id of PANCODE_PLAYBOOKS) components.push({
     kind: legacyFleetNames ? 'fleet' : 'playbook', id, path: `${playbookRoot}/${id}.md`, requires: []
   });
   return standardPluginManifest(model.version, 'wtfp', {
     manifestVersion: 1,
-    // The Claude copy keeps its pre-playbook floor. The plugin installs with
-    // the desk, which judges only what Clio 0.6.3 sends a hook, and its
-    // prompts scope their tools only from 0.6.3.
-    compatibility: { clio: legacyFleetNames ? '>=0.4.7' : '>=0.6.3' },
+    // The plugin installs with the desk, which judges only what PanCode sends
+    // a hook. The Claude copy declares the same floor; its fleets layout alone
+    // marks it as built for an older PanCode.
+    compatibility: { pancode: '>=0.9.0' },
     resources: {
-      skills: 'skills', prompts: 'ai.iowarp.clio/prompts', agents: 'ai.iowarp.clio/agents',
+      skills: 'skills', prompts: 'dev.pancode/prompts', agents: 'dev.pancode/agents',
       [legacyFleetNames ? 'fleets' : 'playbooks']: playbookRoot
     },
     components
@@ -1307,14 +1307,14 @@ function clioPluginManifest(model, legacyFleetNames = false) {
 // Playbook write boundaries are literal paths, so `{section}` cannot be
 // substituted. Section artifacts project to `.planning/sections/`, which keeps
 // workers away from checkpoints, interactions, state and config.
-function clioFleetWriteBoundary(resource, fleetId) {
+function pancodeFleetWriteBoundary(resource, fleetId) {
   if (/^project:\/\/paper(?:\/|$)/u.test(resource)) return 'paper/';
   if (/^project:\/\/sections\//u.test(resource)) return '.planning/sections/';
   if (/^project:\/\//u.test(resource)) return '.planning/';
-  throw new Error(`fleet ${fleetId} has no Clio write-boundary projection for ${resource}`);
+  throw new Error(`fleet ${fleetId} has no PanCode write-boundary projection for ${resource}`);
 }
 
-function clioFleet(fleetId) {
+function pancodeFleet(fleetId) {
   const sourceName = `${fleetId}.json`;
   const sourcePath = path.join(PROTOCOL_ROOT, 'fleets', sourceName);
   const fleet = readJson(sourcePath);
@@ -1372,7 +1372,7 @@ function clioFleet(fleetId) {
       throw new Error(`fleet ${fleetId} step ${step.id} has an unresolved or forward dependency`);
     }
     const boundaries = [...new Set(step.writes.map(resource =>
-      clioFleetWriteBoundary(resource, fleetId)
+      pancodeFleetWriteBoundary(resource, fleetId)
     ))];
     renderedSteps.push('  - kind: agent');
     renderedSteps.push(`    id: ${step.id}`);
@@ -1398,7 +1398,7 @@ function clioFleet(fleetId) {
   const nativeResourceProjection = logicalWrites.some(resource =>
     /^project:\/\/paper(?:\/|$)/u.test(resource)
   )
-    ? 'For this Clio projection, resolve logical `project://paper/...` artifacts under the project-root `paper/` directory, never under `.planning/paper/`.'
+    ? 'For this PanCode projection, resolve logical `project://paper/...` artifacts under the project-root `paper/` directory, never under `.planning/paper/`.'
     : null;
   return [
     '---',
@@ -1576,20 +1576,20 @@ function manuscriptGuardActions(model, availabilityById, host) {
   return guarded;
 }
 
-// The Clio desk arms on every available action. Each entry carries the
+// The PanCode desk arms on every available action. Each entry carries the
 // action's exact declared outputs: the desk derives file roots from them,
 // substitutes the section an invocation names, and refuses record writes the
-// contract does not declare. `paperWriters` are the Clio agent IDs of the
+// contract does not declare. `paperWriters` are the PanCode agent IDs of the
 // writing roles that manuscript-producing actions dispatch; the desk confines
 // them to manuscripts whose sections are ready to draft. `agents` are the
-// Clio agent IDs an action's contract delegates to; inside that action the
-// desk refuses a worker that is none of them. Clio reports which
+// PanCode agent IDs an action's contract delegates to; inside that action the
+// desk refuses a worker that is none of them. PanCode reports which
 // workers run read-only, the verifier roles' read-only recipes among them, so
 // the guard names none.
-function clioWriteGuard(model, availabilityById) {
+function pancodeWriteGuard(model, availabilityById) {
   const available = model.actions.filter((action) => availabilityById.get(action.id).available);
   if (!available.some((action) => action.produces.some((output) => output.uri.startsWith('project://paper')))) {
-    throw new Error('no manuscript-writing action is available on Clio');
+    throw new Error('no manuscript-writing action is available on PanCode');
   }
   const verifiers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
   // A driver action writes nothing under its own name: the desk arms each step
@@ -1602,7 +1602,7 @@ function clioWriteGuard(model, availabilityById) {
     for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
   }
   return stableJson({
-    schema: 'wtfp.clio-write-guard/v4',
+    schema: 'wtfp.pancode-write-guard/v4',
     actions: Object.fromEntries(available.map((action) => [action.id, {
       agents: drives(action) ? [] : [...new Set(action.delegation.map((entry) => `wtfp-${entry.role}`))].sort(),
       produces: drives(action) ? [] : action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
@@ -1747,25 +1747,25 @@ function geminiManifest(version) {
   });
 }
 
-// The Clio extension is installed and consented independently of the content
+// The PanCode extension is installed and consented independently of the content
 // plugin. Every file its runtime reads belongs to this package; the plugin
 // link controls prompt takeover, not filesystem access to another install.
-function addClioRuntime(plan, model, availabilityById) {
-  const source = (relative) => fs.readFileSync(path.join(CLIO_RUNTIME_ROOT, relative), 'utf8');
-  const manifest = source('clio-coder-extension.yaml').replace(/^(?:#.*\n)+/, '');
-  if (!/^version: .*$/m.test(manifest)) throw new Error('clio/clio-coder-extension.yaml must declare a version line');
-  addFile(plan, 'clio-coder-extension.yaml', [
-    `# Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from clio/clio-coder-extension.yaml; do not edit.`,
+function addPanCodeRuntime(plan, model, availabilityById) {
+  const source = (relative) => fs.readFileSync(path.join(PANCODE_RUNTIME_ROOT, relative), 'utf8');
+  const manifest = source('pancode-extension.yaml').replace(/^(?:#.*\n)+/, '');
+  if (!/^version: .*$/m.test(manifest)) throw new Error('hosts/pancode/pancode-extension.yaml must declare a version line');
+  addFile(plan, 'pancode-extension.yaml', [
+    `# Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from hosts/pancode/pancode-extension.yaml; do not edit.`,
     manifest.replace(/^version: .*$/m, `version: ${model.version}`)
   ].join('\n'));
-  addFile(plan, 'runtime/extension.ts', `${generatedScriptBanner('clio', 'runtime/extension.ts')}\n${source('runtime/extension.ts')}`);
-  // `clio-coder extensions test vendors/clio-extension` runs the package tests from here.
-  addFile(plan, 'runtime/extension.test.ts', `${generatedScriptBanner('clio', 'runtime/extension.test.ts')}\n${source('runtime/extension.test.ts')}`);
+  addFile(plan, 'runtime/extension.ts', `${generatedScriptBanner('hosts/pancode', 'runtime/extension.ts')}\n${source('runtime/extension.ts')}`);
+  // `pancode extensions test pancode/extension` runs the package tests from here.
+  addFile(plan, 'runtime/extension.test.ts', `${generatedScriptBanner('hosts/pancode', 'runtime/extension.test.ts')}\n${source('runtime/extension.test.ts')}`);
   addFile(plan, 'runtime/package.json', source('runtime/package.json'));
   addFile(plan, 'runtime/json-schema.cjs', `${generatedScriptBanner('evaluation', 'lib/json-schema.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'json-schema.js'), 'utf8')}`);
   addFile(plan, 'runtime/claim-coverage.cjs', `${generatedScriptBanner('evaluation', 'lib/claim-coverage.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'claim-coverage.js'), 'utf8')}`);
   addFile(plan, 'runtime/desk-trust.cjs', `${generatedScriptBanner('evaluation', 'lib/desk-trust.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'desk-trust.js'), 'utf8')}`);
-  addFile(plan, 'runtime/write-guard.json', clioWriteGuard(model, availabilityById));
+  addFile(plan, 'runtime/write-guard.json', pancodeWriteGuard(model, availabilityById));
   addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'templates'), 'project/templates');
@@ -2224,21 +2224,21 @@ function compilePlans(options = {}) {
   const targetPolicies = options.targetPolicies === undefined ? TARGET_POLICIES : options.targetPolicies;
   validateTargetPolicies(targetPolicies, model.effects.effects);
   const plans = Object.entries(TARGET_ROOTS).map(([id, root]) => makePlan(id, root));
-  // The Clio projection has no envelope of its own. It is assembled in memory
+  // The PanCode projection has no envelope of its own. It is assembled in memory
   // and relocated wholesale into the canonical plugin bundle below.
-  const clio = makePlan('clio', null);
-  const byId = new Map([...plans, clio].map((plan) => [plan.id, plan]));
+  const pancode = makePlan('pancode', null);
+  const byId = new Map([...plans, pancode].map((plan) => [plan.id, plan]));
   const availabilityByTarget = new Map();
-  for (const plan of [...plans, clio]) {
+  for (const plan of [...plans, pancode]) {
     addPortableBundle(plan);
     availabilityByTarget.set(plan.id, addActionAvailability(plan, model, plan.id, targetPolicies));
   }
 
-  for (const fleetId of CLIO_PLAYBOOKS) {
-    if (!clio.files.delete(`fleets/${fleetId}.json`)) {
-      throw new Error(`cannot project missing canonical fleet for Clio: ${fleetId}`);
+  for (const fleetId of PANCODE_PLAYBOOKS) {
+    if (!pancode.files.delete(`fleets/${fleetId}.json`)) {
+      throw new Error(`cannot project missing canonical fleet for PanCode: ${fleetId}`);
     }
-    addFile(clio, `playbooks/${fleetId}.md`, clioFleet(fleetId));
+    addFile(pancode, `playbooks/${fleetId}.md`, pancodeFleet(fleetId));
   }
 
   const claude = byId.get('claude');
@@ -2291,9 +2291,9 @@ function compilePlans(options = {}) {
 
   const reviewers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
   for (const action of model.actions) {
-    addFile(clio, `prompts/wtfp/${action.id}.md`, action.id === 'help'
-      ? clioHelpCard(model, availabilityByTarget.get('clio'))
-      : renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(action.id), false, reviewers));
+    addFile(pancode, `prompts/wtfp/${action.id}.md`, action.id === 'help'
+      ? pancodeHelpCard(model, availabilityByTarget.get('pancode'))
+      : renderMarkdownCommand(action, action.workflowBody, 'pancode', availabilityByTarget.get('pancode').get(action.id), false, reviewers));
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
     addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
     addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
@@ -2307,7 +2307,7 @@ function compilePlans(options = {}) {
   }
 
   for (const role of model.roles) {
-    addFile(clio, `agents/wtfp-${role.slug}.md`, renderClioRole(role, role.slug));
+    addFile(pancode, `agents/wtfp-${role.slug}.md`, renderPanCodeRole(role, role.slug));
     // OpenCode scans `agents/**/*.md` and takes the registered name from the
     // frontmatter, so the nested namespace directory is safe there. Claude Code
     // and Gemini CLI (loadAgentsFromDirectory) read only the top level of
@@ -2324,51 +2324,52 @@ function compilePlans(options = {}) {
   }
 
   // The canonical content-only plugin. Its prompts also work without the desk.
-  const portable = makePlan('portable-plugin', path.join(ROOT, 'vendors', 'plugin'));
-  for (const [file, content] of clio.files) {
+  const portable = makePlan('pancode-plugin', path.join(ROOT, 'pancode', 'plugin'));
+  for (const [file, content] of pancode.files) {
     const native = /^(prompts|agents|playbooks)\//.test(file);
     const actionId = /^prompts\/wtfp\/([a-z-]+)\.md$/.exec(file)?.[1];
     const action = actionId && model.actions.find((entry) => entry.id === actionId);
-    // Every action Clio can run reads records through the desk, so none needs the schema dump a desk-less host gets.
-    const projected = action && action.id !== 'help' && availabilityByTarget.get('clio').get(actionId).available
-      ? renderMarkdownCommand(action, action.workflowBody, 'clio', availabilityByTarget.get('clio').get(actionId), true, reviewers)
+    // Every action PanCode can run reads records through the desk, so none needs the schema dump a desk-less host gets.
+    const projected = action && action.id !== 'help' && availabilityByTarget.get('pancode').get(actionId).available
+      ? renderMarkdownCommand(action, action.workflowBody, 'pancode', availabilityByTarget.get('pancode').get(actionId), true, reviewers)
       : content;
-    addFile(portable, native ? `ai.iowarp.clio/${file}` : file, projected);
+    addFile(portable, native ? `dev.pancode/${file}` : file, projected);
   }
-  addFile(portable, 'plugin.json', clioPluginManifest(model));
+  addFile(portable, 'plugin.json', pancodePluginManifest(model));
   const availability = JSON.parse(portable.files.get('compatibility/action-availability.json'));
   // Base bindings remain usable with the content plugin alone. The separately
   // installed desk supplies these preferred bindings when its tools are live.
   availability.runtimeBindings = {
     plugin: 'wtfp', extension: 'wtfp',
-    capabilities: { 'user.interaction': 'clio:extension-interview' },
-    approvals: { explicit: 'clio:extension-interview' },
+    capabilities: { 'user.interaction': 'pancode:extension-interview' },
+    approvals: { explicit: 'pancode:extension-interview' },
     tools: { record: 'extension_wtfp__record', measure_section: 'extension_wtfp__measure_section', gate: 'extension_wtfp__gate' }
   };
   replaceFile(portable, 'compatibility/action-availability.json', stableJson(availability));
   plans.push(portable);
 
-  const extension = makePlan('clio-extension', path.join(ROOT, 'vendors', 'clio-extension'));
-  addClioRuntime(extension, model, availabilityByTarget.get('clio'));
-  addFile(extension, 'compatibility/action-availability.json', clio.files.get('compatibility/action-availability.json'));
+  const extension = makePlan('pancode-extension', path.join(ROOT, 'pancode', 'extension'));
+  addPanCodeRuntime(extension, model, availabilityByTarget.get('pancode'));
+  addFile(extension, 'compatibility/action-availability.json', pancode.files.get('compatibility/action-availability.json'));
   plans.push(extension);
 
-  // The Claude envelope keeps its pre-playbook Clio namespace: a root `plugin.json`
+  // The Claude envelope keeps its pre-playbook PanCode namespace: a root `plugin.json`
   // and the phase 1 prompts, agents and fleets it names, beside Claude's own
-  // `.claude-plugin/` surface. Clio no longer adopts a Claude-installed WTF-P;
-  // it labels the copy older and points to `vendors/plugin`. Claude Code reads
+  // `.claude-plugin/` surface. PanCode no longer adopts a Claude-installed WTF-P;
+  // it labels the copy built for an older PanCode and names `wtf-p install
+  // pancode`, the canonical install of `pancode/plugin`. Claude Code reads
   // neither file; its commands, agents, skills, hooks, and output style stay
   // where its loader looks.
-  for (const [file, content] of clio.files) {
+  for (const [file, content] of pancode.files) {
     if (file === 'prompts/wtfp/help.md') {
-      addFile(claude, `ai.iowarp.clio/${file}`, clioHelpCard(model, availabilityByTarget.get('clio'), true));
+      addFile(claude, `dev.pancode/${file}`, pancodeHelpCard(model, availabilityByTarget.get('pancode'), true));
     } else if (/^(prompts|agents)\//.test(file)) {
-      addFile(claude, `ai.iowarp.clio/${file}`, content);
+      addFile(claude, `dev.pancode/${file}`, content);
     } else if (file.startsWith('playbooks/')) {
-      addFile(claude, `ai.iowarp.clio/fleets/${file.slice('playbooks/'.length)}`, content);
+      addFile(claude, `dev.pancode/fleets/${file.slice('playbooks/'.length)}`, content);
     }
   }
-  addFile(claude, 'plugin.json', clioPluginManifest(model, true));
+  addFile(claude, 'plugin.json', pancodePluginManifest(model, true));
 
   const codexMarketplace = makePlan('codex-marketplace', path.join(ROOT, 'vendors', 'codex'));
   addFile(codexMarketplace, '.agents/plugins/marketplace.json', stableJson({
@@ -2439,9 +2440,9 @@ function compilePlans(options = {}) {
   ].join('\n'));
   plans.push(copilotMarketplace);
 
-  // The Clio plan carries no envelope root; it is returned so the compiled model
+  // The PanCode plan carries no envelope root; it is returned so the compiled model
   // stays observable, and `compileAdapters` writes only rooted plans.
-  plans.push(clio);
+  plans.push(pancode);
   return plans;
 }
 
@@ -2561,12 +2562,12 @@ function compileAdapters(options = {}) {
 module.exports = {
   GENERATOR_VERSION,
   TARGET_POLICIES,
-  clioActionTools,
-  clioDelegatedTools,
+  pancodeActionTools,
+  pancodeDelegatedTools,
   TARGET_ROOTS,
   compileAdapters,
   compilePlans,
   inventoryFor,
   nativeWorkflowBody,
-  renderClioRole
+  renderPanCodeRole
 };

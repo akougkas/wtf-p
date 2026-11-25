@@ -1,0 +1,288 @@
+{
+  "schema": "wtfp.generated-adapter/v1",
+  "generatorVersion": 5,
+  "target": "pancode-extension",
+  "sourceHash": "b9ca57142b453c0571f0dd1c10bea6d7a36ecb0c646e9c1b092f8175755487de",
+  "files": [
+    {
+      "path": "actions/add-todo.json",
+      "sha256": "ab5c1b0fcc9c7957f367af18f66378cf21bdab1d66cfd1da1afaff853715d8ac"
+    },
+    {
+      "path": "actions/advance.json",
+      "sha256": "7d141296842be6ae5fc5e231280a7d3533ea18b8537d8567fb9a498e0f44348c"
+    },
+    {
+      "path": "actions/analyze-bib.json",
+      "sha256": "b4600e5183e66cb1155f26b7d0c51c540e38f7e775c63d50d7b6ed56de083cd5"
+    },
+    {
+      "path": "actions/audit-milestone.json",
+      "sha256": "350dc1624d227c86286938b63feccd33c3234e7cdf308fb7b1ae94005a29a88f"
+    },
+    {
+      "path": "actions/check-refs.json",
+      "sha256": "3708747c28f4dd9941168a8abf48c3290c666891afcadce9679afebb965f05d5"
+    },
+    {
+      "path": "actions/check-todos.json",
+      "sha256": "9330a438ff0b316c8144caca756ce9d6025364bcbdd60be8c9790601584f024a"
+    },
+    {
+      "path": "actions/checkpoint.json",
+      "sha256": "7823eadcc0cdf1bb1bbe308d5295ac27d4d90a71dee8802c793527bab794f3c4"
+    },
+    {
+      "path": "actions/contribute.json",
+      "sha256": "763a5834e0612858fc9f840936d6d24b754695a2cb278386312bb6cfcb74d53d"
+    },
+    {
+      "path": "actions/create-outline.json",
+      "sha256": "6e3b1d5778855f7b3eda92bb7c2d6775ab1963da793cb4e30c3dd226a59eabb7"
+    },
+    {
+      "path": "actions/create-poster.json",
+      "sha256": "bacfb4b378ddc15bbc79f45116e1c3aa39c58589dbcd47c700299b4e980c5572"
+    },
+    {
+      "path": "actions/create-slides.json",
+      "sha256": "93d64620ff0cced70fa9deadc9bc91d2d62e12677c604bfaa023699499276977"
+    },
+    {
+      "path": "actions/discuss-section.json",
+      "sha256": "21e29c961984fbce3dd3a196507cb975d8774441f5fa2c3d5e9fac493b3288dc"
+    },
+    {
+      "path": "actions/execute-outline.json",
+      "sha256": "73b4f5dd663e88509d9490b44156bd7c37131d4e1ea128bffcdbd6a1455e88c4"
+    },
+    {
+      "path": "actions/export-latex.json",
+      "sha256": "50c1a6293ea383389ba8bc3b7492c5da41a82037ae28be9c3356049e177c6cf1"
+    },
+    {
+      "path": "actions/help.json",
+      "sha256": "5faa429310fd1b3f670b4e9e54100841dbcc02984ce1942287b67d2d0c2fa538"
+    },
+    {
+      "path": "actions/insert-section.json",
+      "sha256": "ba2763d79dbfd7cdcfea16b6560ef75943039838d92276c0640b85ae33b1759d"
+    },
+    {
+      "path": "actions/list-assumptions.json",
+      "sha256": "bcae021890f1fb925e4915f8ad01fd98f6123777fadca1e23be1ea174841805f"
+    },
+    {
+      "path": "actions/map-project.json",
+      "sha256": "b08f4b3b6d3a6c663b6e960a38b91708f8fe3f5be54f8730e9f70b0c44755de2"
+    },
+    {
+      "path": "actions/new-paper.json",
+      "sha256": "24db0bd84c2494aef771d8945a61ce2f1a28fd66d8d63500618aa7ff314a9b71"
+    },
+    {
+      "path": "actions/pause-writing.json",
+      "sha256": "e4b19a5ded382fd1c9d5c0ec15ac9a24ffd0a3fcf33f90ea3ff30c7fc29242c4"
+    },
+    {
+      "path": "actions/plan-milestone-gaps.json",
+      "sha256": "1c08efa6498ef8824b58d4d99a85a39f40d10520a91d683538077c2e2d167c33"
+    },
+    {
+      "path": "actions/plan-revision.json",
+      "sha256": "ca4091b4c2e2de9da18278a0ce463d187081012f19fac9667f06a520a4954af0"
+    },
+    {
+      "path": "actions/plan-section.json",
+      "sha256": "30401c1ef1afef9b0179cc5a2964ab6801cb2459f5a6d5a2ea60392fe0d45a98"
+    },
+    {
+      "path": "actions/polish-prose.json",
+      "sha256": "0c41133b1da1b4aba405476332acf934f43f2416495443dcbb0e788f711b14e3"
+    },
+    {
+      "path": "actions/progress.json",
+      "sha256": "396907ac606003e887db8ead64ebc448a99fb235af2cfbdbf09bfe6095d7cfaa"
+    },
+    {
+      "path": "actions/quick.json",
+      "sha256": "b8330fe8beb1c1ccc05de68101da7259e3aaa3d48cecbf6eb0c8c683a1343d06"
+    },
+    {
+      "path": "actions/remove-section.json",
+      "sha256": "a557d18985e10157b95f2405bc570b67dc85eb57c632b76fc1a6c3b4dd473074"
+    },
+    {
+      "path": "actions/report-bug.json",
+      "sha256": "60076ddd61a483f439e6ed71c7473050e2aaf80dda014337bdd9779dc3efca8e"
+    },
+    {
+      "path": "actions/request-feature.json",
+      "sha256": "3d266481e28af794ea1b4630ceaa23286760487a351bd2fdf30f5960740dfa15"
+    },
+    {
+      "path": "actions/research-gap.json",
+      "sha256": "c24643007ad2ec872f63be68cb54f980c73eea3924940bec7be4eded43fc6b24"
+    },
+    {
+      "path": "actions/resume-writing.json",
+      "sha256": "ebdd19235c2201a19ebecbf7eabec4011652bd41e7fc66abe88510f7c67869a9"
+    },
+    {
+      "path": "actions/review-section.json",
+      "sha256": "9b07db1520abcc0374d595bcddcd841dd1f9b87c85d4724b264c0413bcb14aef"
+    },
+    {
+      "path": "actions/settings.json",
+      "sha256": "ede7fabe1e511921031e31e2f290a747d5d270ccfed25528741e870bba8b0d7a"
+    },
+    {
+      "path": "actions/submit-milestone.json",
+      "sha256": "5b5b102b9c68777a74504ae14c0e8193e691fdb80bb33408c7bd5c7a56802a76"
+    },
+    {
+      "path": "actions/update.json",
+      "sha256": "3d5be74efd9688398d3a6ceccf63883b65787f02b60e1380bf8ee4a93d70c75e"
+    },
+    {
+      "path": "actions/verify-work.json",
+      "sha256": "9d25d3c74dec643816cf9684cdd55b99958ad96d0b46c0defa65c298ceddb4fc"
+    },
+    {
+      "path": "actions/write-section.json",
+      "sha256": "56b13114f3758e24624767ebc095e9a9d3c39aa96764e53f5460c0ec1d11ff68"
+    },
+    {
+      "path": "compatibility/action-availability.json",
+      "sha256": "600fece3eff903992469a5fb22f88705ef46ec508e6ac97abf609a6a349c4e3c"
+    },
+    {
+      "path": "pancode-extension.yaml",
+      "sha256": "9a74dd6538c32cc02a147c868c5064e169aba1d79b712de37e21f21f4b732e99"
+    },
+    {
+      "path": "project/schemas/checkpoint.schema.json",
+      "sha256": "1dfa2192aa3fadad2ba6e62a16df2db51aa01a458735ef2077aa1eed18fb5937"
+    },
+    {
+      "path": "project/schemas/common.schema.json",
+      "sha256": "d389f3831039598b8e3d6904d4ef6df13437ef9df9bf566c86ccb344f48f3bb0"
+    },
+    {
+      "path": "project/schemas/config.schema.json",
+      "sha256": "ab41328730134974cfdc955c4def019765fdb76d7e373c0ff5dc52dbf9f09366"
+    },
+    {
+      "path": "project/schemas/decisions.schema.json",
+      "sha256": "0a97f739d3f62621cbc1750c83b4c0c50e5f52cf35aafc9b8b61f4e6208437d0"
+    },
+    {
+      "path": "project/schemas/evidence.schema.json",
+      "sha256": "e7e7d9934d192bbeb788d7669bfb7298fe48b6ab78ad6709d44b8413190a38e2"
+    },
+    {
+      "path": "project/schemas/interaction.schema.json",
+      "sha256": "b45eec73ae295e32e1fe88ad050f58f192e40f178283213ce014b207c3d98f93"
+    },
+    {
+      "path": "project/schemas/manifest.schema.json",
+      "sha256": "6098eb621afce830c8ab20764114e8d7854efe5805453cbb3192e7eb3eae66f2"
+    },
+    {
+      "path": "project/schemas/outline.schema.json",
+      "sha256": "6f6696578ca275c79a468cfc07588ce10ce813f7cd93a4f1c3b009ab5ec994f7"
+    },
+    {
+      "path": "project/schemas/section.schema.json",
+      "sha256": "61bf54595635e12fa11f2a93ab91269b69d187757a318f181a96fd8f64981bac"
+    },
+    {
+      "path": "project/schemas/source.schema.json",
+      "sha256": "4a6d49a49ad65efcf113c94911184f189a1f9e93bdcfbdad5c6ad82082c3dffc"
+    },
+    {
+      "path": "project/schemas/state.schema.json",
+      "sha256": "4ebcb32f63eeb142443a3c588a41acf6f7fdf8bf276542be93dcfa4e0f56c845"
+    },
+    {
+      "path": "project/schemas/validation.schema.json",
+      "sha256": "89e8bdc850474d557e816a4db5e5e46cf401fb73b98863a1e49a42af33689fa1"
+    },
+    {
+      "path": "project/templates/checkpoint.json",
+      "sha256": "f993221d00fa3938a02958eed91d368f0468d45612cfe22bfce56f558640f309"
+    },
+    {
+      "path": "project/templates/config.json",
+      "sha256": "2df6d5c96d4ec074ec70348ae5a5bff29c034c92f5814d285c73576f70998016"
+    },
+    {
+      "path": "project/templates/decisions.json",
+      "sha256": "73a4f4dac5db9dcf9d339b2cc2dafc55714f7c35f46d28412b5949bc871a43b3"
+    },
+    {
+      "path": "project/templates/evidence.json",
+      "sha256": "640adf3f0031084d9f715bba9138857ad83f8481ed126588f953e4feea25031e"
+    },
+    {
+      "path": "project/templates/interaction.json",
+      "sha256": "ef4f2393d52da7568601025c705c9180fac3d8b45503bcfde9caadcb9f4f992a"
+    },
+    {
+      "path": "project/templates/manifest.json",
+      "sha256": "f2beaa64e1fb853e40282e36f35edcb17f463b53af217c0fcd8a9716f402790c"
+    },
+    {
+      "path": "project/templates/outline.json",
+      "sha256": "e754a9604c4f9f74980d58082e5216ff2ddad16b31e472649e6c000c6650255e"
+    },
+    {
+      "path": "project/templates/section.json",
+      "sha256": "600956c46c93279a682312020bdcd8049182c9eb18c35c4983dece40fd246d0d"
+    },
+    {
+      "path": "project/templates/source.json",
+      "sha256": "35caa0b9f028fccf6b8da426add83866c3205f200dfc7a87a11aef9942726a51"
+    },
+    {
+      "path": "project/templates/state.json",
+      "sha256": "70f769d813914a036036cf9171c9ec28b15a3e4821524d43ade9c721a225c84b"
+    },
+    {
+      "path": "project/templates/validation.json",
+      "sha256": "0df96fe5e0f0bafff69bc6b999c0bf2d6a01749a9acb17a17e241e3b72e4a89d"
+    },
+    {
+      "path": "runtime/claim-coverage.cjs",
+      "sha256": "4cb25e2f57b933ab5fcac12d35e1eca3d16d782f6353e4851525cc2861cf2329"
+    },
+    {
+      "path": "runtime/desk-trust.cjs",
+      "sha256": "34a914f37f41246d73d1c158e0ab68eddb057a88323cde1a461bc444795bcfcf"
+    },
+    {
+      "path": "runtime/extension.test.ts",
+      "sha256": "ffe94104e73271f7771d40364a61b37c55699f4040549329e6d462bc17df5306"
+    },
+    {
+      "path": "runtime/extension.ts",
+      "sha256": "aa6d48f9de4bb77f47f6c12ced3ac511ca851b7141dbf9ec44d78401f5d15133"
+    },
+    {
+      "path": "runtime/json-schema.cjs",
+      "sha256": "d17bd79edd0b63a933613f23e1b41d0dbaeb8b398dba7ed1f004156055243846"
+    },
+    {
+      "path": "runtime/package.json",
+      "sha256": "963a031a8894fbafdec216af462209fd74eba0e1a53a933d5021131fdaa64455"
+    },
+    {
+      "path": "runtime/write-guard.json",
+      "sha256": "35682abb994f4a4e59140d274b7097d66169be5986f9918210d990d06187370f"
+    },
+    {
+      "path": "skins/wtfp.json",
+      "sha256": "d0ddaefeb2b5f1479ad360e45adecf455e042e935b7ae971e74f776c853ade5c"
+    }
+  ]
+}

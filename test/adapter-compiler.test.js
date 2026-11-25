@@ -55,7 +55,7 @@ const EXPECTED_ROLES = [
   'section-writer'
 ];
 
-const CLIO_ROLE_SKILLS = Object.freeze({
+const PANCODE_ROLE_SKILLS = Object.freeze({
   'argument-verifier': 'wtfp-review-manuscript',
   'citation-expert': 'wtfp-research-literature',
   'citation-formatter': 'wtfp-research-literature',
@@ -89,10 +89,10 @@ const BUNDLED_TOOL_ACTIONS = Object.freeze([
   'research-gap'
 ]);
 
-const BUNDLED_TOOL_TARGETS = Object.freeze(['claude', 'clio']);
+const BUNDLED_TOOL_TARGETS = Object.freeze(['claude', 'pancode']);
 
-// Actions that need a host driver (workflow.drive). Only the Clio desk binds
-// one, so they fail closed on every other target and in the desk-less Clio copy.
+// Actions that need a host driver (workflow.drive). Only the PanCode desk binds
+// one, so they fail closed on every other target and in the desk-less PanCode copy.
 const DRIVER_ACTIONS = Object.freeze(['advance']);
 
 const GATED_NETWORK_ACTIONS = Object.freeze([
@@ -159,7 +159,7 @@ function assertManifestDirectory(plan, reference, context) {
 }
 
 function commandPaths(target, actionIds) {
-  if (target === 'clio') return actionIds.map((id) => `prompts/wtfp/${id}.md`);
+  if (target === 'pancode') return actionIds.map((id) => `prompts/wtfp/${id}.md`);
   if (target === 'claude') return actionIds.map((id) => `commands/${id}.md`);
   if (target === 'gemini') return actionIds.map((id) => `commands/wtfp/${id}.toml`);
   if (target === 'copilot') return actionIds.map((id) => `commands/wtfp-${id}.md`);
@@ -171,7 +171,7 @@ function commandPaths(target, actionIds) {
 // Every host except OpenCode reads only the top level of `agents/`. OpenCode
 // scans recursively and registers the frontmatter name, so its namespace
 // directory is kept.
-const FLAT_AGENT_TARGETS = Object.freeze(['clio', 'claude', 'copilot', 'antigravity', 'gemini']);
+const FLAT_AGENT_TARGETS = Object.freeze(['pancode', 'claude', 'copilot', 'antigravity', 'gemini']);
 
 function expectedAgentPaths(target) {
   if (FLAT_AGENT_TARGETS.includes(target)) {
@@ -206,7 +206,7 @@ function isolatedEnvironment(root) {
     XDG_STATE_HOME: path.join(root, 'xdg', 'state'),
     XDG_CACHE_HOME: path.join(root, 'xdg', 'cache'),
     CLAUDE_CONFIG_DIR: path.join(root, 'clients', 'claude'),
-    CLIO_CODER_CONFIG_DIR: path.join(root, 'clients', 'clio'),
+    PANCODE_CONFIG_DIR: path.join(root, 'clients', 'pancode'),
     CODEX_HOME: path.join(root, 'clients', 'codex'),
     COPILOT_HOME: path.join(root, 'clients', 'copilot'),
     GEMINI_CLI_HOME: path.join(root, 'clients', 'gemini'),
@@ -231,7 +231,7 @@ function copyCompilerFixture(destination) {
   const copies = [
     ['bin/lib', 'bin/lib'],
     ['protocol', 'protocol'],
-    ['clio', 'clio'],
+    ['hosts/pancode', 'hosts/pancode'],
     ['evaluation/lib/json-schema.js', 'evaluation/lib/json-schema.js'],
     ['evaluation/lib/claim-coverage.js', 'evaluation/lib/claim-coverage.js'],
     ['evaluation/lib/desk-trust.js', 'evaluation/lib/desk-trust.js']
@@ -323,7 +323,7 @@ function expectedBlockedActions(target) {
   const host = BUNDLED_TOOL_TARGETS.includes(target)
     ? [...BLOCKED_ACTIONS]
     : [...BLOCKED_ACTIONS, ...BUNDLED_TOOL_ACTIONS];
-  const base = sorted(target === 'clio' ? host : [...host, ...DRIVER_ACTIONS]);
+  const base = sorted(target === 'pancode' ? host : [...host, ...DRIVER_ACTIONS]);
   if (target !== 'copilot-cloud') return base;
   const explicitEffects = new Set(readJson(path.join(ROOT, 'protocol', 'effects.json')).effects
     .filter((effect) => effect.consent === 'explicit')
@@ -345,27 +345,27 @@ record('compiler plans and target roots are exact and deterministic', () => {
       ['opencode', EXPECTED_ROOTS.opencode],
       ['antigravity', EXPECTED_ROOTS.antigravity],
       ['gemini', EXPECTED_ROOTS.gemini],
-      ['portable-plugin', path.join(ROOT, 'vendors', 'plugin')],
-      ['clio-extension', path.join(ROOT, 'vendors', 'clio-extension')],
+      ['pancode-plugin', path.join(ROOT, 'pancode', 'plugin')],
+      ['pancode-extension', path.join(ROOT, 'pancode', 'extension')],
       ['codex-marketplace', path.join(ROOT, 'vendors', 'codex')],
       ['copilot-marketplace', path.join(ROOT, 'vendors', 'copilot')],
-      ['clio', null]
+      ['pancode', null]
     ]
   );
   assert.deepStrictEqual(planFingerprint(compilePlans()), planFingerprint(firstPlans));
 });
 
 record('target capability and approval policies are exhaustive and fail closed', () => {
-  const targets = ['antigravity', 'claude', 'clio', 'codex', 'copilot', 'copilot-cloud', 'gemini', 'opencode'];
+  const targets = ['antigravity', 'claude', 'codex', 'copilot', 'copilot-cloud', 'gemini', 'opencode', 'pancode'];
   assert.deepStrictEqual(sorted(Object.keys(TARGET_POLICIES)), targets);
   const clone = () => JSON.parse(JSON.stringify(TARGET_POLICIES));
 
   const missingTarget = clone();
-  delete missingTarget.clio;
+  delete missingTarget.pancode;
   assert.throws(() => compilePlans({ targetPolicies: missingTarget }), /target capability policies must map exactly/);
 
   const unknownTarget = clone();
-  unknownTarget.future = unknownTarget.clio;
+  unknownTarget.future = unknownTarget.pancode;
   assert.throws(() => compilePlans({ targetPolicies: unknownTarget }), /target capability policies must map exactly/);
 
   const missingCapability = clone();
@@ -380,8 +380,8 @@ record('target capability and approval policies are exhaustive and fail closed',
   malformedApproval['copilot-cloud'].approvals.explicit = 'input-approval';
   assert.throws(() => compilePlans({ targetPolicies: malformedApproval }), /malformed exact approval binding for explicit/);
 
-  assert.strictEqual(TARGET_POLICIES.clio.capabilities['user.interaction'], 'clio:ask_user');
-  assert.strictEqual(TARGET_POLICIES.clio.approvals.explicit, 'clio:ask_user');
+  assert.strictEqual(TARGET_POLICIES.pancode.capabilities['user.interaction'], 'pancode:ask_user');
+  assert.strictEqual(TARGET_POLICIES.pancode.approvals.explicit, 'pancode:ask_user');
   assert.doesNotThrow(() => compilePlans(), 'native tool bindings may contain underscores after the target prefix');
 
   const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-policy-registry-'));
@@ -453,13 +453,13 @@ record('stale inventory cleanup is exact, read-only in check mode, and fail-clos
     const isolatedCompiler = require(isolatedCompilerPath);
     isolatedCompiler.compileAdapters();
 
-    const clioRoot = path.join(temporaryRoot, 'vendors', 'plugin');
-    const inventoryPath = path.join(clioRoot, '.wtfp-generated.json');
+    const pancodeRoot = path.join(temporaryRoot, 'pancode', 'plugin');
+    const inventoryPath = path.join(pancodeRoot, '.wtfp-generated.json');
     const staleEmpty = 'retired/empty/compiler-owned.md';
     const staleShared = 'retired/shared/compiler-owned.md';
-    const userSibling = path.join(clioRoot, 'retired', 'shared', 'user-owned.md');
+    const userSibling = path.join(pancodeRoot, 'retired', 'shared', 'user-owned.md');
     for (const relativePath of [staleEmpty, staleShared]) {
-      const absolutePath = path.join(clioRoot, relativePath);
+      const absolutePath = path.join(pancodeRoot, relativePath);
       fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
       fs.writeFileSync(absolutePath, 'stale compiler output\n');
     }
@@ -482,35 +482,35 @@ record('stale inventory cleanup is exact, read-only in check mode, and fail-clos
       'check mode did not report both stale owned paths'
     );
     assert.deepStrictEqual(fs.readFileSync(inventoryPath), inventoryBeforeCheck, 'check mode rewrote the prior inventory');
-    assert.ok(fs.existsSync(path.join(clioRoot, staleEmpty)), 'check mode removed a stale file');
-    assert.ok(fs.existsSync(path.join(clioRoot, staleShared)), 'check mode removed a stale shared file');
+    assert.ok(fs.existsSync(path.join(pancodeRoot, staleEmpty)), 'check mode removed a stale file');
+    assert.ok(fs.existsSync(path.join(pancodeRoot, staleShared)), 'check mode removed a stale shared file');
 
     const result = isolatedCompiler.compileAdapters();
-    const clioChanges = result.changed.find((entry) => entry.target === 'portable-plugin');
-    assert.ok(clioChanges, 'build omitted the changed canonical plugin target');
-    assert.ok(clioChanges.files.includes(`stale:${staleEmpty}`));
-    assert.ok(clioChanges.files.includes(`stale:${staleShared}`));
-    assert.strictEqual(fs.existsSync(path.join(clioRoot, staleEmpty)), false, 'stale owned file survived regeneration');
-    assert.strictEqual(fs.existsSync(path.join(clioRoot, 'retired', 'empty')), false, 'empty stale directory survived regeneration');
-    assert.strictEqual(fs.existsSync(path.join(clioRoot, staleShared)), false, 'stale file beside user content survived regeneration');
+    const pancodeChanges = result.changed.find((entry) => entry.target === 'pancode-plugin');
+    assert.ok(pancodeChanges, 'build omitted the changed canonical plugin target');
+    assert.ok(pancodeChanges.files.includes(`stale:${staleEmpty}`));
+    assert.ok(pancodeChanges.files.includes(`stale:${staleShared}`));
+    assert.strictEqual(fs.existsSync(path.join(pancodeRoot, staleEmpty)), false, 'stale owned file survived regeneration');
+    assert.strictEqual(fs.existsSync(path.join(pancodeRoot, 'retired', 'empty')), false, 'empty stale directory survived regeneration');
+    assert.strictEqual(fs.existsSync(path.join(pancodeRoot, staleShared)), false, 'stale file beside user content survived regeneration');
     assert.strictEqual(fs.readFileSync(userSibling, 'utf8'), 'must survive cleanup\n', 'cleanup modified an unowned sibling');
     assert.deepStrictEqual(isolatedCompiler.compileAdapters({ check: true }).changed, []);
 
     const goodInventory = fs.readFileSync(inventoryPath);
-    const protectedPrompt = path.join(clioRoot, 'ai.iowarp.clio', 'prompts', 'wtfp', 'help.md');
+    const protectedPrompt = path.join(pancodeRoot, 'dev.pancode', 'prompts', 'wtfp', 'help.md');
     fs.writeFileSync(protectedPrompt, 'locally corrupted output\n');
     const malformed = JSON.parse(goodInventory.toString('utf8'));
     malformed.target = 'not-the-plugin';
     fs.writeFileSync(inventoryPath, `${JSON.stringify(malformed, null, 2)}\n`);
     assert.throws(
       () => isolatedCompiler.compileAdapters(),
-      /refusing malformed generated inventory for portable-plugin/,
+      /refusing malformed generated inventory for pancode-plugin/,
       'a malformed ownership receipt did not fail closed'
     );
     assert.strictEqual(fs.readFileSync(protectedPrompt, 'utf8'), 'locally corrupted output\n', 'compiler wrote before validating ownership');
 
     fs.writeFileSync(inventoryPath, goodInventory);
-    fs.writeFileSync(protectedPrompt, isolatedCompiler.compilePlans().find((plan) => plan.id === 'portable-plugin').files.get('ai.iowarp.clio/prompts/wtfp/help.md'));
+    fs.writeFileSync(protectedPrompt, isolatedCompiler.compilePlans().find((plan) => plan.id === 'pancode-plugin').files.get('dev.pancode/prompts/wtfp/help.md'));
     const traversing = JSON.parse(goodInventory.toString('utf8'));
     traversing.files.push({ path: '../../escape', sha256: sha256('escape') });
     fs.writeFileSync(inventoryPath, `${JSON.stringify(traversing, null, 2)}\n`);
@@ -528,10 +528,10 @@ record('every command-capable host exposes the same stable aliases', () => {
   assert.strictEqual(new Set(actionIds).size, actionIds.length);
   assert.deepStrictEqual(aliases.map((entry) => entry.alias), actionIds.map((id) => `wtfp:${id}`));
 
-  for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
+  for (const target of ['pancode', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const expected = commandPaths(target, actionIds);
-    const pattern = target === 'clio'
+    const pattern = target === 'pancode'
       ? /^prompts\/wtfp\/[^/]+\.md$/
       : target === 'claude'
         ? /^commands\/[^/]+\.md$/
@@ -560,12 +560,12 @@ record('every command-capable host exposes the same stable aliases', () => {
       assert.ok(!firstText.startsWith('<!-- Generated by WTF-P'), `${target}:${sourcePath}: banner must not be the first body text`);
       if (target === 'antigravity') {
         assert.match(source, new RegExp(`^---\\nname: wtfp-${actionIds[index]}\\ndisable-model-invocation: true\\n`));
-      } else if (!['clio', 'claude', 'gemini'].includes(target)) {
+      } else if (!['pancode', 'claude', 'gemini'].includes(target)) {
         assert.match(source, new RegExp(`^name: wtfp:${actionIds[index]}$`, 'm'));
       }
       if (target === 'claude') assert.doesNotMatch(source, /^name:/m, `${sourcePath}: Claude command name must be path-derived`);
-      // This Clio projection carries no desk, so it has no driver either.
-      const deskless = target === 'clio' && DRIVER_ACTIONS.includes(actionIds[index]);
+      // This PanCode projection carries no desk, so it has no driver either.
+      const deskless = target === 'pancode' && DRIVER_ACTIONS.includes(actionIds[index]);
       if (deskless || expectedBlockedActions(target).includes(actionIds[index])) {
         assert.match(source, /^WTFP_ACTION_UNAVAILABLE$/m, `${target}:${sourcePath}: missing blocked marker`);
         assert.ok(source.includes(`Action: \`${actionIds[index]}\``));
@@ -583,20 +583,20 @@ record('every command-capable host exposes the same stable aliases', () => {
         }
         continue;
       }
-      if (target === 'clio' && actionIds[index] === 'help') {
-        // Clio prints a display-only prompt's first fenced block to the operator
+      if (target === 'pancode' && actionIds[index] === 'help') {
+        // PanCode prints a display-only prompt's first fenced block to the operator
         // without a model call, so the card must be self-contained.
-        assert.match(source, /^display-only: true$/m, `${sourcePath}: help must be display-only on Clio`);
+        assert.match(source, /^display-only: true$/m, `${sourcePath}: help must be display-only on PanCode`);
         const card = source.match(/^```text\n([\s\S]*?)\n```$/m)?.[1];
         assert.ok(card, `${sourcePath}: help card must be one fenced text block`);
         assert.doesNotMatch(source, /\$\{pluginRoot\}|\$ARGUMENTS|^## (?:Procedure|Record contract|Invocation input)$/m,
           `${sourcePath}: help card must carry no includes, arguments, or model procedure`);
         for (const id of actionIds) assert.ok(card.includes(`/wtfp:${id} `), `${sourcePath}: help card omits /wtfp:${id}`);
-        for (const id of expectedBlockedActions('clio')) {
-          assert.ok(new RegExp(`/wtfp:${id} [^\\n]*\\n[^\\n]*\\[unavailable on clio: `).test(card), `${sourcePath}: help card does not mark /wtfp:${id} unavailable`);
+        for (const id of expectedBlockedActions('pancode')) {
+          assert.ok(new RegExp(`/wtfp:${id} [^\\n]*\\n[^\\n]*\\[unavailable on pancode: `).test(card), `${sourcePath}: help card does not mark /wtfp:${id} unavailable`);
         }
         for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) assert.ok(card.includes(`  ${playbook}\n`), `${sourcePath}: help card omits playbook ${playbook}`);
-        assert.match(card, /^Playbooks \(clio-coder fleet run <playbook> /m, `${sourcePath}: help card must name playbooks`);
+        assert.match(card, /^Playbooks \(pancode fleet run <playbook> /m, `${sourcePath}: help card must name playbooks`);
         assert.doesNotMatch(card, /\bfleets?\b(?! run)/i, `${sourcePath}: help card must not call a playbook a fleet`);
         assert.match(card, /^Start here$/m);
         continue;
@@ -683,10 +683,10 @@ record('every target publishes exact action availability and skill-route blocker
     );
     assert.deepStrictEqual(metadata.capabilityBindings, TARGET_POLICIES[projection.target].capabilities);
     assert.deepStrictEqual(metadata.approvalBindings, TARGET_POLICIES[projection.target].approvals);
-    if (projection.target === 'clio') {
+    if (projection.target === 'pancode') {
       assert.deepStrictEqual(metadata.hostToolEnforcement, {
         actionScoped: true,
-        surface: 'clio:template-allowed-tools',
+        surface: 'pancode:template-allowed-tools',
         certificationAutonomy: ['default'],
         undeclaredToolCall: 'fail'
       });
@@ -725,7 +725,7 @@ record('every envelope exposes only declared tools plus the bounded dispatcher',
     'tools/wtfp-tool.js',
     'tools/support/cite-nexus-client.js'
   ].sort((left, right) => left.localeCompare(right));
-  for (const target of [...Object.keys(EXPECTED_ROOTS), 'clio']) {
+  for (const target of [...Object.keys(EXPECTED_ROOTS), 'pancode']) {
     const plan = plansById.get(target);
     assert.deepStrictEqual(planFiles(plan, /^tools\/.*\.js$/), expected, `${target}: bundled tool surface drift`);
     assert.ok(plan.files.has('tools/README.md'), `${target}: logical tool resolver documentation is missing`);
@@ -743,7 +743,7 @@ record('every envelope exposes only declared tools plus the bounded dispatcher',
 });
 
 record('supported hosts contain exactly the canonical native roles', () => {
-  for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
+  for (const target of ['pancode', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const expected = expectedAgentPaths(target);
     const actual = FLAT_AGENT_TARGETS.includes(target)
@@ -802,7 +802,7 @@ record('Claude ships the academic output style, the write guard, and skill-bound
 
   for (const role of EXPECTED_ROLES) {
     const body = planText(plan, `agents/wtfp-${role}.md`);
-    assert.match(body, new RegExp(`^skills:\\n  - wtfp:${CLIO_ROLE_SKILLS[role]}$`, 'm'), `${role}: agent must preload its bound plugin skill`);
+    assert.match(body, new RegExp(`^skills:\\n  - wtfp:${PANCODE_ROLE_SKILLS[role]}$`, 'm'), `${role}: agent must preload its bound plugin skill`);
   }
   for (const role of EXPECTED_ROLES) {
     const opencode = planText(plansById.get('opencode'), `agents/wtfp/${role}.md`);
@@ -815,8 +815,8 @@ record('Claude ships the academic output style, the write guard, and skill-bound
   }
 });
 
-record('Clio emits one namespaced prompt per action, strict agents, and two agent-only playbooks', () => {
-  const plan = plansById.get('clio');
+record('PanCode emits one namespaced prompt per action, strict agents, and two agent-only playbooks', () => {
+  const plan = plansById.get('pancode');
   const nested = actionIds.map((id) => `prompts/wtfp/${id}.md`);
   assert.deepStrictEqual(planFiles(plan, /^prompts\/wtfp\/[^/]+\.md$/), sorted(nested));
   assert.deepStrictEqual(planFiles(plan, /^prompts\/wtfp-[^/]+\.md$/), [],
@@ -824,7 +824,7 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
 
   const lifecycleGuards = {
     'prompts/wtfp/research-gap.md': [
-      '## Clio CiteNexus binding',
+      '## PanCode CiteNexus binding',
       'call them directly without a gateway `find` or `describe`',
       'gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})',
       '  - mcp_cite-nexus__search-papers\n  - mcp_cite-nexus__resolve-paper\n  - mcp_cite-nexus__verify-citation\n  - mcp_cite-nexus__get-citation\n',
@@ -862,32 +862,32 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
   // verify-work is the author's acceptance after review: it closes with a checkpoint the driver routes on.
   const verifyContract = readJson(path.join(ROOT, 'protocol/actions/verify-work.json'));
   assert.ok(verifyContract.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create'), 'verify-work declares its acceptance checkpoint');
-  const verifyPrompt = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/verify-work.md');
+  const verifyPrompt = planText(plansById.get('pancode-plugin'), 'dev.pancode/prompts/wtfp/verify-work.md');
   assert.ok(verifyPrompt.includes('When none exists yet, create it pending through `extension_wtfp__record`'), 'verify-work gates through a checkpoint it creates');
   assert.ok(verifyPrompt.includes('options `accept` and `revise`'), 'verify-work asks accept or revise');
   assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/workflows/advance.md'), 'utf8').includes('`verify-work`, `plan-revision`'), 'advance drives verify-work and plan-revision');
   // A gate binding states only the branch the action can take: a local model tried both in turn.
   for (const [id, creates] of [['create-outline', false], ['plan-section', true]]) {
-    const source = planText(plansById.get('portable-plugin'), `ai.iowarp.clio/prompts/wtfp/${id}.md`);
+    const source = planText(plansById.get('pancode-plugin'), `dev.pancode/prompts/wtfp/${id}.md`);
     assert.strictEqual(source.includes('This action creates no checkpoint, so ask its gate question with `ask_user`'), !creates, `${id}: ask_user branch`);
     assert.strictEqual(source.includes('When none exists yet, create it pending through `extension_wtfp__record`'), creates, `${id}: checkpoint branch`);
   }
-  // Live, a discuss step read a 172 KB snapshot doc whole and Clio ended the turn on its observation budget.
-  assert.ok(planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/discuss-section.md').includes('Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole'), 'desk prompts bound large reads');
+  // Live, a discuss step read a 172 KB snapshot doc whole and PanCode ended the turn on its observation budget.
+  assert.ok(planText(plansById.get('pancode-plugin'), 'dev.pancode/prompts/wtfp/discuss-section.md').includes('Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole'), 'desk prompts bound large reads');
   assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/project/README.md'), 'utf8').includes('Read a large source or manuscript by section'), 'the protocol bounds large reads');
   // A local model looped 18k tokens between an author's request and the step's contract; both projections settle it.
-  assert.ok(planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/plan-section.md').includes('An author\'s request is never permission to write outside this action\'s declared outputs'), 'desk prompts carry the out-of-contract rule');
+  assert.ok(planText(plansById.get('pancode-plugin'), 'dev.pancode/prompts/wtfp/plan-section.md').includes('An author\'s request is never permission to write outside this action\'s declared outputs'), 'desk prompts carry the out-of-contract rule');
   assert.ok(fs.readFileSync(path.join(ROOT, 'protocol/project/README.md'), 'utf8').includes('An author\'s request is never permission to write outside the running action\'s declared outputs'), 'the protocol carries the out-of-contract rule');
-  // Live, every step spent calls on read_record for artifacts, and reviewer dispatches failed Clio's scope inference.
-  const portableReview = planText(plansById.get('portable-plugin'), 'ai.iowarp.clio/prompts/wtfp/review-section.md');
+  // Live, every step spent calls on read_record for artifacts, and reviewer dispatches failed PanCode's scope inference.
+  const portableReview = planText(plansById.get('pancode-plugin'), 'dev.pancode/prompts/wtfp/review-section.md');
   assert.ok(portableReview.includes('It serves JSON records only; read authored artifacts directly'), 'desk prompts map artifact URIs to files');
   // Live, listing sources and evidence took a shell find and nine serial reads.
   assert.ok(portableReview.includes('`read_record` on a family URI, such as `project://sources` or `project://evidence`, returns that family\'s records in one call, and names a `?after=` page'), 'desk prompts name the family read');
   assert.ok(portableReview.includes('Give every dispatched task an `agent` and an `intent` with workspace-relative `read_roots`'), 'dispatch bindings declare scope explicitly');
-  // Live, the model twice put record fields beside `record`, which Clio's gateway rejects before the desk sees them.
+  // Live, the model twice put record fields beside `record`, which PanCode's gateway rejects before the desk sees them.
   assert.ok(portableReview.includes('with no record field outside `record`'), 'the record shape keeps fields inside record');
   // A local model read "alone in its call" as leave to batch questions into one
-  // round, which Clio refuses for operator_only questions; the rule is literal.
+  // round, which PanCode refuses for operator_only questions; the rule is literal.
   for (const sourcePath of [...plan.files.keys()].filter((file) => file.startsWith('prompts/wtfp/'))) {
     const source = planText(plan, sourcePath);
     if (!source.includes('operator_only')) continue;
@@ -895,21 +895,21 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     assert.ok(!source.includes('alone in its call'), `${sourcePath}: ambiguous author-question rule`);
   }
 
-  assert.ok([...plan.files.keys()].every((file) => !file.split('/').some((segment) => segment.includes(':'))), 'Clio generated a colon-bearing filename');
+  assert.ok([...plan.files.keys()].every((file) => !file.split('/').some((segment) => segment.includes(':'))), 'PanCode generated a colon-bearing filename');
   for (const role of EXPECTED_ROLES) {
     const sourcePath = `agents/wtfp-${role}.md`;
     const source = planText(plan, sourcePath);
     const verifier = ['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'].includes(role);
     assert.match(source, /^---\nversion: 1\n/);
     // Live, a planner that preloaded the plan-section action skill tried to run the action and reported itself blocked.
-    assert.ok(source.includes('\nskills: []\n'), `${sourcePath}: a Clio recipe preloads no action skill`);
+    assert.ok(source.includes('\nskills: []\n'), `${sourcePath}: a PanCode recipe preloads no action skill`);
     assert.match(source, /^audience: custom$/m);
     // A read-only checker judges only what it is handed, so it gets no project orientation.
     assert.match(source, new RegExp(`^projectContextTier: ${verifier ? 'none' : 'bounded'}$`, 'm'));
     assert.match(source, /^latencyClass: (?:fast|balanced|deep)$/m);
     assert.match(source, /^budget: \{toolCalls: \d+, synthesis: true\}$/m);
     assert.match(source, new RegExp(`^resultContract: \\{kind: ${verifier ? 'verifier-report' : 'mutation-report'}\\}$`, 'm'));
-    assert.match(source, /^## Clio result contract$/m);
+    assert.match(source, /^## PanCode result contract$/m);
     assert.match(source, /entire final response must be one (?:compact )?JSON object/);
     if (verifier) {
       assert.match(source, /Return at most 12 non-duplicate checks/);
@@ -918,7 +918,7 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     }
   }
 
-  assert.deepStrictEqual(planFiles(plan, /^fleets\//), [], 'Clio reads fleet contracts only as playbooks');
+  assert.deepStrictEqual(planFiles(plan, /^fleets\//), [], 'PanCode reads fleet contracts only as playbooks');
   const fleetPaths = planFiles(plan, /^playbooks\/[^/]+\.md$/);
   assert.deepStrictEqual(fleetPaths, ['playbooks/wtfp-draft-review.md', 'playbooks/wtfp-plan-section.md']);
   const canonicalFleetPaths = fs.readdirSync(path.join(ROOT, 'protocol', 'fleets'))
@@ -984,13 +984,13 @@ record('Clio emits one namespaced prompt per action, strict agents, and two agen
     assert.match(source, /invoking action orchestrator owns/u,
       `${sourcePath}: generated fleet does not reserve approval and state reconciliation to the orchestrator`);
     assert.doesNotMatch(source, /evidence coverage/u,
-      `${sourcePath}: Clio 0.3.8 misclassifies the verifier task as a mutating test`);
+      `${sourcePath}: the host misclassifies the verifier task as a mutating test`);
     assert.doesNotMatch(
       source,
       /writes: \[(?:paper, )?\.planning\]/,
-      `${sourcePath}: a bare path is one exact file in Clio's write-boundary grammar`
+      `${sourcePath}: a bare path is one exact file in PanCode's write-boundary grammar`
     );
-    assert.doesNotMatch(source, /^\s*- kind: code$/m, `${sourcePath}: initial Clio fleets must remain agent-only`);
+    assert.doesNotMatch(source, /^\s*- kind: code$/m, `${sourcePath}: initial PanCode fleets must remain agent-only`);
     const agents = [...source.matchAll(/^\s+agent: (wtfp-[a-z0-9-]+)$/gm)].map((match) => match[1]);
     assert.deepStrictEqual(agents, expectedFleetAgents[sourcePath]);
     for (const agent of agents) assert.ok(plan.files.has(`agents/${agent}.md`), `${sourcePath}: missing bound agent ${agent}`);
@@ -1005,7 +1005,7 @@ record('bound logical tools grant one dispatcher command and unbound ones fail c
   );
   assert(executableActionIds.length > 0, 'fixture must cover logical tool execution');
   for (const actionId of executableActionIds) {
-    // Claude and Clio bind `tool.execute`. The grant is Bash, and the only
+    // Claude and PanCode bind `tool.execute`. The grant is Bash, and the only
     // command the workflow authorises is the packaged dispatcher.
     const claude = planText(plansById.get('claude'), `commands/${actionId}.md`);
     assert.doesNotMatch(claude, /^WTFP_ACTION_UNAVAILABLE$/m);
@@ -1015,10 +1015,10 @@ record('bound logical tools grant one dispatcher command and unbound ones fail c
     assert.ok(claude.includes('Never execute another module in this package'),
       `${actionId}: Claude command does not bound the shell grant`);
 
-    const clio = planText(plansById.get('clio'), `prompts/wtfp/${actionId}.md`);
-    assert.doesNotMatch(clio, /^WTFP_ACTION_UNAVAILABLE$/m);
-    assert.ok(clio.includes('${pluginRoot}/tools/wtfp-tool.js'),
-      `${actionId}: Clio prompt does not name the bundled dispatcher`);
+    const pancode = planText(plansById.get('pancode'), `prompts/wtfp/${actionId}.md`);
+    assert.doesNotMatch(pancode, /^WTFP_ACTION_UNAVAILABLE$/m);
+    assert.ok(pancode.includes('${pluginRoot}/tools/wtfp-tool.js'),
+      `${actionId}: PanCode prompt does not name the bundled dispatcher`);
 
     // Every target without a verified shell tool name stays fail-closed.
     for (const target of ['antigravity', 'copilot', 'gemini', 'opencode']) {
@@ -1124,21 +1124,26 @@ record('Codex, Claude, Copilot, Antigravity, Gemini, and plugin manifests resolv
   assert.strictEqual(geminiManifest.version, PACKAGE_VERSION);
   assert.ok(gemini.files.has(geminiManifest.contextFileName), 'Gemini contextFileName does not resolve');
 
-  const pluginPlan = plansById.get('portable-plugin');
-  const clioExtension = JSON.parse(planText(pluginPlan, 'plugin.json')).extensions['ai.iowarp.clio'];
-  assert.strictEqual(clioExtension.manifestVersion, 1);
-  assert.strictEqual(clioExtension.compatibility.clio, '>=0.6.3');
-  assert.deepStrictEqual(clioExtension.resources, {
+  const pluginPlan = plansById.get('pancode-plugin');
+  const pancodeExtension = JSON.parse(planText(pluginPlan, 'plugin.json')).extensions['dev.pancode'];
+  assert.strictEqual(pancodeExtension.manifestVersion, 1);
+  assert.strictEqual(pancodeExtension.compatibility.pancode, '>=0.9.0');
+  assert.deepStrictEqual(pancodeExtension.resources, {
     skills: 'skills',
-    prompts: 'ai.iowarp.clio/prompts',
-    agents: 'ai.iowarp.clio/agents',
-    playbooks: 'ai.iowarp.clio/playbooks'
+    prompts: 'dev.pancode/prompts',
+    agents: 'dev.pancode/agents',
+    playbooks: 'dev.pancode/playbooks'
   });
-  for (const directory of Object.values(clioExtension.resources)) {
-    assertDirectory(pluginPlan, directory, `Clio ${directory}`);
+  for (const directory of Object.values(pancodeExtension.resources)) {
+    assertDirectory(pluginPlan, directory, `PanCode ${directory}`);
   }
-  assert.deepStrictEqual(planFiles(pluginPlan, /^ai\.iowarp\.clio\/prompts\/[^/]+\.md$/), [],
+  assert.deepStrictEqual(planFiles(pluginPlan, /^dev\.pancode\/prompts\/[^/]+\.md$/), [],
     'the canonical plugin must publish no flat prompt aliases');
+  assert.deepStrictEqual(planFiles(pluginPlan, /^dev\.pancode\/fleets\//), [], 'the canonical plugin declares playbooks, not fleets');
+  assert.ok(!pancodeExtension.components.some((item) => item.kind === 'fleet'));
+  const extensionPlan = plansById.get('pancode-extension');
+  assert.strictEqual(extensionPlan.root, path.join(ROOT, 'pancode', 'extension'));
+  assert.match(planText(extensionPlan, 'pancode-extension.yaml'), /^compatibility: \{ pancode: ">=0\.9\.0" \}$/m);
 
   const codexMarketplace = JSON.parse(planText(
     plansById.get('codex-marketplace'),
@@ -1153,13 +1158,13 @@ record('Codex, Claude, Copilot, Antigravity, Gemini, and plugin manifests resolv
 });
 
 record('every bundled native resource reference resolves inside its target envelope', () => {
-  for (const target of ['clio', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
+  for (const target of ['pancode', 'claude', 'copilot', 'opencode', 'antigravity', 'gemini']) {
     const plan = plansById.get(target);
     const nativePaths = [
       ...commandPaths(target, actionIds),
       ...expectedAgentPaths(target)
     ];
-    assertSelfContained(plan, nativePaths, ['clio', 'claude', 'copilot', 'antigravity'].includes(target));
+    assertSelfContained(plan, nativePaths, ['pancode', 'claude', 'copilot', 'antigravity'].includes(target));
     if (target === 'claude') assertSelfContained(plan, ['output-styles/wtfp-academic-writing.md'], true);
     if (target === 'gemini') {
       for (const sourcePath of nativePaths) {
@@ -1169,12 +1174,12 @@ record('every bundled native resource reference resolves inside its target envel
   }
 });
 
-record('Clio desk prompts load their method as a skill and call desk tools without a describe or contract round trip', () => {
-  // Clio resends an inlined file with every request and the whole context on each
+record('PanCode desk prompts load their method as a skill and call desk tools without a describe or contract round trip', () => {
+  // PanCode resends an inlined file with every request and the whole context on each
   // gateway describe or file read; a skill loaded through context survives compaction.
-  const portable = plansById.get('portable-plugin');
+  const portable = plansById.get('pancode-plugin');
   const desk = actionIds
-    .map((id) => [id, planText(portable, `ai.iowarp.clio/prompts/wtfp/${id}.md`)])
+    .map((id) => [id, planText(portable, `dev.pancode/prompts/wtfp/${id}.md`)])
     .filter(([, body]) => /extension_wtfp__read_record|extension_wtfp__next_step/.test(body));
   assert.ok(desk.length >= 30, `expected the desk-bound prompts, found ${desk.length}`);
   for (const [id, body] of desk) {
@@ -1196,33 +1201,35 @@ record('Clio desk prompts load their method as a skill and call desk tools witho
   }
 });
 
-record('the Claude envelope keeps its pre-playbook Clio namespace under the legacy fleet names', () => {
+record('the Claude envelope keeps its pre-playbook PanCode namespace under the legacy fleet names', () => {
   const claude = plansById.get('claude');
-  const portable = plansById.get('portable-plugin');
-  const phase1 = plansById.get('clio');
-  // Clio no longer adopts a Claude-installed WTF-P, so the carried copy stays
-  // frozen: the canonical manifest with the playbook names and floor reverted.
+  const portable = plansById.get('pancode-plugin');
+  const phase1 = plansById.get('pancode');
+  // PanCode no longer adopts a Claude-installed WTF-P, so the carried copy stays
+  // frozen: the canonical manifest with the playbook names reverted to fleets.
   const legacyManifest = planText(portable, 'plugin.json')
-    .replace('"clio": ">=0.6.3"', '"clio": ">=0.4.7"')
-    .replace('"playbooks": "ai.iowarp.clio/playbooks"', '"fleets": "ai.iowarp.clio/fleets"')
+    .replace('"playbooks": "dev.pancode/playbooks"', '"fleets": "dev.pancode/fleets"')
     .replaceAll('"kind": "playbook"', '"kind": "fleet"')
-    .replaceAll('"path": "ai.iowarp.clio/playbooks/', '"path": "ai.iowarp.clio/fleets/');
+    .replaceAll('"path": "dev.pancode/playbooks/', '"path": "dev.pancode/fleets/');
   assert.strictEqual(planText(claude, 'plugin.json'), legacyManifest,
-    'Claude root plugin.json must differ from the canonical manifest only in the legacy fleet names and floor');
-  assert.deepStrictEqual(planFiles(claude, /^ai\.iowarp\.clio\/playbooks\//), []);
-  const extension = JSON.parse(planText(claude, 'plugin.json')).extensions['ai.iowarp.clio'];
-  for (const directory of Object.values(extension.resources)) assertDirectory(claude, directory, `Claude-carried Clio ${directory}`);
+    'Claude root plugin.json must differ from the canonical manifest only in the legacy fleet names');
+  const carriedExtension = JSON.parse(planText(claude, 'plugin.json')).extensions['dev.pancode'];
+  assert.strictEqual(carriedExtension.resources.fleets, 'dev.pancode/fleets', 'the Claude envelope declares dev.pancode with resources.fleets');
+  assert.ok(!('playbooks' in carriedExtension.resources));
+  assert.deepStrictEqual(planFiles(claude, /^dev\.pancode\/playbooks\//), []);
+  const extension = JSON.parse(planText(claude, 'plugin.json')).extensions['dev.pancode'];
+  for (const directory of Object.values(extension.resources)) assertDirectory(claude, directory, `Claude-carried PanCode ${directory}`);
   for (const item of extension.components) {
-    assert.ok(claude.files.has(item.path), `Claude envelope lacks Clio component ${item.kind}:${item.id}`);
+    assert.ok(claude.files.has(item.path), `Claude envelope lacks PanCode component ${item.kind}:${item.id}`);
     if (item.kind === 'prompt') {
       const carried = planText(claude, item.path);
-      const phase1Prompt = planText(phase1, item.path.replace(/^ai\.iowarp\.clio\//, ''));
+      const phase1Prompt = planText(phase1, item.path.replace(/^dev\.pancode\//, ''));
       assert.strictEqual(carried, item.id === 'help'
         ? phase1Prompt.replace(
-          'Playbooks (clio-coder fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
-          'Fleets (clio-coder fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)')
+          'Playbooks (pancode fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
+          'Fleets (pancode fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)')
         : phase1Prompt,
-      `${item.path} must retain the phase 1 Clio prompt in Claude`);
+      `${item.path} must retain the phase 1 PanCode prompt in Claude`);
       assert.doesNotMatch(carried, /extension_wtfp__(?:record|measure_section|gate)/,
         `${item.path} must not call desk tools outside the canonical plugin`);
       const canonical = planText(portable, item.path);
@@ -1234,20 +1241,20 @@ record('the Claude envelope keeps its pre-playbook Clio namespace under the lega
     } else if (item.kind === 'fleet') {
       assert.strictEqual(planText(claude, item.path), planText(portable, item.path.replace('/fleets/', '/playbooks/')),
         `${item.path} differs from the canonical playbook`);
-    } else if (item.path.startsWith('ai.iowarp.clio/')) {
+    } else if (item.path.startsWith('dev.pancode/')) {
       assert.strictEqual(planText(claude, item.path), planText(portable, item.path),
         `${item.path} differs between the Claude and canonical bundles`);
     }
   }
-  assert.deepStrictEqual(planFiles(claude, /^ai\.iowarp\.clio\/prompts\/[^/]+\.md$/), [],
-    'the Claude-carried Clio graph must publish no flat prompt aliases');
-  // Claude Code keeps reading its own manifest; the root file is for Clio.
+  assert.deepStrictEqual(planFiles(claude, /^dev\.pancode\/prompts\/[^/]+\.md$/), [],
+    'the Claude-carried PanCode graph must publish no flat prompt aliases');
+  // Claude Code keeps reading its own manifest; the root file is for PanCode.
   assert.strictEqual(JSON.parse(planText(claude, '.claude-plugin/plugin.json')).name, 'wtfp');
   assert.ok(!('extensions' in JSON.parse(planText(claude, '.claude-plugin/plugin.json'))));
 });
 
 record('standard plugin graph resolves and retains portable host boundaries', () => {
-  const plan = plansById.get('portable-plugin');
+  const plan = plansById.get('pancode-plugin');
   const manifest = JSON.parse(planText(plan, 'plugin.json'));
   assert.strictEqual(manifest.$schema, 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
   assert.strictEqual(manifest.name, 'wtfp');
@@ -1257,14 +1264,14 @@ record('standard plugin graph resolves and retains portable host boundaries', ()
   const registry = new SchemaRegistry([schemaFile]);
   assert.deepStrictEqual(validateInstance(manifest, registry.get(schemaFile), schemaFile, registry), []);
   assert.ok(validateInstance({ ...manifest, skills: './skills' }, registry.get(schemaFile), schemaFile, registry).length, 'nonstandard top-level metadata must fail');
-  const extension = manifest.extensions['ai.iowarp.clio'];
+  const extension = manifest.extensions['dev.pancode'];
   const components = new Map(extension.components.map(item => [`${item.kind}:${item.id}`, item]));
   // One prompt per action, 11 agents, two playbooks and seven skills.
   assert.strictEqual(components.size, actionIds.length + 20);
   for (const [ref, item] of components) {
     assert.ok(plan.files.has(item.path), `${ref} has no packaged file`);
     for (const dependency of item.requires) assert.ok(components.has(dependency), `${ref}: missing ${dependency}`);
-    if (['agent', 'playbook', 'prompt'].includes(item.kind)) assert.ok(item.path.startsWith('ai.iowarp.clio/'));
+    if (['agent', 'playbook', 'prompt'].includes(item.kind)) assert.ok(item.path.startsWith('dev.pancode/'));
   }
   assertSkillLinksResolve(plan);
   for (const directory of Object.values(extension.resources)) assert.ok([...plan.files.keys()].some(file => file.startsWith(directory + '/')));
@@ -1293,18 +1300,18 @@ record('research handoff declares incremental state and preserves native decisio
     assert.match(mapping, /Read existing source and evidence records before any update/);
     assert.match(mapping, /preserving existing entries/);
   }
-  const clio = plansById.get('clio');
-  // Clio has no native web-search tool. The only scholarly search WTF-P declares
+  const pancode = plansById.get('pancode');
+  // PanCode has no native web-search tool. The only scholarly search WTF-P declares
   // is the bundled citation client, run through the packaged dispatcher.
-  assert.strictEqual(TARGET_POLICIES.clio.capabilities['network.search'], 'clio:bash-bundled-citation-tools');
-  assert.strictEqual(TARGET_POLICIES.clio.capabilities['tool.execute'], 'clio:bash');
+  assert.strictEqual(TARGET_POLICIES.pancode.capabilities['network.search'], 'pancode:bash-bundled-citation-tools');
+  assert.strictEqual(TARGET_POLICIES.pancode.capabilities['tool.execute'], 'pancode:bash');
   assert.strictEqual(TARGET_POLICIES.claude.capabilities['tool.execute'], 'claude:Bash');
   for (const target of ['antigravity', 'codex', 'copilot', 'copilot-cloud', 'gemini', 'opencode']) {
     assert.strictEqual(TARGET_POLICIES[target].capabilities['tool.execute'], null,
       `${target}: tool.execute must stay fail-closed until its shell tool name is verified`);
   }
   for (const role of EXPECTED_ROLES) {
-    const body = planText(clio, `agents/wtfp-${role}.md`);
+    const body = planText(pancode, `agents/wtfp-${role}.md`);
     if (['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'].includes(role)) {
       // A verifier returns verdict and checks only: a local model failed every review that nested a serialized role result.
       assert.doesNotMatch(body, /wtfp\.role-result/, `${role}: a verifier carries no nested role result`);
@@ -1315,25 +1322,25 @@ record('research handoff declares incremental state and preserves native decisio
       assert.match(body, /entry named wtfp.role-result/);
       assert.match(body, /status needs_input/);
       assert.match(body, /Portable result object \(wtfp.role-result\/v1\): \{"schema":"wtfp.role-result\/v1"/);
-      // Live, a worker filled the role with its own identity ("Clio Coder"), and the orchestrator stopped on it.
+      // Live, a worker filled the role with its own identity ("PanCode"), and the orchestrator stopped on it.
       assert.ok(body.includes(`"role":"${role}"`), `${role}: the result form names the role exactly`);
     }
     // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
     const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
-    assert.ok(tools, `${role}: Clio recipe declares its tools`);
+    assert.ok(tools, `${role}: PanCode recipe declares its tools`);
     const declared = `${tools[1]}, ${tools[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
     for (const tool of ['bash', 'verify', 'run_script', 'job', 'git']) {
-      assert.ok(!declared.includes(tool), `${role}: Clio recipe must not hold ${tool}`);
+      assert.ok(!declared.includes(tool), `${role}: PanCode recipe must not hold ${tool}`);
     }
     if (/resultContract: \{kind: verifier-report\}/.test(body)) {
-      assert.match(body, /^capabilityClass: read-only$/m, `${role}: a reviewer recipe is Clio's read-only class`);
+      assert.match(body, /^capabilityClass: read-only$/m, `${role}: a reviewer recipe is PanCode's read-only class`);
       assert.deepStrictEqual(declared.filter((tool) => ['write', 'edit', 'artifact'].includes(tool)), [], `${role}: a reviewer recipe holds no write tool`);
-      // Clio refuses context(scope=skills) in a read-only run, so a bound skill could never load.
+      // PanCode refuses context(scope=skills) in a read-only run, so a bound skill could never load.
       assert.match(body, /^skills: \[\]$/m, `${role}: a read-only reviewer binds no skill`);
     }
   }
-  // Each Clio prompt scopes its turn (allowed-tools) and its workers (delegated-tools); Clio 0.6.3 enforces both, 0.6.2 ignores them.
-  const portablePlan = plansById.get('portable-plugin');
+  // Each PanCode prompt scopes its turn (allowed-tools) and its workers (delegated-tools), and PanCode enforces both.
+  const portablePlan = plansById.get('pancode-plugin');
   const availability = JSON.parse(planText(portablePlan, 'compatibility/action-availability.json'));
   const listField = (text, key) => {
     const frontmatter = /^---\n([\s\S]*?)\n---/.exec(text)?.[1] ?? '';
@@ -1341,7 +1348,7 @@ record('research handoff declares incremental state and preserves native decisio
     return block ? block[1].trim().split('\n').map((line) => line.replace(/^\s*- /, '')) : null;
   };
   const recipeTools = (role) => {
-    const declared = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(planText(clio, `agents/wtfp-${role}.md`));
+    const declared = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(planText(pancode, `agents/wtfp-${role}.md`));
     return `${declared[1]}, ${declared[2]}`.replace(/\{anyOf: \[|\]\}/g, '').split(/,\s*/);
   };
   const VERIFIER_ROLES = ['argument-verifier', 'coherence-checker', 'plan-checker', 'section-reviewer'];
@@ -1349,13 +1356,13 @@ record('research handoff declares incremental state and preserves native decisio
   for (const entry of availability.actions.filter((item) => item.status === 'available' && item.id !== 'help')) {
     const action = readJson(path.join(ROOT, 'protocol/actions', `${entry.id}.json`));
     const capabilities = new Set(action.requirements.capabilities);
-    // The desk-less Clio copy fails closed for a driver action; only the portable plugin carries its prompt.
-    const projections = [['clio', planText(clio, `prompts/wtfp/${entry.id}.md`)], ['portable', planText(portablePlan, `ai.iowarp.clio/prompts/wtfp/${entry.id}.md`)]]
+    // The desk-less PanCode copy fails closed for a driver action; only the portable plugin carries its prompt.
+    const projections = [['pancode', planText(pancode, `prompts/wtfp/${entry.id}.md`)], ['portable', planText(portablePlan, `dev.pancode/prompts/wtfp/${entry.id}.md`)]]
       .filter(([label]) => label === 'portable' || !DRIVER_ACTIONS.includes(entry.id));
     for (const [label, text] of projections) {
       const allowed = listField(text, 'allowed-tools');
       assert.ok(allowed && allowed.includes('read'), `${label} ${entry.id}: the prompt scopes its turn`);
-      for (const tool of ['run_script', 'job', 'git', 'verify', 'configure_clio', 'web_read']) assert.ok(!allowed.includes(tool), `${label} ${entry.id}: never ${tool}`);
+      for (const tool of ['run_script', 'job', 'git', 'verify', 'configure_pancode', 'web_read']) assert.ok(!allowed.includes(tool), `${label} ${entry.id}: never ${tool}`);
       assert.strictEqual(allowed.includes('bash'), capabilities.has('tool.execute') || capabilities.has('network.search'), `${label} ${entry.id}: a shell only for the bundled tool dispatcher`);
       assert.strictEqual(allowed.includes('write'), capabilities.has('filesystem.write') || capabilities.has('filesystem.delete'), `${label} ${entry.id}: writes only where declared`);
       // On the desk a record-only action's writing roles have no root they may hold, so the turn does their work.
@@ -1363,14 +1370,14 @@ record('research handoff declares incremental state and preserves native decisio
       const inlined = label === 'portable' && recordOnly ? action.delegation.filter((role) => !VERIFIER_ROLES.includes(role.role)) : [];
       const dispatchedRoles = action.delegation.filter((role) => !inlined.includes(role));
       if (inlined.length > 0) {
-        assert.ok(text.includes('## Clio role binding') && text.includes('Do not dispatch'), `${label} ${entry.id}: record-only roles run in the turn`);
-        assert.ok(!text.includes('## Clio role-result binding') || dispatchedRoles.length > 0, `${label} ${entry.id}: no dispatch binding for inline roles`);
+        assert.ok(text.includes('## PanCode role binding') && text.includes('Do not dispatch'), `${label} ${entry.id}: record-only roles run in the turn`);
+        assert.ok(!text.includes('## PanCode role-result binding') || dispatchedRoles.length > 0, `${label} ${entry.id}: no dispatch binding for inline roles`);
       }
       assert.strictEqual(allowed.includes('dispatch'), dispatchedRoles.length > 0, `${label} ${entry.id}: dispatch only where a role can be dispatched`);
       const delegated = listField(text, 'delegated-tools');
       if (dispatchedRoles.length === 0) assert.strictEqual(delegated, null, `${label} ${entry.id}: no worker ceiling without delegation`);
       else {
-        // The ceiling is exactly what the delegated recipes declare, so Clio admits each of them and nothing wider.
+        // The ceiling is exactly what the delegated recipes declare, so PanCode admits each of them and nothing wider.
         const expected = [...new Set(dispatchedRoles.flatMap((role) => recipeTools(role.role)))].sort();
         assert.deepStrictEqual(delegated, expected, `${label} ${entry.id}: worker ceiling`);
         assert.ok(!delegated.includes('bash') && !delegated.includes('verify'), `${label} ${entry.id}: no worker runs a program`);
@@ -1383,23 +1390,23 @@ record('research handoff declares incremental state and preserves native decisio
       const reader = ['status', 'read_record', 'readiness', ...(gated ? ['gate'] : [])].map((tool) => `extension_wtfp__${tool}`);
       assert.ok(desked.length === 0 || (writes ? desked.length === deskTools.length : JSON.stringify(desked.sort()) === JSON.stringify(reader.sort())),
         `${label} ${entry.id}: a record writer holds every desk tool, a reader only what reads`);
-      if (label === 'clio') assert.strictEqual(desked.length, 0, `${entry.id}: the desk-free projection names no desk tool`);
+      if (label === 'pancode') assert.strictEqual(desked.length, 0, `${entry.id}: the desk-free projection names no desk tool`);
     }
   }
-  assert.deepStrictEqual(listField(planText(portablePlan, 'ai.iowarp.clio/prompts/wtfp/write-section.md'), 'allowed-tools').filter((tool) => tool.startsWith('extension_')), deskTools);
-  assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
-  // Live on Clio 0.8.3, review-section read a reviewer's fail verdict, which Clio labels "validation failed", as a failed run and recorded nothing.
-  assert.match(planText(clio, 'prompts/wtfp/review-section.md'), /calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run/);
-  assert.match(planText(clio, 'workflows/review-section.md'), /A reviewer's fail verdict is the review's result, not a failed run/);
-  // F-W31, live on Clio 0.8.3: verify-work asked its acceptance with ask_user before the desk gate, so the author answered twice.
-  for (const actionId of ['verify-work', 'plan-section', 'plan-revision']) assert.match(planText(portablePlan, `ai.iowarp.clio/prompts/wtfp/${actionId}.md`), /The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`/, actionId);
-  // Live on Clio 0.8.3, the section writer could not count words, returned blocked, and stopped the drive.
-  for (const role of ['section-writer']) assert.match(planText(clio, `agents/wtfp-${role}.md`), /On Clio a worker holds no word counter\..*never blocks this role/, `${role}: the count is the orchestrator's`);
-  for (const role of ['section-planner', 'prose-polisher']) assert.doesNotMatch(planText(clio, `agents/wtfp-${role}.md`), /holds no word counter/);
-  assert.match(planText(portablePlan, 'ai.iowarp.clio/prompts/wtfp/write-section.md'), /^4\. A dispatched writer has no word counter, so tell it to write the summary without a count; then add the measured count to the summary yourself/m);
-  assert.match(planText(clio, 'workflows/review-section.md'), /A revision plan's preservation or no-change criteria governed that revision and its verification; they are not criteria for a later review/);
-  assert.doesNotMatch(planText(clio, 'prompts/wtfp/create-outline.md'), /is read-only: begin each task/);
-  assert.match(planText(clio, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
+  assert.deepStrictEqual(listField(planText(portablePlan, 'dev.pancode/prompts/wtfp/write-section.md'), 'allowed-tools').filter((tool) => tool.startsWith('extension_')), deskTools);
+  assert.match(planText(pancode, 'prompts/wtfp/review-section.md'), /`wtfp-section-reviewer` is read-only: begin each task for it with "Review"/);
+  // Live, review-section read a reviewer's fail verdict, which PanCode labels "validation failed", as a failed run and recorded nothing.
+  assert.match(planText(pancode, 'prompts/wtfp/review-section.md'), /calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run/);
+  assert.match(planText(pancode, 'workflows/review-section.md'), /A reviewer's fail verdict is the review's result, not a failed run/);
+  // F-W31, live: verify-work asked its acceptance with ask_user before the desk gate, so the author answered twice.
+  for (const actionId of ['verify-work', 'plan-section', 'plan-revision']) assert.match(planText(portablePlan, `dev.pancode/prompts/wtfp/${actionId}.md`), /The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`/, actionId);
+  // Live, the section writer could not count words, returned blocked, and stopped the drive.
+  for (const role of ['section-writer']) assert.match(planText(pancode, `agents/wtfp-${role}.md`), /On PanCode a worker holds no word counter\..*never blocks this role/, `${role}: the count is the orchestrator's`);
+  for (const role of ['section-planner', 'prose-polisher']) assert.doesNotMatch(planText(pancode, `agents/wtfp-${role}.md`), /holds no word counter/);
+  assert.match(planText(portablePlan, 'dev.pancode/prompts/wtfp/write-section.md'), /^4\. A dispatched writer has no word counter, so tell it to write the summary without a count; then add the measured count to the summary yourself/m);
+  assert.match(planText(pancode, 'workflows/review-section.md'), /A revision plan's preservation or no-change criteria governed that revision and its verification; they are not criteria for a later review/);
+  assert.doesNotMatch(planText(pancode, 'prompts/wtfp/create-outline.md'), /is read-only: begin each task/);
+  assert.match(planText(pancode, 'prompts/wtfp/create-outline.md'), /Missing, duplicate or malformed outcomes fail closed/);
   for (const role of EXPECTED_ROLES) {
     const body = planText(plansById.get('claude'), `agents/wtfp-${role}.md`);
     assert.match(body, /^tools:$/m);

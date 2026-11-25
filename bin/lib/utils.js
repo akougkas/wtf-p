@@ -228,7 +228,7 @@ function detectInstallation(vendorDir) {
       );
       const expectsAnyPath = prefixes => prefixes.some(expectsPath);
       const nativeComponent = relative => {
-        const match = relative.match(/^plugins\/wtfp\/(?:ai\.iowarp\.clio\/)?(prompts|workflows|skills|agents|tools)\//);
+        const match = relative.match(/^plugins\/wtfp\/(?:dev\.pancode\/)?(prompts|workflows|skills|agents|tools)\//);
         return match ? ({ prompts: 'commands', tools: 'scripts' }[match[1]] || match[1]) : null;
       };
       const componentPaths = component => receiptEntries
@@ -264,7 +264,7 @@ function detectInstallation(vendorDir) {
 
       const expectedHasCommands = expectsAnyPath([
         'commands/wtfp', 'marketplaces/wtfp/commands',
-        'plugins/wtfp/ai.iowarp.clio/prompts', 'extensions/wtfp/commands', 'sources/wtfp/commands'
+        'plugins/wtfp/dev.pancode/prompts', 'extensions/wtfp/commands', 'sources/wtfp/commands'
       ]);
       const expectedHasWorkflows = expectsAnyPath([
         'write-the-f-paper', 'workflows', 'marketplaces/wtfp/workflows',
@@ -276,7 +276,7 @@ function detectInstallation(vendorDir) {
       ]);
       const expectedHasAgents = expectsAnyPath([
         'agents/wtfp', 'marketplaces/wtfp/agents',
-        'plugins/wtfp/ai.iowarp.clio/agents', 'extensions/wtfp/agents', 'sources/wtfp/agents'
+        'plugins/wtfp/dev.pancode/agents', 'extensions/wtfp/agents', 'sources/wtfp/agents'
       ]);
       const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/wtfp/mcp']);
       const expectedHasBin = expectsAnyPath([

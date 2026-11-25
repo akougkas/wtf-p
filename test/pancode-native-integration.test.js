@@ -1,0 +1,354 @@
+#!/usr/bin/env node
+'use strict';
+
+// Opt-in integration against an explicitly supplied built PanCode CLI. Never use
+// the normal profile or resolve an ambient binary as the subject of this test.
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { spawnSync } = require('child_process');
+const { createHash } = require('crypto');
+const ROOT = path.resolve(__dirname, '..');
+
+// A disposable, credential-free PanCode profile. Nothing here reads or writes the
+// operator's real configuration, data, state, or cache roots.
+function pancodeProbeContext() {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-pancode-native-'));
+  fs.chmodSync(root, 0o700);
+  const directory = (name) => path.join(root, name);
+  const environment = {
+    PATH: '/usr/bin:/bin',
+    HOME: root,
+    USERPROFILE: root,
+    XDG_CONFIG_HOME: directory('xdg-config'),
+    XDG_DATA_HOME: directory('xdg-data'),
+    XDG_STATE_HOME: directory('xdg-state'),
+    XDG_CACHE_HOME: directory('xdg-cache'),
+    TMPDIR: directory('tmp'),
+    PANCODE_HOME: root,
+    PANCODE_CONFIG_DIR: directory('pancode-config'),
+    PANCODE_DATA_DIR: directory('pancode-data'),
+    PANCODE_STATE_DIR: directory('pancode-state'),
+    PANCODE_CACHE_DIR: directory('pancode-cache'),
+    NO_COLOR: '1'
+  };
+  for (const value of Object.values(environment)) {
+    if (typeof value === 'string' && value.startsWith(`${root}${path.sep}`)) {
+      fs.mkdirSync(value, { recursive: true });
+    }
+  }
+  return { environment, cleanup() { fs.rmSync(root, { recursive: true, force: true }); } };
+}
+const entry = process.env.WTFP_PANCODE_ENTRY;
+assert.ok(entry && path.isAbsolute(entry), 'WTFP_PANCODE_ENTRY must name an explicit absolute built CLI file');
+assert.ok(fs.statSync(entry).isFile());
+const probe = pancodeProbeContext();
+const scratch = probe.environment.HOME;
+const wrapperDir = path.join(scratch, 'bin');
+fs.mkdirSync(wrapperDir);
+fs.writeFileSync(path.join(wrapperDir, 'pancode'), `#!${process.execPath}
+const args = process.argv.slice(2);
+if (process.env.WTFP_TEST_INSPECT_FAILURE === '1' && args[0] === 'hub' && args[1] === 'inspect') {
+  console.error('injected verification failure after real native installation'); process.exit(1);
+}
+const result = require('child_process').spawnSync(process.execPath, [${JSON.stringify(entry)}, ...args], {stdio:'inherit'});
+if (result.error) throw result.error;
+// The second package really installs, then reports failure, after the plugin is already active.
+if (process.env.WTFP_TEST_EXTENSION_FAILURE === '1' && args[0] === 'extensions' && args[1] === 'install') {
+  console.error('injected failure after real desk extension installation'); process.exit(1);
+}
+process.exit(result.status ?? 1);
+`, { mode: 0o755 });
+const env = { ...probe.environment, PATH: `${wrapperDir}${path.delimiter}/usr/bin:/bin` };
+function run(file, args, cwd) {
+  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8', timeout: 60000 });
+  assert.ifError(result.error);
+  assert.strictEqual(result.status, 0, `${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
+  result.combined = `${result.stdout}${result.stderr}`;
+  return result.stdout;
+}
+function runCombined(file, args, cwd) {
+  const result = spawnSync(process.execPath, [file, ...args], { cwd, env, encoding: 'utf8', timeout: 60000 });
+  assert.ifError(result.error);
+  assert.strictEqual(result.status, 0, `${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
+  return `${result.stdout}${result.stderr}`;
+}
+function native(args, cwd) { return run(entry, args, cwd); }
+function hash(file) { return createHash('sha256').update(fs.readFileSync(file)).digest('hex'); }
+function installedCopies(listing) {
+  assert.ok(Array.isArray(listing.entries), JSON.stringify(listing));
+  assert.deepStrictEqual(listing.diagnostics, []);
+  return listing.entries.flatMap(item => {
+    assert.strictEqual(item.kind, 'plugin');
+    assert.ok(Array.isArray(item.installed));
+    for (const copy of item.installed) {
+      assert.strictEqual(copy.id, item.name);
+      assert.ok(['user', 'project'].includes(copy.scope));
+      assert.ok(path.isAbsolute(copy.rootPath));
+    }
+    return item.installed;
+  });
+}
+const installer = path.join(ROOT, 'bin/install.js');
+const uninstaller = path.join(ROOT, 'bin/uninstall.js');
+try {
+  console.log(JSON.stringify({ cli: entry, entrySha256: hash(entry), version: native(['--version'], scratch).trim() }));
+  const help = native(['hub', '--help'], scratch);
+  for (const command of ['install', 'inspect', 'list', 'remove', 'enable', 'disable']) {
+    assert.ok(help.includes(`pancode hub ${command}`), `built CLI does not offer hub ${command}`);
+  }
+  assert.match(help, /--dry-run/);
+  console.log('PASS hub contract precheck');
+  for (const project of [false, true]) {
+    const cwd = path.join(scratch, project ? 'project-workspace' : 'user-workspace');
+    fs.mkdirSync(cwd);
+    // Fleet write boundaries require an existing checkout. This is fixture
+    // setup, not a WTF-P action initializing a researcher's repository.
+    for (const args of [['init', '--quiet'], ['-c', 'user.name=WTF-P Test', '-c', 'user.email=test@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'fixture']]) {
+      const git = spawnSync('git', args, { cwd, env, encoding: 'utf8' });
+      assert.strictEqual(git.status, 0, git.stderr);
+    }
+    const target = project ? path.join(cwd, '.pancode') : env.PANCODE_CONFIG_DIR;
+    const scope = project ? 'project' : 'user';
+    const args = ['install', 'pancode', '--config-dir', target, '--advanced', '--force', '--no-color'];
+    const candidate = JSON.parse(native(['hub', 'inspect', path.join(ROOT, 'pancode/plugin'), `--${scope}`, '--json'], cwd));
+    assert.strictEqual(candidate.valid, true, JSON.stringify(candidate));
+    const preview = JSON.parse(native(['hub', 'install', path.join(ROOT, 'pancode/plugin'), `--${scope}`, '--dry-run', '--json'], cwd));
+    assert.strictEqual(preview.confirmed, false, JSON.stringify(preview));
+    assert.ok(!fs.existsSync(path.join(target, 'plugins/wtfp')), 'dry-run installed a package');
+    run(path.join(ROOT, 'bin/install.js'), args, cwd);
+    const receipt = JSON.parse(fs.readFileSync(path.join(target, '.wtfp-version')));
+    for (const root of ['plugins/wtfp/', 'extensions/wtfp/']) {
+      assert.ok(receipt.files.some(item => item.path.startsWith(root)), `receipt owns nothing under ${root}`);
+    }
+    assert.ok(receipt.files.every(item => item.path.startsWith('plugins/wtfp/') || item.path.startsWith('extensions/wtfp/')));
+    for (const item of receipt.files) assert.strictEqual(hash(path.join(target, item.path)), item.sha256);
+    const listing = JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], cwd));
+    const plugin = installedCopies(listing).find(item => item.id === 'wtfp' && item.scope === scope);
+    for (const flag of ['valid', 'enabled', 'compatible', 'effective', 'loadable']) assert.strictEqual(plugin?.[flag], true, JSON.stringify(plugin));
+    const inspected = JSON.parse(native(['hub', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], cwd));
+    assert.strictEqual(inspected.id, 'wtfp');
+    assert.strictEqual(inspected.scope, scope);
+    assert.strictEqual(path.resolve(inspected.rootPath), path.join(target, 'plugins/wtfp'));
+    assert.deepStrictEqual(inspected.diagnostics, []);
+    assert.deepStrictEqual(plugin.diagnostics, []);
+    assert.strictEqual(inspected.trust, 'trusted', 'first-party CLI install must not inherit foreign trust');
+    // The desk is the second, separate PanCode install, linked to the plugin it serves.
+    const deskEntry = () => JSON.parse(native(['extensions', 'list', `--${scope}`, '--json'], cwd)).extensions.find(item => item.id === 'wtfp');
+    const desk = deskEntry();
+    for (const flag of ['valid', 'enabled', 'loadable']) assert.strictEqual(desk?.[flag], true, JSON.stringify(desk));
+    assert.deepStrictEqual(desk.diagnostics, []);
+    assert.strictEqual(path.resolve(desk.rootPath), path.join(target, 'extensions/wtfp'));
+    assert.strictEqual(desk.plugin, 'wtfp');
+    const installedRoot = path.join(target, 'plugins/wtfp');
+    const agents = native(['agents'], cwd);
+    const manifest = JSON.parse(fs.readFileSync(path.join(installedRoot, 'plugin.json')));
+    const recipes = manifest.extensions['dev.pancode'].components.filter(item => item.kind === 'agent');
+    const roleCount = fs.readdirSync(path.join(ROOT, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
+    assert.strictEqual(recipes.length, roleCount);
+    const skills = JSON.parse(native(['hub', 'skills', '--all', '--json'], cwd));
+    const catalog = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/catalog.json')));
+    for (const skill of catalog.skills) {
+      assert.ok(skills.skills.some(item => item.name === skill.id), `missing runtime skill ${skill.id}`);
+    }
+    for (const recipe of recipes) assert.ok(agents.includes(`wtfp-${recipe.id}`), `missing native recipe ${recipe.id}: ${agents}`);
+    for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
+      native(['playbook', 'validate', playbook], cwd);
+      const graph = JSON.parse(native(['playbook', 'graph', playbook, '--json'], cwd));
+      const canonical = JSON.parse(fs.readFileSync(path.join(ROOT, 'protocol/fleets', `${playbook}.json`), 'utf8'));
+      const boundary = (uri) => /^project:\/\/paper(?:\/|$)/u.test(uri) ? 'paper/' : /^project:\/\/sections\//u.test(uri) ? '.planning/sections/' : '.planning/';
+      const observed = graph.waves.flatMap(wave => wave.steps).map(step => ({ id: step.id, agent: step.agent, scope: step.scope, writes: [...step.writes].sort(), dependencies: step.dependencies }));
+      const expected = canonical.steps.map(step => ({
+        id: step.id,
+        agent: `wtfp-${step.role.slice('role://'.length)}`,
+        scope: step.operation === 'mutate' ? 'workspace' : 'readonly',
+        writes: [...new Set(step.writes.map(boundary))].sort(),
+        dependencies: step.dependsOn
+      }));
+      assert.deepStrictEqual(observed, expected, `${playbook}: native graph drifts from its canonical fleet contract`);
+      assert.ok(!observed.some(step => step.writes.includes('.planning/')), `${playbook}: a playbook worker may write checkpoints, interactions or state`);
+    }
+    // The desk runs its own package tests from where PanCode installed it, with no reference to this checkout.
+    const deskTests = runCombined(entry, ['extensions', 'test', path.join(target, 'extensions/wtfp')], cwd);
+    assert.match(deskTests, /ℹ fail 0/, deskTests);
+    assert.match(deskTests, /ℹ pass [1-9]\d*/, deskTests);
+    assert.doesNotMatch(deskTests, new RegExp(ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'installed desk tests referred to the source checkout');
+    assert.match(native(['run', '/wtfp:help'], cwd), /wtfp:new-paper/);
+
+    // PanCode marks a prompt unavailable when any packaged reference in its body
+    // fails to resolve inside the installed root, which is how a missing
+    // template silently disables an advertised route. Apply the host's rule to
+    // every installed prompt and agent against the real installed package.
+    const componentPaths = new Map(manifest.extensions['dev.pancode'].components
+      .map(item => [`${item.kind}:${item.id}`, item.path]));
+    let resolvedReferences = 0;
+    function assertReferencesResolve(file) {
+      const body = fs.readFileSync(file, 'utf8');
+      for (const match of body.matchAll(/\$\{(pluginRoot|extensionRoot|component:([^}]+))\}(\/[A-Za-z0-9._~%+@/-]*)?/g)) {
+        const relative = match[2] === undefined ? '' : componentPaths.get(match[2]);
+        assert.ok(relative !== undefined, `${file}: unresolved component reference ${match[2]}`);
+        const resolved = path.resolve(installedRoot, `.${relative ? `/${relative}` : ''}${match[3] || ''}`);
+        assert.ok(resolved === installedRoot || resolved.startsWith(`${installedRoot}${path.sep}`),
+          `${file}: packaged reference escapes the installed root: ${match[0]}`);
+        assert.ok(fs.existsSync(resolved), `${file}: packaged reference does not resolve: ${match[0]}`);
+        resolvedReferences++;
+      }
+    }
+    function walk(directory) {
+      for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const file = path.join(directory, entry.name);
+        if (entry.isDirectory()) walk(file);
+        else if (entry.name.endsWith('.md')) assertReferencesResolve(file);
+      }
+    }
+    for (const kind of ['prompts', 'agents', 'playbooks']) {
+      walk(path.join(installedRoot, 'dev.pancode', kind));
+    }
+    assert.ok(resolvedReferences > 0, 'no packaged references were checked');
+
+    // The four advertised document routes must reach a real packaged scaffold.
+    const documentRoutes = {
+      'new-paper': ['templates/paper-outline.md', 'templates/grant-proposal-outline.md'],
+      'create-outline': ['templates/paper-outline.md', 'templates/grant-proposal-outline.md'],
+      'create-poster': ['templates/poster.md'],
+      'create-slides': ['templates/slides.md']
+    };
+    for (const [action, templates] of Object.entries(documentRoutes)) {
+      const prompt = fs.readFileSync(path.join(installedRoot, 'dev.pancode/prompts/wtfp', `${action}.md`), 'utf8');
+      assert.doesNotMatch(prompt, /^WTFP_ACTION_UNAVAILABLE$/m, `${action}: advertised route is not executable`);
+      for (const template of templates) {
+        assert.ok(prompt.includes('${pluginRoot}/' + template), `${action}: does not bind ${template}`);
+        assert.ok(fs.existsSync(path.join(installedRoot, template)), `${action}: ${template} is not installed`);
+      }
+    }
+    console.log(`  ${scope}: ${resolvedReferences} packaged references resolve inside the installed root`);
+    console.log(JSON.stringify({ scope, rootPath: inspected.rootPath, valid: inspected.valid,
+      enabled: inspected.enabled, trust: inspected.trust, receiptFiles: receipt.files.length,
+      agents: recipes.length, skills: catalog.skills.length, playbooks: 2 }));
+    const stateFile = path.join(target, 'plugins/state.json');
+    const before = fs.readFileSync(stateFile);
+    run(path.join(ROOT, 'bin/install.js'), args, cwd);
+    assert.ok(before.equals(fs.readFileSync(stateFile)), 'idempotent reinstall changed native registration');
+    // Enable/disable is the operator's switch and PanCode's state. A reinstall
+    // must report it, not silently flip it back on.
+    native(['hub', 'disable', 'plugin:wtfp', `--${scope}`, '--json'], cwd);
+    const afterDisable = runCombined(path.join(ROOT, 'bin/install.js'), args, cwd);
+    assert.match(afterDisable, /installed but disabled/);
+    const stillDisabled = installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], cwd))).find(item => item.id === 'wtfp' && item.scope === scope);
+    assert.strictEqual(stillDisabled?.enabled, false, 'reinstall re-enabled a plugin the operator disabled');
+    // A stale native digest forces the registration path again. PanCode must
+    // retain the existing preference when replacing that registration.
+    const staleState = JSON.parse(fs.readFileSync(stateFile));
+    staleState.installed.wtfp.contentDigest = '0'.repeat(64);
+    fs.writeFileSync(stateFile, JSON.stringify(staleState));
+    assert.match(runCombined(installer, args, cwd), /installed but disabled/);
+    const repaired = JSON.parse(native(['hub', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], cwd));
+    assert.strictEqual(repaired.valid, true);
+    assert.strictEqual(repaired.enabled, false);
+    native(['hub', 'enable', 'plugin:wtfp', `--${scope}`, '--json'], cwd);
+    run(path.join(ROOT, 'bin/uninstall.js'), ['--pancode', '--config-dir', target, '--yes', '--no-color'], cwd);
+    assert.ok(!fs.existsSync(installedRoot));
+    assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
+    assert.ok(!installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], cwd))).some(item => item.id === 'wtfp' && item.scope === scope));
+    assert.strictEqual(deskEntry(), undefined, 'uninstall left the desk extension registered');
+    assert.ok(!fs.existsSync(path.join(target, 'extensions/wtfp')));
+    console.log(`PASS ${scope}: standard inspect, exact receipt, active discovery, agents, both playbooks, the desk extension, idempotence, preserved disable preference, native removal`);
+  }
+  const coexist = path.join(scratch, 'coexist-workspace');
+  fs.mkdirSync(coexist);
+  const projectTarget = path.join(coexist, '.pancode');
+  const userTarget = env.PANCODE_CONFIG_DIR;
+  const installArgs = target => ['install', 'pancode', '--config-dir', target, '--advanced', '--force', '--no-color'];
+  run(installer, installArgs(projectTarget), coexist);
+  const projectState = fs.readFileSync(path.join(projectTarget, 'plugins/state.json'));
+  run(installer, installArgs(userTarget), coexist);
+  assert.ok(projectState.equals(fs.readFileSync(path.join(projectTarget, 'plugins/state.json'))));
+  const copies = installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], coexist))).filter(item => item.id === 'wtfp');
+  assert.deepStrictEqual(copies.map(item => item.scope).sort(), ['project', 'user']);
+  for (const scope of ['user', 'project']) {
+    const selected = JSON.parse(native(['hub', 'inspect', 'plugin:wtfp', `--${scope}`, '--json'], coexist));
+    assert.strictEqual(selected.scope, scope);
+    assert.strictEqual(selected.valid, true);
+    assert.strictEqual(selected.rootPath, path.join(scope === 'user' ? userTarget : projectTarget, 'plugins/wtfp'));
+    const filtered = installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', `--${scope}`, '--json'], coexist))).filter(item => item.id === 'wtfp');
+    assert.deepStrictEqual(filtered.map(item => item.scope), [scope]);
+  }
+  run(uninstaller, ['--pancode', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(projectState.equals(fs.readFileSync(path.join(projectTarget, 'plugins/state.json'))));
+  assert.strictEqual(JSON.parse(native(['hub', 'inspect', 'plugin:wtfp', '--project', '--json'], coexist)).valid, true);
+  run(uninstaller, ['--pancode', '--config-dir', projectTarget, '--yes', '--no-color'], coexist);
+  console.log('PASS coexistence: both installed copies listed, exact scoped inspect/list, user removal preserves project registration');
+  for (const scope of ['user', 'project']) {
+    const target = scope === 'user' ? userTarget : projectTarget;
+    const failed = spawnSync(process.execPath, [installer, ...installArgs(target)], {
+      cwd: coexist, env: { ...env, WTFP_TEST_INSPECT_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+    });
+    assert.ifError(failed.error);
+    assert.notStrictEqual(failed.status, 0);
+    assert.match(failed.stdout + failed.stderr, /injected verification failure/);
+    assert.doesNotMatch(failed.stdout + failed.stderr, /native rollback also failed/);
+    assert.ok(!fs.existsSync(path.join(target, 'plugins/wtfp')));
+    assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
+    assert.ok(!JSON.parse(fs.readFileSync(path.join(target, 'plugins/state.json'))).installed.wtfp);
+    assert.ok(!installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
+    console.log(`PASS ${scope}: real native install/remove compensates injected verification failure; no files, receipt, or registration remain`);
+    const second = spawnSync(process.execPath, [installer, ...installArgs(target)], {
+      cwd: coexist, env: { ...env, WTFP_TEST_EXTENSION_FAILURE: '1' }, encoding: 'utf8', timeout: 60000
+    });
+    assert.ifError(second.error);
+    assert.notStrictEqual(second.status, 0);
+    assert.match(second.stdout + second.stderr, /injected failure after real desk extension installation/);
+    assert.doesNotMatch(second.stdout + second.stderr, /native rollback also failed/);
+    for (const root of ['plugins/wtfp', 'extensions/wtfp', '.wtfp-version']) assert.ok(!fs.existsSync(path.join(target, root)), `${root} survived a failed second install`);
+    assert.ok(!installedCopies(JSON.parse(native(['hub', 'list', '--kind', 'plugin', '--json'], coexist))).some(item => item.id === 'wtfp' && item.scope === scope));
+    assert.ok(!JSON.parse(native(['extensions', 'list', `--${scope}`, '--json'], coexist)).extensions.some(item => item.id === 'wtfp'));
+    console.log(`PASS ${scope}: a failure after the desk extension installs compensates the active plugin too; nothing remains`);
+  }
+  // Removal never takes a file WTF-P did not publish.
+  run(installer, installArgs(userTarget), coexist);
+  const note = path.join(userTarget, 'extensions/wtfp/operator-notes.md');
+  fs.writeFileSync(note, 'kept by the operator\n');
+  const refused = runCombined(uninstaller, ['--pancode', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(fs.existsSync(note), 'uninstall deleted an unowned file inside the installed desk');
+  assert.match(refused, /Kept the WTF-P extension installed and registered: extensions\/wtfp\/ holds files WTF-P did not publish/, refused);
+  const keptDesk = JSON.parse(native(['extensions', 'list', '--user', '--json'], coexist)).extensions.find(item => item.id === 'wtfp');
+  assert.ok(keptDesk && keptDesk.valid === false, 'the kept desk stays registered; PanCode reports the unowned note as drift');
+  assert.ok(fs.existsSync(path.join(userTarget, 'extensions/wtfp/pancode-extension.yaml')), 'uninstall gutted a package PanCode still registers');
+  fs.rmSync(note);
+  run(uninstaller, ['--pancode', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(!fs.existsSync(path.join(userTarget, 'extensions/wtfp')));
+  assert.ok(!fs.existsSync(path.join(userTarget, 'plugins/wtfp')));
+  console.log('PASS removal preserves an unowned file in the installed desk and completes once it is gone');
+
+  // An upgrade over an unchanged installation: build the next version from a
+  // copy of this checkout and install it over the current one.
+  const nextRoot = path.join(scratch, 'next-version');
+  fs.cpSync(ROOT, nextRoot, { recursive: true, filter: source => !/(^|[\\/])(\.git|node_modules)$/u.test(source) });
+  const nextPackage = JSON.parse(fs.readFileSync(path.join(nextRoot, 'package.json'), 'utf8'));
+  const nextVersion = `${nextPackage.version}-upgrade.1`;
+  fs.writeFileSync(path.join(nextRoot, 'package.json'), `${JSON.stringify({ ...nextPackage, version: nextVersion }, null, 2)}\n`);
+  const progressWorkflow = path.join(nextRoot, 'protocol/workflows/progress.md');
+  fs.appendFileSync(progressWorkflow, '\nThis line exists only in the upgrade fixture.\n');
+  const rebuilt = spawnSync(process.execPath, [path.join(nextRoot, 'scripts/build-adapters.js')], { cwd: nextRoot, env, encoding: 'utf8', timeout: 120000 });
+  assert.strictEqual(rebuilt.status, 0, rebuilt.stdout + rebuilt.stderr);
+  run(installer, installArgs(userTarget), coexist);
+  native(['hub', 'disable', 'plugin:wtfp', '--user', '--json'], coexist);
+  const upgraded = runCombined(path.join(nextRoot, 'bin/install.js'), installArgs(userTarget), coexist);
+  assert.match(upgraded, /installed but disabled/, upgraded);
+  const upgradedReceipt = JSON.parse(fs.readFileSync(path.join(userTarget, '.wtfp-version'), 'utf8'));
+  assert.strictEqual(upgradedReceipt.version, nextVersion);
+  assert.strictEqual(upgradedReceipt.partial, false);
+  for (const item of upgradedReceipt.files) assert.strictEqual(hash(path.join(userTarget, item.path)), item.sha256, item.path);
+  const upgradedPlugin = JSON.parse(native(['hub', 'inspect', 'plugin:wtfp', '--user', '--json'], coexist));
+  assert.strictEqual(upgradedPlugin.valid, true, JSON.stringify(upgradedPlugin.diagnostics));
+  assert.strictEqual(upgradedPlugin.enabled, false, 'the upgrade re-enabled a plugin the operator disabled');
+  assert.strictEqual(upgradedPlugin.version, nextVersion);
+  assert.match(fs.readFileSync(path.join(userTarget, 'plugins/wtfp/dev.pancode/prompts/wtfp/progress.md'), 'utf8'), /only in the upgrade fixture/);
+  const upgradedDesk = JSON.parse(native(['extensions', 'list', '--user', '--json'], coexist)).extensions.find(item => item.id === 'wtfp');
+  assert.ok(upgradedDesk && upgradedDesk.valid === true && upgradedDesk.diagnostics.length === 0, JSON.stringify(upgradedDesk));
+  native(['hub', 'enable', 'plugin:wtfp', '--user', '--json'], coexist);
+  run(path.join(nextRoot, 'bin/uninstall.js'), ['--pancode', '--config-dir', userTarget, '--yes', '--no-color'], coexist);
+  assert.ok(!fs.existsSync(path.join(userTarget, 'plugins/wtfp')) && !fs.existsSync(path.join(userTarget, 'extensions/wtfp')));
+  console.log(`PASS upgrade to ${nextVersion} over an unchanged install: new receipt, valid plugin and desk, disabled preference kept, clean removal`);
+} finally { probe.cleanup(); }

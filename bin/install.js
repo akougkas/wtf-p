@@ -67,7 +67,7 @@ const positionalInstallTarget = installPositionals[0] || null;
 const hasGlobal = args.includes('--global') || args.includes('-g');
 const hasLocal = args.includes('--local') || args.includes('-l');
 const hasClaude = args.includes('--claude');
-const hasClio = args.includes('--clio');
+const hasPanCode = args.includes('--pancode');
 const hasCodex = args.includes('--codex');
 const hasCopilot = args.includes('--copilot');
 const hasGemini = args.includes('--gemini');
@@ -112,7 +112,7 @@ function parseOnlyArg() {
 function validateArguments() {
   if (subcommand === 'uninstall') return;
   const booleanFlags = new Set([
-    '--global', '-g', '--local', '-l', '--claude', '--clio', '--codex',
+    '--global', '-g', '--local', '-l', '--claude', '--pancode', '--codex',
     '--copilot', '--gemini', '--opencode', '--antigravity', '--all',
     '--force', '-f', '--backup-all', '-b', '--help', '-h', '--version', '-v',
     '--list', '--no-color', '--quiet', '-q', '--verbose', '--beginner', '--advanced'
@@ -216,7 +216,7 @@ function showHelp() {
     ${c.cyan('uninstall [<target>]')}      Remove WTF-P (see Uninstall Options)
 
   ${c.yellow('Targets:')}
-    ${c.cyan('clio')}                      Clio Coder plugin              
+    ${c.cyan('pancode')}                   PanCode plugin                 
     ${c.cyan('claude')}                    Claude Code plugin
     ${c.cyan('codex')}                     Codex plugin
     ${c.cyan('copilot')}                   GitHub Copilot CLI plugin
@@ -235,7 +235,7 @@ function showHelp() {
     ${c.cyan('--only=<type>')}             Install one generated component type
 
   ${c.yellow('Uninstall Options:')} ${c.dim('(npx wtf-p uninstall --help for the full list)')}
-    ${c.cyan('<target>')} or ${c.cyan('--<target>')}    Client to remove from (clio, claude, ...)
+    ${c.cyan('<target>')} or ${c.cyan('--<target>')}    Client to remove from (pancode, claude, ...)
     ${c.cyan('--all')}                     Every detected user installation
     ${c.cyan('-c, --config-dir <path>')}   Custom root; requires an explicit target
     ${c.cyan('-n, --dry-run')}             Classify receipt paths without changing them
@@ -258,12 +258,12 @@ function showHelp() {
     ${c.dim('# Install with interactive prompts')}
     npx wtf-p
 
-    ${c.dim('# Install the Clio plugin without prompts')}
-    npx wtf-p install clio --advanced
+    ${c.dim('# Install the PanCode plugin without prompts')}
+    npx wtf-p install pancode --advanced
 
-    ${c.dim('# Preview, then remove, the Clio plugin')}
-    npx wtf-p uninstall clio --dry-run
-    npx wtf-p uninstall clio --yes
+    ${c.dim('# Preview, then remove, the PanCode plugin')}
+    npx wtf-p uninstall pancode --dry-run
+    npx wtf-p uninstall pancode --yes
 
     ${c.dim('# Install a Codex plugin into an isolated home')}
     CODEX_HOME=/tmp/codex-test npx wtf-p install codex --advanced
@@ -309,7 +309,7 @@ async function main() {
   }
   const flagSelectedTargets = [
     ['claude', hasClaude],
-    ['clio', hasClio],
+    ['pancode', hasPanCode],
     ['codex', hasCodex],
     ['copilot', hasCopilot],
     ['gemini', hasGemini],
@@ -409,7 +409,7 @@ async function main() {
     out.log(`  ${out.colors.yellow('Which tool do you use for AI-assisted coding?')}
 `);
     const interactiveTargets = [
-      ['clio', 'Clio Coder', '~/.config/clio-coder'],
+      ['pancode', 'PanCode', '~/.config/pancode'],
       ['claude', 'Claude Code', '~/.claude'],
       ['codex', 'Codex', '~/.codex'],
       ['copilot', 'GitHub Copilot CLI', '~/.copilot'],

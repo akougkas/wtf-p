@@ -95,7 +95,8 @@ for (const relativePath of ['bin/install.js', 'bin/uninstall.js', 'scripts/prefl
 const requiredArtifacts = [
   'protocol/catalog.json',
   'protocol/project/README.md',
-  'vendors/plugin/plugin.json',
+  'pancode/plugin/plugin.json',
+  'pancode/extension/pancode-extension.yaml',
   'vendors/claude/.claude-plugin/marketplace.json',
   'vendors/codex/.agents/plugins/marketplace.json',
   'vendors/copilot/marketplace.json',
@@ -112,7 +113,7 @@ else fail('native envelope entry points are missing', missingArtifacts.join(', '
 section('Determinism and regression suite');
 commandPassed('npm', ['run', 'check:adapters'], 'generated adapters exactly match canonical sources');
 // The full safety suite includes isolated installer subprocesses for every
-// target and adversarial Clio lifecycle cases; allow it to finish on disk-backed
+// target and adversarial PanCode lifecycle cases; allow it to finish on disk-backed
 // disposable profiles while retaining a bounded gate timeout.
 commandPassed('npm', ['run', 'test:all'], 'unit, ownership, compatibility, and integration suites pass', { timeout: 600000 });
 
@@ -129,7 +130,8 @@ if (packed.error || packed.status !== 0) {
       'bin/install.js',
       'bin/uninstall.js',
       'protocol/catalog.json',
-      'vendors/plugin/plugin.json',
+      'pancode/plugin/plugin.json',
+      'pancode/extension/pancode-extension.yaml',
       'vendors/claude/.claude-plugin/marketplace.json',
       'vendors/codex/.agents/plugins/marketplace.json',
       'vendors/copilot/marketplace.json',
