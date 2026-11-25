@@ -106,8 +106,9 @@ On PanCode, one command then carries the project forward:
 The desk picks each step from the project records, by the same ladder
 `/wtfp:progress` reports, and arms its write guard for that action alone. It
 stops at the first gate only you can answer, asks it, and continues after your
-answer; a gate you keep pending ends the run. Press `a` in the desk to start
-it. Every other host, and any step you want to run yourself, moves one action
+answer; a gate you keep pending ends the run. In the desk, `Ctrl+G A` starts
+it, `Ctrl+G C` answers the pending gate and `Ctrl+G V` validates the records.
+Every other host, and any step you want to run yourself, moves one action
 at a time:
 
 ```text
