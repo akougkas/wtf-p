@@ -4,7 +4,7 @@ display-only: true
 ---
 
 ```text
-WTF-P 0.9.0 on PanCode: evidence-grounded academic writing
+WTF-P 0.9.1 on PanCode: evidence-grounded academic writing
 
 Start here
   /wtfp:new-paper [input]

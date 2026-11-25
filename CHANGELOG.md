@@ -5,7 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.9.0]
+## [0.9.1] - 2026-11-25
+
+Fixes from running WTF-P 0.9.0 in PanCode 0.9.0. Both playbooks finish, a
+resumed project is active again, and the actions PanCode cannot run cost no
+model call.
+
+### Fixed
+
+- PanCode playbook workers wrote section artifacts to a top-level `sections/`
+  directory, so the fleet rolled their writes back and neither playbook
+  finished. Every PanCode agent recipe now maps `project://` URIs to workspace
+  files, and each playbook names the file each of its declared writes goes to
+- Answering `resume` on a pause checkpoint left `state.status` at `paused`.
+  The desk now sets it to `active` in the same commit as the answer, and
+  `expire` leaves the project paused. `pause-writing` names both options
+- `contribute`, `remove-section`, `report-bug`, `request-feature` and
+  `update`, which PanCode cannot run, are display-only prompts on PanCode.
+  PanCode prints the refusal without calling a model
+- A freshly outlined project failed validation because new section records
+  linked plan and review files no action had written. `create-outline` and
+  `insert-section` now start a section with empty artifact lists, and the
+  desk's `record` tool refuses a section write that links a missing artifact
+  file or adds a claim id another claim already holds
+- The desk's help card showed 18 of 37 actions; it now lists them by group.
+  Ledger labels no longer clip, validate findings are a list instead of a
+  clipped table, the write-guard notice reads as a sentence, and the author's
+  card for a gate answer leaves out the instructions meant for the model
+- The README names the desk's `Ctrl+G` chords
+- `npm run release` printed local `npm publish` steps. It now names the tag
+  push and the approval in the "Publish to npm" workflow
+- Preflight ran the whole suite as one 600 s step, which a busy machine
+  could exceed. It now runs each suite file as its own step, several at a
+  time, and stops a step only after 300 s with no output
+- The evaluation routing matrix and the `hpc-checkpointing` baseline were
+  resealed for the changed envelopes
+
+## [0.9.0] - 2026-11-25
 
 PanCode replaces Clio Coder as WTF-P's native host. The installer target,
 the generated packages, the desk extension and the evaluation campaign all
@@ -1072,7 +1108,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/akougkas/wtf-p/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/akougkas/wtf-p/compare/v0.8.5...v0.9.0
 [0.8.5]: https://github.com/akougkas/wtf-p/compare/v0.8.4...v0.8.5
 [0.8.4]: https://github.com/akougkas/wtf-p/compare/v0.8.3...v0.8.4

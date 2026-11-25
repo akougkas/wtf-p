@@ -2,7 +2,7 @@
 id: wtfp
 plugin: wtfp
 name: WTF-P
-version: 0.9.0
+version: 0.9.1
 description: "The WTF-P writing desk for PanCode; paper state, gates and the write guard run in code."
 license: MIT
 compatibility: { pancode: ">=0.9.0" }
