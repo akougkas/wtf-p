@@ -40,17 +40,17 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 
 ## 2. Install this candidate and start the client
 
-For Clio Coder 0.6.3 or newer:
+For PanCode 0.9.0 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.8.5 -- wtf-p install clio
+npx --yes --package=wtf-p@0.9.0 -- wtf-p install pancode
 cd /path/to/nsf25-531-clio-trust
-clio-coder --autonomy default
+pancode --autonomy default
 ```
 
 Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
 
-The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtfp-<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated Clio profile recipe.
+The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtfp-<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated PanCode profile recipe.
 
 ## 3. Initialize through an interview
 
@@ -182,7 +182,7 @@ Start a fresh process in the same project directory:
 
 ```bash
 cd /path/to/nsf25-531-clio-trust
-clio-coder --autonomy default
+pancode --autonomy default
 ```
 
 Resume from disk:

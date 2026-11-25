@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0]
+
+PanCode replaces Clio Coder as WTF-P's native host. The installer target,
+the generated packages, the desk extension and the evaluation campaign all
+name PanCode now. The old `clio` target is removed with no alias, and nothing
+reads the old names: reinstall with `npx wtf-p install pancode`.
+
+### Changed
+
+- **Breaking:** the installer target is `pancode` (`--pancode`). It installs
+  `plugins/wtfp` and `extensions/wtfp` under PanCode's config root, which it
+  resolves as PanCode does: `PANCODE_CONFIG_DIR`, then `PANCODE_HOME/config`,
+  then the platform default. Registration runs through `pancode hub` and
+  `pancode extensions`, and project installs land under `.pancode/`
+- The generated PanCode packages moved to `pancode/plugin/` and
+  `pancode/extension/`; `vendors/plugin/` and `vendors/clio-extension/` are
+  gone. Their compiler targets are `pancode-plugin` and `pancode-extension`
+- The plugin and agent namespace is `dev.pancode`, in the PanCode plugin and
+  in the Claude envelope that carries the fleets
+- The desk extension's source moved from `clio/` to `hosts/pancode/`. Its
+  manifest is `pancode-extension.yaml` with `compatibility.pancode: ">=0.9.0"`
+  and an MIT licence, and its runtime imports `pancode/sdk/extension` and
+  `pancode/sdk/testing`
+- The evaluation campaign runner is `evaluation/tools/run-pancode-campaign.js`
+  (`--pancode-entry`, `PANCODE_*` profile variables). The never-run
+  `clio-0.6.2-reference` campaign is replaced by `pancode-0.9.0-reference`,
+  which pins a PanCode build, under campaign schema v3. Each step runs with
+  `--output-format stream-json` and the remaining budget as
+  `--max-cost-usd`; cost comes from `pancode telemetry` and is reported as
+  unavailable, never zero, when PanCode cannot price a call. The draft
+  `clio-reliability-comparison` study becomes `pancode-reliability-comparison`
+  and runs on the new campaign
+- The evaluation routing matrix and the `hpc-checkpointing` baseline were
+  resealed for the moved and restamped envelopes; sealed evidence ids are
+  unchanged
+
+### Removed
+
+- The `clio` installer target and the `--clio` flag. Both are refused as
+  unknown
+
 ## [0.8.5] - 2026-11-21
 
 Generated CLIO Coder agents no longer declare `readReserve`. CLIO Coder 0.8.5
@@ -1032,6 +1073,7 @@ Initial public release.
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
 [Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.8.1...HEAD
+[0.9.0]: https://github.com/akougkas/wtf-p/compare/v0.8.5...v0.9.0
 [0.8.5]: https://github.com/akougkas/wtf-p/compare/v0.8.4...v0.8.5
 [0.8.4]: https://github.com/akougkas/wtf-p/compare/v0.8.3...v0.8.4
 [0.8.3]: https://github.com/akougkas/wtf-p/compare/v0.8.2...v0.8.3

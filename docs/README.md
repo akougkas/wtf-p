@@ -1,6 +1,6 @@
 # WTF-P documentation
 
-Version `0.8.5`. Start with the [README](../README.md) for the two-screen
+Version `0.9.0`. Start with the [README](../README.md) for the two-screen
 overview, then use the guide that matches your role.
 
 ## For scientists and operators
@@ -18,7 +18,7 @@ overview, then use the guide that matches your role.
 | Reference | What it holds |
 | --- | --- |
 | [Host capabilities](HOST_CAPABILITIES.md) | Per-host loader facts, what WTF-P projects into each package, the exact verification commands and their observed output, and the per-host action availability table |
-| [Agent plugin packaging](AGENT_PLUGIN.md) | The canonical Agent Plugins 1.0.0 bundle, the Clio install lifecycle the installer follows, and the research execution boundaries |
+| [Agent plugin packaging](AGENT_PLUGIN.md) | The canonical Agent Plugins 1.0.0 bundle, the PanCode install lifecycle the installer follows, and the research execution boundaries |
 | [Compatibility and evidence](COMPATIBILITY.md) | What "verified" means, the current discovery evidence, known limitations, and the labelled historical evidence from earlier candidates |
 | [Portable project protocol](../protocol/project/README.md) | The `.planning` v1 records, logical URIs, and invariants every workflow obeys |
 | [Authored-artifact templates](../protocol/templates/README.md) | The paper, grant-proposal, poster, and slides scaffolds |
