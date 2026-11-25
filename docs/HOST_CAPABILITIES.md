@@ -1,6 +1,6 @@
 # Host capability matrix
 
-What each supported host can load from a plugin, how it installs and discovers it, and how the WTF-P adapter compiler projects the canonical `vendors/plugin` bundle into a package that uses those capabilities. Every row names the evidence it rests on. A host that was not installed on the machine that produced this document is marked unverified: its projection follows the vendor's published loader source or documentation, not an observed run.
+What each supported host can load from a plugin, how it installs and discovers it, and how the WTF-P adapter compiler projects the canonical `pancode/plugin` bundle into a package that uses those capabilities. Every row names the evidence it rests on. A host that was not installed on the machine that produced this document is marked unverified: its projection follows the vendor's published loader source or documentation, not an observed run.
 
 Evidence was gathered in two rounds on Linux. The full round ran on 2026-09-09 against the `0.6.0-rc.4` envelope with `claude` 2.1.267, `codex` 0.153.3, a local `clio-coder` 0.4.7 build, `agy` 1.1.28, and temporary-prefix installs of `gemini` 0.59.0, `opencode` 1.18.30, and `copilot` 1.0.83. The release round ran on 2026-09-14 against the `0.6.0` envelope, which differs from rc.4 only by the plugin name `wtfp` on every host, the removed v0.5 tree, and the repository-root marketplaces: `claude` 2.1.271, `codex` 0.153.3, the published `@iowarp/clio-coder` 0.4.8, `agy` 1.2.2, and temporary-prefix `gemini` 0.59.0, `opencode` 1.18.31, and `copilot` 1.0.83 each re-ran the installer route in a disposable profile (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, `CLIO_CODER_CONFIG_DIR`, `COPILOT_HOME`, `OPENCODE_CONFIG_DIR`, `GEMINI_CLI_HOME`, `ANTIGRAVITY_HOME` plus `HOME`/`XDG_*` under a temporary root) and reproduced the file counts and the listings noted per host below with the new name. Claude Code, Codex, and Copilot CLI additionally installed `wtfp@wtf-p` straight from the repository checkout through their own `plugin marketplace add` commands. The two model-backed headless runs recorded under Claude Code and Codex were made on 2026-09-09 on the factory-round envelope, before the version bump and the Claude root manifest; they are labelled as such.
 
@@ -10,31 +10,33 @@ A fourth round ran on 2026-11-08 against the packed `0.8.1` candidate (`wtf-p-0.
 
 The same round exercised the CiteNexus backend by invoking the dispatcher from the installed Clio and Claude plugins by hand; no model drove these runs. With a disposable CiteNexus 0.2.0 companion installed from its prepared wheel before that package reached PyPI, one live Crossref query per host exited 0 with three candidates and empty `metadata.errors`, and no rate limit was reported. `--offline` exited 1 with the `network.search` refusal, and a nonexistent `WTFP_CITE_NEXUS_COMMAND` exited 1 with the install message and empty stdout. Action availability stayed 31/36 on Clio and Claude and 26/36 with `tool.execute` unbound on the other five hosts.
 
+These four rounds predate 0.9.0, in which PanCode replaced Clio Coder as WTF-P's native host. Their Clio Coder observations, and the Clio sections below, are history and make no claim about PanCode. The paths, tests, and tools they name, such as `vendors/plugin`, `vendors/clio-extension`, `test/clio-native-integration.test.js`, and `run-clio-campaign.js`, are those of the time and no longer exist. The PanCode packages are covered in [PanCode 0.9.0](#pancode-090).
+
 ## Summary
 
-| Capability | Claude Code | Codex | OpenCode | Antigravity CLI | Gemini CLI | Copilot CLI | Clio Coder |
+| Capability | Claude Code | Codex | OpenCode | Antigravity CLI | Gemini CLI | Copilot CLI | PanCode |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Skills (`skills/<id>/SKILL.md`) | native | native | native | native | native | native | native |
-| Agents / subagents | `agents/*.md`, flat | `$CODEX_HOME/agents/*.toml`, outside the plugin | `agents/**/*.md` | `agents/*.md`, `subagent: true` | `agents/*.md`, flat, strict schema | `agents/*.md` (Claude-compatible) | `ai.iowarp.clio/agents/*.md` recipes |
-| Commands / prompts | `commands/*.md` as `/<plugin>:<name>` | none (skills only) | `commands/**/*.md`, name from frontmatter | none in the plugin format (1.5); each action ships as an explicit skill, `/wtfp-<action>` | `commands/<ns>/<name>.toml` as `/<ns>:<name>` | `commands/*.md` | `ai.iowarp.clio/prompts/<ns>/<name>.md` as `/<ns>:<name>` |
+| Agents / subagents | `agents/*.md`, flat | `$CODEX_HOME/agents/*.toml`, outside the plugin | `agents/**/*.md` | `agents/*.md`, `subagent: true` | `agents/*.md`, flat, strict schema | `agents/*.md` (Claude-compatible) | `dev.pancode/agents/*.md` recipes |
+| Commands / prompts | `commands/*.md` as `/<plugin>:<name>` | none (skills only) | `commands/**/*.md`, name from frontmatter | none in the plugin format (1.5); each action ships as an explicit skill, `/wtfp-<action>` | `commands/<ns>/<name>.toml` as `/<ns>:<name>` | `commands/*.md` | `dev.pancode/prompts/<ns>/<name>.md` as `/<ns>:<name>` |
 | Output styles | `output-styles/*.md` | no | no | no | no | no | no |
-| Hooks | `hooks/hooks.json` | `hooks/hooks.json` via `extensions.com.openai.hooks` | JS plugins, not markdown | `hooks.json` | `hooks/hooks.json` | unverified | no (harness extensions only) |
-| MCP servers | `.mcp.json` | `mcp.json` | config file | `mcp_config.json` | `gemini-extension.json` `mcpServers` | unverified | preserved, not executed |
-| Rules / always-on context | via skills only | `AGENTS.md` | `AGENTS.md`/instructions | `rules/*.md` | `GEMINI.md` via `contextFileName` | `copilot-instructions.md` | `CLIO-CODER.md` |
-| Marketplace | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` | none | none | gallery only | `marketplace.json` | `library.yaml` (scoped package index; formerly `plugins/registry.yaml`) |
-| Verified here | yes | yes | yes | yes | yes (agents load without diagnostics; no listing surface) | yes (marketplace add and plugin list; no in-session listing) | yes |
+| Hooks | `hooks/hooks.json` | `hooks/hooks.json` via `extensions.com.openai.hooks` | JS plugins, not markdown | `hooks.json` | `hooks/hooks.json` | unverified | no (extensions only) |
+| MCP servers | `.mcp.json` | `mcp.json` | config file | `mcp_config.json` | `gemini-extension.json` `mcpServers` | unverified | root `mcp.json` preserved; a stdio server runs only after `pancode mcp trust <id>` |
+| Rules / always-on context | via skills only | `AGENTS.md` | `AGENTS.md`/instructions | `rules/*.md` | `GEMINI.md` via `contextFileName` | `copilot-instructions.md` | `PANCODE.md` |
+| Marketplace | `.claude-plugin/marketplace.json` | `.agents/plugins/marketplace.json` | none | none | gallery only | `marketplace.json` | `hub.yaml` (scoped package index) |
+| Verified here | yes | yes | yes | yes | yes (agents load without diagnostics; no listing surface) | yes (marketplace add and plugin list; no in-session listing) | validators only; native discovery not yet recorded |
 
 ## What WTF-P projects per host
 
 | Host | Projection (`vendors/...`) | What is native there |
 | --- | --- | --- |
-| Claude Code | `vendors/claude` | 37 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus an older Clio namespace (root `plugin.json` and the `ai.iowarp.clio/` prompts, agents, and fleets it names) that Clio no longer adopts |
+| Claude Code | `vendors/claude` | 37 commands, 11 agents each preloading its bound plugin skill, 7 skills, `output-styles/wtfp-academic-writing.md`, `hooks/hooks.json` write guard, bounded tool dispatcher via `Bash`; plus a `dev.pancode` namespace for older PanCode (root `plugin.json` and the `dev.pancode/` prompts, agents, and fleets it names) that PanCode no longer adopts |
 | Codex | `vendors/codex` | root `plugin.json` with `extensions["com.openai"]`, `.codex-plugin/plugin.json` fallback, 7 skills, 11 TOML custom agents (installed to `$CODEX_HOME/agents/`), local marketplace |
 | OpenCode | `vendors/opencode` | 37 commands (`name: wtfp:<action>`), 11 subagents (`mode: subagent`, verifier roles deny edit/bash), 7 skills |
 | Antigravity CLI | `vendors/antigravity` | schema-conformant `plugin.json` with `version`, 11 agents (`subagent: true`), 7 router skills plus 35 explicit action skills (`disable-model-invocation: true`; `write-section` and `plan-section` are served by the router skill of that name), `rules/wtfp-project-state.md` with `trigger: always_on` |
 | Gemini CLI | `vendors/gemini` | `gemini-extension.json`, `GEMINI.md`, 37 TOML commands under `commands/wtfp/`, 11 flat agents (`kind: local`), 7 skills |
 | Copilot CLI | `vendors/copilot` | Claude-compatible plugin (`.claude-plugin/plugin.json`, 37 commands, 11 agents, 7 skills) in a local marketplace, plus the copyable `.github` repository projection |
-| Clio Coder | `vendors/plugin`, `vendors/clio-extension` | the canonical bundle itself: 37 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks; and the desk extension, installed separately |
+| PanCode | `pancode/plugin`, `pancode/extension` | the canonical bundle itself: 37 prompts (help is a `display-only` operator card), 11 recipes, 7 skills, 2 playbooks; and the desk extension, installed separately |
 
 No projection declares an MCP server: the repository contains no MCP server implementation (the untracked `vendors/claude/mcp/research-server/` directory holds empty directories and is excluded from the package).
 
@@ -44,15 +46,15 @@ Derived from each envelope's generated `compatibility/action-availability.json` 
 
 | Target | Available | Unavailable (blocking capability) |
 | --- | ---: | --- |
-| `clio` (`vendors/plugin`) | 32 / 37 | `contribute` (`external.issue`, `vcs.branch`, `vcs.commit`), `remove-section` (`filesystem.delete`), `report-bug` (`external.issue`), `request-feature` (`external.issue`), `update` (`package.update`) |
-| `claude` | 31 / 37 | the same five, plus `advance` (`workflow.drive`, which only the Clio desk binds) |
+| `pancode` (`pancode/plugin`) | 32 / 37 | `contribute` (`external.issue`, `vcs.branch`, `vcs.commit`), `remove-section` (`filesystem.delete`), `report-bug` (`external.issue`), `request-feature` (`external.issue`), `update` (`package.update`) |
+| `claude` | 31 / 37 | the same five, plus `advance` (`workflow.drive`, which only the PanCode desk binds) |
 | `codex`, `copilot`, `opencode`, `antigravity`, `gemini` | 26 / 37 | the six above plus `analyze-bib`, `audit-milestone`, `check-refs`, `export-latex`, `research-gap` (`tool.execute` unbound) |
 | `copilot-cloud` (`vendors/copilot/project/.github`) | 5 / 37 | every action that needs an explicit approval gate, plus the eleven above |
 
-`tool.execute` is bound to `clio:bash` and `claude:Bash`, in both cases authorizing only the generated `tools/wtfp-tool.js` dispatcher. `network.search` is `clio:bash-bundled-citation-tools` on Clio (the same dispatcher running the bundled scholarly clients) and the host's own web search elsewhere. To regenerate this table:
+`tool.execute` is bound to `pancode:bash` and `claude:Bash`, in both cases authorizing only the generated `tools/wtfp-tool.js` dispatcher. `network.search` is `pancode:bash-bundled-citation-tools` on PanCode (the same dispatcher running the bundled scholarly clients) and the host's own web search elsewhere. To regenerate this table:
 
 ```bash
-node -e 'for (const [t,f] of Object.entries({clio:"vendors/plugin",claude:"vendors/claude",codex:"vendors/codex/plugins/wtfp",copilot:"vendors/copilot/plugins/wtfp","copilot-cloud":"vendors/copilot/project/.github/wtfp",opencode:"vendors/opencode",antigravity:"vendors/antigravity",gemini:"vendors/gemini"})){const j=require("./"+f+"/compatibility/action-availability.json");console.log(t,j.actions.filter(a=>a.status==="available").length+"/"+j.actions.length,j.actions.filter(a=>a.status!=="available").map(a=>a.id+"("+a.unavailableCapabilities.join(",")+")").join(" "))}'
+node -e 'for (const [t,f] of Object.entries({pancode:"pancode/plugin",claude:"vendors/claude",codex:"vendors/codex/plugins/wtfp",copilot:"vendors/copilot/plugins/wtfp","copilot-cloud":"vendors/copilot/project/.github/wtfp",opencode:"vendors/opencode",antigravity:"vendors/antigravity",gemini:"vendors/gemini"})){const j=require("./"+f+"/compatibility/action-availability.json");console.log(t,j.actions.filter(a=>a.status==="available").length+"/"+j.actions.length,j.actions.filter(a=>a.status!=="available").map(a=>a.id+"("+a.unavailableCapabilities.join(",")+")").join(" "))}'
 ```
 
 ## Claude Code 2.1.267 and 2.1.271 (verified)
@@ -74,7 +76,7 @@ claude plugin uninstall wtfp@wtfp --scope user -y && claude plugin marketplace r
 cp -r vendors/claude <tmp>/staged/wtfp && clio-coder library inspect <tmp>/staged/wtfp --json   # valid: true, diagnostics: [] (Clio reads root plugin.json; historical run used plugins inspect)
 ```
 
-The installer writes 258 files for this envelope. Root manifest: `vendors/claude/plugin.json` is the canonical manifest with fleet contracts under their pre-playbook `fleets` names, and the `ai.iowarp.clio/{prompts,agents,fleets}` files its component graph names are carried beside Claude's own `commands/`, `agents/`, `skills/`, `hooks/`, and `output-styles/`. Claude Code reads neither the root manifest nor `ai.iowarp.clio/`; the `plugin details` counts above are unchanged from the envelope without them. Clio no longer adopts this copy. The compiler contract `the Claude envelope keeps its pre-playbook Clio namespace under the legacy fleet names` in `test/adapter-compiler.test.js` pins it.
+The installer writes 258 files for this envelope. Root manifest: `vendors/claude/plugin.json` declares the `dev.pancode` namespace with fleet contracts under their pre-playbook `fleets` names, for older PanCode builds, and the `dev.pancode/{prompts,agents,fleets}` files its component graph names are carried beside Claude's own `commands/`, `agents/`, `skills/`, `hooks/`, and `output-styles/`. Claude Code reads neither the root manifest nor `dev.pancode/`; the `plugin details` counts above are unchanged from the envelope without them. PanCode no longer adopts this copy; it labels it as built for an older PanCode and points to `wtf-p install pancode`. The compiler contract `the Claude envelope keeps its pre-playbook PanCode namespace under the legacy fleet names` in `test/adapter-compiler.test.js` pins it.
 
 Format facts, from the plugin reference at code.claude.com/docs/en/plugins-reference and confirmed by `plugin details`:
 
@@ -130,6 +132,35 @@ codex exec -s workspace-write -m gpt-5.6-luna -c 'model_reasoning_effort="xhigh"
 ```
 
 Whether Codex loads the TOML agents at runtime was not observed: there is no CLI listing for custom agents, and neither headless run needed a subagent.
+
+## PanCode 0.9.0
+
+WTF-P 0.9.0 installs into PanCode 0.9.0 or newer as two packages: the canonical bundle `pancode/plugin` through `pancode hub`, and the writing desk `pancode/extension` through `pancode extensions`. Both declare `pancode: ">=0.9.0"`, in `extensions["dev.pancode"].compatibility` of `plugin.json` and in `compatibility` of `pancode-extension.yaml`. The installer resolves the configuration root as PanCode does (`PANCODE_CONFIG_DIR`, then `$PANCODE_HOME/config`, then the platform default, `~/.config/pancode` on Linux), and a `--config-dir` of `<project>/.pancode` selects project scope. Native discovery of the 0.9.0 envelope is not yet recorded in this document; the commands are:
+
+```bash
+pancode hub validate ./pancode/plugin
+pancode extensions validate ./pancode/extension
+pancode extensions test ./pancode/extension
+node bin/install.js install pancode --config-dir <tmp>/config --force --advanced --no-color
+pancode hub list --kind plugin --json
+pancode hub inspect plugin:wtfp --user --json
+pancode extensions list --user --json
+pancode hub skills --all --json
+pancode agents
+pancode playbook validate wtfp-plan-section && pancode playbook graph wtfp-plan-section --json
+pancode run '/wtfp:help'
+node bin/install.js uninstall pancode --config-dir <tmp>/config --yes --no-color
+```
+
+`test/pancode-native-integration.test.js` runs the installer, discovery, and uninstall checks against an explicit built CLI named by `WTFP_PANCODE_ENTRY`; see [AGENT_PLUGIN.md](AGENT_PLUGIN.md#repeating-the-native-pancode-test).
+
+Format facts, from PanCode's plugin and extension guides:
+
+- A plugin carries content only: skills, prompts, agents, and playbooks. PanCode does not execute plugin hooks; hooks, runtime tools, and slash commands belong to an extension. WTF-P's write guard, record tools, and `advance` driver therefore live in the desk extension.
+- Prompts load from `dev.pancode/prompts/wtfp/<action>.md` and run as `/wtfp:<action>`. A prompt's `allowed-tools` narrows the expanded turn to the tools it names, and `delegated-tools` caps its workers. `help` is `display-only`, so `pancode run '/wtfp:help'` prints it without a model call.
+- The desk manifest declares the slash commands `desk`, `progress`, `help`, `check-todos`, `checkpoints`, and `validate`, and eight execute tools (`record`, `status`, `read_record`, `readiness`, `measure_section`, `archive`, `next_step`, `gate`) that reach the model as `extension_wtfp__<tool>`. Its only filesystem write permission is `.planning`, with no exec or network permission.
+- Playbooks run with `pancode fleet run <playbook> --var section=<section-id>`. Fleet write boundaries require a Git repository in which the declared directories are not ignored.
+- PanCode holds project-scope plugins and extensions until the operator trusts the project's package state with `pancode config trust plugins` (then `/reload hub`) and `pancode config trust extensions`. The installer reports that hold and does not grant trust.
 
 ## Clio Coder 0.7.0 (local build, 2026-11-08)
 
@@ -205,7 +236,7 @@ Exercised with a model on 2026-11-15 on the released Clio Coder 0.8.2 (official 
 
 This section records WTF-P through commit `6f98f49`, whose desk read each call itself. From 0.8.1 both Clio packages require Clio 0.6.3, which Clio 0.6.2 enforces by refusing them, so the rows below describe the earlier desk.
 
-Clio is the reference host. Its qualified build is the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` is pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
+Clio was then the reference host. Its qualified build was the `v0.6.2` tag of the Clio repository (commit `e4b3c7b18e20`, tree `f693e859`, `pnpm-lock.yaml` SHA-256 `1422ca03`), built in a scratch tree from `git archive` with that lockfile's dependencies. esbuild chunk names change between builds, so the build is not byte-reproducible and the one qualified `dist` was pinned by digest (`499f8400…`, entry `70644cc5…`, Node v24.20.0) in `evaluation/v2/campaigns/clio-0.6.2-reference.json`, the campaign file that 0.9.0 replaced with `pancode-0.9.0-reference.json`. The operator's working Clio checkout was ahead of the tag and changing during qualification, so it is not the qualified build.
 
 Observed on that build, in disposable profiles, with no credentials and no model call:
 
@@ -419,6 +450,6 @@ copilot plugin marketplace add <repo-root> && copilot plugin install wtfp@wtf-p 
 
 ## Spec compliance
 
-`vendors/plugin/plugin.json` and the Codex root `plugin.json` validate against `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`. The schema was fetched on 2026-09-09 and is byte-identical (sha256 `0a4aad95…`) to the vendored copy at `test/fixtures/agent-plugin-1.0.0.schema.json`, which `test/adapter-compiler.test.js` uses. The root schema allows `$schema`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, `extensions`; host-specific data lives under reverse-domain keys in `extensions` (`ai.iowarp.clio`, `com.openai`).
+`pancode/plugin/plugin.json` and the Codex root `plugin.json` validate against `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`. The schema was fetched on 2026-09-09 and is byte-identical (sha256 `0a4aad95…`) to the vendored copy at `test/fixtures/agent-plugin-1.0.0.schema.json`, which `test/adapter-compiler.test.js` uses. The root schema allows `$schema`, `name`, `version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`, `extensions`; host-specific data lives under reverse-domain keys in `extensions` (`dev.pancode`, `com.openai`).
 
-Provenance: every generated file carries a `Generated by WTF-P adapter compiler v5 from protocol/<source>` banner naming its canonical source, and every envelope's `.wtfp-generated.json` records the SHA-256 of each generated path and a `sourceHash` over the whole envelope. The canonical bundle is `vendors/plugin`; each host envelope is a projection of the same `protocol/` sources by `bin/lib/adapter-compiler.js`.
+Provenance: every generated file carries a `Generated by WTF-P adapter compiler v5 from protocol/<source>` banner naming its canonical source, and every envelope's `.wtfp-generated.json` records the SHA-256 of each generated path and a `sourceHash` over the whole envelope. The canonical bundle is `pancode/plugin`; each host envelope is a projection of the same `protocol/` sources by `bin/lib/adapter-compiler.js`.

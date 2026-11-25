@@ -19,7 +19,7 @@ the scientific judgment. The agent keeps the bookkeeping and does bounded jobs.
 
 It ships as one canonical [Agent Plugins 1.0.0](https://agent-plugins.org)
 bundle that a deterministic compiler projects into a native package for seven
-coding-agent hosts. Version `0.8.5` is the current stable release and is
+coding-agent hosts. Version `0.9.0` is the current stable release and is
 what npm `latest` resolves to; v0.5 remains installable by explicit version.
 
 **Optional CiteNexus research backend (since 0.7.0):** `citation-search --backend=cite-nexus`
@@ -27,7 +27,7 @@ queries Crossref, DataCite and Europe PMC by default, plus explicitly selected a
 APIs, through the [CiteNexus](docs/CITE_NEXUS.md) MCP server. Results keep their source
 evidence and stay candidates. CiteNexus is a separate Python package
 (`pip install cite-nexus-mcp==0.2.0`) that WTF-P never installs for you. Research
-actions reach it on Clio Coder and Claude Code; the other hosts keep their existing
+actions reach it on PanCode and Claude Code; the other hosts keep their existing
 capability blockers.
 
 ## Install on your agent
@@ -56,19 +56,20 @@ registers it with the host's native plugin lifecycle where one exists.
 
 | Host | Install | Native registration the installer performs | Verified with |
 | --- | --- | --- | --- |
-| Clio Coder (0.6.3 or newer) | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install clio` | `clio-coder library install <staged-bundle> --user` and `clio-coder library inspect plugin:wtfp --user --json`, then `clio-coder extensions install <staged-extension> --user` and `clio-coder extensions list --user --json` | Clio Coder 0.8.3 release: desk tests 61/61 and a brownfield revision driven back to a delivered milestone |
-| Claude Code | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.319 |
-| Codex | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.163.0 |
-| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.107 |
-| OpenCode | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.19.5 |
-| Antigravity CLI | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.5.3 |
-| Gemini CLI | `npx --yes --package=wtf-p@0.8.5 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.67.0 |
+| PanCode (0.9.0 or newer) | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install pancode` | `pancode hub install <staged-plugin> --user` and `pancode hub inspect plugin:wtfp --user --json`, then `pancode extensions install <staged-extension> --user` and `pancode extensions list --user --json` | Pending; see [Host capabilities](docs/HOST_CAPABILITIES.md#pancode-090) |
+| Claude Code | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install claude` | `claude plugin marketplace add <root>/marketplaces/wtfp --scope user`, then `claude plugin install wtfp@wtfp --scope user -y` | 2.1.319 |
+| Codex | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install codex` | `codex plugin marketplace add <root>/marketplaces/wtfp`, then `codex plugin add wtfp@wtfp --json`; agents copied to `$CODEX_HOME/agents/` | 0.163.0 |
+| GitHub Copilot CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install copilot` | `copilot plugin marketplace add <root>/marketplaces/wtfp`, then `copilot plugin install wtfp@wtfp` | 1.0.107 |
+| OpenCode | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install opencode` | Files under the OpenCode config root; OpenCode discovers them by directory | 1.19.5 |
+| Antigravity CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install antigravity` | `agy plugin install <root>/sources/wtfp` | 1.5.3 |
+| Gemini CLI | `npx --yes --package=wtf-p@0.9.0 -- wtf-p install gemini` | Files under `<root>/extensions/wtfp`; Gemini discovers the extension by directory | 0.67.0 |
 
 "Verified" means native discovery in a disposable profile on this exact
 envelope, with the commands recorded in
-[Host capabilities](docs/HOST_CAPABILITIES.md). Clio Coder is published as
-`@iowarp/clio-coder`; 0.6.3 and newer carry the plugin and extension engine WTF-P uses.
-Clio Coder itself requires Node.js 22.19 or newer.
+[Host capabilities](docs/HOST_CAPABILITIES.md). Both PanCode packages declare
+`pancode: ">=0.9.0"`, and PanCode itself requires Node.js 22.19 or newer. When
+`pancode` is not on PATH, the installer publishes the files and leaves
+registration pending until you re-run `npx wtf-p install pancode`.
 
 Keep the explicit `--package=wtf-p@<version> -- wtf-p` form. On a workstation
 with WTF-P 0.5 installed globally, the shorter `npx wtf-p@<version>` can run
@@ -77,9 +78,9 @@ the old executable instead.
 ## Sixty-second start
 
 ```bash
-npx --yes --package=wtf-p@0.8.5 -- wtf-p install clio
+npx --yes --package=wtf-p@0.9.0 -- wtf-p install pancode
 cd /path/to/your-paper-or-proposal
-clio-coder --autonomy yolo
+pancode --autonomy yolo
 ```
 
 ```text
@@ -88,15 +89,15 @@ clio-coder --autonomy yolo
 ```
 
 The agent interviews you, previews the five initial project records, and waits
-for your approval before writing anything. Clio 0.8 has two autonomy levels,
-`default` and `yolo`; `yolo` removes Clio's approval cards, while every WTF-P
+for your approval before writing anything. PanCode has two autonomy levels,
+`default` and `yolo`; `yolo` removes PanCode's approval cards, while every WTF-P
 gate and interview question still waits for you, because WTF-P asks them as
 questions only you may answer. Every host uses the same
 `/wtfp:<action>` names except Codex, which exposes the same actions through
 seven native skills: mention `$wtfp-start-project` and ask for the
 `new-paper` action with the same brief.
 
-On Clio, one command then carries the project forward:
+On PanCode, one command then carries the project forward:
 
 ```text
 /wtfp:advance            run the next actions until a decision is yours
@@ -142,17 +143,17 @@ action returns `WTFP_ACTION_UNAVAILABLE` instead of improvising:
 
 | Host | Available | Fails closed |
 | --- | ---: | --- |
-| Clio Coder | 32 / 37 | `contribute`, `report-bug`, `request-feature` (no `external.issue` binding); `remove-section` (no `filesystem.delete`); `update` (no `package.update`) |
-| Claude Code | 31 / 37 | the five above plus `advance`, whose `workflow.drive` capability only the Clio desk binds |
-| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26 / 37 | the six above plus `research-gap`, `analyze-bib`, `check-refs`, `audit-milestone`, `export-latex`, whose `tool.execute` effect is bound only to Clio `bash` and Claude `Bash` |
+| PanCode | 32 / 37 | `contribute`, `report-bug`, `request-feature` (no `external.issue` binding); `remove-section` (no `filesystem.delete`); `update` (no `package.update`) |
+| Claude Code | 31 / 37 | the five above plus `advance`, whose `workflow.drive` capability only the PanCode desk binds |
+| Codex, Copilot CLI, OpenCode, Antigravity, Gemini | 26 / 37 | the six above plus `research-gap`, `analyze-bib`, `check-refs`, `audit-milestone`, `export-latex`, whose `tool.execute` effect is bound only to PanCode `bash` and Claude `Bash` |
 | Copilot cloud projection (`.github`) | 5 / 37 | everything that needs an explicit approval gate |
 
 Where the research routes are available, `tool.execute` authorizes exactly one
 command, the bundled `tools/wtfp-tool.js` dispatcher over seven bibliography
-and citation tools. On Clio at `yolo` autonomy, `research-gap` can search free no-key
+and citation tools. On PanCode at `yolo` autonomy, `research-gap` can search free no-key
 public indexes through CiteNexus without another approval for each bounded
 query. An operator-configured read-class CiteNexus MCP connection is preferred
-when the Clio build supports it. Other network routes keep their author gate;
+when the PanCode build supports it. Other network routes keep their author gate;
 see [CiteNexus setup](docs/CITE_NEXUS.md).
 
 ## What it will not do
@@ -175,14 +176,14 @@ see [CiteNexus setup](docs/CITE_NEXUS.md).
 ## How it is built
 
 One protocol, one compiler, seven projections. Humans edit `protocol/`; the
-compiler owns every file under `vendors/`, authenticates each envelope with a
+compiler owns every file under `pancode/` and `vendors/`, authenticates each envelope with a
 SHA-256 inventory, and fails closed when a host cannot bind a capability an
 action requires.
 
 ```mermaid
 flowchart LR
   P["protocol/<br/>37 action contracts, 37 workflows,<br/>11 roles, 7 skills, .planning v1 schemas,<br/>templates, tools.json"] --> C["adapter compiler<br/>bin/lib/adapter-compiler.js"]
-  C --> B["vendors/plugin<br/>canonical Agent Plugins 1.0.0 bundle<br/>(Clio route)"]
+  C --> B["pancode/plugin · pancode/extension<br/>canonical Agent Plugins 1.0.0 bundle<br/>and the PanCode desk"]
   C --> H["vendors/claude · codex · copilot ·<br/>opencode · antigravity · gemini<br/>native projections"]
   B --> I["npx wtf-p install &lt;host&gt;<br/>exact-file receipts, native registration"]
   H --> I
@@ -202,7 +203,7 @@ than from chat history.
 - [Proposal workflow](docs/PROPOSAL_WORKFLOW.md)
 - [Migrating from v0.5](docs/MIGRATION_V05_TO_V06.md)
 - [Compatibility and evidence](docs/COMPATIBILITY.md)
-- [Packaging and the Clio plugin lifecycle](docs/AGENT_PLUGIN.md)
+- [Packaging and the PanCode plugin lifecycle](docs/AGENT_PLUGIN.md)
 - [Building and releasing](docs/BUILD_AND_RELEASE.md)
 - [Changelog](CHANGELOG.md) and [Contributing](CONTRIBUTING.md)
 
