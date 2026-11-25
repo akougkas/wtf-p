@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "5d2a49e8c5a9fb471351f5843451184b4d83de34ff3c8e0d4f6775b5d15ea5c6",
+  "sourceHash": "6b8996fd98e61f928cd34f27e93484411c17cc1757a0c79db5a366f0dae9631f",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
@@ -246,7 +246,7 @@
     },
     {
       "path": "commands/create-outline.md",
-      "sha256": "041070ffe511c0a2732a93ef99f94a14390c4261767494d193468734f78e1af4"
+      "sha256": "3218ec725f6a52d41fc44e441a3b7b94925c2d5f8465c769568b3954b651f981"
     },
     {
       "path": "commands/create-poster.md",
@@ -274,7 +274,7 @@
     },
     {
       "path": "commands/insert-section.md",
-      "sha256": "2d5f6dc70440f10fc12e842aa441b7549c8af448f1148a786ad171786279bf0e"
+      "sha256": "d7ffca773363c7d316bfc936897af967da1e832b035be19cf53c2c7ca47c0756"
     },
     {
       "path": "commands/list-assumptions.md",
@@ -290,7 +290,7 @@
     },
     {
       "path": "commands/pause-writing.md",
-      "sha256": "81ef7a89a578a005d419d77ab0c537e985909fb0f78c64880e600a543a8712b6"
+      "sha256": "287160925648382453e58c8569c8281a4c64ea76b340eb9ecbb51f7dbbcb22b7"
     },
     {
       "path": "commands/plan-milestone-gaps.md",
@@ -366,55 +366,55 @@
     },
     {
       "path": "dev.pancode/agents/wtfp-argument-verifier.md",
-      "sha256": "e21ef30e3cc102f77bc39cbb14b69b6777a73934c6af4e80604646d03f90cb0f"
+      "sha256": "04b67f6595f13ebe09ff290119cb2d3e69570de1046907fcbbe51da9401d2bec"
     },
     {
       "path": "dev.pancode/agents/wtfp-citation-expert.md",
-      "sha256": "afda45e56a6b85a356f67727bdab8f39662a54f43ad4a3a562e056d28f85f192"
+      "sha256": "ef159352be4c755676ac8f50112085bc1f927bcbc8701430e7fe4b2e51fd6d23"
     },
     {
       "path": "dev.pancode/agents/wtfp-citation-formatter.md",
-      "sha256": "19673234b575139df82c985cd598c9df3326df1b473e1ae7ca5d67e052c4b1b4"
+      "sha256": "f15c2791a9ce994aee8347723d1b2b687ec3ed61b66717a3145e46d27e0ed7f0"
     },
     {
       "path": "dev.pancode/agents/wtfp-coherence-checker.md",
-      "sha256": "049a9d6068eeb07e543af652ec9e2050b4f530520420c9193c0ceac0fcdb44b2"
+      "sha256": "d5ca16880b95bffc3b1f3f120475fd79df8ccf91a6ea3a15d6117e5cfb6da582"
     },
     {
       "path": "dev.pancode/agents/wtfp-outliner.md",
-      "sha256": "f8640481a15acd8ffef35a760d73456a842e6d0eb80f7688ddd2daf93e85b7e7"
+      "sha256": "c4bf18993f9012818f57dbde8655c8e752efcfcd3899fcbc54660dadf40bca67"
     },
     {
       "path": "dev.pancode/agents/wtfp-plan-checker.md",
-      "sha256": "0e1d5bc389926d1bbdccc86b0a8db6572c228acf700f1e7f1ef576870a365f8b"
+      "sha256": "9749e2294344a1a8b4b3bd5e8eea9a0674a351409f9b5a0d1ca54f6a3522dbf4"
     },
     {
       "path": "dev.pancode/agents/wtfp-prose-polisher.md",
-      "sha256": "a222af680df82a3974fa5f09329597d1693c80d6bfc858db232a224cbe3e5b92"
+      "sha256": "0d5de65569ed4efd2d303b976d005a7a8721a1e62227ad89609a511d8620a619"
     },
     {
       "path": "dev.pancode/agents/wtfp-research-synthesizer.md",
-      "sha256": "9b1e065556dbc108f59d13285130809f6a9217c760cb1a49f6078d0a7c33efc8"
+      "sha256": "cf05c0ca182b0dbbb366c7fb4b87c59766c29791f50a2306ceadc4ed5de87884"
     },
     {
       "path": "dev.pancode/agents/wtfp-section-planner.md",
-      "sha256": "5036c4350696f8cb534244fd8e55f2020a91de86fd63679fc5dd60f4566e50e1"
+      "sha256": "b9601d6819fe7c13f3dede850329e52becf20325b516bc3398c413f75f0ddb4d"
     },
     {
       "path": "dev.pancode/agents/wtfp-section-reviewer.md",
-      "sha256": "de4f76888c9ce72f6747c0ab4014f2d080fc77cef0e521b1b2c7ef5bcddb89cc"
+      "sha256": "6ed9d9e66810ed7113cc65aa5008c02be821f478f6fc440cfc5a3f274d152d3a"
     },
     {
       "path": "dev.pancode/agents/wtfp-section-writer.md",
-      "sha256": "a47efd949d3292e12bd3081c44d9e7b6aea9d8172119b9ca501965a088babd40"
+      "sha256": "a9cf607c3157cd0b3b5531a7860d38f5f7d9eae0b9303ce0abe5422b43267847"
     },
     {
       "path": "dev.pancode/fleets/wtfp-draft-review.md",
-      "sha256": "2616b843bd20004ca85ce9bdcfe41e2181b3eca9db21153db8d7891eedeff519"
+      "sha256": "97c7d6cacda215ffed15091560a5e84ac0903fe429cb1da5356cd87f807e4ff4"
     },
     {
       "path": "dev.pancode/fleets/wtfp-plan-section.md",
-      "sha256": "414be527ea74218dd09487eff2aa9531c9a21ca1db229a4b792324fc7850b0e5"
+      "sha256": "aaf47207881bc982c19430d66827d11a4fa3ac454807969f4c1528165eb0bfd6"
     },
     {
       "path": "dev.pancode/prompts/wtfp/add-todo.md",
@@ -422,7 +422,7 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/advance.md",
-      "sha256": "efa984df48e1ea9711b2751e5775f7d93f3d5b63a5b8d9c6b742a975dad4b5cd"
+      "sha256": "d344a3f00e8088ad57c3d924f0cf9d5145d2755293228e506e4cf9fa2e6c61eb"
     },
     {
       "path": "dev.pancode/prompts/wtfp/analyze-bib.md",
@@ -446,11 +446,11 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/contribute.md",
-      "sha256": "c6f0c031087f1dd38cc8d23440a794c40611455e11f7656d5a97358bbade9b9e"
+      "sha256": "7195cf97bc6a802aac4b696ddca0af001137d2cee47d5b1d9dbe46d4b89fbf13"
     },
     {
       "path": "dev.pancode/prompts/wtfp/create-outline.md",
-      "sha256": "8bd3ba1c0f7eb5254fa99645ae962c4be2e67672ecb0513691c4ecd83399a69e"
+      "sha256": "2ad343eae3a590076dfd27640b796d965e6f84dd19af0c968350950622c883f2"
     },
     {
       "path": "dev.pancode/prompts/wtfp/create-poster.md",
@@ -478,7 +478,7 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/insert-section.md",
-      "sha256": "235a3f3cfca0c07ffbfe14eca2ab520ea57d0d75d3df8c71b3d0a23f95bdd11e"
+      "sha256": "5ea0eab3fef7f073300bc008365611b110e9681a21254ef73e3cd8471670b149"
     },
     {
       "path": "dev.pancode/prompts/wtfp/list-assumptions.md",
@@ -494,7 +494,7 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/pause-writing.md",
-      "sha256": "e413fbfc4a48ed3bc0451f6a0b36f959a38b082ff45db4e691ba41e56e682938"
+      "sha256": "7a7435740edbacb3e782875f5ee287d8af6353bfe7078a8cd26ffb0742c1ab27"
     },
     {
       "path": "dev.pancode/prompts/wtfp/plan-milestone-gaps.md",
@@ -522,15 +522,15 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/remove-section.md",
-      "sha256": "af931e21802234176acfbf27b992148514ec6ce3ec5224e7c9f9a25a460b69f4"
+      "sha256": "cdbab09418b5c6d79949c4748d289d066e3a8aebe244bd8b463c4e7d1f4f598a"
     },
     {
       "path": "dev.pancode/prompts/wtfp/report-bug.md",
-      "sha256": "3c73a45725aad73824f112ab6c3dc8f1de4299d4d66b5f8d2a326dc326f1de02"
+      "sha256": "fdb43e78a233932548e546cbfb54fb9501a1f6780b4186dc59ed459c35c642c2"
     },
     {
       "path": "dev.pancode/prompts/wtfp/request-feature.md",
-      "sha256": "7af242b0883e253be16ec1189348e90fe2a8bdd723b28d6a574190e9cbc1fb97"
+      "sha256": "972b7ce39e2a53a9b33ccdc3f50c940a417d5451528d3b97aaf7c81babed97c8"
     },
     {
       "path": "dev.pancode/prompts/wtfp/research-gap.md",
@@ -554,7 +554,7 @@
     },
     {
       "path": "dev.pancode/prompts/wtfp/update.md",
-      "sha256": "b82ac4cb1a135543f1914f5e53540940c048d57c5649d63ae19067aec6d5bce0"
+      "sha256": "571c8c85e4ef33893d5077ce9d220ddc9c8f20b4ebfdc031a9feccde75b33dc2"
     },
     {
       "path": "dev.pancode/prompts/wtfp/verify-work.md",
@@ -950,7 +950,7 @@
     },
     {
       "path": "workflows/create-outline.md",
-      "sha256": "a04d0f25a64d5963c890162399e26de2aad593408491c68871832f5c96a6e90e"
+      "sha256": "41ffcf7fafb9496686318d5852569eecfe85bb80d9f101da20ec8ae6599b936e"
     },
     {
       "path": "workflows/create-poster.md",
@@ -978,7 +978,7 @@
     },
     {
       "path": "workflows/insert-section.md",
-      "sha256": "4a0856be3e3165b2bfb6e16a459ccdc04798f21e78178b2c8a24fbbc321cdc70"
+      "sha256": "eb0c313fd2eed6809c86384b9cb8fb842c0225cc0c3b33f180131d6b5de0de26"
     },
     {
       "path": "workflows/list-assumptions.md",
@@ -994,7 +994,7 @@
     },
     {
       "path": "workflows/pause-writing.md",
-      "sha256": "5925c00a573e65c99a34e19984804f6407373e560621874cff29dbff4080fd0a"
+      "sha256": "ac40a7b7520e07e94c1f45dbdd6bc443ba7bae63def58e08e80d36081be3710a"
     },
     {
       "path": "workflows/plan-milestone-gaps.md",

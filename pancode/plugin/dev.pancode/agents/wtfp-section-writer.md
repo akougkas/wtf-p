@@ -59,6 +59,10 @@ Execute an approved section plan into evidence-grounded academic prose or the ex
 - Do not commit, delete, rename, publish, or perform destructive operations unless the exact effect is granted by the action contract.
 - Do not initiate human interaction. Encode checkpoint needs in the result for the orchestrator.
 
+## PanCode project paths
+
+On PanCode the `project://` URIs above are files under the workspace root. Records: `project://manifest`, `config`, `state` and `decisions` are `.planning/project.json`, `config.json`, `state.json` and `decisions.json`; `project://structure/outline` is `.planning/structure/outline.json`; `project://sections/{s}` is `.planning/sections/{s}/section.json`; and `project://sources/{id}`, `evidence/{id}`, `checkpoints/{id}` and `validations/{id}` are `.planning/sources/{id}.json`, `.planning/evidence/{id}.json`, `.planning/checkpoints/{id}.json` and `.planning/validations/{id}.json`. Authored artifacts: `project://sections/{s}/context`, `research`, `summary` and `handoff` are `.planning/sections/{s}/<name>.md`, plans and reviews are `.planning/sections/{s}/plans/<id>.md` and `reviews/<id>.md`, and `project://paper/{a}` is `paper/{a}.md`. Read and write those files; section artifacts live under `.planning/sections/`, never a top-level `sections/`.
+
 On PanCode a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.
 
 ## PanCode result contract

@@ -581,6 +581,11 @@ record('every command-capable host exposes the same stable aliases', () => {
         } else {
           assert.doesNotMatch(source, /^(?:allowed-)?tools:/m, `${target}:${sourcePath}: blocked action received tools`);
         }
+        if (target === 'pancode') {
+          // PanCode prints the refusal with no model call.
+          assert.match(source, /^display-only: true$/m, `${sourcePath}: blocked action must be display-only on PanCode`);
+          assert.match(source, /^```text\nWTFP_ACTION_UNAVAILABLE\n[\s\S]+?\n```$/m, `${sourcePath}: refusal must be one fenced text block`);
+        }
         continue;
       }
       if (target === 'pancode' && actionIds[index] === 'help') {
@@ -946,10 +951,17 @@ record('PanCode emits one namespaced prompt per action, strict agents, and two a
     'playbooks/wtfp-draft-review.md': [
       'update only its declared portable Markdown summary',
       'independently review',
-      'resolve logical `project://paper/...` artifacts under the project-root `paper/` directory',
-      'never under `.planning/paper/`'
+      '`project://paper/<artifact>` as `paper/<artifact>.md`',
+      '`project://sections/{{section}}/summary` as `.planning/sections/{{section}}/summary.md`',
+      'never a top-level `sections/`',
+      'never `.planning/paper/`'
     ],
-    'playbooks/wtfp-plan-section.md': ['support for every required claim', 'independently review']
+    'playbooks/wtfp-plan-section.md': [
+      'support for every required claim',
+      'independently review',
+      '`project://sections/{{section}}/plans/<plan>` as `.planning/sections/{{section}}/plans/<plan>.md`',
+      'never a top-level `sections/`'
+    ]
   };
   for (const sourcePath of fleetPaths) {
     const source = planText(plan, sourcePath);
@@ -1325,6 +1337,10 @@ record('research handoff declares incremental state and preserves native decisio
       // Live, a worker filled the role with its own identity ("PanCode"), and the orchestrator stopped on it.
       assert.ok(body.includes(`"role":"${role}"`), `${role}: the result form names the role exactly`);
     }
+    // A worker holds no desk to resolve a project URI; live, one wrote `sections/<s>/` at the workspace root.
+    assert.ok(body.includes('`project://sections/{s}` is `.planning/sections/{s}/section.json`'), `${role}: the recipe maps section records to files`);
+    assert.ok(body.includes('plans and reviews are `.planning/sections/{s}/plans/<id>.md`'), `${role}: the recipe maps section artifacts to files`);
+    assert.ok(body.includes('never a top-level `sections/`'), `${role}: the recipe rules out a root sections/ directory`);
     // No WTF-P recipe can run code: verify runs checks from files a writer could plant, and a reviewer judges text.
     const tools = /^tools: \{required: \[(.*)\], optional: \[(.*)\]\}$/m.exec(body);
     assert.ok(tools, `${role}: PanCode recipe declares its tools`);

@@ -754,7 +754,26 @@ function pancodeDeskCalls(tools) {
     if (!(name in PANCODE_DESK_ARGS)) throw new Error(`no PanCode argument shape for desk tool ${tool}`);
     return `${name} ${PANCODE_DESK_ARGS[name]}`;
   });
-  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. A record write that would not validate, or reports a stale read or a missing version, asks you to fix the record or read it again and resend; that is not a refusal. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns that family's records in one call, and names a \`?after=\` page for any it holds back; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: \`project://sections/{s}/context\`, \`research\`, \`summary\` and \`handoff\` are \`.planning/sections/{s}/<name>.md\`, plans and reviews are \`.planning/sections/{s}/plans/<id>.md\` and \`reviews/<id>.md\`, and \`project://paper/{a}\` is \`paper/{a}.md\`.`;
+  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. A record write that would not validate, or reports a stale read or a missing version, asks you to fix the record or read it again and resend; that is not a refusal. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns that family's records in one call, and names a \`?after=\` page for any it holds back; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: ${PANCODE_ARTIFACT_PATHS}.`;
+}
+
+// Where PanCode keeps the portable project's resources (protocol/project/README.md).
+// A worker holds only `project://` URIs and no desk to resolve them, so its
+// recipe and its playbook carry these paths.
+const PANCODE_RECORD_PATHS = '`project://manifest`, `config`, `state` and `decisions` are `.planning/project.json`, `config.json`, `state.json` and `decisions.json`; `project://structure/outline` is `.planning/structure/outline.json`; `project://sections/{s}` is `.planning/sections/{s}/section.json`; and `project://sources/{id}`, `evidence/{id}`, `checkpoints/{id}` and `validations/{id}` are `.planning/sources/{id}.json`, `.planning/evidence/{id}.json`, `.planning/checkpoints/{id}.json` and `.planning/validations/{id}.json`';
+const PANCODE_ARTIFACT_PATHS = '`project://sections/{s}/context`, `research`, `summary` and `handoff` are `.planning/sections/{s}/<name>.md`, plans and reviews are `.planning/sections/{s}/plans/<id>.md` and `reviews/<id>.md`, and `project://paper/{a}` is `paper/{a}.md`';
+
+// One declared logical write as the workspace path a PanCode worker writes.
+// `section` is what stands for the section id; other placeholders read as `<name>`.
+function pancodeArtifactPath(resource, section) {
+  const sectionPart = (value) => value === '{section}' ? section : `<${value.replace(/[{}]/gu, '')}>`;
+  const paper = /^project:\/\/paper\/(\{[a-z]+\})$/u.exec(resource);
+  if (paper) return `paper/${sectionPart(paper[1])}.md`;
+  const named = /^project:\/\/sections\/(\{[a-z]+\})\/(context|research|summary|handoff)$/u.exec(resource);
+  if (named) return `.planning/sections/${sectionPart(named[1])}/${named[2]}.md`;
+  const listed = /^project:\/\/sections\/(\{[a-z]+\})\/(plans|reviews)\/(\{[a-z]+\})$/u.exec(resource);
+  if (listed) return `.planning/sections/${sectionPart(listed[1])}/${listed[2]}/${sectionPart(listed[3])}.md`;
+  return null;
 }
 
 // The PanCode projection of the workflow.drive capability. The desk, not the
@@ -801,6 +820,27 @@ const HELP_START_SEQUENCE = Object.freeze([
   'write-section', 'review-section', 'progress', 'pause-writing', 'resume-writing'
 ]);
 
+// The catalog's actions in the help card's reading order: one group per skill,
+// then the product operations. The desk's help card draws the same groups.
+function helpGroups(model) {
+  const groupIds = new Set(HELP_GROUP_ORDER.map(([id]) => id));
+  for (const skill of model.catalog.skills) {
+    if (!groupIds.has(skill.id)) throw new Error(`help card has no group order for skill ${skill.id}`);
+  }
+  return [
+    ...HELP_GROUP_ORDER.map(([skillId, title]) => ({
+      title,
+      skill: skillId,
+      actions: model.catalog.skills.find((entry) => entry.id === skillId).actions
+    })),
+    { title: 'Product operations', skill: null, actions: model.catalog.operations.actions }
+  ];
+}
+
+function pancodeHelpData(model) {
+  return stableJson({ schema: 'wtfp.pancode-help/v1', groups: helpGroups(model).map(({ title, actions }) => ({ title, actions })) });
+}
+
 // The argument a human types after the action, derived from the contract's
 // preconditions: an action whose condition names a target or selected section
 // takes a section id; a selected prose target or milestone id likewise.
@@ -827,10 +867,7 @@ function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
       : `  [unavailable on pancode: ${[...new Set([...availability.unavailableCapabilities, ...availability.unavailableEffects])].join(', ')}]`;
     return `  /wtfp:${id} ${helpArgumentHint(action)}\n      ${action.description}${blocked}`;
   };
-  const groupIds = new Set(HELP_GROUP_ORDER.map(([id]) => id));
-  for (const skill of model.catalog.skills) {
-    if (!groupIds.has(skill.id)) throw new Error(`help card has no group order for skill ${skill.id}`);
-  }
+  const groups = helpGroups(model);
   for (const id of HELP_START_SEQUENCE) if (!byId.has(id)) throw new Error(`help card start sequence names an unknown action: ${id}`);
   const playbooks = fs.readdirSync(path.join(PROTOCOL_ROOT, 'fleets'))
     .filter((file) => file.endsWith('.json')).sort()
@@ -847,13 +884,7 @@ function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
         : [])
     ]),
     '',
-    ...HELP_GROUP_ORDER.flatMap(([skillId, title]) => {
-      const skill = model.catalog.skills.find((entry) => entry.id === skillId);
-      return [`${title} (skill ${skillId})`, ...skill.actions.map(line), ''];
-    }),
-    'Product operations',
-    ...model.catalog.operations.actions.map(line),
-    '',
+    ...groups.flatMap(({ title, skill, actions }) => [skill ? `${title} (skill ${skill})` : title, ...actions.map(line), '']),
     legacyFleetNames
       ? 'Fleets (pancode fleet run <fleet> --var section=<section>; explicit fleet primitives, not auto-routed)'
       : 'Playbooks (pancode fleet run <playbook> --var section=<section>; run explicitly, never auto-routed)',
@@ -893,7 +924,10 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
     if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
       lines.push('allowed-tools: []');
     }
-    lines.push('---', '', blockedActionBody(action, target, availability), '', generatedBanner('protocol/actions', action.id), '');
+    // PanCode prints a display-only prompt's first fenced block with no model call, so the refusal costs nothing.
+    if (target === 'pancode') lines.push('display-only: true');
+    const body = blockedActionBody(action, target, availability);
+    lines.push('---', '', target === 'pancode' ? ['```text', body, '```'].join('\n') : body, '', generatedBanner('protocol/actions', action.id), '');
     return lines.join('\n');
   }
   lines.push('argument-hint: "[arguments]"');
@@ -1236,6 +1270,10 @@ function renderPanCodeRole(role, slug) {
     ...(verifier ? ['**Output:** your final message is one JSON object, `{"verdict":"pass|fail","checks":[...]}`, and nothing else. Do every step below as checks in that object, not as a Markdown review; the exact form is in the PanCode result contract at the end.', ''] : []),
     nativeWorkflowBody(roleBodyWithoutPortableResult(role), 'pancode'),
     '',
+    '## PanCode project paths',
+    '',
+    `On PanCode the \`project://\` URIs above are files under the workspace root. Records: ${PANCODE_RECORD_PATHS}. Authored artifacts: ${PANCODE_ARTIFACT_PATHS}. Read and write those files; section artifacts live under \`.planning/sections/\`, never a top-level \`sections/\`.`,
+    '',
     // Live on the 0.8.3 host, a writer that could not count words returned blocked and stopped the drive.
     ...(/word count/i.test(roleBodyWithoutPortableResult(role)) ? ['On PanCode a worker holds no word counter. The dispatching action measures the persisted manuscript after you return and writes that count into the summary, so write the summary without a count. A count you cannot take never blocks this role: return completed when the rest is done.', ''] : []),
     '## PanCode result contract',
@@ -1394,11 +1432,19 @@ function pancodeFleet(fleetId) {
     /\{([a-z][a-z0-9-]*)\}/gu,
     (_match, parameter) => `{{${parameter}}}`
   );
-  const logicalWrites = fleet.steps.flatMap(step => step.writes);
-  const nativeResourceProjection = logicalWrites.some(resource =>
-    /^project:\/\/paper(?:\/|$)/u.test(resource)
-  )
-    ? 'For this PanCode projection, resolve logical `project://paper/...` artifacts under the project-root `paper/` directory, never under `.planning/paper/`.'
+  const logicalWrites = [...new Set(fleet.steps.flatMap(step => step.writes))];
+  const writePaths = logicalWrites.map((resource) => {
+    const file = pancodeArtifactPath(resource, '{{section}}');
+    if (file === null) throw new Error(`fleet ${fleetId} has no PanCode path for ${resource}`);
+    const uri = resource.replace(/\{([a-z]+)\}/gu, (_match, name) => name === 'section' ? '{{section}}' : `<${name}>`);
+    return `\`${uri}\` as \`${file}\``;
+  });
+  const roots = [
+    ...(writePaths.some((entry) => entry.includes('`.planning/sections/')) ? ['section artifacts go under `.planning/sections/`, never a top-level `sections/`'] : []),
+    ...(writePaths.some((entry) => entry.includes('`paper/')) ? ['manuscripts go under `paper/`, never `.planning/paper/`'] : [])
+  ];
+  const nativeResourceProjection = writePaths.length > 0
+    ? `On PanCode, write ${writePaths.join(' and ')}, relative to the workspace root: ${roots.join(', and ')}.`
     : null;
   return [
     '---',
@@ -1766,6 +1812,7 @@ function addPanCodeRuntime(plan, model, availabilityById) {
   addFile(plan, 'runtime/claim-coverage.cjs', `${generatedScriptBanner('evaluation', 'lib/claim-coverage.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'claim-coverage.js'), 'utf8')}`);
   addFile(plan, 'runtime/desk-trust.cjs', `${generatedScriptBanner('evaluation', 'lib/desk-trust.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'desk-trust.js'), 'utf8')}`);
   addFile(plan, 'runtime/write-guard.json', pancodeWriteGuard(model, availabilityById));
+  addFile(plan, 'runtime/help.json', pancodeHelpData(model));
   addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'templates'), 'project/templates');

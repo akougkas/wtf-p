@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot",
-  "sourceHash": "564a1c173c60b7c5b1d8cf777a9138c616c2dd364bfe8498bb2345dee0caf20f",
+  "sourceHash": "35a66d71e75fdfcdf0b948b9b0b0c7b7564288673879888d9f3d733bcf90d6c6",
   "files": [
     {
       "path": ".claude-plugin/plugin.json",
@@ -242,7 +242,7 @@
     },
     {
       "path": "commands/wtfp-create-outline.md",
-      "sha256": "3cdf3dbd8e5b361f3750b5ae3914325de1b05319b65e590a8a022848538fd1b3"
+      "sha256": "3dc1a98c56aa4ee0d70c445dcd69a08750b2cb6347d5c0acfb381004dac652d6"
     },
     {
       "path": "commands/wtfp-create-poster.md",
@@ -270,7 +270,7 @@
     },
     {
       "path": "commands/wtfp-insert-section.md",
-      "sha256": "4732fb8a7609717424a949256e5bb2d2cf917191df9e0ad72f4dd37086132be9"
+      "sha256": "65407f860732b7805d1fba784e44bbc2315643f3c8f8e97bb6e1cfc036677379"
     },
     {
       "path": "commands/wtfp-list-assumptions.md",
@@ -286,7 +286,7 @@
     },
     {
       "path": "commands/wtfp-pause-writing.md",
-      "sha256": "9a90f1f9a24a90ea59d6ac9ac4fcc76271d8be538e01fd0008db48668ac41d97"
+      "sha256": "43ba49ed8b58721134d4a73bc12888a6ad7e1de29c6c4c4ff0d8b6b06f378d08"
     },
     {
       "path": "commands/wtfp-plan-milestone-gaps.md",
@@ -726,7 +726,7 @@
     },
     {
       "path": "workflows/create-outline.md",
-      "sha256": "a04d0f25a64d5963c890162399e26de2aad593408491c68871832f5c96a6e90e"
+      "sha256": "41ffcf7fafb9496686318d5852569eecfe85bb80d9f101da20ec8ae6599b936e"
     },
     {
       "path": "workflows/create-poster.md",
@@ -754,7 +754,7 @@
     },
     {
       "path": "workflows/insert-section.md",
-      "sha256": "4a0856be3e3165b2bfb6e16a459ccdc04798f21e78178b2c8a24fbbc321cdc70"
+      "sha256": "eb0c313fd2eed6809c86384b9cb8fb842c0225cc0c3b33f180131d6b5de0de26"
     },
     {
       "path": "workflows/list-assumptions.md",
@@ -770,7 +770,7 @@
     },
     {
       "path": "workflows/pause-writing.md",
-      "sha256": "5925c00a573e65c99a34e19984804f6407373e560621874cff29dbff4080fd0a"
+      "sha256": "ac40a7b7520e07e94c1f45dbdd6bc443ba7bae63def58e08e80d36081be3710a"
     },
     {
       "path": "workflows/plan-milestone-gaps.md",

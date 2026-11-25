@@ -147,7 +147,7 @@ for (const [host, spec] of Object.entries(hosts)) {
     if (spec.routers?.has(`wtfp-${action.id}`)) return true;
     const source = fs.readFileSync(file, 'utf8');
     // A display-only prompt is rendered to the operator and takes no arguments.
-    if (/^display-only: true$/m.test(source)) return !source.includes(spec.args);
+    if (/^display-only: true$/m.test(source)) return !source.includes(spec.args) && (availability.get(action.id) === 'available' || source.includes(UNAVAILABLE_MARKER));
     return availability.get(action.id) === 'available'
       ? source.includes(spec.args) && !source.includes(UNAVAILABLE_MARKER)
       : !source.includes(spec.args) && source.includes(UNAVAILABLE_MARKER);

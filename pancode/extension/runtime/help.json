@@ -1,0 +1,82 @@
+{
+  "schema": "wtfp.pancode-help/v1",
+  "groups": [
+    {
+      "title": "Start a project",
+      "actions": [
+        "create-outline",
+        "map-project",
+        "new-paper"
+      ]
+    },
+    {
+      "title": "Research the literature",
+      "actions": [
+        "analyze-bib",
+        "check-refs",
+        "research-gap"
+      ]
+    },
+    {
+      "title": "Plan a section",
+      "actions": [
+        "discuss-section",
+        "insert-section",
+        "list-assumptions",
+        "plan-revision",
+        "plan-section",
+        "remove-section"
+      ]
+    },
+    {
+      "title": "Write a section",
+      "actions": [
+        "execute-outline",
+        "quick",
+        "write-section"
+      ]
+    },
+    {
+      "title": "Review the manuscript",
+      "actions": [
+        "audit-milestone",
+        "plan-milestone-gaps",
+        "polish-prose",
+        "review-section",
+        "verify-work"
+      ]
+    },
+    {
+      "title": "Manage the project",
+      "actions": [
+        "add-todo",
+        "advance",
+        "check-todos",
+        "checkpoint",
+        "pause-writing",
+        "progress",
+        "resume-writing",
+        "settings"
+      ]
+    },
+    {
+      "title": "Deliver the research",
+      "actions": [
+        "create-poster",
+        "create-slides",
+        "export-latex",
+        "submit-milestone"
+      ]
+    },
+    {
+      "title": "Product operations",
+      "actions": [
+        "contribute",
+        "help",
+        "report-bug",
+        "request-feature",
+        "update"
+      ]
+    }
+  ]
+}

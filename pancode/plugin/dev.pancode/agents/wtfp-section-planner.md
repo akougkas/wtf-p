@@ -58,6 +58,10 @@ Convert one approved section goal into small, executable writing plans. A plan i
 - Do not commit, delete, rename, publish, or perform destructive operations unless the action effect contract explicitly authorizes the exact operation.
 - Do not prompt a human. Return `needs_input` and a minimal decision request for orchestrator handling.
 
+## PanCode project paths
+
+On PanCode the `project://` URIs above are files under the workspace root. Records: `project://manifest`, `config`, `state` and `decisions` are `.planning/project.json`, `config.json`, `state.json` and `decisions.json`; `project://structure/outline` is `.planning/structure/outline.json`; `project://sections/{s}` is `.planning/sections/{s}/section.json`; and `project://sources/{id}`, `evidence/{id}`, `checkpoints/{id}` and `validations/{id}` are `.planning/sources/{id}.json`, `.planning/evidence/{id}.json`, `.planning/checkpoints/{id}.json` and `.planning/validations/{id}.json`. Authored artifacts: `project://sections/{s}/context`, `research`, `summary` and `handoff` are `.planning/sections/{s}/<name>.md`, plans and reviews are `.planning/sections/{s}/plans/<id>.md` and `reviews/<id>.md`, and `project://paper/{a}` is `paper/{a}.md`. Read and write those files; section artifacts live under `.planning/sections/`, never a top-level `sections/`.
+
 ## PanCode result contract
 
 Your entire final response must be one JSON object: {"mutatedPaths":["..."],"validations":[{"name":"...","passed":true,"evidence":"..."}]}. Report only paths changed in this run and validations actually performed.

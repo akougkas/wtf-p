@@ -22,4 +22,4 @@ onFailure: stop
 
 Draft section {{section}} from its explicitly approved plan into its declared paper artifact and update only its declared portable Markdown summary. The invoking action orchestrator owns validation, checkpoint, manifest, section, and state reconciliation. The reviewer must independently review the resulting prose against the plan, sources, decisions, and venue constraints without claiming a mutation.
 
-For this PanCode projection, resolve logical `project://paper/...` artifacts under the project-root `paper/` directory, never under `.planning/paper/`.
+On PanCode, write `project://paper/<artifact>` as `paper/<artifact>.md` and `project://sections/{{section}}/summary` as `.planning/sections/{{section}}/summary.md`, relative to the workspace root: section artifacts go under `.planning/sections/`, never a top-level `sections/`, and manuscripts go under `paper/`, never `.planning/paper/`.

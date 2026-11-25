@@ -468,6 +468,41 @@ test("record writes at the revision or digest the caller read and refuses stale,
 		assert.match(gone.text, /holds wtfp.project.source\/v1|no longer exists/);
 	}));
 
+test("a section write may not add a link to a missing artifact or a claim id another claim holds", () =>
+	withDesk(async (host, workspace) => {
+		const sectionFile = ".planning/sections/introduction/section.json";
+		const section = read(workspace, sectionFile);
+		const artifacts = section.artifacts as Json;
+		const dangling = await host.tool("record", {
+			uri: "project://sections/introduction",
+			record: { ...section, artifacts: { ...artifacts, context: "project://sections/introduction/context" } },
+			expect_sha256: sha(workspace, sectionFile),
+		});
+		assert.match(dangling.text, /links project:\/\/sections\/introduction\/context, which has no file yet\. Write the artifact first/);
+		assert.deepEqual(read(workspace, sectionFile).artifacts, artifacts);
+		put(workspace, ".planning/sections/introduction/context.md", "# Context\n");
+		const linked = await host.tool("record", {
+			uri: "project://sections/introduction",
+			record: { ...section, artifacts: { ...artifacts, context: "project://sections/introduction/context" } },
+			expect_sha256: sha(workspace, sectionFile),
+		});
+		assert.equal(linked.isError, undefined, linked.text);
+
+		const claim = { id: "claim-flush", statement: "Flushes dominate logging cost.", status: "planned", evidence_required: false, evidence_uris: [] };
+		const current = read(workspace, sectionFile);
+		const claimed = await host.tool("record", { uri: "project://sections/introduction", record: { ...current, claims: [claim] }, expect_sha256: sha(workspace, sectionFile) });
+		assert.equal(claimed.isError, undefined, claimed.text);
+		const { updated_at: _updated, revision: _revision, ...base } = read(workspace, sectionFile);
+		const methods = { ...base, id: "methods", title: "Methods", status: "not-started", artifacts: { plans: [], reviews: [] }, checkpoint_uris: [], claims: [claim] };
+		const duplicate = await host.tool("record", { uri: "project://sections/methods", record: methods });
+		assert.match(duplicate.text, /claim-flush is already a claim of project:\/\/sections\/introduction\. Each claim needs an id no other claim in the project holds/);
+		const twice = await host.tool("record", { uri: "project://sections/methods", record: { ...methods, claims: [{ ...claim, id: "claim-cost" }, { ...claim, id: "claim-cost" }] } });
+		assert.match(twice.text, /claim-cost appears twice in this record/);
+		assert.equal(existsSync(path.join(workspace, ".planning/sections/methods/section.json")), false);
+		const fresh = await host.tool("record", { uri: "project://sections/methods", record: { ...methods, claims: [{ ...claim, id: "claim-method" }] } });
+		assert.equal(fresh.isError, undefined, fresh.text);
+	}));
+
 test("record refuses wrong type, id, project and unknown fields without touching the destination", () =>
 	withDesk(async (host, workspace) => {
 		const before = sha(workspace, ".planning/sections/introduction/section.json");
@@ -581,6 +616,57 @@ test("a gate answer is recorded as a sealed interaction bound to what the author
 		const again = await host.tool("gate", { checkpoint: GATE });
 		assert.match(again.text, /already resolved by the author at this desk/);
 	}));
+
+test("resume on a pause checkpoint returns the project to active in the same write; expire leaves it paused", () =>
+	withDesk(async (host, workspace) => {
+		const pause = (id: string): void => {
+			put(workspace, `.planning/checkpoints/${id}.json`, {
+				schema: "wtfp.project.checkpoint/v1",
+				id,
+				project_id: PROJECT,
+				kind: "human-action",
+				status: "pending",
+				blocking: true,
+				scope_uri: "project://sections/introduction",
+				request: "Resume writing the introduction?",
+				options: [
+					{ id: "resume", label: "Resume", implication: "The project returns to active." },
+					{ id: "expire", label: "Expire", implication: "The checkpoint closes and the project stays paused." },
+				],
+				resume_action: "write-section",
+				created_at: AT,
+			});
+			const state = read(workspace, ".planning/state.json");
+			put(workspace, ".planning/state.json", { ...state, status: "paused", active_checkpoint_uris: [`project://checkpoints/${id}`] });
+		};
+		pause("pause-expire");
+		await answer(host, "pause-expire", "expire");
+		assert.deepEqual([read(workspace, ".planning/state.json").status, read(workspace, ".planning/state.json").active_checkpoint_uris], ["paused", []]);
+
+		pause("pause-resume");
+		const before = read(workspace, ".planning/state.json").revision as number;
+		const key = await ask(host, "pause-resume");
+		const done = await host.interview({ id: "gate-one", step: key, nav: "next", answers: { choice: "resume" } });
+		assert.match("done" in done ? done.text : "", /pause-resume: Resume\. The project is active again/);
+		const state = read(workspace, ".planning/state.json");
+		assert.deepEqual([state.status, state.phase, state.active_checkpoint_uris, state.revision], ["active", "writing", [], before + 1]);
+		assert.deepEqual([(state.last_transition as Json).from, (state.last_transition as Json).to], ["paused", "active"]);
+		const report = (await host.command("validate")).text;
+		assert.match(report, /records valid against their schemas/);
+		assert.doesNotMatch(report, /project:\/\/(state|checkpoints\/pause-)/);
+	}));
+
+test("the author's card for a batch of gate answers names what was chosen and leaves the model's instructions out", () =>
+	withDesk(async (host) => {
+		await answer(host, PLAN_GATE, "approve");
+		const started = await host.command("check-todos");
+		const next = await host.interview({ id: "gate", step: started.interview?.step.key as string, nav: "next", answers: { choice: "workflow-first" } });
+		assert.ok("done" in next);
+		assert.match(next.text, /checkpoint-framing: Workflow first\. The desk wrote .*read any of them again/);
+		const card = JSON.stringify(next.card);
+		assert.match(card, /Recorded: checkpoint-framing: Workflow first\./);
+		assert.doesNotMatch(card, /The desk wrote|read any of them again/);
+	}, SERVED));
 
 test("cancelling, headless asking and keeping a gate pending never resolve it (G2)", () =>
 	withDesk(async (host, workspace) => {
@@ -1876,6 +1962,7 @@ test("a pending plan gate cannot be retired by briefly linking a decoy plan", ()
 		await answer(host, GATE, "protocol-first");
 		const sectionFile = ".planning/sections/introduction/section.json";
 		const section = read(workspace, sectionFile);
+		writeFileSync(path.join(workspace, ".planning/sections/introduction/plans/decoy.md"), "# Decoy\n");
 		const decoy = { ...(section.artifacts as Json), plans: [PLAN_URI, "project://sections/introduction/plans/decoy"] };
 		assert.equal((await host.tool("record", { uri: "project://sections/introduction", record: { ...section, artifacts: decoy }, expect_sha256: sha(workspace, sectionFile) })).isError, undefined);
 		const checkpoint = read(workspace, `.planning/checkpoints/${PLAN_GATE}.json`);

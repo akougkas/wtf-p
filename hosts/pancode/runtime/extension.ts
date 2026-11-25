@@ -1,7 +1,7 @@
 /**
  * WTF-P writing desk for PanCode. Human-edited source; the adapter
  * compiler copies it to pancode/extension/runtime/ beside the
- * generated write-guard.json, json-schema.cjs and claim-coverage.cjs.
+ * generated write-guard.json, help.json, json-schema.cjs and claim-coverage.cjs.
  *
  * The desk reads the portable `.planning` records and the manuscript and
  * draws them. It is also the project's one JSON record writer on PanCode: each
@@ -111,6 +111,10 @@ const GUARD = JSON.parse(readFileSync(new URL("./write-guard.json", import.meta.
 	schema: string;
 	actions: Record<string, GuardAction>;
 	paperWriters: string[];
+};
+const HELP = JSON.parse(readFileSync(new URL("./help.json", import.meta.url), "utf8")) as {
+	schema: string;
+	groups: Array<{ title: string; actions: string[] }>;
 };
 const SKIN = JSON.parse(readFileSync(new URL("../skins/wtfp.json", import.meta.url), "utf8")) as ExtensionSkin;
 const RECORD_LIMIT = 1024 * 1024;
@@ -916,11 +920,7 @@ function reconcile(workspace: string, desk: Desk): Finding[] {
 			continue;
 		}
 		const artifacts = (section.record.artifacts ?? {}) as Json;
-		for (const uri of [
-			...(Array.isArray(artifacts.plans) ? (artifacts.plans as string[]) : []),
-			...(Array.isArray(artifacts.reviews) ? (artifacts.reviews as string[]) : []),
-			...["context", "research", "summary", "handoff"].map((key) => artifacts[key]).filter((uri): uri is string => typeof uri === "string"),
-		]) {
+		for (const uri of sectionLinks(section.record)) {
 			const file = artifactFile(workspace, uri, desk.outputFormat);
 			if (file === null || readBytes(workspace, file) === null) add("error", "artifact-dangling", subject, `${uri} is linked but does not resolve to a file.`);
 		}
@@ -1381,6 +1381,56 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 	}
 }
 
+/** The artifact URIs a section record links, manuscript aside: the links reconcile resolves. */
+function sectionLinks(record: Json | null): string[] {
+	const artifacts = isObject(record?.artifacts) ? (record.artifacts as Json) : {};
+	return [
+		...(Array.isArray(artifacts.plans) ? artifacts.plans : []),
+		...(Array.isArray(artifacts.reviews) ? artifacts.reviews : []),
+		...["context", "research", "summary", "handoff"].map((key) => artifacts[key]),
+	].filter((uri): uri is string => typeof uri === "string");
+}
+
+function claimIds(record: Json | null): string[] {
+	return (Array.isArray(record?.claims) ? record.claims : []).map((claim) => (isObject(claim) ? text(claim.id) : "")).filter(Boolean);
+}
+
+/**
+ * Why a section write would leave the project failing validation, judged on what
+ * this write adds: a link to an artifact file that does not exist, or a claim id
+ * another claim already holds.
+ */
+function sectionRefusal(workspace: string, uri: string, prior: Json | null, record: Json): string | null {
+	const linked = new Set(sectionLinks(prior));
+	const missing = sectionLinks(record).filter((link) => {
+		if (linked.has(link)) return false;
+		const file = artifactFile(workspace, link);
+		return file === null || readBytes(workspace, file) === null;
+	});
+	if (missing.length > 0)
+		return `${uri} links ${missing.join(", ")}, which ${missing.length === 1 ? "has" : "have"} no file yet. Write the artifact first or leave the link out until it exists, then send the write again; a missing artifact is not a refusal and does not end the step`;
+	const held = new Set(claimIds(prior));
+	const ids = claimIds(record);
+	const added = ids.filter((id) => !held.has(id));
+	const twice = [...new Set(added.filter((id, index) => added.indexOf(id) !== index))];
+	const owners = new Map<string, string>();
+	const directory = contained(workspace, ".planning/sections");
+	const own = record.id;
+	if (directory !== null && existsSync(directory) && lstatSync(directory).isDirectory())
+		for (const entry of readdirSync(directory, { withFileTypes: true })) {
+			if (!entry.isDirectory() || entry.name === own) continue;
+			for (const id of claimIds(readRecord(workspace, `.planning/sections/${entry.name}/section.json`)))
+				if (added.includes(id) && !owners.has(id)) owners.set(id, entry.name);
+		}
+	const clashes = [
+		...twice.map((id) => `${id} appears twice in this record`),
+		...[...owners].map(([id, section]) => `${id} is already a claim of project://sections/${section}`),
+	];
+	return clashes.length > 0
+		? `${uri}: ${clashes.join("; ")}. Each claim needs an id no other claim in the project holds; rename the claim and send the write again. A duplicate id is not a refusal and does not end the step`
+		: null;
+}
+
 function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | "desk", armed: Armed | null): Prepared {
 	const { uri } = input;
 	const record = input.record;
@@ -1441,6 +1491,10 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 		const superseded = plan !== null && Array.isArray(plans) && plans.length > 0 && plans[plans.length - 1] !== prior?.scope_uri;
 		const refusal = checkpointRefusal(prior, record, superseded);
 		if (refusal) throw new Error(`${uri}: ${refusal}`);
+	}
+	if (route.type === "section") {
+		const refusal = sectionRefusal(workspace, uri, prior, record);
+		if (refusal) throw new Error(refusal);
 	}
 	const next: Json = { ...record };
 	let revision: number | null = null;
@@ -1951,9 +2005,9 @@ function islands(desk: Desk, running: Record<string, { agentId: string; at: numb
 				items: [
 					{ label: "sources verified", value: String(verified), tone: verified > 0 ? "positive" : "muted" },
 					{ label: "provisional", value: String(provisional), tone: provisional > 0 ? "warning" : "muted" },
-					...(lost > 0 ? [{ label: "unavailable or retracted", value: String(lost), tone: "error" as ViewTone }] : []),
+					...(lost > 0 ? [{ label: "sources unusable", value: String(lost), tone: "error" as ViewTone }] : []),
 					{ label: "evidence items", value: String(desk.evidence) },
-					{ label: "required claims without support", value: String(unsupported), tone: unsupported > 0 ? "warning" : "positive" },
+					{ label: "unsupported claims", value: String(unsupported), tone: unsupported > 0 ? "warning" : "positive" },
 				],
 			},
 		});
@@ -2108,6 +2162,8 @@ async function revalidate(ctx: ExtensionContextV2, files: string[]): Promise<Vie
 const KEEP = "__keep";
 const RESOLVE = "__resolve";
 const WAIVE = "__waive";
+/** The pause checkpoint's option that returns a paused project to active (pause-writing step 2). */
+const RESUME = "resume";
 
 /** What the author was shown, kept until the answer arrives so a changed question cannot take an old answer. */
 interface Asked {
@@ -2222,7 +2278,7 @@ function interactionId(): string {
 	return `interaction-${timestamp().replace(/[^0-9]/gu, "")}-${randomBytes(4).toString("hex")}`;
 }
 
-type AnswerResult = { kind: "recorded" | "kept" | "stale" | "refused"; text: string; checkpoint?: string };
+type AnswerResult = { kind: "recorded" | "kept" | "stale" | "refused"; text: string; author?: string; checkpoint?: string };
 
 /**
  * Records one gate answer. The answer counts only if it names an option the
@@ -2271,6 +2327,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 	);
 	const writes: Array<{ input: RecordWrite }> = [{ input: { uri: `project://interactions/${String(interaction.id)}`, record: interaction } }];
 	let linkedIn: string | null = null;
+	let resumed = false;
 	if (!stale && picked !== KEEP) {
 		const { file: _file, trust: _trust, answer: _answer, ...stored } = checkpoint;
 		writes.push({
@@ -2297,14 +2354,22 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 		});
 		const state = readRecord(workspace, ".planning/state.json");
 		const uri = `project://checkpoints/${checkpoint.id}`;
-		if (state && Array.isArray(state.active_checkpoint_uris) && state.active_checkpoint_uris.includes(uri))
+		if (state && Array.isArray(state.active_checkpoint_uris) && state.active_checkpoint_uris.includes(uri)) {
+			resumed = option?.id === RESUME && state.status === "paused";
 			writes.push({
 				input: {
 					uri: "project://state",
 					expect_revision: typeof state.revision === "number" ? state.revision : 0,
-					record: { ...state, active_checkpoint_uris: (state.active_checkpoint_uris as string[]).filter((entry) => entry !== uri) },
+					record: {
+						...state,
+						active_checkpoint_uris: (state.active_checkpoint_uris as string[]).filter((entry) => entry !== uri),
+						...(resumed
+							? { status: "active", last_transition: { from: "paused", to: "active", reason: `The author chose to resume at ${checkpoint.id}.`, at: now } }
+							: {}),
+					},
 				},
 			});
+		}
 		// The author's approval links the plan in the same commit: live, the model asked the desk for its next
 		// step before linking, and the approved plan sat unlinked while the driver planned again.
 		const planned = option?.id === APPROVE && planGate(checkpoint) ? /^project:\/\/sections\/([^/]+)\/plans\//u.exec(checkpoint.scope_uri)?.[1] : undefined;
@@ -2344,14 +2409,16 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 			checkpoint: checkpoint.id,
 		};
 	if (picked === KEEP) return { kind: "kept", text: `${checkpoint.id}: kept pending`, checkpoint: checkpoint.id };
+	const chosen = `${option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`}${
+		resumed ? ". The project is active again" : ""
+	}`;
 	return {
 		kind: "recorded",
-		text: `${option ? `${checkpoint.id}: ${shown(checkpoint, option).label}` : `${checkpoint.id}: ${picked === WAIVE ? "waived" : "done"}`}${
-			linkedIn ? `. The desk linked ${checkpoint.scope_uri} in ${linkedIn} with this answer; do not link it again` : ""
-		}. The desk wrote ${writes
+		text: `${chosen}${linkedIn ? `. The desk linked ${checkpoint.scope_uri} in ${linkedIn} with this answer; do not link it again` : ""}. The desk wrote ${writes
 			.slice(1)
 			.map((entry) => entry.input.uri)
 			.join(", ")}; read any of them again before writing it`,
+		author: chosen,
 		checkpoint: checkpoint.id,
 	};
 }
@@ -2859,6 +2926,7 @@ function helpCard(served: ServedPlugin): { text: string; card: View } {
 		];
 	});
 	const local = [...DESK_COMMANDS].map((id) => actionName(served, id));
+	const unavailable = new Set(availability.actions.filter((entry) => entry.status !== "available").map((entry) => entry.id));
 	return {
 		text: rows.map((row) => `${row[0]}  ${row[1]}`).join("\n"),
 		card: {
@@ -2868,7 +2936,14 @@ function helpCard(served: ServedPlugin): { text: string; card: View } {
 			title: "WTF-P actions",
 			meta: `${rows.length}`,
 			children: [
-				{ t: "table", columns: ["action", "what it does"], rows },
+				{
+					t: "kv",
+					items: HELP.groups.map((group) => ({
+						label: group.title,
+						value: group.actions.map((id) => `${actionName(served, id)}${unavailable.has(id) ? " (unavailable)" : ""}`).join("  "),
+					})),
+				},
+				...(served ? [{ t: "text", wrap: "wrap", tone: "muted", text: "Type /wtfp: in the prompt to see what each action does." } as View] : []),
 				{
 					t: "text",
 					wrap: "wrap",
@@ -2948,9 +3023,17 @@ async function validateAll(ctx: ExtensionContextV2): Promise<ExtensionOutputV2> 
 			...(findings.length > 0
 				? [
 						{
-							t: "table",
-							columns: ["severity", "finding", "subject", "detail"],
-							rows: findings.slice(0, 40).map((finding) => [finding.severity, finding.code, finding.subject.replace(/^project:\/\//u, ""), finding.message]),
+							t: "list",
+							items: findings.slice(0, 40).map((finding, index) => {
+								const tone: ViewTone = finding.severity === "warning" ? "warning" : finding.severity === "info" ? "muted" : "error";
+								return {
+									key: String(index),
+									mark: tone === "error" ? "✗" : tone === "warning" ? "!" : "·",
+									tone,
+									label: `${finding.severity} ${finding.code} · ${finding.subject.replace(/^project:\/\//u, "")}`,
+									detail: finding.message,
+								};
+							}),
 						} as View,
 					]
 				: []),
@@ -3759,7 +3842,7 @@ export default function extension(api: ExtensionApiV2): void {
 				...(await picture(ctx)),
 			};
 		const kept = (await ctx.state.get<string[]>("gate-kept")).value ?? [];
-		const recorded = (await ctx.state.get<string[]>("gate-recorded")).value ?? [];
+		const recorded = (await ctx.state.get<Array<{ text: string; author: string }>>("gate-recorded")).value ?? [];
 		let note = "";
 		try {
 			const typed = await freeText(ctx, event);
@@ -3770,7 +3853,7 @@ export default function extension(api: ExtensionApiV2): void {
 				if (current && remaining.includes(current)) return { step: await ask(ctx, desk, current, FREE_TEXT), total: remaining.length + recorded.length + kept.length };
 			}
 			const result = typed ?? (await answer(ctx, event.step, choiceOf(event.answers), noteOf(event)));
-			if (result.kind === "recorded") recorded.push(result.text);
+			if (result.kind === "recorded") recorded.push({ text: result.text, author: result.author ?? result.text });
 			else if (result.kind === "kept" && result.checkpoint) kept.push(result.checkpoint);
 			else if (result.kind === "refused") {
 				note = result.text;
@@ -3786,11 +3869,12 @@ export default function extension(api: ExtensionApiV2): void {
 		const next = remaining[0];
 		if (next && !note.startsWith("Nothing was recorded")) return { step: await ask(ctx, desk, next), total: remaining.length + recorded.length + kept.length };
 		await ctx.state.set("gate-recorded", []);
-		const summary = [recorded.length > 0 ? `Recorded: ${recorded.join("; ")}.` : "Nothing recorded.", note].filter(Boolean).join(" ");
+		const summary = (pick: "text" | "author"): string =>
+			[recorded.length > 0 ? `Recorded: ${recorded.map((entry) => entry[pick]).join("; ")}.` : "Nothing recorded.", note].filter(Boolean).join(" ");
 		return {
 			done: true,
-			text: summary,
-			card: { t: "text", text: `${recorded.length > 0 ? "✓" : "·"} ${summary}`, tone: recorded.length > 0 ? "positive" : "muted", wrap: "wrap" },
+			text: summary("text"),
+			card: { t: "text", text: `${recorded.length > 0 ? "✓" : "·"} ${summary("author")}`, tone: recorded.length > 0 ? "positive" : "muted", wrap: "wrap" },
 			...(await picture(ctx, desk)),
 		};
 	});
@@ -3889,7 +3973,9 @@ export default function extension(api: ExtensionApiV2): void {
 				{
 					kind: "notify_operator",
 					key: "wtfp-guard",
-					message: `WTF-P write guard armed for ${actionName(ctx.snapshot.plugin ?? null, armed.action)}${armed.section ? ` ${armed.section}` : ""}: files stay under ${roots.join(", ") || "nothing"}, records under what it declares.`,
+					message: `WTF-P write guard armed for ${actionName(ctx.snapshot.plugin ?? null, armed.action)}${armed.section ? ` ${armed.section}` : ""}: ${
+						roots.length > 0 ? `files stay under ${roots.join(", ")}` : "it writes no files"
+					}, and records only the ones its contract declares.`,
 				},
 			],
 		};

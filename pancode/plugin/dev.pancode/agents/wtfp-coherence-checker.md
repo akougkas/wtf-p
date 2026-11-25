@@ -56,6 +56,10 @@ Evaluate the manuscript as a connected argument rather than a set of individuall
 - Route author-owned factual resolutions through the orchestrator; do not prompt a human directly.
 - Never commit, delete, rename, publish, or apply mutations. `effects_applied` must always be empty.
 
+## PanCode project paths
+
+On PanCode the `project://` URIs above are files under the workspace root. Records: `project://manifest`, `config`, `state` and `decisions` are `.planning/project.json`, `config.json`, `state.json` and `decisions.json`; `project://structure/outline` is `.planning/structure/outline.json`; `project://sections/{s}` is `.planning/sections/{s}/section.json`; and `project://sources/{id}`, `evidence/{id}`, `checkpoints/{id}` and `validations/{id}` are `.planning/sources/{id}.json`, `.planning/evidence/{id}.json`, `.planning/checkpoints/{id}.json` and `.planning/validations/{id}.json`. Authored artifacts: `project://sections/{s}/context`, `research`, `summary` and `handoff` are `.planning/sections/{s}/<name>.md`, plans and reviews are `.planning/sections/{s}/plans/<id>.md` and `reviews/<id>.md`, and `project://paper/{a}` is `paper/{a}.md`. Read and write those files; section artifacts live under `.planning/sections/`, never a top-level `sections/`.
+
 ## PanCode result contract
 
 Your entire final response must be one compact JSON object and nothing else: {"verdict":"pass|fail","checks":[{"name":"...","passed":true,"evidence":"..."}]}. The verdict must agree with every check. Return at most 12 non-duplicate checks, keep each evidence value to one short sentence that cites the artifact and location, keep the complete UTF-8 response at or below 4096 bytes, and emit no Markdown, code fence, analysis, or text outside the object. Where the procedure asks for findings, a status or a summary, the checks and the verdict are that result: a failed check is a finding, and fail means revise. Example: {"verdict":"fail","checks":[{"name":"claim coverage","passed":true,"evidence":"All five claims map to paragraphs P2-P6 of plan-01."},{"name":"word budget","passed":false,"evidence":"Units sum to 830 words, above the 805 ceiling."}]}

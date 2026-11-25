@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "copilot-marketplace",
-  "sourceHash": "c93ef202c01dc7bf8fcba0beaf4127165fdd59d8d6b6d4cb16829dc1fa23cb77",
+  "sourceHash": "1e2d7c66815877e29d5de4c228cfc43db7e5c251d1380e31fab8c072cac53446",
   "files": [
     {
       "path": "marketplace.json",
@@ -134,7 +134,7 @@
     },
     {
       "path": "project/.github/prompts/wtfp-pause-writing.prompt.md",
-      "sha256": "3ceed10f1d206be775f7a9258d7f3893207419dc1687fed06d3d9fc593544c9b"
+      "sha256": "6bc67bfbb9417d961f558c46a6e3a6ae0fc4b10552c56b43cf248dda0ef9a833"
     },
     {
       "path": "project/.github/prompts/wtfp-plan-milestone-gaps.prompt.md",
@@ -766,7 +766,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/create-outline.md",
-      "sha256": "a04d0f25a64d5963c890162399e26de2aad593408491c68871832f5c96a6e90e"
+      "sha256": "41ffcf7fafb9496686318d5852569eecfe85bb80d9f101da20ec8ae6599b936e"
     },
     {
       "path": "project/.github/wtfp/workflows/create-poster.md",
@@ -794,7 +794,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/insert-section.md",
-      "sha256": "4a0856be3e3165b2bfb6e16a459ccdc04798f21e78178b2c8a24fbbc321cdc70"
+      "sha256": "eb0c313fd2eed6809c86384b9cb8fb842c0225cc0c3b33f180131d6b5de0de26"
     },
     {
       "path": "project/.github/wtfp/workflows/list-assumptions.md",
@@ -810,7 +810,7 @@
     },
     {
       "path": "project/.github/wtfp/workflows/pause-writing.md",
-      "sha256": "5925c00a573e65c99a34e19984804f6407373e560621874cff29dbff4080fd0a"
+      "sha256": "ac40a7b7520e07e94c1f45dbdd6bc443ba7bae63def58e08e80d36081be3710a"
     },
     {
       "path": "project/.github/wtfp/workflows/plan-milestone-gaps.md",

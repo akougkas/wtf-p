@@ -84,6 +84,7 @@ function validateMarkdownCommand(filePath, actionId, options) {
   check(content.includes(GENERATED), filePath, 'compiler provenance banner is missing');
   if (isUnavailableBody(parsed.body)) {
     validateUnavailableBody(parsed.body, filePath, actionId, '$ARGUMENTS');
+    if (parsed.fields['display-only'] === 'true') check(/^```text\nWTFP_ACTION_UNAVAILABLE\n[\s\S]+?\n```$/m.test(parsed.body), filePath, 'display-only refusal must be one fenced text block');
     passed++;
     return;
   }
