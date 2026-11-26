@@ -1,6 +1,6 @@
 {
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
-  "name": "wtfp",
-  "version": "0.9.1",
-  "description": "Portable academic research and writing workflows (WTF-P 0.9.1)."
+  "name": "panwrite",
+  "version": "1.0.0",
+  "description": "Portable academic research and writing workflows (PanWrite 1.0.0)."
 }

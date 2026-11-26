@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-11-26
+
+WTF-P is now PanWrite, published by PanStudio. The package, commands,
+plugins, desk extension, markers and environment variables all carry the new
+name. Nothing reads the old names and no aliases are installed: remove an
+existing WTF-P install with the old package's uninstaller, then install
+PanWrite with `npx @panstudio/panwrite install <host>`.
+
+### Changed
+
+- **Breaking:** the product is renamed from WTF-P to PanWrite and the
+  repository moved to https://github.com/PanStudio/panwrite
+- **Breaking:** the npm package is `@panstudio/panwrite`. The `wtf-p`
+  package receives no further releases
+- **Breaking:** the slash commands are `/panwrite-*` (`/panwrite:*` in plugin
+  namespaces), the skills are `panwrite-*`, the agents are `panwrite-*`, the
+  plugin and marketplace are `panwrite@panwrite`, and the PanCode desk
+  extension and skin are `panwrite`. Generated inventories are
+  `.panwrite-generated.json`, receipts and locks use `.panwrite-*` names,
+  environment variables use the `PANWRITE_` prefix, and schema identifiers
+  live under `https://schemas.panwrite.dev/`
+- **Breaking:** the PanCite companion (formerly CiteNexus) is reached as
+  `citation-search --backend=pancite` through the `pancite-panwrite` command,
+  which `PANWRITE_PANCITE_COMMAND` may name. The exchange schema is
+  `pancite.panwrite/v1` with each result's provenance under `pancite`, and the
+  MCP server id is `pancite`. The setup guide is `docs/PANCITE.md`
+- The licence changes from MIT to Apache-2.0, copyright PanStudio, with a
+  `NOTICE` file
+
+### Removed
+
+- **Breaking:** the `/wtfp-*` and `/wtfp:*` commands, the `wtfp-*` skills and
+  agents, and the `wtfp`, `wtf-p` and `wtf-p-uninstall` executables. The
+  executables are now `panwrite` and `panwrite-uninstall`
+- The installer no longer treats a plugin manifest or receipt named
+  `write-the-f-paper` as its own
+
 ## [0.9.1] - 2026-11-25
 
 Fixes from running WTF-P 0.9.0 in PanCode 0.9.0. Both playbooks finish, a
@@ -1110,7 +1147,8 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/PanStudio/panwrite/compare/v0.9.1...HEAD
+[Unreleased]: https://github.com/PanStudio/panwrite/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/PanStudio/panwrite/compare/v0.9.1...v1.0.0
 [0.9.1]: https://github.com/PanStudio/panwrite/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/PanStudio/panwrite/compare/v0.8.5...v0.9.0
 [0.8.5]: https://github.com/PanStudio/panwrite/compare/v0.8.4...v0.8.5

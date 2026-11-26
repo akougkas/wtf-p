@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.baseline/v1",
+  "$id": "panwrite.evaluation.baseline/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "version", "evidence_status", "scenario", "fixture", "protocol", "expected_invariants", "required_capabilities", "run_metadata_schema", "observed_runs"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.baseline/v1" },
+    "schema": { "const": "panwrite.evaluation.baseline/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 },
     "evidence_status": { "enum": ["definition-only", "observed"] },
@@ -49,7 +49,7 @@
       "required": ["project_protocol_version", "catalog_schema", "adapter_compiler_version", "canonical_source_commit", "canonical_source_sha256"],
       "properties": {
         "project_protocol_version": { "const": 1 },
-        "catalog_schema": { "const": "wtfp.catalog/v1" },
+        "catalog_schema": { "const": "panwrite.catalog/v1" },
         "adapter_compiler_version": { "type": "integer", "minimum": 1 },
         "canonical_source_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
         "canonical_source_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
@@ -82,7 +82,7 @@
       "items": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
       "uniqueItems": true
     },
-    "run_metadata_schema": { "const": "wtfp.evaluation.run-metadata/v1" },
+    "run_metadata_schema": { "const": "panwrite.evaluation.run-metadata/v1" },
     "observed_runs": {
       "type": "array",
       "items": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.json$" },

@@ -1,7 +1,7 @@
 {
-  "schema": "wtfp.action-availability/v1",
+  "schema": "panwrite.action-availability/v1",
   "target": "claude",
-  "marker": "WTFP_ACTION_UNAVAILABLE",
+  "marker": "PANWRITE_ACTION_UNAVAILABLE",
   "capabilityBindings": {
     "agent.delegate": "claude:Task",
     "agent.parallel": "claude:Task",

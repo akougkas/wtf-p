@@ -171,7 +171,7 @@ function lintExplicitActions(explicit, ownership, actionIds) {
   for (const action of explicit.actions) {
     assert.strictEqual(
       action.invocation,
-      `/wtfp:${action.id}${action.arguments.length > 0 ? ` ${action.arguments}` : ''}`,
+      `/panwrite:${action.id}${action.arguments.length > 0 ? ` ${action.arguments}` : ''}`,
       `${action.id}: invocation must preserve exact argument bytes after the command separator`
     );
     assert.strictEqual(action.expected.action, action.id, `${action.id}: explicit route changed the action id`);
@@ -241,7 +241,7 @@ function lintFixtureAndBaseline(rubric, expected, baseline, registry) {
   assert.strictEqual(baseline.protocol.adapter_compiler_version, GENERATOR_VERSION);
   assert.strictEqual(
     baseline.protocol.canonical_source_sha256,
-    readJson(path.join(repositoryRoot, 'pancode', 'plugin', '.wtfp-generated.json')).sourceHash,
+    readJson(path.join(repositoryRoot, 'pancode', 'plugin', '.panwrite-generated.json')).sourceHash,
     'baseline must bind the exact current canonical source hash'
   );
   lintBaselineEvidenceState(baseline, registry);
@@ -396,7 +396,7 @@ function lintClientSurfaces(surfaces, explicit) {
         assert.strictEqual(input, null, `${target}/${action.id}: unsupported operation acquired a selector`);
       } else if (target === 'codex') {
         assert.strictEqual(input,
-          `$wtf-p:${action.expected.skill} ${action.id}${action.arguments.length > 0 ? ` ${action.arguments}` : ''}`,
+          `$panwrite:${action.expected.skill} ${action.id}${action.arguments.length > 0 ? ` ${action.arguments}` : ''}`,
           `${target}/${action.id}: native skill mention changed bytes`);
       } else {
         assert.strictEqual(input, action.invocation, `${target}/${action.id}: native action command changed bytes`);
@@ -433,15 +433,15 @@ function lintRoutingManifest(manifest) {
   assert.strictEqual(manifest.adapter_compiler_version, GENERATOR_VERSION);
 
   const expectedEnvelopePaths = [
-    'vendors/antigravity/.wtfp-generated.json',
-    'vendors/claude/.wtfp-generated.json',
-    'pancode/plugin/.wtfp-generated.json',
-    'vendors/codex/.wtfp-generated.json',
-    'vendors/codex/plugins/wtfp/.wtfp-generated.json',
-    'vendors/copilot/.wtfp-generated.json',
-    'vendors/copilot/plugins/wtfp/.wtfp-generated.json',
-    'vendors/gemini/.wtfp-generated.json',
-    'vendors/opencode/.wtfp-generated.json'
+    'vendors/antigravity/.panwrite-generated.json',
+    'vendors/claude/.panwrite-generated.json',
+    'pancode/plugin/.panwrite-generated.json',
+    'vendors/codex/.panwrite-generated.json',
+    'vendors/codex/plugins/panwrite/.panwrite-generated.json',
+    'vendors/copilot/.panwrite-generated.json',
+    'vendors/copilot/plugins/panwrite/.panwrite-generated.json',
+    'vendors/gemini/.panwrite-generated.json',
+    'vendors/opencode/.panwrite-generated.json'
   ];
   assert.deepStrictEqual(manifest.generated_envelopes.map(item => item.path), expectedEnvelopePaths,
     'routing manifest must bind all nine generated envelopes');

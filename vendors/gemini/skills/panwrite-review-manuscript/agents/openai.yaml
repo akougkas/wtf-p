@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Review Manuscript"
+  short_description: "Review, verify, and polish a manuscript"
+  default_prompt: "Use $panwrite-review-manuscript to review this manuscript against its plans and evidence."

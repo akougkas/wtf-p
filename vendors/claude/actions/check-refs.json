@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "check-refs",
   "title": "Check references",
   "description": "Audit citation integrity and emit a validated corrected-bibliography candidate without mutating source records or manuscript inputs.",
-  "alias": "wtfp:check-refs",
+  "alias": "panwrite:check-refs",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-research-literature"
+    "skill": "panwrite-research-literature"
   },
-  "workflow": "wtfp://workflows/check-refs",
+  "workflow": "panwrite://workflows/check-refs",
   "requirements": {
     "capabilities": [
       "agent.delegate",
@@ -70,7 +70,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "declared bibliography and citation tools through tools/wtfp-tool.js"
+      "scope": "declared bibliography and citation tools through tools/panwrite-tool.js"
     },
     {
       "id": "user.gate",

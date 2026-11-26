@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "check-todos",
   "title": "Review todos",
   "description": "Review pending tasks and explicitly act on, defer, complete, or dismiss each one.",
-  "alias": "wtfp:check-todos",
+  "alias": "panwrite:check-todos",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/check-todos",
+  "workflow": "panwrite://workflows/check-todos",
   "requirements": {
     "capabilities": [
       "filesystem.read",

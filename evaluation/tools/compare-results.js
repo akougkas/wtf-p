@@ -147,7 +147,7 @@ function verifyResultEvidence(document, evidenceRoot) {
 }
 
 function invariantMap(document) {
-  const invariants = document.schema === 'wtfp.evaluation.baseline/v1'
+  const invariants = document.schema === 'panwrite.evaluation.baseline/v1'
     ? document.expected_invariants
     : document.invariants;
   const result = new Map();
@@ -168,16 +168,16 @@ function expectationScore(invariant) {
 }
 
 function fixtureMetadata(document) {
-  return document.schema === 'wtfp.evaluation.baseline/v1' ? document.fixture : document.run.fixture;
+  return document.schema === 'panwrite.evaluation.baseline/v1' ? document.fixture : document.run.fixture;
 }
 
 function referenceOutput(document) {
-  if (document.schema === 'wtfp.evaluation.baseline/v1') return document.reference_output || null;
+  if (document.schema === 'panwrite.evaluation.baseline/v1') return document.reference_output || null;
   return document.output || null;
 }
 
 function capabilityMap(document) {
-  if (document.schema === 'wtfp.evaluation.baseline/v1') {
+  if (document.schema === 'panwrite.evaluation.baseline/v1') {
     return new Map((document.required_capabilities || []).map(id => [id, 'available']));
   }
   return new Map((document.capabilities || []).map(capability => [capability.id, capability.status]));
@@ -295,8 +295,8 @@ function validateObservedEvidenceContract(document, root) {
 
 function validateDocument(document, label) {
   const schemaNames = {
-    'wtfp.evaluation.baseline/v1': 'baseline.schema.json',
-    'wtfp.evaluation.result/v1': 'result.schema.json'
+    'panwrite.evaluation.baseline/v1': 'baseline.schema.json',
+    'panwrite.evaluation.result/v1': 'result.schema.json'
   };
   const schemaName = schemaNames[document && document.schema];
   if (!schemaName) throw new Error(`${label} has unsupported schema ${document && document.schema || '<missing>'}`);
@@ -304,7 +304,7 @@ function validateDocument(document, label) {
   const schemaFile = path.join(schemasRoot, schemaName);
   const errors = validateInstance(document, schemas.get(schemaFile), schemaFile, schemas);
   if (errors.length > 0) throw new Error(`${label} schema failed:\n${errors.join('\n')}`);
-  if (document.schema === 'wtfp.evaluation.result/v1') validateResultIntegrity(document, label);
+  if (document.schema === 'panwrite.evaluation.result/v1') validateResultIntegrity(document, label);
 }
 
 function validateResultIntegrity(document, label) {
@@ -448,11 +448,11 @@ function validateResultIntegrity(document, label) {
 }
 
 function expectedProtocol(document) {
-  if (document.schema === 'wtfp.evaluation.baseline/v1') {
+  if (document.schema === 'panwrite.evaluation.baseline/v1') {
     return {
       project_protocol_version: document.protocol.project_protocol_version,
       adapter_compiler_version: document.protocol.adapter_compiler_version,
-      wtfp_commit: document.protocol.canonical_source_commit,
+      panwrite_commit: document.protocol.canonical_source_commit,
       source_sha256: document.protocol.canonical_source_sha256
     };
   }
@@ -460,7 +460,7 @@ function expectedProtocol(document) {
 }
 
 function expectedScenario(document) {
-  if (document.schema === 'wtfp.evaluation.baseline/v1') {
+  if (document.schema === 'panwrite.evaluation.baseline/v1') {
     return {
       phases: document.scenario.phases.filter(phase => phase !== 'always'),
       actionSequence: document.scenario.action_sequence,
@@ -475,11 +475,11 @@ function expectedScenario(document) {
 }
 
 function assertComparable(baseline, candidate) {
-  if (!['wtfp.evaluation.baseline/v1', 'wtfp.evaluation.result/v1'].includes(baseline.schema)) {
+  if (!['panwrite.evaluation.baseline/v1', 'panwrite.evaluation.result/v1'].includes(baseline.schema)) {
     throw new Error(`unsupported baseline schema ${baseline.schema || '<missing>'}`);
   }
-  if (candidate.schema !== 'wtfp.evaluation.result/v1') {
-    throw new Error(`candidate must use wtfp.evaluation.result/v1, got ${candidate.schema || '<missing>'}`);
+  if (candidate.schema !== 'panwrite.evaluation.result/v1') {
+    throw new Error(`candidate must use panwrite.evaluation.result/v1, got ${candidate.schema || '<missing>'}`);
   }
   const expectedFixture = fixtureMetadata(baseline);
   const actualFixture = fixtureMetadata(candidate);
@@ -494,7 +494,7 @@ function assertComparable(baseline, candidate) {
       throw new Error(`fixture ${field} differs: ${expectedFixture[field]} != ${actualFixture[field]}`);
     }
   }
-  if (baseline.schema === 'wtfp.evaluation.baseline/v1') {
+  if (baseline.schema === 'panwrite.evaluation.baseline/v1') {
     if (candidate.scenario.id !== baseline.scenario.id) {
       throw new Error(`scenario id differs: ${baseline.scenario.id} != ${candidate.scenario.id}`);
     }
@@ -525,7 +525,7 @@ function compareResults(baseline, candidate, options = {}) {
   const expected = invariantMap(baseline);
   const actual = invariantMap(candidate);
   const protocol = expectedProtocol(baseline);
-  for (const field of ['project_protocol_version', 'adapter_compiler_version', 'wtfp_commit', 'source_sha256']) {
+  for (const field of ['project_protocol_version', 'adapter_compiler_version', 'panwrite_commit', 'source_sha256']) {
     if (candidate.run.protocol[field] !== protocol[field]) {
       addDetail(
         classifications,
@@ -752,7 +752,7 @@ function compareResults(baseline, candidate, options = {}) {
   if (!DISPOSITIONS.includes(disposition)) throw new Error(`unknown comparison disposition ${disposition}`);
 
   const comparison = {
-    schema: 'wtfp.evaluation.comparison/v1',
+    schema: 'panwrite.evaluation.comparison/v1',
     baseline_id: baseline.id || baseline.run.id,
     candidate_run_id: candidate.run.id,
     disposition,

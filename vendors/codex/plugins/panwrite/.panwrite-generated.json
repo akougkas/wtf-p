@@ -1,0 +1,700 @@
+{
+  "schema": "panwrite.generated-adapter/v1",
+  "generatorVersion": 5,
+  "target": "codex",
+  "sourceHash": "9a3cd0978fd4b7c8bc6f086be302daefd063d894218eff62554a40f8f9e20005",
+  "files": [
+    {
+      "path": ".codex-plugin/plugin.json",
+      "sha256": "d2ae5baa405f9c0cc155cd58e9a132aadc926ee48d544c052392b6179978f359"
+    },
+    {
+      "path": "actions/add-todo.json",
+      "sha256": "3043a873d68d81d6744b5d8b075d4187fd754aa710ef7054a527b63fc7342442"
+    },
+    {
+      "path": "actions/advance.json",
+      "sha256": "636e6defe3a4567523548a1895b818eb66bce1945f5fd5edacadfbfb7817ca6b"
+    },
+    {
+      "path": "actions/analyze-bib.json",
+      "sha256": "610bb56718627f2a862b7e9d90c1e9c8f4c1e29ae0792e84f2abd0c3f2d988f6"
+    },
+    {
+      "path": "actions/audit-milestone.json",
+      "sha256": "8533f09ba2756f1d696e259c5228bab93b1fd30a09a2eb03951c6001052ca72d"
+    },
+    {
+      "path": "actions/check-refs.json",
+      "sha256": "e71904d7461c6f8f3f7f7be9dfa12a8816613719518916b185763ff2ea87ca09"
+    },
+    {
+      "path": "actions/check-todos.json",
+      "sha256": "37e264e0de7151694f6ac79ec01ac335d8bd10b54a6c240fb881a58a5d0b1bce"
+    },
+    {
+      "path": "actions/checkpoint.json",
+      "sha256": "88fb3968a6a47f8b02a30f824b5c53ed9b861a94f5d8e3d1510dcb5ed35df13f"
+    },
+    {
+      "path": "actions/contribute.json",
+      "sha256": "3dfade7988abd4359640b248e3203f7d6b686a1640897f7ca1809dcdbc327df9"
+    },
+    {
+      "path": "actions/create-outline.json",
+      "sha256": "9ad6fa1586fd5f2e24d3e56de0360a47284590a1f4ce29195345981ad2922129"
+    },
+    {
+      "path": "actions/create-poster.json",
+      "sha256": "c2fb6b28f1cc27d28b12d5e6611d6cc0d8d9554856236614b7a4bfebf97b03a1"
+    },
+    {
+      "path": "actions/create-slides.json",
+      "sha256": "ee9f11d18c3bb5f8256c177434bf62515e02892dbc65a22525ed652e3d318928"
+    },
+    {
+      "path": "actions/discuss-section.json",
+      "sha256": "64f948487ca93f5c26e4f7bbe8b5436b55d91cacb16de75207431b50f513efff"
+    },
+    {
+      "path": "actions/execute-outline.json",
+      "sha256": "73da23585ee107501fc5d334b4574d0321a4bd31d77ad6ad06c79d33aae8282e"
+    },
+    {
+      "path": "actions/export-latex.json",
+      "sha256": "937569f477051a547e8fdd2e6bf2d94ad1f5bec59aa5abe61f02f9b929ea2b4f"
+    },
+    {
+      "path": "actions/help.json",
+      "sha256": "d68abee2ae4ca8bf17b8a031897048022b8a483064c4d41591dd3530fefc34fc"
+    },
+    {
+      "path": "actions/insert-section.json",
+      "sha256": "4a48615c3a7e80ce5b7cb2f1ca72d129b447ee4e12f09d5bf0f941d45cdad093"
+    },
+    {
+      "path": "actions/list-assumptions.json",
+      "sha256": "d3b51841f08d5ee065e2ae6ff90fdf19af554dace4db2a6e5449313c63d8b8fa"
+    },
+    {
+      "path": "actions/map-project.json",
+      "sha256": "68b59f0e8d2ba72b7947bbf75aa08a523b857cc8930d0c32f1116bb4313015b2"
+    },
+    {
+      "path": "actions/new-paper.json",
+      "sha256": "6cbfd96eae3646e5331a50a45e077e158d1aebc18999ddbf22371126ca8406cd"
+    },
+    {
+      "path": "actions/pause-writing.json",
+      "sha256": "6284f438aa38d24bfd3a4949301c166a4b92b8af582747f7fcf55f32e3b1b133"
+    },
+    {
+      "path": "actions/plan-milestone-gaps.json",
+      "sha256": "1ab9ab557e6a0e84bb269a8f05036a58a02389218ef2af28c2b5b7da4db25cab"
+    },
+    {
+      "path": "actions/plan-revision.json",
+      "sha256": "92f811239015401d1e0850f8d0bf3c3fcd726235a18262b87cdcc237733a103c"
+    },
+    {
+      "path": "actions/plan-section.json",
+      "sha256": "d65d5580dcac15743b3440d39a2f1524f2a65d3ae6300816a8786fc0f69d0e3a"
+    },
+    {
+      "path": "actions/polish-prose.json",
+      "sha256": "cb37b6de182948c90eb676d7c7e7ffb27fc31258f0672719d396782decdd3d46"
+    },
+    {
+      "path": "actions/progress.json",
+      "sha256": "0e9ddef9f6ce965e1444a9acef44172925411c6036f75a0785e134af06ec72cb"
+    },
+    {
+      "path": "actions/quick.json",
+      "sha256": "e10ed5bf4e8ca2d47bd9cdbad2987061d102b4f1932dbdc8a2ece60354d19480"
+    },
+    {
+      "path": "actions/remove-section.json",
+      "sha256": "535e56b46faebc14ad3751e265aa3ec240cdfd1d3fedeaef5a6b0653cfc8c5d9"
+    },
+    {
+      "path": "actions/report-bug.json",
+      "sha256": "506d95527a6f62c42537af9ef3ee70a1b6eb71d9281826bc8c08cb1db1b7baee"
+    },
+    {
+      "path": "actions/request-feature.json",
+      "sha256": "86a23bdbd5e1db203a1c22cf97bb7953108423b2bc6df5a7eac2c14155988645"
+    },
+    {
+      "path": "actions/research-gap.json",
+      "sha256": "84c7c666634144eacda3fe04709eb60cc5ba1af9d2ba1ed8dc1bf7b73de5edc9"
+    },
+    {
+      "path": "actions/resume-writing.json",
+      "sha256": "9a822fd04c8707887a642d086b72406a3564455fda4892729bb90c45156ff617"
+    },
+    {
+      "path": "actions/review-section.json",
+      "sha256": "1e935ca52eea9ea03063284f558ee6669f0761eb53526aa8bd5f1ec9a2f507bb"
+    },
+    {
+      "path": "actions/settings.json",
+      "sha256": "7c05d16b34b0b5a70b2ae1765e3c4414924b949fc6de8a0365747aff4c5fdb70"
+    },
+    {
+      "path": "actions/submit-milestone.json",
+      "sha256": "a4b35be13e637c23172a5a0b3a7ff075d0be2f4fe476a0c8734ede9b8b9b0524"
+    },
+    {
+      "path": "actions/update.json",
+      "sha256": "48c820618a79dac0d56ea5106474b4c297fab2509415cfecbf92c504be2b9d56"
+    },
+    {
+      "path": "actions/verify-work.json",
+      "sha256": "c2383cbb14e91dc7a23f19243b5451525aacb13b4dec9b4b45c4f99cd681419f"
+    },
+    {
+      "path": "actions/write-section.json",
+      "sha256": "dfcf27f9fa6ffdf7d6b8e19875c1c25a21df9de00c74e8b120f4906b1854b019"
+    },
+    {
+      "path": "agents/panwrite-argument-verifier.toml",
+      "sha256": "07d449b4c0f64aa861b4b4daf66f55edd7bfc0b398582a829c9076fbed602410"
+    },
+    {
+      "path": "agents/panwrite-citation-expert.toml",
+      "sha256": "bce6bc5f2230efb4f86af338ff2002872df7f7b910d35e6e3af6520cac7e453f"
+    },
+    {
+      "path": "agents/panwrite-citation-formatter.toml",
+      "sha256": "b8277c2d71def2888fd6e19ca51d29a8378a4ef66d5c03bf8752d7979648f581"
+    },
+    {
+      "path": "agents/panwrite-coherence-checker.toml",
+      "sha256": "8eb1b4274f0847b39f058cf148b66e1c7641bf3d83e33be1c1d2e54685cb24fe"
+    },
+    {
+      "path": "agents/panwrite-outliner.toml",
+      "sha256": "b4e7ae793b0248a275ac6914410815872e08d2d9f0b627514044e2d391a75e12"
+    },
+    {
+      "path": "agents/panwrite-plan-checker.toml",
+      "sha256": "b859570696662d6b2ef8cf40d871e71b070ac5f9842e160ca956be1c454014d6"
+    },
+    {
+      "path": "agents/panwrite-prose-polisher.toml",
+      "sha256": "169299a4d2f551e09bd420a604b3ede0c966f1314633fd54342816e4c3952826"
+    },
+    {
+      "path": "agents/panwrite-research-synthesizer.toml",
+      "sha256": "23409ed8ecd5b53804d284b2511ccde3a598c492bad831dfe37da5e51d1158c5"
+    },
+    {
+      "path": "agents/panwrite-section-planner.toml",
+      "sha256": "1a04cb86d6cb6cb2bc893b2e37b53125eec6bd99b9260b63ed6ab47ada1e8441"
+    },
+    {
+      "path": "agents/panwrite-section-reviewer.toml",
+      "sha256": "141698336921d4b69eb812a4a9dfd7d301cfe53d85411c0173005b7745241fbb"
+    },
+    {
+      "path": "agents/panwrite-section-writer.toml",
+      "sha256": "02b5ae2e53cc787957d673ad72d6a0cf8aa7ab7fcad6f7bae46939853cae99fe"
+    },
+    {
+      "path": "aliases.lock.json",
+      "sha256": "48abfe575b9431198272efc7d32028d15e4cb4398c8e0c21dadac2b3660b8520"
+    },
+    {
+      "path": "catalog.json",
+      "sha256": "80e51e59a70635b8c30b4b98a550c3d08b2c39f1221f9154f23f5e914aae63a7"
+    },
+    {
+      "path": "compatibility/action-availability.json",
+      "sha256": "195f6be399c3d3260e9dfa5600bbd698436fae4853d92e8b2a4e1842397a92cb"
+    },
+    {
+      "path": "effects.json",
+      "sha256": "dca4f12a5f6c96ec164c360cc5b914514558583ba7086cad6ff98b83d7ada6b7"
+    },
+    {
+      "path": "fleets/panwrite-draft-review.json",
+      "sha256": "669373614d5cd827e7f4d068aa8feef850014209ea6a4ec2ea17ff6f44371812"
+    },
+    {
+      "path": "fleets/panwrite-plan-section.json",
+      "sha256": "7ea64a07e0968dcc2c9339ac9183dd432a45129a3c7a8a3e69588e2d8990b27f"
+    },
+    {
+      "path": "plugin.json",
+      "sha256": "12692d1bf9ccdfd4c13986e33007945bb6f8bf1c45ce23a2a15a67c4f6331855"
+    },
+    {
+      "path": "project/README.md",
+      "sha256": "224a9ac45531ba5754bbb5870614917db21a071998e39d225e60367e6048e9de"
+    },
+    {
+      "path": "project/schemas/checkpoint.schema.json",
+      "sha256": "522497c3ec78f5e41d4c4728391b105b34aee81bf78026d18ecd0575ebbf8623"
+    },
+    {
+      "path": "project/schemas/common.schema.json",
+      "sha256": "b1fa23af062d59f88cea4575001a4f457c6506133e01019e8744c10762c5e329"
+    },
+    {
+      "path": "project/schemas/config.schema.json",
+      "sha256": "39ef9ac594c86177919fddd1c0b8ccdb71d04b7f06cb2c834975108cc80b6216"
+    },
+    {
+      "path": "project/schemas/decisions.schema.json",
+      "sha256": "1e6eafeae870dc0f9b47e4cd8db1679f93586a71d8600c94d7b52230f6e59ec6"
+    },
+    {
+      "path": "project/schemas/evidence.schema.json",
+      "sha256": "1213bc06b092377f545305cfcd54c5c89f98d98fa89718100dd3607556081adf"
+    },
+    {
+      "path": "project/schemas/interaction.schema.json",
+      "sha256": "6e6b3c3ea7644d9d323bcd46f24bddc0dba833ef6de24b85f5875b6387b84994"
+    },
+    {
+      "path": "project/schemas/manifest.schema.json",
+      "sha256": "fdbde898563a473aeabb4dc2c921227d084c946d152a91aa3e7dcc7c90fe76d5"
+    },
+    {
+      "path": "project/schemas/outline.schema.json",
+      "sha256": "54cce3b12d9b08dddc0695d9c9d1d2351949d18e26aa052672b5e22fff9f91fd"
+    },
+    {
+      "path": "project/schemas/section.schema.json",
+      "sha256": "6fc88b01bb0df37c4d9a119374d89df88c9720cb5fa87b72afad9bc8cdcb204d"
+    },
+    {
+      "path": "project/schemas/source.schema.json",
+      "sha256": "8c2df05472711a8134edb843bbe4fdb5f4fa4a8e06294386a9405da739494974"
+    },
+    {
+      "path": "project/schemas/state.schema.json",
+      "sha256": "33110ceba6b34cf3494575136780f998b1aa26876058e5e0da9990eefcf1ef2d"
+    },
+    {
+      "path": "project/schemas/validation.schema.json",
+      "sha256": "21b8741b999ec596db2818ab3dad3ecd3dbbba40133558cc14ddcfce0c30da38"
+    },
+    {
+      "path": "project/templates/checkpoint.json",
+      "sha256": "5037d52df0c1ce6cde1193b94253e983777efa914c9657b7787ec6cae2028b19"
+    },
+    {
+      "path": "project/templates/config.json",
+      "sha256": "8979d81e4c87bb7e9f97613a79e26e058207090de4451316c840d0efeb233f40"
+    },
+    {
+      "path": "project/templates/decisions.json",
+      "sha256": "f262964321fb5fc8aa0d8236d4e3a70d03ca4886768058c1d9647f807cb8b8a8"
+    },
+    {
+      "path": "project/templates/evidence.json",
+      "sha256": "9f6fa0f4eba933654b4919c7e4240073fd7ea3622df0889358b6e5cdcdd4aa24"
+    },
+    {
+      "path": "project/templates/interaction.json",
+      "sha256": "f36b68e5d947682b6ca213bb349c3e7a6d0b0dd4a91b4afeb1fb851a602b0bb3"
+    },
+    {
+      "path": "project/templates/manifest.json",
+      "sha256": "41429b609f0f72f16d4de4904d182a3e3269e49064ff1fd43d3aa78ed9d9136a"
+    },
+    {
+      "path": "project/templates/outline.json",
+      "sha256": "7841c4df297c581b7373bb4a1269026a158a164725b3d241fba1e10d56aa85f5"
+    },
+    {
+      "path": "project/templates/section.json",
+      "sha256": "e81a931c0137451d4eb357f660473075d14e5ce696ac2626a8297188d9c65c89"
+    },
+    {
+      "path": "project/templates/source.json",
+      "sha256": "d4f83f8d2d953d46844b456904996f402f717a6cd9feeb257ee753247e5ea292"
+    },
+    {
+      "path": "project/templates/state.json",
+      "sha256": "24b99f1e4c3668b6e2de9a74a588b7115258d8001ed6771665f7a8e552791f9f"
+    },
+    {
+      "path": "project/templates/validation.json",
+      "sha256": "938c335e90c918df5461be9d595d99e03fa10ad43843fb2cb65889b00c10dc6b"
+    },
+    {
+      "path": "repository/CONTRIBUTING.md",
+      "sha256": "99d04a87731d982fcaff651ea6246e95e604e4a0ceec38cfbb9d8d6afb9deede"
+    },
+    {
+      "path": "roles/argument-verifier.md",
+      "sha256": "74db956efb582ff2bab9f7d96f65799f9dadc5858383f6a4970fbc34db763264"
+    },
+    {
+      "path": "roles/citation-expert.md",
+      "sha256": "69c3e4ad144264d584dfb4615ce4a720ae8ec47cbcabd87af26c1132560c51a1"
+    },
+    {
+      "path": "roles/citation-formatter.md",
+      "sha256": "d894ba9fce3e1ffd882aef5fa6c2c7f632ef71eef816191467cc4304466f46f8"
+    },
+    {
+      "path": "roles/coherence-checker.md",
+      "sha256": "5d4f3e0ea3a737cc5c8bb0c24e5722ae31f449ea7badb5958b44ff611cdc4307"
+    },
+    {
+      "path": "roles/outliner.md",
+      "sha256": "46f54e551f86bedcb83ed0aff84173ba8673bece853254f2e7dbbe111c8d8ba0"
+    },
+    {
+      "path": "roles/plan-checker.md",
+      "sha256": "5876a3350d8abaf523cd018c95a82e8e17d09007588bb877436e83fab60a284c"
+    },
+    {
+      "path": "roles/prose-polisher.md",
+      "sha256": "2e5784c5702446ccdf5a16ff0f94aa3948b2b8ac780ba3c7e3788397162f9cfb"
+    },
+    {
+      "path": "roles/research-synthesizer.md",
+      "sha256": "5d086dbdcb568c027a7a4b1218e7392f3ae63db0864a73f0f87642b975ca40b6"
+    },
+    {
+      "path": "roles/section-planner.md",
+      "sha256": "60a1510ff874af2ebc6836287260ec6a61de25084fc837b600c662e58c63fcd8"
+    },
+    {
+      "path": "roles/section-reviewer.md",
+      "sha256": "2317ef0cfab4a691d8300256f8de1778de920f826d3865b20aaf9e5fb10df0b7"
+    },
+    {
+      "path": "roles/section-writer.md",
+      "sha256": "93dff0b4e1b72f74aded4e94a471388597c32a5c001ff6f4055f894f7bb840ef"
+    },
+    {
+      "path": "schemas/action.schema.json",
+      "sha256": "1b31290a0098b91100592ecb8fb9167b5628f4f281535c115d1bf644e67211af"
+    },
+    {
+      "path": "schemas/aliases.schema.json",
+      "sha256": "890e5619166d2e9daab7e0bb605edfd60b4b2f49ef7a215f20dd075452bf45c0"
+    },
+    {
+      "path": "schemas/catalog.schema.json",
+      "sha256": "0978b346e79eb82ba6336acdee447cbfe8618f93131eb971669e77e51a97ce7a"
+    },
+    {
+      "path": "schemas/effects.schema.json",
+      "sha256": "e08ed39bc2a510154a356b4797e0f3b2631b1edb9805d2f93dd8d4d084e34ee3"
+    },
+    {
+      "path": "schemas/role-result.schema.json",
+      "sha256": "04cd6f7819502bbd0936dca7216f78b00bb1931c9c3485eba061db89949344b5"
+    },
+    {
+      "path": "schemas/tools.schema.json",
+      "sha256": "2999b5c81fc46f70d99dab04fee44042f2afac850dcce916dbcb71f167f71209"
+    },
+    {
+      "path": "skills/panwrite-deliver-research/agents/openai.yaml",
+      "sha256": "01745236851437eeb13e5d078b3180dafe6bb55202820cac12b7df56cf8ae657"
+    },
+    {
+      "path": "skills/panwrite-deliver-research/references/actions.md",
+      "sha256": "09e717fc13ff4a4729ec0726a373d7094b72fa5baff9fed7017cd34442783fd7"
+    },
+    {
+      "path": "skills/panwrite-deliver-research/SKILL.md",
+      "sha256": "75c7f00bc72a56bc873a38a946dc4f81b10ecea88cabf5b5f0936040c836bebf"
+    },
+    {
+      "path": "skills/panwrite-manage-project/agents/openai.yaml",
+      "sha256": "fe168dfe16c2d636df7def9d7dbe4e1ad8b2d21752520738b8b28e9579d6b18c"
+    },
+    {
+      "path": "skills/panwrite-manage-project/references/actions.md",
+      "sha256": "ae45a629b93e6ae170b8c673a7e6fdbfc40a0b04f2f81cd5b426815281388808"
+    },
+    {
+      "path": "skills/panwrite-manage-project/SKILL.md",
+      "sha256": "e28b390dc5c4aa7bcebf4f0320ed89fdb7cf4f085530fd96b7e6dbd2c1e5ffde"
+    },
+    {
+      "path": "skills/panwrite-plan-section/agents/openai.yaml",
+      "sha256": "66fe7f54dc0f60d781d138ee8f1ccc0c5ba9e63e9b77812f849ca418fce2ba58"
+    },
+    {
+      "path": "skills/panwrite-plan-section/references/actions.md",
+      "sha256": "67f9a3706ad90015d67a19658b0d5d8676009cccfe1e76fdaff6a838ff4cd6f2"
+    },
+    {
+      "path": "skills/panwrite-plan-section/SKILL.md",
+      "sha256": "6b7957b11de48fb0c9bb676f9688eba7828a950bad2cb408e17b285cfcc4157f"
+    },
+    {
+      "path": "skills/panwrite-research-literature/agents/openai.yaml",
+      "sha256": "6d518f5286da714908259874747d646f1232eae1d7b6ce2b955c5f96226b7eef"
+    },
+    {
+      "path": "skills/panwrite-research-literature/references/actions.md",
+      "sha256": "b4d71fa166b0efce394662e32f0296994b08fdf144fd7b11097399cb82ef16ed"
+    },
+    {
+      "path": "skills/panwrite-research-literature/SKILL.md",
+      "sha256": "f175517b8834b018b98d021a27626eb93312651c4bdd67584bf2da3fd083c4f3"
+    },
+    {
+      "path": "skills/panwrite-review-manuscript/agents/openai.yaml",
+      "sha256": "a16b880dfba9af125f501036df18793fe35b97d697cbc5b09d0ab89ab7981cf1"
+    },
+    {
+      "path": "skills/panwrite-review-manuscript/references/actions.md",
+      "sha256": "730ab89766a4d92f58f31e79ad297d1e9832c96b37a1b508f6737af4a3397d8f"
+    },
+    {
+      "path": "skills/panwrite-review-manuscript/SKILL.md",
+      "sha256": "d96ac9018e77e41ce64f84c6afa5abd85d507382ea80087bcb461c88e0f63307"
+    },
+    {
+      "path": "skills/panwrite-start-project/agents/openai.yaml",
+      "sha256": "0453013db31e6a97fb182ec84a53528719d18aebf9b93e89e85017475ed157e2"
+    },
+    {
+      "path": "skills/panwrite-start-project/references/actions.md",
+      "sha256": "56a04dd70007b0530d38d49cbe2fc2939fdfd8e5656922d8424a729c652977a2"
+    },
+    {
+      "path": "skills/panwrite-start-project/SKILL.md",
+      "sha256": "fab00db5edf819f584e926127b6560f9512199b440556c534cb1ceae0811086d"
+    },
+    {
+      "path": "skills/panwrite-write-section/agents/openai.yaml",
+      "sha256": "fad90fd71ce2736f0f88139dd09e568bdd40db41301ca92def1441445ec60c8c"
+    },
+    {
+      "path": "skills/panwrite-write-section/references/actions.md",
+      "sha256": "22eabfcece3ede2442d74211a405dc4ed2ed4abf930656217b4384af86117171"
+    },
+    {
+      "path": "skills/panwrite-write-section/SKILL.md",
+      "sha256": "9a88df76927bd76a6ae9c1b237cf2329995b0a6d43af44b83f5c302eed895020"
+    },
+    {
+      "path": "templates/grant-proposal-outline.md",
+      "sha256": "8b35bf6e2841845fe41e1edddaadb8fb922d5f59435e369a157e53933f67e1a5"
+    },
+    {
+      "path": "templates/paper-outline.md",
+      "sha256": "8145d91548d5cb0f63c23428f319eb6ef99f7e179421dbdddb5476935f776cb4"
+    },
+    {
+      "path": "templates/poster.md",
+      "sha256": "b9cdf29740bf0f0cc87e84cb84d5e35cba94023b326414f5211275413e81c7f7"
+    },
+    {
+      "path": "templates/README.md",
+      "sha256": "6775b165a02d42ff53e3ddb2a63ff75498d5b1ae2396c887237f4a34b0147e31"
+    },
+    {
+      "path": "templates/slides.md",
+      "sha256": "d21113019f190b7f31df22fbbd0f694bb0adba2c0d53401643663927536081e6"
+    },
+    {
+      "path": "tools.json",
+      "sha256": "878e35c26eb2a28c2aafdf1db6e0956f6d94e98ce6a9dd5e71958fbcedbcd743"
+    },
+    {
+      "path": "tools/bibliography/analyze-impact.js",
+      "sha256": "be341b28eabe26bf0a4867ee083abbfaaba7869e41e84af526ff9203f4c85d6f"
+    },
+    {
+      "path": "tools/bibliography/format.js",
+      "sha256": "bbc772d580a04c97238059c47b899e77f1a1aff7c8afbf06bfa979ee66551760"
+    },
+    {
+      "path": "tools/bibliography/index.js",
+      "sha256": "77ca8deb56cb64993083d85c72fb08c233a90d4f8b00ed9ddc0fe7d4c3885995"
+    },
+    {
+      "path": "tools/citation/fetch.js",
+      "sha256": "d5961064cace2e694d39f36386ac128c0daa4f2726a5dd9b28aa03d9a1c4520e"
+    },
+    {
+      "path": "tools/citation/rank.js",
+      "sha256": "e47e19d0505d218f367b830a17f106c34564bfe73109d00609051b998b8ca99a"
+    },
+    {
+      "path": "tools/citation/scholar-lookup.js",
+      "sha256": "fb1a32567620780257f25df44bc8ce5a737dd760178a7a450320b686503426a5"
+    },
+    {
+      "path": "tools/citation/semantic-scholar.js",
+      "sha256": "52248d654fd946f5021511ab738a1c408bd50a6975a18f3736fd1bd6d4baa9dc"
+    },
+    {
+      "path": "tools/package.json",
+      "sha256": "dbf8353f77358bc12169b7bb7301e1978d5b503e002ee927229a8993672818fc"
+    },
+    {
+      "path": "tools/panwrite-tool.js",
+      "sha256": "d225a3bb26c7f1f21b3f0ac15bc2d4572a0a511851c10ea4d1433bb14e1d90d9"
+    },
+    {
+      "path": "tools/README.md",
+      "sha256": "2bf3860421af3002ecedea8cce3cc459c4bbf43a35fa7b9e3865662911944539"
+    },
+    {
+      "path": "tools/support/pancite-client.js",
+      "sha256": "acff935e2031351123165143f704b5fcd7bca5e50c7138477892265b6cc78600"
+    },
+    {
+      "path": "workflows/add-todo.md",
+      "sha256": "0a5ca274b4ad809fe3902a600ef2f35d9abd31ff9e66db0307e507289f6d7a62"
+    },
+    {
+      "path": "workflows/advance.md",
+      "sha256": "9271a65ee93fb339a525586ff891b41da5e7031c89f9607be11002799129e8cc"
+    },
+    {
+      "path": "workflows/analyze-bib.md",
+      "sha256": "cf7a8265eb8b9745cd7ac7d57e3be168bb233d501db9ea8a1d1a9f1dca394aa1"
+    },
+    {
+      "path": "workflows/audit-milestone.md",
+      "sha256": "fcc81bce13608a883e9a060eea5c3f98f4db70c4aa5ec2327dc50f44d2f09db4"
+    },
+    {
+      "path": "workflows/check-refs.md",
+      "sha256": "3f891f206c280fd228bbdb6641a6533b328fd5c7c46477ff14a8638edf767036"
+    },
+    {
+      "path": "workflows/check-todos.md",
+      "sha256": "b8575dbe95556b1ce95c40afd13bb280d0ad15305ebf2b40b2abbcd5444a1d72"
+    },
+    {
+      "path": "workflows/checkpoint.md",
+      "sha256": "f123f72fd489a1c84fd81616fdbc004240cfbb5641183e5f8190dca83ef3f32e"
+    },
+    {
+      "path": "workflows/contribute.md",
+      "sha256": "ad990684c2ee1afc015027f796c50c7ea12ace696796b493bd39d071bdbd7cbd"
+    },
+    {
+      "path": "workflows/create-outline.md",
+      "sha256": "44e406866e2bca90b40df1d95a4387220ee83768ed81fa0d1b698d2d07143910"
+    },
+    {
+      "path": "workflows/create-poster.md",
+      "sha256": "091575dec1c0d0797c370a496d27134f00827ed159932de4b30500afb3dfbc49"
+    },
+    {
+      "path": "workflows/create-slides.md",
+      "sha256": "798fdcfb4723ea9461e2794f297face47efba0e60ebf74ceddbf1d29cfcbee1c"
+    },
+    {
+      "path": "workflows/discuss-section.md",
+      "sha256": "8dd539e635138c9fa76b6240f0d311c50fb48f9109a22ffe8802204f294031c7"
+    },
+    {
+      "path": "workflows/execute-outline.md",
+      "sha256": "4bead62bb26c6d4a21243b3b8a5ff2cfdbf08149b813f9b72625b379e531723a"
+    },
+    {
+      "path": "workflows/export-latex.md",
+      "sha256": "c63aad2a89925dedb97da4c4794416286f82a3b4194722311937c08a21d175ba"
+    },
+    {
+      "path": "workflows/help.md",
+      "sha256": "59313a3d0d8746ad8c9496778c80eeb20c0996b44f8fe6007dfd604fd035ba3d"
+    },
+    {
+      "path": "workflows/insert-section.md",
+      "sha256": "85d3b978a2753a75900b0c583122aab769428634810f4f314bb7547314ad9cf9"
+    },
+    {
+      "path": "workflows/list-assumptions.md",
+      "sha256": "6a9919e5049877a096e30a790273bdc512e22b85c685a1ecd67cbe6949dd85dc"
+    },
+    {
+      "path": "workflows/map-project.md",
+      "sha256": "c1fe4657121a8d9a6879f1bebd5a35ee7c582ed4084e61ee6079d5910ede11a1"
+    },
+    {
+      "path": "workflows/new-paper.md",
+      "sha256": "8e279b136902e404c266e598db698b8bb953dde195018afb67e18d8bb933cf14"
+    },
+    {
+      "path": "workflows/pause-writing.md",
+      "sha256": "cb328e884aed585aaddfc463aa861f399052f46b63711877b541d5bd0a6823b8"
+    },
+    {
+      "path": "workflows/plan-milestone-gaps.md",
+      "sha256": "422020e7872db40cfcc2749fb7a0dd7961e63a6bc718ec1d480cbfcabe474d12"
+    },
+    {
+      "path": "workflows/plan-revision.md",
+      "sha256": "a138eca5c03452c8e13ffa353d53f688eaa4bf12ebbb26336a041d21b36cee9c"
+    },
+    {
+      "path": "workflows/plan-section.md",
+      "sha256": "fbbf49362a681f80a6c39c4faf55f0ad0aeea6780daa543381948de5f34d34f0"
+    },
+    {
+      "path": "workflows/polish-prose.md",
+      "sha256": "b269098fe8eedeb24ce4d171097691d77b34ad5fd1b6fe9e6fc63ddfc616e4eb"
+    },
+    {
+      "path": "workflows/progress.md",
+      "sha256": "8d3949502dde878a977f5f4dd764a402271a23f1d9e4a02e688af9666fc1c2e5"
+    },
+    {
+      "path": "workflows/quick.md",
+      "sha256": "68e3469e20037a7cc604fca0cb349ea2d9238c97c015fb0a9fee87a22db1c5d1"
+    },
+    {
+      "path": "workflows/remove-section.md",
+      "sha256": "0f59557c2b4d887f51df972c71fd04dcbe02e06ea1ac3672115d31f09343a53d"
+    },
+    {
+      "path": "workflows/report-bug.md",
+      "sha256": "988dea2e6762020edcf3a3aed10a9a402cfffe8bf99824a708029d47b72cdb15"
+    },
+    {
+      "path": "workflows/request-feature.md",
+      "sha256": "7de1fda80c5190de63d600efde7cbe5662106214e52b49c79355892f0e9d0e9c"
+    },
+    {
+      "path": "workflows/research-gap.md",
+      "sha256": "cec983b1b2779a5e35ff212c238690fd50a78a05b98817f0fc16e8543c49fc7e"
+    },
+    {
+      "path": "workflows/resume-writing.md",
+      "sha256": "0c58796db08fa7ba1b3b279ab726b619f98fc41c628a25af5a1dec998851649b"
+    },
+    {
+      "path": "workflows/review-section.md",
+      "sha256": "7e96979e287caec95fcf818f9d64b85221dcd8a612b760bbccf7980cea40512f"
+    },
+    {
+      "path": "workflows/settings.md",
+      "sha256": "f4d61656197997d9bb3d5e39e6381b94b2ea4a59b8f0a61f7cac04c764943782"
+    },
+    {
+      "path": "workflows/submit-milestone.md",
+      "sha256": "89ccfbe967866f9442d806f8cf304875d0e04794dda9ebe3af825df5741f387b"
+    },
+    {
+      "path": "workflows/update.md",
+      "sha256": "cbff90920587ce8003660ae0a8facf9ab35d9d05f084d97c8daae06d91257029"
+    },
+    {
+      "path": "workflows/verify-work.md",
+      "sha256": "f578abb349500335421c3722e0d27f73ae365e1c40a055b64fe8240b98491e4f"
+    },
+    {
+      "path": "workflows/write-section.md",
+      "sha256": "bbf6a930b95bd934085c2812aeadde605d8f62243553e45d36923a5107af26f0"
+    }
+  ]
+}

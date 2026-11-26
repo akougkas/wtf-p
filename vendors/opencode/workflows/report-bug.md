@@ -1,10 +1,10 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: report-bug
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
-# Report a WTF-P bug
+# Report a PanWrite bug
 
 @protocol://project/README.md
 

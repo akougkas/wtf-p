@@ -2,7 +2,7 @@
 
 Source structure for `project://deliverables/slides/{artifact}`. A talk is a narrative with one claim and a defensible path to it, not the paper's section list rendered as bullets.
 
-Copy the body below, replace every bracketed placeholder from the manuscript and its evidence records, and cut slides until the budget below holds. WTF-P writes slide source only; it declares no rendering effect and runs no renderer. If the author wants a rendered deck, hand back the exact command for their own toolchain.
+Copy the body below, replace every bracketed placeholder from the manuscript and its evidence records, and cut slides until the budget below holds. PanWrite writes slide source only; it declares no rendering effect and runs no renderer. If the author wants a rendered deck, hand back the exact command for their own toolchain.
 
 ## Confirm before writing
 

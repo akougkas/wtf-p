@@ -3,7 +3,7 @@
 'use strict';
 
 /**
- * Fail-closed native Clio gate for the two generated WTF-P fleet contracts.
+ * Fail-closed native Clio gate for the two generated PanWrite fleet contracts.
  * Preparation is credential-free. Paid execution requires a sealed preparation,
  * an exact acknowledgement, and credential source paths supplied only through
  * the environment. See evaluation/FLEETS.md.
@@ -52,21 +52,21 @@ const EFFORT = 'xhigh';
 const DEFAULT_TIMEOUT_MINUTES = 30;
 const DEFAULT_BUDGET_USD = 20;
 const PREPARED_FILE = 'fleet-prepared.json';
-const PREPARED_SCHEMA = 'wtfp.evaluation.clio-fleets-prepared/v1';
-const RESULT_SCHEMA = 'wtfp.evaluation.clio-fleets-run/v1';
-const CONFIRMATION_ENV = 'WTFP_FLEETS_CONFIRM_PAID';
+const PREPARED_SCHEMA = 'panwrite.evaluation.clio-fleets-prepared/v1';
+const RESULT_SCHEMA = 'panwrite.evaluation.clio-fleets-run/v1';
+const CONFIRMATION_ENV = 'PANWRITE_FLEETS_CONFIRM_PAID';
 const CONFIRMATION = 'I_ACKNOWLEDGE_PAID_CLIO_FLEETS_V1';
-const SETTINGS_SOURCE_ENV = 'WTFP_FLEETS_CLIO_SETTINGS_SOURCE';
-const CREDENTIALS_SOURCE_ENV = 'WTFP_FLEETS_CLIO_CREDENTIALS_SOURCE';
-const PROFILE_PATHS_ENV = 'WTFP_FLEETS_NORMAL_PROFILE_PATHS';
+const SETTINGS_SOURCE_ENV = 'PANWRITE_FLEETS_CLIO_SETTINGS_SOURCE';
+const CREDENTIALS_SOURCE_ENV = 'PANWRITE_FLEETS_CLIO_CREDENTIALS_SOURCE';
+const PROFILE_PATHS_ENV = 'PANWRITE_FLEETS_NORMAL_PROFILE_PATHS';
 const MAX_SOURCE_BYTES = 16 * 1024 * 1024;
 const MAX_EVIDENCE_BYTES = 128 * 1024 * 1024;
 
 const FLEETS = Object.freeze([
   Object.freeze({
-    name: 'wtfp-plan-section',
-    mutator: 'wtfp-section-planner',
-    verifier: 'wtfp-plan-checker',
+    name: 'panwrite-plan-section',
+    mutator: 'panwrite-section-planner',
+    verifier: 'panwrite-plan-checker',
     mutatorStep: 'plan',
     verifierStep: 'check',
     writes: Object.freeze(['.planning/sections/']),
@@ -78,9 +78,9 @@ const FLEETS = Object.freeze([
     ])
   }),
   Object.freeze({
-    name: 'wtfp-draft-review',
-    mutator: 'wtfp-section-writer',
-    verifier: 'wtfp-section-reviewer',
+    name: 'panwrite-draft-review',
+    mutator: 'panwrite-section-writer',
+    verifier: 'panwrite-section-reviewer',
     mutatorStep: 'draft',
     verifierStep: 'review',
     writes: Object.freeze(['.planning/sections/', 'paper/']),
@@ -244,15 +244,15 @@ function createRoot(requested) {
     fs.chmodSync(requested, 0o700);
     return requested;
   }
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-fleets.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-clio-fleets.'));
   fs.chmodSync(root, 0o700);
   return root;
 }
 
 function verifyGeneratedInventory(extension) {
-  const envelopeFile = path.join(extension, '.wtfp-generated.json');
+  const envelopeFile = path.join(extension, '.panwrite-generated.json');
   const envelope = readJson(envelopeFile);
-  if (envelope.schema !== 'wtfp.generated-adapter/v1' || envelope.target !== 'clio' || envelope.generatorVersion !== GENERATOR_VERSION) {
+  if (envelope.schema !== 'panwrite.generated-adapter/v1' || envelope.target !== 'clio' || envelope.generatorVersion !== GENERATOR_VERSION) {
     throw new Error('generated Clio envelope identity does not match the current compiler');
   }
   if (!Array.isArray(envelope.files) || envelope.files.length === 0) {
@@ -266,7 +266,7 @@ function verifyGeneratedInventory(extension) {
     }
     expected.set(entry.path, entry.sha256);
   }
-  const actualEntries = walkFiles(extension).filter(entry => entry.path !== '.wtfp-generated.json');
+  const actualEntries = walkFiles(extension).filter(entry => entry.path !== '.panwrite-generated.json');
   const actual = new Map(actualEntries.map(entry => [entry.path, sha256(fs.readFileSync(entry.absolute))]));
   const errors = [];
   for (const [relative, digest] of expected) {
@@ -278,9 +278,9 @@ function verifyGeneratedInventory(extension) {
   }
   if (errors.length > 0) throw new Error(errors.join('; '));
   for (const required of [
-    'agents/wtfp-section-planner.md', 'agents/wtfp-plan-checker.md',
-    'agents/wtfp-section-writer.md', 'agents/wtfp-section-reviewer.md',
-    'fleets/wtfp-plan-section.md', 'fleets/wtfp-draft-review.md',
+    'agents/panwrite-section-planner.md', 'agents/panwrite-plan-checker.md',
+    'agents/panwrite-section-writer.md', 'agents/panwrite-section-reviewer.md',
+    'fleets/panwrite-plan-section.md', 'fleets/panwrite-draft-review.md',
     'project/templates/state.json'
   ]) {
     if (!expected.has(required)) throw new Error(`generated inventory omits required fleet resource ${required}`);
@@ -338,8 +338,8 @@ function inspectSources(options) {
   return {
     ...sources,
     clio: { ...sources.clio, tree, reported_version: version },
-    wtfp: {
-      ...sources.wtfp,
+    panwrite: {
+      ...sources.panwrite,
       generated_inventory: verifyGeneratedInventory(options.extension),
       fleet_runtime: runtimeBinding()
     },
@@ -395,7 +395,7 @@ function buildPlan(options, sources, root = '<new-mode-0700-root>') {
     };
   });
   return {
-    schema: 'wtfp.evaluation.clio-fleets-plan/v1',
+    schema: 'panwrite.evaluation.clio-fleets-plan/v1',
     scenario: 'hpc-checkpointing-native-fleets',
     root,
     source: sources,
@@ -421,8 +421,8 @@ function buildPlan(options, sources, root = '<new-mode-0700-root>') {
     },
     extension: {
       source: options.extension,
-      sha256: sources.wtfp.extension_sha256,
-      inventory: sources.wtfp.generated_inventory,
+      sha256: sources.panwrite.extension_sha256,
+      inventory: sources.panwrite.generated_inventory,
       install_scope: 'isolated-user'
     },
     fixture: {
@@ -476,7 +476,7 @@ function safeProjectPath(projectRoot, relative, label) {
 function initializeSeedProject(projectRoot) {
   makePrivateDirectory(projectRoot);
   const seed = readJson(seedFile);
-  if (seed.schema !== 'wtfp.evaluation.clio-fleet-fixture-seed/v1' || seed.version !== 1 ||
+  if (seed.schema !== 'panwrite.evaluation.clio-fleet-fixture-seed/v1' || seed.version !== 1 ||
       seed.fixture?.id !== 'hpc-checkpointing-paper' || seed.fixture?.version !== 1 ||
       seed.project_id !== 'resilient-checkpoint-coordination' || seed.section_id !== 'evaluation' ||
       seed.expected_outputs?.plan !== FLEETS[0].exactMutationFiles[0] ||
@@ -544,8 +544,8 @@ function initializeSeedProject(projectRoot) {
     .filter(entry => entry.kind === 'file').map(entry => entry.path).sort();
   commandResult('git', ['add', '--', ...filePaths], { cwd: projectRoot, env: gitEnvironment });
   commandResult('git', [
-    '-c', 'user.name=WTF-P Evaluation Harness',
-    '-c', 'user.email=eval.invalid@wtf-p.invalid',
+    '-c', 'user.name=PanWrite Evaluation Harness',
+    '-c', 'user.email=eval.invalid@panwrite.invalid',
     '-c', 'commit.gpgsign=false',
     'commit', '--quiet', '--message', 'test: initialize native fleet fixture'
   ], { cwd: projectRoot, env: gitEnvironment });
@@ -573,7 +573,7 @@ function verifyPortableSeed(projectRoot, seed = readJson(seedFile)) {
   }
   if ((byType.get('evidence') || []).length !== 3) errors.push('expected exactly three seeded evidence records');
   const values = records.map(record => record.value);
-  const projectIds = values.map(value => value.schema === 'wtfp.project.manifest/v1' ? value.id : value.project_id)
+  const projectIds = values.map(value => value.schema === 'panwrite.project.manifest/v1' ? value.id : value.project_id)
     .filter(Boolean);
   if (projectIds.some(id => id !== seed.project_id)) errors.push('seeded records have inconsistent project IDs');
   const manifest = byType.get('manifest')?.[0]?.value;
@@ -631,7 +631,7 @@ function verifyPortableSeed(projectRoot, seed = readJson(seedFile)) {
     }
   }
   return {
-    schema: 'wtfp.evaluation.clio-fleet-seed-invariants/v1',
+    schema: 'panwrite.evaluation.clio-fleet-seed-invariants/v1',
     valid: errors.length === 0,
     record_count: records.length,
     record_sha256: canonicalDigest(records.map(record => ({ path: record.path, sha256: record.sha256 }))),
@@ -685,7 +685,7 @@ function auditNativeTopology(root) {
   const errors = [];
   const results = [];
   for (const fleet of FLEETS) {
-    const stem = fleet.name === 'wtfp-plan-section' ? 'fleet-plan' : 'fleet-draft';
+    const stem = fleet.name === 'panwrite-plan-section' ? 'fleet-plan' : 'fleet-draft';
     let validation = null;
     let graph = null;
     try {
@@ -928,7 +928,7 @@ function prepare(options, sources, environment = process.env) {
   let installedHash = null;
   let settingsAfter = null;
   try {
-    installedHash = hashTree(path.join(paths.CLIO_CODER_CONFIG_DIR, 'extensions', 'wtfp')).sha256;
+    installedHash = hashTree(path.join(paths.CLIO_CODER_CONFIG_DIR, 'extensions', 'panwrite')).sha256;
     settingsAfter = lifecycle.containedPrivateFileSha256(
       root, paths.CLIO_CODER_CONFIG_DIR, settingsFile, 'sealed fleet settings'
     );
@@ -943,7 +943,7 @@ function prepare(options, sources, environment = process.env) {
     native.errors.push('native preflight credential placeholder cleanup failed');
   }
   if (receipts.receipts.length !== 0) native.errors.push('credential-free native preflight produced a paid receipt');
-  if (installedHash !== sources.wtfp.extension_sha256) native.errors.push('installed extension differs from exact generated source');
+  if (installedHash !== sources.panwrite.extension_sha256) native.errors.push('installed extension differs from exact generated source');
   if (settingsAfter !== settingsSha256) native.errors.push('native preflight changed sealed minimal settings');
   native.topology = topology;
   native.project_mutations = projectMutations;
@@ -1035,8 +1035,8 @@ function verifyPrepared(options, sources) {
     ['timeout', options.timeoutMinutes, plan.requested.timeout_minutes_per_fleet]
   ];
   for (const [label, actual, expected] of optionChecks) if (actual !== expected) throw new Error(`${label} differs from prepared plan`);
-  if (hashTree(path.join(root, 'clio', 'config', 'extensions', 'wtfp')).sha256 !== prepared.installed_extension_sha256 ||
-      prepared.installed_extension_sha256 !== sources.wtfp.extension_sha256) throw new Error('installed extension changed');
+  if (hashTree(path.join(root, 'clio', 'config', 'extensions', 'panwrite')).sha256 !== prepared.installed_extension_sha256 ||
+      prepared.installed_extension_sha256 !== sources.panwrite.extension_sha256) throw new Error('installed extension changed');
   const settingsFile = path.join(root, 'clio', 'config', 'settings.yaml');
   if (lifecycle.containedPrivateFileSha256(root, path.join(root, 'clio', 'config'), settingsFile, 'fleet settings') !==
       prepared.settings_sha256 || canonicalDigest(lifecycle.minimalEvaluationSettings(options)) !== prepared.settings_policy_sha256) {
@@ -1206,7 +1206,7 @@ function auditFleetToolActivity(fleet, root, projectRoot, offsets) {
   const incremental = lifecycle.auditEventsSince(root, offsets);
   const observed = lifecycle.eventToolAudit(incremental.events, {
     project: projectRoot,
-    extension: path.join(root, 'clio', 'config', 'extensions', 'wtfp'),
+    extension: path.join(root, 'clio', 'config', 'extensions', 'panwrite'),
     additional: []
   });
   const errors = [...incremental.errors, ...observed.errors];
@@ -1430,7 +1430,7 @@ function countWords(text) {
 function auditArtifactInvariants(projectRoot, fleet) {
   const errors = [];
   const evidence = [];
-  if (fleet.name === 'wtfp-plan-section') {
+  if (fleet.name === 'panwrite-plan-section') {
     const directory = path.join(projectRoot, '.planning', 'sections', 'evaluation', 'plans');
     const files = fs.existsSync(directory) ? walkFiles(directory).filter(entry => entry.path.endsWith('.md')) : [];
     const combined = files.map(entry => fs.readFileSync(entry.absolute, 'utf8')).join('\n');
@@ -1622,7 +1622,7 @@ async function execute(options, sources, environment = process.env) {
   writeJsonPrivate(profilesPreFile, profilesBefore, true);
   const markerFile = path.join(root, 'evidence', 'fleet-execution-started.json');
   writeJsonPrivate(markerFile, {
-    schema: 'wtfp.evaluation.clio-fleets-execution-start/v1',
+    schema: 'panwrite.evaluation.clio-fleets-execution-start/v1',
     started_at: new Date().toISOString(),
     prepared_sha256: sha256(fs.readFileSync(path.join(root, 'evidence', PREPARED_FILE))),
     confirmation_sha256: sha256(Buffer.from(CONFIRMATION)),
@@ -1754,7 +1754,7 @@ async function execute(options, sources, environment = process.env) {
   try {
     aggregateAudit = lifecycle.auditLogSummary(root, {
       project: projectRoot,
-      extension: path.join(configRoot, 'extensions', 'wtfp'),
+      extension: path.join(configRoot, 'extensions', 'panwrite'),
       additional: []
     });
   } catch (error) {

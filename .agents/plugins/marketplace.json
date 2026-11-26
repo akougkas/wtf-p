@@ -1,14 +1,14 @@
 {
-  "name": "wtf-p",
+  "name": "panwrite",
   "interface": {
-    "displayName": "WTF-P"
+    "displayName": "PanWrite"
   },
   "plugins": [
     {
-      "name": "wtfp",
+      "name": "panwrite",
       "source": {
         "source": "local",
-        "path": "./vendors/codex/plugins/wtfp"
+        "path": "./vendors/codex/plugins/panwrite"
       },
       "policy": {
         "installation": "AVAILABLE",

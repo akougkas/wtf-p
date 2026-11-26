@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.effects/v1",
+  "schema": "panwrite.effects/v1",
   "effects": [
     {
       "consent": "implicit",
@@ -69,13 +69,13 @@
     },
     {
       "consent": "explicit",
-      "description": "Install a newer WTF-P package or plugin release.",
+      "description": "Install a newer PanWrite package or plugin release.",
       "id": "package.update",
       "reversibility": "conditionally-reversible"
     },
     {
       "consent": "implicit",
-      "description": "Execute a declared WTF-P tool with bounded inputs and outputs.",
+      "description": "Execute a declared PanWrite tool with bounded inputs and outputs.",
       "id": "tool.execute",
       "reversibility": "conditionally-reversible"
     },

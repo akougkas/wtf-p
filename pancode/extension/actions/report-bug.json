@@ -1,9 +1,9 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "report-bug",
-  "title": "Report a WTF-P bug",
+  "title": "Report a PanWrite bug",
   "description": "Collect a reproducible bug report and publish it only after explicit user approval.",
-  "alias": "wtfp:report-bug",
+  "alias": "panwrite:report-bug",
   "surface": {
     "kind": "operations",
     "operation": "product-operations"
@@ -29,7 +29,7 @@
   "effects": [
     {
       "id": "external.issue",
-      "scope": "the configured WTF-P issue tracker"
+      "scope": "the configured PanWrite issue tracker"
     },
     {
       "id": "filesystem.read",

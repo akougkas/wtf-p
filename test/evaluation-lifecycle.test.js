@@ -93,7 +93,7 @@ function fixtureBinding() {
 
 function sourceBinding() {
   return {
-    wtfp: {
+    panwrite: {
       commit: 'a'.repeat(40),
       branch: 'test',
       dirty: false,
@@ -140,7 +140,7 @@ function planOptions() {
   return {
     binary: '/opt/clio/index.js',
     clioSource: '/opt/clio-source',
-    extension: '/opt/wtfp/vendors/plugin',
+    extension: '/opt/panwrite/vendors/plugin',
     target: 'openai-codex',
     model: 'gpt-5.6-terra',
     effort: 'xhigh',
@@ -305,7 +305,7 @@ function testPlan() {
     'new:S2', 'resume:S2'
   ]);
   for (const action of actionPlan) {
-    assert(action.invocation.startsWith(`/wtfp:${action.action}\n`));
+    assert(action.invocation.startsWith(`/panwrite:${action.action}\n`));
     assert(action.invocation_arguments.includes(ARGUMENT_FIDELITY_MARKER));
     assert(action.fidelity.contains_repeated_space);
     assert(action.fidelity.contains_literal_tab);
@@ -364,7 +364,7 @@ function testIsolation(root) {
   assert.strictEqual(paths.CLIO_CODER_CONFIG_DIR, resumePaths.CLIO_CODER_CONFIG_DIR);
 
   const hostile = {
-    WTFP_TEST_SECRET_TOKEN: 'must-not-propagate',
+    PANWRITE_TEST_SECRET_TOKEN: 'must-not-propagate',
     GIT_DIR: '/outside/git',
     GIT_WORK_TREE: '/outside/tree',
     CODEX_HOME: '/outside/codex',
@@ -379,7 +379,7 @@ function testIsolation(root) {
     if (value === undefined) delete process.env[key];
     else process.env[key] = value;
   }
-  assert.strictEqual(child.WTFP_TEST_SECRET_TOKEN, undefined);
+  assert.strictEqual(child.PANWRITE_TEST_SECRET_TOKEN, undefined);
   assert.strictEqual(child.GIT_DIR, undefined);
   assert.strictEqual(child.GIT_WORK_TREE, undefined);
   assert.strictEqual(child.CODEX_HOME, undefined);
@@ -571,16 +571,16 @@ function testToolAudit(root, project) {
   });
   const safe = eventToolAudit([
     { type: 'tool_execution_start', toolName: 'read', args: { path: 'project-brief.md' } },
-    { type: 'tool_execution_start', toolCallId: 'planner', toolName: 'dispatch', args: dispatchArgs('wtfp-section-planner') },
-    dispatchEnd('planner', 'wtfp-section-planner'),
-    { type: 'tool_execution_start', toolCallId: 'checker', toolName: 'dispatch', args: dispatchArgs('wtfp-plan-checker') },
-    dispatchEnd('checker', 'wtfp-plan-checker')
+    { type: 'tool_execution_start', toolCallId: 'planner', toolName: 'dispatch', args: dispatchArgs('panwrite-section-planner') },
+    dispatchEnd('planner', 'panwrite-section-planner'),
+    { type: 'tool_execution_start', toolCallId: 'checker', toolName: 'dispatch', args: dispatchArgs('panwrite-plan-checker') },
+    dispatchEnd('checker', 'panwrite-plan-checker')
   ], { project, isolated: root, extension });
   assert.strictEqual(safe.valid, true);
   assert.strictEqual(safe.dispatch.length, 2);
   const sealedReceipt = agent => {
-    const sequence = agent === 'wtfp-section-planner' ? 1 : 3;
-    const mutation = agent === 'wtfp-section-planner';
+    const sequence = agent === 'panwrite-section-planner' ? 1 : 3;
+    const mutation = agent === 'panwrite-section-planner';
     const result = mutation ? {
       mutatedPaths: ['.planning/sections/evaluation/plans/initial.md'],
       validations: [{ name: 'Plan schema', passed: true, evidence: 'plan schema passed' }]
@@ -665,15 +665,15 @@ function testToolAudit(root, project) {
     }]
   };
   assert.strictEqual(requiredDispatchAudit('plan-section', safe, [
-    sealedReceipt('wtfp-section-planner'), sealedReceipt('wtfp-plan-checker')
+    sealedReceipt('panwrite-section-planner'), sealedReceipt('panwrite-plan-checker')
   ], undefined, structuredEvidence).valid, true);
   assert.strictEqual(requiredDispatchAudit('write-section', safe).valid, false);
   const failedDispatch = eventToolAudit([
-    { type: 'tool_execution_start', toolCallId: 'outliner', toolName: 'dispatch', args: { agent: 'wtfp-outliner' } },
+    { type: 'tool_execution_start', toolCallId: 'outliner', toolName: 'dispatch', args: { agent: 'panwrite-outliner' } },
     { type: 'tool_execution_end', toolCallId: 'outliner', toolName: 'dispatch', result: { status: 'failed' }, isError: false, outcome: 'failed' }
   ], { project, isolated: root, extension });
   assert.strictEqual(failedDispatch.dispatch[0].terminal_success, false);
-  assert.strictEqual(requiredDispatchAudit('create-outline', failedDispatch, [sealedReceipt('wtfp-outliner')]).valid, false);
+  assert.strictEqual(requiredDispatchAudit('create-outline', failedDispatch, [sealedReceipt('panwrite-outliner')]).valid, false);
   for (const outcome of ['succeeded', 'blocked', undefined]) {
     const event = {
       type: 'tool_execution_end',
@@ -688,7 +688,7 @@ function testToolAudit(root, project) {
         type: 'tool_execution_start',
         toolCallId: event.toolCallId,
         toolName: 'dispatch',
-        args: { agent: 'wtfp-outliner' }
+        args: { agent: 'panwrite-outliner' }
       },
       event
     ], { project, isolated: root, extension });
@@ -736,7 +736,7 @@ function testPlaybookBoundaryProbe(root) {
   const boundaryModule = [
     'function parsePlaybook(raw) {',
     '  const name = raw.match(/^name:\\s*(.+)$/m)?.[1];',
-    '  const id = name === "wtfp-plan-section" ? "plan" : "draft";',
+    '  const id = name === "panwrite-plan-section" ? "plan" : "draft";',
     '  const match = raw.match(/writes:\\s*\\[([^\\]]+)\\]/);',
     '  const writes = match ? match[1].split(",").map(value => value.trim()) : [];',
     '  return { name, steps: [{ id, writes }] };',
@@ -750,7 +750,7 @@ function testPlaybookBoundaryProbe(root) {
     'export { parsePlaybook, playbookStepBoundaries, writeBoundaryCovers, };'
   ].join('\n');
   fs.writeFileSync(moduleFile, boundaryModule);
-  for (const playbook of ['wtfp-plan-section.md', 'wtfp-draft-review.md']) {
+  for (const playbook of ['panwrite-plan-section.md', 'panwrite-draft-review.md']) {
     fs.copyFileSync(path.join(repositoryRoot, 'pancode', 'plugin', 'dev.pancode', 'playbooks', playbook), path.join(installed, 'playbooks', playbook));
   }
   const valid = playbookBoundaryProbe(clioSource, installed);
@@ -758,7 +758,7 @@ function testPlaybookBoundaryProbe(root) {
   assert.strictEqual(valid.checks.plan_covers_nested_plan, true);
   assert.strictEqual(valid.checks.draft_covers_manuscript, true);
 
-  const planFile = path.join(installed, 'playbooks', 'wtfp-plan-section.md');
+  const planFile = path.join(installed, 'playbooks', 'panwrite-plan-section.md');
   fs.writeFileSync(planFile, fs.readFileSync(planFile, 'utf8').replace('writes: [.planning/sections/]', 'writes: [.planning]'));
   const unsafe = playbookBoundaryProbe(clioSource, installed);
   assert.strictEqual(unsafe.valid, false);
@@ -1266,27 +1266,27 @@ function testPreparedIntegrity(root) {
     }
   }
   const fixture = initializeFixture(project, fixtureBinding());
-  const installed = path.join(preparedRoot, 'clio', 'config', 'extensions', 'wtfp');
+  const installed = path.join(preparedRoot, 'clio', 'config', 'extensions', 'panwrite');
   fs.mkdirSync(installed, { recursive: true, mode: 0o700 });
-  fs.writeFileSync(path.join(installed, 'extension.json'), '{"id":"wtfp"}\n', { mode: 0o600 });
+  fs.writeFileSync(path.join(installed, 'extension.json'), '{"id":"panwrite"}\n', { mode: 0o600 });
   const sources = sourceBinding();
-  sources.wtfp.extension_sha256 = hashTree(installed).sha256;
+  sources.panwrite.extension_sha256 = hashTree(installed).sha256;
   const options = { ...planOptions(), root: preparedRoot };
   const plan = buildPlan(options, sources, preparedRoot);
   const effectiveSettings = minimalEvaluationSettings(options);
   const effectiveSettingsFile = path.join(preparedRoot, 'clio', 'config', 'settings.yaml');
   writeJson(effectiveSettingsFile, effectiveSettings);
   const nativeFile = path.join(preparedRoot, 'evidence', 'native-preflight.json');
-  writeJson(nativeFile, { schema: 'wtfp.evaluation.clio-native-preflight/v1', valid: true, errors: [] });
+  writeJson(nativeFile, { schema: 'panwrite.evaluation.clio-native-preflight/v1', valid: true, errors: [] });
   const prepared = {
-    schema: 'wtfp.evaluation.clio-lifecycle-prepared/v1',
+    schema: 'panwrite.evaluation.clio-lifecycle-prepared/v1',
     root: preparedRoot,
     source: sources,
     plan_sha256: sha256(Buffer.from(JSON.stringify(canonicalJson(plan)), 'utf8')),
     native_preflight_sha256: sha256(fs.readFileSync(nativeFile)),
     native_preflight_valid: true,
     paid_execution_ready: true,
-    installed_extension_sha256: sources.wtfp.extension_sha256,
+    installed_extension_sha256: sources.panwrite.extension_sha256,
     effective_settings_sha256: sha256(fs.readFileSync(effectiveSettingsFile)),
     effective_settings_policy_sha256: sha256(Buffer.from(JSON.stringify(canonicalJson(effectiveSettings)), 'utf8')),
     fresh_session_initial_sha256: sessionPrivateState(resumePaths, preparedRoot).sha256,
@@ -1404,14 +1404,14 @@ function testStructuredWorkerResultAudit(root) {
     validations: [{ name: 'schema check', passed: true, evidence: 'independent schema validation passed' }]
   };
   const unmeasuredMutation = outputReceipt(
-    'wtfp-section-planner', 'mutation-report', mutationResult, 'unmeasured');
+    'panwrite-section-planner', 'mutation-report', mutationResult, 'unmeasured');
   const mutationAudit = auditStructuredWorkerResult('plan-section', unmeasuredMutation, evidence);
   assert.strictEqual(mutationAudit.valid, true);
   assert.strictEqual(mutationAudit.quality_interpretation, 'unmeasured-not-promoted');
   assert.strictEqual(mutationAudit.reconciliation.grounding, 'aggregate-diff-only-clio-unmeasured');
   assert(!JSON.stringify(unmeasuredMutation).includes('independent schema validation passed'),
     'raw receipt output must remain non-enumerable');
-  const containedAbsolute = outputReceipt('wtfp-section-planner', 'mutation-report', {
+  const containedAbsolute = outputReceipt('panwrite-section-planner', 'mutation-report', {
     ...mutationResult,
     mutatedPaths: [path.join(root, changedPath)]
   }, 'unmeasured');
@@ -1419,17 +1419,17 @@ function testStructuredWorkerResultAudit(root) {
   assert.strictEqual(absoluteAudit.valid, true,
     'a lexically and physically contained absolute path emitted by Clio must be accepted');
   assert.deepStrictEqual(absoluteAudit.reconciliation.paths, [changedPath]);
-  const outsideAbsolute = outputReceipt('wtfp-section-planner', 'mutation-report', {
+  const outsideAbsolute = outputReceipt('panwrite-section-planner', 'mutation-report', {
     ...mutationResult,
     mutatedPaths: [path.join(path.dirname(root), 'outside-project', 'initial.json')]
   }, 'unmeasured');
   assert.strictEqual(auditStructuredWorkerResult('plan-section', outsideAbsolute, evidence).valid, false,
     'an absolute path outside the project must fail containment');
 
-  const qualityFailed = outputReceipt('wtfp-section-planner', 'mutation-report', mutationResult, 'fail');
+  const qualityFailed = outputReceipt('panwrite-section-planner', 'mutation-report', mutationResult, 'fail');
   assert.strictEqual(auditStructuredWorkerResult('plan-section', qualityFailed, evidence).valid, false,
     'shape-conformant quality failure must never pass');
-  const fabricated = outputReceipt('wtfp-section-planner', 'mutation-report', {
+  const fabricated = outputReceipt('panwrite-section-planner', 'mutation-report', {
     ...mutationResult,
     mutatedPaths: ['.planning/sections/evaluation/plans/fabricated.json']
   });
@@ -1446,7 +1446,7 @@ function testStructuredWorkerResultAudit(root) {
       receipt.output.sha256 = sha256(Buffer.from(malformed, 'utf8'));
     }
   ]) {
-    const receipt = outputReceipt('wtfp-section-planner', 'mutation-report', mutationResult);
+    const receipt = outputReceipt('panwrite-section-planner', 'mutation-report', mutationResult);
     mutate(receipt);
     assert.strictEqual(auditStructuredWorkerResult('plan-section', receipt, evidence).valid, false,
       'partial, truncated, and malformed outputs must fail closed');
@@ -1471,7 +1471,7 @@ function testStructuredWorkerResultAudit(root) {
       }]
     }
   };
-  const verifier = outputReceipt('wtfp-plan-checker', 'verifier-report', verifierResult);
+  const verifier = outputReceipt('panwrite-plan-checker', 'verifier-report', verifierResult);
   const verifierEvidence = { ...evidence, records: [validation] };
   assert.strictEqual(auditStructuredWorkerResult('plan-section', verifier, verifierEvidence).valid, true);
   const statusMismatch = JSON.parse(JSON.stringify(validation));
@@ -1485,7 +1485,7 @@ function testStructuredWorkerResultAudit(root) {
   assert.strictEqual(auditStructuredWorkerResult(
     'plan-section', verifier, { ...evidence, records: [evidenceMismatch] }).valid, false,
   'main-agent validation may not replace checker evidence');
-  const failedVerifier = outputReceipt('wtfp-plan-checker', 'verifier-report', {
+  const failedVerifier = outputReceipt('panwrite-plan-checker', 'verifier-report', {
     verdict: 'fail',
     checks: [{ name: 'Decision fidelity', passed: false, evidence: 'locked decision was changed' }]
   }, 'fail');
@@ -1756,7 +1756,7 @@ async function testProcessAndSignalCleanup(root, project) {
 }
 
 async function main() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-evaluation-lifecycle-test.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-evaluation-lifecycle-test.'));
   fs.chmodSync(root, 0o700);
   try {
     testPlan();

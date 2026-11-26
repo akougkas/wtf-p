@@ -73,7 +73,7 @@ function doRequest(path) {
       path: path,
       method: 'GET',
       headers: {
-        'User-Agent': 'WTF-P/0.4.0 (citation-expert)',
+        'User-Agent': 'PanWrite/0.4.0 (citation-expert)',
       }
     };
 

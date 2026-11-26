@@ -1,24 +1,24 @@
 {
-  "schema": "wtfp.evaluation.study/v2",
+  "schema": "panwrite.evaluation.study/v2",
   "id": "pancode-reliability-comparison",
   "version": 1,
   "status": "draft",
   "question": "On matched manuscript tasks, do explicit author decisions, claim-level evidence records, checked plans, separate review and durable state make PanCode's manuscript production more reliable, and at what author effort and runtime cost?",
   "hypotheses": [
-    { "id": "H1", "statement": "PanCode with the WTF-P plugin and desk produces fewer externally checkable claims without inspected support than the same PanCode and model without WTF-P.", "primary_outcome": "unsupported-claim-rate", "direction": "lower-is-better" },
-    { "id": "H2", "statement": "PanCode with the WTF-P plugin and desk violates fewer recorded author decisions than the same PanCode and model given an expert checklist prompt.", "primary_outcome": "author-decision-violations", "direction": "lower-is-better" },
-    { "id": "H3", "statement": "Runs interrupted mid-write recover to a consistent state more often with WTF-P than without it.", "primary_outcome": "recovery-success", "direction": "higher-is-better" }
+    { "id": "H1", "statement": "PanCode with the PanWrite plugin and desk produces fewer externally checkable claims without inspected support than the same PanCode and model without PanWrite.", "primary_outcome": "unsupported-claim-rate", "direction": "lower-is-better" },
+    { "id": "H2", "statement": "PanCode with the PanWrite plugin and desk violates fewer recorded author decisions than the same PanCode and model given an expert checklist prompt.", "primary_outcome": "author-decision-violations", "direction": "lower-is-better" },
+    { "id": "H3", "statement": "Runs interrupted mid-write recover to a consistent state more often with PanWrite than without it.", "primary_outcome": "recovery-success", "direction": "higher-is-better" }
   ],
   "conditions": [
-    { "id": "wtfp-desk", "role": "treatment", "description": "PanCode 0.9.0 pinned build with the WTF-P plugin and desk extension; author answers at the desk.", "host": "pancode-0.9.0-reference", "wtfp": "plugin-and-desk", "author_gates": "desk-attested" },
-    { "id": "pancode-plain", "role": "baseline", "description": "The same PanCode build and model with no WTF-P package; the same task statement and materials; the author answers the agent's questions in the session.", "host": "pancode-0.9.0-reference", "wtfp": "none", "author_gates": "host-prompted" },
-    { "id": "pancode-checklist", "role": "baseline", "description": "The same PanCode build and model with no WTF-P package and an expert writing checklist prompt covering evidence, decisions, review and recovery; the author answers in the session.", "host": "pancode-0.9.0-reference", "wtfp": "none", "author_gates": "author-instructed" }
+    { "id": "panwrite-desk", "role": "treatment", "description": "PanCode 0.9.0 pinned build with the PanWrite plugin and desk extension; author answers at the desk.", "host": "pancode-0.9.0-reference", "panwrite": "plugin-and-desk", "author_gates": "desk-attested" },
+    { "id": "pancode-plain", "role": "baseline", "description": "The same PanCode build and model with no PanWrite package; the same task statement and materials; the author answers the agent's questions in the session.", "host": "pancode-0.9.0-reference", "panwrite": "none", "author_gates": "host-prompted" },
+    { "id": "pancode-checklist", "role": "baseline", "description": "The same PanCode build and model with no PanWrite package and an expert writing checklist prompt covering evidence, decisions, review and recovery; the author answers in the session.", "host": "pancode-0.9.0-reference", "panwrite": "none", "author_gates": "author-instructed" }
   ],
   "ablations": [
-    { "id": "no-desk", "of": "wtfp-desk", "removes": "the desk extension: the plugin's prompts carry the same rules as instructions only", "keeps_production_author_gates": true, "isolates": "runtime-enforcement" },
-    { "id": "no-coverage-gate", "of": "wtfp-desk", "removes": "the readiness check on required-claim evidence before drafting; all other desk checks stay", "keeps_production_author_gates": true, "isolates": "evidence-checks" },
-    { "id": "shared-reviewer", "of": "wtfp-desk", "removes": "the separate reviewer role: the drafting session reviews its own section", "keeps_production_author_gates": true, "isolates": "reviewer-separation" },
-    { "id": "no-durable-state", "of": "wtfp-desk", "removes": "resumption from records: each session starts from the manuscript and materials only", "keeps_production_author_gates": true, "isolates": "durable-state" }
+    { "id": "no-desk", "of": "panwrite-desk", "removes": "the desk extension: the plugin's prompts carry the same rules as instructions only", "keeps_production_author_gates": true, "isolates": "runtime-enforcement" },
+    { "id": "no-coverage-gate", "of": "panwrite-desk", "removes": "the readiness check on required-claim evidence before drafting; all other desk checks stay", "keeps_production_author_gates": true, "isolates": "evidence-checks" },
+    { "id": "shared-reviewer", "of": "panwrite-desk", "removes": "the separate reviewer role: the drafting session reviews its own section", "keeps_production_author_gates": true, "isolates": "reviewer-separation" },
+    { "id": "no-durable-state", "of": "panwrite-desk", "removes": "resumption from records: each session starts from the manuscript and materials only", "keeps_production_author_gates": true, "isolates": "durable-state" }
   ],
   "tasks": {
     "sample": "Short sections and proposal parts drawn from author-supplied research materials, each with a closed-world corpus whose supportable and unsupportable claims are known to the assessors and hidden from the agents.",
@@ -56,7 +56,7 @@
     "agreement": "Two assessors per output; agreement reported per primary outcome before adjudication."
   },
   "analysis": {
-    "comparisons": "Each hypothesis compares its treatment and baseline conditions on the same tasks; ablations compare against wtfp-desk only. Effect sizes with intervals per task family, no pooled ranking across unrelated scopes.",
+    "comparisons": "Each hypothesis compares its treatment and baseline conditions on the same tasks; ablations compare against panwrite-desk only. Effect sizes with intervals per task family, no pooled ranking across unrelated scopes.",
     "thresholds": "pending",
     "null_results": "reported",
     "post_hoc_changes": "new-version-and-labelled-exploratory"

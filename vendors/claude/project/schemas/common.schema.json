@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/project/common/v1",
+  "$id": "https://schemas.panwrite.dev/project/common/v1",
   "$defs": {
     "identifier": {
       "type": "string",

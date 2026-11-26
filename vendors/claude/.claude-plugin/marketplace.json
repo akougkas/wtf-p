@@ -1,18 +1,18 @@
 {
-  "name": "wtfp",
+  "name": "panwrite",
   "owner": {
     "name": "PanStudio"
   },
   "metadata": {
-    "description": "WTF-P evidence-grounded academic workflow plugin.",
-    "version": "0.9.1"
+    "description": "PanWrite evidence-grounded academic workflow plugin.",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "wtfp",
+      "name": "panwrite",
       "source": "./",
       "description": "Portable academic research and writing workflows.",
-      "version": "0.9.1",
+      "version": "1.0.0",
       "author": {
         "name": "Anthony Kougkas"
       },

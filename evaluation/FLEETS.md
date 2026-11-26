@@ -31,22 +31,22 @@ above. The examples below do this deliberately.
 The paid phase runs these commands, in this order, from one disposable fixture project:
 
 ```text
-fleet run wtfp-plan-section --var section=evaluation --json
-fleet run wtfp-draft-review --var section=evaluation --json
+fleet run panwrite-plan-section --var section=evaluation --json
+fleet run panwrite-draft-review --var section=evaluation --json
 ```
 
 Each fleet must have exactly two waves:
 
 | Fleet | Wave 1 | Scope and writes | Wave 2 | Scope and writes |
 | --- | --- | --- | --- | --- |
-| `wtfp-plan-section` | `plan` → `wtfp-section-planner` | `workspace`; `.planning/` | `check` → `wtfp-plan-checker` | `readonly`; none |
-| `wtfp-draft-review` | `draft` → `wtfp-section-writer` | `workspace`; `.planning/`, `paper/` | `review` → `wtfp-section-reviewer` | `readonly`; none |
+| `panwrite-plan-section` | `plan` → `panwrite-section-planner` | `workspace`; `.planning/` | `check` → `panwrite-plan-checker` | `readonly`; none |
+| `panwrite-draft-review` | `draft` → `panwrite-section-writer` | `workspace`; `.planning/`, `paper/` | `review` → `panwrite-section-reviewer` | `readonly`; none |
 
 The trailing slashes are contract semantics, not presentation. Clio interprets a bare `.planning` or `paper` entry as one literal file. It does not cover nested outputs. The native topology audit and the deterministic negative regression therefore reject the old bare form that caused Clio to roll back `.planning/sections/evaluation/plans/initial.md`.
 
 ## Inspect without creating a root
 
-`--dry-run` authenticates the WTF-P and Clio inputs and prints the exact plan. It forwards no credentials, creates no disposable project, and calls no model:
+`--dry-run` authenticates the PanWrite and Clio inputs and prints the exact plan. It forwards no credentials, creates no disposable project, and calls no model:
 
 ```bash
 node evaluation/tools/run-clio-fleets.js --dry-run \
@@ -87,16 +87,16 @@ Any inconsistency produces `prepared-blocked`, leaves the evidence for diagnosis
 Execution is possible only after successful preparation and an exact paid acknowledgement. Settings and credential source paths are accepted only through environment variables, never CLI options:
 
 ```bash
-WTFP_FLEETS_CONFIRM_PAID=I_ACKNOWLEDGE_PAID_CLIO_FLEETS_V1 \
-WTFP_FLEETS_CLIO_SETTINGS_SOURCE=/absolute/path/to/settings.yaml \
-WTFP_FLEETS_CLIO_CREDENTIALS_SOURCE=/absolute/path/to/credentials.yaml \
+PANWRITE_FLEETS_CONFIRM_PAID=I_ACKNOWLEDGE_PAID_CLIO_FLEETS_V1 \
+PANWRITE_FLEETS_CLIO_SETTINGS_SOURCE=/absolute/path/to/settings.yaml \
+PANWRITE_FLEETS_CLIO_CREDENTIALS_SOURCE=/absolute/path/to/credentials.yaml \
 node evaluation/tools/run-clio-fleets.js --execute \
   --root /absolute/path/to/prepared-root
 ```
 
 The settings and credential sources must be distinct, regular, non-symlink, singly linked files outside the disposable root. The credential source must grant no group or other permissions. Both reads are descriptor-bound and limited to 16 MiB. The acknowledgement, preparation seal, source hashes, root identities, exact options, fixture/Git baseline, extension install, settings, planning records, empty receipt inventory, and absence of a prior execution marker are checked before credential bytes are forwarded.
 
-`WTFP_FLEETS_NORMAL_PROFILE_PATHS` may contain an additional platform-delimited list of normal files or directories to inventory before and after execution. It adds observations; it does not authorize writes.
+`PANWRITE_FLEETS_NORMAL_PROFILE_PATHS` may contain an additional platform-delimited list of normal files or directories to inventory before and after execution. It adds observations; it does not authorize writes.
 
 Every child receives contained values for `HOME`, all XDG roots, `TMPDIR`, `CLIO_CODER_HOME`, and every `CLIO_CODER_{CONFIG,DATA,STATE,CACHE,BIN}_DIR`. `CLIO_CODER_REQUIRE_HOME_PREFIX=1` and `CLIO_CODER_NO_NETWORK_TOOLS=1` remain mandatory. The child environment does not inherit provider credentials, `CODEX_HOME`, arbitrary `GIT_*` variables, local shims, or the operator's normal Clio profile.
 
@@ -168,7 +168,7 @@ fail-closed harness:
 
 Clio 0.3.8 treats an ordinary sequential verifier as another completed agent
 step. Its negative result does not by itself change the native fleet process
-exit from zero. The WTF-P harness therefore reads and enforces structured
+exit from zero. The PanWrite harness therefore reads and enforces structured
 quality/verdict fields instead of treating process exit as semantic success.
 
 ## Evidence and credential cleanup

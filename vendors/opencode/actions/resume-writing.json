@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "resume-writing",
   "title": "Resume writing",
   "description": "Restore the latest portable handoff and route the researcher to the next safe action.",
-  "alias": "wtfp:resume-writing",
+  "alias": "panwrite:resume-writing",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/resume-writing",
+  "workflow": "panwrite://workflows/resume-writing",
   "requirements": {
     "capabilities": [
       "filesystem.read",

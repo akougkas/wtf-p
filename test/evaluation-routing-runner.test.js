@@ -76,7 +76,7 @@ async function test(name, callback) {
 }
 
 function temporaryRoot() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-routing-test.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-routing-test.'));
   fs.chmodSync(root, 0o700);
   return root;
 }
@@ -96,15 +96,15 @@ function rowByClient(suite, client) {
 }
 
 const fixtureInventoryBindings = [
-  ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
-  ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'pancode/plugin/.wtfp-generated.json'],
-  ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
-  ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
-  ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
-  ['copilot', 'vendors/copilot/plugins/wtfp/.wtfp-generated.json'],
-  ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json']
+  ['antigravity', 'vendors/antigravity/.panwrite-generated.json'],
+  ['claude', 'vendors/claude/.panwrite-generated.json'],
+  ['clio', 'pancode/plugin/.panwrite-generated.json'],
+  ['codex-marketplace', 'vendors/codex/.panwrite-generated.json'],
+  ['codex', 'vendors/codex/plugins/panwrite/.panwrite-generated.json'],
+  ['copilot-marketplace', 'vendors/copilot/.panwrite-generated.json'],
+  ['copilot', 'vendors/copilot/plugins/panwrite/.panwrite-generated.json'],
+  ['gemini', 'vendors/gemini/.panwrite-generated.json'],
+  ['opencode', 'vendors/opencode/.panwrite-generated.json']
 ];
 
 function fixtureGit(root, argv) {
@@ -132,8 +132,8 @@ function canonicalProjectionFixture() {
   writeFixtureFile(root, 'bin/lib/adapter-metadata.js', 'module.exports = { GENERATOR_VERSION: 4 };\n');
   writeFixtureFile(root, 'bin/lib/fixture-tool.js', 'module.exports = { tool: true };\n');
   writeFixtureFile(root, 'protocol/tools.json', JSON.stringify({
-    schema: 'wtfp.tools/v1',
-    tools: [{ id: 'fixture.tool', legacyName: 'fixture-tool', implementation: 'wtfp://tools/fixture/tool' }]
+    schema: 'panwrite.tools/v1',
+    tools: [{ id: 'fixture.tool', legacyName: 'fixture-tool', implementation: 'panwrite://tools/fixture/tool' }]
   }, null, 2) + '\n');
   writeFixtureFile(root, 'protocol/catalog.json', '{"actions":[]}\n');
   const generatedEnvelopes = [];
@@ -159,7 +159,7 @@ function canonicalProjectionFixture() {
   fixtureGit(root, ['commit', '--quiet', '-m', 'canonical source']);
   const canonical = fixtureGit(root, ['rev-parse', 'HEAD']);
   const manifest = {
-    wtfp_commit: canonical,
+    panwrite_commit: canonical,
     adapter_compiler_version: 4,
     generated_envelopes: generatedEnvelopes
   };
@@ -219,7 +219,7 @@ async function main() {
     assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 172);
     assert.strictEqual(sha256(Buffer.from(codex.input)),
       '1ab063ce39749f1b07ef1a4bb507c33f9294cda86a4566743b40fab866055599');
-    assert.ok(codex.input.startsWith('$wtf-p:wtfp-start-project new-paper  '));
+    assert.ok(codex.input.startsWith('$panwrite:panwrite-start-project new-paper  '));
     for (const projected of [claude, codex, clio]) {
       assert.ok(projected.input.endsWith(semantic.arguments));
       assert.strictEqual((projected.input.match(/"/gu) || []).length, 2);
@@ -232,7 +232,7 @@ async function main() {
     const catalog = definitionCatalog(null, null, 'codex');
     assert.strictEqual(catalog.get('explicit-help').input, null);
     assert.strictEqual(catalog.get('explicit-help').input_supported, false);
-    assert.match(catalog.get('explicit-plan-section').input, /^\$wtf-p:wtfp-plan-section plan-section /u);
+    assert.match(catalog.get('explicit-plan-section').input, /^\$panwrite:panwrite-plan-section plan-section /u);
     assert.strictEqual(CAPABILITY_SURFACES.codex.explicit.operations.selector_kind, 'unsupported');
   });
 
@@ -365,7 +365,7 @@ async function main() {
     const root = temporaryRoot();
     const credential = path.join(root, 'credentials.json');
     fs.writeFileSync(credential, '{"token":"alpha-secret-value"}\n', { mode: 0o600 });
-    const environment = { WTFP_ROUTING_CLAUDE_CREDENTIALS_SOURCE: credential };
+    const environment = { PANWRITE_ROUTING_CLAUDE_CREDENTIALS_SOURCE: credential };
     assert.ok(!profileSpecs(environment, root).some(([label]) => label === 'claude-forward-source'));
     const included = profileSpecs(environment, root, true);
     assert.ok(included.some(([label]) => label === 'claude-forward-source'));
@@ -784,12 +784,12 @@ async function main() {
     const observation = observeNativeTrace('claude', [
       { type: 'system', session_id: 'claude-session', model: 'claude-sonnet-5-20260801' },
       { type: 'assistant', message: { role: 'assistant', content: [
-        { type: 'tool_use', name: 'Skill', input: { skill: 'wtfp-start-project' } }
+        { type: 'tool_use', name: 'Skill', input: { skill: 'panwrite-start-project' } }
       ] } },
       { type: 'result', session_id: 'claude-session', total_cost_usd: 0.04 }
     ], null, implicit);
     assert.deepStrictEqual(observation.route.value,
-      { kind: 'skill', skill: 'wtfp-start-project', action: null });
+      { kind: 'skill', skill: 'panwrite-start-project', action: null });
     assert.strictEqual(observation.route.signal, 'selected');
     assert.strictEqual(observation.activation.status, 'loaded');
     assert.strictEqual(observation.cost.status, 'metered');
@@ -841,11 +841,11 @@ async function main() {
     };
     const observation = observeNativeTrace('clio', [{
       type: 'message_end', message: { role: 'assistant', content: [
-        { type: 'text', text: 'Suggested skill: /skill wtfp-start-project\nI activated a skill.' }
+        { type: 'text', text: 'Suggested skill: /skill panwrite-start-project\nI activated a skill.' }
       ] }
     }], receipt, definition);
     assert.strictEqual(observation.route.signal, 'suggested');
-    assert.strictEqual(observation.route.value.skill, 'wtfp-start-project');
+    assert.strictEqual(observation.route.value.skill, 'panwrite-start-project');
     assert.strictEqual(observation.activation.status, 'not-loaded');
     assert.strictEqual(observation.model_self_reports_ignored, 1);
   });
@@ -860,7 +860,7 @@ async function main() {
     const expanded = [
       `<invocation_arguments>\n${definition.arguments}\n</invocation_arguments>`,
       ...tags,
-      `Generated by WTF-P adapter compiler v4 from protocol/actions/${route.action}`
+      `Generated by PanWrite adapter compiler v4 from protocol/actions/${route.action}`
     ].join('\n');
     const receipt = {
       raw: {
@@ -890,7 +890,7 @@ async function main() {
       arguments: [
         'ordinary operator prose',
         '<file name="actions/new-paper.json">not actually bound</file>',
-        'Generated by WTF-P adapter compiler v4 from protocol/actions/new-paper'
+        'Generated by PanWrite adapter compiler v4 from protocol/actions/new-paper'
       ].join('\n')
     };
     const expanded = `<invocation_arguments>\n${definition.arguments}\n</invocation_arguments>`;
@@ -1101,7 +1101,7 @@ async function main() {
       ['protocol', 'protocol/catalog.json'],
       ['compiler', 'bin/lib/adapter-compiler.js'],
       ['tool', 'bin/lib/fixture-tool.js'],
-      ['generated inventory', 'vendors/claude/.wtfp-generated.json'],
+      ['generated inventory', 'vendors/claude/.panwrite-generated.json'],
       ['generated entry', 'pancode/plugin/payload.txt']
     ];
     for (const [label, relative] of mutations) {

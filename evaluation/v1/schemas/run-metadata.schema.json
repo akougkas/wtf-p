@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.run-metadata/v1",
+  "$id": "panwrite.evaluation.run-metadata/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -62,14 +62,14 @@
       "required": [
         "project_protocol_version",
         "adapter_compiler_version",
-        "wtfp_commit",
+        "panwrite_commit",
         "client_commit",
         "source_sha256"
       ],
       "properties": {
         "project_protocol_version": { "const": 1 },
         "adapter_compiler_version": { "type": "integer", "minimum": 1 },
-        "wtfp_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "panwrite_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
         "client_commit": { "type": ["string", "null"], "pattern": "^[a-f0-9]{40}$" },
         "source_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }

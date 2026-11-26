@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Manage Project"
+  short_description: "Track and resume a writing project"
+  default_prompt: "Use $panwrite-manage-project to assess progress and coordinate the next research-writing step."

@@ -62,7 +62,7 @@ function frontmatterValue(source, key) {
 }
 
 function validateRole(slug, executionClass, source) {
-  const expectedContract = `wtfp.role.${slug}/v1`;
+  const expectedContract = `panwrite.role.${slug}/v1`;
 
   assert.strictEqual(frontmatterValue(source, 'id'), slug, `${slug}: stable lookup id`);
   assert.strictEqual(

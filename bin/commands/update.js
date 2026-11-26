@@ -26,8 +26,8 @@ async function runUpdate(options, pkg, installFunc) {
   }
 
   if (!targetDir) {
-    out.log(`  ${c.yellow('No WTF-P installation found.')}`);
-    out.log(`  Install with: ${c.cyan('npx wtf-p')}\n`);
+    out.log(`  ${c.yellow('No PanWrite installation found.')}`);
+    out.log(`  Install with: ${c.cyan('npx @panstudio/panwrite')}\n`);
     return;
   }
 

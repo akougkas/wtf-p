@@ -10,7 +10,7 @@ const { analyzeCoverage, indexRecords } = require('../lib/claim-coverage');
 
 const repositoryRoot = path.resolve(__dirname, '../..');
 const schemasRoot = path.join(repositoryRoot, 'protocol', 'project', 'schemas');
-const recordPattern = /^wtfp\.project\.([a-z][a-z0-9-]*)\/v1$/;
+const recordPattern = /^panwrite\.project\.([a-z][a-z0-9-]*)\/v1$/;
 
 function schemaFiles() {
   return fs.readdirSync(schemasRoot)
@@ -80,7 +80,7 @@ function validateRecord(file, root, registry) {
       file: relative,
       record_type: null,
       valid: false,
-      errors: ['$: missing or unsupported wtfp.project.<record>/v1 schema discriminator']
+      errors: ['$: missing or unsupported panwrite.project.<record>/v1 schema discriminator']
     };
   }
 
@@ -130,7 +130,7 @@ function validatePlanningPaths(inputs, options = {}) {
 
   const checked = roots.reduce((sum, root) => sum + root.records.length, 0);
   return {
-    schema: 'wtfp.evaluation.planning-validation/v1',
+    schema: 'panwrite.evaluation.planning-validation/v1',
     valid: roots.every(root => root.valid),
     checked,
     roots,
@@ -159,12 +159,12 @@ function coverageForRoot(resolved, validation) {
     }
     if (!value || typeof value.schema !== 'string') continue;
     if (valid.get(relative) === false) {
-      if (/^wtfp\.project\.(?:evidence|source|section)\/v1$/u.test(value.schema)) ignored.push({ file: relative, reason: 'it fails its schema' });
+      if (/^panwrite\.project\.(?:evidence|source|section)\/v1$/u.test(value.schema)) ignored.push({ file: relative, reason: 'it fails its schema' });
       continue;
     }
     records[relative] = value;
   }
-  const byType = (type) => Object.entries(records).filter(([, value]) => value.schema === `wtfp.project.${type}/v1`);
+  const byType = (type) => Object.entries(records).filter(([, value]) => value.schema === `panwrite.project.${type}/v1`);
   // Coverage resolves logical URIs the way the protocol maps them, so only records at their protocol files count.
   const at = (type, file) => byType(type).filter(([relative]) => relative === file).map(([, value]) => value)[0] || null;
   const manifest = at('manifest', 'project.json');
@@ -285,7 +285,7 @@ function main(argv = process.argv.slice(2)) {
   } catch (error) {
     if (json) {
       process.stdout.write(`${JSON.stringify({
-        schema: 'wtfp.evaluation.planning-validation/v1',
+        schema: 'panwrite.evaluation.planning-validation/v1',
         valid: false,
         error: error.message
       }, null, 2)}\n`);

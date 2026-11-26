@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.client-routing-surfaces/v1",
+  "schema": "panwrite.evaluation.client-routing-surfaces/v1",
   "version": 1,
   "targets": [
     {
@@ -13,13 +13,13 @@
       "explicit": {
         "academic": {
           "selector_kind": "action-command",
-          "template": "/wtfp:{action}{separator}{arguments}",
+          "template": "/panwrite:{action}{separator}{arguments}",
           "granularity": "action",
           "arguments": "expanded"
         },
         "operations": {
           "selector_kind": "action-command",
-          "template": "/wtfp:{action}{separator}{arguments}",
+          "template": "/panwrite:{action}{separator}{arguments}",
           "granularity": "operation"
         }
       },
@@ -47,7 +47,7 @@
       "explicit": {
         "academic": {
           "selector_kind": "skill-mention",
-          "template": "$wtf-p:{skill} {action}{separator}{arguments}",
+          "template": "$panwrite:{skill} {action}{separator}{arguments}",
           "granularity": "skill",
           "arguments": "ordinary-prose"
         },
@@ -80,13 +80,13 @@
       "explicit": {
         "academic": {
           "selector_kind": "action-command",
-          "template": "/wtfp:{action}{separator}{arguments}",
+          "template": "/panwrite:{action}{separator}{arguments}",
           "granularity": "action",
           "arguments": "expanded"
         },
         "operations": {
           "selector_kind": "action-command",
-          "template": "/wtfp:{action}{separator}{arguments}",
+          "template": "/panwrite:{action}{separator}{arguments}",
           "granularity": "operation"
         }
       },

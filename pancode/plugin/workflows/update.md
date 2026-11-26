@@ -1,10 +1,10 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: update
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
-# Update WTF-P
+# Update PanWrite
 
 @protocol://project/README.md
 

@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "quick",
   "title": "Make a quick writing change",
   "description": "Apply a small, bounded writing fix with minimal planning overhead and state tracking.",
-  "alias": "wtfp:quick",
+  "alias": "panwrite:quick",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-write-section"
+    "skill": "panwrite-write-section"
   },
-  "workflow": "wtfp://workflows/quick",
+  "workflow": "panwrite://workflows/quick",
   "requirements": {
     "capabilities": [
       "agent.delegate",

@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "create-outline",
   "title": "Create the paper outline",
   "description": "Build the section structure, argument map, dependencies, and word budgets.",
-  "alias": "wtfp:create-outline",
+  "alias": "panwrite:create-outline",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-start-project"
+    "skill": "panwrite-start-project"
   },
-  "workflow": "wtfp://workflows/create-outline",
+  "workflow": "panwrite://workflows/create-outline",
   "requirements": {
     "capabilities": [
       "agent.delegate",

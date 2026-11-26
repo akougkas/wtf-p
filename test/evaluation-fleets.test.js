@@ -49,12 +49,12 @@ function writeJson(file, value) {
 
 function fakeSources() {
   return {
-    wtfp: {
+    panwrite: {
       commit: 'a'.repeat(40),
       branch: 'feat/agent-platform-modernization',
       extension_sha256: 'b'.repeat(64),
       generated_inventory: {
-        schema: 'wtfp.generated-adapter/v1',
+        schema: 'panwrite.generated-adapter/v1',
         target: 'clio',
         generator_version: 4,
         files: 231,
@@ -76,7 +76,7 @@ function fakeSources() {
       path: 'evaluation/v1/fleets/fixture-seed.json',
       sha256: '1'.repeat(64),
       bytes: 1,
-      schema: 'wtfp.evaluation.clio-fleet-fixture-seed/v1'
+      schema: 'panwrite.evaluation.clio-fleet-fixture-seed/v1'
     }
   };
 }
@@ -190,7 +190,7 @@ function testDryRunIdentityAndArguments() {
   }, EXPECTED_CLIO.tree, EXPECTED_CLIO.version), /Clio binary/u);
 
   const plan = buildPlan(options, fakeSources());
-  assert.strictEqual(plan.schema, 'wtfp.evaluation.clio-fleets-plan/v1');
+  assert.strictEqual(plan.schema, 'panwrite.evaluation.clio-fleets-plan/v1');
   assert.strictEqual(plan.client.commit, EXPECTED_CLIO.commit);
   assert.strictEqual(plan.client.target, 'openai-codex');
   assert.strictEqual(plan.client.model, 'gpt-5.6-terra');
@@ -228,7 +228,7 @@ function testSeedAndNativeTopology(root) {
   const nativeEvidence = path.join(nativeRoot, 'evidence', 'native');
   makePrivateDirectory(nativeEvidence);
   for (const fleet of FLEETS) {
-    const stem = fleet.name === 'wtfp-plan-section' ? 'fleet-plan' : 'fleet-draft';
+    const stem = fleet.name === 'panwrite-plan-section' ? 'fleet-plan' : 'fleet-draft';
     writeJson(path.join(nativeEvidence, `${stem}-validate.stdout`), {
       valid: true,
       fleet: fleet.name,
@@ -314,7 +314,7 @@ function toolAuditFixture(root, name, events) {
   const fixture = path.join(root, `tool-audit-${name}`);
   const project = path.join(fixture, 'project');
   makePrivateDirectory(project);
-  makePrivateDirectory(path.join(fixture, 'clio', 'config', 'extensions', 'wtfp'));
+  makePrivateDirectory(path.join(fixture, 'clio', 'config', 'extensions', 'panwrite'));
   writeAuditEvents(fixture, events);
   return { fixture, project };
 }
@@ -644,7 +644,7 @@ async function testCredentialAndProcessAdversaries(root) {
 }
 
 async function main() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-evaluation-fleets-test.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-evaluation-fleets-test.'));
   fs.chmodSync(root, 0o700);
   try {
     testDryRunIdentityAndArguments();

@@ -1,6 +1,6 @@
 ---
 id: section-reviewer
-contract: wtfp.role.section-reviewer/v1
+contract: panwrite.role.section-reviewer/v1
 name: Section Reviewer
 execution_class: verifier-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -49,7 +49,7 @@ Review a section as an academic evaluator and produce prioritized, actionable fe
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `section-reviewer`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

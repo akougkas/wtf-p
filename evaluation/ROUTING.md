@@ -40,9 +40,9 @@ prompts and target-native inputs are separate cryptographic inputs.
 
 | Surface | Implicit routing | Explicit academic selector | Observable route | Arguments/resources | Cost |
 |---|---|---|---|---|---|
-| Claude Code 2.1.251 | native selection and typed `Skill` load | `/wtfp:<action>` | typed skill activation only; action resolution unobservable | arguments unobservable; resources partial | native metered USD result |
-| Codex CLI 0.144.1 | unobservable in stable JSONL | `$wtf-p:<skill> <action> …` | route/activation unobservable | arguments are ordinary prose; resources unobservable | unavailable through ChatGPT auth |
-| Clio Coder 0.3.8 | operator-gated `Suggested skill: /skill …`, not loaded | `/wtfp:<action>` | suggested skill implicitly; action explicitly | explicit expansion exposes exact arguments and bound resources | sealed receipt provenance, possibly unavailable |
+| Claude Code 2.1.251 | native selection and typed `Skill` load | `/panwrite:<action>` | typed skill activation only; action resolution unobservable | arguments unobservable; resources partial | native metered USD result |
+| Codex CLI 0.144.1 | unobservable in stable JSONL | `$panwrite:<skill> <action> …` | route/activation unobservable | arguments are ordinary prose; resources unobservable | unavailable through ChatGPT auth |
+| Clio Coder 0.3.8 | operator-gated `Suggested skill: /skill …`, not loaded | `/panwrite:<action>` | suggested skill implicitly; action explicitly | explicit expansion exposes exact arguments and bound resources | sealed receipt provenance, possibly unavailable |
 
 Codex product operations have no native action-command surface and are marked
 unsupported. The budgeted Codex explicit cases are the seven academic actions,
@@ -72,7 +72,7 @@ Dry-run, preparation, and execution verification recompute these bindings:
 | Routing manifest | SHA-256 `ab6ec763b5001109dfdd82928b2e0b26d4bae88b5f19d3e384f49ef586c41d0b` |
 | Client-surface contract | SHA-256 `cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594` |
 | Budget matrix | SHA-256 `69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039` |
-| WTF-P canonical source | commit `93617d24a1fe4438239534a2d4fab067530dc026`, projection SHA-256 `f7bcf1a0e150b4859a86b3edebda77c818a8e0ddf8b0539133202f6d9f558fd2`, protocol v1, compiler v4 |
+| PanWrite canonical source | commit `93617d24a1fe4438239534a2d4fab067530dc026`, projection SHA-256 `f7bcf1a0e150b4859a86b3edebda77c818a8e0ddf8b0539133202f6d9f558fd2`, protocol v1, compiler v4 |
 | Claude Code | `2.1.251`, binary SHA-256 `fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7` |
 | Codex CLI | `0.144.1`, binary SHA-256 `a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902` |
 | Clio Coder | `0.3.8`, source commit `9b7b80ccbd3d2211d4079bc76558bb06d66a8583`, binary SHA-256 `f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162` |
@@ -80,7 +80,7 @@ Dry-run, preparation, and execution verification recompute these bindings:
 | Clio generated inventory | SHA-256 `1e143685a035f3e507cb2ab816484211774009dd3f4ddd25fdc03a76b2f14956` |
 | Clio generated source | SHA-256 `6065657e80692f300bcc5ba97c09624eb1eac4a963fc16ab0b0dc7e034e31f15` |
 
-The WTF-P commit in the routing manifest is the immutable canonical-source
+The PanWrite commit in the routing manifest is the immutable canonical-source
 commit, not a requirement that the repository remain checked out at that exact
 HEAD. The runner requires that commit to exist and be an ancestor of the actual
 HEAD. It then proves that the working projection still matches the canonical
@@ -117,10 +117,10 @@ global symlink. Relocated copies can be selected only through these identity
 options or their matching environment variables:
 
 ```text
---claude-binary / WTFP_ROUTING_CLAUDE_BINARY
---codex-binary   / WTFP_ROUTING_CODEX_BINARY
---clio-binary    / WTFP_ROUTING_CLIO_BINARY
---clio-source    / WTFP_ROUTING_CLIO_SOURCE
+--claude-binary / PANWRITE_ROUTING_CLAUDE_BINARY
+--codex-binary   / PANWRITE_ROUTING_CODEX_BINARY
+--clio-binary    / PANWRITE_ROUTING_CLIO_BINARY
+--clio-source    / PANWRITE_ROUTING_CLIO_SOURCE
 ```
 
 A matching marketing version does not excuse a different commit, binary,
@@ -133,8 +133,8 @@ Preparation runs only local/native commands in isolated profiles. Claude strict
 plugin validation and discovery, Codex marketplace/plugin discovery and prompt
 input inspection, and Clio extension discovery/install/list plus real skill,
 agent, and fleet validation all have to pass. The generated Clio extension is
-tested with its two real fleets, `wtfp-plan-section` and
-`wtfp-draft-review`; the preparation does not use an invented extension.
+tested with its two real fleets, `panwrite-plan-section` and
+`panwrite-draft-review`; the preparation does not use an invented extension.
 
 Every row/case pair receives a distinct private root:
 
@@ -184,17 +184,17 @@ Paid execution is intentionally a separate, one-shot action. Credential paths
 are never accepted in argv. Set only the source files needed by selected rows:
 
 ```text
-WTFP_ROUTING_CLAUDE_CREDENTIALS_SOURCE
-WTFP_ROUTING_CODEX_CREDENTIALS_SOURCE
-WTFP_ROUTING_CLIO_SETTINGS_SOURCE
-WTFP_ROUTING_CLIO_CREDENTIALS_SOURCE
+PANWRITE_ROUTING_CLAUDE_CREDENTIALS_SOURCE
+PANWRITE_ROUTING_CODEX_CREDENTIALS_SOURCE
+PANWRITE_ROUTING_CLIO_SETTINGS_SOURCE
+PANWRITE_ROUTING_CLIO_CREDENTIALS_SOURCE
 ```
 
 Every source must be a regular non-symlink file outside the disposable root.
 Then provide the exact acknowledgement and execute the already prepared root:
 
 ```bash
-export WTFP_ROUTING_CONFIRM_PAID=I_ACKNOWLEDGE_PAID_ROUTING_MATRIX_V1
+export PANWRITE_ROUTING_CONFIRM_PAID=I_ACKNOWLEDGE_PAID_ROUTING_MATRIX_V1
 node evaluation/tools/run-routing-matrix.js --execute --root /prepared/path
 ```
 
@@ -268,7 +268,7 @@ the stronger operational cleanup after evidence has been retained elsewhere.
 Claude runs restricted with an empty strict MCP configuration, no Chrome, no
 session persistence, `dontAsk`, and the bounded tool list
 `Skill,Read,Glob,Grep`. A typed `Skill` tool event proves a loaded skill. The
-exact `/wtfp:<action>` input and native discovery prove that the command is
+exact `/panwrite:<action>` input and native discovery prove that the command is
 available, but process success alone does not prove command resolution. Because
 the stable stream exposes neither an expansion event nor the selected action,
 selector/action and expanded-argument claims remain capability-inconclusive.
@@ -276,7 +276,7 @@ The result event provides native metered USD cost.
 
 Codex runs with `-a never`, read-only sandboxing, an ephemeral session, disabled
 web search, memories, analytics, and multi-agent behavior, and exact stdin. Its
-native academic selector `$wtf-p:<skill>` is materialized exactly, but current
+native academic selector `$panwrite:<skill>` is materialized exactly, but current
 JSONL has no stable selector-resolution,
 route, activation, or priced USD receipt. Those claims stay
 unobservable/unavailable instead of being inferred from process exit, prose, or

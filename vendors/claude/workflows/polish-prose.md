@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: polish-prose
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Polish prose
 
 @protocol://project/README.md
-@protocol://skills/wtfp-review-manuscript/SKILL.md
-@protocol://skills/wtfp-review-manuscript/references/actions.md
+@protocol://skills/panwrite-review-manuscript/SKILL.md
+@protocol://skills/panwrite-review-manuscript/references/actions.md
 
 ## Record contract
 

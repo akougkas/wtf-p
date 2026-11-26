@@ -139,7 +139,7 @@ async function runSuites(commands, { stall, jobs }) {
 }
 
 async function main() {
-  process.stdout.write(`${colors.green}WTF-P ${publishMode ? 'publish ' : ''}preflight${colors.reset}\n`);
+  process.stdout.write(`${colors.green}PanWrite ${publishMode ? 'publish ' : ''}preflight${colors.reset}\n`);
 
   section('Package contract');
   const packageJson = readJson('package.json');
@@ -147,7 +147,7 @@ async function main() {
   else fail('package.json must declare the @panstudio/panwrite package and a version');
   if (packageJson.engines?.node === '>=20.0.0') pass('Node.js support floor is explicit (>=20)');
   else fail('package.json must declare engines.node >=20.0.0');
-  if (packageJson.bin?.wtfp === 'bin/install.js' && packageJson.bin?.['wtf-p-uninstall'] === 'bin/uninstall.js') {
+  if (packageJson.bin?.panwrite === 'bin/install.js' && packageJson.bin?.['panwrite-uninstall'] === 'bin/uninstall.js') {
     pass('install and uninstall binaries are declared');
   } else {
     fail('package binary declarations are incomplete');
@@ -173,8 +173,8 @@ async function main() {
     'vendors/codex/.agents/plugins/marketplace.json',
     'vendors/copilot/marketplace.json',
     'vendors/copilot/project/.github/copilot-instructions.md',
-    'vendors/copilot/project/.github/prompts/wtfp-new-paper.prompt.md',
-    'vendors/opencode/.wtfp-generated.json',
+    'vendors/copilot/project/.github/prompts/panwrite-new-paper.prompt.md',
+    'vendors/opencode/.panwrite-generated.json',
     'vendors/antigravity/plugin.json',
     'vendors/gemini/gemini-extension.json'
   ];
@@ -213,14 +213,14 @@ async function main() {
         'vendors/codex/.agents/plugins/marketplace.json',
         'vendors/copilot/marketplace.json',
         'vendors/copilot/project/.github/copilot-instructions.md',
-        'vendors/copilot/project/.github/prompts/wtfp-new-paper.prompt.md',
+        'vendors/copilot/project/.github/prompts/panwrite-new-paper.prompt.md',
         'vendors/antigravity/plugin.json',
         'vendors/gemini/gemini-extension.json'
       ];
       const absent = requiredPackedFiles.filter((relativePath) => !files.has(relativePath));
       const forbiddenPrefixes = [
         'vendors/claude/mcp/',
-        'vendors/claude/skills/wtfp/',
+        'vendors/claude/skills/panwrite/',
         'evaluation/'
       ];
       const forbidden = [...files].filter((relativePath) =>

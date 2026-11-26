@@ -1,0 +1,79 @@
+{
+  "schema": "panwrite.action/v1",
+  "id": "polish-prose",
+  "title": "Polish prose",
+  "description": "Improve clarity, flow, precision, and academic voice without changing supported claims.",
+  "alias": "panwrite:polish-prose",
+  "surface": {
+    "kind": "skill",
+    "skill": "panwrite-review-manuscript"
+  },
+  "workflow": "panwrite://workflows/polish-prose",
+  "requirements": {
+    "capabilities": [
+      "agent.delegate",
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "The selected prose target exists"
+    ]
+  },
+  "reads": [
+    "project://manifest",
+    "project://config",
+    "project://decisions",
+    "project://paper/{artifact}",
+    "project://sections/{section}",
+    "project://state"
+  ],
+  "produces": [
+    {
+      "uri": "project://paper/{artifact}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://validations/{validation}",
+      "mode": "create"
+    },
+    {
+      "uri": "project://sections/{section}",
+      "mode": "update"
+    },
+    {
+      "uri": "project://state",
+      "mode": "update"
+    }
+  ],
+  "delegation": [
+    {
+      "role": "prose-polisher",
+      "mode": "required",
+      "purpose": "Revise prose while preserving factual content, citations, and author voice"
+    }
+  ],
+  "tools": [],
+  "effects": [
+    {
+      "id": "agent.delegate",
+      "scope": "role://prose-polisher"
+    },
+    {
+      "id": "filesystem.create",
+      "scope": "project://validations/{validation}"
+    },
+    {
+      "id": "filesystem.modify",
+      "scope": "project://paper/{artifact}, project://sections/{section}, project://state"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://manifest, project://config, project://decisions, project://paper/{artifact}, project://sections/{section}, project://state"
+    },
+    {
+      "id": "user.gate",
+      "scope": "proposed substantive changes"
+    }
+  ]
+}

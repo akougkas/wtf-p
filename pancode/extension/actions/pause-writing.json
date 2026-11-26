@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "pause-writing",
   "title": "Pause writing",
   "description": "Record an exact context handoff so another session can resume without reconstructing intent.",
-  "alias": "wtfp:pause-writing",
+  "alias": "panwrite:pause-writing",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/pause-writing",
+  "workflow": "panwrite://workflows/pause-writing",
   "requirements": {
     "capabilities": [
       "filesystem.read",

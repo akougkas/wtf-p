@@ -48,7 +48,7 @@ async function runTests() {
     
     assert.strictEqual(paper.source, 'semantic_scholar', 'Source should be S2');
     assert.strictEqual(paper.paperId, 's2-attention', 'Ranking should retain the strongest fixture');
-    assert.ok(paper.bibtex.includes('wtfp_status'), 'BibTeX should have provenance');
+    assert.ok(paper.bibtex.includes('panwrite_status'), 'BibTeX should have provenance');
     assert.deepStrictEqual(result.metadata.errors, [], 'Offline fixture should not report provider failures');
     assert.strictEqual(semanticScholarSearchCalls, 1, 'citation.fetch must perform its declared provider search');
     

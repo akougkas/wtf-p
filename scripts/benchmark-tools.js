@@ -70,7 +70,7 @@ const results = [
     ranker.rank(papers, 'balanced', referenceDate)[0].id
   )),
   measure('bibliography.format (one entry, explicit date)', 10000, () => (
-    bibFormat.format(paper, { wtfp_fetched: '2026-01-15' }).length
+    bibFormat.format(paper, { panwrite_fetched: '2026-01-15' }).length
   )),
 ];
 

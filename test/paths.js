@@ -73,7 +73,7 @@ check(!isValidPath('a'.repeat(2000)), 'rejects excessively long paths');
 
 // Test 4: Paths with spaces
 console.log('\n--- Paths with Spaces ---');
-const tempBase = path.join(os.tmpdir(), 'wtfp-test-' + Date.now());
+const tempBase = path.join(os.tmpdir(), 'panwrite-test-' + Date.now());
 const spacePath = path.join(tempBase, 'path with spaces', 'subdir');
 
 try {
@@ -96,7 +96,7 @@ try {
 // Test 5: Symlinks (Unix only)
 if (process.platform !== 'win32') {
   console.log('\n--- Symlink Handling ---');
-  const symlinkBase = path.join(os.tmpdir(), 'wtfp-symlink-' + Date.now());
+  const symlinkBase = path.join(os.tmpdir(), 'panwrite-symlink-' + Date.now());
   const realDir = path.join(symlinkBase, 'real');
   const linkDir = path.join(symlinkBase, 'link');
 
@@ -118,7 +118,7 @@ if (process.platform !== 'win32') {
 
 // Test 6: Install dry-run with spaced path
 console.log('\n--- Install with Spaced Path (dry-run) ---');
-const installTestBase = path.join(os.tmpdir(), 'wtfp install test ' + Date.now());
+const installTestBase = path.join(os.tmpdir(), 'panwrite install test ' + Date.now());
 const installTestDir = path.join(installTestBase, '.claude');
 
 try {
@@ -139,7 +139,7 @@ try {
 
 // Test 7: Version tracking
 console.log('\n--- Version Tracking ---');
-const versionTestDir = path.join(os.tmpdir(), 'wtfp-version-' + Date.now());
+const versionTestDir = path.join(os.tmpdir(), 'panwrite-version-' + Date.now());
 const versionClaudeDir = path.join(versionTestDir, '.claude');
 
 try {
@@ -151,12 +151,12 @@ try {
 
   // Test write + read version
   const mockFiles = [
-    { dest: path.join(versionClaudeDir, 'commands/wtfp/help.md') },
+    { dest: path.join(versionClaudeDir, 'commands/panwrite/help.md') },
     { dest: path.join(versionClaudeDir, 'write-the-f-paper/workflows/test.md') }
   ];
 
   // Create the files first for checksum
-  fs.mkdirSync(path.join(versionClaudeDir, 'commands/wtfp'), { recursive: true });
+  fs.mkdirSync(path.join(versionClaudeDir, 'commands/panwrite'), { recursive: true });
   fs.mkdirSync(path.join(versionClaudeDir, 'write-the-f-paper/workflows'), { recursive: true });
   fs.writeFileSync(mockFiles[0].dest, '# Help');
   fs.writeFileSync(mockFiles[1].dest, '# Test');
@@ -167,7 +167,7 @@ try {
   check(readBack !== null, 'reads version file');
   check(readBack.version === '0.2.0', 'version matches');
   check(readBack.schemaVersion === 2, 'uses ownership receipt schema v2');
-  check(readBack.product === 'wtf-p', 'receipt names its owner');
+  check(readBack.product === 'panwrite', 'receipt names its owner');
   check(readBack.files.length === 2, 'receipt has two owned file entries');
   check(readBack.files.every(file => /^[a-f0-9]{64}$/.test(file.sha256)), 'receipt entries use SHA-256');
   check(readBack.installedAt, 'has installedAt timestamp');

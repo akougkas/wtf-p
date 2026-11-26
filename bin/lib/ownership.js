@@ -11,8 +11,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const PRODUCT = 'wtf-p';
-const RECEIPT_FILE = '.wtfp-version';
+const PRODUCT = 'panwrite';
+const RECEIPT_FILE = '.panwrite-version';
 const RECEIPT_SCHEMA_VERSION = 2;
 
 function pathsEqual(left, right) {
@@ -342,7 +342,7 @@ function removeCreatedDirectories(records, guard) {
           ? `/proc/self/fd/${parentDescriptor}`
           : parent;
         const pinnedSource = path.join(pinnedParent, path.basename(record.path));
-        const quarantineName = `.wtfp-remove-${process.pid}-${crypto.randomBytes(8).toString('hex')}`;
+        const quarantineName = `.panwrite-remove-${process.pid}-${crypto.randomBytes(8).toString('hex')}`;
         const quarantine = path.join(pinnedParent, quarantineName);
         const immediate = fs.lstatSync(pinnedSource);
         if (immediate.isSymbolicLink() || !immediate.isDirectory() ||
@@ -562,7 +562,7 @@ function hasValidV2Entries(receipt) {
     } catch {
       return false;
     }
-    if (entry.path !== relative || relative === RECEIPT_FILE || relative.startsWith('.wtfp-backup-') || paths.has(relative)) return false;
+    if (entry.path !== relative || relative === RECEIPT_FILE || relative.startsWith('.panwrite-backup-') || paths.has(relative)) return false;
     paths.add(relative);
   }
 
@@ -593,7 +593,7 @@ function isLegacyReceiptShape(receipt) {
     typeof receipt === 'object' &&
     !Array.isArray(receipt) &&
     (receipt.schemaVersion === undefined || receipt.schemaVersion === 1) &&
-    (receipt.product === undefined || receipt.product === PRODUCT || receipt.product === 'write-the-f-paper') &&
+    (receipt.product === undefined || receipt.product === PRODUCT) &&
     typeof receipt.version === 'string' &&
     Array.isArray(receipt.manifest)
   );
@@ -617,7 +617,7 @@ function readReceipt(targetDir, targetGuard = null) {
       return {
         receipt: null,
         corrupt: true,
-        error: 'unsupported or malformed WTF-P receipt schema',
+        error: 'unsupported or malformed PanWrite receipt schema',
         receiptSha256: snapshot.sha256
       };
     }

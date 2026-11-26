@@ -17,7 +17,7 @@ const runner = require('../evaluation/tools/run-pancode-campaign');
 const deskTrust = require('../evaluation/lib/desk-trust');
 
 const CAMPAIGN_FILE = path.join(ROOT, 'evaluation/v2/campaigns/pancode-0.9.0-reference.json');
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-campaign-test-'));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-campaign-test-'));
 let passed = 0;
 
 async function test(name, run) {
@@ -89,12 +89,12 @@ function preparedRoot(name, entry, change = (prepared) => prepared, campaignFile
   fs.mkdirSync(path.join(root, 'pancode', 'bin'), { recursive: true });
   fs.writeFileSync(path.join(root, 'pancode', 'bin', 'pancode'), `#!${process.execPath}\n// launches ${entry}\n`, { mode: 0o755 });
   const identity = runner.pancodeIdentity(entry, campaign);
-  const wtfp = runner.wtfpIdentity();
+  const panwrite = runner.panwriteIdentity();
   fs.writeFileSync(path.join(root, 'prepared.json'), `${JSON.stringify(change({
-    schema: 'wtfp.evaluation.campaign-prepared/v3',
+    schema: 'panwrite.evaluation.campaign-prepared/v3',
     campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(campaignFile)) },
-    wtfp,
-    allow_dirty: wtfp.package_tree !== 'clean',
+    panwrite,
+    allow_dirty: panwrite.package_tree !== 'clean',
     pancode: identity.observed,
     pancode_unpinned: identity.mismatches,
     fixture: { ...runner.fixtureIdentity(campaign), evaluator_oracles_copied: false },
@@ -116,7 +116,7 @@ const sum = (measured, estimated = 0, unknownCount = 0, absentCount = 0) => ({ f
 /** A call row of `pancode telemetry calls --run`, reporting `model` as the provider's answer or reporting none. */
 const callRow = (model, fields = {}) => ({ disposition: 'settled', responseId: 'resp', target: { reportedModel: { fact: model === null ? { kind: 'unknown', reason: 'not-reported' } : { kind: 'measured', value: model } } }, ...fields });
 /** A worker run as `telemetry inspect --run` returns it once PanCode verified its seal. */
-const workerRun = (settled, calls = []) => ({ inspect: { seal: { status: 'verified' }, settled: { agentId: 'wtfp-section-writer', tools: [], ...settled } }, calls: { calls } });
+const workerRun = (settled, calls = []) => ({ inspect: { seal: { status: 'verified' }, settled: { agentId: 'panwrite-section-writer', tools: [], ...settled } }, calls: { calls } });
 /**
  * A step's sealed telemetry as a fake PanCode run leaves it: the session frame
  * the stream opens with, a main-agent run record and each worker's under
@@ -171,9 +171,9 @@ async function withEnv(values, run) {
 async function main() {
   const campaign = runner.loadCampaign(CAMPAIGN_FILE);
   const executeEnv = {
-    WTFP_CAMPAIGN_CONFIRM: runner.confirmValue(campaign),
-    WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: privateSource('settings.yaml', 'targets: {}\n'),
-    WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: privateSource('credentials.yaml', 'secret-value-that-must-be-wiped\n')
+    PANWRITE_CAMPAIGN_CONFIRM: runner.confirmValue(campaign),
+    PANWRITE_CAMPAIGN_PANCODE_SETTINGS_SOURCE: privateSource('settings.yaml', 'targets: {}\n'),
+    PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: privateSource('credentials.yaml', 'secret-value-that-must-be-wiped\n')
   };
   const selection = { target: 'operator-target', model: 'operator-model', effort: 'medium', budgetUsd: 5 };
   /** The campaign with only ungated steps, for cases a gated first step would stop before they are reached. */
@@ -186,7 +186,7 @@ async function main() {
     assert.deepStrictEqual([campaign.model.target, campaign.model.model, campaign.model.effort, campaign.budget.ceiling], [null, null, null, null]);
     assert.strictEqual(campaign.pancode.source.commit, '58bd6111b673be0ab4a33f00de8907feb396afea');
     assert.deepStrictEqual([campaign.pancode.version, campaign.pancode.build.entry], ['0.9.0-dev', 'bin/pancode.cjs']);
-    assert.deepStrictEqual(campaign.wtfp.packages.map(pkg => [pkg.path, pkg.inventory_target]), [['pancode/plugin', 'pancode-plugin'], ['pancode/extension', 'pancode-extension']]);
+    assert.deepStrictEqual(campaign.panwrite.packages.map(pkg => [pkg.path, pkg.inventory_target]), [['pancode/plugin', 'pancode-plugin'], ['pancode/extension', 'pancode-extension']]);
     const v1 = JSON.parse(fs.readFileSync(path.join(ROOT, campaign.fixture.path, 'manifest.json'), 'utf8'));
     assert.strictEqual(campaign.fixture.model_inputs_sha256, v1.model_inputs_sha256);
     const drifted = path.join(scratch, 'drifted.json');
@@ -204,7 +204,7 @@ async function main() {
   await test('plan is credential-free, writes nothing, and names what the operator still has to select', async () => {
     const entry = fakePanCode('fake-plan', 'process.exit(3);');
     const before = tree(path.join(scratch, 'fake-plan'));
-    const planned = await withEnv({ WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: '/nonexistent/credentials.yaml' }, () => runner.plan(campaign, { entry }));
+    const planned = await withEnv({ PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: '/nonexistent/credentials.yaml' }, () => runner.plan(campaign, { entry }));
     assert.strictEqual(planned.credential_free, true);
     assert.deepStrictEqual(planned.resources_missing, ['model.target', 'model.model', 'model.effort', 'budget.ceiling']);
     assert.ok(planned.pancode.mismatches.some(item => /entry sha256/.test(item)), 'a build other than the pinned one is reported');
@@ -214,7 +214,7 @@ async function main() {
     assert.deepStrictEqual(tree(path.join(scratch, 'fake-plan')), before);
   });
 
-  await test('the plan command names the campaign, the pinned build, the WTF-P candidate and every step, reading no credential and writing nothing', async () => {
+  await test('the plan command names the campaign, the pinned build, the PanWrite candidate and every step, reading no credential and writing nothing', async () => {
     const { execFileSync } = require('child_process');
     const entry = fakePanCode('fake-plan-cli', 'process.exit(3);');
     const cwd = path.join(scratch, 'plan-cwd');
@@ -226,15 +226,15 @@ async function main() {
     const stdout = execFileSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'plan', '--pancode-entry', entry], {
       cwd,
       encoding: 'utf8',
-      env: { ...process.env, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: locked, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: path.join(scratch, 'nonexistent', 'settings.yaml') }
+      env: { ...process.env, PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: locked, PANWRITE_CAMPAIGN_PANCODE_SETTINGS_SOURCE: path.join(scratch, 'nonexistent', 'settings.yaml') }
     });
     fs.chmodSync(locked, 0o600);
     const planned = JSON.parse(stdout);
     assert.deepStrictEqual(planned.campaign, { id: 'pancode-0.9.0-reference', version: campaign.version, status: 'awaiting-resources' });
     assert.strictEqual(planned.pancode.pinned.source.commit, '58bd6111b673be0ab4a33f00de8907feb396afea');
     assert.strictEqual(planned.pancode.observed.version, 'PanCode 0.9.0-dev (unreleased · 58bd611)');
-    assert.deepStrictEqual(Object.keys(planned.wtfp.packages), ['pancode/plugin', 'pancode/extension']);
-    assert.match(planned.wtfp.commit, /^[0-9a-f]{40}$/);
+    assert.deepStrictEqual(Object.keys(planned.panwrite.packages), ['pancode/plugin', 'pancode/extension']);
+    assert.match(planned.panwrite.commit, /^[0-9a-f]{40}$/);
     assert.deepStrictEqual(planned.steps.map(step => step.step), campaign.lifecycle.map(step => step.step));
     assert.strictEqual(planned.steps.length, 12);
     assert.strictEqual(planned.credential_free, true);
@@ -254,10 +254,10 @@ async function main() {
     const root = preparedRoot('refusals', entry);
     await assert.rejects(runner.execute(campaign, { root, entry }), /operator's --target/);
     await assert.rejects(runner.execute(campaign, { root, entry, ...selection, budgetUsd: undefined }), /--budget-usd/);
-    await assert.rejects(runner.execute(campaign, { root, entry, ...selection }), /set WTFP_CAMPAIGN_CONFIRM=/);
+    await assert.rejects(runner.execute(campaign, { root, entry, ...selection }), /set PANWRITE_CAMPAIGN_CONFIRM=/);
     const inside = path.join(root, 'credentials.yaml');
     fs.writeFileSync(inside, 'x');
-    await assert.rejects(withEnv({ ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: inside }, () => runner.execute(campaign, { root, entry, ...selection })), /outside the run root/);
+    await assert.rejects(withEnv({ ...executeEnv, PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: inside }, () => runner.execute(campaign, { root, entry, ...selection })), /outside the run root/);
     assert.ok(!fs.existsSync(path.join(root, 'run.json')));
     assert.throws(() => runner.parseArgs(['execute', '--api-key', 'x']), /unknown option|credentials only/);
   });
@@ -328,7 +328,7 @@ setTimeout(() => {}, 60000);`);
     const sealedRun = { status: 'verified' };
     const records = {
       'inspect --run main1': { seal: sealedRun, settled: { agentId: 'main-agent', tools: null } },
-      'inspect --run w1': { seal: sealedRun, settled: { agentId: 'wtfp-section-writer', route: { wireModelId: 'm' }, tools: [{ tool: 'read', calls: 2, blocked: 0 }, { tool: 'bash', calls: 1, blocked: 1 }] } },
+      'inspect --run w1': { seal: sealedRun, settled: { agentId: 'panwrite-section-writer', route: { wireModelId: 'm' }, tools: [{ tool: 'read', calls: 2, blocked: 0 }, { tool: 'bash', calls: 1, blocked: 1 }] } },
       'calls --run w1': { calls: [callRow('m', { responseId: 'r1' }), callRow(null, { disposition: 'sent_unsettled', responseId: null })] },
       'cost sess1': { total: { calls: sum(3), usd: sum(0.02), pricedBy: { 'target-rates': 3 } } },
       'inspect sess1': { runs: { count: 1, unresolved: 0 } }
@@ -349,7 +349,7 @@ setTimeout(() => {}, 60000);`);
     assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0.01) } }), ['estimated', 0.02]);
     assert.deepStrictEqual(cost({ total: { calls: sum(3), usd: sum(0.01, 0, 1) } }), ['unavailable', null], 'one unpriced call makes the step\'s cost unknown, never partial');
     assert.deepStrictEqual(cost(null), ['unavailable', null]);
-    const ran = judge({ 'inspect --run w1': { seal: sealedRun, settled: { agentId: 'wtfp-section-writer', tools: [{ tool: 'bash', calls: 1, blocked: 0 }] } } });
+    const ran = judge({ 'inspect --run w1': { seal: sealedRun, settled: { agentId: 'panwrite-section-writer', tools: [{ tool: 'bash', calls: 1, blocked: 0 }] } } });
     assert.deepStrictEqual([ran.outcome, ran.tools.execution_calls], ['policy-violation', 1]);
     const judged = (overrides) => { const result = judge(overrides); return [result.outcome, result.unreadable_worker_runs]; };
     assert.deepStrictEqual(judged({ 'inspect --run w1': { seal: { status: 'broken' }, settled: records['inspect --run w1'].settled } }), ['integrity-violation', ['run:w1']], 'a run whose seal PanCode does not verify vouches for nothing');
@@ -384,7 +384,7 @@ setTimeout(() => {}, 60000);`);
     fs.rmSync(path.join(moved, 'workspace', 'planted.md'));
     fs.mkdirSync(path.join(moved, 'workspace', 'empty'));
     await assert.rejects(attempt(moved), /workspace changed since prepare/, 'an empty directory counts');
-    await assert.rejects(attempt(preparedRoot('bound-candidate', entry, (prepared) => ({ ...prepared, wtfp: { ...prepared.wtfp, commit: '0'.repeat(40) } }))), /WTF-P candidate changed/);
+    await assert.rejects(attempt(preparedRoot('bound-candidate', entry, (prepared) => ({ ...prepared, panwrite: { ...prepared.panwrite, commit: '0'.repeat(40) } }))), /PanWrite candidate changed/);
     await assert.rejects(attempt(preparedRoot('bound-build', entry, (prepared) => ({ ...prepared, pancode: { ...prepared.pancode, dist_sha256: '0'.repeat(64) } }))), /PanCode build changed since prepare/);
     await assert.rejects(attempt(preparedRoot('bound-pinned', entry, (prepared) => ({ ...prepared, pancode_unpinned: [] }))), /unpinned PanCode build/);
     await assert.rejects(attempt(preparedRoot('bound-timeout', entry), { timeoutMinutes: campaign.budget.timeout_minutes_per_step + 1 }), /at most the campaign's/);
@@ -426,7 +426,7 @@ process.exit(0);`);
     assert.deepStrictEqual(listed('--delegate-tools'), [...runner.WORKER_TOOLS]);
     assert.strictEqual(argv[argv.indexOf('--max-cost-usd') + 1], '5', 'the step runs under the budget as its cost ceiling');
     assert.strictEqual(argv[argv.indexOf('--output-format') + 1], 'stream-json');
-    assert.strictEqual(argv[argv.length - 1], '/wtfp:new-paper durable workflows', 'the action prompt is the last argument');
+    assert.strictEqual(argv[argv.length - 1], '/panwrite:new-paper durable workflows', 'the action prompt is the last argument');
     assert.strictEqual(run.budget_enforcement, 'per-step PanCode ceiling (--max-cost-usd) and between steps');
     for (const tool of [...runner.EXECUTION_TOOLS, 'web_fetch', 'web_read', 'configure_pancode', 'consult', 'browser', 'restart_session']) {
       assert.ok(!runner.MAIN_TOOLS.includes(tool) && !runner.WORKER_TOOLS.includes(tool), `no step holds ${tool}`);
@@ -437,8 +437,8 @@ process.exit(0);`);
     // and its steps never archive a milestone, so they hold no archive tool either.
     const manifest = fs.readFileSync(path.join(ROOT, 'pancode/extension/pancode-extension.yaml'), 'utf8');
     const deskTools = [...manifest.split(/^  tools:$/m)[1].matchAll(/^    - name: ([a-z_]+)$/gm)]
-      .map(match => `extension_wtfp__${match[1]}`)
-      .filter(tool => !['extension_wtfp__next_step', 'extension_wtfp__archive'].includes(tool));
+      .map(match => `extension_panwrite__${match[1]}`)
+      .filter(tool => !['extension_panwrite__next_step', 'extension_panwrite__archive'].includes(tool));
     assert.deepStrictEqual(runner.MAIN_TOOLS.filter(tool => tool.startsWith('extension_')), deskTools);
   });
 
@@ -513,7 +513,7 @@ process.exit(seen.length === 0 ? 0 : 4);`);
     const worker = workerRun({ tools: [] });
     assert.deepStrictEqual(judged([main, runner.telemetryWorker('w', worker.inspect, worker.calls.calls)]), ['completed', []]);
     assert.deepStrictEqual(judged([main, runner.telemetryWorker('torn', null, [])]), ['integrity-violation', ['run:torn']]);
-    const bare = { seal: { status: 'verified' }, settled: { agentId: 'wtfp-section-writer' } };
+    const bare = { seal: { status: 'verified' }, settled: { agentId: 'panwrite-section-writer' } };
     assert.deepStrictEqual(judged([main, runner.telemetryWorker('bare', bare, [])]), ['integrity-violation', ['run:bare']], 'a run that records no tool counts');
     assert.deepStrictEqual(judged([main, runner.telemetryWorker('uncalled', worker.inspect, null)]), ['integrity-violation', ['run:uncalled']], 'a run whose calls cannot be read');
     assert.deepStrictEqual(judged([runner.telemetryWorker('main', { seal: { status: 'unsealed' }, settled: { agentId: 'main-agent' } }, null)]), ['integrity-violation', ['run:main']], 'even the main agent\'s run must be sealed');
@@ -529,12 +529,12 @@ ${sealed(0.01)}
 process.exit(0);`);
     const clean = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('outputs', outputs, undefined, ungatedFile), entry: outputs, ...selection, campaignFile: ungatedFile }));
     assert.deepStrictEqual(clean.steps.map(step => [step.outcome, step.pancode_config_changed]), [['completed', []], ['completed', []]]);
-    const recipe = fakePanCode('fake-recipe', `${fileWrite('.pancode/agents/wtfp-section-reviewer.md', '---\nname: always pass\n---\n')}
+    const recipe = fakePanCode('fake-recipe', `${fileWrite('.pancode/agents/panwrite-section-reviewer.md', '---\nname: always pass\n---\n')}
 ${sealed(0.01)}
 process.exit(0);`);
     const overridden = await withEnv(executeEnv, () => runner.execute(ungated, { root: preparedRoot('recipe', recipe, undefined, ungatedFile), entry: recipe, ...selection, campaignFile: ungatedFile }));
     assert.strictEqual(overridden.outcome, 'integrity-violation');
-    assert.deepStrictEqual(overridden.steps[0].pancode_config_changed, ['.pancode/agents', '.pancode/agents/wtfp-section-reviewer.md']);
+    assert.deepStrictEqual(overridden.steps[0].pancode_config_changed, ['.pancode/agents', '.pancode/agents/panwrite-section-reviewer.md']);
     // A link inside the configuration counts by its target, so retargeting it is a change.
     const config = path.join(scratch, 'config-links');
     fs.mkdirSync(path.join(config, '.pancode', 'wiki'), { recursive: true });
@@ -550,21 +550,21 @@ process.exit(0);`);
     assert.deepStrictEqual([relinked.outcome, relinked.steps[0].pancode_config_changed], ['integrity-violation', ['.pancode']]);
   });
 
-  await test('prepare refuses a WTF-P recipe that declares a tool a step\'s workers may not hold', async () => {
+  await test('prepare refuses a PanWrite recipe that declares a tool a step\'s workers may not hold', async () => {
     assert.deepStrictEqual(runner.recipeToolsOutside(path.join(ROOT, 'pancode/plugin')), [], 'the shipped recipes fit the delegated tools');
     const plugin = path.join(scratch, 'grown-plugin');
     fs.cpSync(path.join(ROOT, 'pancode/plugin/dev.pancode/agents'), path.join(plugin, 'dev.pancode/agents'), { recursive: true });
-    const recipe = path.join(plugin, 'dev.pancode/agents/wtfp-section-reviewer.md');
+    const recipe = path.join(plugin, 'dev.pancode/agents/panwrite-section-reviewer.md');
     const grown = fs.readFileSync(recipe, 'utf8').replace(/optional: \[/, 'optional: [verify, ');
     assert.notStrictEqual(grown, fs.readFileSync(recipe, 'utf8'), 'the recipe declares optional tools to extend');
     fs.writeFileSync(recipe, grown);
-    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify']);
-    const writer = path.join(plugin, 'dev.pancode/agents/wtfp-section-writer.md');
+    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['panwrite-section-reviewer: verify']);
+    const writer = path.join(plugin, 'dev.pancode/agents/panwrite-section-writer.md');
     fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace('{anyOf: [write, edit]}', '{anyOf: [write, edit, bash]}'));
-    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['wtfp-section-reviewer: verify', 'wtfp-section-writer: bash']);
+    assert.deepStrictEqual(runner.recipeToolsOutside(plugin), ['panwrite-section-reviewer: verify', 'panwrite-section-writer: bash']);
     fs.writeFileSync(writer, fs.readFileSync(writer, 'utf8').replace(/^tools: .*$/m, 'tools:\n  required: [bash]'));
-    assert.match(runner.recipeToolsOutside(plugin).join('\n'), /wtfp-section-writer\.md: tools not declared/);
-    assert.match(runner.recipeToolsOutside(path.join(scratch, 'no-plugin')).join(''), /no WTF-P recipes/);
+    assert.match(runner.recipeToolsOutside(plugin).join('\n'), /panwrite-section-writer\.md: tools not declared/);
+    assert.match(runner.recipeToolsOutside(path.join(scratch, 'no-plugin')).join(''), /no PanWrite recipes/);
   });
 
   await test('a gated step is never completed while its gate is pending or answered without a sealed author answer', async () => {
@@ -595,7 +595,7 @@ process.exit(0);`);
     const asked = { ...checkpoint, blocking: true };
     delete asked.status;
     const sealedAnswer = deskTrust.seal({
-      schema: 'wtfp.project.interaction/v1', id: 'interaction-minted', project_id: manifest.id, kind: 'checkpoint-answer',
+      schema: 'panwrite.project.interaction/v1', id: 'interaction-minted', project_id: manifest.id, kind: 'checkpoint-answer',
       subject_uri: `project://checkpoints/${checkpoint.id}`, channel: 'attested-interview', outcome: 'selected', selected_option: checkpoint.options[0].id,
       presented: { content_sha256: sha256(runner.canonical(asked)), options: checkpoint.options.map(option => option.id) }, asked_at: '2026-10-14T12:00:00Z', answered_at: '2026-10-14T12:01:00Z'
     }, key);
@@ -604,7 +604,7 @@ ${planningWrite(`checkpoints/${checkpoint.id}.json`, { ...checkpoint, blocking: 
 ${planningWrite('interactions/interaction-minted.json', sealedAnswer)}
 process.exit(0);`);
     const mintedRoot = preparedRoot('minted', minted);
-    const store = path.join(runner.profilePaths(mintedRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(mintedRoot).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, JSON.stringify({ version: 1, entries: { 'seal-key': { value: key.toString('hex'), version: 1 } } }));
     const mintedRun = await withEnv(executeEnv, () => runner.execute(campaign, { root: mintedRoot, entry: minted, ...selection }));
@@ -615,7 +615,7 @@ process.exit(0);`);
     assert.deepStrictEqual(mintedReport.decisions.map(item => [item.checkpoint, item.trust, item.attested_by]), [[checkpoint.id, 'sealed-during-headless-step', null]]);
     assert.ok(!mintedReport.evidence_levels.includes('observed-author'), 'a seal minted with no author present is not author evidence');
     // Reaching for the seal store is a policy violation whatever tool does it.
-    const reaching = fakePanCode('fake-reaching', `${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'bash', args: { command: 'cat ../pancode/state/extensions/wtfp/store.json' } })}
+    const reaching = fakePanCode('fake-reaching', `${frame({ type: 'tool_execution_start', toolCallId: 'c1', toolName: 'bash', args: { command: 'cat ../pancode/state/extensions/panwrite/store.json' } })}
 process.exit(0);`);
     const reached = await withEnv(executeEnv, () => runner.execute(campaign, { root: preparedRoot('reaching', reaching), entry: reaching, ...selection }));
     assert.deepStrictEqual([reached.outcome, reached.steps[0].tools.store_calls], ['policy-violation', 1]);
@@ -709,12 +709,12 @@ process.exit(0);`);
     const probe = path.join(scratch, 'store-probe.json');
     const late = path.join(scratch, 'late-interaction.json');
     const entry = fakePanCode('fake-keyless', `${sealed(0.01)}
-const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
 require('fs').writeFileSync(${JSON.stringify(probe)}, JSON.stringify({ present: require('fs').existsSync(store) }));
 require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(`setTimeout(() => require('fs').writeFileSync(${JSON.stringify(late)}, 'minted'), 1500)`)}], { detached: true, stdio: 'ignore' }).unref();
 process.exit(0);`);
     const root = preparedRoot('keyless', entry, undefined, ungatedFile);
-    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     const stored = JSON.stringify({ version: 1, entries: { 'seal-key': { value: 'a'.repeat(64), version: 1 } } });
     fs.writeFileSync(store, stored);
@@ -727,7 +727,7 @@ process.exit(0);`);
     assert.ok(!fs.existsSync(late), 'the swept process wrote nothing after the step');
     // A store a step creates is not the author's key: it is set aside and the run fails integrity.
     const maker = fakePanCode('fake-store-maker', `${sealed(0.01)}
-const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+const store = require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
 require('fs').mkdirSync(require('path').dirname(store), { recursive: true });
 require('fs').writeFileSync(store, '{}');
 process.exit(0);`);
@@ -740,10 +740,10 @@ process.exit(0);`);
     // A step that plants a dangling link at the store path, or replaces its directory with a link, gets neither the key nor a clean run.
     const landing = path.join(scratch, 'store-landing.json');
     const planter = fakePanCode('fake-planter', `${sealed(0.01)}
-require('fs').symlinkSync(${JSON.stringify(landing)}, require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
+require('fs').symlinkSync(${JSON.stringify(landing)}, require('path').join(process.env.PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json'));
 process.exit(0);`);
     const plantRoot = preparedRoot('planter', planter, undefined, ungatedFile);
-    const store = path.join(runner.profilePaths(plantRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(plantRoot).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, 'held-key');
     const planted = await withEnv(executeEnv, () => runner.execute(ungated, { root: plantRoot, entry: planter, ...selection, campaignFile: ungatedFile }));
@@ -754,12 +754,12 @@ process.exit(0);`);
     fs.mkdirSync(elsewhere);
     const mover = fakePanCode('fake-dir-mover', `${sealed(0.01)}
 const fs = require('fs'); const path = require('path');
-const dir = path.join(process.env.PANCODE_STATE_DIR, 'extensions', 'wtfp');
+const dir = path.join(process.env.PANCODE_STATE_DIR, 'extensions', 'panwrite');
 fs.renameSync(dir, dir + '-old');
 fs.symlinkSync(${JSON.stringify(elsewhere)}, dir);
 process.exit(0);`);
     const moveRoot = preparedRoot('dir-mover', mover, undefined, ungatedFile);
-    const moveStore = path.join(runner.profilePaths(moveRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const moveStore = path.join(runner.profilePaths(moveRoot).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(moveStore), { recursive: true });
     fs.writeFileSync(moveStore, 'held-key');
     const moved = await withEnv(executeEnv, () => runner.execute(ungated, { root: moveRoot, entry: mover, ...selection, campaignFile: ungatedFile }));
@@ -814,14 +814,14 @@ process.exit(0);`);
     fs.writeFileSync(oneStepFile, JSON.stringify({ ...ungated, lifecycle: ungated.lifecycle.slice(0, 1) }));
     const oneStep = runner.loadCampaign(oneStepFile);
     const swapRoot = preparedRoot('root-swapper', swapper, undefined, oneStepFile);
-    const store = path.join(runner.profilePaths(swapRoot).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(swapRoot).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, 'held-key');
     const swapped = await withEnv(executeEnv, () => runner.execute(oneStep, { root: swapRoot, entry: swapper, ...selection, campaignFile: oneStepFile }));
     assert.strictEqual(swapped.outcome, 'integrity-violation');
     assert.match(swapped.integrity.join(' '), /run root was replaced/);
     assert.deepStrictEqual(swapped.seal_store, { held_during_run: true, restored: false }, 'a key not restored is never recorded as restored');
-    assert.ok(!fs.existsSync(path.join(landing, 'pancode', 'state', 'extensions', 'wtfp', 'store.json')), 'the key is not written into the stand-in root');
+    assert.ok(!fs.existsSync(path.join(landing, 'pancode', 'state', 'extensions', 'panwrite', 'store.json')), 'the key is not written into the stand-in root');
     assert.strictEqual(swapped.credentials_removed, false);
     assert.ok(fs.readFileSync(path.join(`${swapRoot}-old`, 'pancode', 'config', 'credentials.yaml')).every(byte => byte === 0), 'the copy left behind was zeroed');
     // A copy a step moves elsewhere is zeroed through the descriptor the runner kept, and never reported removed.
@@ -927,7 +927,7 @@ process.exit(1);`);
     const root = preparedRoot('leak', entry);
     const cli = require('child_process').spawnSync(process.execPath, [path.join(ROOT, 'evaluation/tools/run-pancode-campaign.js'), 'execute', '--root', root, '--pancode-entry', entry,
       '--target', selection.target, '--model', selection.model, '--effort', selection.effort, '--budget-usd', String(selection.budgetUsd)],
-    { env: { ...process.env, ...executeEnv, WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: source, WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE: settings }, encoding: 'utf8' });
+    { env: { ...process.env, ...executeEnv, PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE: source, PANWRITE_CAMPAIGN_PANCODE_SETTINGS_SOURCE: settings }, encoding: 'utf8' });
     assert.strictEqual(cli.status, 3, cli.stderr);
     const run = JSON.parse(fs.readFileSync(path.join(root, 'run.json'), 'utf8'));
     assert.strictEqual(run.outcome, 'failed');
@@ -951,7 +951,7 @@ process.exit(1);`);
     fs.cpSync(path.join(ROOT, campaign.fixture.path), copy, { recursive: true });
     assert.strictEqual(checkFixture(copy).valid, true);
     const descriptor = JSON.parse(fs.readFileSync(path.join(copy, 'fixture.json'), 'utf8'));
-    fs.writeFileSync(path.join(copy, 'fixture.json'), JSON.stringify({ ...descriptor, schema: 'wtfp.evaluation.user-acceptance/v1' }));
+    fs.writeFileSync(path.join(copy, 'fixture.json'), JSON.stringify({ ...descriptor, schema: 'panwrite.evaluation.user-acceptance/v1' }));
     assert.match(checkFixture(copy).reason, /changed its schema/);
   });
 
@@ -972,11 +972,11 @@ process.exit(1);`);
     const asked = { ...checkpoint };
     delete asked.status;
     const key = crypto.randomBytes(32);
-    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+    const store = path.join(runner.profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
     fs.mkdirSync(path.dirname(store), { recursive: true });
     fs.writeFileSync(store, JSON.stringify({ version: 1, entries: { 'seal-key': { value: key.toString('hex'), version: 1 } } }));
     const interaction = {
-      schema: 'wtfp.project.interaction/v1',
+      schema: 'panwrite.project.interaction/v1',
       id: 'interaction-answer',
       project_id: checkpoint.project_id,
       kind: 'checkpoint-answer',
@@ -1056,7 +1056,7 @@ process.exit(1);`);
     assert.throws(() => loadStudy(variant('gateless', value => ({ ...value, ablations: [{ ...value.ablations[0], keeps_production_author_gates: false }] }))), /not a valid study/);
     assert.throws(() => loadStudy(variant('self-judging', value => ({ ...value, assessment: { ...value.assessment, model_judges: 'allowed' } }))), /not a valid study/);
     assert.throws(() => loadStudy(variant('hidden-null', value => ({ ...value, analysis: { ...value.analysis, null_results: 'omitted' } }))), /not a valid study/);
-    assert.throws(() => loadStudy(variant('no-baseline', value => ({ ...value, conditions: value.conditions.map(condition => (condition.wtfp === 'none' ? { ...condition, wtfp: 'plugin-only' } : condition)) }))), /baseline without WTF-P/);
+    assert.throws(() => loadStudy(variant('no-baseline', value => ({ ...value, conditions: value.conditions.map(condition => (condition.panwrite === 'none' ? { ...condition, panwrite: 'plugin-only' } : condition)) }))), /baseline without PanWrite/);
     assert.throws(() => loadStudy(variant('secondary-primary', value => ({ ...value, hypotheses: [{ ...value.hypotheses[0], primary_outcome: 'latency' }] }))), /declared primary outcome/);
     assert.throws(() => loadStudy(variant('unknown-host', value => ({ ...value, conditions: value.conditions.map(condition => ({ ...condition, host: 'pancode-9.9.9-reference' })) }))), /unknown campaign/);
   });

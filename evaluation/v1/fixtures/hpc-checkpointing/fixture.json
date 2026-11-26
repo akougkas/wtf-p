@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.fixture/v1",
+  "schema": "panwrite.evaluation.fixture/v1",
   "id": "hpc-checkpointing-paper",
   "version": 1,
   "title": "Synthetic resilient-checkpointing paper",

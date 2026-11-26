@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "settings",
   "title": "Manage project settings",
   "description": "View and update portable project settings after presenting the exact proposed diff.",
-  "alias": "wtfp:settings",
+  "alias": "panwrite:settings",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/settings",
+  "workflow": "panwrite://workflows/settings",
   "requirements": {
     "capabilities": [
       "filesystem.read",

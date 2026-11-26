@@ -10,7 +10,7 @@ const { RECEIPT_FILE } = require('../bin/lib/ownership');
 const { detectInstallation } = require('../bin/lib/utils');
 
 const originalCwd = process.cwd();
-const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-status-partial-'));
+const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-status-partial-'));
 const workspace = path.join(testRoot, 'workspace');
 let passed = 0;
 
@@ -51,7 +51,7 @@ function makeDir(relative) {
 function writeReceipt(targetDir, overrides = {}) {
   const receipt = {
     schemaVersion: 2,
-    product: 'wtf-p',
+    product: 'panwrite',
     version: '1.0.0',
     target: { canonicalPath: fs.realpathSync(targetDir) },
     runtime: 'claude',
@@ -112,8 +112,8 @@ async function main() {
   });
 
   const localConfig = path.join(workspace, '.claude');
-  fs.mkdirSync(path.join(localConfig, 'skills', 'wtfp'), { recursive: true });
-  fs.writeFileSync(path.join(localConfig, 'skills', 'wtfp', 'SKILL.md'), '# skill\n');
+  fs.mkdirSync(path.join(localConfig, 'skills', 'panwrite'), { recursive: true });
+  fs.writeFileSync(path.join(localConfig, 'skills', 'panwrite', 'SKILL.md'), '# skill\n');
 
   await record('skill-only legacy installs set hasAny', () => {
     const detection = detectInstallation(localConfig);

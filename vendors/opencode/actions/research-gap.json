@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "research-gap",
   "title": "Research a section gap",
   "description": "Synthesize literature, domain conventions, open gaps, and defensible positioning for a section.",
-  "alias": "wtfp:research-gap",
+  "alias": "panwrite:research-gap",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-research-literature"
+    "skill": "panwrite-research-literature"
   },
-  "workflow": "wtfp://workflows/research-gap",
+  "workflow": "panwrite://workflows/research-gap",
   "requirements": {
     "capabilities": [
       "agent.delegate",
@@ -105,7 +105,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "declared bibliography and citation tools through tools/wtfp-tool.js"
+      "scope": "declared bibliography and citation tools through tools/panwrite-tool.js"
     },
     {
       "id": "user.gate",

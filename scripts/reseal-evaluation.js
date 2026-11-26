@@ -14,7 +14,7 @@ const sha256 = (b) => crypto.createHash('sha256').update(b).digest('hex');
 const manifestPath = path.join(ROOT, 'evaluation/v1/routing/manifest.json');
 let text = fs.readFileSync(manifestPath, 'utf8');
 const m = JSON.parse(text);
-text = text.replace(`"wtfp_commit": "${m.wtfp_commit}"`, `"wtfp_commit": "${commit}"`);
+text = text.replace(`"panwrite_commit": "${m.panwrite_commit}"`, `"panwrite_commit": "${commit}"`);
 let pancodeSource = null;
 for (const e of m.generated_envelopes) {
   const bytes = cp.execFileSync('git', ['-C', ROOT, 'show', `${commit}:${e.path}`], { maxBuffer: 64 * 1024 * 1024 });
@@ -22,7 +22,7 @@ for (const e of m.generated_envelopes) {
   const block = new RegExp(`("target": "${e.target}",\\n\\s+"path": "${e.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}",\\n\\s+"manifest_sha256": ")[a-f0-9]{64}(",\\n\\s+"source_sha256": ")[a-f0-9]{64}(")`);
   if (!block.test(text)) throw new Error(`manifest block not found for ${e.target}`);
   text = text.replace(block, `$1${sha256(bytes)}$2${inv.sourceHash}$3`);
-  if (e.path === 'pancode/plugin/.wtfp-generated.json') pancodeSource = inv.sourceHash;
+  if (e.path === 'pancode/plugin/.panwrite-generated.json') pancodeSource = inv.sourceHash;
 }
 fs.writeFileSync(manifestPath, text);
 const baselinePath = path.join(ROOT, 'evaluation/v1/baselines/hpc-checkpointing.json');

@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.semantic-rubric/v1",
+  "schema": "panwrite.evaluation.semantic-rubric/v1",
   "version": 1,
   "score_range": { "minimum": 0, "maximum": 1 },
   "statuses": ["pass", "warning", "fail", "capability-unavailable"],

@@ -1,16 +1,16 @@
 {
-  "schema": "wtfp.evaluation.fixture-hashes/v1",
+  "schema": "panwrite.evaluation.fixture-hashes/v1",
   "fixture_id": "hpc-checkpointing-paper",
   "fixture_version": 1,
   "hash_algorithm": "sha256",
-  "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
-  "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
-  "aggregate_sha256": "9479bf971aeccec5ca76955fb6b865a566fb6539949f4f8aea518dca305c6b9c",
+  "model_inputs_sha256": "cdcf779e12c7d48ca916ef54307f918441401fddd6ab627ad951d0ff80eff83e",
+  "evaluator_oracles_sha256": "543c5e82dc4eadad42dfd3b1fbdb472590f0e68fd07029266aaeb242b38815a3",
+  "aggregate_sha256": "559f1093af29f122d57f9e100ec568a98ac2ee38ac28407a0ab8ac7855a28686",
   "files": [
     {
       "path": "author-decisions.json",
-      "bytes": 715,
-      "sha256": "203156f89490242ab2723eb36c24f9bf6b87f27ed5ac2224d5dd0069731c7cce",
+      "bytes": 719,
+      "sha256": "40290e33aac07e2231daa91919109ecf6aef156a511dd76262818bcbbdc09417",
       "audience": "model"
     },
     {
@@ -21,14 +21,14 @@
     },
     {
       "path": "expected-invariants.json",
-      "bytes": 3254,
-      "sha256": "9e6012678003c1252f07d4a81e89c0049152da3cf9621205f7cbfd9db7f5c0bf",
+      "bytes": 3258,
+      "sha256": "4badeb56f4f15fdf4446da3b9b19f3cfa12925a05501ec47419abae4feb97df0",
       "audience": "evaluator"
     },
     {
       "path": "fixture.json",
-      "bytes": 1141,
-      "sha256": "0d61993ae955366a20fccbd917a2d94021f19503fe9e0c35daa236fd811a03e9",
+      "bytes": 1145,
+      "sha256": "353fc204c1fb1ce02458b71ff3fd51735de4f4d489473b65d9b7dda65530371b",
       "audience": "harness"
     },
     {

@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "plan-section",
   "title": "Plan a section",
   "description": "Create and independently check a detailed writing plan for one section.",
-  "alias": "wtfp:plan-section",
+  "alias": "panwrite:plan-section",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/plan-section",
+  "workflow": "panwrite://workflows/plan-section",
   "requirements": {
     "capabilities": [
       "agent.delegate",

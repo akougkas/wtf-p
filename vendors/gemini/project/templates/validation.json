@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.validation/v1",
+  "schema": "panwrite.project.validation/v1",
   "id": "validation-introduction-plan",
   "project_id": "portable-research-demo",
   "subject_uri": "project://sections/introduction/plans/plan-01",

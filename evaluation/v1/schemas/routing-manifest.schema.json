@@ -1,19 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.routing-manifest/v1",
+  "$id": "panwrite.evaluation.routing-manifest/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema", "id", "version", "project_protocol_version", "adapter_compiler_version",
-    "wtfp_commit", "corpora", "fixture", "generated_envelopes"
+    "panwrite_commit", "corpora", "fixture", "generated_envelopes"
   ],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.routing-manifest/v1" },
+    "schema": { "const": "panwrite.evaluation.routing-manifest/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "const": 1 },
     "project_protocol_version": { "const": 1 },
     "adapter_compiler_version": { "enum": [4, 5] },
-    "wtfp_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "panwrite_commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
     "corpora": {
       "type": "array",
       "minItems": 3,
@@ -46,7 +46,7 @@
         "required": ["target", "path", "manifest_sha256", "source_sha256"],
         "properties": {
           "target": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-          "path": { "type": "string", "pattern": "^vendors/[A-Za-z0-9._/-]+/\\.wtfp-generated\\.json$|^vendors/[A-Za-z0-9._-]+/\\.wtfp-generated\\.json$|^pancode/(?:plugin|extension)/\\.wtfp-generated\\.json$" },
+          "path": { "type": "string", "pattern": "^vendors/[A-Za-z0-9._/-]+/\\.panwrite-generated\\.json$|^vendors/[A-Za-z0-9._-]+/\\.panwrite-generated\\.json$|^pancode/(?:plugin|extension)/\\.panwrite-generated\\.json$" },
           "manifest_sha256": { "$ref": "#/$defs/sha256" },
           "source_sha256": { "$ref": "#/$defs/sha256" }
         }

@@ -34,7 +34,7 @@ async function showStatus(options, pkg) {
     });
   }
 
-  out.log(`  ${c.yellow('WTF-P Installation Status')}\n`);
+  out.log(`  ${c.yellow('PanWrite Installation Status')}\n`);
 
   for (const loc of locations) {
     out.log(`  ${c.cyan(loc.label)} ${c.dim(`(${loc.pathLabel})`)}`);
@@ -76,10 +76,10 @@ async function showStatus(options, pkg) {
   const bothInstalled = locations.filter(location => location.hasAny);
   if (bothInstalled.length > 1) {
     out.log(`  ${c.red('⚠ Duplicate installation detected!')}`);
-    out.log(`    WTF-P is installed in both locations. Resources may appear more than once.`);
+    out.log(`    PanWrite is installed in both locations. Resources may appear more than once.`);
     out.log(`    Remove one to fix:`);
-    out.log(`      ${c.cyan('npx wtf-p uninstall --local')}   Remove local copy`);
-    out.log(`      ${c.cyan('npx wtf-p uninstall --global')}  Remove global copy\n`);
+    out.log(`      ${c.cyan('npx @panstudio/panwrite uninstall --local')}   Remove local copy`);
+    out.log(`      ${c.cyan('npx @panstudio/panwrite uninstall --global')}  Remove global copy\n`);
   }
 
   // Check for updates (only suggest if registry version is actually newer)
@@ -96,7 +96,7 @@ async function showStatus(options, pkg) {
     };
     if (latest && isNewer(latest, pkg.version)) {
       out.log(`  ${c.yellow('Update available:')} ${pkg.version} -> ${c.green(latest)}`);
-      out.log(`  Run: ${c.cyan('npx wtf-p update')}\n`);
+      out.log(`  Run: ${c.cyan('npx @panstudio/panwrite update')}\n`);
     }
   } catch {
     // Ignore

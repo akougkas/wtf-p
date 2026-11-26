@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.claude-write-guard/v1",
+  "schema": "panwrite.claude-write-guard/v1",
   "actions": {
     "execute-outline": [
       ".planning",

@@ -96,7 +96,7 @@ const forbiddenSyntax = [
 ];
 
 const catalog = readJson(path.join(protocolRoot, 'catalog.json'));
-assert.strictEqual(catalog.schema, 'wtfp.catalog/v1', 'catalog schema drift');
+assert.strictEqual(catalog.schema, 'panwrite.catalog/v1', 'catalog schema drift');
 assert.strictEqual(catalog.actions.length, catalog.counts.actions, 'the canonical catalog must match its declared action count');
 
 const actionIds = catalog.actions.map((entry) => entry.id);
@@ -132,9 +132,9 @@ for (const action of actionIds) {
   const { fields, body } = splitWorkflow(source, fileName);
   const contract = readJson(path.join(protocolRoot, 'actions', `${action}.json`));
 
-  assert.strictEqual(fields.schema, 'wtfp.workflow/v1', `${fileName} schema drift`);
+  assert.strictEqual(fields.schema, 'panwrite.workflow/v1', `${fileName} schema drift`);
   assert.strictEqual(fields.action, action, `${fileName} frontmatter action must match its filename`);
-  assert.strictEqual(fields.source, 'wtfp.protocol', `${fileName} must identify the canonical protocol source`);
+  assert.strictEqual(fields.source, 'panwrite.protocol', `${fileName} must identify the canonical protocol source`);
   assert.ok(body.trim().length > 0, `${fileName} must have a non-empty workflow body`);
 
   const readLine = body.match(/^Read: (.+)\.$/m);
@@ -193,7 +193,7 @@ for (const action of actionIds) {
       assert.match(
         reference,
         /^(?:https:\/\/github\.com\/PanStudio\/panwrite(?:\/[A-Za-z0-9._{}?=&%#/-]*)?|https:\/\/cli\.github\.com\/?)$/,
-        `${fileName} external resource must be an approved WTF-P or GitHub CLI resource`,
+        `${fileName} external resource must be an approved PanWrite or GitHub CLI resource`,
       );
       continue;
     }
@@ -238,7 +238,7 @@ const legacyProjectTokens = [
   '.planning/PROJECT.md',
   '.planning/ROADMAP.md',
   '.planning/STATE.md',
-  'wtfp.project.config/v0.5',
+  'panwrite.project.config/v0.5',
   'model_profile',
   'commit_docs',
   'branching_strategy',
@@ -308,11 +308,11 @@ for (const catalogEntry of catalog.actions) {
 
   assert.strictEqual(
     contract.workflow,
-    `wtfp://workflows/${catalogEntry.id}`,
+    `panwrite://workflows/${catalogEntry.id}`,
     `${catalogEntry.id} must declare its canonical workflow URI`,
   );
 
-  const workflowName = contract.workflow.slice('wtfp://workflows/'.length);
+  const workflowName = contract.workflow.slice('panwrite://workflows/'.length);
   const workflowPath = path.resolve(workflowsRoot, `${workflowName}.md`);
   assert.ok(
     workflowPath.startsWith(`${workflowsRoot}${path.sep}`),

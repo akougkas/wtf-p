@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.client-routing-surfaces/v1",
+  "$id": "panwrite.evaluation.client-routing-surfaces/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "version", "targets"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.client-routing-surfaces/v1" },
+    "schema": { "const": "panwrite.evaluation.client-routing-surfaces/v1" },
     "version": { "const": 1 },
     "targets": {
       "type": "array",

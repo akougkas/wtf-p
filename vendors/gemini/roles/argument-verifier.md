@@ -1,6 +1,6 @@
 ---
 id: argument-verifier
-contract: wtfp.role.argument-verifier/v1
+contract: panwrite.role.argument-verifier/v1
 name: Argument Verifier
 execution_class: verifier-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -49,7 +49,7 @@ Verify that completed section text actually delivers the claims, evidence, const
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `argument-verifier`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

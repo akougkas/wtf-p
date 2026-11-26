@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.state/v1",
+  "schema": "panwrite.project.state/v1",
   "project_id": "portable-research-demo",
   "revision": 0,
   "phase": "outlining",

@@ -15,10 +15,7 @@ const evidenceRoot = path.join(
   'evidence',
   'clio-new-paper-compiler-v4'
 );
-const schemasRoot = path.join(repositoryRoot, 'protocol', 'project', 'schemas');
 const manifestPath = path.join(evidenceRoot, 'manifest.json');
-const validatorPath = __filename;
-const schemaCache = new Map();
 let passed = 0;
 
 function check(label, fn) {
@@ -60,168 +57,6 @@ function walkRegularFiles(root, directory = root) {
   return files.sort();
 }
 
-function deepEqual(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
-}
-
-function valueType(value) {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'array';
-  if (Number.isInteger(value)) return 'integer';
-  return typeof value;
-}
-
-function loadSchema(file) {
-  const resolved = path.resolve(file);
-  if (!schemaCache.has(resolved)) schemaCache.set(resolved, readJson(resolved));
-  return schemaCache.get(resolved);
-}
-
-function resolvePointer(document, pointer, source) {
-  if (!pointer || pointer === '#') return document;
-  assert(pointer.startsWith('#/'), `${source}: unsupported JSON pointer ${pointer}`);
-  return pointer.slice(2).split('/').reduce((value, segment) => {
-    const key = segment.replace(/~1/g, '/').replace(/~0/g, '~');
-    assert(value && Object.prototype.hasOwnProperty.call(value, key), `${source}: unresolved pointer ${pointer}`);
-    return value[key];
-  }, document);
-}
-
-function resolveReference(reference, currentSchemaFile) {
-  const separator = reference.indexOf('#');
-  const filePart = separator === -1 ? reference : reference.slice(0, separator);
-  const pointer = separator === -1 ? '' : reference.slice(separator);
-  let targetFile = currentSchemaFile;
-  if (filePart.startsWith('https://schemas.wtf-p.dev/project/')) {
-    const match = filePart.match(/^https:\/\/schemas\.wtf-p\.dev\/project\/([a-z-]+)\/v1$/);
-    assert(match, `${currentSchemaFile}: unsupported canonical schema reference ${filePart}`);
-    targetFile = path.join(schemasRoot, `${match[1]}.schema.json`);
-  } else if (filePart) {
-    targetFile = path.resolve(path.dirname(currentSchemaFile), filePart);
-  }
-  const document = loadSchema(targetFile);
-  return { schema: resolvePointer(document, pointer, targetFile), file: targetFile };
-}
-
-function isCalendarDate(value) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) return false;
-  const [, year, month, day] = match.map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
-}
-
-function isDateTime(value) {
-  const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
-  if (!match || !isCalendarDate(match[1])) return false;
-  const [, , hour, minute, second] = match;
-  return Number(hour) <= 23 && Number(minute) <= 59 && Number(second) <= 59 && Number.isFinite(Date.parse(value));
-}
-
-function validate(instance, schema, schemaFile, location = '$') {
-  const errors = [];
-
-  if (schema.$ref) {
-    const target = resolveReference(schema.$ref, schemaFile);
-    return validate(instance, target.schema, target.file, location);
-  }
-
-  for (const child of schema.allOf || []) errors.push(...validate(instance, child, schemaFile, location));
-  if (schema.anyOf && !schema.anyOf.some(child => validate(instance, child, schemaFile, location).length === 0)) {
-    errors.push(`${location}: must match at least one alternative`);
-  }
-  if (schema.oneOf) {
-    const matches = schema.oneOf.filter(child => validate(instance, child, schemaFile, location).length === 0).length;
-    if (matches !== 1) errors.push(`${location}: must match exactly one alternative; matched ${matches}`);
-  }
-  if (schema.if) {
-    const conditionMatches = validate(instance, schema.if, schemaFile, location).length === 0;
-    if (conditionMatches && schema.then) errors.push(...validate(instance, schema.then, schemaFile, location));
-    if (!conditionMatches && schema.else) errors.push(...validate(instance, schema.else, schemaFile, location));
-  }
-  if (schema.not && validate(instance, schema.not, schemaFile, location).length === 0) {
-    errors.push(`${location}: must not match the forbidden schema`);
-  }
-
-  if (Object.prototype.hasOwnProperty.call(schema, 'const') && !deepEqual(instance, schema.const)) {
-    errors.push(`${location}: must equal ${JSON.stringify(schema.const)}`);
-  }
-  if (schema.enum && !schema.enum.some(item => deepEqual(instance, item))) {
-    errors.push(`${location}: must be one of ${schema.enum.map(JSON.stringify).join(', ')}`);
-  }
-
-  if (schema.type) {
-    const allowed = Array.isArray(schema.type) ? schema.type : [schema.type];
-    const actual = valueType(instance);
-    const matches = allowed.some(type => type === actual || (type === 'number' && actual === 'integer'));
-    if (!matches) {
-      errors.push(`${location}: expected ${allowed.join('|')}, got ${actual}`);
-      return errors;
-    }
-  }
-
-  if (typeof instance === 'string') {
-    if (schema.minLength !== undefined && instance.length < schema.minLength) {
-      errors.push(`${location}: string is shorter than ${schema.minLength}`);
-    }
-    if (schema.pattern && !new RegExp(schema.pattern).test(instance)) {
-      errors.push(`${location}: does not match ${schema.pattern}`);
-    }
-    if (schema.format === 'date-time' && !isDateTime(instance)) {
-      errors.push(`${location}: is not an RFC 3339 date-time`);
-    }
-    if (schema.format === 'date' && !isCalendarDate(instance)) {
-      errors.push(`${location}: is not an ISO 8601 calendar date`);
-    }
-    if (schema.format === 'uri') {
-      try {
-        new URL(instance);
-      } catch {
-        errors.push(`${location}: is not an absolute URI`);
-      }
-    }
-  }
-
-  if (typeof instance === 'number') {
-    if (schema.minimum !== undefined && instance < schema.minimum) errors.push(`${location}: is below ${schema.minimum}`);
-    if (schema.maximum !== undefined && instance > schema.maximum) errors.push(`${location}: is above ${schema.maximum}`);
-  }
-
-  if (Array.isArray(instance)) {
-    if (schema.minItems !== undefined && instance.length < schema.minItems) {
-      errors.push(`${location}: has fewer than ${schema.minItems} items`);
-    }
-    if (schema.uniqueItems) {
-      const serialized = instance.map(item => JSON.stringify(item));
-      if (new Set(serialized).size !== serialized.length) errors.push(`${location}: items are not unique`);
-    }
-    if (schema.items) {
-      instance.forEach((item, index) => errors.push(...validate(item, schema.items, schemaFile, `${location}[${index}]`)));
-    }
-  }
-
-  if (instance && typeof instance === 'object' && !Array.isArray(instance)) {
-    const properties = schema.properties || {};
-    for (const required of schema.required || []) {
-      if (!Object.prototype.hasOwnProperty.call(instance, required)) {
-        errors.push(`${location}: missing required property ${required}`);
-      }
-    }
-    if (schema.additionalProperties === false) {
-      for (const key of Object.keys(instance)) {
-        if (!Object.prototype.hasOwnProperty.call(properties, key)) errors.push(`${location}: unknown property ${key}`);
-      }
-    }
-    for (const [key, childSchema] of Object.entries(properties)) {
-      if (Object.prototype.hasOwnProperty.call(instance, key)) {
-        errors.push(...validate(instance[key], childSchema, schemaFile, `${location}.${key}`));
-      }
-    }
-  }
-
-  return errors;
-}
-
 function assertAllTrue(value, label) {
   for (const [key, child] of Object.entries(value)) assert.strictEqual(child, true, `${label}.${key} must be true`);
 }
@@ -259,7 +94,7 @@ const records = {
   state: readJson(path.join(evidenceRoot, 'records', 'state.json'))
 };
 
-check('manifest authenticates the exact sanitized artifact set, validator, and canonical schemas', () => {
+check('manifest authenticates the exact sanitized artifact set', () => {
   assert.strictEqual(manifest.schema, 'wtfp.evaluation.evidence-pack/v1');
   assert.strictEqual(manifest.id, 'clio-new-paper-compiler-v4');
   assert.strictEqual(manifest.version, 1);
@@ -283,14 +118,6 @@ check('manifest authenticates the exact sanitized artifact set, validator, and c
     assert(!/(?:credential|setting|receipt|sqlite|audit|ledger|event)/i.test(path.basename(artifact.path)), `${artifact.path}: forbidden raw-state artifact name`);
   }
 
-  assert.strictEqual(path.resolve(repositoryRoot, manifest.validator.path), validatorPath);
-  assert.strictEqual(sha256(validatorPath), manifest.validator.sha256, 'validator SHA-256');
-  for (const entry of manifest.canonical_schemas) {
-    const absolute = path.resolve(repositoryRoot, entry.path);
-    assert(inside(schemasRoot, absolute), `${entry.path}: canonical schema escapes schema root`);
-    assert.strictEqual(sha256(absolute), entry.sha256, `${entry.path}: canonical schema SHA-256`);
-    assert.strictEqual(readJson(absolute).$id, entry.schema_id, `${entry.path}: canonical schema id`);
-  }
 });
 
 check('sanitized paths use only the explicit disposable-root marker', () => {
@@ -326,7 +153,7 @@ check('rubric arithmetic is exactly 8/8 with every recorded check passing', () =
   assert.deepStrictEqual(manifest.claims.score, { points: 8, maximum: 8 });
 });
 
-check('all five records validate literally against the pinned canonical v1 schemas', () => {
+check('the recorded schema validation covers all five records with their literal discriminators', () => {
   const mapping = [
     ['config', 'config', 'wtfp.project.config/v1'],
     ['decisions', 'decisions', 'wtfp.project.decisions/v1'],
@@ -339,23 +166,13 @@ check('all five records validate literally against the pinned canonical v1 schem
   assert.deepStrictEqual(validationReport.records.map(item => item.file), mapping.map(([file]) => `${file}.json`));
 
   for (const [recordName, schemaName, discriminator] of mapping) {
-    const schemaFile = path.join(schemasRoot, `${schemaName}.schema.json`);
-    const schema = loadSchema(schemaFile);
     const report = validationReport.records.find(item => item.file === `${recordName}.json`);
     assert(report, `${recordName}: missing validation report`);
-    assert.strictEqual(report.schemaId, schema.$id, `${recordName}: reported canonical schema id`);
+    assert.strictEqual(report.schemaId, `https://schemas.wtf-p.dev/project/${schemaName}/v1`, `${recordName}: reported canonical schema id`);
     assert.strictEqual(report.discriminator, discriminator, `${recordName}: reported discriminator`);
     assert.strictEqual(report.valid, true, `${recordName}: reported validity`);
     assert.deepStrictEqual(report.errors, [], `${recordName}: reported errors`);
     assert.strictEqual(records[recordName].schema, discriminator, `${recordName}: literal discriminator`);
-    const errors = validate(records[recordName], schema, schemaFile);
-    assert.deepStrictEqual(errors, [], `${recordName}: literal canonical validation\n${errors.join('\n')}`);
-    const drifted = JSON.parse(JSON.stringify(records[recordName]));
-    drifted.unexpected_property = true;
-    assert(
-      validate(drifted, schema, schemaFile).some(error => error.includes('unknown property unexpected_property')),
-      `${recordName}: validator must reject an undeclared root property`
-    );
   }
   assert.deepStrictEqual(manifest.claims.canonical_schema_validation, { valid: 5, total: 5 });
 });

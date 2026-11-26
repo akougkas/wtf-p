@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 /**
- * WTF-P Bibliography Indexer
+ * PanWrite Bibliography Indexer
  * Indexes and retrieves BibTeX entries without loading the entire file into context.
  */
 

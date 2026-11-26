@@ -13,7 +13,7 @@ const createTag = args.has('--tag');
 const push = args.has('--push');
 
 function usage() {
-  process.stdout.write(`WTF-P release finalizer
+  process.stdout.write(`PanWrite release finalizer
 
 Usage:
   npm run release -- --dry-run
@@ -87,7 +87,7 @@ try {
     throw new Error(`CHANGELOG.md has no release heading for ${version}`);
   }
 
-  process.stdout.write(`Finalizing WTF-P ${version}\n`);
+  process.stdout.write(`Finalizing PanWrite ${version}\n`);
   // Preflight bounds each of its own steps, so this call has no limit of its own.
   run('npm', ['run', 'preflight'], { inherit: true, timeout: 0 });
 

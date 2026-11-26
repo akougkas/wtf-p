@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 /**
- * WTF-P BibTeX Formatter
+ * PanWrite BibTeX Formatter
  * Standardizes BibTeX entries to the project's strict template.
  * Handles missing fields and assigns provenance metadata.
  */
@@ -69,10 +69,10 @@ function parse(rawEntry) {
 
 // --- Formatting Logic ---
 
-// Every placeholder the body can emit is reported in wtfp_missing, so the
+// Every placeholder the body can emit is reported in panwrite_missing, so the
 // two never disagree.
 function missingReport(data, provenance) {
-  let status = provenance.wtfp_status || 'official';
+  let status = provenance.panwrite_status || 'official';
   const missingFields = [];
   if (!data.doi) {
     status = 'incomplete';
@@ -102,7 +102,7 @@ function missingReport(data, provenance) {
 
 // Default output: a standard BibTeX entry that bibtex and biber accept. Only
 // non-empty fields are emitted, apart from the placeholders that
-// wtfp_missing reports. The venue field follows the entry type.
+// panwrite_missing reports. The venue field follows the entry type.
 function formatBibtex(data, provenance = {}) {
   const { status, missingFields } = missingReport(data, provenance);
   const entryType = normalizeEntryType(data.entryType);
@@ -121,14 +121,14 @@ function formatBibtex(data, provenance = {}) {
     ['url', data.url || (data.doi ? `https://doi.org/${data.doi}` : '')],
     ['keywords', data.keywords],
     ['abstract', data.abstract],
-    ['wtfp_status', status],
-    ['wtfp_source', provenance.wtfp_source],
-    ['wtfp_citations', provenance.wtfp_citations],
-    ['wtfp_velocity', provenance.wtfp_velocity],
-    ['wtfp_s2_id', provenance.wtfp_s2_id],
-    ['wtfp_scholar_id', provenance.wtfp_scholar_id],
-    ['wtfp_fetched', provenance.wtfp_fetched || new Date().toISOString().split('T')[0]],
-    ['wtfp_missing', missingFields.join(',')]
+    ['panwrite_status', status],
+    ['panwrite_source', provenance.panwrite_source],
+    ['panwrite_citations', provenance.panwrite_citations],
+    ['panwrite_velocity', provenance.panwrite_velocity],
+    ['panwrite_s2_id', provenance.panwrite_s2_id],
+    ['panwrite_scholar_id', provenance.panwrite_scholar_id],
+    ['panwrite_fetched', provenance.panwrite_fetched || new Date().toISOString().split('T')[0]],
+    ['panwrite_missing', missingFields.join(',')]
   ].filter(([, value]) => value !== undefined && value !== null && String(value).length > 0);
   const body = fields.map(([name, value]) => `  ${name} = {${String(value)}}`).join(',\n');
   return `@${entryType}{${data.key || 'unknown'},\n${body}\n}`;
@@ -147,12 +147,12 @@ function formatAlFolio(data, provenance = {}) {
   const { status, missingFields } = missingReport(data, provenance);
 
   // Use provided provenance or defaults
-  const wtfp_source = provenance.wtfp_source || '';
-  const wtfp_citations = provenance.wtfp_citations || '';
-  const wtfp_velocity = provenance.wtfp_velocity || '';
-  const wtfp_s2_id = provenance.wtfp_s2_id || '';
-  const wtfp_scholar_id = provenance.wtfp_scholar_id || '';
-  const wtfp_fetched = provenance.wtfp_fetched || new Date().toISOString().split('T')[0];
+  const panwrite_source = provenance.panwrite_source || '';
+  const panwrite_citations = provenance.panwrite_citations || '';
+  const panwrite_velocity = provenance.panwrite_velocity || '';
+  const panwrite_s2_id = provenance.panwrite_s2_id || '';
+  const panwrite_scholar_id = provenance.panwrite_scholar_id || '';
+  const panwrite_fetched = provenance.panwrite_fetched || new Date().toISOString().split('T')[0];
 
   const normalized = normalizeEntryType(data.entryType);
   const entryType = normalized === 'inproceedings' ? 'conference' : (normalized === 'article' ? 'journal' : normalized);
@@ -183,14 +183,14 @@ function formatAlFolio(data, provenance = {}) {
   bibtex_show="${clean(data.bibtex_show, "true")}",
   selected="${clean(data.selected, "false")}",
   projects="${clean(data.projects)}",
-  wtfp_status="${status}",
-  wtfp_source="${wtfp_source}",
-  wtfp_citations="${wtfp_citations}",
-  wtfp_velocity="${wtfp_velocity}",
-  wtfp_s2_id="${wtfp_s2_id}",
-  wtfp_scholar_id="${wtfp_scholar_id}",
-  wtfp_fetched="${wtfp_fetched}",
-  wtfp_missing="${missingFields.join(',')}"
+  panwrite_status="${status}",
+  panwrite_source="${panwrite_source}",
+  panwrite_citations="${panwrite_citations}",
+  panwrite_velocity="${panwrite_velocity}",
+  panwrite_s2_id="${panwrite_s2_id}",
+  panwrite_scholar_id="${panwrite_scholar_id}",
+  panwrite_fetched="${panwrite_fetched}",
+  panwrite_missing="${missingFields.join(',')}"
 }`;
 }
 

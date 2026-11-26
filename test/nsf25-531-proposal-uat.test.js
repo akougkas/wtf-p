@@ -41,7 +41,7 @@ function json(name) {
 
 test('NSF fixture is a separate grant-proposal UAT with complete file inventory', () => {
   const fixture = json('fixture.json');
-  assert.strictEqual(fixture.schema, 'wtfp.evaluation.user-acceptance-fixture/v1');
+  assert.strictEqual(fixture.schema, 'panwrite.evaluation.user-acceptance-fixture/v1');
   assert.strictEqual(fixture.id, 'nsf25-531-proposal-uat');
   assert.strictEqual(fixture.version, 2);
   assert.strictEqual(fixture.document_type, 'grant-proposal');
@@ -159,7 +159,7 @@ test('author brief makes project facts and choices explicitly unknown', () => {
 
 test('operator guide contains the exact ordered namespaced invocation sequence', () => {
   const invocations = read('invocations.md');
-  const observed = [...invocations.matchAll(/^\/wtfp:([a-z][a-z-]*)/gm)].map(match => match[1]);
+  const observed = [...invocations.matchAll(/^\/panwrite:([a-z][a-z-]*)/gm)].map(match => match[1]);
   assert.deepStrictEqual(observed, ACTIONS);
   assert(invocations.includes('Canonical document_type: grant-proposal.'));
   assert(invocations.includes('Working title: "CICI:<AUTHOR-SELECTED-TRACK>:<AUTHOR-WORKING-TITLE>".'));
@@ -193,7 +193,7 @@ test('user test documents isolated discovery, gates, and canonical initial artif
     '.planning/decisions.json',
     '.planning/structure/outline.json'
   ]) assert(guide.includes(artifact), `guide omits initial artifact ${artifact}`);
-  assert(guide.includes('/wtfp:new-paper'));
+  assert(guide.includes('/panwrite:new-paper'));
   assert(guide.includes('/thinking off'));
   assert(guide.includes('autonomy to `suggest`'));
   assert(guide.includes('Deny and stop the turn if the model requests `bash`'));

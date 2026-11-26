@@ -58,18 +58,18 @@ const MANIFEST = {
       workflows: 'workflows',
       tools: 'scripts',
       '.claude-plugin': 'plugin'
-    }, 'marketplaces/wtfp'),
+    }, 'marketplaces/panwrite'),
     native: {
       kind: 'claude-marketplace',
-      marketplace: 'wtfp',
-      plugin: 'wtfp',
-      selector: 'wtfp@wtfp',
-      source: 'marketplaces/wtfp'
+      marketplace: 'panwrite',
+      plugin: 'panwrite',
+      selector: 'panwrite@panwrite',
+      source: 'marketplaces/panwrite'
     }
   },
   // PanCode consumes the canonical Agent Plugins bundle through its hub
   // lifecycle and the desk through its extension lifecycle: two packages, two
-  // PanCode installs, one WTF-P receipt.
+  // PanCode installs, one PanWrite receipt.
   pancode: {
     name: 'PanCode',
     configDirEnv: 'PANCODE_CONFIG_DIR',
@@ -79,25 +79,25 @@ const MANIFEST = {
       {
         id: 'plugin',
         src: path.join(ROOT, 'pancode', 'plugin'),
-        dest: 'plugins/wtfp',
+        dest: 'plugins/panwrite',
         type: 'dir'
       },
       {
         id: 'extension',
         src: path.join(ROOT, 'pancode', 'extension'),
-        dest: 'extensions/wtfp',
+        dest: 'extensions/panwrite',
         type: 'dir'
       }
     ],
     discovery: {
       kind: 'directory',
-      path: 'plugins/wtfp'
+      path: 'plugins/panwrite'
     },
     native: {
       kind: 'pancode-plugin',
-      id: 'wtfp',
-      source: 'plugins/wtfp',
-      extension: { id: 'wtfp', source: 'extensions/wtfp' }
+      id: 'panwrite',
+      source: 'plugins/panwrite',
+      extension: { id: 'panwrite', source: 'extensions/panwrite' }
     }
   },
   codex: {
@@ -108,22 +108,22 @@ const MANIFEST = {
       ...generatedBundle('codex', {}, {
         '.agents': 'marketplace',
         plugins: 'plugin'
-      }, 'marketplaces/wtfp'),
+      }, 'marketplaces/panwrite'),
       // Codex discovers custom agents only from $CODEX_HOME/agents/, never from
       // a plugin, so the generated TOML roles are published there as well.
       {
         id: 'agents',
-        src: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp', 'agents'),
+        src: path.join(ROOT, 'vendors', 'codex', 'plugins', 'panwrite', 'agents'),
         dest: 'agents',
         type: 'dir'
       }
     ],
     native: {
       kind: 'codex-marketplace',
-      marketplace: 'wtfp',
-      plugin: 'wtfp',
-      selector: 'wtfp@wtfp',
-      source: 'marketplaces/wtfp'
+      marketplace: 'panwrite',
+      plugin: 'panwrite',
+      selector: 'panwrite@panwrite',
+      source: 'marketplaces/panwrite'
     }
   },
   copilot: {
@@ -133,13 +133,13 @@ const MANIFEST = {
     components: generatedBundle('copilot', {}, {
       'marketplace.json': 'marketplace',
       plugins: 'plugin'
-    }, 'marketplaces/wtfp'),
+    }, 'marketplaces/panwrite'),
     native: {
       kind: 'copilot-marketplace',
-      marketplace: 'wtfp',
-      plugin: 'wtfp',
-      selector: 'wtfp@wtfp',
-      source: 'marketplaces/wtfp'
+      marketplace: 'panwrite',
+      plugin: 'panwrite',
+      selector: 'panwrite@panwrite',
+      source: 'marketplaces/panwrite'
     }
   },
   gemini: {
@@ -159,10 +159,10 @@ const MANIFEST = {
       agents: 'agents',
       workflows: 'workflows',
       tools: 'scripts'
-    }, 'extensions/wtfp'),
+    }, 'extensions/panwrite'),
     discovery: {
       kind: 'directory',
-      path: 'extensions/wtfp'
+      path: 'extensions/panwrite'
     }
   },
   opencode: {
@@ -195,11 +195,11 @@ const MANIFEST = {
       commands: 'commands',
       skills: 'skills',
       agents: 'agents'
-    }, 'sources/wtfp'),
+    }, 'sources/panwrite'),
     native: {
       kind: 'antigravity-plugin',
-      plugin: 'wtfp',
-      source: 'sources/wtfp'
+      plugin: 'panwrite',
+      source: 'sources/panwrite'
     }
   }
 };

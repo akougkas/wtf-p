@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.pancode-write-guard/v4",
+  "schema": "panwrite.pancode-write-guard/v4",
   "actions": {
     "add-todo": {
       "agents": [],
@@ -20,7 +20,7 @@
     },
     "analyze-bib": {
       "agents": [
-        "wtfp-citation-expert"
+        "panwrite-citation-expert"
       ],
       "produces": [
         {
@@ -56,7 +56,7 @@
     },
     "check-refs": {
       "agents": [
-        "wtfp-citation-formatter"
+        "panwrite-citation-formatter"
       ],
       "produces": [
         {
@@ -113,7 +113,7 @@
     },
     "create-outline": {
       "agents": [
-        "wtfp-outliner"
+        "panwrite-outliner"
       ],
       "produces": [
         {
@@ -183,8 +183,8 @@
     },
     "execute-outline": {
       "agents": [
-        "wtfp-coherence-checker",
-        "wtfp-section-writer"
+        "panwrite-coherence-checker",
+        "panwrite-section-writer"
       ],
       "produces": [
         {
@@ -386,8 +386,8 @@
     },
     "plan-section": {
       "agents": [
-        "wtfp-plan-checker",
-        "wtfp-section-planner"
+        "panwrite-plan-checker",
+        "panwrite-section-planner"
       ],
       "produces": [
         {
@@ -414,7 +414,7 @@
     },
     "polish-prose": {
       "agents": [
-        "wtfp-prose-polisher"
+        "panwrite-prose-polisher"
       ],
       "produces": [
         {
@@ -441,7 +441,7 @@
     },
     "quick": {
       "agents": [
-        "wtfp-section-writer"
+        "panwrite-section-writer"
       ],
       "produces": [
         {
@@ -460,7 +460,7 @@
     },
     "research-gap": {
       "agents": [
-        "wtfp-research-synthesizer"
+        "panwrite-research-synthesizer"
       ],
       "produces": [
         {
@@ -508,7 +508,7 @@
     },
     "review-section": {
       "agents": [
-        "wtfp-section-reviewer"
+        "panwrite-section-reviewer"
       ],
       "produces": [
         {
@@ -582,8 +582,8 @@
     },
     "write-section": {
       "agents": [
-        "wtfp-argument-verifier",
-        "wtfp-section-writer"
+        "panwrite-argument-verifier",
+        "panwrite-section-writer"
       ],
       "produces": [
         {
@@ -626,7 +626,7 @@
     }
   },
   "paperWriters": [
-    "wtfp-prose-polisher",
-    "wtfp-section-writer"
+    "panwrite-prose-polisher",
+    "panwrite-section-writer"
   ]
 }

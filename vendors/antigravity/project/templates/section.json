@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.section/v1",
+  "schema": "panwrite.project.section/v1",
   "id": "introduction",
   "project_id": "portable-research-demo",
   "outline_uri": "project://structure/outline",

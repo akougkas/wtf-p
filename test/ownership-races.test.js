@@ -50,7 +50,7 @@ function write(filePath, content) {
 function makeReceipt(target, relativePath, filePath) {
   return {
     schemaVersion: 2,
-    product: 'wtf-p',
+    product: 'panwrite',
     version: 'test',
     target: { canonicalPath: fs.realpathSync(target) },
     runtime: 'claude',
@@ -70,7 +70,7 @@ function makeReceipt(target, relativePath, filePath) {
 
 function writeReceipt(target, receipt) {
   return write(
-    path.join(target, '.wtfp-version'),
+    path.join(target, '.panwrite-version'),
     JSON.stringify(receipt, null, 2) + '\n'
   );
 }
@@ -96,7 +96,7 @@ function spawnNode(args, cwd, env) {
 
 async function main() {
   console.log('=== Ownership Race and Fault-Injection Tests ===\n');
-  const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-races-'));
+  const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-races-'));
   const fakeHome = mkdir(path.join(sandbox, 'home'));
   const project = mkdir(path.join(sandbox, 'project'));
   const isolatedEnv = {
@@ -325,7 +325,7 @@ async function main() {
       const originalRename = fs.renameSync;
       let injected = false;
       fs.renameSync = function patchedRename(source, destination, ...args) {
-        if (!injected && path.basename(source) === 'created' && path.basename(destination).startsWith('.wtfp-remove-')) {
+        if (!injected && path.basename(source) === 'created' && path.basename(destination).startsWith('.panwrite-remove-')) {
           injected = true;
           originalRename.call(fs, source, moved);
           fs.mkdirSync(source);
@@ -342,25 +342,25 @@ async function main() {
       assert.ok(injected, 'fault hook ran');
       assert.strictEqual(failures.length, 1);
       assert.ok(fs.existsSync(moved));
-      const quarantine = fs.readdirSync(target).find(name => name.startsWith('.wtfp-remove-'));
+      const quarantine = fs.readdirSync(target).find(name => name.startsWith('.panwrite-remove-'));
       assert.ok(quarantine, 'raced replacement was preserved under quarantine');
       assert.strictEqual(fs.readFileSync(path.join(target, quarantine, 'user-sentinel.txt'), 'utf8'), 'preserve me\n');
     });
 
     await test('malformed v2 and unsupported future receipts fail closed', () => {
       const target = mkdir(path.join(sandbox, 'receipt-schema-target'));
-      write(path.join(target, '.wtfp-version'), JSON.stringify({
+      write(path.join(target, '.panwrite-version'), JSON.stringify({
         schemaVersion: 2,
-        product: 'wtf-p',
+        product: 'panwrite',
         version: 'test',
         target: { canonicalPath: fs.realpathSync(target) },
         files: [{ path: '../escape', sha256: 'not-a-hash' }]
       }));
       assert.strictEqual(ownership.readReceipt(target).corrupt, true);
 
-      write(path.join(target, '.wtfp-version'), JSON.stringify({
+      write(path.join(target, '.panwrite-version'), JSON.stringify({
         schemaVersion: 3,
-        product: 'wtf-p',
+        product: 'panwrite',
         version: 'future',
         manifest: []
       }));

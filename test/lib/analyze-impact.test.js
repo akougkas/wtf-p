@@ -16,7 +16,7 @@ const originalIndex = bibIndex.index;
 const originalTimezone = process.env.TZ;
 
 async function runTests() {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-analyze-impact-'));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-analyze-impact-'));
   const dummyBib = path.join(tempRoot, 'dummy.bib');
   fs.writeFileSync(dummyBib, '@article{seminal2017, title={Seminal Paper}}');
   const referenceDate = new Date('2026-01-01T00:30:00Z');

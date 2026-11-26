@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: settings
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Manage project settings
 
 @protocol://project/README.md
-@protocol://skills/wtfp-manage-project/SKILL.md
-@protocol://skills/wtfp-manage-project/references/actions.md
+@protocol://skills/panwrite-manage-project/SKILL.md
+@protocol://skills/panwrite-manage-project/references/actions.md
 
 ## Record contract
 

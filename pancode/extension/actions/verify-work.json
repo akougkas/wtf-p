@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "verify-work",
   "title": "Verify written work",
   "description": "Test a drafted section against each plan requirement and record evidence one check at a time.",
-  "alias": "wtfp:verify-work",
+  "alias": "panwrite:verify-work",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-review-manuscript"
+    "skill": "panwrite-review-manuscript"
   },
-  "workflow": "wtfp://workflows/verify-work",
+  "workflow": "panwrite://workflows/verify-work",
   "requirements": {
     "capabilities": [
       "filesystem.read",

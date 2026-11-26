@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "map-project",
   "title": "Map an existing project",
   "description": "Index existing drafts, data, figures, and references into portable project state.",
-  "alias": "wtfp:map-project",
+  "alias": "panwrite:map-project",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-start-project"
+    "skill": "panwrite-start-project"
   },
-  "workflow": "wtfp://workflows/map-project",
+  "workflow": "panwrite://workflows/map-project",
   "requirements": {
     "capabilities": [
       "filesystem.read",

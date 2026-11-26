@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Research Literature"
+  short_description: "Research and audit scholarly literature"
+  default_prompt: "Use $panwrite-research-literature to investigate and organize the literature for this paper."

@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.pancode-help/v1",
+  "schema": "panwrite.pancode-help/v1",
   "groups": [
     {
       "title": "Start a project",

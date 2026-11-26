@@ -9,9 +9,9 @@ const { inventoryFixture } = require('../lib/fixture-hashes');
 
 const fixturesRoot = path.resolve(__dirname, '../v1/fixtures');
 
-const SEALED_SCHEMA = 'wtfp.evaluation.fixture/v1';
+const SEALED_SCHEMA = 'panwrite.evaluation.fixture/v1';
 
-// Closed-world `wtfp.evaluation.fixture/v1` fixtures carry a byte manifest. A
+// Closed-world `panwrite.evaluation.fixture/v1` fixtures carry a byte manifest. A
 // user-acceptance fixture is a template the user materializes, so its bytes
 // are not this tool's to seal. A directory that already holds a manifest
 // stays sealed: changing its schema is a check failure, never a way out of it.
@@ -28,7 +28,7 @@ function expectedManifest(fixtureRoot) {
   const fixtureMetadata = JSON.parse(fs.readFileSync(path.join(fixtureRoot, 'fixture.json'), 'utf8'));
   const inventory = inventoryFixture(fixtureRoot);
   return {
-    schema: 'wtfp.evaluation.fixture-hashes/v1',
+    schema: 'panwrite.evaluation.fixture-hashes/v1',
     fixture_id: fixtureMetadata.id,
     fixture_version: fixtureMetadata.version,
     hash_algorithm: 'sha256',

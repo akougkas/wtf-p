@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "execute-outline",
   "title": "Execute the outline",
   "description": "Draft independent section waves in parallel and verify cross-section coherence.",
-  "alias": "wtfp:execute-outline",
+  "alias": "panwrite:execute-outline",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-write-section"
+    "skill": "panwrite-write-section"
   },
-  "workflow": "wtfp://workflows/execute-outline",
+  "workflow": "panwrite://workflows/execute-outline",
   "requirements": {
     "capabilities": [
       "agent.delegate",

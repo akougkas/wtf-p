@@ -130,11 +130,11 @@ function rank(papers, intent = "balanced", referenceDate = new Date()) {
   }
   const scored = papers.map(p => ({
     ...p,
-    wtfp_score: calculateScore(p, intent, referenceDate),
-    wtfp_velocity: calculateVelocity(p.citationCount, p.year, referenceDate)
+    panwrite_score: calculateScore(p, intent, referenceDate),
+    panwrite_velocity: calculateVelocity(p.citationCount, p.year, referenceDate)
   }));
 
-  return scored.sort((a, b) => b.wtfp_score - a.wtfp_score);
+  return scored.sort((a, b) => b.panwrite_score - a.panwrite_score);
 }
 
 module.exports = {

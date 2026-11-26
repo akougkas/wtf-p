@@ -15,7 +15,7 @@ const ACTION_DIR = path.join(ROOT, 'protocol', 'actions');
 const ROLE_DIR = path.join(ROOT, 'protocol', 'roles');
 const CLAUDE_COMMAND_DIR = path.join(ROOT, 'vendors', 'claude', 'commands');
 const CLAUDE_AGENT_DIR = path.join(ROOT, 'vendors', 'claude', 'agents');
-const UNAVAILABLE_MARKER = 'WTFP_ACTION_UNAVAILABLE';
+const UNAVAILABLE_MARKER = 'PANWRITE_ACTION_UNAVAILABLE';
 
 const COLORS = {
   red: '\x1b[31m',
@@ -73,7 +73,7 @@ for (const action of actions) {
 
 for (const role of [...delegatedRoles].sort()) {
   check(fs.existsSync(path.join(ROLE_DIR, `${role}.md`)), `canonical role exists: ${role}`);
-  check(fs.existsSync(path.join(CLAUDE_AGENT_DIR, `wtfp-${role}.md`)), `Claude projects native agent: ${role}`);
+  check(fs.existsSync(path.join(CLAUDE_AGENT_DIR, `panwrite-${role}.md`)), `Claude projects native agent: ${role}`);
 }
 const roleFiles = fs.readdirSync(ROLE_DIR).filter((file) => file.endsWith('.md'));
 check(delegatedRoles.size === roleFiles.length, `resolved all ${roleFiles.length} semantic roles (${delegatedRoles.size})`);
@@ -115,7 +115,7 @@ const simulatedReads = new Set(scenario.reads);
 const simulatedWrites = new Map(scenario.produces.map((entry) => [entry.uri, entry.mode]));
 const simulatedRoles = scenario.delegation.map((entry) => `${entry.role}:${entry.mode}`);
 
-console.log(`${COLORS.dim}  /wtfp:plan-section dry-run, no mutation performed${COLORS.reset}`);
+console.log(`${COLORS.dim}  /panwrite:plan-section dry-run, no mutation performed${COLORS.reset}`);
 check(simulatedReads.has('project://manifest'), 'would resolve the portable project manifest');
 check(simulatedReads.has('project://sections/{section}/context'), 'would resolve linked author context');
 check(simulatedReads.has('project://sources/{source}'), 'would load source provenance');
@@ -130,12 +130,12 @@ check(projected.includes('on approval'), 'would cross the declared user gate bef
 section('Cross-host invocation and command shape');
 const hosts = {
   claude: { dir: path.join(ROOT, 'vendors', 'claude', 'commands'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/claude/compatibility/action-availability.json' },
-  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp', 'commands'), file: (id) => `wtfp-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/wtfp/compatibility/action-availability.json' },
-  opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
+  copilot: { dir: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'panwrite', 'commands'), file: (id) => `panwrite-${id}.md`, args: '$ARGUMENTS', availability: 'vendors/copilot/plugins/panwrite/compatibility/action-availability.json' },
+  opencode: { dir: path.join(ROOT, 'vendors', 'opencode', 'commands', 'panwrite'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'vendors/opencode/compatibility/action-availability.json' },
   // Antigravity 1.5 loads actions only as skills; a router skill of the same name serves its action.
-  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'skills'), file: (id) => `wtfp-${id}/SKILL.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json', routers: new Set(readJson(path.join(ROOT, 'protocol', 'catalog.json')).skills.map((skill) => skill.id)) },
-  gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'wtfp'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
-  pancode: { dir: path.join(ROOT, 'pancode', 'plugin', 'dev.pancode', 'prompts', 'wtfp'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'pancode/plugin/compatibility/action-availability.json' }
+  antigravity: { dir: path.join(ROOT, 'vendors', 'antigravity', 'skills'), file: (id) => `panwrite-${id}/SKILL.md`, args: '$ARGUMENTS', availability: 'vendors/antigravity/compatibility/action-availability.json', routers: new Set(readJson(path.join(ROOT, 'protocol', 'catalog.json')).skills.map((skill) => skill.id)) },
+  gemini: { dir: path.join(ROOT, 'vendors', 'gemini', 'commands', 'panwrite'), file: (id) => `${id}.toml`, args: '{{args}}', availability: 'vendors/gemini/compatibility/action-availability.json' },
+  pancode: { dir: path.join(ROOT, 'pancode', 'plugin', 'dev.pancode', 'prompts', 'panwrite'), file: (id) => `${id}.md`, args: '$ARGUMENTS', availability: 'pancode/plugin/compatibility/action-availability.json' }
 };
 
 for (const [host, spec] of Object.entries(hosts)) {
@@ -144,7 +144,7 @@ for (const [host, spec] of Object.entries(hosts)) {
   const allExist = files.every((entry) => fs.existsSync(entry.file));
   check(allExist, `${host} exposes all ${actions.length} stable commands`);
   check(allExist && files.every(({ action, file }) => {
-    if (spec.routers?.has(`wtfp-${action.id}`)) return true;
+    if (spec.routers?.has(`panwrite-${action.id}`)) return true;
     const source = fs.readFileSync(file, 'utf8');
     // A display-only prompt is rendered to the operator and takes no arguments.
     if (/^display-only: true$/m.test(source)) return !source.includes(spec.args) && (availability.get(action.id) === 'available' || source.includes(UNAVAILABLE_MARKER));

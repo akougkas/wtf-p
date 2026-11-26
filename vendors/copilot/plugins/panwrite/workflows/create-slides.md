@@ -1,0 +1,33 @@
+---
+schema: panwrite.workflow/v1
+action: create-slides
+source: panwrite.protocol
+---
+
+# Create presentation slides
+
+@protocol://project/README.md
+@protocol://skills/panwrite-deliver-research/SKILL.md
+@protocol://skills/panwrite-deliver-research/references/actions.md
+
+## Record contract
+
+Read: `project://manifest`, `project://structure/outline`, `project://paper/{artifact}`.
+Produce: `project://deliverables/slides/{artifact}` (create).
+
+Resolve every logical URI through the host adapter. Portable v1 JSON records are the source of truth: schema-validate before a write, preserve stable IDs, update revision and timestamps where required, and replace records atomically. Never pass a literal logical URI to a shell command or infer record state from a legacy Markdown control file.
+
+Manuscript prose and supporting context, research, plan, review, summary, handoff, and deliverable artifacts retain their authored format (normally Markdown). Link them from the relevant v1 record; do not convert manuscript prose into project-state JSON.
+
+## Procedure
+
+1. Confirm audience, duration, format, speaking goal, and the exact speaker, affiliation, and venue metadata, following the confirmation list in `protocol://templates/slides.md`. Never invent missing metadata; leave a visible placeholder.
+1a. Derive the slide count from the confirmed duration using the budget table in `protocol://templates/slides.md`, not from the manuscript's section count.
+2. Build a narrative arc from supported manuscript claims only, running the evidence gate in `protocol://templates/slides.md`: refuse every statement, comparison, or figure without a cited source record, manuscript passage, or named project file, and derive each diagram from named source files or documents with their paths stated on the slide.
+3. Write slide source and assets under the declared deliverable URI; preview before replacing an existing deliverable. This action produces slide source, not a rendered deck: PanWrite declares no rendering effect and runs no renderer. If the author asks for a rendered artifact, return a labeled handoff naming the exact command they can run in their own toolchain.
+
+## Safety and completion
+
+Do not initialize a repository or run branch, stage, commit, merge, push, or publish operations. If requested, return a clearly labeled optional handoff for a separately authorized action.
+
+Report the logical resources read, created, updated, archived, or deleted; the gates crossed; validation results; unresolved checkpoints; and the safest next action. Never claim a mutation that was not verified.

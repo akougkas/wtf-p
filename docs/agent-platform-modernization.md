@@ -1,18 +1,18 @@
-# WTF-P Agent Platform Modernization
+# PanWrite Agent Platform Modernization
 
 > **Historical design record.** This is the modernization contract as it stood
 > at `0.6.0-rc.2` (2026-08-29). It is kept unchanged below the banner because
 > it explains why the 0.6 line is shaped the way it is. Where it disagrees with
 > the current tree, the current documentation wins:
 >
-> - The Clio "self-contained extension" and the flat `/wtfp-<action>` aliases
+> - The Clio "self-contained extension" and the flat `/panwrite-<action>` aliases
 >   are gone. Clio installs the canonical Agent Plugins 1.0.0 bundle through
 >   `clio-coder library install` and requires Clio Coder 0.4.7 or newer. See
 >   [AGENT_PLUGIN.md](AGENT_PLUGIN.md).
 > - The Claude envelope also carries that root manifest and the Clio component
 >   graph, so Clio can adopt an installed Claude plugin.
 > - `tool.execute` is bound on Clio and Claude Code through the bundled
->   `tools/wtfp-tool.js` dispatcher; see the amendment in
+>   `tools/panwrite-tool.js` dispatcher; see the amendment in
 >   [ADR 0001](adr/0001-hybrid-tool-execution.md).
 > - Native discovery is verified for all seven hosts on `0.6.0`; see
 >   [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md). Copilot cloud remains a
@@ -30,7 +30,7 @@ Release line: `main` (modernization originated on `feat/agent-platform-moderniza
 
 ## Why this document exists
 
-WTF-P's academic-writing system is still valuable, but its delivery layer reflects an older agent ecosystem. The repository currently treats copied Claude, Gemini, and OpenCode command trees as separate products. That makes semantic drift likely, makes installation difficult to reason about, and prevents newer clients from receiving native behavior.
+PanWrite's academic-writing system is still valuable, but its delivery layer reflects an older agent ecosystem. The repository currently treats copied Claude, Gemini, and OpenCode command trees as separate products. That makes semantic drift likely, makes installation difficult to reason about, and prevents newer clients from receiving native behavior.
 
 This record is the durable contract for the modernization. It deliberately separates the stable academic domain model from fast-moving client packaging. It also records the safety constraints and release gates that must survive long-running agent work, context compaction, and parallel implementation.
 
@@ -85,17 +85,17 @@ Targets are explicit. The installer must never silently treat two clients as ali
 | `antigravity` | Primary Google consumer terminal target | Native `agy` plugin with version capability probes | First |
 | `gemini` | Continuing enterprise/API-key and migration target | Gemini extension and TOML compatibility commands | Compatibility |
 
-Google's consumer terminal transition completed on 2026-06-18. Antigravity and Gemini therefore remain distinct targets: `wtfp install antigravity` and `wtfp install gemini` have separate manifests, discovery probes, and support statements.
+Google's consumer terminal transition completed on 2026-06-18. Antigravity and Gemini therefore remain distinct targets: `panwrite install antigravity` and `panwrite install gemini` have separate manifests, discovery probes, and support statements.
 
 ## Clio Coder as the reference adapter
 
-Clio already has the strongest primitives for WTF-P's orchestration model: recursive Agent Skills, strict custom agent recipes, native dispatch/monitor/steer/task-ledger tools, extension hooks, isolated state directories, and fleet execution.
+Clio already has the strongest primitives for PanWrite's orchestration model: recursive Agent Skills, strict custom agent recipes, native dispatch/monitor/steer/task-ledger tools, extension hooks, isolated state directories, and fleet execution.
 
-The initial WTF-P adapter must work with the current Clio release without modifying a user's normal home:
+The initial PanWrite adapter must work with the current Clio release without modifying a user's normal home:
 
 - Ship a self-contained extension.
-- Expose flat compatibility prompts such as `prompts/wtfp-new-paper.md` (`/wtfp-new-paper`) for older shallow discovery. Do not use colon characters in filenames because they are invalid on Windows.
-- Ship the native nested form beside each alias, such as `prompts/wtfp/new-paper.md`; Clio Coder 0.3.8 derives `/wtfp:new-paper` from it.
+- Expose flat compatibility prompts such as `prompts/panwrite-new-paper.md` (`/panwrite-new-paper`) for older shallow discovery. Do not use colon characters in filenames because they are invalid on Windows.
+- Ship the native nested form beside each alias, such as `prompts/panwrite/new-paper.md`; Clio Coder 0.3.8 derives `/panwrite:new-paper` from it.
 - Ship standard skills and extension-owned workflow resources.
 - Install only explicitly owned agent and fleet recipe files.
 - Resolve every resource from the extension root or a declared project root.
@@ -105,7 +105,7 @@ The initial WTF-P adapter must work with the current Clio release without modify
 The coordinated changes merged into Clio Coder `v0.3.8` at `9b7b80cc`
 provide the intended native UX:
 
-1. Recursive namespaced prompt discovery, for example `prompts/wtfp/new-paper.md` becoming `/wtfp:new-paper`.
+1. Recursive namespaced prompt discovery, for example `prompts/panwrite/new-paper.md` becoming `/panwrite:new-paper`.
 2. Extension manifest resource kinds for agents and fleets with exact ownership and lifecycle handling.
 3. Prompt-relative or `${extensionRoot}` references with lexical and realpath containment checks.
 4. Byte-faithful raw `$ARGUMENTS` after tokenized positional/slice expansion.
@@ -120,23 +120,23 @@ that a reserved manifest field activates a server.
 
 ## Skills and explicit workflows
 
-Agent Skills provide reusable domain methods and progressive disclosure. Explicit workflows retain deterministic `/wtfp:*` entry points, arguments, state transitions, specialist dispatch, and human approval boundaries. A skill is not treated as a complete workflow schema.
+Agent Skills provide reusable domain methods and progressive disclosure. Explicit workflows retain deterministic `/panwrite:*` entry points, arguments, state transitions, specialist dispatch, and human approval boundaries. A skill is not treated as a complete workflow schema.
 
 The initial skill decomposition is intentionally small and intent-oriented:
 
 | Skill | Stable actions it owns |
 | --- | --- |
-| `wtfp-start-project` | `new-paper`, `map-project`, `create-outline` |
-| `wtfp-research-literature` | `research-gap`, `analyze-bib`, `check-refs` |
-| `wtfp-plan-section` | `discuss-section`, `list-assumptions`, `plan-section`, `plan-revision`, `insert-section`, `remove-section` |
-| `wtfp-write-section` | `write-section`, `execute-outline`, `quick` |
-| `wtfp-review-manuscript` | `review-section`, `verify-work`, `polish-prose`, `audit-milestone`, `plan-milestone-gaps` |
-| `wtfp-manage-project` | `progress`, `pause-writing`, `resume-writing`, `checkpoint`, `settings`, `add-todo`, `check-todos` |
-| `wtfp-deliver-research` | `export-latex`, `submit-milestone`, `create-slides`, `create-poster` |
+| `panwrite-start-project` | `new-paper`, `map-project`, `create-outline` |
+| `panwrite-research-literature` | `research-gap`, `analyze-bib`, `check-refs` |
+| `panwrite-plan-section` | `discuss-section`, `list-assumptions`, `plan-section`, `plan-revision`, `insert-section`, `remove-section` |
+| `panwrite-write-section` | `write-section`, `execute-outline`, `quick` |
+| `panwrite-review-manuscript` | `review-section`, `verify-work`, `polish-prose`, `audit-milestone`, `plan-milestone-gaps` |
+| `panwrite-manage-project` | `progress`, `pause-writing`, `resume-writing`, `checkpoint`, `settings`, `add-todo`, `check-todos` |
+| `panwrite-deliver-research` | `export-latex`, `submit-milestone`, `create-slides`, `create-poster` |
 
 The remaining product operations—`help`, `update`, `report-bug`, `request-feature`, and `contribute`—remain compatibility actions but do not consume default academic skill trigger space. Help is generated from the action catalog; update delegates to the package/plugin lifecycle; maintainer actions may later become an optional skill.
 
-The existing 36 `/wtfp:*` commands remain compatibility aliases during the release-candidate cycle. They must be generated from workflow records rather than maintained as copied bodies.
+The existing 36 `/panwrite:*` commands remain compatibility aliases during the release-candidate cycle. They must be generated from workflow records rather than maintained as copied bodies.
 
 The 14 WCN files are not canonical: recompiling their Markdown counterparts currently produces zero byte-for-byte matches, and several WCN files contain hand-refined orchestration. Host-neutral Markdown becomes the sole workflow prose. WCN is retired for the initial migration and may return only as a deterministic, semantically evaluated compiler target.
 
@@ -147,7 +147,7 @@ Every workflow must declare enough information for adapters and safety checks to
 ```yaml
 id: review-section
 description: Review a drafted section against its plan and evidence.
-skill: wtfp-review
+skill: panwrite-review
 invocation:
   explicit: true
   automatic: false
@@ -203,7 +203,7 @@ The planned release artifacts are:
 - A Gemini extension for enterprise and migration users.
 - An OpenCode filesystem bundle plus executable plugin only for behavior requiring hooks or custom tools.
 - A Clio extension and resource library.
-- The `wtfp` installer as a deterministic transaction engine over those manifests.
+- The `panwrite` installer as a deterministic transaction engine over those manifests.
 
 Repository-local marketplace metadata is allowed. Development must never register a marketplace or install a plugin in the operator's personal agent home.
 
@@ -264,7 +264,7 @@ Gate: one canonical change regenerates every adapter deterministically, and exis
 Release-candidate gate: the complete extension is discovered, nested prompts expand with exact arguments and contained resources, agents/skills/fleets resolve from the owning extension, and no normal Clio state is touched. The full-lifecycle chain remains a `1.0.0` evidence gate rather than an unqualified `0.6` claim.
 
 The native fleets are explicit operator entry points, not hidden routing behind
-ordinary `/wtfp:*` prompts. Their worker boundaries are narrower than the
+ordinary `/panwrite:*` prompts. Their worker boundaries are narrower than the
 action orchestrator: approval, plan linkage, and portable-state reconciliation
 remain action-level responsibilities.
 
@@ -319,7 +319,7 @@ instead of converting planned coverage into observed evidence.
 - [x] MCP-versus-local decision recorded as local-first hybrid in ADR 0001; no server is shipped.
 - [x] Versioned routing corpus, semantic rubric, fixtures, comparison tooling, and lifecycle/routing harnesses implemented.
 - [x] Both Clio fleet contracts moved to canonical `protocol/fleets/*.json` sources and passed native Clio 0.3.8 validation with directory write boundaries.
-- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier WTF-P source `6b58b298`; no later action or process-boundary resume was inferred from that run.
+- [x] First local `dynamo/qwen3.8-27b` lifecycle reading retained as a typed block at `new-paper` against earlier PanWrite source `6b58b298`; no later action or process-boundary resume was inferred from that run.
 - [x] Post-remediation Dynamo readings retained with exact source identities: the `0245818` slash initialization blocked with zero records; plan/check completed structurally with semantic quality unmeasured; and the `cbba38c` draft/review observation proved the path projection but failed approved-plan, state-reconciliation, and word-budget gates.
 - [x] Current canonical-runtime Dynamo initialization reading retained at `bf50e23`: five records passed literal schema validation, but the dependency-wave invariant and no-shell boundary failed, so the operator stopped before `map-project` and made no full-lifecycle claim.
 - [x] Later NSF 25-531 toy UAT exercised one pre-final-hardening section through outline, discussion, plan, write, review, and durable pause, then a post-hardening fresh-process resume/progress path, with 25/25 schema-valid records; final RC2 write/review/pause has deterministic regression coverage but no second model rerun, and the full proposal and certifying lifecycle remain open.

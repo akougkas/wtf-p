@@ -84,7 +84,7 @@ function assertFailure(result, label) {
 
 console.log('=== Ownership and Containment Tests ===\n');
 
-const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-ownership-'));
+const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-ownership-'));
 const fakeHome = mkdir(path.join(sandbox, 'home'));
 const project = mkdir(path.join(sandbox, 'project'));
 const targets = mkdir(path.join(sandbox, 'targets'));
@@ -168,7 +168,7 @@ try {
   });
 
   const target = path.join(targets, 'claude');
-  const unownedHelp = write(path.join(target, 'commands', 'wtfp', 'help.md'), 'user-owned-help\n');
+  const unownedHelp = write(path.join(target, 'commands', 'panwrite', 'help.md'), 'user-owned-help\n');
   const foreignPlugin = write(
     path.join(target, '.claude-plugin', 'plugin.json'),
     JSON.stringify({ name: 'someone-else' }, null, 2) + '\n'
@@ -187,15 +187,15 @@ try {
     assert.strictEqual(fs.readFileSync(unownedHelp, 'utf8'), 'user-owned-help\n');
     assert.strictEqual(readJson(foreignPlugin).name, 'someone-else');
 
-    const receiptPath = path.join(target, '.wtfp-version');
+    const receiptPath = path.join(target, '.panwrite-version');
     const receipt = readJson(receiptPath);
     assert.strictEqual(receipt.schemaVersion, 2);
-    assert.strictEqual(receipt.product, 'wtf-p');
+    assert.strictEqual(receipt.product, 'panwrite');
     assert.strictEqual(receipt.target.canonicalPath, fs.realpathSync(target));
     assert.strictEqual(receipt.runtime, 'claude');
     assert.strictEqual(receipt.scope, 'custom');
     assert.ok(receipt.files.length > 50);
-    assert.ok(!receipt.files.some(file => file.path === 'commands/wtfp/help.md'));
+    assert.ok(!receipt.files.some(file => file.path === 'commands/panwrite/help.md'));
     assert.ok(!receipt.files.some(file => file.path === '.claude-plugin/plugin.json'));
 
     const paths = new Set();
@@ -212,13 +212,13 @@ try {
       collectComponentFiles(component, target, planned);
     }
     assert.strictEqual(receipt.files.length, planned.length);
-    assert.ok(receipt.files.every(file => file.path.startsWith('marketplaces/wtfp/')));
+    assert.ok(receipt.files.every(file => file.path.startsWith('marketplaces/panwrite/')));
     assert.ok(!receipt.files.some(file => file.path.startsWith('plugins/cache/')));
     assert.ok(!receipt.files.some(file => file.path === 'settings.json' || file.path === '.claude.json'));
   });
 
   test('all-skipped reinstall leaves receipt bytes unchanged', () => {
-    const receiptPath = path.join(target, '.wtfp-version');
+    const receiptPath = path.join(target, '.panwrite-version');
     const before = fs.readFileSync(receiptPath);
     const result = spawnNode([
       INSTALL,
@@ -244,7 +244,7 @@ try {
 
     // Rewrite two owned files and their receipt entries as an older release
     // would have left them, then edit one of them as an operator would.
-    const receiptPath = path.join(upgradeTarget, '.wtfp-version');
+    const receiptPath = path.join(upgradeTarget, '.panwrite-version');
     const receipt = readJson(receiptPath);
     const [owned, edited] = receipt.files.filter(file => file.path.endsWith('.md')).slice(0, 2);
     const ownedPath = path.join(upgradeTarget, ...owned.path.split('/'));
@@ -297,9 +297,9 @@ try {
 
   test('receipt commit failure rolls back every package file', () => {
     const rollbackTarget = mkdir(path.join(targets, 'rollback-target'));
-    mkdir(path.join(rollbackTarget, '.wtfp-version'));
+    mkdir(path.join(rollbackTarget, '.panwrite-version'));
     const priorFile = write(
-      path.join(rollbackTarget, 'marketplaces', 'wtfp', 'core', 'templates', 'config.json'),
+      path.join(rollbackTarget, 'marketplaces', 'panwrite', 'core', 'templates', 'config.json'),
       '{"user":"preimage"}\n'
     );
 
@@ -312,8 +312,8 @@ try {
       '--no-color'
     ], { cwd: project, env: isolatedEnv });
     assertFailure(result, 'receipt failure install');
-    assert.deepStrictEqual(fs.readdirSync(rollbackTarget).sort(), ['.wtfp-version', 'marketplaces']);
-    assert.deepStrictEqual(fs.readdirSync(path.join(rollbackTarget, '.wtfp-version')), []);
+    assert.deepStrictEqual(fs.readdirSync(rollbackTarget).sort(), ['.panwrite-version', 'marketplaces']);
+    assert.deepStrictEqual(fs.readdirSync(path.join(rollbackTarget, '.panwrite-version')), []);
     assert.strictEqual(fs.readFileSync(priorFile, 'utf8'), '{"user":"preimage"}\n');
     assert.deepStrictEqual(fs.readdirSync(path.dirname(priorFile)), ['config.json']);
   });
@@ -322,9 +322,9 @@ try {
     const dryTarget = mkdir(path.join(targets, 'dry-run'));
     const owned = write(path.join(dryTarget, 'bin', 'owned.js'), 'owned bytes\n');
     const sibling = write(path.join(dryTarget, 'bin', 'user.js'), 'user bytes\n');
-    const receiptPath = write(path.join(dryTarget, '.wtfp-version'), JSON.stringify({
+    const receiptPath = write(path.join(dryTarget, '.panwrite-version'), JSON.stringify({
       schemaVersion: 2,
-      product: 'wtf-p',
+      product: 'panwrite',
       version: 'test',
       target: { canonicalPath: fs.realpathSync(dryTarget) },
       runtime: 'claude',
@@ -368,25 +368,25 @@ try {
     assert.ok(!fs.existsSync(owned));
     assert.ok(fs.existsSync(sibling));
     assert.ok(!fs.existsSync(receiptPath));
-    const bundleName = fs.readdirSync(dryTarget).find(name => name.startsWith('.wtfp-backup-'));
+    const bundleName = fs.readdirSync(dryTarget).find(name => name.startsWith('.panwrite-backup-'));
     assert.ok(bundleName, 'owned backup bundle was created');
     const bundle = path.join(dryTarget, bundleName);
     assert.strictEqual(fs.readFileSync(path.join(bundle, 'bin', 'owned.js'), 'utf8'), 'owned bytes\n');
-    const marker = readJson(path.join(bundle, '.wtfp-backup.json'));
-    assert.strictEqual(marker.product, 'wtf-p');
+    const marker = readJson(path.join(bundle, '.panwrite-backup.json'));
+    assert.strictEqual(marker.product, 'panwrite');
     assert.deepStrictEqual(marker.files.map(file => file.path), ['bin/owned.js']);
   });
 
   test('uninstall preserves modified files and every unowned sibling', () => {
-    const receipt = readJson(path.join(target, '.wtfp-version'));
-    const modifiedEntry = receipt.files.find(file => file.path === 'commands/wtfp/new-paper.md') || receipt.files[0];
+    const receipt = readJson(path.join(target, '.panwrite-version'));
+    const modifiedEntry = receipt.files.find(file => file.path === 'commands/panwrite/new-paper.md') || receipt.files[0];
     const modifiedPath = path.join(target, ...modifiedEntry.path.split('/'));
     fs.appendFileSync(modifiedPath, '\nuser modification\n');
 
     const sentinels = [
       write(path.join(target, 'bin', 'user-sentinel'), 'user bin\n'),
       write(path.join(target, 'mcp', 'user-sentinel'), 'user mcp\n'),
-      write(path.join(target, 'commands', 'wtfp', 'custom-user-command.md'), 'user command\n')
+      write(path.join(target, 'commands', 'panwrite', 'custom-user-command.md'), 'user command\n')
     ];
 
     const result = spawnNode([
@@ -403,12 +403,12 @@ try {
     assert.strictEqual(readJson(foreignPlugin).name, 'someone-else');
     for (const sentinel of sentinels) assert.ok(fs.existsSync(sentinel));
 
-    const residual = readJson(path.join(target, '.wtfp-version'));
+    const residual = readJson(path.join(target, '.panwrite-version'));
     assert.strictEqual(residual.status, 'partial-uninstall');
     assert.deepStrictEqual(residual.files.map(file => file.path), [modifiedEntry.path]);
     assert.strictEqual(residual.files[0].sha256, modifiedEntry.sha256);
 
-    const receiptBytes = fs.readFileSync(path.join(target, '.wtfp-version'));
+    const receiptBytes = fs.readFileSync(path.join(target, '.panwrite-version'));
     const repeat = spawnNode([
       UNINSTALL,
       '--claude',
@@ -417,7 +417,7 @@ try {
       '--no-color'
     ], { cwd: project, env: isolatedEnv });
     assertSuccess(repeat, 'idempotent partial uninstall');
-    assert.deepStrictEqual(fs.readFileSync(path.join(target, '.wtfp-version')), receiptBytes);
+    assert.deepStrictEqual(fs.readFileSync(path.join(target, '.panwrite-version')), receiptBytes);
 
     const forced = spawnNode([
       UNINSTALL,
@@ -428,17 +428,17 @@ try {
     ], { cwd: project, env: isolatedEnv });
     assertSuccess(forced, 'forced modified-file uninstall');
     assert.ok(!fs.existsSync(modifiedPath));
-    assert.ok(!fs.existsSync(path.join(target, '.wtfp-version')));
+    assert.ok(!fs.existsSync(path.join(target, '.panwrite-version')));
     assert.ok(fs.existsSync(path.join(target, 'bin', 'user-sentinel')));
     assert.ok(fs.existsSync(path.join(target, 'mcp', 'user-sentinel')));
-    assert.ok(fs.existsSync(path.join(target, 'commands', 'wtfp', 'custom-user-command.md')));
+    assert.ok(fs.existsSync(path.join(target, 'commands', 'panwrite', 'custom-user-command.md')));
   });
 
   test('legacy receipt is diagnostic by default and exact under force', () => {
     const legacyTarget = mkdir(path.join(targets, 'legacy'));
     const legacyCandidate = write(path.join(legacyTarget, 'bin', 'candidate.js'), 'possibly user owned\n');
     const sibling = write(path.join(legacyTarget, 'bin', 'unowned.js'), 'definitely user owned\n');
-    write(path.join(legacyTarget, '.wtfp-version'), JSON.stringify({
+    write(path.join(legacyTarget, '.panwrite-version'), JSON.stringify({
       version: '0.5.0',
       manifest: [{ path: './bin/candidate.js', checksum: 'legacy' }]
     }, null, 2));
@@ -464,20 +464,20 @@ try {
     assertSuccess(forced, 'forced legacy uninstall');
     assert.ok(!fs.existsSync(legacyCandidate));
     assert.ok(fs.existsSync(sibling));
-    assert.ok(!fs.existsSync(path.join(legacyTarget, '.wtfp-version')));
+    assert.ok(!fs.existsSync(path.join(legacyTarget, '.panwrite-version')));
   });
 
   test('malformed and escaping receipt entries are always unsafe', () => {
     const malformedTarget = mkdir(path.join(targets, 'malformed'));
     const receipt = {
       schemaVersion: 2,
-      product: 'wtf-p',
+      product: 'panwrite',
       version: 'test',
       target: { canonicalPath: fs.realpathSync(malformedTarget) },
       files: [
         { path: '../outside/sentinel.txt', sha256: sha256File(outsideSentinel) },
         { path: '/absolute/file', sha256: '0'.repeat(64) },
-        { path: '.wtfp-version', sha256: '0'.repeat(64) },
+        { path: '.panwrite-version', sha256: '0'.repeat(64) },
         { path: 'duplicate.txt', sha256: '0'.repeat(64) },
         { path: 'duplicate.txt', sha256: '0'.repeat(64) }
       ]

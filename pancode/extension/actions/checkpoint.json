@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "checkpoint",
   "title": "Manage checkpoints",
   "description": "Save, list, or restore an exact portable paper-state checkpoint.",
-  "alias": "wtfp:checkpoint",
+  "alias": "panwrite:checkpoint",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/checkpoint",
+  "workflow": "panwrite://workflows/checkpoint",
   "requirements": {
     "capabilities": [
       "filesystem.read",

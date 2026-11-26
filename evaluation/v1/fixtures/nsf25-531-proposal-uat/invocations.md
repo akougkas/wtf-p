@@ -5,7 +5,7 @@ This is a hands-on user acceptance sequence, not an academic-paper baseline or a
 ## 1. Initialize
 
 ```text
-/wtfp:new-paper Initialize an NSF 25-531 CICI proposal project.
+/panwrite:new-paper Initialize an NSF 25-531 CICI proposal project.
 Canonical document_type: grant-proposal.
 Selected track: <AUTHOR-SELECTED-TRACK>.
 Working title: "CICI:<AUTHOR-SELECTED-TRACK>:<AUTHOR-WORKING-TITLE>".
@@ -20,7 +20,7 @@ Do not initialize, stage, commit, branch, merge, push, tag, publish, or otherwis
 ## 2. Map official and author evidence
 
 ```text
-/wtfp:map-project Map only this authorized project root without following escaping symlinks.
+/panwrite:map-project Map only this authorized project root without following escaping symlinks.
 Record the three captured official pages with exact URLs, actual retrieval times, local paths, and SHA-256 values from source-receipt.md.
 Keep call evidence, author-supplied project evidence, and author-only decisions as three distinct authority classes.
 Treat every unsupported proposal statement as provisional and do not use the network.
@@ -30,7 +30,7 @@ Schema-validate every source, evidence, and state record before writing and repo
 ## 3. Create the proposal outline
 
 ```text
-/wtfp:create-outline Create a Project Description outline for <AUTHOR-SELECTED-TRACK> under NSF 25-531.
+/panwrite:create-outline Create a Project Description outline for <AUTHOR-SELECTED-TRACK> under NSF 25-531.
 Map every program-wide requirement, applicable track-specific requirement, Intellectual Merit, Broader Impacts, and all seven solicitation-specific review dimensions to a section or explicit compliance checkpoint.
 Represent separate-document dependencies such as the data-management plan, budget, personnel list, and collaboration letters without fabricating their contents.
 Do not resolve UNKNOWN author facts or choices.
@@ -40,7 +40,7 @@ Show the complete outline diff and validation findings, then wait at confirm_out
 ## 4. Plan one bounded section
 
 ```text
-/wtfp:plan-section <RETURNED-STABLE-SECTION-ID> Plan only this section.
+/panwrite:plan-section <RETURNED-STABLE-SECTION-ID> Plan only this section.
 Trace every proposed claim to captured call evidence or verified author-supplied project evidence.
 Mark missing technical support, personnel facts, commitments, citations, and author choices as blockers.
 Require a distinct plan-checker pass over claim coverage, dependencies, citations, file scope, call requirements, and decision fidelity.
@@ -50,7 +50,7 @@ Preview the plan and validation, then wait at confirm_plan.
 ## 5. Draft from the approved plan
 
 ```text
-/wtfp:write-section <RETURNED-STABLE-SECTION-ID> Draft only from the approved plan and verified evidence.
+/panwrite:write-section <RETURNED-STABLE-SECTION-ID> Draft only from the approved plan and verified evidence.
 Do not invent preliminary results, partners, institutional capabilities, metrics, citations, eligibility, or compliance claims.
 Preserve locked, deferred, and discretionary author decisions exactly and stop at any blocking judgment.
 Write only the declared proposal artifact and report exact mutations and validation results.
@@ -59,7 +59,7 @@ Write only the declared proposal artifact and report exact mutations and validat
 ## 6. Review without editing
 
 ```text
-/wtfp:review-section <RETURNED-STABLE-SECTION-ID> Review this section without editing it.
+/panwrite:review-section <RETURNED-STABLE-SECTION-ID> Review this section without editing it.
 Check evidence fidelity, unsupported claims, selected-track fit, program-wide and track-specific requirement coverage, Intellectual Merit, Broader Impacts, all seven CICI review dimensions, citation integrity, and author-decision fidelity.
 Write review findings and read-only validation only; route disputed or blocking findings to a checkpoint.
 ```
@@ -67,7 +67,7 @@ Write review findings and read-only validation only; route disputed or blocking 
 ## 7. Pause durably
 
 ```text
-/wtfp:pause-writing Pause after the reviewed section.
+/panwrite:pause-writing Pause after the reviewed section.
 Create and schema-validate a durable Markdown handoff and machine-readable checkpoint naming completed work, blockers, current revisions, pending author decisions, and the exact next safe action.
 Set portable state to paused without operating Git.
 ```
@@ -77,7 +77,7 @@ Quit Clio completely and start a fresh Clio process in the same project before c
 ## 8. Resume from durable state
 
 ```text
-/wtfp:resume-writing Resume only from portable .planning records, the active checkpoint, and the linked handoff.
+/panwrite:resume-writing Resume only from portable .planning records, the active checkpoint, and the linked handoff.
 Do not rely on previous conversational memory.
 Report completed work, blockers, stale assumptions, unresolved decisions, current revisions, and the exact resume action before making any mutation.
 ```
@@ -85,6 +85,6 @@ Report completed work, blockers, stale assumptions, unresolved decisions, curren
 ## 9. Verify progress
 
 ```text
-/wtfp:progress Report current proposal progress, requirement coverage, validation state, and unresolved checkpoints without editing proposal prose.
+/panwrite:progress Report current proposal progress, requirement coverage, validation state, and unresolved checkpoints without editing proposal prose.
 Distinguish completed, blocked, deferred, and merely suggested work, and do not claim submission readiness.
 ```

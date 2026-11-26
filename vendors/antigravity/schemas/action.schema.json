@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.action/v1",
-  "title": "WTF-P action contract",
+  "$id": "panwrite.action/v1",
+  "title": "PanWrite action contract",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -19,11 +19,11 @@
     "effects"
   ],
   "properties": {
-    "schema": { "const": "wtfp.action/v1" },
+    "schema": { "const": "panwrite.action/v1" },
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
     "title": { "type": "string", "minLength": 1 },
     "description": { "type": "string", "minLength": 1 },
-    "alias": { "type": "string", "pattern": "^wtfp:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "alias": { "type": "string", "pattern": "^panwrite:[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
     "surface": {
       "oneOf": [
         {
@@ -32,7 +32,7 @@
           "required": ["kind", "skill"],
           "properties": {
             "kind": { "const": "skill" },
-            "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+            "skill": { "type": "string", "pattern": "^panwrite-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
           }
         },
         {
@@ -46,7 +46,7 @@
         }
       ]
     },
-    "workflow": { "type": "string", "pattern": "^wtfp://workflows/[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "workflow": { "type": "string", "pattern": "^panwrite://workflows/[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
     "requirements": {
       "type": "object",
       "additionalProperties": false,

@@ -1,5 +1,5 @@
 /**
- * Shared utilities for WTF-P CLI
+ * Shared utilities for PanWrite CLI
  */
 
 const fs = require('fs');
@@ -103,7 +103,7 @@ function getPathLabel(fullPath, isGlobal = true) {
 // ============ Version Tracking ============
 
 /**
- * Read installed WTF-P version from .wtfp-version file
+ * Read installed PanWrite version from .panwrite-version file
  */
 function readInstalledVersion(claudeDir) {
   const result = ownership.readReceipt(claudeDir);
@@ -176,10 +176,10 @@ function detectInstallation(vendorDir) {
     binFiles: []
   };
 
-  const commandsDir = path.join(vendorDir, 'commands', 'wtfp');
+  const commandsDir = path.join(vendorDir, 'commands', 'panwrite');
   const workflowsDir = path.join(vendorDir, 'write-the-f-paper');
-  const skillsDir = path.join(vendorDir, 'skills', 'wtfp');
-  const agentsDir = path.join(vendorDir, 'agents', 'wtfp');
+  const skillsDir = path.join(vendorDir, 'skills', 'panwrite');
+  const agentsDir = path.join(vendorDir, 'agents', 'panwrite');
   const mcpDir = path.join(vendorDir, 'mcp');
   const binDir = path.join(vendorDir, 'bin');
   const receiptPath = path.join(vendorDir, VERSION_FILE);
@@ -228,7 +228,7 @@ function detectInstallation(vendorDir) {
       );
       const expectsAnyPath = prefixes => prefixes.some(expectsPath);
       const nativeComponent = relative => {
-        const match = relative.match(/^plugins\/wtfp\/(?:dev\.pancode\/)?(prompts|workflows|skills|agents|tools)\//);
+        const match = relative.match(/^plugins\/panwrite\/(?:dev\.pancode\/)?(prompts|workflows|skills|agents|tools)\//);
         return match ? ({ prompts: 'commands', tools: 'scripts' }[match[1]] || match[1]) : null;
       };
       const componentPaths = component => receiptEntries
@@ -263,25 +263,25 @@ function detectInstallation(vendorDir) {
       }
 
       const expectedHasCommands = expectsAnyPath([
-        'commands/wtfp', 'marketplaces/wtfp/commands',
-        'plugins/wtfp/dev.pancode/prompts', 'extensions/wtfp/commands', 'sources/wtfp/commands'
+        'commands/panwrite', 'marketplaces/panwrite/commands',
+        'plugins/panwrite/dev.pancode/prompts', 'extensions/panwrite/commands', 'sources/panwrite/commands'
       ]);
       const expectedHasWorkflows = expectsAnyPath([
-        'write-the-f-paper', 'workflows', 'marketplaces/wtfp/workflows',
-        'plugins/wtfp/workflows', 'extensions/wtfp/workflows', 'sources/wtfp/workflows'
+        'write-the-f-paper', 'workflows', 'marketplaces/panwrite/workflows',
+        'plugins/panwrite/workflows', 'extensions/panwrite/workflows', 'sources/panwrite/workflows'
       ]);
       const expectedHasSkills = expectsAnyPath([
-        'skills/wtfp', 'skills/wtfp-start-project', 'marketplaces/wtfp/skills',
-        'plugins/wtfp/skills', 'extensions/wtfp/skills', 'sources/wtfp/skills'
+        'skills/panwrite', 'skills/panwrite-start-project', 'marketplaces/panwrite/skills',
+        'plugins/panwrite/skills', 'extensions/panwrite/skills', 'sources/panwrite/skills'
       ]);
       const expectedHasAgents = expectsAnyPath([
-        'agents/wtfp', 'marketplaces/wtfp/agents',
-        'plugins/wtfp/dev.pancode/agents', 'extensions/wtfp/agents', 'sources/wtfp/agents'
+        'agents/panwrite', 'marketplaces/panwrite/agents',
+        'plugins/panwrite/dev.pancode/agents', 'extensions/panwrite/agents', 'sources/panwrite/agents'
       ]);
-      const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/wtfp/mcp']);
+      const expectedHasMcp = expectsAnyPath(['mcp', 'marketplaces/panwrite/mcp']);
       const expectedHasBin = expectsAnyPath([
-        'bin', 'tools', 'marketplaces/wtfp/tools',
-        'plugins/wtfp/tools', 'extensions/wtfp/tools', 'sources/wtfp/tools'
+        'bin', 'tools', 'marketplaces/panwrite/tools',
+        'plugins/panwrite/tools', 'extensions/panwrite/tools', 'sources/panwrite/tools'
       ]);
 
       result.partial = Boolean(versionData.partial) ||

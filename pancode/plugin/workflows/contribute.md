@@ -1,10 +1,10 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: contribute
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
-# Contribute to WTF-P
+# Contribute to PanWrite
 
 @protocol://project/README.md
 

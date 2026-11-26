@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "insert-section",
   "title": "Insert a section",
   "description": "Insert a newly discovered section while preserving established numbering and dependencies.",
-  "alias": "wtfp:insert-section",
+  "alias": "panwrite:insert-section",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/insert-section",
+  "workflow": "panwrite://workflows/insert-section",
   "requirements": {
     "capabilities": [
       "filesystem.read",

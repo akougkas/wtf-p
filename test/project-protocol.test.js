@@ -64,8 +64,8 @@ function resolveReference(reference, currentSchemaFile) {
   const filePart = separator === -1 ? reference : reference.slice(0, separator);
   const pointer = separator === -1 ? '' : reference.slice(separator);
   let targetFile = currentSchemaFile;
-  if (filePart.startsWith('https://schemas.wtf-p.dev/project/')) {
-    const match = filePart.match(/^https:\/\/schemas\.wtf-p\.dev\/project\/([a-z-]+)\/v1$/);
+  if (filePart.startsWith('https://schemas.panwrite.dev/project/')) {
+    const match = filePart.match(/^https:\/\/schemas\.panwrite\.dev\/project\/([a-z-]+)\/v1$/);
     assert(match, `${currentSchemaFile}: unsupported canonical schema reference ${filePart}`);
     targetFile = path.join(schemasRoot, `${match[1]}.schema.json`);
   } else if (filePart) {
@@ -306,7 +306,7 @@ function main() {
 
   const common = loadSchema(path.join(schemasRoot, 'common.schema.json'));
   assert.strictEqual(common.$schema, 'https://json-schema.org/draft/2020-12/schema');
-  assert.strictEqual(common.$id, 'https://schemas.wtf-p.dev/project/common/v1');
+  assert.strictEqual(common.$id, 'https://schemas.panwrite.dev/project/common/v1');
 
   const templates = {};
   for (const name of recordNames) {
@@ -316,10 +316,10 @@ function main() {
     templates[name] = template;
 
     assert.strictEqual(schema.$schema, 'https://json-schema.org/draft/2020-12/schema', `${name}: schema dialect`);
-    assert.strictEqual(schema.$id, `https://schemas.wtf-p.dev/project/${name}/v1`, `${name}: canonical schema id`);
+    assert.strictEqual(schema.$id, `https://schemas.panwrite.dev/project/${name}/v1`, `${name}: canonical schema id`);
     assert.strictEqual(schema.type, 'object', `${name}: root must be an object`);
     assert.strictEqual(schema.additionalProperties, false, `${name}: root must reject unknown properties`);
-    assert.strictEqual(template.schema, `wtfp.project.${name}/v1`, `${name}: fixture discriminator`);
+    assert.strictEqual(template.schema, `panwrite.project.${name}/v1`, `${name}: fixture discriminator`);
 
     const errors = validate(template, schema, schemaFile);
     assert.deepStrictEqual(errors, [], `${name}: canonical fixture is invalid\n${errors.join('\n')}`);

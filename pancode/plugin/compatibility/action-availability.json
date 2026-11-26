@@ -1,7 +1,7 @@
 {
-  "schema": "wtfp.action-availability/v1",
+  "schema": "panwrite.action-availability/v1",
   "target": "pancode",
-  "marker": "WTFP_ACTION_UNAVAILABLE",
+  "marker": "PANWRITE_ACTION_UNAVAILABLE",
   "hostToolEnforcement": {
     "actionScoped": true,
     "surface": "pancode:template-allowed-tools",
@@ -24,7 +24,7 @@
     "user.interaction": "pancode:ask_user",
     "vcs.branch": null,
     "vcs.commit": null,
-    "workflow.drive": "pancode:wtfp-desk-driver"
+    "workflow.drive": "pancode:panwrite-desk-driver"
   },
   "approvalBindings": {
     "none": "pancode:permission-policy",
@@ -299,8 +299,8 @@
     }
   ],
   "runtimeBindings": {
-    "plugin": "wtfp",
-    "extension": "wtfp",
+    "plugin": "panwrite",
+    "extension": "panwrite",
     "capabilities": {
       "user.interaction": "pancode:extension-interview"
     },
@@ -308,9 +308,9 @@
       "explicit": "pancode:extension-interview"
     },
     "tools": {
-      "record": "extension_wtfp__record",
-      "measure_section": "extension_wtfp__measure_section",
-      "gate": "extension_wtfp__gate"
+      "record": "extension_panwrite__record",
+      "measure_section": "extension_panwrite__measure_section",
+      "gate": "extension_panwrite__gate"
     }
   }
 }

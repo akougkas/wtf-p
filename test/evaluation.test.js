@@ -166,7 +166,7 @@ function runMetadata(baseline, overrides = {}) {
     protocol: {
       project_protocol_version: 1,
       adapter_compiler_version: baseline.protocol.adapter_compiler_version,
-      wtfp_commit: baseline.protocol.canonical_source_commit,
+      panwrite_commit: baseline.protocol.canonical_source_commit,
       client_commit: null,
       source_sha256: baseline.protocol.canonical_source_sha256
     },
@@ -235,7 +235,7 @@ function createPlanningProject(root) {
 
 function candidateFromBaseline(baseline) {
   return {
-    schema: 'wtfp.evaluation.result/v1',
+    schema: 'panwrite.evaluation.result/v1',
     outcome: 'completed',
     run: runMetadata(baseline, {
       id: 'semantic-candidate',
@@ -611,7 +611,7 @@ function testComparator(tempRoot) {
 
   for (const [field, value] of [
     ['adapter_compiler_version', 3],
-    ['wtfp_commit', '1'.repeat(40)],
+    ['panwrite_commit', '1'.repeat(40)],
     ['source_sha256', '2'.repeat(64)]
   ]) {
     const drifted = clone(passing);
@@ -748,7 +748,7 @@ function routingDocument(baseline, definitions, subset = null) {
   const manifest = readJson(routingManifestFile);
   const envelope = manifest.generated_envelopes.find(item => item.target === 'clio');
   return {
-    schema: 'wtfp.evaluation.routing-observations/v1',
+    schema: 'panwrite.evaluation.routing-observations/v1',
     suite: {
       id: manifest.id,
       version: manifest.version,
@@ -766,7 +766,7 @@ function routingDocument(baseline, definitions, subset = null) {
       protocol: {
         project_protocol_version: manifest.project_protocol_version,
         adapter_compiler_version: manifest.adapter_compiler_version,
-        wtfp_commit: manifest.wtfp_commit,
+        panwrite_commit: manifest.panwrite_commit,
         client_commit: null,
         source_sha256: envelope.source_sha256
       },
@@ -798,14 +798,14 @@ function testRoutingScorer(tempRoot) {
   const explicitNewPaper = definitions.get('explicit-new-paper');
   assert.strictEqual(
     materializeNativeInput(explicitNewPaper, 'claude'),
-    '/wtfp:new-paper  working title="Resilient Checkpoint Coordination"  preserve  repeated spacing\n' +
+    '/panwrite:new-paper  working title="Resilient Checkpoint Coordination"  preserve  repeated spacing\n' +
       'second line\tliteral-tab literal-token=$1 literal-all=$@  '
   );
   assert.strictEqual(materializeNativeInput(explicitNewPaper, 'clio'),
     materializeNativeInput(explicitNewPaper, 'claude'));
   assert.strictEqual(
     materializeNativeInput(explicitNewPaper, 'codex'),
-    '$wtf-p:wtfp-start-project new-paper  working title="Resilient Checkpoint Coordination"  preserve  repeated spacing\n' +
+    '$panwrite:panwrite-start-project new-paper  working title="Resilient Checkpoint Coordination"  preserve  repeated spacing\n' +
       'second line\tliteral-tab literal-token=$1 literal-all=$@  '
   );
   assert.strictEqual(materializeNativeInput(definitions.get('explicit-help'), 'codex'), null);
@@ -873,7 +873,7 @@ function testRoutingScorer(tempRoot) {
   const wrongNeighbor = clone(document);
   wrongNeighbor.observations.find(item => item.case_id === 'start-clear-new-paper').route.value = {
     kind: 'skill',
-    skill: 'wtfp-write-section',
+    skill: 'panwrite-write-section',
     action: 'write-section'
   };
   assert(scoreObservations(wrongNeighbor).implicit.metrics.wrong_neighbor_route_rate > 0);
@@ -881,7 +881,7 @@ function testRoutingScorer(tempRoot) {
   const productFalsePositive = clone(document);
   productFalsePositive.observations.find(item => item.case_id === 'operation-update').route.value = {
     kind: 'skill',
-    skill: 'wtfp-start-project',
+    skill: 'panwrite-start-project',
     action: 'new-paper'
   };
   const productScore = scoreObservations(productFalsePositive);
@@ -942,7 +942,7 @@ function testRoutingScorer(tempRoot) {
     ['project snapshot', value => { value.observations[0].project_snapshot_sha256 = '0'.repeat(64); }, /routing project snapshot differs/],
     ['suite manifest', value => { value.suite.manifest_sha256 = '0'.repeat(64); }, /routing suite manifest digest differs/],
     ['compiler', value => { value.run.protocol.adapter_compiler_version = 3; }, /adapter_compiler_version differs/],
-    ['WTF-P commit', value => { value.run.protocol.wtfp_commit = '0'.repeat(40); }, /wtfp_commit differs/],
+    ['PanWrite commit', value => { value.run.protocol.panwrite_commit = '0'.repeat(40); }, /panwrite_commit differs/],
     ['source hash', value => { value.run.protocol.source_sha256 = '0'.repeat(64); }, /source_sha256 differs/],
     ['fixture hash', value => { value.run.fixture.model_inputs_sha256 = '0'.repeat(64); }, /routing fixture model_inputs_sha256 differs/],
     ['binary hash', value => { value.run.client.binary.sha256 = '0'.repeat(64); }, /routing client binary digest differs/]
@@ -1020,7 +1020,7 @@ function testRoutingScorer(tempRoot) {
   completedRow.result = {
     path: 'clio-score.json',
     sha256: sha256(fs.readFileSync(completedFile)),
-    schema: 'wtfp.evaluation.routing-score/v1',
+    schema: 'panwrite.evaluation.routing-score/v1',
     row_id: row.id,
     run_id: partialScore.run.id
   };
@@ -1264,7 +1264,7 @@ function testFixtureAudienceSplit() {
 }
 
 function main() {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-evaluation-test.'));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-evaluation-test.'));
   try {
     const counts = lintEvaluation();
     assert.strictEqual(counts.routingCases, 40);

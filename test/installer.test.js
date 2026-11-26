@@ -1,5 +1,5 @@
 /**
- * Installer/Uninstaller Tests for WTF-P
+ * Installer/Uninstaller Tests for PanWrite
  *
  * Tests installer and uninstaller logic, MANIFEST structure,
  * path handling, and multi-runtime support.
@@ -194,10 +194,10 @@ if (utils) {
   }
 
   // Test VERSION_FILE constant
-  if (utils.VERSION_FILE === '.wtfp-version') {
-    pass('VERSION_FILE is .wtfp-version');
+  if (utils.VERSION_FILE === '.panwrite-version') {
+    pass('VERSION_FILE is .panwrite-version');
   } else {
-    fail(`VERSION_FILE should be .wtfp-version, got ${utils.VERSION_FILE}`);
+    fail(`VERSION_FILE should be .panwrite-version, got ${utils.VERSION_FILE}`);
   }
 }
 
@@ -241,8 +241,8 @@ if (fs.existsSync(INSTALL_PATH)) {
   }
 
   // Check banner
-  if (content.includes('WTF-P') || content.includes('Write The F')) {
-    pass('install.js has WTF-P banner');
+  if (content.includes('PanWrite')) {
+    pass('install.js has PanWrite banner');
   }
 } else {
   fail('install.js missing');
@@ -487,24 +487,24 @@ const PKG_PATH = path.join(ROOT, 'package.json');
 if (fs.existsSync(PKG_PATH)) {
   const pkg = require(PKG_PATH);
 
-  if (pkg.bin && pkg.bin.wtfp) {
-    pass('package.json has wtfp bin entry');
-    if (pkg.bin.wtfp.includes('install.js')) pass('wtfp points to install.js');
+  if (pkg.bin && pkg.bin.panwrite) {
+    pass('package.json has panwrite bin entry');
+    if (pkg.bin.panwrite.includes('install.js')) pass('panwrite points to install.js');
   } else {
-    fail('package.json missing wtfp bin entry');
+    fail('package.json missing panwrite bin entry');
   }
 
-  if (pkg.bin && pkg.bin['wtf-p']) {
-    pass('package.json has wtf-p bin entry');
+  if (pkg.bin && pkg.bin['panwrite']) {
+    pass('package.json has panwrite bin entry');
   }
 
-  if (pkg.bin && pkg.bin['wtf-p-uninstall']) {
-    pass('package.json has wtf-p-uninstall bin entry');
-    if (pkg.bin['wtf-p-uninstall'].includes('uninstall.js')) {
-      pass('wtf-p-uninstall points to uninstall.js');
+  if (pkg.bin && pkg.bin['panwrite-uninstall']) {
+    pass('package.json has panwrite-uninstall bin entry');
+    if (pkg.bin['panwrite-uninstall'].includes('uninstall.js')) {
+      pass('panwrite-uninstall points to uninstall.js');
     }
   } else {
-    fail('package.json missing wtf-p-uninstall bin entry');
+    fail('package.json missing panwrite-uninstall bin entry');
   }
 }
 

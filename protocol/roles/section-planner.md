@@ -1,6 +1,6 @@
 ---
 id: section-planner
-contract: wtfp.role.section-planner/v1
+contract: panwrite.role.section-planner/v1
 name: Section Planner
 execution_class: mutation-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -52,7 +52,7 @@ Convert one approved section goal into small, executable writing plans. A plan i
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `section-planner`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

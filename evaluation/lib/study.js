@@ -34,8 +34,8 @@ function loadStudy(file) {
   }
   const conditions = new Map(study.conditions.map(condition => [condition.id, condition]));
   if (!study.conditions.some(condition => condition.role === 'treatment')) throw new Error('a study needs a treatment condition');
-  if (!study.conditions.some(condition => condition.role === 'baseline' && condition.wtfp === 'none')) {
-    throw new Error('a study needs a baseline without WTF-P on the same host');
+  if (!study.conditions.some(condition => condition.role === 'baseline' && condition.panwrite === 'none')) {
+    throw new Error('a study needs a baseline without PanWrite on the same host');
   }
   for (const ablation of study.ablations) {
     if (conditions.get(ablation.of)?.role !== 'treatment') throw new Error(`ablation ${ablation.id} must vary a treatment condition`);

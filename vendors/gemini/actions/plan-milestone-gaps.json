@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "plan-milestone-gaps",
   "title": "Plan milestone gap fixes",
   "description": "Convert milestone audit failures into targeted, verifiable fix plans.",
-  "alias": "wtfp:plan-milestone-gaps",
+  "alias": "panwrite:plan-milestone-gaps",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-review-manuscript"
+    "skill": "panwrite-review-manuscript"
   },
-  "workflow": "wtfp://workflows/plan-milestone-gaps",
+  "workflow": "panwrite://workflows/plan-milestone-gaps",
   "requirements": {
     "capabilities": [
       "filesystem.read",

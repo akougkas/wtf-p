@@ -1,4 +1,4 @@
-# WTF-P authored-artifact templates
+# PanWrite authored-artifact templates
 
 These are scaffolds for artifacts the author owns, not project control state. Portable v1 JSON records under `protocol/project/` remain the only source of truth for project state; nothing in this directory is schema-validated or written back as a record.
 

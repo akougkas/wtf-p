@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Start Project"
+  short_description: "Initialize and structure a research paper"
+  default_prompt: "Use $panwrite-start-project to initialize and structure this research paper."

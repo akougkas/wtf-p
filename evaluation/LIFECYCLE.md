@@ -1,6 +1,6 @@
 # Clio lifecycle evaluation harness
 
-`evaluation/tools/run-clio-lifecycle.js` executes the versioned HPC-checkpointing fixture through the complete WTF-P project lifecycle:
+`evaluation/tools/run-clio-lifecycle.js` executes the versioned HPC-checkpointing fixture through the complete PanWrite project lifecycle:
 
 ```text
 new-paper → map-project → create-outline → plan-section → write-section
@@ -28,7 +28,7 @@ node evaluation/tools/run-clio-lifecycle.js --prepare \
 
 Preparation captures and gates on:
 
-- the WTF-P commit, protocol tree hash, generated extension tree and inventory hashes, generator source hash, routing-manifest hash, compiler version, and dirty-state digest;
+- the PanWrite commit, protocol tree hash, generated extension tree and inventory hashes, generator source hash, routing-manifest hash, compiler version, and dirty-state digest;
 - the complete local lifecycle evaluator dependency closure, including fixture hashing and literal JSON Schema validation code;
 - the Clio source commit/tree hash, complete non-symlink executable `dist/` tree,
   installed runtime-module tree, Node.js executable/version, contained entry
@@ -36,7 +36,7 @@ Preparation captures and gates on:
 - the model-input, evaluator-oracle, and aggregate fixture hashes;
 - discovery of the effective diagnostic-free extension and all eleven extension agents;
 - both extension fleets appearing in native discovery;
-- native `validate` and `graph` success for `wtfp-plan-section` and `wtfp-draft-review`;
+- native `validate` and `graph` success for `panwrite-plan-section` and `panwrite-draft-review`;
 - canonical Clio parsing of the installed fleet contracts, exact directory-root write boundaries (`.planning/` and `paper/`), and positive/negative `writeBoundaryCovers` probes on representative nested paths;
 - an unchanged fixture tree and unchanged Git HEAD, index, refs, and `.git` tree;
 - unchanged SHA-256 inventories for normal Clio and Codex profiles across all native commands;
@@ -51,8 +51,8 @@ A client inconsistency is preserved in `evidence/native-preflight.json`, marks t
 Credential source paths are accepted only through environment variables so a secret value can never become an argument. The harness copies their bytes to the isolated configuration directory with mode 0600. Source paths and SHA-256 digests appear in the normal-profile inventory for an auditable pre/post comparison; credential contents never appear in metadata or command arguments.
 
 ```bash
-WTFP_CLIO_SETTINGS_SOURCE=/normal/profile/settings.yaml \
-WTFP_CLIO_CREDENTIALS_SOURCE=/normal/profile/credentials.yaml \
+PANWRITE_CLIO_SETTINGS_SOURCE=/normal/profile/settings.yaml \
+PANWRITE_CLIO_CREDENTIALS_SOURCE=/normal/profile/credentials.yaml \
 node evaluation/tools/run-clio-lifecycle.js --execute \
   --root /absolute/path/to/prepared-root \
   --binary /absolute/path/to/frozen-clio/dist/cli/index.js \
@@ -94,7 +94,7 @@ The first invalid transition stops the campaign. Full event streams, transition 
 
 ## Profiles, credentials, and interpretation
 
-Normal Clio and Codex configuration/credential files, both forwarding sources, and any additional paths in `WTFP_LIFECYCLE_PROFILE_PATHS` are SHA-256 inventoried immediately before and after execution. A difference blocks the result.
+Normal Clio and Codex configuration/credential files, both forwarding sources, and any additional paths in `PANWRITE_LIFECYCLE_PROFILE_PATHS` are SHA-256 inventoried immediately before and after execution. A difference blocks the result.
 
 Credential scalars are searched in contained, singly linked artifacts before cleanup; multiply linked files are not read or rewritten and instead block the run. Any credential occurrence in an eligible artifact is replaced with a redaction marker and blocks the run. Credential paths are removed through an `O_NOFOLLOW` descriptor whose device and inode must match the pre-open pathname: three overwrite/fsync passes and truncation happen through that descriptor, then the still-contained pathname identity is rechecked immediately before unlink. Absence is verified and recorded even on a failed transition.
 

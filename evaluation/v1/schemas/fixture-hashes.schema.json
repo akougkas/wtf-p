@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.fixture-hashes/v1",
+  "$id": "panwrite.evaluation.fixture-hashes/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,7 +14,7 @@
     "files"
   ],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.fixture-hashes/v1" },
+    "schema": { "const": "panwrite.evaluation.fixture-hashes/v1" },
     "fixture_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "fixture_version": { "type": "integer", "minimum": 1 },
     "hash_algorithm": { "const": "sha256" },

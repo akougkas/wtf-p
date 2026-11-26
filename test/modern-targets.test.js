@@ -9,7 +9,7 @@ const { spawnSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const INSTALL = path.join(ROOT, 'bin', 'install.js');
 const UNINSTALL = path.join(ROOT, 'bin', 'uninstall.js');
-const RECEIPT = '.wtfp-version';
+const RECEIPT = '.panwrite-version';
 const MANIFEST = require('../bin/lib/manifest');
 const { GENERATOR_VERSION } = require('../bin/lib/adapter-metadata');
 const installLogic = require('../bin/commands/install-logic');
@@ -24,7 +24,7 @@ const MODERN_TARGETS = {
     configDirEnv: 'PANCODE_CONFIG_DIR',
     defaultDir: '.config/pancode',
     source: path.join(ROOT, 'pancode', 'plugin'),
-    destination: 'plugins/wtfp',
+    destination: 'plugins/panwrite',
     resource: '.',
     component: 'plugin'
   },
@@ -32,23 +32,23 @@ const MODERN_TARGETS = {
     configDirEnv: 'CODEX_HOME',
     defaultDir: '.codex',
     source: path.join(ROOT, 'vendors', 'codex'),
-    destination: 'marketplaces/wtfp',
-    resource: 'plugins/wtfp',
+    destination: 'marketplaces/panwrite',
+    resource: 'plugins/panwrite',
     component: 'bundle'
   },
   copilot: {
     configDirEnv: 'COPILOT_HOME',
     defaultDir: '.copilot',
     source: path.join(ROOT, 'vendors', 'copilot'),
-    destination: 'marketplaces/wtfp',
-    resource: 'plugins/wtfp',
+    destination: 'marketplaces/panwrite',
+    resource: 'plugins/panwrite',
     component: 'bundle'
   },
   antigravity: {
     configDirEnv: 'ANTIGRAVITY_HOME',
     defaultDir: '.gemini/config',
     source: path.join(ROOT, 'vendors', 'antigravity'),
-    destination: 'sources/wtfp',
+    destination: 'sources/panwrite',
     resource: '.',
     component: 'bundle'
   }
@@ -64,7 +64,7 @@ const ALL_TARGETS = [
   'pancode'
 ];
 
-const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-modern-targets-'));
+const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-modern-targets-'));
 let passed = 0;
 
 function record(name, test) {
@@ -145,7 +145,7 @@ function listRegularFiles(root) {
 function assertPortableContract(root, context) {
   const files = listRegularFiles(root);
   // Antigravity action skills are explicit-only (disable-model-invocation).
-  const skills = files.filter(file => /^skills\/wtfp-[^/]+\/SKILL\.md$/.test(file) &&
+  const skills = files.filter(file => /^skills\/panwrite-[^/]+\/SKILL\.md$/.test(file) &&
     !/^---\nname: [^\n]+\ndisable-model-invocation: true\n/.test(fs.readFileSync(path.join(root, file), 'utf8')));
   const commands = files.filter(file => /^actions\/[^/]+\.json$/.test(file));
   const agents = files.filter(file => /^roles\/[^/]+\.md$/.test(file));
@@ -256,7 +256,7 @@ try {
     assert.strictEqual(MANIFEST.gemini.defaultDir, '.gemini');
     assert.deepStrictEqual(MANIFEST.gemini.discovery, {
       kind: 'directory',
-      path: 'extensions/wtfp'
+      path: 'extensions/panwrite'
     });
     assert.strictEqual(MANIFEST.opencode.defaultDir, '.config/opencode');
 
@@ -273,8 +273,8 @@ try {
       antigravity: path.join(ROOT, 'vendors', 'antigravity'),
       claude: path.join(ROOT, 'vendors', 'claude'),
       plugin: path.join(ROOT, 'pancode', 'plugin'),
-      codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp'),
-      copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp'),
+      codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'panwrite'),
+      copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'panwrite'),
       gemini: path.join(ROOT, 'vendors', 'gemini'),
       opencode: path.join(ROOT, 'vendors', 'opencode')
     };
@@ -477,15 +477,15 @@ try {
     const executable = path.join(fakeBin, 'claude');
     fs.writeFileSync(executable, `#!/usr/bin/env node
 const fs = require('fs');
-const statePath = process.env.WTFP_NATIVE_STATE;
-const source = process.env.WTFP_NATIVE_SOURCE;
-const receiptPath = process.env.WTFP_RECEIPT_PATH;
+const statePath = process.env.PANWRITE_NATIVE_STATE;
+const source = process.env.PANWRITE_NATIVE_SOURCE;
+const receiptPath = process.env.PANWRITE_RECEIPT_PATH;
 const args = process.argv.slice(2).join(' ');
 const state = fs.existsSync(statePath)
   ? JSON.parse(fs.readFileSync(statePath, 'utf8'))
   : { marketplace: false, plugin: false };
 if (args.startsWith('plugin marketplace list')) {
-  process.stdout.write(JSON.stringify(state.marketplace ? [{ name: 'wtfp', path: source, installLocation: source }] : []));
+  process.stdout.write(JSON.stringify(state.marketplace ? [{ name: 'panwrite', path: source, installLocation: source }] : []));
 } else if (args.startsWith('plugin marketplace add')) {
   state.marketplace = true;
 } else if (args.startsWith('plugin marketplace remove')) {
@@ -495,7 +495,7 @@ if (args.startsWith('plugin marketplace list')) {
 } else if (args.startsWith('plugin uninstall')) {
   state.plugin = false;
 } else if (args.startsWith('plugin list')) {
-  process.stdout.write(JSON.stringify(state.plugin ? [{ id: 'wtfp@wtfp', enabled: true }] : []));
+  process.stdout.write(JSON.stringify(state.plugin ? [{ id: 'panwrite@panwrite', enabled: true }] : []));
   if (state.plugin) fs.mkdirSync(receiptPath, { recursive: true });
 } else {
   process.stderr.write('unexpected command: ' + args);
@@ -511,9 +511,9 @@ fs.writeFileSync(statePath, JSON.stringify(state));
       '--force', '--advanced', '--quiet', '--no-color'
     ], {
       PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
-      WTFP_NATIVE_STATE: statePath,
-      WTFP_NATIVE_SOURCE: source,
-      WTFP_RECEIPT_PATH: path.join(targetDir, RECEIPT)
+      PANWRITE_NATIVE_STATE: statePath,
+      PANWRITE_NATIVE_SOURCE: source,
+      PANWRITE_RECEIPT_PATH: path.join(targetDir, RECEIPT)
     });
     assertFailure(result, /ownership receipt failed/, 'transactional receipt failure');
     assert.deepStrictEqual(JSON.parse(fs.readFileSync(statePath, 'utf8')), {
@@ -527,13 +527,13 @@ fs.writeFileSync(statePath, JSON.stringify(state));
     const fakeBin = path.join(testRoot, 'partial-native-bin');
     const calledPath = path.join(testRoot, 'partial-native-called');
     const targetDir = path.join(testRoot, 'partial-native-target');
-    const preserved = path.join(targetDir, 'marketplaces', 'wtfp', '.wtfp-generated.json');
+    const preserved = path.join(targetDir, 'marketplaces', 'panwrite', '.panwrite-generated.json');
     fs.mkdirSync(fakeBin, { recursive: true });
     fs.mkdirSync(path.dirname(preserved), { recursive: true });
     fs.writeFileSync(preserved, 'operator-owned conflict\n');
     const executable = path.join(fakeBin, 'claude');
     fs.writeFileSync(executable, `#!/usr/bin/env node
-require('fs').writeFileSync(process.env.WTFP_NATIVE_CALLED, process.argv.slice(2).join(' '));
+require('fs').writeFileSync(process.env.PANWRITE_NATIVE_CALLED, process.argv.slice(2).join(' '));
 process.exitCode = 91;
 `);
     fs.chmodSync(executable, 0o755);
@@ -544,7 +544,7 @@ process.exitCode = 91;
       '--advanced', '--quiet', '--no-color'
     ], {
       PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
-      WTFP_NATIVE_CALLED: calledPath
+      PANWRITE_NATIVE_CALLED: calledPath
     });
     assertSuccess(result, 'partial bundle install');
     assert.strictEqual(fs.existsSync(calledPath), false, 'partial bundle invoked native registration');
@@ -552,7 +552,7 @@ process.exitCode = 91;
     const receipt = JSON.parse(fs.readFileSync(path.join(targetDir, RECEIPT), 'utf8'));
     assert.strictEqual(receipt.partial, true);
     assert.strictEqual(
-      receipt.files.some((entry) => entry.path === 'marketplaces/wtfp/.wtfp-generated.json'),
+      receipt.files.some((entry) => entry.path === 'marketplaces/panwrite/.panwrite-generated.json'),
       false,
       'receipt claimed ownership of the preserved conflict'
     );
@@ -560,8 +560,8 @@ process.exitCode = 91;
 
   record('Claude, Gemini, and OpenCode full installs include their generated adapter roots', () => {
     const installedRoots = {
-      claude: 'marketplaces/wtfp',
-      gemini: 'extensions/wtfp',
+      claude: 'marketplaces/panwrite',
+      gemini: 'extensions/panwrite',
       opencode: '.'
     };
     for (const [runtime, generatedRoot] of Object.entries(installedRoots)) {
@@ -573,7 +573,7 @@ process.exitCode = 91;
       ]);
       assertSuccess(result, `${runtime} complete generated install`);
       const installedRoot = path.join(targetDir, generatedRoot);
-      assert.ok(fs.existsSync(path.join(installedRoot, '.wtfp-generated.json')));
+      assert.ok(fs.existsSync(path.join(installedRoot, '.panwrite-generated.json')));
       assertPortableContract(installedRoot, `${runtime} installed adapter`);
     }
   });
@@ -588,13 +588,13 @@ process.exitCode = 91;
       if (runtime === 'pancode') {
         assert.deepStrictEqual(
           { ...target.components[1] },
-          { id: 'extension', src: path.join(path.dirname(expected.source), 'extension'), dest: 'extensions/wtfp', type: 'dir' }
+          { id: 'extension', src: path.join(path.dirname(expected.source), 'extension'), dest: 'extensions/panwrite', type: 'dir' }
         );
       }
       if (runtime === 'codex') {
         assert.deepStrictEqual(
           { ...target.components[1] },
-          { id: 'agents', src: path.join(expected.source, 'plugins', 'wtfp', 'agents'), dest: 'agents', type: 'dir' }
+          { id: 'agents', src: path.join(expected.source, 'plugins', 'panwrite', 'agents'), dest: 'agents', type: 'dir' }
         );
       }
       assert.strictEqual(target.components[0].id, expected.component);
@@ -623,7 +623,7 @@ process.exitCode = 91;
   record('help documents positional vNext grammar and every compatibility selector', () => {
     const result = run(INSTALL, ['--help', '--no-color']);
     assertSuccess(result, 'installer help');
-    assert.match(result.output, /wtf-p install <target>/);
+    assert.match(result.output, /panwrite install <target>/);
     for (const target of ALL_TARGETS) {
       assert.match(result.output, new RegExp(`\\b${target}\\b`), `help omits ${target}`);
     }
@@ -648,7 +648,7 @@ process.exitCode = 91;
     fs.mkdirSync(emptyRoot, { recursive: true });
     const positional = run(INSTALL, ['uninstall', 'pancode', '--config-dir', emptyRoot, '--dry-run', '--no-color']);
     assertSuccess(positional, 'positional uninstall target');
-    assert.match(positional.output, /No WTF-P installation receipt found/);
+    assert.match(positional.output, /No PanWrite installation receipt found/);
     const unknown = run(INSTALL, ['uninstall', 'bogus', '--dry-run', '--no-color']);
     assertFailure(unknown, /Unknown uninstall target: bogus/, 'unknown uninstall target');
   });

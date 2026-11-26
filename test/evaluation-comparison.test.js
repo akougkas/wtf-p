@@ -47,7 +47,7 @@ function evidenceClaim(root, name, payload, method, assessor = null) {
 
 function identityReceipt(run) {
   return {
-    schema: 'wtfp.evaluation.identity-receipt/v1',
+    schema: 'panwrite.evaluation.identity-receipt/v1',
     client: {
       name: run.client.name,
       actual_version: run.client.actual_version,
@@ -104,7 +104,7 @@ function buildPaidCandidate(root) {
     protocol: {
       project_protocol_version: baseline.protocol.project_protocol_version,
       adapter_compiler_version: baseline.protocol.adapter_compiler_version,
-      wtfp_commit: baseline.protocol.canonical_source_commit,
+      panwrite_commit: baseline.protocol.canonical_source_commit,
       client_commit: null,
       source_sha256: baseline.protocol.canonical_source_sha256
     },
@@ -177,7 +177,7 @@ function buildPaidCandidate(root) {
   const outputBytes = Buffer.from('Bounded claim.\nSafe next action.\n', 'utf8');
   writePrivate(path.join(root, 'evidence', 'model-output.md'), outputBytes);
   const candidate = {
-    schema: 'wtfp.evaluation.result/v1',
+    schema: 'panwrite.evaluation.result/v1',
     outcome: 'completed',
     run,
     scenario: {
@@ -263,7 +263,7 @@ function expectedAnchor(candidate, kind) {
 }
 
 function main() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-evaluation-comparison.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-evaluation-comparison.'));
   fs.chmodSync(root, 0o700);
   try {
     const { baseline, candidate } = buildPaidCandidate(root);

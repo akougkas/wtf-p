@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: discuss-section
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Discuss a section
 
 @protocol://project/README.md
-@protocol://skills/wtfp-plan-section/SKILL.md
-@protocol://skills/wtfp-plan-section/references/actions.md
+@protocol://skills/panwrite-plan-section/SKILL.md
+@protocol://skills/panwrite-plan-section/references/actions.md
 
 ## Record contract
 

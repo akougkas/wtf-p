@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Deliver Research"
+  short_description: "Package papers, slides, and posters"
+  default_prompt: "Use $panwrite-deliver-research to prepare this research for delivery."

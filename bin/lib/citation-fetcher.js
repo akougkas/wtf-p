@@ -7,7 +7,7 @@ const ranker = require('./citation-ranker');
 const bibFormat = require('./bib-format');
 
 /**
- * WTF-P Citation Fetcher v0.4.0
+ * PanWrite Citation Fetcher v0.4.0
  *
  * Orchestrates tiered search:
  * 1. Semantic Scholar (Primary, Free)
@@ -33,7 +33,7 @@ async function searchCrossRef(query, limit = 5) {
       path: `/works?${querystring.stringify(params)}`,
       method: 'GET',
       headers: {
-        'User-Agent': 'WTF-P/0.4.0 (citation-expert)'
+        'User-Agent': 'PanWrite/0.4.0 (citation-expert)'
       }
     };
 
@@ -160,9 +160,9 @@ function deduplicatePapers(papers) {
 // --- Main Search Logic ---
 
 async function search(query, options = {}) {
-  if (options.backend === 'cite-nexus') return require('./cite-nexus-client').search(query, options);
+  if (options.backend === 'pancite') return require('./pancite-client').search(query, options);
   if (options.backend && options.backend !== 'legacy') throw new Error('Unknown citation backend');
-  if (options.providers) throw new Error('Provider selection requires --backend=cite-nexus');
+  if (options.providers) throw new Error('Provider selection requires --backend=pancite');
   const limit = options.limit || 10;
   const intent = options.intent || 'balanced';
 
@@ -244,12 +244,12 @@ async function search(query, options = {}) {
     };
 
     const provenance = {
-      wtfp_status: p.doi ? 'official' : 'partial',
-      wtfp_source: p.source,
-      wtfp_citations: p.citationCount,
-      wtfp_velocity: p.wtfp_velocity,
-      wtfp_s2_id: p.paperId,
-      wtfp_scholar_id: p.scholarClusterId
+      panwrite_status: p.doi ? 'official' : 'partial',
+      panwrite_source: p.source,
+      panwrite_citations: p.citationCount,
+      panwrite_velocity: p.panwrite_velocity,
+      panwrite_s2_id: p.paperId,
+      panwrite_scholar_id: p.scholarClusterId
     };
 
     return {

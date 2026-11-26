@@ -1,6 +1,6 @@
 ---
 id: citation-formatter
-contract: wtfp.role.citation-formatter/v1
+contract: panwrite.role.citation-formatter/v1
 name: Citation Formatter
 execution_class: mutation-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -50,7 +50,7 @@ Audit bibliography integrity and produce deterministic corrections without touch
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `citation-formatter`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

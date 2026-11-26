@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.explicit-actions/v1",
+  "schema": "panwrite.evaluation.explicit-actions/v1",
   "version": 1,
   "disclosure_policy": {
     "skill": "protocol/skills/{skill}/SKILL.md for academic actions; none for product operations",
@@ -12,225 +12,225 @@
   "actions": [
     {
       "id": "add-todo",
-      "invocation": "/wtfp:add-todo verify the checkpoint-overhead confidence interval",
+      "invocation": "/panwrite:add-todo verify the checkpoint-overhead confidence interval",
       "arguments": "verify the checkpoint-overhead confidence interval",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "add-todo" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "add-todo" }
     },
     {
       "id": "advance",
-      "invocation": "/wtfp:advance until the next decision is mine",
+      "invocation": "/panwrite:advance until the next decision is mine",
       "arguments": "until the next decision is mine",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "advance" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "advance" }
     },
     {
       "id": "analyze-bib",
-      "invocation": "/wtfp:analyze-bib references/checkpointing.bib",
+      "invocation": "/panwrite:analyze-bib references/checkpointing.bib",
       "arguments": "references/checkpointing.bib",
-      "expected": { "kind": "skill", "skill": "wtfp-research-literature", "action": "analyze-bib" }
+      "expected": { "kind": "skill", "skill": "panwrite-research-literature", "action": "analyze-bib" }
     },
     {
       "id": "audit-milestone",
-      "invocation": "/wtfp:audit-milestone first complete draft",
+      "invocation": "/panwrite:audit-milestone first complete draft",
       "arguments": "first complete draft",
-      "expected": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "audit-milestone" }
+      "expected": { "kind": "skill", "skill": "panwrite-review-manuscript", "action": "audit-milestone" }
     },
     {
       "id": "check-refs",
-      "invocation": "/wtfp:check-refs paper/manuscript.md",
+      "invocation": "/panwrite:check-refs paper/manuscript.md",
       "arguments": "paper/manuscript.md",
-      "expected": { "kind": "skill", "skill": "wtfp-research-literature", "action": "check-refs" }
+      "expected": { "kind": "skill", "skill": "panwrite-research-literature", "action": "check-refs" }
     },
     {
       "id": "check-todos",
-      "invocation": "/wtfp:check-todos blocking items first",
+      "invocation": "/panwrite:check-todos blocking items first",
       "arguments": "blocking items first",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "check-todos" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "check-todos" }
     },
     {
       "id": "checkpoint",
-      "invocation": "/wtfp:checkpoint save pre-results-revision",
+      "invocation": "/panwrite:checkpoint save pre-results-revision",
       "arguments": "save pre-results-revision",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "checkpoint" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "checkpoint" }
     },
     {
       "id": "contribute",
-      "invocation": "/wtfp:contribute add a routing regression fixture",
+      "invocation": "/panwrite:contribute add a routing regression fixture",
       "arguments": "add a routing regression fixture",
       "expected": { "kind": "operation", "action": "contribute" }
     },
     {
       "id": "create-outline",
-      "invocation": "/wtfp:create-outline six-section checkpointing paper",
+      "invocation": "/panwrite:create-outline six-section checkpointing paper",
       "arguments": "six-section checkpointing paper",
-      "expected": { "kind": "skill", "skill": "wtfp-start-project", "action": "create-outline" }
+      "expected": { "kind": "skill", "skill": "panwrite-start-project", "action": "create-outline" }
     },
     {
       "id": "create-poster",
-      "invocation": "/wtfp:create-poster 36 by 48 inch conference poster",
+      "invocation": "/panwrite:create-poster 36 by 48 inch conference poster",
       "arguments": "36 by 48 inch conference poster",
-      "expected": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "create-poster" }
+      "expected": { "kind": "skill", "skill": "panwrite-deliver-research", "action": "create-poster" }
     },
     {
       "id": "create-slides",
-      "invocation": "/wtfp:create-slides fifteen-minute systems talk",
+      "invocation": "/panwrite:create-slides fifteen-minute systems talk",
       "arguments": "fifteen-minute systems talk",
-      "expected": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "create-slides" }
+      "expected": { "kind": "skill", "skill": "panwrite-deliver-research", "action": "create-slides" }
     },
     {
       "id": "discuss-section",
-      "invocation": "/wtfp:discuss-section results",
+      "invocation": "/panwrite:discuss-section results",
       "arguments": "results",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "discuss-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "discuss-section" }
     },
     {
       "id": "execute-outline",
-      "invocation": "/wtfp:execute-outline dependency wave two",
+      "invocation": "/panwrite:execute-outline dependency wave two",
       "arguments": "dependency wave two",
-      "expected": { "kind": "skill", "skill": "wtfp-write-section", "action": "execute-outline" }
+      "expected": { "kind": "skill", "skill": "panwrite-write-section", "action": "execute-outline" }
     },
     {
       "id": "export-latex",
-      "invocation": "/wtfp:export-latex ACM article source",
+      "invocation": "/panwrite:export-latex ACM article source",
       "arguments": "ACM article source",
-      "expected": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "export-latex" }
+      "expected": { "kind": "skill", "skill": "panwrite-deliver-research", "action": "export-latex" }
     },
     {
       "id": "help",
-      "invocation": "/wtfp:help",
+      "invocation": "/panwrite:help",
       "arguments": "",
       "expected": { "kind": "operation", "action": "help" }
     },
     {
       "id": "insert-section",
-      "invocation": "/wtfp:insert-section limitations after discussion",
+      "invocation": "/panwrite:insert-section limitations after discussion",
       "arguments": "limitations after discussion",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "insert-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "insert-section" }
     },
     {
       "id": "list-assumptions",
-      "invocation": "/wtfp:list-assumptions methods",
+      "invocation": "/panwrite:list-assumptions methods",
       "arguments": "methods",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "list-assumptions" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "list-assumptions" }
     },
     {
       "id": "map-project",
-      "invocation": "/wtfp:map-project existing checkpointing draft",
+      "invocation": "/panwrite:map-project existing checkpointing draft",
       "arguments": "existing checkpointing draft",
-      "expected": { "kind": "skill", "skill": "wtfp-start-project", "action": "map-project" }
+      "expected": { "kind": "skill", "skill": "panwrite-start-project", "action": "map-project" }
     },
     {
       "id": "new-paper",
-      "invocation": "/wtfp:new-paper  working title=\"Resilient Checkpoint Coordination\"  preserve  repeated spacing\nsecond line\tliteral-tab literal-token=$1 literal-all=$@  ",
+      "invocation": "/panwrite:new-paper  working title=\"Resilient Checkpoint Coordination\"  preserve  repeated spacing\nsecond line\tliteral-tab literal-token=$1 literal-all=$@  ",
       "arguments": " working title=\"Resilient Checkpoint Coordination\"  preserve  repeated spacing\nsecond line\tliteral-tab literal-token=$1 literal-all=$@  ",
-      "expected": { "kind": "skill", "skill": "wtfp-start-project", "action": "new-paper" }
+      "expected": { "kind": "skill", "skill": "panwrite-start-project", "action": "new-paper" }
     },
     {
       "id": "pause-writing",
-      "invocation": "/wtfp:pause-writing before revising results",
+      "invocation": "/panwrite:pause-writing before revising results",
       "arguments": "before revising results",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "pause-writing" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "pause-writing" }
     },
     {
       "id": "plan-milestone-gaps",
-      "invocation": "/wtfp:plan-milestone-gaps first-draft audit",
+      "invocation": "/panwrite:plan-milestone-gaps first-draft audit",
       "arguments": "first-draft audit",
-      "expected": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "plan-milestone-gaps" }
+      "expected": { "kind": "skill", "skill": "panwrite-review-manuscript", "action": "plan-milestone-gaps" }
     },
     {
       "id": "plan-revision",
-      "invocation": "/wtfp:plan-revision results reviewer findings",
+      "invocation": "/panwrite:plan-revision results reviewer findings",
       "arguments": "results reviewer findings",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "plan-revision" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "plan-revision" }
     },
     {
       "id": "plan-section",
-      "invocation": "/wtfp:plan-section checkpoint-overhead evaluation",
+      "invocation": "/panwrite:plan-section checkpoint-overhead evaluation",
       "arguments": "checkpoint-overhead evaluation",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "plan-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "plan-section" }
     },
     {
       "id": "polish-prose",
-      "invocation": "/wtfp:polish-prose discussion preserve technical meaning",
+      "invocation": "/panwrite:polish-prose discussion preserve technical meaning",
       "arguments": "discussion preserve technical meaning",
-      "expected": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "polish-prose" }
+      "expected": { "kind": "skill", "skill": "panwrite-review-manuscript", "action": "polish-prose" }
     },
     {
       "id": "progress",
-      "invocation": "/wtfp:progress checkpointing manuscript",
+      "invocation": "/panwrite:progress checkpointing manuscript",
       "arguments": "checkpointing manuscript",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "progress" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "progress" }
     },
     {
       "id": "quick",
-      "invocation": "/wtfp:quick correct one abstract typo",
+      "invocation": "/panwrite:quick correct one abstract typo",
       "arguments": "correct one abstract typo",
-      "expected": { "kind": "skill", "skill": "wtfp-write-section", "action": "quick" }
+      "expected": { "kind": "skill", "skill": "panwrite-write-section", "action": "quick" }
     },
     {
       "id": "remove-section",
-      "invocation": "/wtfp:remove-section unused future appendix",
+      "invocation": "/panwrite:remove-section unused future appendix",
       "arguments": "unused future appendix",
-      "expected": { "kind": "skill", "skill": "wtfp-plan-section", "action": "remove-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-plan-section", "action": "remove-section" }
     },
     {
       "id": "report-bug",
-      "invocation": "/wtfp:report-bug nested state resource omitted",
+      "invocation": "/panwrite:report-bug nested state resource omitted",
       "arguments": "nested state resource omitted",
       "expected": { "kind": "operation", "action": "report-bug" }
     },
     {
       "id": "request-feature",
-      "invocation": "/wtfp:request-feature export evaluation traces",
+      "invocation": "/panwrite:request-feature export evaluation traces",
       "arguments": "export evaluation traces",
       "expected": { "kind": "operation", "action": "request-feature" }
     },
     {
       "id": "research-gap",
-      "invocation": "/wtfp:research-gap checkpoint coordination",
+      "invocation": "/panwrite:research-gap checkpoint coordination",
       "arguments": "checkpoint coordination",
-      "expected": { "kind": "skill", "skill": "wtfp-research-literature", "action": "research-gap" }
+      "expected": { "kind": "skill", "skill": "panwrite-research-literature", "action": "research-gap" }
     },
     {
       "id": "resume-writing",
-      "invocation": "/wtfp:resume-writing latest durable handoff",
+      "invocation": "/panwrite:resume-writing latest durable handoff",
       "arguments": "latest durable handoff",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "resume-writing" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "resume-writing" }
     },
     {
       "id": "review-section",
-      "invocation": "/wtfp:review-section results evidence and coherence",
+      "invocation": "/panwrite:review-section results evidence and coherence",
       "arguments": "results evidence and coherence",
-      "expected": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "review-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-review-manuscript", "action": "review-section" }
     },
     {
       "id": "settings",
-      "invocation": "/wtfp:settings show approval gates",
+      "invocation": "/panwrite:settings show approval gates",
       "arguments": "show approval gates",
-      "expected": { "kind": "skill", "skill": "wtfp-manage-project", "action": "settings" }
+      "expected": { "kind": "skill", "skill": "panwrite-manage-project", "action": "settings" }
     },
     {
       "id": "submit-milestone",
-      "invocation": "/wtfp:submit-milestone first complete draft",
+      "invocation": "/panwrite:submit-milestone first complete draft",
       "arguments": "first complete draft",
-      "expected": { "kind": "skill", "skill": "wtfp-deliver-research", "action": "submit-milestone" }
+      "expected": { "kind": "skill", "skill": "panwrite-deliver-research", "action": "submit-milestone" }
     },
     {
       "id": "update",
-      "invocation": "/wtfp:update check only",
+      "invocation": "/panwrite:update check only",
       "arguments": "check only",
       "expected": { "kind": "operation", "action": "update" }
     },
     {
       "id": "verify-work",
-      "invocation": "/wtfp:verify-work results against approved plan",
+      "invocation": "/panwrite:verify-work results against approved plan",
       "arguments": "results against approved plan",
-      "expected": { "kind": "skill", "skill": "wtfp-review-manuscript", "action": "verify-work" }
+      "expected": { "kind": "skill", "skill": "panwrite-review-manuscript", "action": "verify-work" }
     },
     {
       "id": "write-section",
-      "invocation": "/wtfp:write-section checkpoint-overhead evaluation",
+      "invocation": "/panwrite:write-section checkpoint-overhead evaluation",
       "arguments": "checkpoint-overhead evaluation",
-      "expected": { "kind": "skill", "skill": "wtfp-write-section", "action": "write-section" }
+      "expected": { "kind": "skill", "skill": "panwrite-write-section", "action": "write-section" }
     }
   ]
 }

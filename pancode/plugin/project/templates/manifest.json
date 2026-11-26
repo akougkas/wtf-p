@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.manifest/v1",
+  "schema": "panwrite.project.manifest/v1",
   "protocol_version": 1,
   "id": "portable-research-demo",
   "title": "Portable Research Workflow",
