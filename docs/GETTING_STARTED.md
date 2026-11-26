@@ -19,9 +19,9 @@ The same action set covers the four document types WTF-P scaffolds from `protoco
 Claude Code, Codex, and GitHub Copilot CLI can install WTF-P straight from the Git repository with their own plugin managers; the repository root carries a marketplace for each:
 
 ```bash
-claude plugin marketplace add akougkas/wtf-p && claude plugin install wtfp@wtf-p
-codex plugin marketplace add akougkas/wtf-p && codex plugin add wtfp@wtf-p
-copilot plugin marketplace add akougkas/wtf-p && copilot plugin install wtfp@wtf-p
+claude plugin marketplace add PanStudio/panwrite && claude plugin install wtfp@wtf-p
+codex plugin marketplace add PanStudio/panwrite && codex plugin add wtfp@wtf-p
+copilot plugin marketplace add PanStudio/panwrite && copilot plugin install wtfp@wtf-p
 ```
 
 That route loads the committed envelope and runs no WTF-P code. It does not copy the eleven Codex role agents into `$CODEX_HOME/agents/`; use the npm installer below for Codex when you want subagents. Do not combine both routes on one profile: they register the same `wtfp` plugin and the host keeps only one.

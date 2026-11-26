@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "pancode-plugin",
-  "sourceHash": "46caa2d1e0299e9f5b8fcf18fdb7e3f4ae5a8dc8a22946e1e83288a278babf69",
+  "sourceHash": "7b0f4d46449d25000660ff4b43639fd7be42d2537297b1e2b30276cd05b21cdd",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -370,7 +370,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "c10e55ab4882874393c43947206f8df53a248ac5a61e8809b16b1eb303d912fe"
+      "sha256": "1c2fb51a039c5218d86a5143bb2265001fd023f02b7132ec226e85c526be8676"
     },
     {
       "path": "project/README.md",
@@ -470,7 +470,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "bc5da3e24afaa10e7e665076b1c5a75a39350feddec69cfb8ea0b73e5a050ffb"
+      "sha256": "f061cd49ed1093e9793e8a65b51150e37f1e21a3530a82009f1d8349e2d4b770"
     },
     {
       "path": "roles/argument-verifier.md",

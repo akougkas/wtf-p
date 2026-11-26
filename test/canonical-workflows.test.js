@@ -192,7 +192,7 @@ for (const action of actionIds) {
     if (reference.startsWith('https://')) {
       assert.match(
         reference,
-        /^(?:https:\/\/github\.com\/akougkas\/wtf-p(?:\/[A-Za-z0-9._{}?=&%#/-]*)?|https:\/\/cli\.github\.com\/?)$/,
+        /^(?:https:\/\/github\.com\/PanStudio\/panwrite(?:\/[A-Za-z0-9._{}?=&%#/-]*)?|https:\/\/cli\.github\.com\/?)$/,
         `${fileName} external resource must be an approved WTF-P or GitHub CLI resource`,
       );
       continue;

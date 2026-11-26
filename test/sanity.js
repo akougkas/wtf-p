@@ -36,11 +36,11 @@ check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
 
 // Package.json fields
 const pkg = require(path.join(root, 'package.json'));
-check(pkg.name === 'wtf-p', 'package name is wtf-p');
+check(pkg.name === '@panstudio/panwrite', 'package name is @panstudio/panwrite');
 check(pkg.bin && pkg.bin.wtfp, 'bin.wtfp defined');
 check(pkg.bin && pkg.bin['wtf-p-uninstall'], 'bin.wtf-p-uninstall defined');
 check(pkg.files && pkg.files.includes('bin'), 'files includes bin');
-check(pkg.license === 'MIT', 'license is MIT');
+check(pkg.license === 'Apache-2.0', 'license is Apache-2.0');
 
 // Mutating CLI entrypoints must only be checked in disposable child processes.
 // Requiring either one in this process could modify the developer's profile if

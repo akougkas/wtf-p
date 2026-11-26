@@ -15,7 +15,7 @@ WTF-P is a portable academic-research and writing protocol for AI coding agents.
 WTF-P requires Node.js 20 or newer and has no runtime package dependencies.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/wtf-p.git
+git clone https://github.com/YOUR_USERNAME/panwrite.git
 cd wtf-p
 npm test
 ```
@@ -182,8 +182,8 @@ Common types are `feat`, `fix`, `docs`, `refactor`, `test`, and `chore`. Useful 
 
 ## Questions and responsible reports
 
-- Use [Discussions](https://github.com/akougkas/wtf-p/discussions) for design questions.
-- Search existing [Issues](https://github.com/akougkas/wtf-p/issues) before filing a report.
+- Use [Discussions](https://github.com/PanStudio/panwrite/discussions) for design questions.
+- Search existing [Issues](https://github.com/PanStudio/panwrite/issues) before filing a report.
 - Do not include credentials, unpublished manuscripts, private bibliographies, or isolated live-test traces in an issue.
 
 Thank you for helping make rigorous academic workflows portable across agent platforms.

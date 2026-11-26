@@ -90,8 +90,8 @@ const GENERATOR_SOURCE_PATHS = Object.freeze([
 const SOURCE_PROJECTION_EXCLUSIONS = Object.freeze(new Set());
 
 const KNOWN_DEFAULTS = Object.freeze({
-  claude: '/home/akougkas/.local/share/claude/versions/2.1.251',
-  codex: '/home/akougkas/.codex/packages/standalone/releases/0.144.1-x86_64-unknown-linux-musl/bin/codex',
+  claude: path.join(os.homedir(), '.local/share/claude/versions/2.1.251'),
+  codex: path.join(os.homedir(), '.codex/packages/standalone/releases/0.144.1-x86_64-unknown-linux-musl/bin/codex'),
   clio: '/tmp/clio-v038-fixed-source.Xbdr8a/dist/cli/index.js',
   clioSource: '/tmp/clio-v038-fixed-source.Xbdr8a'
 });

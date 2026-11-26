@@ -2,15 +2,15 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "claude",
-  "sourceHash": "3231e9fb9e894fefc94e162826225348523abd5435494d6e16be9cf6f1803b87",
+  "sourceHash": "5d040d7d027a8f18135d88b8d182cd9ba92b1f5d6ab07c8815e7c747c015fa34",
   "files": [
     {
       "path": ".claude-plugin/marketplace.json",
-      "sha256": "bfd80dea277d9b1f7a0b13383ae0798b87b924165fa9593c743a7f80dffebf09"
+      "sha256": "9bc4344485d4c751f5b67a2e532be630834edaa67b21fd3d18b1c65ca4e650be"
     },
     {
       "path": ".claude-plugin/plugin.json",
-      "sha256": "c31519c16bcfd0ff09b5ea65542621fb6750d713204a6375248564fc00564847"
+      "sha256": "ded61eb88673a2f68751e3700f8b63eda28ddb9479abc1e6f5318393c38377a2"
     },
     {
       "path": "actions/add-todo.json",
@@ -586,7 +586,7 @@
     },
     {
       "path": "plugin.json",
-      "sha256": "8838123fdb317cfe3f7d27205c1a9bb0bac1b8fdb71a016669346d92038c8e06"
+      "sha256": "67be86ae58dd0a18ba117c040c4cc8c9ded2ee259c6fe599fca17140abd7fd44"
     },
     {
       "path": "project/README.md",
@@ -686,7 +686,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "bc5da3e24afaa10e7e665076b1c5a75a39350feddec69cfb8ea0b73e5a050ffb"
+      "sha256": "f061cd49ed1093e9793e8a65b51150e37f1e21a3530a82009f1d8349e2d4b770"
     },
     {
       "path": "roles/argument-verifier.md",

@@ -1,7 +1,7 @@
 {
   "name": "wtfp",
   "owner": {
-    "name": "akougkas"
+    "name": "PanStudio"
   },
   "metadata": {
     "description": "WTF-P research workflow plugins",
@@ -14,7 +14,7 @@
       "description": "Portable academic research and writing workflows.",
       "version": "0.9.1",
       "author": {
-        "name": "akougkas"
+        "name": "Anthony Kougkas"
       },
       "commands": "./commands/",
       "agents": "./agents/",

@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "opencode",
-  "sourceHash": "4fed9889e4c0966c516cdcb1cf25c878f2e5e349102aef25372cdd680e684889",
+  "sourceHash": "95c9c33506301cd107ffc6d1e9bd0e7ce8a5303975c93800bac9717a4659913a",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -466,7 +466,7 @@
     },
     {
       "path": "repository/CONTRIBUTING.md",
-      "sha256": "bc5da3e24afaa10e7e665076b1c5a75a39350feddec69cfb8ea0b73e5a050ffb"
+      "sha256": "f061cd49ed1093e9793e8a65b51150e37f1e21a3530a82009f1d8349e2d4b770"
     },
     {
       "path": "roles/argument-verifier.md",

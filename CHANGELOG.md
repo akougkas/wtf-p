@@ -755,7 +755,7 @@ after `0.6.0-rc.2`. npm `latest` now resolves to this line.
 - Repository-root marketplaces (`.claude-plugin/marketplace.json`,
   `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`), so
   Claude Code, Codex, and Copilot CLI install the committed envelope straight
-  from Git with `<cli> plugin marketplace add akougkas/wtf-p` and
+  from Git with `<cli> plugin marketplace add PanStudio/panwrite` and
   `wtfp@wtf-p`, with no npm and no installer. The Codex route does not copy
   the role agents to `$CODEX_HOME/agents/`; the installer still does
 
@@ -1110,25 +1110,25 @@ Initial public release.
 - Git-based version control for drafts
 - `npx wtf-p` interactive installer with `--global`, `--local`, `--config-dir` options
 
-[Unreleased]: https://github.com/akougkas/wtf-p/compare/v0.9.1...HEAD
-[0.9.1]: https://github.com/akougkas/wtf-p/compare/v0.9.0...v0.9.1
-[0.9.0]: https://github.com/akougkas/wtf-p/compare/v0.8.5...v0.9.0
-[0.8.5]: https://github.com/akougkas/wtf-p/compare/v0.8.4...v0.8.5
-[0.8.4]: https://github.com/akougkas/wtf-p/compare/v0.8.3...v0.8.4
-[0.8.3]: https://github.com/akougkas/wtf-p/compare/v0.8.2...v0.8.3
-[0.8.2]: https://github.com/akougkas/wtf-p/compare/v0.8.1...v0.8.2
-[0.8.1]: https://github.com/akougkas/wtf-p/compare/v0.8.0...v0.8.1
-[0.8.0]: https://github.com/akougkas/wtf-p/compare/v0.7.4...v0.8.0
-[0.7.4]: https://github.com/akougkas/wtf-p/compare/v0.7.3...v0.7.4
-[0.7.3]: https://github.com/akougkas/wtf-p/compare/v0.7.2...v0.7.3
-[0.7.2]: https://github.com/akougkas/wtf-p/compare/v0.7.1...v0.7.2
-[0.7.1]: https://github.com/akougkas/wtf-p/compare/v0.7.0...v0.7.1
-[0.7.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.2...v0.6.0
-[0.6.0-rc.2]: https://github.com/akougkas/wtf-p/compare/v0.6.0-rc.1...v0.6.0-rc.2
-[0.6.0-rc.1]: https://github.com/akougkas/wtf-p/compare/v0.5.0...v0.6.0-rc.1
-[0.5.0]: https://github.com/akougkas/wtf-p/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/akougkas/wtf-p/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/akougkas/wtf-p/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/akougkas/wtf-p/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/akougkas/wtf-p/releases/tag/v0.1.0
+[Unreleased]: https://github.com/PanStudio/panwrite/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/PanStudio/panwrite/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/PanStudio/panwrite/compare/v0.8.5...v0.9.0
+[0.8.5]: https://github.com/PanStudio/panwrite/compare/v0.8.4...v0.8.5
+[0.8.4]: https://github.com/PanStudio/panwrite/compare/v0.8.3...v0.8.4
+[0.8.3]: https://github.com/PanStudio/panwrite/compare/v0.8.2...v0.8.3
+[0.8.2]: https://github.com/PanStudio/panwrite/compare/v0.8.1...v0.8.2
+[0.8.1]: https://github.com/PanStudio/panwrite/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/PanStudio/panwrite/compare/v0.7.4...v0.8.0
+[0.7.4]: https://github.com/PanStudio/panwrite/compare/v0.7.3...v0.7.4
+[0.7.3]: https://github.com/PanStudio/panwrite/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/PanStudio/panwrite/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/PanStudio/panwrite/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/PanStudio/panwrite/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/PanStudio/panwrite/compare/v0.6.0-rc.2...v0.6.0
+[0.6.0-rc.2]: https://github.com/PanStudio/panwrite/compare/v0.6.0-rc.1...v0.6.0-rc.2
+[0.6.0-rc.1]: https://github.com/PanStudio/panwrite/compare/v0.5.0...v0.6.0-rc.1
+[0.5.0]: https://github.com/PanStudio/panwrite/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/PanStudio/panwrite/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/PanStudio/panwrite/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/PanStudio/panwrite/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/PanStudio/panwrite/releases/tag/v0.1.0

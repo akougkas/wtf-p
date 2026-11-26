@@ -4,11 +4,11 @@
   "version": "0.9.1",
   "description": "Portable, evidence-grounded academic research and writing workflows.",
   "author": {
-    "name": "akougkas"
+    "name": "Anthony Kougkas"
   },
-  "homepage": "https://github.com/akougkas/wtf-p",
-  "repository": "https://github.com/akougkas/wtf-p",
-  "license": "MIT",
+  "homepage": "https://github.com/PanStudio/panwrite",
+  "repository": "https://github.com/PanStudio/panwrite",
+  "license": "Apache-2.0",
   "extensions": {
     "dev.pancode": {
       "manifestVersion": 1,

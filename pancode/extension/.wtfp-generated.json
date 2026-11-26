@@ -2,7 +2,7 @@
   "schema": "wtfp.generated-adapter/v1",
   "generatorVersion": 5,
   "target": "pancode-extension",
-  "sourceHash": "57232427f8bbf3b1910c9cff3dafd97f0907557db93af3708c15e3a35d90d8f2",
+  "sourceHash": "28657b75dce8c287430bf8a17ae5806859fc9359f7a0ac4c6a57e8d5655d912d",
   "files": [
     {
       "path": "actions/add-todo.json",
@@ -158,7 +158,7 @@
     },
     {
       "path": "pancode-extension.yaml",
-      "sha256": "3ad6dbb7e3498b4bd0196f8d7ab6d2d2cb7d63da024088a42de11e2dbb1edb2a"
+      "sha256": "b49762ee64c9f7df58cfdd99f832555ca285de2bbeb76dd871b675bdf966a257"
     },
     {
       "path": "project/schemas/checkpoint.schema.json",

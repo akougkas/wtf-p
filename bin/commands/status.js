@@ -84,7 +84,7 @@ async function showStatus(options, pkg) {
 
   // Check for updates (only suggest if registry version is actually newer)
   try {
-    const latest = execFileSync('npm', ['view', 'wtf-p', 'version'], {
+    const latest = execFileSync('npm', ['view', '@panstudio/panwrite', 'version'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000

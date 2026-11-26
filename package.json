@@ -1,5 +1,5 @@
 {
-  "name": "wtf-p",
+  "name": "@panstudio/panwrite",
   "version": "0.9.1",
   "description": "Portable, evidence-grounded academic writing workflows (papers, proposals, posters, presentations) for PanCode, Claude Code, Codex, GitHub Copilot CLI, OpenCode, Antigravity CLI, and Gemini CLI.",
   "bin": {
@@ -28,6 +28,7 @@
     "protocol",
     "scripts/build-adapters.js",
     "pancode",
+    "NOTICE",
     "vendors",
     "!vendors/claude/mcp/**",
     "!vendors/claude/skills/wtfp/**"
@@ -57,17 +58,20 @@
     "bibtex",
     "citation"
   ],
-  "author": "akougkas",
-  "license": "MIT",
-  "homepage": "https://github.com/akougkas/wtf-p",
+  "author": "Anthony Kougkas",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/PanStudio/panwrite",
   "bugs": {
-    "url": "https://github.com/akougkas/wtf-p/issues"
+    "url": "https://github.com/PanStudio/panwrite/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/akougkas/wtf-p.git"
+    "url": "git+https://github.com/PanStudio/panwrite.git"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

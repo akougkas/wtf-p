@@ -1,7 +1,7 @@
 {
   "name": "wtfp",
   "owner": {
-    "name": "akougkas"
+    "name": "PanStudio"
   },
   "metadata": {
     "description": "WTF-P evidence-grounded academic workflow plugin.",
@@ -14,11 +14,11 @@
       "description": "Portable academic research and writing workflows.",
       "version": "0.9.1",
       "author": {
-        "name": "akougkas"
+        "name": "Anthony Kougkas"
       },
-      "homepage": "https://github.com/akougkas/wtf-p",
-      "repository": "https://github.com/akougkas/wtf-p",
-      "license": "MIT"
+      "homepage": "https://github.com/PanStudio/panwrite",
+      "repository": "https://github.com/PanStudio/panwrite",
+      "license": "Apache-2.0"
     }
   ]
 }

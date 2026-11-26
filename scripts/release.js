@@ -80,7 +80,7 @@ try {
     throw new Error(`package.json contains an invalid release version: ${version}`);
   }
   const tag = `v${version}`;
-  const publication = `The pushed ${tag} tag starts the "Publish to npm" workflow (.github/workflows/publish.yml). Approve its npm environment there to publish wtf-p@${version}${version.includes('-') ? ' under the next dist-tag' : ''}; nothing is published from this checkout.\n`;
+  const publication = `The pushed ${tag} tag starts the "Publish to npm" workflow (.github/workflows/publish.yml). Approve its npm environment there to publish @panstudio/panwrite@${version}${version.includes('-') ? ' under the next dist-tag' : ''}; nothing is published from this checkout.\n`;
   const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   if (!new RegExp(`^## \\[${escapedVersion}\\](?: - \\d{4}-\\d{2}-\\d{2})?$`, 'm').test(changelog)) {

@@ -1297,10 +1297,10 @@ function standardPluginManifest(version, name = 'wtfp', pancodeExtension) {
     $schema: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
     name, version,
     description: 'Portable, evidence-grounded academic research and writing workflows.',
-    author: { name: 'akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT',
+    author: { name: 'Anthony Kougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0',
     ...(pancodeExtension ? { extensions: { 'dev.pancode': pancodeExtension } } : {})
   });
 }
@@ -1473,10 +1473,10 @@ function codexInterface() {
     displayName: 'WTF-P',
     shortDescription: 'Plan and write evidence-grounded research',
     longDescription: 'Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.',
-    developerName: 'akougkas',
+    developerName: 'PanStudio',
     category: 'Productivity',
     capabilities: ['Research', 'Write'],
-    websiteURL: 'https://github.com/akougkas/wtf-p',
+    websiteURL: 'https://github.com/PanStudio/panwrite',
     defaultPrompt: 'Help me plan and execute an evidence-grounded research paper.'
   };
 }
@@ -1486,10 +1486,10 @@ function codexPluginManifest(version) {
     name: 'wtfp',
     version,
     description: 'Evidence-grounded academic research, planning, writing, review, and delivery workflows.',
-    author: { name: 'akougkas', url: 'https://github.com/akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT',
+    author: { name: 'Anthony Kougkas', url: 'https://github.com/akougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0',
     keywords: ['academic-writing', 'research', 'citations', 'papers'],
     skills: './skills/',
     interface: codexInterface()
@@ -1501,10 +1501,10 @@ function claudeCompatibleManifest(version, name = 'wtfp') {
     name,
     version,
     description: 'Portable academic research and writing workflows with stable wtfp actions.',
-    author: { name: 'akougkas', url: 'https://github.com/akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT'
+    author: { name: 'Anthony Kougkas', url: 'https://github.com/akougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0'
   });
 }
 
@@ -2292,7 +2292,7 @@ function compilePlans(options = {}) {
   addFile(claude, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version, 'wtfp'));
   addFile(claude, '.claude-plugin/marketplace.json', stableJson({
     name: 'wtfp',
-    owner: { name: 'akougkas' },
+    owner: { name: 'PanStudio' },
     metadata: {
       description: 'WTF-P evidence-grounded academic workflow plugin.',
       version: model.version
@@ -2302,10 +2302,10 @@ function compilePlans(options = {}) {
       source: './',
       description: 'Portable academic research and writing workflows.',
       version: model.version,
-      author: { name: 'akougkas' },
-      homepage: 'https://github.com/akougkas/wtf-p',
-      repository: 'https://github.com/akougkas/wtf-p',
-      license: 'MIT'
+      author: { name: 'Anthony Kougkas' },
+      homepage: 'https://github.com/PanStudio/panwrite',
+      repository: 'https://github.com/PanStudio/panwrite',
+      license: 'Apache-2.0'
     }]
   }));
 
@@ -2434,14 +2434,14 @@ function compilePlans(options = {}) {
   const copilotMarketplace = makePlan('copilot-marketplace', path.join(ROOT, 'vendors', 'copilot'));
   addFile(copilotMarketplace, 'marketplace.json', stableJson({
     name: 'wtfp',
-    owner: { name: 'akougkas' },
+    owner: { name: 'PanStudio' },
     metadata: { description: 'WTF-P research workflow plugins', version: model.version },
     plugins: [{
       name: 'wtfp',
       source: './plugins/wtfp',
       description: 'Portable academic research and writing workflows.',
       version: model.version,
-      author: { name: 'akougkas' },
+      author: { name: 'Anthony Kougkas' },
       commands: './commands/',
       agents: './agents/',
       skills: './skills/'

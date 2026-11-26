@@ -135,7 +135,7 @@ npm run release -- --tag --push
 
 The helper never runs `npm publish`. The publisher is `.github/workflows/publish.yml`, which runs on every pushed `v*` tag:
 
-1. The `check` job fails unless the tag equals `v<package-version>`, then looks the version up with `npm view wtf-p@<version>`. A version already on npm ends the run there, so pushing the tag of a published release is a no-op.
+1. The `check` job fails unless the tag equals `v<package-version>`, then looks the version up with `npm view @panstudio/panwrite@<version>`. A version already on npm ends the run there, so pushing the tag of a published release is a no-op.
 2. For a new version, `check` runs `npm run preflight` on the tagged commit.
 3. The `publish` job waits for the owner to approve the `npm` environment. It installs npm 11.21.3 (Trusted Publishing needs npm 11.5.1 or newer), then runs `npm publish --provenance --access public` (with `--tag next` for a prerelease) through npm Trusted Publishing. The job authenticates with a short-lived OIDC credential and reads no npm token. `prepublishOnly` still runs `scripts/publish-guard.js` against the clean tag checkout.
 

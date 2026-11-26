@@ -4,11 +4,11 @@
   "version": "0.9.1",
   "description": "Portable, evidence-grounded academic research and writing workflows.",
   "author": {
-    "name": "akougkas"
+    "name": "Anthony Kougkas"
   },
-  "homepage": "https://github.com/akougkas/wtf-p",
-  "repository": "https://github.com/akougkas/wtf-p",
-  "license": "MIT",
+  "homepage": "https://github.com/PanStudio/panwrite",
+  "repository": "https://github.com/PanStudio/panwrite",
+  "license": "Apache-2.0",
   "keywords": [
     "academic-writing",
     "research",
@@ -21,13 +21,13 @@
         "displayName": "WTF-P",
         "shortDescription": "Plan and write evidence-grounded research",
         "longDescription": "Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.",
-        "developerName": "akougkas",
+        "developerName": "PanStudio",
         "category": "Productivity",
         "capabilities": [
           "Research",
           "Write"
         ],
-        "websiteURL": "https://github.com/akougkas/wtf-p",
+        "websiteURL": "https://github.com/PanStudio/panwrite",
         "defaultPrompt": "Help me plan and execute an evidence-grounded research paper."
       }
     }

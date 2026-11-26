@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/akougkas/wtf-p/main/assets/wtfp-banner.jpg" alt="WTF-P Banner" width="600">
+<img src="https://raw.githubusercontent.com/PanStudio/panwrite/main/assets/wtfp-banner.jpg" alt="WTF-P Banner" width="600">
 
 # WTF-P
 
@@ -40,9 +40,9 @@ Codex, and Copilot CLI read a marketplace straight from the Git repository and
 load the committed envelope, so no installer runs:
 
 ```bash
-claude plugin marketplace add akougkas/wtf-p && claude plugin install wtfp@wtf-p
-codex plugin marketplace add akougkas/wtf-p && codex plugin add wtfp@wtf-p
-copilot plugin marketplace add akougkas/wtf-p && copilot plugin install wtfp@wtf-p
+claude plugin marketplace add PanStudio/panwrite && claude plugin install wtfp@wtf-p
+codex plugin marketplace add PanStudio/panwrite && codex plugin add wtfp@wtf-p
+copilot plugin marketplace add PanStudio/panwrite && copilot plugin install wtfp@wtf-p
 ```
 
 Codex still needs the eleven role agents copied to `$CODEX_HOME/agents/`,
@@ -218,4 +218,4 @@ time for writer's block.
 
 </div>
 
-Part of Anthony Kougkas's agentic engineering work: [akougkas.io/work/agentic-engineering](https://akougkas.io/work/agentic-engineering/)
+: [akougkas.io/work/agentic-engineering](https://akougkas.io/work/agentic-engineering/)

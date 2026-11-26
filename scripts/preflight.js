@@ -143,8 +143,8 @@ async function main() {
 
   section('Package contract');
   const packageJson = readJson('package.json');
-  if (packageJson.name === 'wtf-p' && packageJson.version) pass(`package identity is wtf-p@${packageJson.version}`);
-  else fail('package.json must declare the wtf-p package and a version');
+  if (packageJson.name === '@panstudio/panwrite' && packageJson.version) pass(`package identity is @panstudio/panwrite@${packageJson.version}`);
+  else fail('package.json must declare the @panstudio/panwrite package and a version');
   if (packageJson.engines?.node === '>=20.0.0') pass('Node.js support floor is explicit (>=20)');
   else fail('package.json must declare engines.node >=20.0.0');
   if (packageJson.bin?.wtfp === 'bin/install.js' && packageJson.bin?.['wtf-p-uninstall'] === 'bin/uninstall.js') {

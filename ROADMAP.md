@@ -1,6 +1,6 @@
 # WTF-P Roadmap
 
-Development direction for WTF-P. Community input welcome via [GitHub Discussions](https://github.com/akougkas/wtf-p/discussions).
+Development direction for WTF-P. Community input welcome via [GitHub Discussions](https://github.com/PanStudio/panwrite/discussions).
 
 ---
 
