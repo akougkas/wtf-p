@@ -40,8 +40,8 @@
     "project_protocol_version": 1,
     "catalog_schema": "panwrite.catalog/v1",
     "adapter_compiler_version": 5,
-    "canonical_source_commit": "3cce9c7305d68dd0063d2316405faaa0cbb3ee81",
-    "canonical_source_sha256": "7b0f4d46449d25000660ff4b43639fd7be42d2537297b1e2b30276cd05b21cdd"
+    "canonical_source_commit": "6fbddb194badadc713131a5237b9650a535b5d2e",
+    "canonical_source_sha256": "795942d950fc8069880598e54dfbe9e835115846a0f0f45f401c327c2eb322e9"
   },
   "expected_invariants": [
     {

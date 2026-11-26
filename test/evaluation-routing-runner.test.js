@@ -193,17 +193,17 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, 'c93fccd7ae4115d55ad9272b68561766f46d4f25fb3ec1037cbae025c526afe9');
+    assert.strictEqual(suite.manifest_sha256, '59b6386cd17d415477165625a5c4553c270f83640f5eb537874b103df241c6f2');
     assert.strictEqual(suite.client_surfaces_sha256,
-      'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
+      '814f2110071131d3f8a915591f4e6bc399c7d9febaa187e705a7f09a77f55890');
     assert.strictEqual(suite.rows.length, 3);
     assert.strictEqual(suite.rows.reduce((sum, row) => sum + row.case_ids.length, 0), 54);
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      'faf968ea35150baf4df5e17ec08fc354cd38578c13995b2a8f037cfc468f5c81');
+      'cf784c4974f441102d3c3945f64ac30791478fe2571529538d1e120884d01268');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      '7b0f4d46449d25000660ff4b43639fd7be42d2537297b1e2b30276cd05b21cdd');
+      '795942d950fc8069880598e54dfbe9e835115846a0f0f45f401c327c2eb322e9');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -213,12 +213,12 @@ async function main() {
     const clio = suite.target_catalogs.clio.get('explicit-new-paper');
     assert.strictEqual(claude.input, clio.input);
     assert.strictEqual(claude.input, semantic.input);
-    assert.strictEqual(Buffer.byteLength(claude.input, 'utf8'), 152);
+    assert.strictEqual(Buffer.byteLength(claude.input, 'utf8'), 156);
     assert.strictEqual(sha256(Buffer.from(claude.input)),
-      'a2b4a25d42cfb8752e10007adc8da26e4d2eeeedade246f2f0192b279fe2cb01');
-    assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 172);
+      '6085f4b22097e374ea03a46c37d7ed076511f7212981bbcf15491af901134ce4');
+    assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 179);
     assert.strictEqual(sha256(Buffer.from(codex.input)),
-      '1ab063ce39749f1b07ef1a4bb507c33f9294cda86a4566743b40fab866055599');
+      'd500a48f4b4fb429a36c6567e5e78104c0dad16979ee45a6e2319cb7c04ca1b2');
     assert.ok(codex.input.startsWith('$panwrite:panwrite-start-project new-paper  '));
     for (const projected of [claude, codex, clio]) {
       assert.ok(projected.input.endsWith(semantic.arguments));
@@ -1230,10 +1230,10 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      '3cce9c7305d68dd0063d2316405faaa0cbb3ee81');
+      '6fbddb194badadc713131a5237b9650a535b5d2e');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      'f0d47ff710113a7db203530a9a024a26f28bb0bc5cd53ff3f0ef8508a0acabff');
+      '9cf78895e89fcb4a358acd6aaf4a2fcce0f371859ee04d9bb28e32f55078a1b2');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
     assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1703);
   });

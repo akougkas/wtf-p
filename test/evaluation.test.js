@@ -816,7 +816,7 @@ function testRoutingScorer(tempRoot) {
   assert.strictEqual(clientSurface('clio').implicit.expected_activation, 'not-loaded');
   assert.strictEqual(clientSurface('codex').implicit.route_granularity, 'unobservable');
   assert.strictEqual(sha256(fs.readFileSync(path.join(evaluationRoot, 'v1', 'routing', 'cases.json'))),
-    '37abf883ce8f80e2f5419861dc52612adee14e09305df0797c82f360939e0687');
+    'e63b9299b8f1af91a98349e1b2beeb0abbe9885010c37cd842c4ceed683e001e');
   const document = routingDocument(baseline, definitions);
   const operationHelp = document.observations.find(item => item.case_id === 'operation-help');
   const operationDefinition = definitions.get('operation-help');

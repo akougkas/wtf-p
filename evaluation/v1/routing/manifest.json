@@ -4,83 +4,83 @@
   "version": 1,
   "project_protocol_version": 1,
   "adapter_compiler_version": 5,
-  "panwrite_commit": "3cce9c7305d68dd0063d2316405faaa0cbb3ee81",
+  "panwrite_commit": "6fbddb194badadc713131a5237b9650a535b5d2e",
   "corpora": [
     {
       "path": "evaluation/v1/routing/cases.json",
-      "sha256": "37abf883ce8f80e2f5419861dc52612adee14e09305df0797c82f360939e0687"
+      "sha256": "e63b9299b8f1af91a98349e1b2beeb0abbe9885010c37cd842c4ceed683e001e"
     },
     {
       "path": "evaluation/v1/routing/explicit-actions.json",
-      "sha256": "c123b7af406df48344a7f1d8ac4ee7e63316b8303c0586707eb1aa3897c72bf2"
+      "sha256": "810664f93eb98bbea9df54af9c32913cea8a7240cf7ab04750970bd45f1211e6"
     },
     {
       "path": "evaluation/v1/matrix/budget.json",
-      "sha256": "69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039"
+      "sha256": "50e223de83a890df5d4ed5874710558b2e223e6a2d1de6ee42851fcd81b9d922"
     }
   ],
   "fixture": {
     "id": "routing-prompt-only",
     "version": 1,
-    "model_inputs_sha256": "23b6c222c9f6c14b941b823c71dd24af29e0cf5a80b9036d76f8dc62218d2d15",
-    "evaluator_oracles_sha256": "a8865f3be607e87a60ddc96bf12a96ed449237d9d0bb3b035852e40970f1d377",
-    "aggregate_sha256": "f4f7afb8ac8526672b38b96f59f1596c199af357cf05de80ef289c02444f7d40",
+    "model_inputs_sha256": "d23e1ae6d9cc20d22720f7142474041404c52604699ab29f876ccf73e822fba9",
+    "evaluator_oracles_sha256": "31deea0cf6e834e3dea8502e40106796c5e8c7affa29e921c31035e372fd5acc",
+    "aggregate_sha256": "f07b54eabeb0e6d3930306123135ac3609b2d02b12bca87e3db1806b2e8a132f",
     "project_snapshot_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   "generated_envelopes": [
     {
       "target": "antigravity",
       "path": "vendors/antigravity/.panwrite-generated.json",
-      "manifest_sha256": "8b7bb550a7def3b8336388f9c482ee16282a2357d78b8637106ea3e897011038",
-      "source_sha256": "f64c169ee4a3c6833689bf60393729014e68e8c395044486460e965cf150cdc7"
+      "manifest_sha256": "bc2c29b05759d2af8edb265a8ef638c1b62119592deab90d3aea6af7a0be4dd6",
+      "source_sha256": "44172950bd0ead40dffed140c741111a2d553ef872318fa0f80b46157c3dde58"
     },
     {
       "target": "claude",
       "path": "vendors/claude/.panwrite-generated.json",
-      "manifest_sha256": "c93cfa20e218390ad01d551228c0f251a71aefc18d4d9a6264394e3de58c357a",
-      "source_sha256": "5d040d7d027a8f18135d88b8d182cd9ba92b1f5d6ab07c8815e7c747c015fa34"
+      "manifest_sha256": "d79bcd74f29365aefda25e5cdad8d80c615367a0d311493b2fb1017b12ff319f",
+      "source_sha256": "81fb6c9fc6ccec5136f3bc7c3bd4664d51e400f767e88feb5d18443d145dd037"
     },
     {
       "target": "clio",
       "path": "pancode/plugin/.panwrite-generated.json",
-      "manifest_sha256": "faf968ea35150baf4df5e17ec08fc354cd38578c13995b2a8f037cfc468f5c81",
-      "source_sha256": "7b0f4d46449d25000660ff4b43639fd7be42d2537297b1e2b30276cd05b21cdd"
+      "manifest_sha256": "cf784c4974f441102d3c3945f64ac30791478fe2571529538d1e120884d01268",
+      "source_sha256": "795942d950fc8069880598e54dfbe9e835115846a0f0f45f401c327c2eb322e9"
     },
     {
       "target": "codex-marketplace",
       "path": "vendors/codex/.panwrite-generated.json",
-      "manifest_sha256": "b1a2259b0bd85dce8651a9156bed555f6415e58cedb525a8d0fcf8b47bc06dfe",
-      "source_sha256": "d14d8c46c5c338a444832f33d5563695492b8ea9176b0166856f713fd73ed9d2"
+      "manifest_sha256": "068348c02f6087062db5a590d2da9f6f6ccfbec5289f13e217b33f82f71ab357",
+      "source_sha256": "eab6fb3c368b32bd64659ef5245391c8b2c5074b51d1786a7ca7a6eda47372a8"
     },
     {
       "target": "codex",
       "path": "vendors/codex/plugins/panwrite/.panwrite-generated.json",
-      "manifest_sha256": "be56f166258365c9e1fdc406f6a10b6d5c623e730faa6e9ad9eaebd3482dec7a",
-      "source_sha256": "d4150f99fbf03c43258890cefc834a79230de6fa9d808d342c8eec8a2567cf99"
+      "manifest_sha256": "9e480d57927483cfc6aa62f26926401a9d56295448d6fa116d74106ee12c6ece",
+      "source_sha256": "9a3cd0978fd4b7c8bc6f086be302daefd063d894218eff62554a40f8f9e20005"
     },
     {
       "target": "copilot-marketplace",
       "path": "vendors/copilot/.panwrite-generated.json",
-      "manifest_sha256": "25ddf80592ed2cfb33741abcf06c7dcc8b2117cb2cf58949fa2c7a635b24d4a5",
-      "source_sha256": "fc2e90652f5352ce7cd014282045a911b631b99f548e36807f7f4beb45901fe9"
+      "manifest_sha256": "6f8acfdbf32ee00b7014bb39bea1e0e375cbc273412bc446a85d7d9eb6a53a1b",
+      "source_sha256": "036151d1a16eb4406f7c478c94eadd34d2a9d6b98815e8b4a50ab96bef100190"
     },
     {
       "target": "copilot",
       "path": "vendors/copilot/plugins/panwrite/.panwrite-generated.json",
-      "manifest_sha256": "2e64ac06a84d62b076ff4812caf85f6ae90a5e1fe6ecb7511311f3099eed343c",
-      "source_sha256": "e26a417254df7fb8d1679c086086fd333eeda25c3e7ec41a44cf5e2997595fc2"
+      "manifest_sha256": "d9bd4688730dc01584bd5870d9b9d6ae30aa91708ca89c0397bc95147bef1667",
+      "source_sha256": "855f841675f5b06d23d4483ed018aaa318b56d3d443e4d2132da4a4b9bdec124"
     },
     {
       "target": "gemini",
       "path": "vendors/gemini/.panwrite-generated.json",
-      "manifest_sha256": "72f2d0e6cd99f28229e3ba40bf321bc91aa3f42a1993fe298dc684ec0d769657",
-      "source_sha256": "85e8759cd82b8dce0b8bdc7742036ed9b5bd2ad1257ee30b4333844a864a4958"
+      "manifest_sha256": "a8431ac50e630dd58e2535c8058fd6dab8c2a652474c2dfc68140b789ff504c1",
+      "source_sha256": "cbf8291c585bcf5afeba8690862bdb27ff8f4b7be44265e14e474d7dd9d47516"
     },
     {
       "target": "opencode",
       "path": "vendors/opencode/.panwrite-generated.json",
-      "manifest_sha256": "479a93c2824ee82d9fde9deb2dbe0615178794828c097f77cab81ab0b70a715f",
-      "source_sha256": "95c9c33506301cd107ffc6d1e9bd0e7ce8a5303975c93800bac9717a4659913a"
+      "manifest_sha256": "7a505bdec53a889d8127651cde36fc758c1bac77c6b432a759f98babf7f66d59",
+      "source_sha256": "0c68f0aca2cbad48889690f3958026087634c05b32a517519a1c851dedd8971d"
     }
   ]
 }

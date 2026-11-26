@@ -70,8 +70,8 @@ Dry-run, preparation, and execution verification recompute these bindings:
 | Input | Required identity |
 |---|---|
 | Routing manifest | SHA-256 `ab6ec763b5001109dfdd82928b2e0b26d4bae88b5f19d3e384f49ef586c41d0b` |
-| Client-surface contract | SHA-256 `cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594` |
-| Budget matrix | SHA-256 `69e22a7362ddffb0b08ccc62493b079c45ef945d3518af00b0ab612ee38cf039` |
+| Client-surface contract | SHA-256 `814f2110071131d3f8a915591f4e6bc399c7d9febaa187e705a7f09a77f55890` |
+| Budget matrix | SHA-256 `50e223de83a890df5d4ed5874710558b2e223e6a2d1de6ee42851fcd81b9d922` |
 | PanWrite canonical source | commit `93617d24a1fe4438239534a2d4fab067530dc026`, projection SHA-256 `f7bcf1a0e150b4859a86b3edebda77c818a8e0ddf8b0539133202f6d9f558fd2`, protocol v1, compiler v4 |
 | Claude Code | `2.1.251`, binary SHA-256 `fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7` |
 | Codex CLI | `0.144.1`, binary SHA-256 `a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902` |
