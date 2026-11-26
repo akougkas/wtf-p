@@ -1,15 +1,15 @@
 {
-  "name": "wtf-p",
+  "name": "panwrite",
   "owner": {
-    "name": "akougkas"
+    "name": "PanStudio"
   },
   "metadata": {
-    "description": "WTF-P: evidence-grounded academic research and writing workflows for coding agents."
+    "description": "PanWrite: evidence-grounded academic research and writing workflows for coding agents."
   },
   "plugins": [
     {
-      "name": "wtfp",
-      "source": "./vendors/copilot/plugins/wtfp",
+      "name": "panwrite",
+      "source": "./vendors/copilot/plugins/panwrite",
       "description": "Portable academic research and writing workflows."
     }
   ]

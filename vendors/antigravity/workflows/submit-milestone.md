@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: submit-milestone
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Archive a milestone
 
 @protocol://project/README.md
-@protocol://skills/wtfp-deliver-research/SKILL.md
-@protocol://skills/wtfp-deliver-research/references/actions.md
+@protocol://skills/panwrite-deliver-research/SKILL.md
+@protocol://skills/panwrite-deliver-research/references/actions.md
 
 ## Record contract
 

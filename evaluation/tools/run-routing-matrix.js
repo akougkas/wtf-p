@@ -29,15 +29,15 @@ const schemaValidatorFile = path.join(repositoryRoot, 'evaluation', 'lib', 'json
 const schemasRoot = path.join(repositoryRoot, 'evaluation', 'v1', 'schemas');
 const protocolRoot = path.join(repositoryRoot, 'protocol');
 
-const PREPARED_SCHEMA = 'wtfp.evaluation.routing-prepared/v1';
+const PREPARED_SCHEMA = 'panwrite.evaluation.routing-prepared/v1';
 const PREPARED_FILE = 'prepared.json';
 const EXECUTION_CONFIRMATION = 'I_ACKNOWLEDGE_PAID_ROUTING_MATRIX_V1';
-const EXECUTION_CONFIRMATION_ENV = 'WTFP_ROUTING_CONFIRM_PAID';
+const EXECUTION_CONFIRMATION_ENV = 'PANWRITE_ROUTING_CONFIRM_PAID';
 const DEFAULT_CASE_TIMEOUT_MS = 10 * 60 * 1000;
 const MAX_CAPTURE_BYTES = 128 * 1024 * 1024;
 const ROUTING_CONTROL_INSTRUCTIONS = [
   'This is a routing-only behavioral evaluation.',
-  'Identify the native WTF-P route or suggestion and load only the minimum routing resource the client normally requires.',
+  'Identify the native PanWrite route or suggestion and load only the minimum routing resource the client normally requires.',
   'Do not perform the requested academic or product task.',
   'Do not mutate files or version control, do not use a shell, and do not use the network.',
   'After the first route signal, return a brief route statement and stop.'
@@ -48,13 +48,13 @@ const PRIMARY_ROWS = Object.freeze([
   'clio-terra-primary'
 ]);
 const EXPECTED_SKILLS = Object.freeze([
-  'wtfp-deliver-research',
-  'wtfp-manage-project',
-  'wtfp-plan-section',
-  'wtfp-research-literature',
-  'wtfp-review-manuscript',
-  'wtfp-start-project',
-  'wtfp-write-section'
+  'panwrite-deliver-research',
+  'panwrite-manage-project',
+  'panwrite-plan-section',
+  'panwrite-research-literature',
+  'panwrite-review-manuscript',
+  'panwrite-start-project',
+  'panwrite-write-section'
 ]);
 
 // The sealed routing profile `clio` predates the rename of the native host; its
@@ -67,15 +67,15 @@ const GENERATED_ROOTS = PROJECTION_ROOTS.slice(1);
 const underRoot = (relative, roots) => roots.some(root => relative === root || relative.startsWith(`${root}/`));
 
 const GENERATED_INVENTORY_BINDINGS = Object.freeze([
-  ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
-  ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', `${NATIVE_TARGET_BY_PROFILE.clio}/plugin/.wtfp-generated.json`],
-  ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
-  ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
-  ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
-  ['copilot', 'vendors/copilot/plugins/wtfp/.wtfp-generated.json'],
-  ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json']
+  ['antigravity', 'vendors/antigravity/.panwrite-generated.json'],
+  ['claude', 'vendors/claude/.panwrite-generated.json'],
+  ['clio', `${NATIVE_TARGET_BY_PROFILE.clio}/plugin/.panwrite-generated.json`],
+  ['codex-marketplace', 'vendors/codex/.panwrite-generated.json'],
+  ['codex', 'vendors/codex/plugins/panwrite/.panwrite-generated.json'],
+  ['copilot-marketplace', 'vendors/copilot/.panwrite-generated.json'],
+  ['copilot', 'vendors/copilot/plugins/panwrite/.panwrite-generated.json'],
+  ['gemini', 'vendors/gemini/.panwrite-generated.json'],
+  ['opencode', 'vendors/opencode/.panwrite-generated.json']
 ]);
 
 const GENERATOR_SOURCE_PATHS = Object.freeze([
@@ -90,8 +90,8 @@ const GENERATOR_SOURCE_PATHS = Object.freeze([
 const SOURCE_PROJECTION_EXCLUSIONS = Object.freeze(new Set());
 
 const KNOWN_DEFAULTS = Object.freeze({
-  claude: '/home/akougkas/.local/share/claude/versions/2.1.251',
-  codex: '/home/akougkas/.codex/packages/standalone/releases/0.144.1-x86_64-unknown-linux-musl/bin/codex',
+  claude: path.join(os.homedir(), '.local/share/claude/versions/2.1.251'),
+  codex: path.join(os.homedir(), '.codex/packages/standalone/releases/0.144.1-x86_64-unknown-linux-musl/bin/codex'),
   clio: '/tmp/clio-v038-fixed-source.Xbdr8a/dist/cli/index.js',
   clioSource: '/tmp/clio-v038-fixed-source.Xbdr8a'
 });
@@ -99,7 +99,7 @@ const KNOWN_DEFAULTS = Object.freeze({
 const CLIENT_SURFACES = Object.freeze({
   claude: {
     clientName: 'Claude Code',
-    binaryEnv: 'WTFP_ROUTING_CLAUDE_BINARY',
+    binaryEnv: 'PANWRITE_ROUTING_CLAUDE_BINARY',
     expectedVersion: '2.1.251',
     expectedBinarySha256: 'fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7',
     versionPattern: /^2\.1\.251(?:\s|$)/u,
@@ -108,16 +108,16 @@ const CLIENT_SURFACES = Object.freeze({
   },
   codex: {
     clientName: 'Codex CLI',
-    binaryEnv: 'WTFP_ROUTING_CODEX_BINARY',
+    binaryEnv: 'PANWRITE_ROUTING_CODEX_BINARY',
     expectedVersion: '0.144.1',
     expectedBinarySha256: 'a96f944d1a596dbfb7fdd84f482be5c50e34b04bb371126840d873e4ebf26902',
     versionPattern: /^codex-cli 0\.144\.1(?:\s|$)/u,
     envelopeTarget: 'codex',
-    adapterRoot: 'vendors/codex/plugins/wtfp'
+    adapterRoot: 'vendors/codex/plugins/panwrite'
   },
   clio: {
     clientName: 'Clio Coder',
-    binaryEnv: 'WTFP_ROUTING_CLIO_BINARY',
+    binaryEnv: 'PANWRITE_ROUTING_CLIO_BINARY',
     expectedVersion: '0.3.8',
     expectedBinarySha256: 'f02f31c7480ac4f9532980f8df93e07816111626bdce9879e1ee9e98fd3ec162',
     expectedDistTreeSha256: '27472f9b7253dc6608d70fbe623e4953896a9f0899ead00aa5faad1c783acae7',
@@ -218,10 +218,10 @@ function usage() {
     '',
     'Options:',
     '  --row <matrix-row>       repeat to select rows (default: the three primary rows)',
-    '  --claude-binary <path>   exact Claude binary (or WTFP_ROUTING_CLAUDE_BINARY)',
-    '  --codex-binary <path>    exact Codex binary (or WTFP_ROUTING_CODEX_BINARY)',
-    '  --clio-binary <path>     exact fixed Clio entry (or WTFP_ROUTING_CLIO_BINARY)',
-    '  --clio-source <path>     exact coordinated source (or WTFP_ROUTING_CLIO_SOURCE)',
+    '  --claude-binary <path>   exact Claude binary (or PANWRITE_ROUTING_CLAUDE_BINARY)',
+    '  --codex-binary <path>    exact Codex binary (or PANWRITE_ROUTING_CODEX_BINARY)',
+    '  --clio-binary <path>     exact fixed Clio entry (or PANWRITE_ROUTING_CLIO_BINARY)',
+    '  --clio-source <path>     exact coordinated source (or PANWRITE_ROUTING_CLIO_SOURCE)',
     '  --timeout-minutes <n>    per-case paid timeout (default: 10)',
     '',
     'No mode means --dry-run. --dry-run and --prepare never call a model and never',
@@ -239,11 +239,11 @@ function parseArgs(argv, environment = process.env) {
     root: null,
     rows: [],
     binaries: {
-      claude: environment.WTFP_ROUTING_CLAUDE_BINARY || KNOWN_DEFAULTS.claude,
-      codex: environment.WTFP_ROUTING_CODEX_BINARY || KNOWN_DEFAULTS.codex,
-      clio: environment.WTFP_ROUTING_CLIO_BINARY || KNOWN_DEFAULTS.clio
+      claude: environment.PANWRITE_ROUTING_CLAUDE_BINARY || KNOWN_DEFAULTS.claude,
+      codex: environment.PANWRITE_ROUTING_CODEX_BINARY || KNOWN_DEFAULTS.codex,
+      clio: environment.PANWRITE_ROUTING_CLIO_BINARY || KNOWN_DEFAULTS.clio
     },
-    clioSource: environment.WTFP_ROUTING_CLIO_SOURCE || KNOWN_DEFAULTS.clioSource,
+    clioSource: environment.PANWRITE_ROUTING_CLIO_SOURCE || KNOWN_DEFAULTS.clioSource,
     timeoutMs: DEFAULT_CASE_TIMEOUT_MS
   };
   const modes = new Set(['--dry-run', '--prepare', '--execute']);
@@ -430,13 +430,13 @@ function assertCanonicalCommitAncestor(root, canonicalCommit) {
   const head = gitResult(root, ['rev-parse', 'HEAD']);
   const ancestor = commandResult('git', ['-C', root, 'merge-base', '--is-ancestor', canonicalCommit, head]);
   if (ancestor.exit_code !== 0) {
-    throw new Error(`canonical source commit ${canonicalCommit} is not an ancestor of WTF-P HEAD ${head}`);
+    throw new Error(`canonical source commit ${canonicalCommit} is not an ancestor of PanWrite HEAD ${head}`);
   }
   return head;
 }
 
 function verifyCanonicalSourceProjection(root, manifest) {
-  const canonicalCommit = manifest.wtfp_commit;
+  const canonicalCommit = manifest.panwrite_commit;
   const head = assertCanonicalCommitAncestor(root, canonicalCommit);
   const objectFormat = gitResult(root, ['rev-parse', '--show-object-format']);
   const expectedBindings = GENERATED_INVENTORY_BINDINGS.map(([target, inventoryPath]) => ({
@@ -538,7 +538,7 @@ function verifyCanonicalSourceProjection(root, manifest) {
     package_version: currentPackage.version
   }));
   return {
-    schema: 'wtfp.evaluation.canonical-source-projection/v1',
+    schema: 'panwrite.evaluation.canonical-source-projection/v1',
     canonical_commit: canonicalCommit,
     actual_head: head,
     ancestor_verified: true,
@@ -561,7 +561,7 @@ function repositoryIdentity(root, manifest) {
     canonical_source: canonicalSource
   };
   if (repository.commit !== canonicalSource.actual_head) {
-    throw new Error('WTF-P HEAD changed while canonical source identity was inspected');
+    throw new Error('PanWrite HEAD changed while canonical source identity was inspected');
   }
   return repository;
 }
@@ -569,7 +569,7 @@ function repositoryIdentity(root, manifest) {
 function assertRepositoryIdentity(expected, root, manifest) {
   const actual = repositoryIdentity(root, manifest);
   if (canonicalBytes(actual).compare(canonicalBytes(expected)) !== 0) {
-    throw new Error('WTF-P HEAD, dirty state, or canonical source projection changed during evaluation');
+    throw new Error('PanWrite HEAD, dirty state, or canonical source projection changed during evaluation');
   }
   return actual;
 }
@@ -653,7 +653,7 @@ function loadSuite(selectedRows = PRIMARY_ROWS) {
   const cases = readJson(casesFile);
   const explicit = readJson(explicitFile);
   const catalog = definitionCatalog(cases, explicit);
-  if (CLIENT_SURFACE_DOCUMENT.schema !== 'wtfp.evaluation.client-routing-surfaces/v1' ||
+  if (CLIENT_SURFACE_DOCUMENT.schema !== 'panwrite.evaluation.client-routing-surfaces/v1' ||
       CLIENT_SURFACE_DOCUMENT.version !== 1) {
     throw new Error('unsupported checked-in client routing surface contract');
   }
@@ -804,16 +804,16 @@ function profileSpecs(environment = process.env, normalHome = os.homedir(), incl
     ['clio-credentials', path.join(normalHome, '.config', 'clio-coder', 'credentials.yaml')]
   ];
   const credentialSources = [
-    ['claude-forward-source', environment.WTFP_ROUTING_CLAUDE_CREDENTIALS_SOURCE],
-    ['codex-forward-source', environment.WTFP_ROUTING_CODEX_CREDENTIALS_SOURCE],
-    ['clio-settings-forward-source', environment.WTFP_ROUTING_CLIO_SETTINGS_SOURCE],
-    ['clio-credentials-forward-source', environment.WTFP_ROUTING_CLIO_CREDENTIALS_SOURCE]
+    ['claude-forward-source', environment.PANWRITE_ROUTING_CLAUDE_CREDENTIALS_SOURCE],
+    ['codex-forward-source', environment.PANWRITE_ROUTING_CODEX_CREDENTIALS_SOURCE],
+    ['clio-settings-forward-source', environment.PANWRITE_ROUTING_CLIO_SETTINGS_SOURCE],
+    ['clio-credentials-forward-source', environment.PANWRITE_ROUTING_CLIO_CREDENTIALS_SOURCE]
   ];
   if (includeForwardSources) {
     specs.push(...credentialSources.filter(([, file]) => Boolean(file))
       .map(([label, file]) => [label, path.resolve(file)]));
   }
-  const extras = (environment.WTFP_ROUTING_NORMAL_PROFILE_PATHS || '')
+  const extras = (environment.PANWRITE_ROUTING_NORMAL_PROFILE_PATHS || '')
     .split(path.delimiter).filter(Boolean).map((file, index) => [`extra-${index + 1}`, path.resolve(file)]);
   specs.push(...extras);
   const labels = new Set();
@@ -914,7 +914,7 @@ function createRoot(requested) {
     fs.chmodSync(requested, 0o700);
     return requested;
   }
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-routing-matrix.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-routing-matrix.'));
   fs.chmodSync(root, 0o700);
   return root;
 }
@@ -1033,9 +1033,9 @@ function nativeCommands(client, binary, caseLayout) {
       ['version', binary.path, ['--version']],
       ['plugin-validate', binary.path, ['plugin', 'validate', '--strict', plugin]],
       ['marketplace-add', binary.path, ['plugin', 'marketplace', 'add', plugin, '--scope', 'user']],
-      ['plugin-install', binary.path, ['plugin', 'install', 'wtfp@wtfp', '--scope', 'user', '--yes']],
+      ['plugin-install', binary.path, ['plugin', 'install', 'panwrite@panwrite', '--scope', 'user', '--yes']],
       ['plugin-list', binary.path, ['plugin', 'list', '--json']],
-      ['plugin-details', binary.path, ['plugin', 'details', 'wtfp@wtfp']]
+      ['plugin-details', binary.path, ['plugin', 'details', 'panwrite@panwrite']]
     ];
   }
   if (client === 'codex') {
@@ -1043,7 +1043,7 @@ function nativeCommands(client, binary, caseLayout) {
     return [
       ['version', binary.path, ['--version']],
       ['marketplace-add', binary.path, ['plugin', 'marketplace', 'add', marketplace, '--json']],
-      ['plugin-add', binary.path, ['plugin', 'add', 'wtfp@wtfp', '--json']],
+      ['plugin-add', binary.path, ['plugin', 'add', 'panwrite@panwrite', '--json']],
       ['plugin-list', binary.path, ['plugin', 'list', '--json']],
       ['prompt-input', binary.path, [
         'debug', 'prompt-input', '-c', 'web_search="disabled"', '-c', 'memories.use_memories=false',
@@ -1065,10 +1065,10 @@ function nativeCommands(client, binary, caseLayout) {
       ['extension-list', node, [...prefix, 'extensions', 'list', '--all', '--json'], caseLayout.project],
       ['skills-list', node, [...prefix, 'skills', 'list', '--all', '--json'], caseLayout.project],
       ['agents-list', node, [...prefix, 'agents', '--all', '--json'], caseLayout.project],
-      ['playbook-plan-validate', node, [...prefix, 'playbook', 'validate', 'wtfp-plan-section', '--json'], controlProject],
-      ['playbook-plan-graph', node, [...prefix, 'playbook', 'graph', 'wtfp-plan-section', '--json'], controlProject],
-      ['playbook-draft-validate', node, [...prefix, 'playbook', 'validate', 'wtfp-draft-review', '--json'], controlProject],
-      ['playbook-draft-graph', node, [...prefix, 'playbook', 'graph', 'wtfp-draft-review', '--json'], controlProject]
+      ['playbook-plan-validate', node, [...prefix, 'playbook', 'validate', 'panwrite-plan-section', '--json'], controlProject],
+      ['playbook-plan-graph', node, [...prefix, 'playbook', 'graph', 'panwrite-plan-section', '--json'], controlProject],
+      ['playbook-draft-validate', node, [...prefix, 'playbook', 'validate', 'panwrite-draft-review', '--json'], controlProject],
+      ['playbook-draft-graph', node, [...prefix, 'playbook', 'graph', 'panwrite-draft-review', '--json'], controlProject]
     ];
   }
   throw new Error(`unsupported client ${client}`);
@@ -1087,27 +1087,27 @@ function validateNativePreflight(client, outputs, row) {
   if (client === 'claude') {
     const inventory = text('plugin-list');
     const details = text('plugin-details');
-    if (!inventory.includes('wtfp') || !details.includes('wtfp')) errors.push('Claude native plugin inventory omitted wtfp');
+    if (!inventory.includes('panwrite') || !details.includes('panwrite')) errors.push('Claude native plugin inventory omitted panwrite');
   } else if (client === 'codex') {
     const inventory = text('plugin-list');
     const promptInput = text('prompt-input');
-    if (!inventory.includes('wtfp@wtfp') && !inventory.includes('"wtfp"')) errors.push('Codex plugin is not installed and enabled');
+    if (!inventory.includes('panwrite@panwrite') && !inventory.includes('"panwrite"')) errors.push('Codex plugin is not installed and enabled');
     for (const skill of EXPECTED_SKILLS) {
-      if (!promptInput.includes(`wtf-p:${skill}`)) errors.push(`Codex prompt input omitted wtf-p:${skill}`);
+      if (!promptInput.includes(`panwrite:${skill}`)) errors.push(`Codex prompt input omitted panwrite:${skill}`);
     }
-    const fullSkillMarkers = (promptInput.match(/<!-- Generated by WTF-P/gu) || []).length;
-    if (fullSkillMarkers > 0) errors.push('Codex initial prompt unexpectedly disclosed full WTF-P skill bodies');
+    const fullSkillMarkers = (promptInput.match(/<!-- Generated by PanWrite/gu) || []).length;
+    if (fullSkillMarkers > 0) errors.push('Codex initial prompt unexpectedly disclosed full PanWrite skill bodies');
   } else if (client === 'clio') {
     const discovery = text('extension-discover');
     const list = text('extension-list');
-    if (!discovery.includes('"valid"') || !discovery.includes('wtfp')) errors.push('Clio discovery omitted a valid WTF-P candidate');
-    if (!list.includes('wtfp')) errors.push('Clio extension list omitted wtfp');
+    if (!discovery.includes('"valid"') || !discovery.includes('panwrite')) errors.push('Clio discovery omitted a valid PanWrite candidate');
+    if (!list.includes('panwrite')) errors.push('Clio extension list omitted panwrite');
     for (const skill of EXPECTED_SKILLS) {
       if (!text('skills-list').includes(skill)) errors.push(`Clio skill list omitted ${skill}`);
     }
-    for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
-      if (!text(`playbook-${playbook === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid":true') &&
-          !text(`playbook-${playbook === 'wtfp-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid": true')) {
+    for (const playbook of ['panwrite-plan-section', 'panwrite-draft-review']) {
+      if (!text(`playbook-${playbook === 'panwrite-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid":true') &&
+          !text(`playbook-${playbook === 'panwrite-plan-section' ? 'plan' : 'draft'}-validate`).includes('"valid": true')) {
         errors.push(`Clio playbook validation did not prove ${playbook} valid`);
       }
     }
@@ -1144,7 +1144,7 @@ function runNativePreflight(client, binary, row, caseLayout, environment) {
   }
   const validation = validateNativePreflight(client, outputs, row);
   const record = {
-    schema: 'wtfp.evaluation.routing-native-preflight/v1',
+    schema: 'panwrite.evaluation.routing-native-preflight/v1',
     client,
     case_id: path.basename(caseLayout.root).replace(/^\d+-/u, ''),
     valid: validation.valid,
@@ -1245,7 +1245,7 @@ function surfaceAssessment(row) {
 
 function buildDryPlan(options, suite, clients) {
   return {
-    schema: 'wtfp.evaluation.routing-plan/v1',
+    schema: 'panwrite.evaluation.routing-plan/v1',
     mode: options.mode,
     paid_model_calls: false,
     routing_manifest_sha256: suite.manifest_sha256,
@@ -1310,7 +1310,7 @@ function prepare(options, suite, clients, environment = process.env) {
       const childEnv = sanitizedEnvironment(layout.paths, environment);
       const invocation = clientInvocation(client, binary, row, layout, definition);
       const commandManifest = {
-        schema: 'wtfp.evaluation.routing-command/v1',
+        schema: 'panwrite.evaluation.routing-command/v1',
         row_id: row.id,
         case_id: definition.id,
         client,
@@ -1466,7 +1466,7 @@ function verifyPrepared(options, suite, clients, environment = process.env) {
     throw new Error('Clio source changed after preparation');
   }
   if (canonicalBytes(suite.repository).compare(canonicalBytes(prepared.repository)) !== 0) {
-    throw new Error('WTF-P HEAD, dirty state, or canonical source projection changed after preparation');
+    throw new Error('PanWrite HEAD, dirty state, or canonical source projection changed after preparation');
   }
   const profileNow = snapshotProfiles(profileSpecs(environment));
   const priorProfiles = prepared.normal_profile_hashes.map(item => ({ label: item.label, sha256: item.after_sha256 }));
@@ -1636,15 +1636,15 @@ function credentialBindings(client, paths, environment, caseRoot) {
     });
   };
   if (client === 'claude') {
-    add('WTFP_ROUTING_CLAUDE_CREDENTIALS_SOURCE', path.join(paths.CLAUDE_CONFIG_DIR, '.credentials.json'),
+    add('PANWRITE_ROUTING_CLAUDE_CREDENTIALS_SOURCE', path.join(paths.CLAUDE_CONFIG_DIR, '.credentials.json'),
       'Claude credential source');
   } else if (client === 'codex') {
-    add('WTFP_ROUTING_CODEX_CREDENTIALS_SOURCE', path.join(paths.CODEX_HOME, 'auth.json'),
+    add('PANWRITE_ROUTING_CODEX_CREDENTIALS_SOURCE', path.join(paths.CODEX_HOME, 'auth.json'),
       'Codex credential source');
   } else if (client === 'clio') {
-    add('WTFP_ROUTING_CLIO_SETTINGS_SOURCE', path.join(paths.CLIO_CODER_CONFIG_DIR, 'settings.yaml'),
+    add('PANWRITE_ROUTING_CLIO_SETTINGS_SOURCE', path.join(paths.CLIO_CODER_CONFIG_DIR, 'settings.yaml'),
       'Clio settings source');
-    add('WTFP_ROUTING_CLIO_CREDENTIALS_SOURCE', path.join(paths.CLIO_CODER_CONFIG_DIR, 'credentials.yaml'),
+    add('PANWRITE_ROUTING_CLIO_CREDENTIALS_SOURCE', path.join(paths.CLIO_CODER_CONFIG_DIR, 'credentials.yaml'),
       'Clio credential source');
   } else throw new Error(`unsupported credential client ${client}`);
   if (new Set(bindings.map(binding => binding.source)).size !== bindings.length) {
@@ -2312,7 +2312,7 @@ function textValues(value) {
 
 function normalizeSkill(value) {
   if (typeof value !== 'string') return null;
-  const match = value.match(/(?:wtf-p:)?(wtfp-(?:deliver-research|manage-project|plan-section|research-literature|review-manuscript|start-project|write-section))/u);
+  const match = value.match(/(?:panwrite:)?(panwrite-(?:deliver-research|manage-project|plan-section|research-literature|review-manuscript|start-project|write-section))/u);
   return match ? match[1] : null;
 }
 
@@ -2520,14 +2520,14 @@ function observeNativeTrace(client, events, receipt = null, definition = null) {
         observation.selector = { status: 'accepted', basis: ['exact Clio native expansion event'] };
         observation.route = {
           signal: 'selected', granularity: 'action', value: { ...routeExpected },
-          basis: ['exact Clio /wtfp action expansion event']
+          basis: ['exact Clio /panwrite action expansion event']
         };
         observation.arguments = { status: 'observed', value: definition.arguments };
       }
       const observedPaths = new Set([...resourceEnvelope.matchAll(/<file name="([^"]+)">/gu)]
         .map(resourceMatch => clioExpandedResourcePath(resourceMatch[1])).filter(Boolean));
       // Recognize current projections and retained compiler-v4 observations.
-      if ([4, 5].some(version => resourceEnvelope.includes(`Generated by WTF-P adapter compiler v${version} from protocol/actions/${routeExpected.action}`))) {
+      if ([4, 5].some(version => resourceEnvelope.includes(`Generated by PanWrite adapter compiler v${version} from protocol/actions/${routeExpected.action}`))) {
         observedPaths.add(`protocol/workflows/${routeExpected.action}.md`);
       }
       const actionContractLoaded = observedPaths.has(`protocol/actions/${routeExpected.action}.json`);
@@ -2762,7 +2762,7 @@ function evidenceClaim(root, file, summary) {
   return {
     locator: path.relative(absoluteRoot, absoluteFile).split(path.sep).join('/'),
     sha256: sha256(fs.readFileSync(absoluteFile)),
-    assessor: { kind: 'independent-tool', name: 'wtfp-routing-runner', version: '1' },
+    assessor: { kind: 'independent-tool', name: 'panwrite-routing-runner', version: '1' },
     summary
   };
 }
@@ -2885,7 +2885,7 @@ function runMetadata({
     protocol: {
       project_protocol_version: suite.manifest.project_protocol_version,
       adapter_compiler_version: suite.manifest.adapter_compiler_version,
-      wtfp_commit: suite.manifest.wtfp_commit,
+      panwrite_commit: suite.manifest.panwrite_commit,
       client_commit: row.client.commit,
       source_sha256: suite.envelopes[row.id].source_sha256
     },
@@ -2919,7 +2919,7 @@ function runMetadata({
 
 function observationDocument({ suite, row, run, observations, costEvidence }) {
   return {
-    schema: 'wtfp.evaluation.routing-observations/v1',
+    schema: 'panwrite.evaluation.routing-observations/v1',
     suite: {
       id: suite.manifest.id,
       version: suite.manifest.version,
@@ -3005,7 +3005,7 @@ async function executeCase({ options, suite, clients, environment, row, item, pr
   let artifactLeaks = [];
   try {
     writeJsonPrivate(attemptFile, {
-      schema: 'wtfp.evaluation.routing-model-attempt/v1',
+      schema: 'panwrite.evaluation.routing-model-attempt/v1',
       row_id: row.id,
       case_id: definition.id,
       armed_at: new Date().toISOString(),
@@ -3096,7 +3096,7 @@ async function executeCase({ options, suite, clients, environment, row, item, pr
   catch (error) { errors.push(error.message); }
 
   const record = {
-    schema: 'wtfp.evaluation.routing-case-execution/v1',
+    schema: 'panwrite.evaluation.routing-case-execution/v1',
     row_id: row.id,
     case_id: definition.id,
     started_from_session_nonce: item.session_nonce,
@@ -3174,7 +3174,7 @@ async function execute(options, suite, clients, environment = process.env) {
   const executionMarker = path.join(options.root, 'evidence', 'execution-started.json');
   const startedAt = new Date().toISOString();
   writeJsonPrivate(executionMarker, {
-    schema: 'wtfp.evaluation.routing-execution-marker/v1',
+    schema: 'panwrite.evaluation.routing-execution-marker/v1',
     started_at: startedAt,
     pid: process.pid,
     prepared_sha256: sha256(fs.readFileSync(path.join(options.root, 'evidence', PREPARED_FILE))),
@@ -3187,7 +3187,7 @@ async function execute(options, suite, clients, environment = process.env) {
   const profileList = profileSpecs(environment, os.homedir(), true);
   const profilesBefore = snapshotProfiles(profileList);
   const campaign = {
-    schema: 'wtfp.evaluation.routing-execution/v1',
+    schema: 'panwrite.evaluation.routing-execution/v1',
     started_at: startedAt,
     completed_at: null,
     root: options.root,
@@ -3273,7 +3273,7 @@ async function execute(options, suite, clients, environment = process.env) {
       if (!sessionIdsUnique) rowErrors.push('native session ids are missing or reused');
       const actualIdentity = resolveActualIdentity(row, caseResults);
       const rowAudit = {
-        schema: 'wtfp.evaluation.routing-row-audit/v1',
+        schema: 'panwrite.evaluation.routing-row-audit/v1',
         row_id: row.id,
         started_at: rowStartedAt,
         completed_at: new Date().toISOString(),

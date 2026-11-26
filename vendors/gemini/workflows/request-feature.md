@@ -1,10 +1,10 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: request-feature
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
-# Request a WTF-P feature
+# Request a PanWrite feature
 
 @protocol://project/README.md
 

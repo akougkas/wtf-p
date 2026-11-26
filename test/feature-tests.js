@@ -1,5 +1,5 @@
 /**
- * WTF-P v0.6 structural feature tests.
+ * PanWrite v0.6 structural feature tests.
  *
  * Runtime behavior, installer races, schemas, and deterministic generation are
  * covered by focused suites. This file protects the product-level feature set
@@ -62,7 +62,7 @@ function recursiveCount(relativePath, basename) {
   return count;
 }
 
-console.log(`=== Feature Tests for WTF-P ${packageJson.version} ===`);
+console.log(`=== Feature Tests for PanWrite ${packageJson.version} ===`);
 
 section('First-class agent hosts');
 const runtimeIds = ['claude', 'pancode', 'codex', 'copilot', 'gemini', 'opencode', 'antigravity'];
@@ -85,13 +85,13 @@ check(
   'obsolete Claude research MCP prototype has no deliverable files'
 );
 check(packageJson.files.includes('!vendors/claude/mcp/**'), 'npm archive excludes obsolete Claude MCP artifacts');
-const obsoleteClaudeSkillRoot = path.join(ROOT, 'vendors', 'claude', 'skills', 'wtfp');
+const obsoleteClaudeSkillRoot = path.join(ROOT, 'vendors', 'claude', 'skills', 'panwrite');
 check(
-  !fs.existsSync(obsoleteClaudeSkillRoot) || recursiveCount('vendors/claude/skills/wtfp') === 0,
+  !fs.existsSync(obsoleteClaudeSkillRoot) || recursiveCount('vendors/claude/skills/panwrite') === 0,
   'obsolete unowned Claude skill namespace has no deliverable files'
 );
 check(
-  packageJson.files.includes('!vendors/claude/skills/wtfp/**'),
+  packageJson.files.includes('!vendors/claude/skills/panwrite/**'),
   'npm archive excludes the obsolete unowned Claude skill namespace'
 );
 check(
@@ -102,7 +102,7 @@ check(
 section('Canonical protocol');
 const catalog = json('protocol/catalog.json');
 const tools = json('protocol/tools.json');
-check(catalog.schema === 'wtfp.catalog/v1', 'catalog is explicitly versioned');
+check(catalog.schema === 'panwrite.catalog/v1', 'catalog is explicitly versioned');
 // Counts derive from the catalog's own declaration and cross-check the
 // protocol tree; the literal lock lives in test/protocol-catalog.test.js.
 check(catalog.actions.length === catalog.counts.actions, `catalog exposes its declared ${catalog.counts.actions} stable actions`);
@@ -133,47 +133,47 @@ const roleCount = filesAt('protocol/roles', '.md').length;
 const skillCount = recursiveCount('protocol/skills', 'SKILL.md');
 const surfaces = {
   claude: { path: 'vendors/claude/commands', suffix: '.md' },
-  copilot: { path: 'vendors/copilot/plugins/wtfp/commands', suffix: '.md' },
-  gemini: { path: 'vendors/gemini/commands/wtfp', suffix: '.toml' },
-  opencode: { path: 'vendors/opencode/commands/wtfp', suffix: '.md' },
-  pancode: { path: 'pancode/plugin/dev.pancode/prompts/wtfp', suffix: '.md' }
+  copilot: { path: 'vendors/copilot/plugins/panwrite/commands', suffix: '.md' },
+  gemini: { path: 'vendors/gemini/commands/panwrite', suffix: '.toml' },
+  opencode: { path: 'vendors/opencode/commands/panwrite', suffix: '.md' },
+  pancode: { path: 'pancode/plugin/dev.pancode/prompts/panwrite', suffix: '.md' }
 };
 for (const [host, spec] of Object.entries(surfaces)) {
   check(filesAt(spec.path, spec.suffix).length === actionCount, `${host} exposes all ${actionCount} native commands`);
 }
-check(recursiveCount('vendors/codex/plugins/wtfp/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
-check(recursiveCount('vendors/copilot/plugins/wtfp/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/codex/plugins/panwrite/skills', 'SKILL.md') === skillCount, `Codex exposes all ${skillCount} native skills`);
+check(recursiveCount('vendors/copilot/plugins/panwrite/skills', 'SKILL.md') === skillCount, `Copilot exposes all ${skillCount} native skills`);
 check(recursiveCount('vendors/claude/skills', 'SKILL.md') === skillCount, `Claude exposes exactly the ${skillCount} inventory-owned native skills`);
 check(filesAt('vendors/claude/agents', '.md').length === roleCount, `Claude exposes all ${roleCount} native agents at the top level Claude Code discovers`);
 check(filesAt('vendors/antigravity/agents', '.md').length === roleCount, `Antigravity exposes all ${roleCount} native agents`);
 check(filesAt('vendors/gemini/agents', '.md').length === roleCount, `Gemini exposes all ${roleCount} native agents at the top level its loader reads`);
-check(filesAt('vendors/codex/plugins/wtfp/agents', '.toml').length === roleCount, `Codex exposes all ${roleCount} native TOML agents`);
+check(filesAt('vendors/codex/plugins/panwrite/agents', '.toml').length === roleCount, `Codex exposes all ${roleCount} native TOML agents`);
 check(filesAt('vendors/claude/output-styles', '.md').length === 1, 'Claude ships the academic writing output style');
 check(fs.existsSync(path.join(ROOT, 'vendors/claude/hooks/hooks.json')), 'Claude ships the write-guard hooks');
-check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/wtfp-project-state.md')), 'Antigravity ships the project-state rule');
+check(fs.existsSync(path.join(ROOT, 'vendors/antigravity/rules/panwrite-project-state.md')), 'Antigravity ships the project-state rule');
 check(recursiveCount('vendors/antigravity/skills', 'SKILL.md') === skillCount + actionCount - 2, `Antigravity exposes ${skillCount} router skills plus every action as an explicit skill`);
 
 section('PanCode-native integration');
-check(json('pancode/plugin/catalog.json').namespace === 'wtfp', 'the canonical plugin carries the WTF-P catalog');
-check(filesAt('pancode/plugin/dev.pancode/prompts/wtfp', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced PanCode prompts`);
+check(json('pancode/plugin/catalog.json').namespace === 'panwrite', 'the canonical plugin carries the PanWrite catalog');
+check(filesAt('pancode/plugin/dev.pancode/prompts/panwrite', '.md').length === actionCount, `the canonical plugin emits ${actionCount} namespaced PanCode prompts`);
 check(filesAt('pancode/plugin/dev.pancode/prompts', '.md').length === 0, 'the canonical plugin publishes no flat prompt aliases');
 check(filesAt('pancode/plugin/dev.pancode/agents', '.md').length === roleCount, `the canonical plugin exposes all ${roleCount} PanCode agents`);
 check(filesAt('pancode/plugin/dev.pancode/playbooks', '.md').length === 2, 'the canonical plugin exposes deterministic planning and writing playbooks');
 check(recursiveCount('pancode/plugin/skills', 'SKILL.md') === skillCount, `the canonical plugin discovers all ${skillCount} skills`);
-const pancodePrompt = read('pancode/plugin/dev.pancode/prompts/wtfp/new-paper.md');
+const pancodePrompt = read('pancode/plugin/dev.pancode/prompts/panwrite/new-paper.md');
 check(pancodePrompt.includes('${pluginRoot}'), 'PanCode resolves protocol resources through its plugin root');
 check(pancodePrompt.includes('$ARGUMENTS'), 'PanCode forwards invocation arguments');
-check(pancodePrompt.includes('extension_wtfp__record') &&
-  pancodePrompt.includes('Read an existing record first with `extension_wtfp__read_record`') &&
+check(pancodePrompt.includes('extension_panwrite__record') &&
+  pancodePrompt.includes('Read an existing record first with `extension_panwrite__read_record`') &&
   pancodePrompt.includes('The tool validates, bumps revisions and timestamps, commits under the project lock and reads back') &&
   pancodePrompt.includes('If desk tools are absent, follow `${pluginRoot}/workflows/new-paper.md` and `${pluginRoot}/project/README.md`'),
   'PanCode prompt validates records through the desk tool and retains its absence fallback');
 
 section('Marketplaces and lifecycle metadata');
-check(json('vendors/claude/.claude-plugin/marketplace.json').name === 'wtfp', 'Claude marketplace is native and namespaced');
-check(json('vendors/codex/.agents/plugins/marketplace.json').name === 'wtfp', 'Codex marketplace is native and namespaced');
-check(json('vendors/copilot/marketplace.json').name === 'wtfp', 'Copilot marketplace is native and namespaced');
-check(json('vendors/antigravity/plugin.json').name === 'wtfp', 'Antigravity plugin metadata is native and namespaced');
+check(json('vendors/claude/.claude-plugin/marketplace.json').name === 'panwrite', 'Claude marketplace is native and namespaced');
+check(json('vendors/codex/.agents/plugins/marketplace.json').name === 'panwrite', 'Codex marketplace is native and namespaced');
+check(json('vendors/copilot/marketplace.json').name === 'panwrite', 'Copilot marketplace is native and namespaced');
+check(json('vendors/antigravity/plugin.json').name === 'panwrite', 'Antigravity plugin metadata is native and namespaced');
 
 section('Safe installation and release posture');
 const installer = read('bin/install.js');
@@ -190,13 +190,13 @@ check(packageJson.scripts.prepack === 'npm run check:adapters', 'package creatio
 
 section('Repository-root marketplaces');
 const rootMarketplaces = {
-  '.claude-plugin/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source, target: 'vendors/claude/.claude-plugin/plugin.json' },
-  '.agents/plugins/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source.path, target: 'vendors/codex/plugins/wtfp/plugin.json' },
-  '.github/plugin/marketplace.json': { plugin: 'wtfp', source: (entry) => entry.source, target: 'vendors/copilot/plugins/wtfp/.claude-plugin/plugin.json' }
+  '.claude-plugin/marketplace.json': { plugin: 'panwrite', source: (entry) => entry.source, target: 'vendors/claude/.claude-plugin/plugin.json' },
+  '.agents/plugins/marketplace.json': { plugin: 'panwrite', source: (entry) => entry.source.path, target: 'vendors/codex/plugins/panwrite/plugin.json' },
+  '.github/plugin/marketplace.json': { plugin: 'panwrite', source: (entry) => entry.source, target: 'vendors/copilot/plugins/panwrite/.claude-plugin/plugin.json' }
 };
 for (const [file, expected] of Object.entries(rootMarketplaces)) {
   const marketplace = json(file);
-  check(marketplace.name === 'wtf-p', `${file} is the wtf-p marketplace`);
+  check(marketplace.name === 'panwrite', `${file} is the panwrite marketplace`);
   const entry = (marketplace.plugins || []).find((plugin) => plugin.name === expected.plugin);
   check(Boolean(entry), `${file} lists the ${expected.plugin} plugin`);
   const source = entry ? expected.source(entry) : '';

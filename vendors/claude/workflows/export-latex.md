@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: export-latex
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Export LaTeX
 
 @protocol://project/README.md
-@protocol://skills/wtfp-deliver-research/SKILL.md
-@protocol://skills/wtfp-deliver-research/references/actions.md
+@protocol://skills/panwrite-deliver-research/SKILL.md
+@protocol://skills/panwrite-deliver-research/references/actions.md
 
 ## Record contract
 
@@ -30,10 +30,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 The declared `tool.execute` effect authorises exactly one command, run from the package root the host resolves for this bundle:
 
 ```bash
-node protocol://tools/wtfp-tool.js [--offline] <command> [arguments]
+node protocol://tools/panwrite-tool.js [--offline] <command> [arguments]
 ```
 
-Run it with `list` first to read the declared commands, their arguments, their bounds, and the effects each one applies; `protocol://tools/README.md` carries the same table. A command whose effects include `network.*` performs outbound requests. Until network use has been approved for this run, pass `--offline` (or set `WTFP_TOOL_OFFLINE=1`), which makes the dispatcher refuse those commands instead of relying on prose restraint. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
+Run it with `list` first to read the declared commands, their arguments, their bounds, and the effects each one applies; `protocol://tools/README.md` carries the same table. A command whose effects include `network.*` performs outbound requests. Until network use has been approved for this run, pass `--offline` (or set `PANWRITE_TOOL_OFFLINE=1`), which makes the dispatcher refuse those commands instead of relying on prose restraint. Never execute another module in this package, never pass a logical `project://` or `panwrite://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
 
 ## Safety and completion
 

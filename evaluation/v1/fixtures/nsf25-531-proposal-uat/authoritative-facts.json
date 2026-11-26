@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.official-funding-opportunity-facts/v1",
+  "schema": "panwrite.evaluation.official-funding-opportunity-facts/v1",
   "fixture_id": "nsf25-531-proposal-uat",
   "fixture_version": 2,
   "document_type": "grant-proposal",

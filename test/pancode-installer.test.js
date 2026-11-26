@@ -11,7 +11,7 @@ const { detectInstallation } = require('../bin/lib/utils');
 const MANIFEST = require('../bin/lib/manifest');
 const { nativeEnvironment } = require('../bin/lib/native-registration');
 const ROOT = path.resolve(__dirname, '..');
-const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-pancode-installer-'));
+const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-pancode-installer-'));
 const fakeBin = path.join(scratch, 'bin');
 fs.mkdirSync(fakeBin);
 // Emulate PanCode's hub and extension lifecycles, not merely a successful
@@ -26,7 +26,7 @@ if(args[0]==='hub' && command==='list' && JSON.stringify(args)!==JSON.stringify(
 if((args[0]==='extensions' || command!=='list') && (!args.includes('--json') || (!args.includes('--user') && !args.includes('--project'))))throw Error('explicit scope and JSON required');
 const scope = args.includes('--project') ? 'project' : 'user';
 const config = scope === 'project' ? path.join(process.cwd(), '.pancode') : process.env.PANCODE_CONFIG_DIR;
-const base = path.join(config, 'plugins'), root = path.join(base, 'wtfp'), stateFile = path.join(base, 'state.json');
+const base = path.join(config, 'plugins'), root = path.join(base, 'panwrite'), stateFile = path.join(base, 'state.json');
 const read = () => fs.existsSync(stateFile) ? JSON.parse(fs.readFileSync(stateFile)) : {version:1,disabled:[],installed:{}};
 const save = state => { fs.mkdirSync(base,{recursive:true});fs.writeFileSync(stateFile,JSON.stringify(state)); };
 function digest(directory) {
@@ -36,69 +36,69 @@ function digest(directory) {
 }
 function entryFor(selectedScope) {
  const selectedConfig=selectedScope==='project'?path.join(process.cwd(),'.pancode'):process.env.PANCODE_CONFIG_DIR;
- const selectedRoot=path.join(selectedConfig,'plugins','wtfp'), sf=path.join(selectedConfig,'plugins','state.json');
+ const selectedRoot=path.join(selectedConfig,'plugins','panwrite'), sf=path.join(selectedConfig,'plugins','state.json');
  if(!fs.existsSync(selectedRoot))return null;
  const s=fs.existsSync(sf)?JSON.parse(fs.readFileSync(sf)):{installed:{},disabled:[]};
- const valid=s.installed.wtfp?.contentDigest===digest(selectedRoot),enabled=!s.disabled.includes('wtfp');
- return {id:'wtfp',kind:'plugin',trust:'trusted',version:JSON.parse(fs.readFileSync(path.join(selectedRoot,'plugin.json'))).version,scope:selectedScope,rootPath:selectedRoot,valid,enabled,compatible:true,loadable:valid&&enabled,diagnostics:valid?[]:[{type:'error',message:'unregistered/digest mismatch'}]};
+ const valid=s.installed.panwrite?.contentDigest===digest(selectedRoot),enabled=!s.disabled.includes('panwrite');
+ return {id:'panwrite',kind:'plugin',trust:'trusted',version:JSON.parse(fs.readFileSync(path.join(selectedRoot,'plugin.json'))).version,scope:selectedScope,rootPath:selectedRoot,valid,enabled,compatible:true,loadable:valid&&enabled,diagnostics:valid?[]:[{type:'error',message:'unregistered/digest mismatch'}]};
 }
 if(process.env.FAKE_PANCODE_LOG) fs.appendFileSync(process.env.FAKE_PANCODE_LOG, JSON.stringify({args,cwd:process.cwd(),config})+'\\n');
 if(args[0]==='extensions') {
- const ebase=path.join(config,'extensions'), eroot=path.join(ebase,'wtfp'), efile=path.join(ebase,'state.json');
+ const ebase=path.join(config,'extensions'), eroot=path.join(ebase,'panwrite'), efile=path.join(ebase,'state.json');
  const es=fs.existsSync(efile)?JSON.parse(fs.readFileSync(efile)):{installed:{},disabled:[]};
  const esave=()=>{fs.mkdirSync(ebase,{recursive:true});fs.writeFileSync(efile,JSON.stringify(es));};
  if(command==='install') {
   if(fs.existsSync(eroot))throw Error('extension destination already exists: '+eroot);
-  fs.cpSync(args[2],eroot,{recursive:true});es.installed.wtfp={contentDigest:digest(eroot)};esave();
+  fs.cpSync(args[2],eroot,{recursive:true});es.installed.panwrite={contentDigest:digest(eroot)};esave();
   if(process.env.FAKE_EXTENSION_FAILURE)process.exit(1);
-  console.log(JSON.stringify({extension:{id:'wtfp',scope,rootPath:eroot},diagnostics:[]}));
+  console.log(JSON.stringify({extension:{id:'panwrite',scope,rootPath:eroot},diagnostics:[]}));
  } else if(command==='list') {
   if(process.env.FAKE_EXTENSIONS_JSON){console.log(process.env.FAKE_EXTENSIONS_JSON);process.exit(0);}
-  const valid=fs.existsSync(eroot)&&es.installed.wtfp?.contentDigest===digest(eroot);
-  console.log(JSON.stringify({extensions:fs.existsSync(eroot)?[{id:'wtfp',plugin:'wtfp',scope,rootPath:eroot,valid,enabled:!es.disabled.includes('wtfp'),diagnostics:valid?[]:[{type:'error',message:'digest mismatch'}]}]:[]}));
+  const valid=fs.existsSync(eroot)&&es.installed.panwrite?.contentDigest===digest(eroot);
+  console.log(JSON.stringify({extensions:fs.existsSync(eroot)?[{id:'panwrite',plugin:'panwrite',scope,rootPath:eroot,valid,enabled:!es.disabled.includes('panwrite'),diagnostics:valid?[]:[{type:'error',message:'digest mismatch'}]}]:[]}));
  } else if(command==='remove') {
-  if(!fs.existsSync(eroot)){console.log(JSON.stringify({diagnostics:[{type:'error',message:'extension wtfp is not installed'}]}));process.exit(1);}
-  fs.rmSync(eroot,{recursive:true,force:true});delete es.installed.wtfp;esave();
-  console.log(JSON.stringify({removed:{id:'wtfp',scope,path:eroot},diagnostics:[]}));
+  if(!fs.existsSync(eroot)){console.log(JSON.stringify({diagnostics:[{type:'error',message:'extension panwrite is not installed'}]}));process.exit(1);}
+  fs.rmSync(eroot,{recursive:true,force:true});delete es.installed.panwrite;esave();
+  console.log(JSON.stringify({removed:{id:'panwrite',scope,path:eroot},diagnostics:[]}));
  } else throw Error('unexpected extensions command '+args.join(' '));
  process.exit(0);
 }
 const state=read();
 // PanCode refuses a bare name a plugin and an extension share once both exist in a scope.
-const ref=args[2], extensionRoot=path.join(config,'extensions','wtfp');
-if(['inspect','remove','enable','disable'].includes(command)&&ref==='wtfp'&&fs.existsSync(extensionRoot)){console.log(JSON.stringify({ok:false,error:'ambiguous pack: wtfp; use extension:wtfp or plugin:wtfp'}));process.exit(1);}
+const ref=args[2], extensionRoot=path.join(config,'extensions','panwrite');
+if(['inspect','remove','enable','disable'].includes(command)&&ref==='panwrite'&&fs.existsSync(extensionRoot)){console.log(JSON.stringify({ok:false,error:'ambiguous pack: panwrite; use extension:panwrite or plugin:panwrite'}));process.exit(1);}
 if(command==='install') {
  if(fs.existsSync(root)&&!args.includes('--force'))throw Error('hub destination already exists: '+root);
  fs.rmSync(root,{recursive:true,force:true});
  fs.cpSync(args[2],root,{recursive:true});
- const previouslyInstalled=Boolean(state.installed.wtfp);
- state.installed.wtfp={installedAt:new Date().toISOString(),source:args[2],contentDigest:digest(root)};
- if(!previouslyInstalled)state.disabled=state.disabled.filter(id=>id!=='wtfp');save(state);
- if(process.env.FAKE_RECEIPT_FAILURE)fs.mkdirSync(path.join(config,'.wtfp-version'));
+ const previouslyInstalled=Boolean(state.installed.panwrite);
+ state.installed.panwrite={installedAt:new Date().toISOString(),source:args[2],contentDigest:digest(root)};
+ if(!previouslyInstalled)state.disabled=state.disabled.filter(id=>id!=='panwrite');save(state);
+ if(process.env.FAKE_RECEIPT_FAILURE)fs.mkdirSync(path.join(config,'.panwrite-version'));
  if(process.env.FAKE_PARTIAL_FAILURE)process.exit(1);
  if(process.env.FAKE_CONCURRENT_EDIT){fs.writeFileSync(path.join(root,'concurrent-note.txt'),'keep concurrent work');process.exit(1);}
  if(process.env.FAKE_VERIFY_FAILURE)fs.writeFileSync(path.join(base,'fail-next-inspect'),'');
- console.log(JSON.stringify({ok:true,confirmed:true,id:'wtfp',path:root,sha256:digest(root),writes:[{ref:'plugin:wtfp',path:root,sha256:digest(root),sourceUrl:args[2]}],results:[{}]}));
+ console.log(JSON.stringify({ok:true,confirmed:true,id:'panwrite',path:root,sha256:digest(root),writes:[{ref:'plugin:panwrite',path:root,sha256:digest(root),sourceUrl:args[2]}],results:[{}]}));
 } else if(command==='list') {
  const installed=[];
  for(const selectedScope of ['user','project']) { const entry=entryFor(selectedScope); if(entry)installed.push(entry); }
- const entry={kind:'plugin',name:'wtfp',description:'Writing workflows',sourceUrl:root,origin:'installed',installed};
+ const entry={kind:'plugin',name:'panwrite',description:'Writing workflows',sourceUrl:root,origin:'installed',installed};
  // The catalog may also contain packages with no installed copies.
  const available={kind:'plugin',name:'available-only',description:'Available package',sourceUrl:'/catalog/available',origin:'catalog',installed:[]};
  let listing={entries:[available,entry],diagnostics:[]};
  if(process.env.FAKE_LIST_JSON)listing=JSON.parse(process.env.FAKE_LIST_JSON);
- if(process.env.FAKE_REMOVE_RESIDUE && fs.existsSync(path.join(base,'removed')))entry.installed.push({id:'wtfp',kind:'plugin',scope,rootPath:root,valid:false,enabled:true,diagnostics:[]});
+ if(process.env.FAKE_REMOVE_RESIDUE && fs.existsSync(path.join(base,'removed')))entry.installed.push({id:'panwrite',kind:'plugin',scope,rootPath:root,valid:false,enabled:true,diagnostics:[]});
  console.log(JSON.stringify(listing));
 } else if(command==='inspect') {
  if(fs.existsSync(path.join(base,'fail-next-inspect'))){fs.unlinkSync(path.join(base,'fail-next-inspect'));process.exit(1);}
  const entry=entryFor(scope);
- if(!entry){console.log(JSON.stringify({ok:false,error:'plugin not installed: wtfp'}));process.exit(1);}
+ if(!entry){console.log(JSON.stringify({ok:false,error:'plugin not installed: panwrite'}));process.exit(1);}
  console.log(JSON.stringify(process.env.FAKE_INSPECT_JSON?JSON.parse(process.env.FAKE_INSPECT_JSON):entry));
 } else if(command==='remove') {
  if(process.env.FAKE_REMOVE_NOOP){console.log(JSON.stringify({ok:true}));process.exit(0);}
- fs.rmSync(root,{recursive:true,force:true});delete state.installed.wtfp;state.disabled=state.disabled.filter(id=>id!=='wtfp');save(state);
+ fs.rmSync(root,{recursive:true,force:true});delete state.installed.panwrite;state.disabled=state.disabled.filter(id=>id!=='panwrite');save(state);
  if(process.env.FAKE_REMOVE_RESIDUE)fs.writeFileSync(path.join(base,'removed'),'');
- console.log(JSON.stringify({ok:true,removed:'plugin:wtfp'}));
+ console.log(JSON.stringify({ok:true,removed:'plugin:panwrite'}));
 } else throw Error('unexpected native command '+args.join(' '));
 `, { mode: 0o755 });
 let passed = 0;
@@ -119,12 +119,12 @@ function calls(ctx) { return fs.readFileSync(ctx.env.FAKE_PANCODE_LOG,'utf8').tr
 function hubCalls(ctx) { return calls(ctx).filter(c=>c.args[0]==='hub'); }
 function extensions(ctx) { return calls(ctx).filter(c=>c.args[0]==='extensions'); }
 function verifyReceipt(ctx) {
- const receipt=JSON.parse(fs.readFileSync(path.join(ctx.target,'.wtfp-version')));
+ const receipt=JSON.parse(fs.readFileSync(path.join(ctx.target,'.panwrite-version')));
  assert.strictEqual(receipt.schemaVersion,2);assert.strictEqual(receipt.runtime,'pancode');
  assert.ok(receipt.files.length>0);
- for(const root of ['plugins/wtfp/','extensions/wtfp/']) assert.ok(receipt.files.some(f=>f.path.startsWith(root)),`receipt owns nothing under ${root}`);
+ for(const root of ['plugins/panwrite/','extensions/panwrite/']) assert.ok(receipt.files.some(f=>f.path.startsWith(root)),`receipt owns nothing under ${root}`);
  for(const item of receipt.files) {
-  assert.ok(item.path.startsWith('plugins/wtfp/')||item.path.startsWith('extensions/wtfp/'));
+  assert.ok(item.path.startsWith('plugins/panwrite/')||item.path.startsWith('extensions/panwrite/'));
   assert.strictEqual(sha256Buffer(fs.readFileSync(path.join(ctx.target,item.path))),item.sha256);
  }
  assert.ok(!receipt.files.some(f=>f.path==='plugins/state.json'||f.path==='extensions/state.json'));
@@ -158,13 +158,13 @@ try {
   delete env.PANCODE_CONFIG_DIR;delete env.PANCODE_HOME;
   const result=spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env,encoding:'utf8'});
   ok(result);
-  assert.ok(fs.existsSync(path.join(target,'plugins/wtfp/plugin.json')),'bundle must land under $XDG_CONFIG_HOME/pancode');
+  assert.ok(fs.existsSync(path.join(target,'plugins/panwrite/plugin.json')),'bundle must land under $XDG_CONFIG_HOME/pancode');
   assert.ok(!fs.existsSync(path.join(cwd,'.config')),'must not fall back to ~/.config when XDG_CONFIG_HOME is set');
   const ctx={cwd,target,env};
   assert.strictEqual(verifyReceipt(ctx).scope,'user');
   for(const call of calls(ctx)) assert.strictEqual(call.config,target,'native CLI must be pointed at the same profile');
   const removal=spawnSync(process.execPath,[path.join(ROOT,'bin','uninstall.js'),'--pancode','--yes'],{cwd,env,encoding:'utf8'});ok(removal);
-  assert.ok(!fs.existsSync(path.join(target,'plugins/wtfp')));
+  assert.ok(!fs.existsSync(path.join(target,'plugins/panwrite')));
  });
  test('PANCODE_HOME selects <home>/config unless PANCODE_CONFIG_DIR names the root',()=>{
   const cwd=path.join(scratch,'pancode-home');fs.mkdirSync(cwd);
@@ -173,10 +173,10 @@ try {
   delete env.PANCODE_CONFIG_DIR;
   const installer=(extra)=>spawnSync(process.execPath,[path.join(ROOT,'bin','install.js'),'install','pancode','--advanced','--force'],{cwd,env:{...env,...extra},encoding:'utf8'});
   ok(installer({}));
-  for(const root of ['plugins/wtfp/plugin.json','extensions/wtfp/pancode-extension.yaml']) assert.ok(fs.existsSync(path.join(home,'config',root)),`missing ${root} under PANCODE_HOME/config`);
+  for(const root of ['plugins/panwrite/plugin.json','extensions/panwrite/pancode-extension.yaml']) assert.ok(fs.existsSync(path.join(home,'config',root)),`missing ${root} under PANCODE_HOME/config`);
   assert.ok(!fs.existsSync(path.join(cwd,'xdg','pancode')),'PANCODE_HOME must win over XDG_CONFIG_HOME');
   ok(installer({PANCODE_CONFIG_DIR:explicit}));
-  assert.ok(fs.existsSync(path.join(explicit,'plugins/wtfp/plugin.json')),'PANCODE_CONFIG_DIR must win over PANCODE_HOME');
+  assert.ok(fs.existsSync(path.join(explicit,'plugins/panwrite/plugin.json')),'PANCODE_CONFIG_DIR must win over PANCODE_HOME');
  });
  test('the removed clio target and --clio flag are refused as unknown',()=>{
   const ctx=context('removed-target');
@@ -190,189 +190,189 @@ try {
  test('missing binary stages the canonical plugin with a v2 receipt and explicit activation instructions',()=>{
   const ctx=context('pending');const result=install(ctx,{PATH:''});ok(result);
   const pendingText=result.stdout+result.stderr;
-  assert.match(pendingText,/Activation is pending: once pancode is on PATH, re-run npx wtf-p install pancode --config-dir '.*' from this directory to register the user-scope plugin/);
+  assert.match(pendingText,/Activation is pending: once pancode is on PATH, re-run npx @panstudio\/panwrite install pancode --config-dir '.*' from this directory to register the user-scope plugin/);
   assert.ok(!/(?:plugins|hub) install/.test(pendingText),'must not tell the operator to run hub install against the managed root');
-  assert.ok(fs.existsSync(path.join(ctx.target,'plugins/wtfp/plugin.json')));
-  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/pancode-extension.yaml')));
+  assert.ok(fs.existsSync(path.join(ctx.target,'plugins/panwrite/plugin.json')));
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/panwrite/pancode-extension.yaml')));
   assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/state.json')));
   assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/state.json')));verifyReceipt(ctx);
   ok(run(ctx,'uninstall.js',['--pancode','--config-dir',ctx.target,'--yes'],{PATH:''}));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/panwrite')));
  });
  for(const project of [false,true]) test(`native ${project?'project':'user'} install/inspect/remove preserves other registrations`,()=>{
   const ctx=context(project?'project':'user',project);fs.mkdirSync(path.join(ctx.target,'plugins'),{recursive:true});
   const other={installedAt:'2026-09-01T00:00:00Z',source:'/other',contentDigest:'a'.repeat(64)};
   fs.writeFileSync(path.join(ctx.target,'plugins/state.json'),JSON.stringify({version:1,disabled:['other'],installed:{other}}));
   ok(install(ctx));assert.strictEqual(verifyReceipt(ctx).scope,project?'project':'custom');assert.deepStrictEqual(state(ctx).installed.other,other);
-  assert.ok(state(ctx).installed.wtfp.contentDigest);
+  assert.ok(state(ctx).installed.panwrite.contentDigest);
   const detected=detectInstallation(ctx.target);
   assert.strictEqual(detected.partial,false);
   assert.strictEqual(detected.hasCommands,true);assert.strictEqual(detected.hasSkills,true);assert.strictEqual(detected.hasAgents,true);
   const nativeInstall=hubCalls(ctx).find(c=>c.args[1]==='install');
   assert.ok(nativeInstall.args.includes(project?'--project':'--user'));assert.ok(!nativeInstall.args.includes('--force'));
-  assert.ok(calls(ctx).some(c=>JSON.stringify(c.args)===JSON.stringify(['hub','inspect','plugin:wtfp',project?'--project':'--user','--json'])));
+  assert.ok(calls(ctx).some(c=>JSON.stringify(c.args)===JSON.stringify(['hub','inspect','plugin:panwrite',project?'--project':'--user','--json'])));
   // The desk is a second, separate PanCode install that follows the plugin's.
   const desk=extensions(ctx).find(c=>c.args[1]==='install');
   const log=calls(ctx);assert.ok(log.findIndex(c=>c.args[0]==='extensions')>log.findIndex(c=>c.args[0]==='hub'&&c.args[1]==='install'));
   assert.ok(desk.args.includes(project?'--project':'--user'));assert.ok(!desk.args.includes('--force'));
-  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/pancode-extension.yaml')));
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/panwrite/pancode-extension.yaml')));
   ok(install(ctx));assert.strictEqual(hubCalls(ctx).filter(c=>c.args[1]==='install').length,1,'unchanged active install must be idempotent');
   assert.strictEqual(extensions(ctx).filter(c=>c.args[1]==='install').length,1,'unchanged active extension must be idempotent');
-  ok(uninstall(project?{...ctx,cwd:scratch}:ctx));assert.ok(!state(ctx).installed.wtfp);assert.deepStrictEqual(state(ctx).installed.other,other);
+  ok(uninstall(project?{...ctx,cwd:scratch}:ctx));assert.ok(!state(ctx).installed.panwrite);assert.deepStrictEqual(state(ctx).installed.other,other);
   assert.deepStrictEqual(state(ctx).disabled,['other']);assert.ok(hubCalls(ctx).some(c=>c.args[1]==='remove'));
-  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
+  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/panwrite')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
  });
  test('user registration and removal select the user copy while a project copy coexists',()=>{
   const user=context('coexist');
   const project={...user,target:path.join(user.cwd,'.pancode')};
   ok(install(project));
-  const projectReceipt=fs.readFileSync(path.join(project.target,'.wtfp-version'));
+  const projectReceipt=fs.readFileSync(path.join(project.target,'.panwrite-version'));
   const projectState=fs.readFileSync(path.join(project.target,'plugins/state.json'));
   ok(install(user));verifyReceipt(user);verifyReceipt(project);
   assert.ok(calls(user).some(c=>c.args[1]==='inspect'&&c.args.includes('--user')));
   ok(uninstall(user));
-  assert.ok(!fs.existsSync(path.join(user.target,'plugins/wtfp')));
-  assert.ok(projectReceipt.equals(fs.readFileSync(path.join(project.target,'.wtfp-version'))));
+  assert.ok(!fs.existsSync(path.join(user.target,'plugins/panwrite')));
+  assert.ok(projectReceipt.equals(fs.readFileSync(path.join(project.target,'.panwrite-version'))));
   assert.ok(projectState.equals(fs.readFileSync(path.join(project.target,'plugins/state.json'))));
   verifyReceipt(project);ok(uninstall(project));
  });
  for(const project of [false,true]) test(`disabled ${project?'project':'user'} copies remain disabled through idempotence and re-registration`,()=>{
   const ctx=context(project?'disabled-project':'disabled-user',project);ok(install(ctx));
   const file=path.join(ctx.target,'plugins/state.json'), saved=state(ctx);
-  saved.disabled.push('wtfp');fs.writeFileSync(file,JSON.stringify(saved));
+  saved.disabled.push('panwrite');fs.writeFileSync(file,JSON.stringify(saved));
   const before=fs.readFileSync(file),result=install(ctx);ok(result);
-  assert.match(result.stdout+result.stderr,new RegExp('hub enable plugin:wtfp --'+(project?'project':'user')));
+  assert.match(result.stdout+result.stderr,new RegExp('hub enable plugin:panwrite --'+(project?'project':'user')));
   assert.ok(before.equals(fs.readFileSync(file)),'idempotence must not change disabled state');
-  saved.installed.wtfp.contentDigest='0'.repeat(64);fs.writeFileSync(file,JSON.stringify(saved));
+  saved.installed.panwrite.contentDigest='0'.repeat(64);fs.writeFileSync(file,JSON.stringify(saved));
   const repaired=install(ctx);ok(repaired);
   assert.match(repaired.stdout+repaired.stderr,/installed but disabled/);
-  assert.ok(state(ctx).disabled.includes('wtfp'));verifyReceipt(ctx);
+  assert.ok(state(ctx).disabled.includes('panwrite'));verifyReceipt(ctx);
   assert.strictEqual(hubCalls(ctx).filter(c=>c.args[1]==='install').length,2);
   ok(uninstall(ctx));
  });
  test('available catalog entries and installed copies of other kinds never count as registration',()=>{
   const ctx=context('catalog-only');
-  const copy={id:'wtfp',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[]};
-  const listing={entries:[{kind:'plugin',name:'wtfp',...copy,installed:[]},{kind:'skill',name:'wtfp',installed:[copy]}],diagnostics:[]};
+  const copy={id:'panwrite',scope:'user',rootPath:path.join(ctx.target,'plugins/panwrite'),valid:true,enabled:true,diagnostics:[]};
+  const listing={entries:[{kind:'plugin',name:'panwrite',...copy,installed:[]},{kind:'skill',name:'panwrite',installed:[copy]}],diagnostics:[]};
   ok(install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)}));
   assert.strictEqual(hubCalls(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);
   ok(uninstall(ctx));
  });
  for(const coordinate of ['id','scope','rootPath']) test(`installed copy with a different ${coordinate} does not authorize registration`,()=>{
   const ctx=context('different-'+coordinate);
-  const copy={id:'wtfp',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[]};
-  copy[coordinate]=coordinate==='id'?'other':coordinate==='scope'?'project':path.join(ctx.cwd,'foreign','wtfp');
+  const copy={id:'panwrite',scope:'user',rootPath:path.join(ctx.target,'plugins/panwrite'),valid:true,enabled:true,diagnostics:[]};
+  copy[coordinate]=coordinate==='id'?'other':coordinate==='scope'?'project':path.join(ctx.cwd,'foreign','panwrite');
   const listing={entries:[{kind:'plugin',name:copy.id,installed:[copy]}],diagnostics:[]};
   ok(install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)}));
   assert.strictEqual(hubCalls(ctx).filter(c=>c.args[1]==='install').length,1);verifyReceipt(ctx);ok(uninstall(ctx));
  });
  const malformedListings=[null,{}, {plugins:[]},{entries:[],diagnostics:null},
-  {entries:[null],diagnostics:[]},{entries:[{kind:'plugin',name:'wtfp'}],diagnostics:[]},
-  ...[null,{}, {id:'wtfp',scope:'user',rootPath:'relative',valid:true,enabled:true,diagnostics:[]}].map(copy=>({entries:[{kind:'plugin',name:'wtfp',installed:[copy]}],diagnostics:[]}))];
+  {entries:[null],diagnostics:[]},{entries:[{kind:'plugin',name:'panwrite'}],diagnostics:[]},
+  ...[null,{}, {id:'panwrite',scope:'user',rootPath:'relative',valid:true,enabled:true,diagnostics:[]}].map(copy=>({entries:[{kind:'plugin',name:'panwrite',installed:[copy]}],diagnostics:[]}))];
  malformedListings.forEach((listing,index)=>test(`malformed hub JSON fails closed before native mutation (${index})`,()=>{
   const ctx=context('malformed-'+index),result=install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)});
   assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/PanCode hub list/);
   assert.ok(calls(ctx).every(c=>c.args[1]==='list'));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
  }));
  test('duplicate matching installed copies fail closed',()=>{
   const ctx=context('duplicates');
-  const copy={id:'wtfp',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[]};
-  const listing={entries:[{kind:'plugin',name:'wtfp',installed:[copy,copy]}],diagnostics:[]};
+  const copy={id:'panwrite',scope:'user',rootPath:path.join(ctx.target,'plugins/panwrite'),valid:true,enabled:true,diagnostics:[]};
+  const listing={entries:[{kind:'plugin',name:'panwrite',installed:[copy,copy]}],diagnostics:[]};
   const result=install(ctx,{FAKE_LIST_JSON:JSON.stringify(listing)});
   assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/duplicate installed plugin identities/);
   assert.ok(calls(ctx).every(c=>c.args[1]==='list'));
  });
  for(const coordinate of ['id','scope','rootPath','valid','diagnostics','enabled']) test(`inspect verifies exact installed ${coordinate} before accepting registration`,()=>{
   const ctx=context('inspect-'+coordinate);
-  const copy={id:'wtfp',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[]};
+  const copy={id:'panwrite',scope:'user',rootPath:path.join(ctx.target,'plugins/panwrite'),valid:true,enabled:true,diagnostics:[]};
   const wrong={id:'other',scope:'project',rootPath:path.join(ctx.cwd,'foreign'),valid:false,diagnostics:[{type:'error',message:'invalid'}],enabled:'false'};
   copy[coordinate]=wrong[coordinate];
   const result=install(ctx,{FAKE_INSPECT_JSON:JSON.stringify(copy)});
-  assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/exact WTF-P plugin/);
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
-  assert.ok(!state(ctx).installed.wtfp);assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
+  assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/exact PanWrite plugin/);
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
+  assert.ok(!state(ctx).installed.panwrite);assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
  });
  test('a project trust gate registers and names the trust command without granting it',()=>{
   const ctx=context('trust-gate');
   const gate={type:'warning',message:'project plugins are not trusted for this workspace and are not loaded; review with pancode config trust plugins, then run /reload hub',path:path.join(ctx.target,'plugins/state.json')};
-  const copy={id:'wtfp',kind:'plugin',scope:'user',rootPath:path.join(ctx.target,'plugins/wtfp'),valid:true,enabled:true,diagnostics:[gate]};
+  const copy={id:'panwrite',kind:'plugin',scope:'user',rootPath:path.join(ctx.target,'plugins/panwrite'),valid:true,enabled:true,diagnostics:[gate]};
   const result=install(ctx,{FAKE_INSPECT_JSON:JSON.stringify(copy)});ok(result);
-  assert.match(result.stdout+result.stderr,/until you trust its package state; WTF-P does not grant that\. Review it with pancode config trust plugins/);
+  assert.match(result.stdout+result.stderr,/until you trust its package state; PanWrite does not grant that\. Review it with pancode config trust plugins/);
   verifyReceipt(ctx);assert.ok(!calls(ctx).some(c=>c.args.includes('trust')),'the installer must never run config trust');
   const other=context('other-warning');
-  const warned={...copy,rootPath:path.join(other.target,'plugins/wtfp'),diagnostics:[{type:'warning',message:'manifest declares an unknown resource'}]};
+  const warned={...copy,rootPath:path.join(other.target,'plugins/panwrite'),diagnostics:[{type:'warning',message:'manifest declares an unknown resource'}]};
   const refused=install(other,{FAKE_INSPECT_JSON:JSON.stringify(warned)});
-  assert.notStrictEqual(refused.status,0);assert.match(refused.stdout+refused.stderr,/exact WTF-P plugin/);
-  assert.ok(!fs.existsSync(path.join(other.target,'plugins/wtfp')));
+  assert.notStrictEqual(refused.status,0);assert.match(refused.stdout+refused.stderr,/exact PanWrite plugin/);
+  assert.ok(!fs.existsSync(path.join(other.target,'plugins/panwrite')));
  });
  test('native verification failure rolls back created files and shared registration',()=>{
   const ctx=context('verify-failure');const result=install(ctx,{FAKE_VERIFY_FAILURE:'1'});assert.notStrictEqual(result.status,0,result.stdout+result.stderr);
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
-  assert.ok(!state(ctx).installed.wtfp);
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
+  assert.ok(!state(ctx).installed.panwrite);
  });
  test('receipt failure compensates native registration before rolling back file identities',()=>{
   const ctx=context('receipt-failure');const result=install(ctx,{FAKE_RECEIPT_FAILURE:'1'});assert.notStrictEqual(result.status,0);
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
   assert.ok(calls(ctx).some(c=>c.args[1]==='remove'));
  });
  test('existing plugin retains its receipt path when the native binary disappears',()=>{
   const ctx=context('plugin-offline');ok(install(ctx));const original=state(ctx);
   const pending=install(ctx,{PATH:''});ok(pending);
-  assert.match(pending.stdout+pending.stderr,/Activation is pending: once pancode is on PATH, re-run npx wtf-p install pancode/);
-  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/wtfp/pancode-extension.yaml')));verifyReceipt(ctx);
+  assert.match(pending.stdout+pending.stderr,/Activation is pending: once pancode is on PATH, re-run npx @panstudio\/panwrite install pancode/);
+  assert.ok(fs.existsSync(path.join(ctx.target,'extensions/panwrite/pancode-extension.yaml')));verifyReceipt(ctx);
   ok(run(ctx,'uninstall.js',['--pancode','--config-dir',ctx.target,'--yes'],{PATH:''}));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));assert.deepStrictEqual(state(ctx),original);
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));assert.deepStrictEqual(state(ctx),original);
  });
  test('partial native installation is compensated',()=>{
   const ctx=context('partial-native');const result=install(ctx,{FAKE_PARTIAL_FAILURE:'1'});
-  assert.notStrictEqual(result.status,0);assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));
-  assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
+  assert.notStrictEqual(result.status,0);assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));
+  assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
  });
  test('concurrent native content is preserved with explicit recovery diagnostics',()=>{
   const ctx=context('concurrent-native');const result=install(ctx,{FAKE_CONCURRENT_EDIT:'1'});
   assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/changed concurrently.*recovery tree preserved/);
-  assert.strictEqual(fs.readFileSync(path.join(ctx.target,'plugins/wtfp/concurrent-note.txt'),'utf8'),'keep concurrent work');
-  assert.ok(fs.readdirSync(path.join(ctx.target,'plugins')).some(name=>name.startsWith('.wtfp-staged-')));
+  assert.strictEqual(fs.readFileSync(path.join(ctx.target,'plugins/panwrite/concurrent-note.txt'),'utf8'),'keep concurrent work');
+  assert.ok(fs.readdirSync(path.join(ctx.target,'plugins')).some(name=>name.startsWith('.panwrite-staged-')));
  });
  for(const failure of ['FAKE_REMOVE_NOOP','FAKE_REMOVE_RESIDUE']) test(`rollback verifies native removal and preserves recovery on ${failure}`,()=>{
   const ctx=context('rollback-'+failure),result=install(ctx,{FAKE_VERIFY_FAILURE:'1',[failure]:'1'});
   assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/native rollback also failed.*PanCode rollback did not/);
-  const staged=fs.readdirSync(path.join(ctx.target,'plugins')).find(name=>name.startsWith('.wtfp-staged-'));
-  assert.ok(staged);assert.ok(fs.existsSync(path.join(ctx.target,'plugins',staged,'wtfp/plugin.json')));
+  const staged=fs.readdirSync(path.join(ctx.target,'plugins')).find(name=>name.startsWith('.panwrite-staged-'));
+  assert.ok(staged);assert.ok(fs.existsSync(path.join(ctx.target,'plugins',staged,'panwrite/plugin.json')));
  });
  test('uninstall preserves unowned siblings instead of allowing recursive native removal',()=>{
-  const ctx=context('unowned');ok(install(ctx));const extra=path.join(ctx.target,'plugins/wtfp/author-note.txt');fs.writeFileSync(extra,'keep');
+  const ctx=context('unowned');ok(install(ctx));const extra=path.join(ctx.target,'plugins/panwrite/author-note.txt');fs.writeFileSync(extra,'keep');
   const first=uninstall(ctx);ok(first);assert.strictEqual(fs.readFileSync(extra,'utf8'),'keep');
-  assert.match(first.stdout+first.stderr,/Kept the WTF-P plugin installed and registered: plugins\/wtfp\/ holds files WTF-P did not publish or that changed \(author-note\.txt\)/);
-  assert.ok(!hubCalls(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.wtfp);
+  assert.match(first.stdout+first.stderr,/Kept the PanWrite plugin installed and registered: plugins\/panwrite\/ holds files PanWrite did not publish or that changed \(author-note\.txt\)/);
+  assert.ok(!hubCalls(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.panwrite);
   // A package PanCode still registers keeps its owned content and receipt entries.
-  assert.ok(fs.existsSync(path.join(ctx.target,'plugins/wtfp/plugin.json')));
-  const kept=JSON.parse(fs.readFileSync(path.join(ctx.target,'.wtfp-version')));
-  assert.ok(kept.files.length>0&&kept.files.every(file=>file.path.startsWith('plugins/wtfp/')));
+  assert.ok(fs.existsSync(path.join(ctx.target,'plugins/panwrite/plugin.json')));
+  const kept=JSON.parse(fs.readFileSync(path.join(ctx.target,'.panwrite-version')));
+  assert.ok(kept.files.length>0&&kept.files.every(file=>file.path.startsWith('plugins/panwrite/')));
   // The extension's own tree is owned and unchanged, so its removal proceeds.
-  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/wtfp')));
+  assert.ok(extensions(ctx).some(c=>c.args[1]==='remove'));assert.ok(!fs.existsSync(path.join(ctx.target,'extensions/panwrite')));
   // Once the operator moves the note out, the same uninstall finishes the job.
   fs.rmSync(extra);ok(uninstall(ctx));
-  assert.ok(hubCalls(ctx).some(c=>c.args[1]==='remove'));assert.ok(!state(ctx).installed.wtfp);
-  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/wtfp')));assert.ok(!fs.existsSync(path.join(ctx.target,'.wtfp-version')));
+  assert.ok(hubCalls(ctx).some(c=>c.args[1]==='remove'));assert.ok(!state(ctx).installed.panwrite);
+  assert.ok(!fs.existsSync(path.join(ctx.target,'plugins/panwrite')));assert.ok(!fs.existsSync(path.join(ctx.target,'.panwrite-version')));
  });
  test('an extension install failure compensates the extension and then the plugin',()=>{
   const ctx=context('extension-failure');const result=install(ctx,{FAKE_EXTENSION_FAILURE:'1'});
   assert.notStrictEqual(result.status,0);assert.match(result.stdout+result.stderr,/extensions install .* failed/);
   const order=calls(ctx).filter(c=>c.args[1]==='remove').map(c=>c.args[0]);
   assert.deepStrictEqual(order,['extensions','hub'],'compensate in reverse install order');
-  for(const root of ['plugins/wtfp','extensions/wtfp','.wtfp-version'])assert.ok(!fs.existsSync(path.join(ctx.target,root)),root);
-  assert.ok(!state(ctx).installed.wtfp);
+  for(const root of ['plugins/panwrite','extensions/panwrite','.panwrite-version'])assert.ok(!fs.existsSync(path.join(ctx.target,root)),root);
+  assert.ok(!state(ctx).installed.panwrite);
  });
  test('modified owned files preserve native registration during partial uninstall',()=>{
-  const ctx=context('modified');ok(install(ctx));const file=path.join(ctx.target,'plugins/wtfp/dev.pancode/prompts/wtfp/new-paper.md');fs.appendFileSync(file,'\nlocal edit\n');
+  const ctx=context('modified');ok(install(ctx));const file=path.join(ctx.target,'plugins/panwrite/dev.pancode/prompts/panwrite/new-paper.md');fs.appendFileSync(file,'\nlocal edit\n');
   ok(uninstall(ctx));assert.match(fs.readFileSync(file,'utf8'),/local edit/);
-  assert.ok(!calls(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.wtfp);
+  assert.ok(!calls(ctx).some(c=>c.args[1]==='remove'));assert.ok(state(ctx).installed.panwrite);
  });
  console.log(`\nPanCode installer tests: ${passed} passed.`);
 } finally { fs.rmSync(scratch,{recursive:true,force:true}); }

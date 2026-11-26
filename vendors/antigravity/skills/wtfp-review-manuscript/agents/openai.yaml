@@ -1,4 +1,0 @@
-interface:
-  display_name: "WTF-P Review Manuscript"
-  short_description: "Review, verify, and polish a manuscript"
-  default_prompt: "Use $wtfp-review-manuscript to review this manuscript against its plans and evidence."

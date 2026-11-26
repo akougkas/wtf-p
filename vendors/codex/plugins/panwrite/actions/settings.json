@@ -1,0 +1,47 @@
+{
+  "schema": "panwrite.action/v1",
+  "id": "settings",
+  "title": "Manage project settings",
+  "description": "View and update portable project settings after presenting the exact proposed diff.",
+  "alias": "panwrite:settings",
+  "surface": {
+    "kind": "skill",
+    "skill": "panwrite-manage-project"
+  },
+  "workflow": "panwrite://workflows/settings",
+  "requirements": {
+    "capabilities": [
+      "filesystem.read",
+      "filesystem.write",
+      "user.interaction"
+    ],
+    "conditions": [
+      "Portable project state has been initialized"
+    ]
+  },
+  "reads": [
+    "project://config"
+  ],
+  "produces": [
+    {
+      "uri": "project://config",
+      "mode": "update"
+    }
+  ],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.modify",
+      "scope": "project://config"
+    },
+    {
+      "id": "filesystem.read",
+      "scope": "project://config"
+    },
+    {
+      "id": "user.gate",
+      "scope": "the exact settings diff"
+    }
+  ]
+}

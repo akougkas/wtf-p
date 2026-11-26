@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.effects/v1",
-  "title": "WTF-P semantic effect registry",
+  "$id": "panwrite.effects/v1",
+  "title": "PanWrite semantic effect registry",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "effects"],
   "properties": {
-    "schema": { "const": "wtfp.effects/v1" },
+    "schema": { "const": "panwrite.effects/v1" },
     "effects": {
       "type": "array",
       "minItems": 1,

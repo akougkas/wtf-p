@@ -38,7 +38,7 @@ const DEFAULT_EFFORT = 'xhigh';
 const DEFAULT_TIMEOUT_MINUTES = 20;
 const DEFAULT_BUDGET_USD = 20;
 const PREPARED_FILE = 'prepared.json';
-const RUN_SCHEMA = 'wtfp.evaluation.clio-lifecycle-run/v1';
+const RUN_SCHEMA = 'panwrite.evaluation.clio-lifecycle-run/v1';
 const ROTATED_CREDENTIAL_READ_APPROVAL = Symbol('rotated-credential-read-approval');
 const COST_PROVENANCES = Object.freeze(['known', 'known_free', 'estimated', 'unknown']);
 const OPENAI_CODEX_RUNTIME_POLICY = Object.freeze({
@@ -51,18 +51,18 @@ const OPENAI_CODEX_RUNTIME_POLICY = Object.freeze({
   auth: 'oauth'
 });
 const REQUIRED_DISPATCH = Object.freeze({
-  'create-outline': Object.freeze(['wtfp-outliner']),
-  'plan-section': Object.freeze(['wtfp-section-planner', 'wtfp-plan-checker']),
-  'write-section': Object.freeze(['wtfp-section-writer', 'wtfp-argument-verifier']),
-  'review-section': Object.freeze(['wtfp-section-reviewer'])
+  'create-outline': Object.freeze(['panwrite-outliner']),
+  'plan-section': Object.freeze(['panwrite-section-planner', 'panwrite-plan-checker']),
+  'write-section': Object.freeze(['panwrite-section-writer', 'panwrite-argument-verifier']),
+  'review-section': Object.freeze(['panwrite-section-reviewer'])
 });
 const WORKER_RESULT_CONTRACTS = Object.freeze({
-  'wtfp-outliner': Object.freeze({ kind: 'mutation-report', action: 'create-outline', validationRole: null }),
-  'wtfp-section-planner': Object.freeze({ kind: 'mutation-report', action: 'plan-section', validationRole: null }),
-  'wtfp-plan-checker': Object.freeze({ kind: 'verifier-report', action: 'plan-section', validationRole: 'plan-checker' }),
-  'wtfp-section-writer': Object.freeze({ kind: 'mutation-report', action: 'write-section', validationRole: null }),
-  'wtfp-argument-verifier': Object.freeze({ kind: 'verifier-report', action: 'write-section', validationRole: 'argument-verifier' }),
-  'wtfp-section-reviewer': Object.freeze({ kind: 'verifier-report', action: 'review-section', validationRole: 'section-reviewer' })
+  'panwrite-outliner': Object.freeze({ kind: 'mutation-report', action: 'create-outline', validationRole: null }),
+  'panwrite-section-planner': Object.freeze({ kind: 'mutation-report', action: 'plan-section', validationRole: null }),
+  'panwrite-plan-checker': Object.freeze({ kind: 'verifier-report', action: 'plan-section', validationRole: 'plan-checker' }),
+  'panwrite-section-writer': Object.freeze({ kind: 'mutation-report', action: 'write-section', validationRole: null }),
+  'panwrite-argument-verifier': Object.freeze({ kind: 'verifier-report', action: 'write-section', validationRole: 'argument-verifier' }),
+  'panwrite-section-reviewer': Object.freeze({ kind: 'verifier-report', action: 'review-section', validationRole: 'section-reviewer' })
 });
 
 function exactRuntimePolicy(options) {
@@ -82,8 +82,8 @@ function usage() {
     '  node evaluation/tools/run-clio-lifecycle.js --execute --root <prepared-path> [options]',
     '',
     'Required source options (or matching environment variables):',
-    '  --binary <path>       Clio entry file (WTFP_CLIO_BINARY)',
-    '  --clio-source <path>  coordinated Clio source root (WTFP_CLIO_SOURCE)',
+    '  --binary <path>       Clio entry file (PANWRITE_CLIO_BINARY)',
+    '  --clio-source <path>  coordinated Clio source root (PANWRITE_CLIO_SOURCE)',
     '',
     'Other options:',
     '  --plugin <path>       generated Clio plugin bundle (default: vendors/plugin)',
@@ -94,9 +94,9 @@ function usage() {
     '  --budget-usd <n>      stop-before-next-action campaign ceiling (default: 20)',
     '',
     'Execution credentials are intentionally unavailable as flags. Set both',
-    'WTFP_CLIO_SETTINGS_SOURCE and WTFP_CLIO_CREDENTIALS_SOURCE in the environment;',
+    'PANWRITE_CLIO_SETTINGS_SOURCE and PANWRITE_CLIO_CREDENTIALS_SOURCE in the environment;',
     'their contents are copied into the contained root with mode 0600 and never logged.',
-    'Optional WTFP_LIFECYCLE_PROFILE_PATHS is a path-delimiter-separated list of',
+    'Optional PANWRITE_LIFECYCLE_PROFILE_PATHS is a path-delimiter-separated list of',
     'additional normal-profile files to hash before and after execution.',
     '',
     '--dry-run performs read-only source inspection and prints the exact command plan.',
@@ -118,8 +118,8 @@ function parseArgs(argv) {
   const options = {
     mode: null,
     root: null,
-    binary: process.env.WTFP_CLIO_BINARY || null,
-    clioSource: process.env.WTFP_CLIO_SOURCE || null,
+    binary: process.env.PANWRITE_CLIO_BINARY || null,
+    clioSource: process.env.PANWRITE_CLIO_SOURCE || null,
     extension: path.join(repositoryRoot, 'vendors', 'clio'),
     target: DEFAULT_TARGET,
     model: DEFAULT_MODEL,
@@ -159,8 +159,8 @@ function parseArgs(argv) {
   }
 
   if (!options.mode) throw new Error('choose one of --dry-run, --prepare, or --execute');
-  if (!options.binary) throw new Error('--binary or WTFP_CLIO_BINARY is required');
-  if (!options.clioSource) throw new Error('--clio-source or WTFP_CLIO_SOURCE is required');
+  if (!options.binary) throw new Error('--binary or PANWRITE_CLIO_BINARY is required');
+  if (!options.clioSource) throw new Error('--clio-source or PANWRITE_CLIO_SOURCE is required');
   if (options.mode === 'execute' && !options.root) throw new Error('--execute requires --root');
   for (const key of ['binary', 'clioSource', 'extension']) options[key] = path.resolve(options[key]);
   if (options.root) options.root = path.resolve(options.root);
@@ -246,11 +246,11 @@ function inspectSources(options) {
   const fixtureCheck = checkFixture(fixtureRoot);
   if (!fixtureCheck.valid) throw new Error(`fixture hash check failed: ${fixtureCheck.reason}`);
   const fixtureManifest = JSON.parse(fs.readFileSync(path.join(fixtureRoot, 'manifest.json'), 'utf8'));
-  const generatedFile = path.join(options.extension, '.wtfp-generated.json');
+  const generatedFile = path.join(options.extension, '.panwrite-generated.json');
   const generated = JSON.parse(fs.readFileSync(generatedFile, 'utf8'));
   const routingManifestFile = path.join(repositoryRoot, 'evaluation', 'v1', 'routing', 'manifest.json');
   return {
-    wtfp: {
+    panwrite: {
       ...gitMetadata(repositoryRoot),
       protocol_sha256: hashTree(path.join(repositoryRoot, 'protocol')).sha256,
       extension_sha256: hashTree(options.extension).sha256,
@@ -309,7 +309,7 @@ function buildPlan(options, sources, root = '<disposable-root>') {
   const environment = isolatedPaths(root, options.clioSource, 'S1');
   const resumeEnvironment = isolatedPaths(root, options.clioSource, 'S2');
   return {
-    schema: 'wtfp.evaluation.clio-lifecycle-plan/v1',
+    schema: 'panwrite.evaluation.clio-lifecycle-plan/v1',
     scenario: 'hpc-checkpointing-lifecycle',
     fixture: sources.fixture,
     source: sources,
@@ -356,12 +356,12 @@ function buildPlan(options, sources, root = '<disposable-root>') {
     },
     extension: {
       source_root: options.extension,
-      sha256: sources.wtfp.extension_sha256,
+      sha256: sources.panwrite.extension_sha256,
       install_scope: 'isolated-user',
       native_checks: [
         'extensions discover', 'extensions install', 'extensions list', 'agents --all',
-        'playbook list', 'playbook validate wtfp-plan-section', 'playbook graph wtfp-plan-section',
-        'playbook validate wtfp-draft-review', 'playbook graph wtfp-draft-review', 'fleet status'
+        'playbook list', 'playbook validate panwrite-plan-section', 'playbook graph panwrite-plan-section',
+        'playbook validate panwrite-draft-review', 'playbook graph panwrite-draft-review', 'fleet status'
       ]
     },
     sessions: {
@@ -622,7 +622,7 @@ function createRoot(requested) {
     fs.chmodSync(requested, 0o700);
     return requested;
   }
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-clio-lifecycle.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-clio-lifecycle.'));
   fs.chmodSync(root, 0o700);
   return root;
 }
@@ -656,8 +656,8 @@ function initializeFixture(projectRoot, fixture) {
   });
   commandResult('git', ['add', '--', ...modelFiles.map(file => file.path)], { cwd: projectRoot, env: gitEnvironment });
   commandResult('git', [
-    '-c', 'user.name=WTF-P Evaluation Harness',
-    '-c', 'user.email=eval.invalid@wtf-p.invalid',
+    '-c', 'user.name=PanWrite Evaluation Harness',
+    '-c', 'user.email=eval.invalid@panwrite.invalid',
     '-c', 'commit.gpgsign=false',
     'commit', '--quiet', '--message', 'test: initialize immutable lifecycle fixture'
   ], { cwd: projectRoot, env: gitEnvironment });
@@ -719,8 +719,8 @@ function playbookBoundaryProbe(clioSource, installedExtension) {
   if (!moduleName) throw new Error('matching Clio build does not expose canonical playbook-boundary helpers');
   const moduleFile = path.join(dist, moduleName);
   const playbookFiles = {
-    plan: path.join(installedExtension, 'playbooks', 'wtfp-plan-section.md'),
-    draft: path.join(installedExtension, 'playbooks', 'wtfp-draft-review.md')
+    plan: path.join(installedExtension, 'playbooks', 'panwrite-plan-section.md'),
+    draft: path.join(installedExtension, 'playbooks', 'panwrite-draft-review.md')
   };
   for (const [name, file] of Object.entries(playbookFiles)) assertRegularFile(file, `installed ${name} playbook`);
   const probeSource = [
@@ -780,10 +780,10 @@ function runNativePreflight(options, root, env) {
     ['extension-list', ['extensions', 'list', '--all', '--user', '--json']],
     ['agents-all', ['agents', '--json', '--all']],
     ['playbook-list', ['playbook', 'list']],
-    ['playbook-plan-validate', ['playbook', 'validate', 'wtfp-plan-section', '--json']],
-    ['playbook-plan-graph', ['playbook', 'graph', 'wtfp-plan-section', '--json']],
-    ['playbook-draft-validate', ['playbook', 'validate', 'wtfp-draft-review', '--json']],
-    ['playbook-draft-graph', ['playbook', 'graph', 'wtfp-draft-review', '--json']],
+    ['playbook-plan-validate', ['playbook', 'validate', 'panwrite-plan-section', '--json']],
+    ['playbook-plan-graph', ['playbook', 'graph', 'panwrite-plan-section', '--json']],
+    ['playbook-draft-validate', ['playbook', 'validate', 'panwrite-draft-review', '--json']],
+    ['playbook-draft-graph', ['playbook', 'graph', 'panwrite-draft-review', '--json']],
     ['fleet-status', ['fleet', 'status', '--json']]
   ];
   const results = [];
@@ -839,10 +839,10 @@ function runNativePreflight(options, root, env) {
     }
   }
   const expectedAgents = [
-    'wtfp-argument-verifier', 'wtfp-citation-expert', 'wtfp-citation-formatter',
-    'wtfp-coherence-checker', 'wtfp-outliner', 'wtfp-plan-checker',
-    'wtfp-prose-polisher', 'wtfp-research-synthesizer', 'wtfp-section-planner',
-    'wtfp-section-reviewer', 'wtfp-section-writer'
+    'panwrite-argument-verifier', 'panwrite-citation-expert', 'panwrite-citation-formatter',
+    'panwrite-coherence-checker', 'panwrite-outliner', 'panwrite-plan-checker',
+    'panwrite-prose-polisher', 'panwrite-research-synthesizer', 'panwrite-section-planner',
+    'panwrite-section-reviewer', 'panwrite-section-writer'
   ];
   const observedAgents = new Set(Array.isArray(agents)
     ? agents.filter(agent => agent.source === 'extension').map(agent => agent.id) : []);
@@ -850,9 +850,9 @@ function runNativePreflight(options, root, env) {
     if (!observedAgents.has(id)) errors.push(`agents-all: missing extension agent ${id}`);
   }
   const extensionList = parseJson('extension-list');
-  const extension = extensionList?.extensions?.find(item => item.id === 'wtfp');
+  const extension = extensionList?.extensions?.find(item => item.id === 'panwrite');
   if (!extension?.enabled || !extension?.effective || (extension.diagnostics || []).length > 0) {
-    errors.push('extension-list: WTF-P is not enabled, effective, and diagnostic-free');
+    errors.push('extension-list: PanWrite is not enabled, effective, and diagnostic-free');
   }
   for (const name of ['playbook-plan-validate', 'playbook-draft-validate']) {
     const validation = parseJson(name);
@@ -861,7 +861,7 @@ function runNativePreflight(options, root, env) {
     }
   }
   const playbookList = stdout('playbook-list');
-  for (const name of ['wtfp-plan-section', 'wtfp-draft-review']) {
+  for (const name of ['panwrite-plan-section', 'panwrite-draft-review']) {
     if (!playbookList.includes(`${name}  extension  valid`)) errors.push(`playbook-list: ${name} is not extension/valid`);
   }
   let playbookBoundaries = null;
@@ -869,7 +869,7 @@ function runNativePreflight(options, root, env) {
     if (containmentFailure) throw new Error('config-root containment failed before playbook-boundary probing');
     playbookBoundaries = playbookBoundaryProbe(
       options.clioSource,
-      path.join(root, 'clio', 'config', 'extensions', 'wtfp')
+      path.join(root, 'clio', 'config', 'extensions', 'panwrite')
     );
     if (playbookBoundaries.exit_code !== 0 || playbookBoundaries.valid !== true) {
       errors.push('canonical playbook-boundary probe did not prove corrected directory-root coverage');
@@ -878,7 +878,7 @@ function runNativePreflight(options, root, env) {
     errors.push(`canonical playbook-boundary probe failed: ${error.message}`);
   }
   return {
-    schema: 'wtfp.evaluation.clio-native-preflight/v1',
+    schema: 'panwrite.evaluation.clio-native-preflight/v1',
     valid: errors.length === 0,
     checks: {
       minimal_settings_exact: Object.keys(expectedSettings).every(key =>
@@ -888,7 +888,7 @@ function runNativePreflight(options, root, env) {
       expected_extension_agents: expectedAgents.length,
       observed_extension_agents: expectedAgents.filter(id => observedAgents.has(id)).length,
       extension_effective: Boolean(extension?.enabled && extension?.effective),
-      playbook_list_declares_valid: ['wtfp-plan-section', 'wtfp-draft-review']
+      playbook_list_declares_valid: ['panwrite-plan-section', 'panwrite-draft-review']
         .every(name => playbookList.includes(`${name}  extension  valid`)),
       playbook_validate_compiles_agents: ['playbook-plan-validate', 'playbook-draft-validate']
         .every(name => {
@@ -1018,21 +1018,21 @@ function prepare(options, sources) {
   native.receipts = { count: receiptsAfterNative.receipts.length, cost: receiptsAfterNative.cost };
   const nativeEvidenceFile = path.join(root, 'evidence', 'native-preflight.json');
   const clientVersion = fs.readFileSync(path.join(root, 'evidence', 'native', 'version.stdout'), 'utf8').trim();
-  const installedExtension = path.join(paths.CLIO_CODER_CONFIG_DIR, 'extensions', 'wtfp');
+  const installedExtension = path.join(paths.CLIO_CODER_CONFIG_DIR, 'extensions', 'panwrite');
   let installedHash = null;
   if (nativeConfigContained) {
     assertContainedPrivateDirectory(root, paths.CLIO_CODER_CONFIG_DIR, 'isolated Clio config root');
-    assertDirectory(installedExtension, 'installed WTF-P extension');
+    assertDirectory(installedExtension, 'installed PanWrite extension');
     installedHash = hashTree(installedExtension).sha256;
   }
-  if (installedHash !== sources.wtfp.extension_sha256) {
-    native.errors.push(`installed extension hash ${installedHash} != source ${sources.wtfp.extension_sha256}`);
+  if (installedHash !== sources.panwrite.extension_sha256) {
+    native.errors.push(`installed extension hash ${installedHash} != source ${sources.panwrite.extension_sha256}`);
   }
   native.valid = native.errors.length === 0;
   writeJsonPrivate(nativeEvidenceFile, native);
 
   const prepared = {
-    schema: 'wtfp.evaluation.clio-lifecycle-prepared/v1',
+    schema: 'panwrite.evaluation.clio-lifecycle-prepared/v1',
     created_at: new Date().toISOString(),
     root,
     root_mode: (fs.statSync(root).mode & 0o777).toString(8).padStart(4, '0'),
@@ -1068,7 +1068,7 @@ function profilePathList(settingsSource = null, credentialsSource = null) {
     path.join(normalHome, '.codex', 'config.toml'),
     path.join(normalHome, '.codex', 'auth.json')
   ];
-  const extras = (process.env.WTFP_LIFECYCLE_PROFILE_PATHS || '')
+  const extras = (process.env.PANWRITE_LIFECYCLE_PROFILE_PATHS || '')
     .split(path.delimiter).filter(Boolean).map(item => path.resolve(item));
   return [...new Set([...defaults, ...extras, settingsSource, credentialsSource]
     .filter(Boolean).map(item => path.resolve(item)))].sort();
@@ -1135,13 +1135,13 @@ function verifyPrepared(options, currentSources) {
     throw new Error('native preflight evidence changed after preparation');
   }
   for (const [label, expected, actual] of [
-    ['WTF-P commit', prepared.source.wtfp.commit, currentSources.wtfp.commit],
-    ['protocol', prepared.source.wtfp.protocol_sha256, currentSources.wtfp.protocol_sha256],
-    ['extension', prepared.source.wtfp.extension_sha256, currentSources.wtfp.extension_sha256],
-    ['generated envelope inventory', prepared.source.wtfp.generated_manifest_sha256, currentSources.wtfp.generated_manifest_sha256],
-    ['generator source', prepared.source.wtfp.generator_source_sha256, currentSources.wtfp.generator_source_sha256],
-    ['routing manifest', prepared.source.wtfp.routing_manifest_sha256, currentSources.wtfp.routing_manifest_sha256],
-    ['evaluation runtime', prepared.source.wtfp.evaluation_runtime.sha256, currentSources.wtfp.evaluation_runtime.sha256],
+    ['PanWrite commit', prepared.source.panwrite.commit, currentSources.panwrite.commit],
+    ['protocol', prepared.source.panwrite.protocol_sha256, currentSources.panwrite.protocol_sha256],
+    ['extension', prepared.source.panwrite.extension_sha256, currentSources.panwrite.extension_sha256],
+    ['generated envelope inventory', prepared.source.panwrite.generated_manifest_sha256, currentSources.panwrite.generated_manifest_sha256],
+    ['generator source', prepared.source.panwrite.generator_source_sha256, currentSources.panwrite.generator_source_sha256],
+    ['routing manifest', prepared.source.panwrite.routing_manifest_sha256, currentSources.panwrite.routing_manifest_sha256],
+    ['evaluation runtime', prepared.source.panwrite.evaluation_runtime.sha256, currentSources.panwrite.evaluation_runtime.sha256],
     ['Clio commit', prepared.source.clio.commit, currentSources.clio.commit],
     ['Clio source', prepared.source.clio.source_sha256, currentSources.clio.source_sha256],
     ['Clio executable dist tree', prepared.source.clio.dist.sha256, currentSources.clio.dist.sha256],
@@ -1153,7 +1153,7 @@ function verifyPrepared(options, currentSources) {
   ]) {
     if (expected !== actual) throw new Error(`${label} changed after preparation`);
   }
-  const installed = path.join(root, 'clio', 'config', 'extensions', 'wtfp');
+  const installed = path.join(root, 'clio', 'config', 'extensions', 'panwrite');
   assertContainedPrivateDirectory(root, path.join(root, 'clio', 'config'), 'prepared Clio config root');
   if (hashTree(installed).sha256 !== prepared.installed_extension_sha256) {
     throw new Error('installed extension changed after preparation');
@@ -2770,7 +2770,7 @@ function materializeSectionInputs(root, projectRoot) {
   const after = snapshotProject(projectRoot);
   const mutation = checkMutationBoundary('fixture-section-inputs', before, after, recordsBefore, readPlanningRecords(projectRoot));
   const report = {
-    schema: 'wtfp.evaluation.fixture-section-inputs/v1',
+    schema: 'panwrite.evaluation.fixture-section-inputs/v1',
     actor: 'evaluation-harness',
     model_mutation: false,
     valid: mutation.valid,
@@ -2948,7 +2948,7 @@ async function runAction({
   const schemaValidation = validatePlanningPaths([projectRoot]);
   const invariants = checkLifecycleRecords(projectRoot, oracle.decisions, actionPlan.action, previousRecords);
   const gitAfter = gitControlSnapshot(projectRoot);
-  const installedExtensionRoot = path.join(root, 'clio', 'config', 'extensions', 'wtfp');
+  const installedExtensionRoot = path.join(root, 'clio', 'config', 'extensions', 'panwrite');
   const toolAudit = eventToolAudit(parsed.events, {
     project: projectRoot,
     extension: installedExtensionRoot,
@@ -3031,7 +3031,7 @@ async function runAction({
     toolMutationBoundary.valid && dispatchBoundary.valid && verifierTiming.valid &&
     receiptAudit.valid && mainBinding.valid && lockErrors.length === 0 && sessionErrors.length === 0;
   const report = {
-    schema: 'wtfp.evaluation.clio-lifecycle-transition/v1',
+    schema: 'panwrite.evaluation.clio-lifecycle-transition/v1',
     action: actionPlan.action,
     process: processResult,
     state_quiescence: stateQuiescence,
@@ -3071,10 +3071,10 @@ async function execute(options, sources) {
     S1: sanitizedChildEnv(paths),
     S2: sanitizedChildEnv(resumePaths)
   };
-  const settingsSource = process.env.WTFP_CLIO_SETTINGS_SOURCE;
-  const credentialsSource = process.env.WTFP_CLIO_CREDENTIALS_SOURCE;
+  const settingsSource = process.env.PANWRITE_CLIO_SETTINGS_SOURCE;
+  const credentialsSource = process.env.PANWRITE_CLIO_CREDENTIALS_SOURCE;
   if (!settingsSource || !credentialsSource) {
-    throw new Error('execute requires WTFP_CLIO_SETTINGS_SOURCE and WTFP_CLIO_CREDENTIALS_SOURCE');
+    throw new Error('execute requires PANWRITE_CLIO_SETTINGS_SOURCE and PANWRITE_CLIO_CREDENTIALS_SOURCE');
   }
   const settingsPath = path.resolve(settingsSource);
   const credentialsPath = path.resolve(credentialsSource);
@@ -3088,7 +3088,7 @@ async function execute(options, sources) {
   const profilesBefore = snapshotProfiles(profilePaths);
   writeJsonPrivate(path.join(root, 'evidence', 'normal-profiles-pre.json'), profilesBefore);
   writeJsonPrivate(path.join(root, 'evidence', 'execution-started.json'), {
-    schema: 'wtfp.evaluation.clio-lifecycle-execution-start/v1',
+    schema: 'panwrite.evaluation.clio-lifecycle-execution-start/v1',
     started_at: new Date().toISOString(),
     prepared_sha256: sha256(fs.readFileSync(path.join(root, 'evidence', PREPARED_FILE))),
     settings_source_sha256: sha256(fs.readFileSync(settingsPath)),
@@ -3172,7 +3172,7 @@ async function execute(options, sources) {
       if (actionPlan.action === 'resume-writing') {
         const observed = sessionPrivateState(resumePaths, root);
         sessionBoundaryState = {
-          schema: 'wtfp.evaluation.clio-session-boundary/v1',
+          schema: 'panwrite.evaluation.clio-session-boundary/v1',
           checked_at: new Date().toISOString(),
           expected_initial_sha256: prepared.fresh_session_initial_sha256,
           observed,
@@ -3316,7 +3316,7 @@ async function execute(options, sources) {
     isolatedSettingsFinalSha256 === prepared.effective_settings_sha256;
   const aggregateRoots = {
     project: projectRoot,
-    extension: path.join(root, 'clio', 'config', 'extensions', 'wtfp'),
+    extension: path.join(root, 'clio', 'config', 'extensions', 'panwrite'),
     additional: []
   };
   let receipts;

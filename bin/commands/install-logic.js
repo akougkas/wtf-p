@@ -280,7 +280,7 @@ async function installWithConflictResolution(files, pathPrefix, targetDir, optio
       if (file.name === 'plugin.json' && file.componentId === 'plugin' && exists) {
         try {
           const existing = JSON.parse(existingSnapshot.bytes.toString('utf8'));
-          if (existing.name && existing.name !== 'wtfp' && existing.name !== 'wtf-p' && existing.name !== 'write-the-f-paper') {
+          if (existing.name && existing.name !== 'panwrite') {
             out.verbose(`  ${c.yellow('!')} ${c.dim(relDest)} belongs to another plugin — skipped`);
             stats.skipped++;
             continue;
@@ -656,12 +656,12 @@ async function install(runtime, isUpdate, options, pkg) {
       // Installing local — check if global exists
       const globalInstall = detectInstallation(globalDir);
       if (globalInstall.hasCommands) {
-        out.log(`  ${c.yellow('⚠ WTF-P is already installed globally')} ${c.dim('(' + getPathLabel(globalDir, true) + ')')}`);
+        out.log(`  ${c.yellow('⚠ PanWrite is already installed globally')} ${c.dim('(' + getPathLabel(globalDir, true) + ')')}`);
         out.log(`    Installing locally too will cause every command to appear twice.`);
         out.log('');
         out.log(`    ${c.cyan('Options:')}`);
         out.log(`      • Use your global install as-is (recommended)`);
-        out.log(`      • Remove global first: ${c.dim('npx wtf-p uninstall --global')}`);
+        out.log(`      • Remove global first: ${c.dim('npx @panstudio/panwrite uninstall --global')}`);
         out.log(`      • Continue anyway (commands will be duplicated)`);
         out.log('');
 
@@ -683,9 +683,9 @@ async function install(runtime, isUpdate, options, pkg) {
       // Installing global — check if local exists in cwd
       const localInstall = detectInstallation(localDir);
       if (localInstall.hasCommands && globalDir !== localDir) {
-        out.log(`  ${c.yellow('⚠ WTF-P is also installed locally')} ${c.dim('(' + getPathLabel(localDir, false) + ')')}`);
+        out.log(`  ${c.yellow('⚠ PanWrite is also installed locally')} ${c.dim('(' + getPathLabel(localDir, false) + ')')}`);
         out.log(`    Commands may appear twice in this directory.`);
-        out.log(`    To fix: ${c.dim('npx wtf-p uninstall --local')}`);
+        out.log(`    To fix: ${c.dim('npx @panstudio/panwrite uninstall --local')}`);
         out.log('');
       }
     }
@@ -802,26 +802,26 @@ async function install(runtime, isUpdate, options, pkg) {
       error.message += `; native rollback also failed: ${nativeRollbackFailures.join('; ')}; staged source was preserved`;
       error.nativeRollbackFailures = nativeRollbackFailures;
     }
-    error.message = `WTF-P ${transactionPhase} failed: ${error.message}`;
+    error.message = `PanWrite ${transactionPhase} failed: ${error.message}`;
     throw error;
   }
 
   if (nativeRequested) {
     if (nativeActivation.notice && !hasQuiet) out.warn(nativeActivation.notice);
     if (nativeActivation.status === 'unavailable' && !hasQuiet) {
-      out.warn(`${nativeActivation.executable} is not installed; the WTF-P bundle is staged but native registration is pending.`);
+      out.warn(`${nativeActivation.executable} is not installed; the PanWrite bundle is staged but native registration is pending.`);
       if (vendorKey === 'pancode') {
         // PanCode refuses a source that overlaps its managed destination, so the
         // published tree itself can never be the install source. Re-running
         // the installer stages a distinct copy and registers it.
         const scope = targetDir === path.join(process.cwd(), '.pancode') ? 'project' : 'user';
         const configFlag = explicitConfigDir ? ` --config-dir '${targetDir.replaceAll("'", "'\\''")}'` : '';
-        out.warn(`Activation is pending: once pancode is on PATH, re-run npx wtf-p install pancode${configFlag} from this directory to register the ${scope}-scope plugin and extension.`);
+        out.warn(`Activation is pending: once pancode is on PATH, re-run npx @panstudio/panwrite install pancode${configFlag} from this directory to register the ${scope}-scope plugin and extension.`);
       }
     } else if (nativeActivation.status === 'deferred' && !hasQuiet) {
-      out.warn(`${nativeActivation.reason}. The WTF-P bundle is staged but native registration is pending.`);
+      out.warn(`${nativeActivation.reason}. The PanWrite bundle is staged but native registration is pending.`);
     } else if (nativeActivation.status === 'incompatible' && !hasQuiet) {
-      out.warn(`${vendorConfig.name} did not accept the WTF-P package: ${nativeActivation.reason}. The bundle remains staged, not activated.`);
+      out.warn(`${vendorConfig.name} did not accept the PanWrite package: ${nativeActivation.reason}. The bundle remains staged, not activated.`);
     }
   }
 
@@ -836,8 +836,8 @@ async function install(runtime, isUpdate, options, pkg) {
   ${c.green('Done!')} ${c.dim(`[${vendorConfig.name}]`)} Installed: ${stats.installed}, Skipped: ${stats.skipped}, Backed up: ${stats.backed}
 
   ${vendorKey === 'codex'
-    ? `Select ${c.cyan('$wtfp-start-project')} in ${vendorConfig.name} and request the new-paper action to get started.`
-    : `Run ${c.cyan('/wtfp:help')} in ${vendorConfig.name} to get started.`}
+    ? `Select ${c.cyan('$panwrite-start-project')} in ${vendorConfig.name} and request the new-paper action to get started.`
+    : `Run ${c.cyan('/panwrite:help')} in ${vendorConfig.name} to get started.`}
 `);
     }
 
@@ -845,12 +845,12 @@ async function install(runtime, isUpdate, options, pkg) {
       out.log(`  ${c.yellow('Get started:')}`);
       if (vendorKey === 'codex') {
         // Codex exposes skills, not slash commands.
-        out.log(`    ${c.cyan('$wtfp-start-project')}   Define your paper's vision and structure (request new-paper)`);
-        out.log(`    ${c.cyan('$wtfp-manage-project')}  See where you are and what's next (request progress)\n`);
+        out.log(`    ${c.cyan('$panwrite-start-project')}   Define your paper's vision and structure (request new-paper)`);
+        out.log(`    ${c.cyan('$panwrite-manage-project')}  See where you are and what's next (request progress)\n`);
       } else {
-        out.log(`    ${c.cyan('/wtfp:new-paper')}      Define your paper's vision and structure`);
-        out.log(`    ${c.cyan('/wtfp:progress')}       See where you are and what's next`);
-        out.log(`    ${c.cyan('/wtfp:help')}           Browse all available commands\n`);
+        out.log(`    ${c.cyan('/panwrite:new-paper')}      Define your paper's vision and structure`);
+        out.log(`    ${c.cyan('/panwrite:progress')}       See where you are and what's next`);
+        out.log(`    ${c.cyan('/panwrite:help')}           Browse all available commands\n`);
       }
     }
   }

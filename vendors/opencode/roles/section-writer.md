@@ -1,6 +1,6 @@
 ---
 id: section-writer
-contract: wtfp.role.section-writer/v1
+contract: panwrite.role.section-writer/v1
 name: Section Writer
 execution_class: mutation-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -53,7 +53,7 @@ Execute an approved section plan into evidence-grounded academic prose or the ex
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `section-writer`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.semantic-rubric/v1",
+  "$id": "panwrite.evaluation.semantic-rubric/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "version", "score_range", "statuses", "dimensions"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.semantic-rubric/v1" },
+    "schema": { "const": "panwrite.evaluation.semantic-rubric/v1" },
     "version": { "const": 1 },
     "score_range": {
       "type": "object",

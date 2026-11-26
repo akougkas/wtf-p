@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "review-section",
   "title": "Review a section",
   "description": "Review a drafted section for evidence, citations, coherence, requirements, and reader expectations.",
-  "alias": "wtfp:review-section",
+  "alias": "panwrite:review-section",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-review-manuscript"
+    "skill": "panwrite-review-manuscript"
   },
-  "workflow": "wtfp://workflows/review-section",
+  "workflow": "panwrite://workflows/review-section",
   "requirements": {
     "capabilities": [
       "agent.delegate",

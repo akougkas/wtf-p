@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "polish-prose",
   "title": "Polish prose",
   "description": "Improve clarity, flow, precision, and academic voice without changing supported claims.",
-  "alias": "wtfp:polish-prose",
+  "alias": "panwrite:polish-prose",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-review-manuscript"
+    "skill": "panwrite-review-manuscript"
   },
-  "workflow": "wtfp://workflows/polish-prose",
+  "workflow": "panwrite://workflows/polish-prose",
   "requirements": {
     "capabilities": [
       "agent.delegate",

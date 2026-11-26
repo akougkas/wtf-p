@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.outline/v1",
+  "schema": "panwrite.project.outline/v1",
   "project_id": "portable-research-demo",
   "revision": 1,
   "thesis": "A host-neutral project protocol makes academic workflows portable without weakening evidence and decision fidelity.",

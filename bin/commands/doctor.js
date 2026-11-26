@@ -7,7 +7,7 @@ async function runDoctor(options) {
   const { out, explicitConfigDir } = options;
   const c = out.colors;
 
-  out.log(`  ${c.yellow('WTF-P Health Check')}\n`);
+  out.log(`  ${c.yellow('PanWrite Health Check')}\n`);
 
   const issues = [];
   const checks = [];
@@ -39,7 +39,7 @@ async function runDoctor(options) {
   }
   let testDir = null;
   try {
-    testDir = fs.mkdtempSync(path.join(testRoot, '.wtfp-doctor-'));
+    testDir = fs.mkdtempSync(path.join(testRoot, '.panwrite-doctor-'));
     fs.writeFileSync(path.join(testDir, 'test'), 'test');
     fs.unlinkSync(path.join(testDir, 'test'));
     fs.rmdirSync(testDir);
@@ -119,9 +119,9 @@ async function runDoctor(options) {
 
     // Note: After install, agents/workflows/commands are all under globalDir
     // The installer copies from vendors/ and core/ into the config directory
-    const agentsDir = path.join(globalDir, 'agents', 'wtfp');
+    const agentsDir = path.join(globalDir, 'agents', 'panwrite');
     const workflowsDir = path.join(globalDir, 'write-the-f-paper', 'workflows');
-    const commandsDir = path.join(globalDir, 'commands', 'wtfp');
+    const commandsDir = path.join(globalDir, 'commands', 'panwrite');
 
     let missingAgents = [];
     let missingWorkflows = [];
@@ -169,7 +169,7 @@ async function runDoctor(options) {
   if (localDir !== globalDir) {
     const localDetection = detectInstallation(localDir);
     if (localDetection.hasAny && detection.hasAny) {
-      issues.push('WTF-P is installed both globally and locally — resources may appear more than once');
+      issues.push('PanWrite is installed both globally and locally — resources may appear more than once');
       checks.push({
         name: 'Dual installation',
         status: 'warn',
@@ -198,7 +198,7 @@ async function runDoctor(options) {
       out.log(`    ${c.yellow('•')} ${issue}`);
     }
     out.log('');
-    out.log(`  ${c.dim('To fix, reinstall:')} ${c.cyan('npx wtf-p --global --force')}\n`);
+    out.log(`  ${c.dim('To fix, reinstall:')} ${c.cyan('npx @panstudio/panwrite --global --force')}\n`);
   } else {
     out.log(`  ${c.green('No issues found!')}\n`);
   }

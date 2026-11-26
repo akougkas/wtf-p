@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "progress",
   "title": "Show project progress",
   "description": "Summarize writing progress, surface blockers, and recommend the next compatible action.",
-  "alias": "wtfp:progress",
+  "alias": "panwrite:progress",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/progress",
+  "workflow": "panwrite://workflows/progress",
   "requirements": {
     "capabilities": [
       "filesystem.read",

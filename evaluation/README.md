@@ -1,6 +1,6 @@
-# WTF-P behavioral evaluation
+# PanWrite behavioral evaluation
 
-This directory is the versioned, executable evidence layer for WTF-P behavior. It evaluates routing and academic invariants without treating prose bytes as a quality oracle. Canonical behavior remains under `protocol/`; evaluation data does not change an action contract or generated adapter.
+This directory is the versioned, executable evidence layer for PanWrite behavior. It evaluates routing and academic invariants without treating prose bytes as a quality oracle. Canonical behavior remains under `protocol/`; evaluation data does not change an action contract or generated adapter.
 
 The suite is repository/CI evidence, not runtime payload. It is deliberately
 excluded from the npm archive; release users receive the authenticated protocol,
@@ -11,13 +11,13 @@ The routing and lifecycle suite is `v1`. A change that alters a fixture's meanin
 
 ## Versioned PanCode campaigns (`v2`)
 
-`v2/campaigns/pancode-0.9.0-reference.json` is the current campaign, with schema `wtfp.evaluation.campaign/v3`. Its `pancode` block pins one PanCode build: the source commit, tree, and `pnpm-lock.yaml` digest, the entry `bin/pancode.cjs`, and the SHA-256 of that entry and of the `dist` directory beside it, since bundle chunk names make the build not byte-reproducible. `pancode.build.procedure` records how that build is made. The campaign installs both WTF-P packages, the plugin from `pancode/plugin` and the desk from `pancode/extension`, binds the WTF-P commit at prepare, and reuses the `hpc-checkpointing` v1 fixture by its model-input and evaluator-oracle digests without changing its meaning. Its status stays `awaiting-resources` until the operator selects a target, model, effort and budget for a run; the definition names none.
+`v2/campaigns/pancode-0.9.0-reference.json` is the current campaign, with schema `panwrite.evaluation.campaign/v3`. Its `pancode` block pins one PanCode build: the source commit, tree, and `pnpm-lock.yaml` digest, the entry `bin/pancode.cjs`, and the SHA-256 of that entry and of the `dist` directory beside it, since bundle chunk names make the build not byte-reproducible. `pancode.build.procedure` records how that build is made. The campaign installs both PanWrite packages, the plugin from `pancode/plugin` and the desk from `pancode/extension`, binds the PanWrite commit at prepare, and reuses the `hpc-checkpointing` v1 fixture by its model-input and evaluator-oracle digests without changing its meaning. Its status stays `awaiting-resources` until the operator selects a target, model, effort and budget for a run; the definition names none.
 
 `tools/run-pancode-campaign.js` has four commands:
 
 - `plan [--pancode-entry <abs>]` prints identities, the twelve lifecycle prompts and the resources still missing. With an entry it also compares that build with the pin and lists any `pancode.mismatches`. It needs no credentials and writes nothing.
-- `prepare --root <new> --pancode-entry <abs>` takes the absolute path of an installed `node_modules/pancode/bin/pancode.cjs` and refuses an unpinned build or a dirty package tree. It then creates a disposable profile with separate S1 and S2 sessions that share one PanCode state directory, and with it the desk's extension store, installs both packages with `wtf-p install pancode --config-dir "$PANCODE_CONFIG_DIR"`, and records native discovery in nine checks: plugin and desk registration, both playbooks listed, validated and graphed, the desk's package tests run with `pancode extensions test` from its installed root, and a check that every installed WTF-P recipe declares only tools a step's workers may hold. It binds the campaign file, fixture commit and digests, workspace digest and HEAD, the PanCode entry and the `pancode` wrapper, and digests of both installed packages in a `wtfp.evaluation.campaign-prepared/v3` record. Only model-visible fixture inputs enter the workspace, and a root whose checks fail gets no `prepared.json`.
-- `execute` runs each step headless with `pancode run` and the operator's `--target`, `--model`, `--effort` and `--budget-usd`, after `WTFP_CAMPAIGN_CONFIRM`, `WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE` and `WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE` are given by environment variable. It refuses any drift from what `prepare` bound before the run, and checks the PanCode launcher and installed packages again before every step. Steps run at the campaign's `default` autonomy with `PANCODE_HOME`, `PANCODE_CONFIG_DIR`, `PANCODE_STATE_DIR`, `PANCODE_DATA_DIR` and `PANCODE_CACHE_DIR` under the run's root, `PANCODE_REQUIRE_HOME_PREFIX=1`, `PANCODE_DISABLE_RETRIEVE_TOOLS=1`, reading no other agent's home (`PANCODE_INTEROP_HOME=none`), and with PanCode's `--allow-tools` and `--delegate-tools`, so neither the main agent nor any worker holds `bash`, `run_script`, `job`, `verify`, `git` or a retrieval tool. The main agent holds the desk's tools as `extension_wtfp__<tool>`, so the desk guards headless steps too; workers hold only reading and file-writing tools, which is all the WTF-P recipes declare. Outcomes are structural:
+- `prepare --root <new> --pancode-entry <abs>` takes the absolute path of an installed `node_modules/pancode/bin/pancode.cjs` and refuses an unpinned build or a dirty package tree. It then creates a disposable profile with separate S1 and S2 sessions that share one PanCode state directory, and with it the desk's extension store, installs both packages with `panwrite install pancode --config-dir "$PANCODE_CONFIG_DIR"`, and records native discovery in nine checks: plugin and desk registration, both playbooks listed, validated and graphed, the desk's package tests run with `pancode extensions test` from its installed root, and a check that every installed PanWrite recipe declares only tools a step's workers may hold. It binds the campaign file, fixture commit and digests, workspace digest and HEAD, the PanCode entry and the `pancode` wrapper, and digests of both installed packages in a `panwrite.evaluation.campaign-prepared/v3` record. Only model-visible fixture inputs enter the workspace, and a root whose checks fail gets no `prepared.json`.
+- `execute` runs each step headless with `pancode run` and the operator's `--target`, `--model`, `--effort` and `--budget-usd`, after `PANWRITE_CAMPAIGN_CONFIRM`, `PANWRITE_CAMPAIGN_PANCODE_SETTINGS_SOURCE` and `PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE` are given by environment variable. It refuses any drift from what `prepare` bound before the run, and checks the PanCode launcher and installed packages again before every step. Steps run at the campaign's `default` autonomy with `PANCODE_HOME`, `PANCODE_CONFIG_DIR`, `PANCODE_STATE_DIR`, `PANCODE_DATA_DIR` and `PANCODE_CACHE_DIR` under the run's root, `PANCODE_REQUIRE_HOME_PREFIX=1`, `PANCODE_DISABLE_RETRIEVE_TOOLS=1`, reading no other agent's home (`PANCODE_INTEROP_HOME=none`), and with PanCode's `--allow-tools` and `--delegate-tools`, so neither the main agent nor any worker holds `bash`, `run_script`, `job`, `verify`, `git` or a retrieval tool. The main agent holds the desk's tools as `extension_panwrite__<tool>`, so the desk guards headless steps too; workers hold only reading and file-writing tools, which is all the PanWrite recipes declare. Outcomes are structural:
   - a pending blocking gate is `author-unavailable`;
   - a gated step that raised none is `gate-not-raised`;
   - a recorded answer no sealed author answer stands behind, an interaction record added by a headless step, a change to the PanCode configuration later steps load (`.pancode/` apart from PanCode's own runtime output), or a worker run record the runner cannot read is `integrity-violation`;
@@ -30,7 +30,7 @@ The routing and lifecycle suite is `v1`. A change that alters a fixture's meanin
 
 Author decisions are observed only from an interactive PanCode session in the prepared profile; `prepare` prints its environment. Evidence stays under the run root. Retaining a run in this repository is a separate decision about visibility and sanitization.
 
-The checked-in HPC baseline is intentionally `definition-only`. It contains no observed run and makes no live-model claim. Change it to `observed` only when every referenced, non-secret `wtfp.evaluation.result/v1` file is checked in and passes the linter.
+The checked-in HPC baseline is intentionally `definition-only`. It contains no observed run and makes no live-model claim. Change it to `observed` only when every referenced, non-secret `panwrite.evaluation.result/v1` file is checked in and passes the linter.
 
 The first Clio 0.3.8 `dynamo/qwen3.8-27b` lifecycle attempt is retained as a
 [typed blocked result](v1/evidence/clio-dynamo-lifecycle-blocked/README.md).
@@ -40,7 +40,7 @@ phases were not exercised, and the comparator correctly classifies it as a
 regression rather than weakening the baseline.
 
 That blocked reading predates later canonical remediation: it binds
-WTF-P `6b58b298` and generated source `4db9d040…`, while later source adds the
+PanWrite `6b58b298` and generated source `4db9d040…`, while later source adds the
 exact outline-total and direct-tool constraints prompted by those failures.
 
 The separate
@@ -77,8 +77,8 @@ writing-quality claim is made from it. The final RC2 write/review/pause
 corrections have deterministic regression coverage but no second end-to-end
 model rerun; the post-hardening model rerun covers resume/progress only.
 
-This suite has no no-WTF-P control arm. It cannot establish that WTF-P produces
-better prose than the same model and task without WTF-P, and no result should be
+This suite has no no-PanWrite control arm. It cannot establish that PanWrite produces
+better prose than the same model and task without PanWrite, and no result should be
 read as that claim. It measures observable process discipline instead: evidence
 and decision fidelity, schema validity, approval and effect boundaries, durable
 fresh-process resumption, useful recovery actions, and absence of incidental
@@ -99,7 +99,7 @@ verifiable paid entry-workflow evidence.
 
 ## Evidence levels and run identity
 
-Every routing observation and semantic result embeds the shared `wtfp.evaluation.run-metadata/v1` record. It distinguishes:
+Every routing observation and semantic result embeds the shared `panwrite.evaluation.run-metadata/v1` record. It distinguishes:
 
 1. `static-lint`: catalog ownership, trigger-corpus coverage, explicit mappings, fixture integrity, and statically derived resource closure.
 2. `native-discovery`: what one exact client build discovers or exposes without claiming model behavior.
@@ -109,7 +109,7 @@ Every routing observation and semantic result embeds the shared `wtfp.evaluation
 4. `paid-model`: an observed billed model run with cost provenance, latency, and
    independently assessed artifacts.
 
-Run metadata records the exact requested and actual client/model identities, requested and effective effort, permission policy, client binary path and SHA-256, source SHA-256, source commits, protocol/compiler versions, separate model-input and evaluator-oracle fixture hashes, command hash, disposable-environment policy, normal-profile pre/post hash pairs, and case-session isolation. Requested and actual identities are never silently collapsed into one field. A local or paid model result must also bind these values to a contained, SHA-256-exact `wtfp.evaluation.identity-receipt/v1` produced from native client events or a sealed client receipt; metadata alone is not identity evidence.
+Run metadata records the exact requested and actual client/model identities, requested and effective effort, permission policy, client binary path and SHA-256, source SHA-256, source commits, protocol/compiler versions, separate model-input and evaluator-oracle fixture hashes, command hash, disposable-environment policy, normal-profile pre/post hash pairs, and case-session isolation. Requested and actual identities are never silently collapsed into one field. A local or paid model result must also bind these values to a contained, SHA-256-exact `panwrite.evaluation.identity-receipt/v1` produced from native client events or a sealed client receipt; metadata alone is not identity evidence.
 
 Static or local-model success is not a paid-model result. An unavailable historical target stays `unavailable`; a different model is not a substitute.
 
@@ -122,9 +122,9 @@ Static or local-model success is not a paid-model result. An unavailable histori
 
 The case's `selection_binding` identifies the intended skill and action contract. It is not a claim that those are the only bytes loaded. In particular, every academic skill has one real, monolithic `references/actions.md`; the evaluator never invents a per-action reference file.
 
-[`v1/routing/explicit-actions.json`](v1/routing/explicit-actions.json) maps all 36 `/wtfp:*` actions and exact argument bytes. Explicit routing is scored separately from implicit activation.
+[`v1/routing/explicit-actions.json`](v1/routing/explicit-actions.json) maps all 36 `/panwrite:*` actions and exact argument bytes. Explicit routing is scored separately from implicit activation.
 
-[`v1/routing/manifest.json`](v1/routing/manifest.json) authenticates both routing corpora, the budget matrix, the prompt-only project context, the empty-project snapshot, the protocol/compiler/WTF-P identity, and all nine generated envelope inventories and source hashes. Every observation binds that manifest, its exact model input bytes, the initial project snapshot, and a real client executable by path and SHA-256. Stale corpora, regenerated adapters, fixture drift, and silent client binary replacement therefore fail before scoring.
+[`v1/routing/manifest.json`](v1/routing/manifest.json) authenticates both routing corpora, the budget matrix, the prompt-only project context, the empty-project snapshot, the protocol/compiler/PanWrite identity, and all nine generated envelope inventories and source hashes. Every observation binds that manifest, its exact model input bytes, the initial project snapshot, and a real client executable by path and SHA-256. Stale corpora, regenerated adapters, fixture drift, and silent client binary replacement therefore fail before scoring.
 
 Each observation records a unique case session, the actual route, exact argument observability, and an evidence-backed disclosure closure. The closure records these real resource kinds:
 
@@ -152,7 +152,7 @@ The run must bind the matrix ID, version, row, and file SHA-256. Its observation
 
 Native and paid routing evidence is file-backed: every claim locator must be relative, lexically and physically contained under the observation file's directory, a regular non-symlink file, SHA-256 exact, and independently assessed. A partially observable client may report only facts it actually saw; an unrelated loaded resource is a disclosure failure, while a genuinely unavailable trace is capability-inconclusive rather than silently passed.
 
-The `wtfp.evaluation.routing-score/v1` report separates:
+The `panwrite.evaluation.routing-score/v1` report separates:
 
 - implicit and explicit counts and rates;
 - per-target-skill, per-expected-skill, and per-category counts;
@@ -188,7 +188,7 @@ The v1 HPC-checkpointing fixture deliberately contains no verified external bibl
 
 [`v1/baselines/hpc-checkpointing.json`](v1/baselines/hpc-checkpointing.json) defines the semantic floor and binds it to the exact scenario phases and hidden oracle digest. It is not a reference answer. Organization, wording, and style may vary while semantic units and safety invariants remain stable.
 
-A `wtfp.evaluation.result/v1` records:
+A `panwrite.evaluation.result/v1` records:
 
 - a completed, blocked, or capability-unavailable outcome;
 - an exact scenario ID, phases, action sequence, and real process boundaries;
@@ -214,7 +214,7 @@ node evaluation/tools/compare-results.js --json \
   path/to/candidate-result.json
 ```
 
-`wtfp.evaluation.comparison/v1` uses a closed classification set:
+`panwrite.evaluation.comparison/v1` uses a closed classification set:
 
 - `structural-regression`;
 - `safety-regression`;
@@ -246,7 +246,7 @@ node evaluation/tools/validate-planning.js /path/to/disposable-project
 node evaluation/tools/validate-planning.js --json /path/to/record.json
 ```
 
-For a project directory, the validator resolves `.planning`, recursively reads JSON records, selects a canonical schema from each `wtfp.project.<record>/v1` discriminator, and rejects unknown record types and symbolic links. It performs no writes. Hash or snapshot the project and Git state independently before and after a live run; schema validity alone does not establish effect safety or cross-record coherence.
+For a project directory, the validator resolves `.planning`, recursively reads JSON records, selects a canonical schema from each `panwrite.project.<record>/v1` discriminator, and rejects unknown record types and symbolic links. It performs no writes. Hash or snapshot the project and Git state independently before and after a live run; schema validity alone does not establish effect safety or cross-record coherence.
 
 ## Development gate
 

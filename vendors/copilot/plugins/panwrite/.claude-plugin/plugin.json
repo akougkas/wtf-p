@@ -1,0 +1,12 @@
+{
+  "name": "panwrite",
+  "version": "1.0.0",
+  "description": "Portable academic research and writing workflows with stable panwrite actions.",
+  "author": {
+    "name": "Anthony Kougkas",
+    "url": "https://github.com/akougkas"
+  },
+  "homepage": "https://github.com/PanStudio/panwrite",
+  "repository": "https://github.com/PanStudio/panwrite",
+  "license": "Apache-2.0"
+}

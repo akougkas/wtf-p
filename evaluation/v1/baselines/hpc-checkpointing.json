@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.baseline/v1",
+  "schema": "panwrite.evaluation.baseline/v1",
   "id": "hpc-checkpointing-semantic-baseline",
   "version": 1,
   "evidence_status": "definition-only",
@@ -10,7 +10,7 @@
       "lifecycle",
       "resume"
     ],
-    "oracle_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
+    "oracle_sha256": "543c5e82dc4eadad42dfd3b1fbdb472590f0e68fd07029266aaeb242b38815a3",
     "action_sequence": [
       "new-paper",
       "map-project",
@@ -32,16 +32,16 @@
   "fixture": {
     "id": "hpc-checkpointing-paper",
     "version": 1,
-    "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
-    "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
-    "aggregate_sha256": "9479bf971aeccec5ca76955fb6b865a566fb6539949f4f8aea518dca305c6b9c"
+    "model_inputs_sha256": "cdcf779e12c7d48ca916ef54307f918441401fddd6ab627ad951d0ff80eff83e",
+    "evaluator_oracles_sha256": "543c5e82dc4eadad42dfd3b1fbdb472590f0e68fd07029266aaeb242b38815a3",
+    "aggregate_sha256": "559f1093af29f122d57f9e100ec568a98ac2ee38ac28407a0ab8ac7855a28686"
   },
   "protocol": {
     "project_protocol_version": 1,
-    "catalog_schema": "wtfp.catalog/v1",
+    "catalog_schema": "panwrite.catalog/v1",
     "adapter_compiler_version": 5,
-    "canonical_source_commit": "41864fc1dca294b867b52bf5660f765d08a57de5",
-    "canonical_source_sha256": "46caa2d1e0299e9f5b8fcf18fdb7e3f4ae5a8dc8a22946e1e83288a278babf69"
+    "canonical_source_commit": "6fbddb194badadc713131a5237b9650a535b5d2e",
+    "canonical_source_sha256": "795942d950fc8069880598e54dfbe9e835115846a0f0f45f401c327c2eb322e9"
   },
   "expected_invariants": [
     {
@@ -140,6 +140,6 @@
     "filesystem.read",
     "user.interaction"
   ],
-  "run_metadata_schema": "wtfp.evaluation.run-metadata/v1",
+  "run_metadata_schema": "panwrite.evaluation.run-metadata/v1",
   "observed_runs": []
 }

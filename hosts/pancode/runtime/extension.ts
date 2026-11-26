@@ -1,5 +1,5 @@
 /**
- * WTF-P writing desk for PanCode. Human-edited source; the adapter
+ * PanWrite writing desk for PanCode. Human-edited source; the adapter
  * compiler copies it to pancode/extension/runtime/ beside the
  * generated write-guard.json, help.json, json-schema.cjs and claim-coverage.cjs.
  *
@@ -116,7 +116,7 @@ const HELP = JSON.parse(readFileSync(new URL("./help.json", import.meta.url), "u
 	schema: string;
 	groups: Array<{ title: string; actions: string[] }>;
 };
-const SKIN = JSON.parse(readFileSync(new URL("../skins/wtfp.json", import.meta.url), "utf8")) as ExtensionSkin;
+const SKIN = JSON.parse(readFileSync(new URL("../skins/panwrite.json", import.meta.url), "utf8")) as ExtensionSkin;
 const RECORD_LIMIT = 1024 * 1024;
 const PHASES = ["initialized", "mapped", "outlining", "planning", "writing", "reviewing", "ready", "delivered"] as const;
 const WORDMARK = [
@@ -130,9 +130,9 @@ const WORDMARK = [
 const WORD_METHOD =
 	"Body words: front matter, headings, code, math, comments, citation keys and markup are left out; a word is a run of letters or digits, joined across an apostrophe or hyphen.";
 /** Files only the desk writes. A model tool call that would change one is refused. */
-const DESK_OWNED = [".planning/interactions", ".planning/.wtfp-lock", ".planning/.wtfp-journal.json"];
-const LOCK = ".planning/.wtfp-lock";
-const JOURNAL = ".planning/.wtfp-journal.json";
+const DESK_OWNED = [".planning/interactions", ".planning/.panwrite-lock", ".planning/.panwrite-journal.json"];
+const LOCK = ".planning/.panwrite-lock";
+const JOURNAL = ".planning/.panwrite-journal.json";
 const LOCK_WAIT_MS = 2000;
 const LOCK_STALE_MS = 30_000;
 const SEAL_KEY = "seal-key";
@@ -252,22 +252,22 @@ interface Desk {
 	audit: { fresh: boolean; errors: number } | null;
 	/** A passed submit-milestone validation that no later draft or record outdates. */
 	delivered: boolean;
-	/** The WTF-P plugin while PanCode serves it; null when it is not installed and enabled. */
+	/** The PanWrite plugin while PanCode serves it; null when it is not installed and enabled. */
 	served: ServedPlugin;
 }
 
-/** Actions the desk answers itself; they stay reachable as `/ext:wtfp:<name>` without the plugin. */
+/** Actions the desk answers itself; they stay reachable as `/ext:panwrite:<name>` without the plugin. */
 const DESK_COMMANDS = new Set(["progress", "help", "check-todos"]);
 
 /**
- * How the desk names an action: the plugin's `/wtfp:` prompt while the plugin
- * serves it, else the desk's own `/ext:wtfp:` command, else null because only
+ * How the desk names an action: the plugin's `/panwrite:` prompt while the plugin
+ * serves it, else the desk's own `/ext:panwrite:` command, else null because only
  * the plugin can run it.
  */
 function commandFor(served: ServedPlugin, action: string, args = ""): string | null {
 	const tail = args ? ` ${args}` : "";
-	if (served?.prompts.includes(`wtfp:${action}`)) return `/wtfp:${action}${tail}`;
-	if (DESK_COMMANDS.has(action)) return `/ext:wtfp:${action}${tail}`;
+	if (served?.prompts.includes(`panwrite:${action}`)) return `/panwrite:${action}${tail}`;
+	if (DESK_COMMANDS.has(action)) return `/ext:panwrite:${action}${tail}`;
 	return null;
 }
 
@@ -429,7 +429,7 @@ function schemaRegistry(): InstanceType<typeof SchemaRegistry> {
 
 /** The top-level fields a record type's schema defines. */
 function recordFields(schema: string): Set<string> {
-	const match = /^wtfp\.project\.([a-z][a-z0-9-]*)\/v1$/u.exec(schema);
+	const match = /^panwrite\.project\.([a-z][a-z0-9-]*)\/v1$/u.exec(schema);
 	if (!match) return new Set();
 	try {
 		const parsed = JSON.parse(readFileSync(path.join(SCHEMAS, `${match[1]}.schema.json`), "utf8")) as Json;
@@ -442,8 +442,8 @@ function recordFields(schema: string): Set<string> {
 /** Schema errors for one record, as the canonical validator reports them. */
 function validateRecord(value: unknown): string[] {
 	if (value === null || typeof value !== "object" || Array.isArray(value)) return ["$: planning record must be a JSON object"];
-	const match = /^wtfp\.project\.([a-z][a-z0-9-]*)\/v1$/u.exec(text((value as Json).schema));
-	if (!match) return ["$: missing or unsupported wtfp.project.<record>/v1 schema discriminator"];
+	const match = /^panwrite\.project\.([a-z][a-z0-9-]*)\/v1$/u.exec(text((value as Json).schema));
+	if (!match) return ["$: missing or unsupported panwrite.project.<record>/v1 schema discriminator"];
 	const schemaFile = path.join(SCHEMAS, `${match[1]}.schema.json`);
 	if (!existsSync(schemaFile)) return [`$: no canonical schema for record type ${match[1]}`];
 	const schemas = schemaRegistry();
@@ -697,7 +697,7 @@ function loadDesk(workspace: string, key: Buffer | null = null): Desk {
 	const projectId = typeof manifest?.id === "string" ? manifest.id : null;
 	const interactions = listJson(workspace, ".planning/interactions").flatMap((file) => {
 		const record = readRecord(workspace, file);
-		return record && record.schema === "wtfp.project.interaction/v1" ? [record] : [];
+		return record && record.schema === "panwrite.project.interaction/v1" ? [record] : [];
 	});
 	const checkpoints: Checkpoint[] = listJson(workspace, ".planning/checkpoints").flatMap((file) => {
 		const record = readRecord(workspace, file);
@@ -891,7 +891,7 @@ function reconcile(workspace: string, desk: Desk): Finding[] {
 	const add = (severity: Finding["severity"], code: string, subject: string, message: string): void => {
 		out.push({ severity, code, subject, message });
 	};
-	if (desk.journal) add("blocker", "write-interrupted", "project://state", "A journaled record write was interrupted; the next desk write or /ext:wtfp:validate completes it.");
+	if (desk.journal) add("blocker", "write-interrupted", "project://state", "A journaled record write was interrupted; the next desk write or /ext:panwrite:validate completes it.");
 	if (!desk.present) return out;
 	const state = readRecord(workspace, ".planning/state.json");
 	const manifest = readRecord(workspace, ".planning/project.json");
@@ -1014,7 +1014,7 @@ function writeDurably(file: string, data: string): void {
 
 /** Fault injection for the package tests; unset in every real session. */
 function fault(point: string): void {
-	if (process.env.WTFP_DESK_TEST_FAULT === point) throw new Error(`injected fault at ${point}`);
+	if (process.env.PANWRITE_DESK_TEST_FAULT === point) throw new Error(`injected fault at ${point}`);
 }
 
 interface PendingWrite {
@@ -1066,7 +1066,7 @@ function failure(refused: string, error: unknown): string {
 	const message = error instanceof Error ? error.message : String(error);
 	if (error instanceof AfterCommit)
 		return error.pending
-			? `Committed; recovery pending: ${message}. The next desk write or /ext:wtfp:validate completes it.`
+			? `Committed; recovery pending: ${message}. The next desk write or /ext:panwrite:validate completes it.`
 			: `Committed, but ${message}`;
 	return `${refused}: ${message}`;
 }
@@ -1157,7 +1157,7 @@ function commit(workspace: string, writes: PendingWrite[]): void {
 		fault("before-commit");
 		if (staged.length > 1) {
 			const journal = `${JOURNAL}.${randomUUID()}.partial`;
-			writeDurably(path.join(workspace, journal), `${JSON.stringify({ schema: "wtfp.pancode-journal/v1", at: timestamp(), entries: staged }, null, 2)}\n`);
+			writeDurably(path.join(workspace, journal), `${JSON.stringify({ schema: "panwrite.pancode-journal/v1", at: timestamp(), entries: staged }, null, 2)}\n`);
 			renameSync(path.join(workspace, journal), path.join(workspace, JOURNAL));
 		}
 	} catch (error) {
@@ -1196,7 +1196,7 @@ function commit(workspace: string, writes: PendingWrite[]): void {
 		}
 	}
 	// Stands in for another process changing a file between the rename and the readback.
-	if (process.env.WTFP_DESK_TEST_FAULT === "tamper-after-rename" && staged[0]) appendFileSync(path.join(workspace, staged[0].file), " ");
+	if (process.env.PANWRITE_DESK_TEST_FAULT === "tamper-after-rename" && staged[0]) appendFileSync(path.join(workspace, staged[0].file), " ");
 	for (const entry of staged) {
 		const back = readBytes(workspace, entry.file);
 		if (back === null || sha256(back) !== entry.sha256)
@@ -1324,8 +1324,8 @@ function checkpointRefusal(prior: Json | null, next: Json, superseded: boolean):
 	if (next.status === "pending" && next.resolution !== undefined) return "a pending checkpoint carries no resolution";
 	if (answered(next.status)) {
 		if ((next.resolution as Json | undefined)?.resolved_by === "author")
-			return "only the author's answer at the desk resolves it as the author's; call extension_wtfp__gate with its id";
-		if (next.blocking === true) return "a blocking checkpoint is resolved only by the author; call extension_wtfp__gate with its id";
+			return "only the author's answer at the desk resolves it as the author's; call extension_panwrite__gate with its id";
+		if (next.blocking === true) return "a blocking checkpoint is resolved only by the author; call extension_panwrite__gate with its id";
 	}
 	if (prior && prior.status === "pending" && prior.blocking === true) {
 		if (next.blocking !== true) return "a pending blocking checkpoint cannot be made nonblocking";
@@ -1375,7 +1375,7 @@ function prepare(workspace: string, input: RecordWrite, origin: "agent" | "desk"
 		// A create refused for its content carries the record's example, so the next call can succeed.
 		const route = RECORD_URIS.find((entry) => entry.pattern.test(input.uri));
 		const creating = route !== undefined && !existsSync(path.join(workspace, route.file(route.pattern.exec(input.uri)?.[1] ?? "")));
-		const content = error instanceof Error && /holds wtfp\.project|whose id is|project_id|belongs to project|would not validate/u.test(error.message);
+		const content = error instanceof Error && /holds panwrite\.project|whose id is|project_id|belongs to project|would not validate/u.test(error.message);
 		if (creating && content && route) throw new Error(withTemplate((error as Error).message, route.type));
 		throw error;
 	}
@@ -1438,9 +1438,9 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 	const route = RECORD_URIS.find((entry) => entry.pattern.test(uri));
 	if (!route) throw new Error(notARecord(uri));
 	if (route.type === "interaction" && origin === "agent")
-		throw new Error(`${uri}: only the desk records an author's answer; ask with extension_wtfp__gate`);
+		throw new Error(`${uri}: only the desk records an author's answer; ask with extension_panwrite__gate`);
 	const id = route.pattern.exec(uri)?.[1] ?? "";
-	if (record.schema !== `wtfp.project.${route.type}/v1`) throw new Error(`${uri} holds wtfp.project.${route.type}/v1 records`);
+	if (record.schema !== `panwrite.project.${route.type}/v1`) throw new Error(`${uri} holds panwrite.project.${route.type}/v1 records`);
 	if (id && record.id !== id) throw new Error(`${uri} must hold the record whose id is ${id}`);
 	const file = route.file(id);
 	if (contained(workspace, file) === null) throw new Error(`refusing to write ${uri} through a symbolic link or outside the project`);
@@ -1470,7 +1470,7 @@ function prepareRecord(workspace: string, input: RecordWrite, origin: "agent" | 
 		if (expectation) throw new Error(`${uri} no longer exists; read the project again before writing`);
 	} else if (!expectation) {
 		throw new Error(
-			`${uri} already exists; read it with extension_wtfp__read_record and pass ${REVISIONED.has(route.type) ? "the revision you read as expect_revision" : "the sha256 you read as expect_sha256"} so a newer change is never overwritten, then send the write again. A missing version is not a refusal and does not end the step`,
+			`${uri} already exists; read it with extension_panwrite__read_record and pass ${REVISIONED.has(route.type) ? "the revision you read as expect_revision" : "the sha256 you read as expect_sha256"} so a newer change is never overwritten, then send the write again. A missing version is not a refusal and does not end the step`,
 		);
 	} else {
 		const byRevision = input.expect_revision !== undefined && REVISIONED.has(route.type) && input.expect_revision === priorRevision;
@@ -1549,7 +1549,7 @@ interface Next {
 function step(served: ServedPlugin, action: string, args: string, reason: string, gate?: string): Next {
 	const command = commandFor(served, action, args);
 	const named = { action, section: args || null, ...(gate ? { gate } : {}) };
-	return command ? { command, reason, ...named } : { command: null, reason: `${reason} Its next step, ${action}, needs the WTF-P plugin.`, ...named };
+	return command ? { command, reason, ...named } : { command: null, reason: `${reason} Its next step, ${action}, needs the PanWrite plugin.`, ...named };
 }
 
 function openGates(desk: Desk): Checkpoint[] {
@@ -1560,9 +1560,9 @@ function nextAction(desk: Desk): Next {
 	const served = desk.served;
 	if (!desk.present)
 		return desk.paperExists
-			? step(served, "map-project", "", "A manuscript exists but no WTF-P project records do.")
+			? step(served, "map-project", "", "A manuscript exists but no PanWrite project records do.")
 			: step(served, "new-paper", "", "Start a project: brief, decisions and outline.");
-	if (desk.journal) return { command: "/ext:wtfp:validate", reason: "A record write was interrupted; validating completes it." };
+	if (desk.journal) return { command: "/ext:panwrite:validate", reason: "A record write was interrupted; validating completes it." };
 	const gate = openGates(desk)[0];
 	if (gate)
 		return step(
@@ -1668,7 +1668,7 @@ function sectionNext(served: ServedPlugin, section: SectionRow): Next {
 // --- driver --------------------------------------------------------------------
 
 /**
- * The actions `/wtfp:advance` may chain. Each runs under its own contract; the
+ * The actions `/panwrite:advance` may chain. Each runs under its own contract; the
  * driver never runs an action that starts, maps or reshapes the project, since
  * those are the author's to begin.
  */
@@ -1676,7 +1676,7 @@ const DRIVEN = new Set(["create-outline", "discuss-section", "research-gap", "pl
 /** Steps one advance run may take before it hands the session back. */
 const MAX_DRIVE_STEPS = 24;
 
-/** One `/wtfp:advance` run: the steps the desk armed and the gates it put to the author. */
+/** One `/panwrite:advance` run: the steps the desk armed and the gates it put to the author. */
 interface Drive {
 	workspace: string;
 	/** `finish`: the step was handed back once to record outputs it skipped. */
@@ -1721,7 +1721,7 @@ function driveFingerprint(desk: Desk): string {
  */
 function driveStep(desk: Desk, drive: Drive): DriveDecision {
 	if (!desk.present)
-		return { kind: "stop", reason: "There is no WTF-P project here yet. Start one with new-paper, or map-project for an existing manuscript; advance continues a project, it never starts one." };
+		return { kind: "stop", reason: "There is no PanWrite project here yet. Start one with new-paper, or map-project for an existing manuscript; advance continues a project, it never starts one." };
 	const next = nextAction(desk);
 	if (next.gate) {
 		if (drive.asked.includes(next.gate)) return { kind: "stop", reason: `${next.gate} is still waiting on you. ${next.reason}` };
@@ -1745,8 +1745,8 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 				kind: "step",
 				action: next.action,
 				section,
-				prompt: `dev.pancode/prompts/wtfp/${next.action}.md`,
-				reason: `Continue ${next.command}; it has not failed. It recorded nothing the next step depends on, so record its outputs for what it found, whatever the outcome (${creates.join(", ")}), then call extension_wtfp__next_step. Do not repeat its work.`,
+				prompt: `dev.pancode/prompts/panwrite/${next.action}.md`,
+				reason: `Continue ${next.command}; it has not failed. It recorded nothing the next step depends on, so record its outputs for what it found, whatever the outcome (${creates.join(", ")}), then call extension_panwrite__next_step. Do not repeat its work.`,
 				finish: true,
 			};
 		return { kind: "stop", reason: `${next.command} ran and changed nothing the next step depends on, so the desk stops instead of repeating it. ${next.reason}` };
@@ -1757,10 +1757,10 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
 			kind: "step",
 			action: next.action,
 			section,
-			prompt: `dev.pancode/prompts/wtfp/${next.action}.md`,
+			prompt: `dev.pancode/prompts/panwrite/${next.action}.md`,
 			reason: `Continue ${next.command}: it made progress but has not finished, so the desk arms it again on purpose; this is not a loop. ${next.reason}`,
 		};
-	return { kind: "step", action: next.action, section, prompt: `dev.pancode/prompts/wtfp/${next.action}.md`, reason: next.reason };
+	return { kind: "step", action: next.action, section, prompt: `dev.pancode/prompts/panwrite/${next.action}.md`, reason: next.reason };
 }
 
 /**
@@ -1768,7 +1768,7 @@ function driveStep(desk: Desk, drive: Drive): DriveDecision {
  * dropping the advance prompt can still continue from the last result alone.
  */
 const DRIVER_RULE =
-	"Driver rule for this /wtfp:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_wtfp__next_step with after naming that step (\"start\" for the first call), call extension_wtfp__gate with the checkpoint it names and then extension_wtfp__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
+	"Driver rule for this /panwrite:advance run: the desk, not you, picks every step, so finish the step it armed and call extension_panwrite__next_step with after naming that step (\"start\" for the first call), call extension_panwrite__gate with the checkpoint it names and then extension_panwrite__next_step, and on a stop, a failed step or a refused call report the steps taken and end the turn without choosing another action.";
 
 /**
  * Live on the 0.8.3 host, the model looked for a capability named after the step's action, found none in the
@@ -1779,7 +1779,7 @@ const STEP_IS_A_PROCEDURE =
 
 /** Where a step's prompt lives, stated so it survives the loss of the advance prompt's resolved plugin root. */
 function stepPrompt(prompt: string): string {
-	return `<plugin root>/${prompt}, where <plugin root> is the WTF-P plugin root (two directories above the base_dir of the loaded wtfp-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
+	return `<plugin root>/${prompt}, where <plugin root> is the PanWrite plugin root (two directories above the base_dir of the loaded panwrite-manage-project skill; the prompt's \${pluginRoot} paths mean that root)`;
 }
 
 /** The arming of an advance run between steps: nothing may be written until the desk arms a step. */
@@ -1829,7 +1829,7 @@ function header(desk: Desk): View {
 			dir: "col",
 			children: [
 				{ t: "art", lines: WORDMARK, tone: "brand" },
-				{ t: "text", text: "Write The F***ing Paper · no project here yet", tone: "muted" },
+				{ t: "text", text: "Write the paper · no project here yet", tone: "muted" },
 			],
 		};
 	const facts = [desk.documentType.replaceAll("-", " "), desk.venue, daysLeft(desk.deadline)].filter(
@@ -2043,7 +2043,7 @@ function footer(desk: Desk): View {
 		const start = commandFor(desk.served, "new-paper");
 		return {
 			t: "text",
-			text: `WTF-P · no .planning here · ${start ? `${start} starts one` : "the WTF-P plugin's new-paper starts one"}`,
+			text: `PanWrite · no .planning here · ${start ? `${start} starts one` : "the PanWrite plugin's new-paper starts one"}`,
 			tone: "muted",
 		};
 	}
@@ -2071,8 +2071,8 @@ function rail(desk: Desk): View {
 	return {
 		t: "text",
 		text: desk.present
-			? `WTF-P ◆ ${desk.phase} ◆ ${totalWords(desk).toLocaleString("en-US")}/${desk.targetWords.toLocaleString("en-US")}`
-			: "WTF-P ◆ no project",
+			? `PanWrite ◆ ${desk.phase} ◆ ${totalWords(desk).toLocaleString("en-US")}/${desk.targetWords.toLocaleString("en-US")}`
+			: "PanWrite ◆ no project",
 		tone: "brand",
 		bold: true,
 	};
@@ -2118,7 +2118,7 @@ async function picture(
 	return {
 		status: current.present
 			? {
-					text: `WTF-P · ${current.phase} · ${totalWords(current).toLocaleString("en-US")}/${current.targetWords.toLocaleString("en-US")}w`,
+					text: `PanWrite · ${current.phase} · ${totalWords(current).toLocaleString("en-US")}/${current.targetWords.toLocaleString("en-US")}w`,
 					tone: openGates(current).length > 0 || current.journal ? "warning" : "neutral",
 				}
 			: null,
@@ -2149,7 +2149,7 @@ async function revalidate(ctx: ExtensionContextV2, files: string[]): Promise<Vie
 		t: "box",
 		dir: "col",
 		border: "round",
-		title: "WTF-P · schema violation",
+		title: "PanWrite · schema violation",
 		children: fresh.slice(0, 4).flatMap((record) => [
 			{ t: "text", text: record.file, bold: true, tone: "error" } as View,
 			...record.errors.slice(0, 3).map((error) => ({ t: "text", text: `  ${error}`, tone: "muted", wrap: "wrap" }) as View),
@@ -2305,7 +2305,7 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 	const now = timestamp();
 	const artifact = subjectOf(workspace, desk, checkpoint);
 	const base: Json = {
-		schema: "wtfp.project.interaction/v1",
+		schema: "panwrite.project.interaction/v1",
 		id: interactionId(),
 		project_id: desk.projectId,
 		kind: "checkpoint-answer",
@@ -2342,10 +2342,10 @@ async function answer(ctx: ExtensionContextV2, stepKey: string, picked: unknown,
 						...(option ? { selected_option: option.id } : {}),
 						summary: `${
 							option
-								? `The author chose "${shown(checkpoint, option).label}" at the PanCode WTF-P desk.`
+								? `The author chose "${shown(checkpoint, option).label}" at the PanCode PanWrite desk.`
 								: picked === WAIVE
-									? "The author waived this gate at the PanCode WTF-P desk."
-									: "The author marked this done at the PanCode WTF-P desk."
+									? "The author waived this gate at the PanCode PanWrite desk."
+									: "The author marked this done at the PanCode PanWrite desk."
 						}${note ? `${NOTE_LEAD}${note}` : ""}`,
 						resolved_at: now,
 					},
@@ -2435,7 +2435,7 @@ async function startGates(ctx: ExtensionContextV2): Promise<ExtensionOutputV2> {
 		};
 	return {
 		text: `${pending.length} gate${pending.length === 1 ? "" : "s"} want${pending.length === 1 ? "s" : ""} your answer.`,
-		interview: { id: "gate", title: "WTF-P gates", total: pending.length, step: await ask(ctx, desk, pending[0] as Checkpoint) },
+		interview: { id: "gate", title: "PanWrite gates", total: pending.length, step: await ask(ctx, desk, pending[0] as Checkpoint) },
 	};
 }
 
@@ -2563,7 +2563,7 @@ async function recordTool(ctx: ExtensionContextV2, input: Json): Promise<{ text:
 		const write = writes[0] as RecordWrite;
 		return {
 			text: `${write.uri} weakens the author's controls; asking the author.`,
-			interview: { id: "confirm-write", title: "WTF-P · your controls", total: 1, step: await confirmStep(ctx, write, outcome.confirm) },
+			interview: { id: "confirm-write", title: "PanWrite · your controls", total: 1, step: await confirmStep(ctx, write, outcome.confirm) },
 		};
 	}
 	return {
@@ -2794,7 +2794,7 @@ function progressCard(desk: Desk): View {
 		t: "box",
 		dir: "col",
 		border: "round",
-		title: `WTF-P · ${desk.title}`,
+		title: `PanWrite · ${desk.title}`,
 		meta: desk.phase,
 		children: [
 			{
@@ -2837,7 +2837,7 @@ function progressCard(desk: Desk): View {
 
 function progressText(desk: Desk): string {
 	const next = nextAction(desk);
-	if (!desk.present) return `No WTF-P project here. ${next.command ?? next.reason}`;
+	if (!desk.present) return `No PanWrite project here. ${next.command ?? next.reason}`;
 	return [
 		`${desk.title} · ${desk.phase}`,
 		`${totalWords(desk)}/${desk.targetWords} words; ${desk.sections.filter((section) => section.status === "complete").length}/${desk.sections.length} sections complete`,
@@ -2905,11 +2905,11 @@ function clip(message: string, tail: string): string {
 function statusReminder(desk: Desk): string {
 	const gates = openGates(desk);
 	const lines = [
-		"WTF-P desk status at the start of this turn (extension_wtfp__status returns it as structured data):",
+		"PanWrite desk status at the start of this turn (extension_panwrite__status returns it as structured data):",
 		progressText(desk),
 		...(gates.length > 0 ? [`Open gates: ${gates.map((gate) => `${gate.id} (${gate.scope_uri.replace(/^project:\/\//u, "")})`).join(", ")}`] : []),
 	];
-	return clip(lines.join("\n"), "\n… (truncated; call extension_wtfp__status)");
+	return clip(lines.join("\n"), "\n… (truncated; call extension_panwrite__status)");
 }
 
 function helpCard(served: ServedPlugin): { text: string; card: View } {
@@ -2933,7 +2933,7 @@ function helpCard(served: ServedPlugin): { text: string; card: View } {
 			t: "box",
 			dir: "col",
 			border: "round",
-			title: "WTF-P actions",
+			title: "PanWrite actions",
 			meta: `${rows.length}`,
 			children: [
 				{
@@ -2943,12 +2943,12 @@ function helpCard(served: ServedPlugin): { text: string; card: View } {
 						value: group.actions.map((id) => `${actionName(served, id)}${unavailable.has(id) ? " (unavailable)" : ""}`).join("  "),
 					})),
 				},
-				...(served ? [{ t: "text", wrap: "wrap", tone: "muted", text: "Type /wtfp: in the prompt to see what each action does." } as View] : []),
+				...(served ? [{ t: "text", wrap: "wrap", tone: "muted", text: "Type /panwrite: in the prompt to see what each action does." } as View] : []),
 				{
 					t: "text",
 					wrap: "wrap",
 					tone: "muted",
-					text: `${served ? "" : "The WTF-P plugin is not installed and enabled, so the actions above are not commands here; install and enable it to run them. "}Answered locally with no model: ${local.join(", ")}, /ext:wtfp:checkpoints, /ext:wtfp:validate. Write guard: a running action may write only what its contract declares, and the workers it dispatches are confined to the same roots. A section's manuscript waits for its blocking gates, an approved plan whose bytes the author approved, and verified evidence for required claims in literature-heavy sections. Only your answers at the desk count as yours. ${WORD_METHOD}`,
+					text: `${served ? "" : "The PanWrite plugin is not installed and enabled, so the actions above are not commands here; install and enable it to run them. "}Answered locally with no model: ${local.join(", ")}, /ext:panwrite:checkpoints, /ext:panwrite:validate. Write guard: a running action may write only what its contract declares, and the workers it dispatches are confined to the same roots. A section's manuscript waits for its blocking gates, an approved plan whose bytes the author approved, and verified evidence for required claims in literature-heavy sections. Only your answers at the desk count as yours. ${WORD_METHOD}`,
 				},
 			],
 		},
@@ -2962,7 +2962,7 @@ function checkpointsCard(desk: Desk): View {
 				t: "box",
 				dir: "col",
 				border: "round",
-				title: "WTF-P checkpoints",
+				title: "PanWrite checkpoints",
 				meta: String(desk.checkpoints.length),
 				children: [
 					{
@@ -3009,7 +3009,7 @@ async function validateAll(ctx: ExtensionContextV2): Promise<ExtensionOutputV2> 
 		t: "box",
 		dir: "col",
 		border: "round",
-		title: failures.length === 0 && serious.length === 0 ? "WTF-P · records consistent" : "WTF-P · findings",
+		title: failures.length === 0 && serious.length === 0 ? "PanWrite · records consistent" : "PanWrite · findings",
 		meta: `${files.length} records · ${failures.length} invalid · ${serious.length} findings`,
 		children: [
 			...(recovered ? [{ t: "text", text: recovered, tone: "warning", wrap: "wrap" } as View] : []),
@@ -3120,7 +3120,7 @@ function block(reason: string): ExtensionHookResult {
  * and a dispatch call's tasks as admission parsed them. The desk judges only
  * these, never its own reading of a call, so it cannot drift from PanCode's
  * grammar. When a host sends `args` alone, the desk refuses writes and
- * dispatches inside a WTF-P project or action and leaves the rest alone.
+ * dispatches inside a PanWrite project or action and leaves the rest alone.
  */
 interface HostTarget {
 	path: string;
@@ -3157,7 +3157,7 @@ const strings = (value: unknown): value is string[] => Array.isArray(value) && v
 /**
  * The host's facts for a hook event. A fact in a shape the desk cannot read,
  * or a dispatch kind it does not know, counts as no fact, and `malformed` says
- * so: the desk then refuses the call inside a WTF-P project or action and
+ * so: the desk then refuses the call inside a PanWrite project or action and
  * leaves other folders alone, as for a host that sends none.
  */
 function hostLanding(event: unknown): HostLanding & { malformed?: string } {
@@ -3214,7 +3214,7 @@ function hostLanding(event: unknown): HostLanding & { malformed?: string } {
 }
 
 function deskOwned(relative: string): boolean {
-	return DESK_OWNED.some((owned) => under(owned, relative)) || /^\.planning\/(?:.*\/)?\.wtfp-/u.test(relative);
+	return DESK_OWNED.some((owned) => under(owned, relative)) || /^\.planning\/(?:.*\/)?\.panwrite-/u.test(relative);
 }
 
 /** The manuscripts a write must not reach now: those of sections that are not ready to draft. */
@@ -3242,14 +3242,14 @@ function heldBy(desk: Desk, held: string[], root: string): string | undefined {
 	return sectionsForPaper(desk, lexical).some((section) => blockers(desk, section).length > 0) ? lexical : undefined;
 }
 
-/** Whether the session is in a WTF-P project or inside a WTF-P action, where a call the desk cannot judge is refused. */
+/** Whether the session is in a PanWrite project or inside a PanWrite action, where a call the desk cannot judge is refused. */
 async function projectOrArmed(ctx: ExtensionContextV2): Promise<boolean> {
 	if (await armedFor(ctx)) return true;
 	return loadDesk(ctx.snapshot.workspace, await storedKey(ctx, false)).present;
 }
 
 /** Why a host that sends no landing or dispatch plan cannot be guarded. */
-const NEEDS_HOST_FACTS = "WTF-P needs PanCode 0.9.0 or later, which tells the desk where each call lands and what each dispatch starts; this PanCode does not, so the desk refuses the call inside a WTF-P project or action.";
+const NEEDS_HOST_FACTS = "PanWrite needs PanCode 0.9.0 or later, which tells the desk where each call lands and what each dispatch starts; this PanCode does not, so the desk refuses the call inside a PanWrite project or action.";
 
 /** Why a call PanCode sent no usable facts for is refused, once this PanCode has shown it sends them. */
 async function missingFacts(ctx: ExtensionContextV2, malformed: string | undefined): Promise<string> {
@@ -3264,7 +3264,7 @@ async function missingFacts(ctx: ExtensionContextV2, malformed: string | undefin
  * merges into.
  */
 function writeLanding(target: string, workspace: string, host: HostTarget): { relative: string | null } | { refused: string } {
-	if (!host.resolved) return { refused: `WTF-P write guard: PanCode could not resolve where ${target} lands (a link loop, or a component it cannot inspect); refused.` };
+	if (!host.resolved) return { refused: `PanWrite write guard: PanCode could not resolve where ${target} lands (a link loop, or a component it cannot inspect); refused.` };
 	if (host.workspacePath !== undefined) return { relative: host.workspacePath };
 	const root = realWorkspace(workspace);
 	return { relative: inside(root, host.path) ? posix(path.relative(root, host.path)) || "." : null };
@@ -3273,15 +3273,15 @@ function writeLanding(target: string, workspace: string, host: HostTarget): { re
 async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTarget, malformed?: string): Promise<ExtensionHookResult> {
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
-	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P write guard: ${await missingFacts(ctx, malformed)}`) : {};
+	if (!host) return (await projectOrArmed(ctx)) ? block(`PanWrite write guard: ${await missingFacts(ctx, malformed)}`) : {};
 	const landed = writeLanding(target, workspace, host);
 	if ("refused" in landed) return block(landed.refused);
 	if (landed.relative === null) return {};
 	const relative = landed.relative;
-	if (deskOwned(relative)) return block(`WTF-P write guard: ${relative} is written only by the desk; nothing else may change it.`);
+	if (deskOwned(relative)) return block(`PanWrite write guard: ${relative} is written only by the desk; nothing else may change it.`);
 	if (under(".planning", relative) && relative.endsWith(".json") && !under(".planning/archives", relative))
 		return block(
-			`WTF-P write guard: ${relative} is a portable record; write it with extension_wtfp__record so it is validated and checked against the version you read.`,
+			`PanWrite write guard: ${relative} is a portable record; write it with extension_panwrite__record so it is validated and checked against the version you read.`,
 		);
 	const desk = loadDesk(workspace, await storedKey(ctx, false));
 	const armed = await armedFor(ctx);
@@ -3291,15 +3291,15 @@ async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTa
 		if (!roots.some((allowed) => under(allowed, relative)))
 			return block(
 				armed.action === "advance"
-					? `WTF-P write guard: nothing is armed between /wtfp:advance steps; refused ${relative}. Call extension_wtfp__next_step; it arms the step that may write, and that step's own prompt says what it writes.`
-					: `WTF-P write guard: ${actionName(served, armed.action)}${armed.section ? ` ${armed.section}` : ""} may write only under ${roots.join(", ") || "nothing (it declares no file outputs)"}; refused ${relative}. Record other changes as a handoff instead.`,
+					? `PanWrite write guard: nothing is armed between /panwrite:advance steps; refused ${relative}. Call extension_panwrite__next_step; it arms the step that may write, and that step's own prompt says what it writes.`
+					: `PanWrite write guard: ${actionName(served, armed.action)}${armed.section ? ` ${armed.section}` : ""} may write only under ${roots.join(", ") || "nothing (it declares no file outputs)"}; refused ${relative}. Record other changes as a handoff instead.`,
 			);
 	}
 	for (const section of desk.sections) {
 		const linked = Array.isArray((section.record?.artifacts as Json | undefined)?.plans) ? (((section.record?.artifacts as Json).plans as string[]) ?? []) : [];
 		for (const uri of linked)
 			if (artifactFile(workspace, uri) === relative)
-				return block(`WTF-P write guard: ${relative} is a linked plan, and linked plans are immutable; write a revision plan instead.`);
+				return block(`PanWrite write guard: ${relative} is a linked plan, and linked plans are immutable; write a revision plan instead.`);
 	}
 	if (!under("paper", relative) || !desk.present) return {};
 	// A file can be the manuscript of more than one section (one nested under another's stem); every one must be ready.
@@ -3310,13 +3310,13 @@ async function guardWrite(ctx: ExtensionContextV2, target: string, host?: HostTa
 	const { section, reasons } = held;
 	const gate = section.gates[0];
 	return block(
-		`WTF-P gate: ${section.title} cannot be written yet: ${reasons.join("; ")}. ${
+		`PanWrite gate: ${section.title} cannot be written yet: ${reasons.join("; ")}. ${
 			gate
 				? `Answer it with ${actionName(served, "check-todos")}.`
 				: !planReady(section.plan)
 					? commandFor(served, "plan-section", section.id) !== null
 						? `Run ${commandFor(served, "plan-section", section.id)} and approve its plan at the gate.`
-						: "Planning it needs the WTF-P plugin; approve a plan at the gate."
+						: "Planning it needs the PanWrite plugin; approve a plan at the gate."
 					: `Run ${actionName(served, "research-gap")} for it first.`
 		}`,
 	);
@@ -3335,7 +3335,7 @@ function narrow(requested: string[], allowed: string[]): string[] {
 	return [...out].sort();
 }
 
-const WTFP_AGENT = /^wtfp-[a-z-]+$/u;
+const PANWRITE_AGENT = /^panwrite-[a-z-]+$/u;
 
 /** One worker a dispatch names, as PanCode parsed it. */
 interface DispatchTask {
@@ -3369,9 +3369,9 @@ function plainSpelling(root: string): string {
 function planTasks(plan: Extract<HostDispatch, { kind: "tasks" }>, workspace: string, present: boolean): DispatchTask[] {
 	const root = realWorkspace(workspace);
 	for (const task of plan.tasks)
-		if (task.cwd !== root) throw new Error("WTF-P dispatch guard: a worker's cwd moves the write roots the desk judged; dispatch from the project root without cwd.");
+		if (task.cwd !== root) throw new Error("PanWrite dispatch guard: a worker's cwd moves the write roots the desk judged; dispatch from the project root without cwd.");
 	if (present && plan.tasks.some((task) => task.worktree && !task.readOnly))
-		throw new Error("WTF-P dispatch guard: the desk cannot see what a task worktree merges back, so a WTF-P project refuses worktree writers, compete candidates included.");
+		throw new Error("PanWrite dispatch guard: the desk cannot see what a task worktree merges back, so a PanWrite project refuses worktree writers, compete candidates included.");
 	// With no role reported, every task is one the call named.
 	return plan.tasks
 		.filter((task) => task.role === undefined || !GATE_ROLES.has(task.role))
@@ -3386,7 +3386,7 @@ function planTasks(plan: Extract<HostDispatch, { kind: "tasks" }>, workspace: st
 					return;
 				}
 				if (landed === null || landed !== plainSpelling(spelled))
-					throw new Error(`WTF-P dispatch guard: write root ${spelled} does not lead where it reads (a link, or a path outside the project); name the real project path.`);
+					throw new Error(`PanWrite dispatch guard: write root ${spelled} does not lead where it reads (a link, or a path outside the project); name the real project path.`);
 				roots.push(`${landed}${spelled.trim().endsWith("/") ? "/" : ""}`);
 			});
 			return { agent: task.agent, roots: unbounded ? null : roots, readOnly: task.readOnly };
@@ -3413,7 +3413,7 @@ function confineCall(args: Json, narrowed: Array<string[] | null>): Json {
 	if (args.tasks === undefined && narrowed.length === 1) return { ...withoutHostKeys(args), intent: { ...(isObject(args.intent) ? args.intent : {}), write_roots: narrowed[0] } };
 	if (Array.isArray(tasks) && tasks.length === narrowed.length && tasks.every((item) => isObject(item) || typeof item === "string"))
 		return { ...withoutHostKeys(args), tasks: tasks.map((item, index) => confine(item, narrowed[index] ?? null)) };
-	throw new Error("WTF-P dispatch guard: the desk confines each worker through its intent.write_roots, so send tasks as an array of task objects.");
+	throw new Error("PanWrite dispatch guard: the desk confines each worker through its intent.write_roots, so send tasks as an array of task objects.");
 }
 
 const sameRoots = (left: string[] | null, right: string[] | null): boolean =>
@@ -3423,27 +3423,27 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 	if (args.list === true || host?.kind === "list") return {};
 	// PanCode could not prepare this call and refuses it itself, with its own reason; nothing of it runs.
 	if (!host && typeof args.__pancode_dispatch_plan_preparation_error === "string") return {};
-	if (!host) return (await projectOrArmed(ctx)) ? block(`WTF-P dispatch guard: ${await missingFacts(ctx, malformed)}`) : {};
+	if (!host) return (await projectOrArmed(ctx)) ? block(`PanWrite dispatch guard: ${await missingFacts(ctx, malformed)}`) : {};
 	const workspace = ctx.snapshot.workspace;
 	const served = ctx.snapshot.plugin ?? null;
 	const desk = loadDesk(workspace, await storedKey(ctx, false));
 	const armed = await armedFor(ctx);
 	if (!desk.present && !armed) {
-		// Outside a WTF-P project and action, only the WTF-P recipes are the desk's business.
-		const wtfp = host.kind === "tasks" ? host.tasks.filter((task) => WTFP_AGENT.test(task.agent)).map((task) => task.agent) : [];
-		return wtfp.length > 0
-			? block(`WTF-P dispatch guard: ${wtfp.join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`)
+		// Outside a PanWrite project and action, only the PanWrite recipes are the desk's business.
+		const panwrite = host.kind === "tasks" ? host.tasks.filter((task) => PANWRITE_AGENT.test(task.agent)).map((task) => task.agent) : [];
+		return panwrite.length > 0
+			? block(`PanWrite dispatch guard: ${panwrite.join(", ")} run only inside the PanWrite action that owns them, so the desk can confine their writes; start it with its /panwrite: command.`)
 			: {};
 	}
 	if (desk.present && (args.from_scout !== undefined || host.kind === "apply-winner"))
-		return block("WTF-P dispatch guard: the desk cannot see what a scout continuation or a compete winner writes, so a WTF-P project refuses them.");
+		return block("PanWrite dispatch guard: the desk cannot see what a scout continuation or a compete winner writes, so a PanWrite project refuses them.");
 	if (host.kind !== "tasks") return {};
 	const entries = planTasks(host, workspace, desk.present);
 	if (!armed) {
-		const wtfp = entries.filter((entry) => WTFP_AGENT.test(entry.agent));
-		if (wtfp.length > 0)
+		const panwrite = entries.filter((entry) => PANWRITE_AGENT.test(entry.agent));
+		if (panwrite.length > 0)
 			return block(
-				`WTF-P dispatch guard: ${wtfp.map((entry) => entry.agent).join(", ")} run only inside the WTF-P action that owns them, so the desk can confine their writes; start it with its /wtfp: command.`,
+				`PanWrite dispatch guard: ${panwrite.map((entry) => entry.agent).join(", ")} run only inside the PanWrite action that owns them, so the desk can confine their writes; start it with its /panwrite: command.`,
 			);
 		// Workers run no desk check, so outside an action each must be kept off the records and the manuscripts still held.
 		const held = [".planning/", ...heldManuscripts(desk).roots];
@@ -3451,11 +3451,11 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 			if (entry.readOnly) continue;
 			if (entry.roots === null)
 				return block(
-					`WTF-P dispatch guard: outside a WTF-P action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
+					`PanWrite dispatch guard: outside a PanWrite action, give each worker intent.write_roots that leave out ${held.join(", ")}; a worker runs no desk check, so without roots it could change the records or a gated manuscript.`,
 				);
 			for (const root of entry.roots) {
 				const hit = heldBy(desk, held, root);
-				if (hit) return block(`WTF-P dispatch guard: write root ${root} reaches ${hit}, which a worker outside a WTF-P action may not change.`);
+				if (hit) return block(`PanWrite dispatch guard: write root ${root} reaches ${hit}, which a worker outside a PanWrite action may not change.`);
 			}
 		}
 		return {};
@@ -3466,7 +3466,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 	const stranger = agents.length > 0 ? entries.find((entry) => !entry.readOnly && !agents.includes(entry.agent)) : undefined;
 	if (stranger)
 		return block(
-			`WTF-P dispatch guard: ${name} delegates only to ${agents.join(", ")}, and this call would start ${stranger.agent}; name the role with agent (for example agent: "${agents.find((agent) => GUARD.paperWriters.includes(agent)) ?? agents[0]}").`,
+			`PanWrite dispatch guard: ${name} delegates only to ${agents.join(", ")}, and this call would start ${stranger.agent}; name the role with agent (for example agent: "${agents.find((agent) => GUARD.paperWriters.includes(agent)) ?? agents[0]}").`,
 		);
 	// A worker never gets a root that holds records: the record tool is the only way records change.
 	const base = writeRoots(desk, armed).filter((root) => ![".", ".planning", ".planning/sections"].includes(root.replace(/\/$/u, "")));
@@ -3492,23 +3492,23 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		if (paperWriters.has(entry.agent) && !roots.some((root) => root.startsWith("paper/")))
 			throw new Error(
 				entry.roots !== null && allowed.some((root) => root.startsWith("paper/"))
-					? `WTF-P dispatch guard: ${entry.agent} names write_roots ${entry.roots.join(", ")}, which reach no manuscript ${name} may write; give it intent.write_roots ${allowed.join(", ")} (workspace paths, not project:// URIs).`
-					: `WTF-P dispatch guard: ${entry.agent} would have no manuscript it may write. ${notes.length > 0 ? notes.join(" · ") : "Name the section and approve its plan first."}`,
+					? `PanWrite dispatch guard: ${entry.agent} names write_roots ${entry.roots.join(", ")}, which reach no manuscript ${name} may write; give it intent.write_roots ${allowed.join(", ")} (workspace paths, not project:// URIs).`
+					: `PanWrite dispatch guard: ${entry.agent} would have no manuscript it may write. ${notes.length > 0 ? notes.join(" · ") : "Name the section and approve its plan first."}`,
 			);
 		if (roots.length > 0) return roots;
 		// PanCode reads an empty write_roots as no boundary at all, so an empty list is refused, never sent.
 		if (entry.roots !== null && allowed.length > 0)
-			throw new Error(`WTF-P dispatch guard: ${entry.roots.join(", ")} lie outside what ${armed.action} may write (${allowed.join(", ")}).`);
+			throw new Error(`PanWrite dispatch guard: ${entry.roots.join(", ")} lie outside what ${armed.action} may write (${allowed.join(", ")}).`);
 		throw new Error(
 			sectionScoped && armed.section === null
-				? `WTF-P dispatch guard: ${name} names no section, so its workers would reach every section's records; name the section in the command.`
-				: `WTF-P dispatch guard: ${name} declares no file outputs a worker may write; only its read-only reviewers may be dispatched.`,
+				? `PanWrite dispatch guard: ${name} names no section, so its workers would reach every section's records; name the section in the command.`
+				: `PanWrite dispatch guard: ${name} declares no file outputs a worker may write; only its read-only reviewers may be dispatched.`,
 		);
 	});
 	const writers = entries.filter((entry, index) => narrowed[index] !== null);
 	if (writers.length > 1 && writers.some((entry) => entry.roots === null))
 		return block(
-			`WTF-P dispatch guard: give each task its own intent.write_roots inside ${allowed.join(", ")}, one section's manuscript and summary per writer, so parallel writers stay disjoint.`,
+			`PanWrite dispatch guard: give each task its own intent.write_roots inside ${allowed.join(", ")}, one section's manuscript and summary per writer, so parallel writers stay disjoint.`,
 		);
 	// A worker whose roots already are its confinement, in any order, needs no rewrite.
 	const needed = narrowed.map((roots, index) => (roots === null || sameRoots(roots, entries[index]?.roots ?? null) ? null : roots));
@@ -3517,7 +3517,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 	// that needs approval (more than one worker, a review loop, compete) is refused with the exact roots instead.
 	if (host.tasks.length > 1)
 		return block(
-			`WTF-P dispatch guard: give each worker exactly these intent.write_roots, so the call you approve runs unchanged: ${entries
+			`PanWrite dispatch guard: give each worker exactly these intent.write_roots, so the call you approve runs unchanged: ${entries
 				.map((entry, index) => `task ${index + 1} (${entry.agent}): ${(narrowed[index] ?? []).join(", ") || "none, it only reads"}`)
 				.join("; ")}.`,
 		);
@@ -3527,7 +3527,7 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 		isObject(item) && isObject(item.intent) && (!Array.isArray(item.intent.write_roots) || item.intent.write_roots.length === 0);
 	if (declaresEmpty(args) || (Array.isArray(args.tasks) && args.tasks.some(declaresEmpty)))
 		return block(
-			`WTF-P dispatch guard: an intent without write_roots bounds nothing for the worker, and PanCode will not let the desk fill them in. Send ${entries
+			`PanWrite dispatch guard: an intent without write_roots bounds nothing for the worker, and PanCode will not let the desk fill them in. Send ${entries
 				.map((entry, index) => `${entries.length > 1 ? `task ${index + 1} (${entry.agent}) ` : ""}intent.write_roots ${(needed[index] ?? []).join(", ") || "omitted, since it only reads"}`)
 				.join("; ")} in that intent.`,
 		);
@@ -3537,18 +3537,18 @@ async function guardDispatch(ctx: ExtensionContextV2, args: Json, host?: HostDis
 			{
 				kind: "rewrite_tool_input",
 				args: rewritten,
-				reason: `WTF-P confines ${name} workers to ${[...new Set(narrowed.flatMap((roots) => roots ?? []))].join(", ") || "no writes"}.`,
+				reason: `PanWrite confines ${name} workers to ${[...new Set(narrowed.flatMap((roots) => roots ?? []))].join(", ") || "no writes"}.`,
 			},
 		],
 	};
 }
 
-const BASH_DESK_PATHS = /\.planning\/(?:interactions\b|\.wtfp-)/u;
+const BASH_DESK_PATHS = /\.planning\/(?:interactions\b|\.panwrite-)/u;
 /** Tools that run a command or script; the desk can only refuse ones that name its own records. */
 const COMMAND_TOOLS = new Set(["bash", "run_script", "job"]);
 
 /**
- * Inside a WTF-P action every question is the author's. PanCode answers an
+ * Inside a PanWrite action every question is the author's. PanCode answers an
  * unanswered `ask_user` round with its recommended option after
  * `safety.unattendedAfterSeconds`, unless the question is `operator_only`, so
  * the desk marks a lone question that way and refuses a round that would need
@@ -3560,13 +3560,13 @@ async function guardQuestions(ctx: ExtensionContextV2, input: Json): Promise<Ext
 	if (questions.length === 0 || questions.every((question) => (question as Json | null)?.operator_only === true)) return {};
 	if (!(await armedFor(ctx))) return {};
 	if (questions.length > 1)
-		return block("WTF-P: inside a WTF-P action each question is the author's to answer. Ask them one call at a time, each with operator_only: true and its own options, so PanCode never answers one for an absent author.");
+		return block("PanWrite: inside a PanWrite action each question is the author's to answer. Ask them one call at a time, each with operator_only: true and its own options, so PanCode never answers one for an absent author.");
 	return {
 		effects: [
 			{
 				kind: "rewrite_tool_input",
 				args: { ...input, questions: [{ ...(questions[0] as Json), operator_only: true }] },
-				reason: "WTF-P asks the author, and only the author may answer: PanCode never takes a recommended option for this question.",
+				reason: "PanWrite asks the author, and only the author may answer: PanCode never takes a recommended option for this question.",
 			},
 		],
 	};
@@ -3577,7 +3577,7 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 	const effects: ExtensionEffect[] = [];
 	if (!(await ctx.state.get<boolean>("protected")).value) {
 		// The host's protected-artifact guard then refuses bash rm, mv, cp and redirects into the desk's own records.
-		effects.push({ kind: "protect_path", path: path.join(ctx.snapshot.workspace, ".planning", "interactions"), reason: "WTF-P author answers are written only by the desk." });
+		effects.push({ kind: "protect_path", path: path.join(ctx.snapshot.workspace, ".planning", "interactions"), reason: "PanWrite author answers are written only by the desk." });
 		await ctx.state.set("protected", true);
 	}
 	let result: ExtensionHookResult = {};
@@ -3588,7 +3588,7 @@ async function guard(ctx: ExtensionContextV2, tool: string, args: unknown, event
 		if (tool === "dispatch") result = await guardDispatch(ctx, input, host.dispatch, host.malformed);
 		else if (tool === "ask_user") result = await guardQuestions(ctx, input);
 		else if (COMMAND_TOOLS.has(tool)) {
-			if (BASH_DESK_PATHS.test(JSON.stringify(input))) result = block("WTF-P write guard: commands may not touch the desk's own records under .planning.");
+			if (BASH_DESK_PATHS.test(JSON.stringify(input))) result = block("PanWrite write guard: commands may not touch the desk's own records under .planning.");
 		} else {
 			const raw = input.path ?? input.file_path ?? input.filePath;
 			// The artifact tool trims its path; without one it writes under PanCode's own artifact directory, where PanCode's landing still says it lands.
@@ -3623,14 +3623,14 @@ async function noteManuscriptWrite(ctx: ExtensionContextV2, event: unknown): Pro
 		.filter((id) => !noted.includes(id) && declares(armed, `project://sections/${id}`, "update"));
 	if (sections.length === 0) return {};
 	await ctx.state.set("measure-noted", [...noted, ...sections]);
-	const calls = sections.map((id) => `gateway(op="call", capability="extension_wtfp__measure_section", args={section: "${id}"})`).join(" and ");
+	const calls = sections.map((id) => `gateway(op="call", capability="extension_panwrite__measure_section", args={section: "${id}"})`).join(" and ");
 	return {
 		effects: [
 			{
 				kind: "annotate_tool_result",
 				severity: "info",
 				message: clip(
-					`WTF-P: ${landed.relative} is the manuscript of ${sections.join(", ")}, so the desk's recorded word count is stale. When drafting it is done, the WTF-P action records the count with ${calls}; never count words by hand. A dispatched worker leaves this call to the action that dispatched it.`,
+					`PanWrite: ${landed.relative} is the manuscript of ${sections.join(", ")}, so the desk's recorded word count is stale. When drafting it is done, the PanWrite action records the count with ${calls}; never count words by hand. A dispatched worker leaves this call to the action that dispatched it.`,
 					"…",
 				),
 			},
@@ -3639,7 +3639,7 @@ async function noteManuscriptWrite(ctx: ExtensionContextV2, event: unknown): Pro
 }
 
 function arm(text: string, desk: Desk, workspace: string): Armed | null {
-	const match = /^\s*\/wtfp:([a-z][a-z0-9-]*)(?:\s+(\S+))?/u.exec(text);
+	const match = /^\s*\/panwrite:([a-z][a-z0-9-]*)(?:\s+(\S+))?/u.exec(text);
 	if (!match) return null;
 	// The driver arms nothing itself; next_step arms each step it selects.
 	if (match[1] === "advance") return GUARD.actions.advance ? idleArm(workspace) : null;
@@ -3682,7 +3682,7 @@ export default function extension(api: ExtensionApiV2): void {
 		const command = commandFor(ctx.snapshot.plugin ?? null, "advance");
 		return command
 			? { text: command, prompt: { fill: command } }
-			: { text: "advance needs the WTF-P plugin.", toast: { text: "advance needs the WTF-P plugin." } };
+			: { text: "advance needs the PanWrite plugin.", toast: { text: "advance needs the PanWrite plugin." } };
 	});
 	api.action("validate", async (_event, ctx) => validateAll(ctx));
 	api.action("help", async (_event, ctx) => helpCard(ctx.snapshot.plugin ?? null));
@@ -3761,7 +3761,7 @@ export default function extension(api: ExtensionApiV2): void {
 		const workspace = ctx.snapshot.workspace;
 		const drive = (await ctx.state.get<Drive>("drive")).value;
 		if (!drive || drive.workspace !== workspace)
-			return { text: "Only a /wtfp:advance turn can ask the desk for its next step; nothing was armed.", isError: true };
+			return { text: "Only a /panwrite:advance turn can ask the desk for its next step; nothing was armed.", isError: true };
 		let desk = await deskFor(ctx);
 		let recovered: string | null = null;
 		if (desk.journal) {
@@ -3780,7 +3780,7 @@ export default function extension(api: ExtensionApiV2): void {
 			await ctx.state.set("armed", idleArm(workspace));
 			if (decision.kind === "gate") {
 				await ctx.state.set("drive", { ...drive, asked: [...drive.asked, decision.checkpoint] } satisfies Drive);
-				return { text: `${lead}Gate ${decision.checkpoint}: ${decision.reason} Call extension_wtfp__gate with checkpoint ${decision.checkpoint}. ${DRIVER_RULE}`, data: decision };
+				return { text: `${lead}Gate ${decision.checkpoint}: ${decision.reason} Call extension_panwrite__gate with checkpoint ${decision.checkpoint}. ${DRIVER_RULE}`, data: decision };
 			}
 			return { text: `${lead}Stop: ${decision.reason} ${DRIVER_RULE}`, data: decision };
 		}
@@ -3790,7 +3790,7 @@ export default function extension(api: ExtensionApiV2): void {
 			...drive,
 			steps: [...drive.steps, { action: decision.action, section: decision.section, fingerprint: driveFingerprint(desk), ...(decision.finish ? { finish: true } : {}) }],
 		} satisfies Drive);
-		const invocation = `/wtfp:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
+		const invocation = `/panwrite:${decision.action}${decision.section ? ` ${decision.section}` : ""}`;
 		return {
 			text: `${lead}Step ${drive.steps.length + 1}: ${invocation}. ${decision.reason} The write guard is armed for ${decision.action}${decision.section ? ` ${decision.section}` : ""} only. Read and follow ${stepPrompt(decision.prompt)} with ${decision.section ? `invocation input ${decision.section}` : "no invocation input"}. ${STEP_IS_A_PROCEDURE} ${DRIVER_RULE}`,
 			data: decision,
@@ -3802,7 +3802,7 @@ export default function extension(api: ExtensionApiV2): void {
 		const checkpoint = desk.checkpoints.find((entry) => entry.id === id);
 		if (!checkpoint) return { text: `No checkpoint ${id}.`, isError: true };
 		if (!askable(desk, []).includes(checkpoint)) return { text: `${id} is already ${checkpoint.status}${checkpoint.trust === "attested" ? " by the author at this desk" : ""}.` };
-		return { text: `Asking the author: ${checkpoint.request}`, interview: { id: "gate-one", title: "WTF-P gate", total: 1, step: await ask(ctx, desk, checkpoint) } };
+		return { text: `Asking the author: ${checkpoint.request}`, interview: { id: "gate-one", title: "PanWrite gate", total: 1, step: await ask(ctx, desk, checkpoint) } };
 	});
 	api.interview("gate-one", async (event, ctx): Promise<InterviewNext> => {
 		if (event.nav === "cancel")
@@ -3838,7 +3838,7 @@ export default function extension(api: ExtensionApiV2): void {
 			return {
 				done: true,
 				text: event.reason === "headless" ? "No author could be asked in this headless session; gates left as they were." : "Gates left as they were.",
-				toast: { text: "WTF-P gates unchanged" },
+				toast: { text: "PanWrite gates unchanged" },
 				...(await picture(ctx)),
 			};
 		const kept = (await ctx.state.get<string[]>("gate-kept")).value ?? [];
@@ -3900,7 +3900,7 @@ export default function extension(api: ExtensionApiV2): void {
 				const prepared = stale || picked === "decline" ? null : prepare(workspace, pending.write, "desk", null);
 				const interaction = sealed(
 					{
-						schema: "wtfp.project.interaction/v1",
+						schema: "panwrite.project.interaction/v1",
 						id: interactionId(),
 						project_id: pending.project ?? readRecord(workspace, ".planning/project.json")?.id,
 						kind: "record-change",
@@ -3961,8 +3961,8 @@ export default function extension(api: ExtensionApiV2): void {
 				effects: [
 					{
 						kind: "notify_operator",
-						key: "wtfp-guard",
-						message: "WTF-P driver armed: the desk picks each step from the project and confines it to that action's contract; it stops at the first gate only you can answer.",
+						key: "panwrite-guard",
+						message: "PanWrite driver armed: the desk picks each step from the project and confines it to that action's contract; it stops at the first gate only you can answer.",
 					},
 				],
 			};
@@ -3972,8 +3972,8 @@ export default function extension(api: ExtensionApiV2): void {
 			effects: [
 				{
 					kind: "notify_operator",
-					key: "wtfp-guard",
-					message: `WTF-P write guard armed for ${actionName(ctx.snapshot.plugin ?? null, armed.action)}${armed.section ? ` ${armed.section}` : ""}: ${
+					key: "panwrite-guard",
+					message: `PanWrite write guard armed for ${actionName(ctx.snapshot.plugin ?? null, armed.action)}${armed.section ? ` ${armed.section}` : ""}: ${
 						roots.length > 0 ? `files stay under ${roots.join(", ")}` : "it writes no files"
 					}, and records only the ones its contract declares.`,
 				},
@@ -3982,7 +3982,7 @@ export default function extension(api: ExtensionApiV2): void {
 	});
 	api.hook("before_tool", async (event, ctx) => (event.point === "before_tool" ? guard(ctx, event.tool, event.args, event) : {}));
 	api.hook("after_tool", async (event, ctx) => (event.point === "after_tool" && event.outcome === "ok" ? noteManuscriptWrite(ctx, event) : {}));
-	// A WTF-P turn starts from the desk's picture of the project, so the action need not rebuild it from records.
+	// A PanWrite turn starts from the desk's picture of the project, so the action need not rebuild it from records.
 	api.hook("turn_start", async (event, ctx) => {
 		if (event.point !== "turn_start" || !(await armedFor(ctx))) return {};
 		const desk = await deskFor(ctx);
@@ -4023,7 +4023,7 @@ export default function extension(api: ExtensionApiV2): void {
 		return { text: "", ...(card ? { card } : {}), ...(await picture(ctx)) };
 	});
 	api.on("dispatch_started", async (event, ctx) => {
-		if (event.event !== "dispatch_started" || !event.agentId.startsWith("wtfp-")) return undefined;
+		if (event.event !== "dispatch_started" || !event.agentId.startsWith("panwrite-")) return undefined;
 		const runs = await running(ctx);
 		runs[event.runId] = { agentId: event.agentId, at: Date.now() };
 		await ctx.state.set("running", runs);

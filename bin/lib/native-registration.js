@@ -49,7 +49,7 @@ function nativeEnvironment(runtime, targetDir, baseEnvironment = process.env, op
 }
 
 // A search that met only a directory of the same name, such as the `pancode/`
-// output directory in a WTF-P checkout under an empty PATH entry, reports
+// output directory in a PanWrite checkout under an empty PATH entry, reports
 // EACCES; that is no executable at all, unlike a real file without permission.
 function onPathAsFile(command, environment, cwd) {
   if (command.includes('/') || command.includes(path.sep)) return true;
@@ -171,12 +171,12 @@ function marketplaceListArguments(runtime) {
 }
 
 function antigravityPluginState(targetDir) {
-  const pluginDirectory = path.join(targetDir, 'plugins', 'wtfp');
+  const pluginDirectory = path.join(targetDir, 'plugins', 'panwrite');
   if (!fs.existsSync(pluginDirectory)) return 'missing';
   const stat = fs.lstatSync(pluginDirectory);
   if (stat.isSymbolicLink() || !stat.isDirectory()) return 'foreign';
-  return fs.existsSync(path.join(pluginDirectory, '.wtfp-generated.json'))
-    ? 'wtfp'
+  return fs.existsSync(path.join(pluginDirectory, '.panwrite-generated.json'))
+    ? 'panwrite'
     : 'foreign';
 }
 
@@ -375,7 +375,7 @@ function activateNativeRegistration(runtime, targetDir, native, options = {}) {
         }
       } else if (runtime === 'antigravity') {
         if (antigravityPluginState(targetDir) === 'foreign') {
-          throw new Error('Antigravity already has a non-WTF-P plugin named wtfp; native registration was not changed');
+          throw new Error('Antigravity already has a non-PanWrite plugin named panwrite; native registration was not changed');
         }
         const priorVerification = execute(commands.executable, commands.verify, environment, options);
         if (priorVerification.status === 'unavailable') return activationResult('unavailable');
@@ -478,7 +478,7 @@ function deactivateNativeRegistration(runtime, targetDir, native, options = {}) 
   } else if (runtime === 'antigravity') {
     const pluginState = antigravityPluginState(targetDir);
     if (pluginState === 'foreign') {
-      throw new Error('Antigravity plugin wtfp is not marked as a generated WTF-P adapter; native registration was preserved');
+      throw new Error('Antigravity plugin panwrite is not marked as a generated PanWrite adapter; native registration was preserved');
     }
     if (pluginState === 'missing') {
       return {

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.identity-receipt/v1",
+  "$id": "panwrite.evaluation.identity-receipt/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "client", "model", "effort", "provenance"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.identity-receipt/v1" },
+    "schema": { "const": "panwrite.evaluation.identity-receipt/v1" },
     "client": {
       "type": "object",
       "additionalProperties": false,

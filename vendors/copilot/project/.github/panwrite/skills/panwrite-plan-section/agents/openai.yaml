@@ -1,0 +1,4 @@
+interface:
+  display_name: "PanWrite Plan Section"
+  short_description: "Plan and reshape manuscript sections"
+  default_prompt: "Use $panwrite-plan-section to plan the next manuscript section."

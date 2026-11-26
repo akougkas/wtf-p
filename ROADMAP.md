@@ -1,6 +1,6 @@
-# WTF-P Roadmap
+# PanWrite Roadmap
 
-Development direction for WTF-P. Community input welcome via [GitHub Discussions](https://github.com/akougkas/wtf-p/discussions).
+Development direction for PanWrite. Community input welcome via [GitHub Discussions](https://github.com/PanStudio/panwrite/discussions).
 
 ---
 
@@ -9,8 +9,8 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 **Focus:** Multi-Runtime Parity + GSD-Inspired Architecture
 
 ### Multi-Runtime Support
-- [x] **Gemini CLI** — 36 TOML commands + 11 agents (`npx wtf-p --global --gemini`)
-- [x] **OpenCode** — 36 Markdown commands + 11 agents (`npx wtf-p --global --opencode`)
+- [x] **Gemini CLI** — 36 TOML commands + 11 agents (`npx @panstudio/panwrite --global --gemini`)
+- [x] **OpenCode** — 36 Markdown commands + 11 agents (`npx @panstudio/panwrite --global --opencode`)
 - [x] MANIFEST-based installer with per-runtime file tracking
 - [x] MANIFEST-based uninstaller for clean removal
 - [x] Vendor-specific linting (VENDOR_RULES)
@@ -35,8 +35,8 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] `bin/lib/context-primer.js` — Section-specific context extraction
 - [x] `base-prefs.yaml` — Preference inheritance (global defaults + per-project overrides)
 - [x] `bin/lib/checkpoint.js` — Git-tagged checkpoint save/restore/list
-- [x] `/wtfp:quick` command — Minimal-ceremony tasks
-- [x] `/wtfp:checkpoint` command — Save/restore/list paper state
+- [x] `/panwrite:quick` command — Minimal-ceremony tasks
+- [x] `/panwrite:checkpoint` command — Save/restore/list paper state
 
 ### 8 New Commands
 - [x] `verify-work`, `execute-outline`, `settings`, `add-todo`, `check-todos`, `update`, `audit-milestone`, `plan-milestone-gaps`
@@ -51,15 +51,15 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Tiered Search Pipeline (Semantic Scholar + SerpAPI + CrossRef)
 - [x] Impact Scoring Engine (citations, velocity, recency, venue)
 - [x] Deduplication via universal keys (DOI, ScholarID)
-- [x] Provenance Tracking (`wtfp_*` BibTeX fields)
+- [x] Provenance Tracking (`panwrite_*` BibTeX fields)
 
 ### Libraries & Commands
 - [x] `bin/lib/semantic-scholar.js` — S2 API wrapper
 - [x] `bin/lib/scholar-lookup.js` — SerpAPI wrapper
 - [x] `bin/lib/citation-ranker.js` — Ranking algorithm
-- [x] `/wtfp:analyze-bib` — Impact analysis integration
-- [x] `/wtfp:check-refs` — Auto-suggest missing citations
-- [x] `/wtfp:research-gap` — Intent-aware search
+- [x] `/panwrite:analyze-bib` — Impact analysis integration
+- [x] `/panwrite:check-refs` — Auto-suggest missing citations
+- [x] `/panwrite:research-gap` — Intent-aware search
 
 ---
 
@@ -77,8 +77,8 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Restructured repo: `vendors/claude/`, `vendors/gemini/`, `vendors/opencode/` with shared `core/`
 
 ### Skills System (Claude Code)
-- [x] `wtfp-marp` skill — Markdown+CSS → HTML/PDF via Marp CLI
-- [x] `wtfp-echarts` skill — Data → publication-quality charts
+- [x] `panwrite-marp` skill — Markdown+CSS → HTML/PDF via Marp CLI
+- [x] `panwrite-echarts` skill — Data → publication-quality charts
 - [x] Claude Code plugin manifest for marketplace
 
 ---
@@ -98,7 +98,7 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 
 ### Native clients
 
-- [x] Build the Clio Coder content plugin with namespaced prompts, agents, skills, and playbooks, and the WTF-P writing desk as its own Clio extension
+- [x] Build the Clio Coder content plugin with namespaced prompts, agents, skills, and playbooks, and the PanWrite writing desk as its own Clio extension
 - [x] Build Claude Code plugin with generated commands, agents, and skills
 - [x] Build Codex plugin and repo marketplace
 - [x] Build GitHub Copilot CLI plugin and committed `.github` cloud projection
@@ -112,7 +112,7 @@ Development direction for WTF-P. Community input welcome via [GitHub Discussions
 - [x] Generate every adapter from the canonical protocol
 - [x] Authenticate generated files with per-envelope SHA-256 inventories
 - [x] Detect drift and remove only stale compiler-owned outputs
-- [x] Add explicit `wtfp install <target>` grammar for all seven clients
+- [x] Add explicit `panwrite install <target>` grammar for all seven clients
 - [x] Add exact-file v2 receipts, rollback, containment, and safe uninstall
 - [x] Complete isolated native discovery and the primary Claude, Codex, and Clio `new-paper` evaluations
 - [x] Define versioned routing corpora, semantic invariants, budget metadata, and fail-closed comparison tooling
@@ -211,10 +211,10 @@ These will NOT be built, even if they seem useful:
 
 | Version | Release | Focus |
 |---------|---------|-------|
-| v0.8.0 | Oct 2026 | WTF-P writing desk for Clio Coder as its own extension; Clio fleet contracts shipped as playbooks |
+| v0.8.0 | Oct 2026 | PanWrite writing desk for Clio Coder as its own extension; Clio fleet contracts shipped as playbooks |
 | v0.6.0-rc.2 | Aug 2026 | Decision fidelity, lifecycle guardrails, and bounded NSF proposal UAT |
 | v0.6.0-rc.1 | Aug 2026 | Portable protocol, seven native adapters, Clio reference integration, safe transactional installer |
-| v0.7.0 | Sep 2026 | Optional CiteNexus MCP research backend for `citation.fetch` |
+| v0.7.0 | Sep 2026 | Optional PanCite MCP research backend for `citation.fetch` |
 | v0.6.0 | Sep 2026 | Stable agent-plugin release with repository-root marketplaces and one plugin name |
 | v0.5.0 | Feb 2026 | Multi-runtime parity, GSD architecture, agents, quality loops |
 | v0.4.0 | Jan 2026 | Citation Expert v2, tiered API, provenance tracking |

@@ -5,7 +5,7 @@
 // Runner for versioned PanCode campaigns (evaluation/v2). `plan` and `prepare`
 // need no credentials and run no model. `execute` runs the campaign lifecycle
 // headless with resources the operator selects for that run, on exactly the
-// campaign, PanCode build, WTF-P candidate and workspace that `prepare` bound;
+// campaign, PanCode build, PanWrite candidate and workspace that `prepare` bound;
 // every author gate it reaches is reported as a typed unavailable result,
 // never answered. `collect` verifies a prepared workspace independently of the
 // desk with the desk's own trust rules (evaluation/lib/desk-trust.js),
@@ -33,11 +33,11 @@ const {
 const ROOT = path.resolve(__dirname, '../..');
 const DEFAULT_CAMPAIGN = path.join(ROOT, 'evaluation/v2/campaigns/pancode-0.9.0-reference.json');
 const CAMPAIGN_SCHEMA = path.join(ROOT, 'evaluation/v2/schemas/campaign.schema.json');
-const CONFIRM_ENV = 'WTFP_CAMPAIGN_CONFIRM';
-const CREDENTIALS_ENV = 'WTFP_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE';
-const SETTINGS_ENV = 'WTFP_CAMPAIGN_PANCODE_SETTINGS_SOURCE';
+const CONFIRM_ENV = 'PANWRITE_CAMPAIGN_CONFIRM';
+const CREDENTIALS_ENV = 'PANWRITE_CAMPAIGN_PANCODE_CREDENTIALS_SOURCE';
+const SETTINGS_ENV = 'PANWRITE_CAMPAIGN_PANCODE_SETTINGS_SOURCE';
 // A tool call naming the desk's seal store is an attempt on the key that makes answers attestable.
-const STORE_ACCESS = /extensions[\\/]+wtfp[\\/]+store\.json|seal-key/u;
+const STORE_ACCESS = /extensions[\\/]+panwrite[\\/]+store\.json|seal-key/u;
 // What a step's cost covers: the session's own calls and every worker run it referenced, as PanCode's sealed telemetry folds them.
 const TELEMETRY_COST_SCOPE = 'PanCode sealed telemetry (pancode telemetry cost): every call the step\'s session journal owns, compaction included, and every worker run it referenced. Each step runs with the budget left as its --max-cost-usd ceiling; spend can pass it by the model calls in flight when it is reached, and unpriced routes are not bounded, so unknown cost still stops the run.';
 // PanCode's exit code when a limit stopped the run (src/cli/kit/exit-codes.ts, limitReached), and the
@@ -65,10 +65,10 @@ const EXECUTION_TOOLS = new Set(['bash', 'run_script', 'job', 'verify', 'git']);
 const MAIN_TOOLS = Object.freeze([
   'read', 'evidence', 'grep', 'find', 'ls', 'code_nav', 'context', 'self_compact', 'pancode_docs', 'pancode_hub', 'memory_recall',
   'write', 'edit', 'artifact', 'dispatch', 'monitor', 'steer', 'tasks', 'ledger', 'limitation', 'decide', 'ask_user', 'gateway',
-  ...['record', 'status', 'read_record', 'readiness', 'measure_section', 'gate'].map(tool => `extension_wtfp__${tool}`)
+  ...['record', 'status', 'read_record', 'readiness', 'measure_section', 'gate'].map(tool => `extension_panwrite__${tool}`)
 ]);
 // The tools a dispatched worker may hold (--delegate-tools): exactly what the
-// WTF-P recipes declare. PanCode holds every dispatched worker to this ceiling.
+// PanWrite recipes declare. PanCode holds every dispatched worker to this ceiling.
 const WORKER_TOOLS = Object.freeze(['read', 'grep', 'find', 'ls', 'context', 'ledger', 'limitation', 'write', 'edit']);
 // What PanCode writes for itself under a project's .pancode: the entries its
 // own .pancode/.gitignore keeps out of Git (src/core/project-root.ts) and
@@ -144,14 +144,14 @@ function loadCampaign(file = DEFAULT_CAMPAIGN) {
   for (const step of campaign.lifecycle) {
     if (!actions.has(step.action)) throw new Error(`campaign step ${step.step} names unknown action ${step.action}`);
   }
-  for (const pkg of campaign.wtfp.packages) {
-    const inventory = readJson(path.join(ROOT, pkg.path, '.wtfp-generated.json'));
+  for (const pkg of campaign.panwrite.packages) {
+    const inventory = readJson(path.join(ROOT, pkg.path, '.panwrite-generated.json'));
     if (inventory.target !== pkg.inventory_target) throw new Error(`${pkg.path} is not the ${pkg.inventory_target} envelope`);
   }
   return campaign;
 }
 
-function wtfpIdentity() {
+function panwriteIdentity() {
   const git = (args) => spawnSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' });
   const head = git(['rev-parse', 'HEAD']);
   const status = git(['status', '--porcelain', '--', ...PACKAGE_PATHS]);
@@ -159,7 +159,7 @@ function wtfpIdentity() {
     commit: head.status === 0 ? head.stdout.trim() : null,
     package_tree: status.status !== 0 ? 'unknown' : status.stdout.trim() === '' ? 'clean' : 'dirty',
     packages: Object.fromEntries(['pancode/plugin', 'pancode/extension'].map(relative => {
-      const inventory = readJson(path.join(ROOT, relative, '.wtfp-generated.json'));
+      const inventory = readJson(path.join(ROOT, relative, '.panwrite-generated.json'));
       return [relative, { target: inventory.target, source_sha256: inventory.sourceHash }];
     }))
   };
@@ -215,7 +215,7 @@ function pancodeIdentity(entry, campaign) {
   if (!stat.isFile()) throw new Error(`${entry} is not a regular file`);
   const dist = distOf(entry);
   // A throwaway home keeps the probe from ever resolving the operator's profile.
-  const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'wtfp-campaign-probe-'));
+  const scratch = fs.mkdtempSync(path.join(require('os').tmpdir(), 'panwrite-campaign-probe-'));
   let version;
   try {
     version = spawnSync(process.execPath, [entry, '--version'], {
@@ -245,7 +245,7 @@ function pancodeIdentity(entry, campaign) {
 }
 
 function prompt(step) {
-  return `/wtfp:${step.action}${step.arguments ? ` ${step.arguments}` : ''}`;
+  return `/panwrite:${step.action}${step.arguments ? ` ${step.arguments}` : ''}`;
 }
 
 /** What one run of this campaign would do, computed without credentials, a model, or any write. */
@@ -255,9 +255,9 @@ function plan(campaign, options = {}) {
     ...(options.budgetUsd === undefined && campaign.budget.ceiling === null ? ['budget.ceiling'] : [])
   ];
   return {
-    schema: 'wtfp.evaluation.campaign-plan/v3',
+    schema: 'panwrite.evaluation.campaign-plan/v3',
     campaign: { id: campaign.id, version: campaign.version, status: campaign.status },
-    wtfp: wtfpIdentity(),
+    panwrite: panwriteIdentity(),
     pancode: { pinned: campaign.pancode, ...(options.entry ? pancodeIdentity(options.entry, campaign) : { observed: null }) },
     fixture: campaign.fixture,
     permissions: campaign.permissions,
@@ -341,7 +341,7 @@ function deskTestsPassed(result) {
 
 /**
  * What steps actually launch: the PanCode entry, the `pancode` wrapper the
- * desk and installer find on PATH, and the two installed WTF-P packages.
+ * desk and installer find on PATH, and the two installed PanWrite packages.
  */
 function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   const wrapper = path.join(root, 'pancode', 'bin', 'pancode');
@@ -360,11 +360,11 @@ function launcherIdentity(root, entry, pluginRoot, deskRoot) {
   };
 }
 
-/** Each installed WTF-P PanCode recipe tool that a campaign step's workers may not hold, as `agent: tool`. */
+/** Each installed PanWrite PanCode recipe tool that a campaign step's workers may not hold, as `agent: tool`. */
 function recipeToolsOutside(pluginRoot) {
   const agents = path.join(pluginRoot, 'dev.pancode', 'agents');
-  const files = fs.existsSync(agents) ? fs.readdirSync(agents).filter(name => /^wtfp-.+\.md$/u.test(name)).sort() : [];
-  if (files.length === 0) return [`no WTF-P recipes under ${agents}`];
+  const files = fs.existsSync(agents) ? fs.readdirSync(agents).filter(name => /^panwrite-.+\.md$/u.test(name)).sort() : [];
+  if (files.length === 0) return [`no PanWrite recipes under ${agents}`];
   const outside = [];
   for (const file of files) {
     const declared = /^tools:\s*\{required:\s*\[(.*)\],\s*optional:\s*\[(.*)\]\}\s*$/mu.exec(fs.readFileSync(path.join(agents, file), 'utf8'));
@@ -381,9 +381,9 @@ function prepare(campaign, options) {
   if (identity.mismatches.length > 0 && !options.allowUnpinned) {
     throw new Error(`refusing to prepare on an unpinned PanCode build: ${identity.mismatches.join('; ')}`);
   }
-  const wtfp = wtfpIdentity();
-  if (wtfp.package_tree !== 'clean' && !options.allowDirty) {
-    throw new Error('refusing to prepare from a dirty WTF-P package tree; commit the candidate first');
+  const panwrite = panwriteIdentity();
+  if (panwrite.package_tree !== 'clean' && !options.allowDirty) {
+    throw new Error('refusing to prepare from a dirty PanWrite package tree; commit the candidate first');
   }
   const fixture = fixtureIdentity(campaign);
   const root = createRoot(options.root);
@@ -406,7 +406,7 @@ function prepare(campaign, options) {
     fs.copyFileSync(path.join(fixtureRoot, input.path), path.join(workspace, input.path));
   }
   const gitEnv = { ...process.env, ...GIT_ENV };
-  for (const args of [['init', '--quiet'], ['-c', 'user.name=WTF-P Campaign', '-c', 'user.email=campaign@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'fixture']]) {
+  for (const args of [['init', '--quiet'], ['-c', 'user.name=PanWrite Campaign', '-c', 'user.email=campaign@example.invalid', 'commit', '--quiet', '--allow-empty', '-m', 'fixture']]) {
     // Playbook write boundaries need a checkout; this is fixture setup, not an action effect.
     const git = spawnSync('git', args, { cwd: workspace, env: gitEnv, encoding: 'utf8' });
     if (git.status !== 0) throw new Error(`fixture checkout failed: ${git.stderr}`);
@@ -416,23 +416,23 @@ function prepare(campaign, options) {
   installEnv.PATH = [path.join(root, 'pancode', 'bin'), installEnv.PATH].join(path.delimiter);
   const install = spawnSync(process.execPath, [path.join(ROOT, 'bin/install.js'), 'install', 'pancode', '--config-dir', profilePaths(root).PANCODE_CONFIG_DIR, '--advanced', '--force', '--no-color'],
     { cwd: workspace, env: installEnv, encoding: 'utf8', timeout: 300000 });
-  const observations = [{ args: ['wtf-p', 'install', 'pancode'], status: install.status, stdout_sha256: sha256(install.stdout || ''), stderr_tail: (install.stderr || '').slice(-400) }];
-  if (install.status !== 0) throw new Error(`WTF-P installation failed in the campaign profile: ${(install.stdout || '') + (install.stderr || '')}`);
+  const observations = [{ args: ['panwrite', 'install', 'pancode'], status: install.status, stdout_sha256: sha256(install.stdout || ''), stderr_tail: (install.stderr || '').slice(-400) }];
+  if (install.status !== 0) throw new Error(`PanWrite installation failed in the campaign profile: ${(install.stdout || '') + (install.stderr || '')}`);
   const checks = [];
   const record = (name, result, ok, detail) => {
     observations.push({ args: result.args, status: result.status, stdout_sha256: sha256(result.stdout) });
     checks.push({ name, passed: Boolean(ok), detail });
   };
-  const inspected = native(['hub', 'inspect', 'plugin:wtfp', '--user', '--json'], workspace);
+  const inspected = native(['hub', 'inspect', 'plugin:panwrite', '--user', '--json'], workspace);
   const plugin = inspected.status === 0 ? JSON.parse(inspected.stdout) : null;
   record('plugin-registered', inspected, plugin && plugin.valid && plugin.enabled && plugin.diagnostics.length === 0, plugin ? `${plugin.version} ${plugin.rootPath}` : inspected.stderr);
   const extensions = native(['extensions', 'list', '--user', '--json'], workspace);
-  const desk = extensions.status === 0 ? JSON.parse(extensions.stdout).extensions.find(item => item.id === 'wtfp') : null;
-  record('desk-registered', extensions, desk && desk.valid && desk.enabled && desk.plugin === 'wtfp' && desk.diagnostics.length === 0, desk ? desk.rootPath : extensions.stderr);
+  const desk = extensions.status === 0 ? JSON.parse(extensions.stdout).extensions.find(item => item.id === 'panwrite') : null;
+  record('desk-registered', extensions, desk && desk.valid && desk.enabled && desk.plugin === 'panwrite' && desk.diagnostics.length === 0, desk ? desk.rootPath : extensions.stderr);
   // Discovery is separate evidence from validity and from any `fleet run` outcome.
   const listed = native(['playbook', 'list'], workspace);
-  record('playbook-list', listed, ['wtfp-plan-section', 'wtfp-draft-review'].every(name => new RegExp(`^${name}\\s+plugin\\s+valid\\b`, 'mu').test(listed.stdout)), null);
-  for (const playbook of ['wtfp-plan-section', 'wtfp-draft-review']) {
+  record('playbook-list', listed, ['panwrite-plan-section', 'panwrite-draft-review'].every(name => new RegExp(`^${name}\\s+plugin\\s+valid\\b`, 'mu').test(listed.stdout)), null);
+  for (const playbook of ['panwrite-plan-section', 'panwrite-draft-review']) {
     const validated = native(['playbook', 'validate', playbook, '--json'], workspace);
     record(`playbook-validate-${playbook}`, validated, validated.status === 0, null);
     const graph = native(['playbook', 'graph', playbook, '--json'], workspace);
@@ -441,19 +441,19 @@ function prepare(campaign, options) {
   // --delegate-tools is the ceiling every worker runs under, so a recipe that outgrew it is caught here, not mid-run.
   const outside = plugin ? recipeToolsOutside(plugin.rootPath) : ['plugin root unavailable'];
   checks.push({ name: 'worker-recipes-within-delegated-tools', passed: outside.length === 0, detail: outside.length ? outside.join('; ') : `${WORKER_TOOLS.join(',')}` });
-  const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).PANCODE_CONFIG_DIR, 'extensions', 'wtfp');
+  const deskRoot = desk ? desk.rootPath : path.join(profilePaths(root).PANCODE_CONFIG_DIR, 'extensions', 'panwrite');
   const deskTests = native(['extensions', 'test', deskRoot], workspace, 600000);
   const passed = deskTestsPassed(deskTests);
   record('desk-package-tests', deskTests, passed, (deskTests.stdout.match(/ℹ (?:tests|pass|fail) \d+/gu) || []).join(', '));
   const prepared = {
-    schema: 'wtfp.evaluation.campaign-prepared/v3',
+    schema: 'panwrite.evaluation.campaign-prepared/v3',
     campaign: { id: campaign.id, version: campaign.version, sha256: sha256(fs.readFileSync(options.campaignFile || DEFAULT_CAMPAIGN)) },
     prepared_at: new Date().toISOString(),
     evidence_level: 'native-discovery',
-    wtfp,
+    panwrite,
     pancode: identity.observed,
     pancode_unpinned: identity.mismatches,
-    allow_dirty: wtfp.package_tree !== 'clean',
+    allow_dirty: panwrite.package_tree !== 'clean',
     fixture: { ...fixture, evaluator_oracles_copied: false },
     workspace: path.relative(root, workspace),
     workspace_sha256: workspaceDigest(workspace),
@@ -556,7 +556,7 @@ function readRecords(directory) {
 
 /** The desk's seal key from the run's extension store, read the way the desk stores it. */
 function sealKey(root) {
-  const stored = readJsonQuietly(path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json'));
+  const stored = readJsonQuietly(path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json'));
   const value = stored && stored.entries && stored.entries['seal-key'] && stored.entries['seal-key'].value;
   return typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value) ? Buffer.from(value, 'hex') : null;
 }
@@ -567,7 +567,7 @@ function deskState(root, workspace) {
   const manifest = readJsonQuietly(path.join(planning, 'project.json'));
   const projectId = manifest && typeof manifest.id === 'string' ? manifest.id : null;
   const key = sealKey(root);
-  const interactions = readRecords(path.join(planning, 'interactions')).filter(record => record.schema === 'wtfp.project.interaction/v1');
+  const interactions = readRecords(path.join(planning, 'interactions')).filter(record => record.schema === 'panwrite.project.interaction/v1');
   const checkpoints = readRecords(path.join(planning, 'checkpoints')).filter(record => typeof record.id === 'string');
   return {
     key,
@@ -912,7 +912,7 @@ function wipePrivate(config) {
   return failures;
 }
 
-const RUN_MARKER = 'WTFP_CAMPAIGN_RUN';
+const RUN_MARKER = 'PANWRITE_CAMPAIGN_RUN';
 
 /**
  * Stops every process still carrying this run's marker: anything a step left
@@ -1197,10 +1197,10 @@ function verifyLauncher(root, prepared, entry) {
   }
 }
 
-/** Refuses to run unless the campaign, PanCode build, WTF-P candidate, fixture and workspace are the ones prepare bound. */
+/** Refuses to run unless the campaign, PanCode build, PanWrite candidate, fixture and workspace are the ones prepare bound. */
 function boundRun(campaign, options, root, prepared) {
   const campaignFile = options.campaignFile || DEFAULT_CAMPAIGN;
-  if (prepared.schema !== 'wtfp.evaluation.campaign-prepared/v3' || !prepared.campaign || prepared.campaign.id !== campaign.id || prepared.campaign.version !== campaign.version) {
+  if (prepared.schema !== 'panwrite.evaluation.campaign-prepared/v3' || !prepared.campaign || prepared.campaign.id !== campaign.id || prepared.campaign.version !== campaign.version) {
     throw new Error('the prepared root belongs to another campaign');
   }
   if (sha256(fs.readFileSync(campaignFile)) !== prepared.campaign.sha256) throw new Error('the campaign definition changed since prepare; prepare a new root');
@@ -1214,11 +1214,11 @@ function boundRun(campaign, options, root, prepared) {
   for (const key of ['version', 'entry_sha256', 'dist_sha256', 'node']) {
     if (!prepared.pancode || identity.observed[key] !== prepared.pancode[key]) throw new Error(`the PanCode build changed since prepare (${key})`);
   }
-  const wtfp = wtfpIdentity();
-  if (!prepared.wtfp || wtfp.commit !== prepared.wtfp.commit || canonical(wtfp.packages) !== canonical(prepared.wtfp.packages)) {
-    throw new Error('the WTF-P candidate changed since prepare; prepare a new root');
+  const panwrite = panwriteIdentity();
+  if (!prepared.panwrite || panwrite.commit !== prepared.panwrite.commit || canonical(panwrite.packages) !== canonical(prepared.panwrite.packages)) {
+    throw new Error('the PanWrite candidate changed since prepare; prepare a new root');
   }
-  if (wtfp.package_tree !== 'clean' && prepared.allow_dirty !== true) throw new Error('the WTF-P package tree is dirty; commit the candidate and prepare a new root');
+  if (panwrite.package_tree !== 'clean' && prepared.allow_dirty !== true) throw new Error('the PanWrite package tree is dirty; commit the candidate and prepare a new root');
   const fixture = fixtureIdentity(campaign);
   if (!prepared.fixture || fixture.model_inputs_sha256 !== prepared.fixture.model_inputs_sha256 || fixture.evaluator_oracles_sha256 !== prepared.fixture.evaluator_oracles_sha256) {
     throw new Error('the fixture changed since prepare; prepare a new root');
@@ -1228,7 +1228,7 @@ function boundRun(campaign, options, root, prepared) {
   if (initial !== prepared.workspace_sha256) throw new Error('the workspace changed since prepare; prepare a new root');
   if ((prepared.workspace_head ?? null) !== workspaceHead(workspace)) throw new Error('the workspace checkout moved since prepare; prepare a new root');
   verifyLauncher(root, prepared, options.entry);
-  return { identity, wtfp, fixture, workspace, initial };
+  return { identity, panwrite, fixture, workspace, initial };
 }
 
 async function execute(campaign, options) {
@@ -1266,16 +1266,16 @@ async function execute(campaign, options) {
     ...settingsSecrets(fs.readFileSync(path.join(config, 'settings.yaml'), 'utf8'))
   ])];
   const telemetryRuns = path.join(profilePaths(root).PANCODE_STATE_DIR, 'telemetry', 'runs');
-  const storeFile = path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'wtfp', 'store.json');
+  const storeFile = path.join(profilePaths(root).PANCODE_STATE_DIR, 'extensions', 'panwrite', 'store.json');
   const preparedSha = sha256(fs.readFileSync(preparedFile));
   const marker = crypto.randomUUID();
   const run = {
-    schema: 'wtfp.evaluation.campaign-run/v3',
+    schema: 'panwrite.evaluation.campaign-run/v3',
     campaign: prepared.campaign,
     evidence_level: 'pending',
     pancode: bound.identity.observed,
     pancode_unpinned: bound.identity.mismatches,
-    wtfp: bound.wtfp,
+    panwrite: bound.panwrite,
     fixture: bound.fixture,
     selection: { target: options.target, model: options.model, effort: options.effort, budget_usd: options.budgetUsd, selected_by: 'operator' },
     budget_enforcement: 'per-step PanCode ceiling (--max-cost-usd) and between steps',
@@ -1515,7 +1515,7 @@ function collect(campaign, options) {
   }
   const after = workspaceDigest(workspace);
   const report = {
-    schema: 'wtfp.evaluation.campaign-collect/v3',
+    schema: 'panwrite.evaluation.campaign-collect/v3',
     campaign: prepared.campaign,
     collected_at: new Date().toISOString(),
     evidence_levels: decisions.some(item => item.trust === 'attested') ? ['native-discovery', 'observed-author'] : ['native-discovery'],
@@ -1640,5 +1640,5 @@ module.exports = {
   verifySeal,
   workspaceDigest,
   workspaceHead,
-  wtfpIdentity
+  panwriteIdentity
 };

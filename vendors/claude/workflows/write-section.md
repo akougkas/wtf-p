@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: write-section
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Write a section
 
 @protocol://project/README.md
-@protocol://skills/wtfp-write-section/SKILL.md
-@protocol://skills/wtfp-write-section/references/actions.md
+@protocol://skills/panwrite-write-section/SKILL.md
+@protocol://skills/panwrite-write-section/references/actions.md
 
 ## Record contract
 

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/evaluation/campaign/v3",
+  "$id": "https://schemas.panwrite.dev/evaluation/campaign/v3",
   "title": "A versioned PanCode evaluation campaign: the exact build, inputs, gates and evidence levels one run is judged against.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "version", "status", "purpose", "historical_suites", "wtfp", "pancode", "model", "fixture", "permissions", "budget", "lifecycle", "evidence_levels"],
+  "required": ["schema", "id", "version", "status", "purpose", "historical_suites", "panwrite", "pancode", "model", "fixture", "permissions", "budget", "lifecycle", "evidence_levels"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.campaign/v3" },
+    "schema": { "const": "panwrite.evaluation.campaign/v3" },
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 },
     "status": {
@@ -28,13 +28,13 @@
         }
       }
     },
-    "wtfp": {
+    "panwrite": {
       "type": "object",
       "additionalProperties": false,
       "required": ["candidate", "packages"],
       "properties": {
         "candidate": {
-          "description": "The WTF-P commit a run binds; prepare refuses a dirty package tree.",
+          "description": "The PanWrite commit a run binds; prepare refuses a dirty package tree.",
           "const": "bound-at-prepare"
         },
         "packages": {

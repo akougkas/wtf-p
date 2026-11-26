@@ -176,14 +176,14 @@ ${c.magenta('██║███╗██║   ██║   ██╔══╝  �
 ${c.magenta('╚███╔███╔╝   ██║   ██║           ██║')}
 ${c.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═╝')}
 
-  ${c.cyan('WTF-P Uninstaller')} ${c.dim(`v${version}`)}
+  ${c.cyan('PanWrite Uninstaller')} ${c.dim(`v${version}`)}
 `;
 }
 
 function showHelp(out) {
   const c = out.colors;
   console.log(createBanner(out));
-  console.log(`  ${c.yellow('Usage:')} npx wtf-p uninstall [options]
+  console.log(`  ${c.yellow('Usage:')} npx @panstudio/panwrite uninstall [options]
 
   ${c.yellow('Target and scope:')}
     ${c.cyan('-g, --global')}              Claude user installation (legacy alias)
@@ -201,7 +201,7 @@ function showHelp(out) {
   ${c.yellow('Safety and output:')}
     ${c.cyan('-n, --dry-run')}             Classify exact receipt paths without changing them
     ${c.cyan('-b, --backup')}              Copy exact removal candidates to an owned backup bundle
-    ${c.cyan('--clean-backups')}           Remove unchanged backups recorded by WTF-P
+    ${c.cyan('--clean-backups')}           Remove unchanged backups recorded by PanWrite
     ${c.cyan('-y, --yes')}                 Confirm removal of unchanged owned files
     ${c.cyan('-f, --force')}               Skip confirmation and remove modified/untrusted receipt files
     ${c.cyan('--no-color')}                Disable colored output
@@ -246,7 +246,7 @@ function classifyReceiptEntries(targetDir, receipt, force = false, suppliedGuard
 
     try {
       item.path = normalizeRelativePath(entry.path);
-      if (item.path === VERSION_FILE || item.path.startsWith('.wtfp-backup-')) {
+      if (item.path === VERSION_FILE || item.path.startsWith('.panwrite-backup-')) {
         item.reason = 'receipt control paths cannot own themselves or backup bundles';
         return item;
       }
@@ -342,7 +342,7 @@ function summarizePlan(plan) {
 function uniqueBackupDirectory(targetDir, targetGuard) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const nonce = crypto.randomBytes(4).toString('hex');
-  return resolveOwnedPath(targetDir, `.wtfp-backup-${stamp}-${nonce}`, targetGuard);
+  return resolveOwnedPath(targetDir, `.panwrite-backup-${stamp}-${nonce}`, targetGuard);
 }
 
 function statIdentity(stat) {
@@ -496,7 +496,7 @@ function createBackupBundle(plan) {
       if (cleanupFailures.length > 0) throw new Error('Could not remove an empty backup directory safely');
       return null;
     }
-    const marker = resolveOwnedPath(backupDir, '.wtfp-backup.json', backupGuard);
+    const marker = resolveOwnedPath(backupDir, '.panwrite-backup.json', backupGuard);
     const markerBytes = Buffer.from(JSON.stringify(manifest, null, 2) + '\n');
     atomicWriteFile(marker, markerBytes, { mode: 0o644, mustNotExist: true, targetGuard: backupGuard });
     createdFiles.push({ path: marker, sha256: sha256Buffer(markerBytes) });
@@ -699,7 +699,7 @@ async function uninstall(runtime, options, out) {
   const locationLabel = getPathLabel(targetDir, !isLocal);
   const c = out.colors;
 
-  out.log(`  Checking ${c.cyan(locationLabel)} for a WTF-P ownership receipt...\n`);
+  out.log(`  Checking ${c.cyan(locationLabel)} for a PanWrite ownership receipt...\n`);
   const receiptResult = readReceipt(targetDir, targetGuard);
   const plan = createUninstallPlan(targetDir, receiptResult, { ...options, targetGuard });
 
@@ -711,10 +711,10 @@ async function uninstall(runtime, options, out) {
   if (!plan.receipt) {
     const detected = detectInstallation(targetDir);
     if (detected.hasAny) {
-      out.warn('WTF-P-shaped files exist, but no ownership receipt can prove who created them.');
+      out.warn('PanWrite-shaped files exist, but no ownership receipt can prove who created them.');
       out.log(`  Reinstall explicitly with ${c.cyan('--force --backup-all')} to establish a v2 receipt, then uninstall.\n`);
     } else {
-      out.log(`  ${c.yellow('No WTF-P installation receipt found.')}\n`);
+      out.log(`  ${c.yellow('No PanWrite installation receipt found.')}\n`);
     }
     return { status: 'not-installed', plan };
   }
@@ -786,7 +786,7 @@ async function uninstall(runtime, options, out) {
         .map(item => [item.path, item.entry.sha256])) }
     );
     if (nativeRemoval.status === 'unavailable' && !options.hasQuiet) {
-      out.warn(`${nativeRemoval.executable} is unavailable; removing the WTF-P-owned staging files without changing the client's native registry.`);
+      out.warn(`${nativeRemoval.executable} is unavailable; removing the PanWrite-owned staging files without changing the client's native registry.`);
     } else if (nativeRemoval.status === 'deferred') {
       // A package PanCode still registers keeps every owned file and its receipt
       // entries; removing them would leave a registration with no content.
@@ -798,10 +798,10 @@ async function uninstall(runtime, options, out) {
           }
         }
       }
-      if (!options.hasQuiet) out.warn(nativeRemoval.reason || 'The target cannot be natively unregistered; only WTF-P-owned staging files will be removed.');
+      if (!options.hasQuiet) out.warn(nativeRemoval.reason || 'The target cannot be natively unregistered; only PanWrite-owned staging files will be removed.');
     }
   } else if (vendorConfig.native && !options.hasQuiet) {
-    out.warn('Native registration was preserved because this uninstall cannot remove every WTF-P-owned source file safely.');
+    out.warn('Native registration was preserved because this uninstall cannot remove every PanWrite-owned source file safely.');
   }
 
   applyUninstallPlan(plan);
@@ -824,7 +824,7 @@ async function uninstall(runtime, options, out) {
   }
   if (keptRegistered > 0) return { status: 'partial', plan, summary };
 
-  out.log(`\n  ${c.green('Done!')} Removed WTF-P-owned files from ${vendorConfig.name}.`);
+  out.log(`\n  ${c.green('Done!')} Removed PanWrite-owned files from ${vendorConfig.name}.`);
   out.log(`  ${c.dim('Unowned files and nonempty shared directories were not touched.')}\n`);
   return { status: 'removed', plan, summary };
 }
@@ -844,7 +844,7 @@ async function promptLocation(options, out) {
   if (localReceipt.receipt || localReceipt.corrupt) installations.push({ runtime: 'claude-local', targetDir: localTarget });
 
   if (installations.length === 0) {
-    out.log('  No WTF-P ownership receipts found.\n');
+    out.log('  No PanWrite ownership receipts found.\n');
     return;
   }
 

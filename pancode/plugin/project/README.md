@@ -1,6 +1,6 @@
-# WTF-P portable project protocol v1
+# PanWrite portable project protocol v1
 
-This directory defines the host-neutral data model stored by a WTF-P project. Runtime adapters may render friendly Markdown views, but the JSON records defined here are the interoperable source of truth.
+This directory defines the host-neutral data model stored by a PanWrite project. Runtime adapters may render friendly Markdown views, but the JSON records defined here are the interoperable source of truth.
 
 ## Logical resources
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/project/config/v1",
+  "$id": "https://schemas.panwrite.dev/project/config/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,13 +16,13 @@
     "parallelism"
   ],
   "properties": {
-    "schema": { "const": "wtfp.project.config/v1" },
-    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "schema": { "const": "panwrite.project.config/v1" },
+    "project_id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
     "interaction_mode": { "enum": ["guided", "standard", "autonomous"] },
     "depth": { "enum": ["quick", "standard", "comprehensive"] },
     "output_format": { "enum": ["markdown", "latex", "typst"] },
     "language": { "type": "string", "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$" },
-    "citation_style": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "citation_style": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
     "gates": {
       "type": "object",
       "additionalProperties": false,

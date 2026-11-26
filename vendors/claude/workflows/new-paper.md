@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: new-paper
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Start a new paper
 
 @protocol://project/README.md
-@protocol://skills/wtfp-start-project/SKILL.md
-@protocol://skills/wtfp-start-project/references/actions.md
+@protocol://skills/panwrite-start-project/SKILL.md
+@protocol://skills/panwrite-start-project/references/actions.md
 
 ## Record contract
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Integration tests for WTF-P CLI
+ * Integration tests for PanWrite CLI
  * Tests the full install/status/update/uninstall cycle
  */
 
@@ -67,11 +67,11 @@ function claudePluginList(configDir) {
 }
 
 function assertPortableClaudeBundle(configDir, label) {
-  const bundle = path.join(configDir, 'marketplaces', 'wtfp');
+  const bundle = path.join(configDir, 'marketplaces', 'panwrite');
   const commandFiles = fs.readdirSync(path.join(bundle, 'commands')).filter(file => file.endsWith('.md'));
   const agentFiles = fs.readdirSync(path.join(bundle, 'agents')).filter(file => file.endsWith('.md'));
   const skillDirectories = fs.readdirSync(path.join(bundle, 'skills'), { withFileTypes: true })
-    .filter(entry => entry.isDirectory() && entry.name.startsWith('wtfp-'));
+    .filter(entry => entry.isDirectory() && entry.name.startsWith('panwrite-'));
   const catalog = JSON.parse(fs.readFileSync(path.join(root, 'protocol', 'catalog.json'), 'utf8'));
   const roleCount = fs.readdirSync(path.join(root, 'protocol', 'roles')).filter(file => file.endsWith('.md')).length;
   check(commandFiles.length === catalog.actions.length, `${label} contains all ${catalog.actions.length} canonical commands`);
@@ -82,7 +82,7 @@ function assertPortableClaudeBundle(configDir, label) {
 }
 
 // Setup test directory
-testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-integration-'));
+testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-integration-'));
 const claudeDir = path.join(testDir, '.claude');
 const isolatedHome = path.join(testDir, 'home');
 const isolatedEnv = {
@@ -100,7 +100,7 @@ const isolatedEnv = {
 delete isolatedEnv.FORCE_COLOR;
 delete isolatedEnv.NO_COLOR;
 
-console.log('\n=== WTF-P Integration Tests ===\n');
+console.log('\n=== PanWrite Integration Tests ===\n');
 console.log(`Test directory: ${testDir}\n`);
 
 try {
@@ -110,17 +110,17 @@ try {
   check(installOutput.includes('Done!'), 'install completes successfully');
   const claudeBundle = assertPortableClaudeBundle(claudeDir, 'native Claude bundle');
   check(fs.existsSync(path.join(claudeBundle, 'workflows')), 'workflows installed in plugin bundle');
-  check(fs.existsSync(path.join(claudeDir, '.wtfp-version')), 'version file created');
+  check(fs.existsSync(path.join(claudeDir, '.panwrite-version')), 'version file created');
 
   const nativePlugins = claudePluginList(claudeDir);
   if (nativePlugins) {
-    check(nativePlugins.some(plugin => plugin.id === 'wtfp@wtfp' && plugin.enabled), 'Claude reports wtfp@wtfp installed and enabled');
+    check(nativePlugins.some(plugin => plugin.id === 'panwrite@panwrite' && plugin.enabled), 'Claude reports panwrite@panwrite installed and enabled');
   } else {
     check(true, 'Claude binary unavailable; native registration is covered by deterministic lifecycle tests');
   }
 
   // Verify version file contents
-  const versionData = JSON.parse(fs.readFileSync(path.join(claudeDir, '.wtfp-version'), 'utf8'));
+  const versionData = JSON.parse(fs.readFileSync(path.join(claudeDir, '.panwrite-version'), 'utf8'));
   check(versionData.version === pkg.version, 'version file has correct version');
   check(versionData.installedAt, 'version file has installedAt');
   check(versionData.schemaVersion === 2, 'version file uses receipt schema v2');
@@ -139,7 +139,7 @@ try {
   // Test 3: Doctor command
   console.log('\n--- Doctor Command ---');
   const doctorOutput = run(['doctor', '--no-color', '--config-dir', claudeDir]);
-  check(doctorOutput.includes('WTF-P Health Check'), 'doctor shows header');
+  check(doctorOutput.includes('PanWrite Health Check'), 'doctor shows header');
   check(doctorOutput.includes('Node.js version'), 'doctor checks node version');
   check(doctorOutput.includes('Write permissions'), 'doctor checks write permissions');
   check(doctorOutput.includes('No issues found'), 'doctor finds no issues');
@@ -162,9 +162,9 @@ try {
   const onlyDir = path.join(testDir, '.claude-only');
   const onlyOutput = run(['--global', '--force', '--no-color', '--only=commands', '--config-dir', onlyDir]);
   check(onlyOutput.includes('Done!'), 'selective install completes');
-  check(fs.existsSync(path.join(onlyDir, 'marketplaces', 'wtfp', 'commands')), 'commands installed');
-  check(!fs.existsSync(path.join(onlyDir, 'marketplaces', 'wtfp', 'workflows')), 'workflows NOT installed');
-  const selectiveReceipt = JSON.parse(fs.readFileSync(path.join(onlyDir, '.wtfp-version'), 'utf8'));
+  check(fs.existsSync(path.join(onlyDir, 'marketplaces', 'panwrite', 'commands')), 'commands installed');
+  check(!fs.existsSync(path.join(onlyDir, 'marketplaces', 'panwrite', 'workflows')), 'workflows NOT installed');
+  const selectiveReceipt = JSON.parse(fs.readFileSync(path.join(onlyDir, '.panwrite-version'), 'utf8'));
   check(selectiveReceipt.partial === true, 'selective install receipt is marked partial');
 
   // Test 7: Uninstall dry-run
@@ -180,22 +180,22 @@ try {
   check(backupOutput.includes('Done!'), 'uninstall completes');
   check(backupOutput.includes('Backed up'), 'backup was created');
   check(!fs.existsSync(claudeBundle), 'native plugin source bundle removed');
-  check(!fs.existsSync(path.join(claudeDir, '.wtfp-version')), 'version file removed');
+  check(!fs.existsSync(path.join(claudeDir, '.panwrite-version')), 'version file removed');
   const pluginsAfterRemoval = claudePluginList(claudeDir);
   if (pluginsAfterRemoval) {
-    check(!pluginsAfterRemoval.some(plugin => plugin.id === 'wtfp@wtfp'), 'Claude native registration removed');
+    check(!pluginsAfterRemoval.some(plugin => plugin.id === 'panwrite@panwrite'), 'Claude native registration removed');
   }
 
   // Verify backup exists
-  const backupDirs = fs.readdirSync(claudeDir).filter(d => d.startsWith('.wtfp-backup-'));
+  const backupDirs = fs.readdirSync(claudeDir).filter(d => d.startsWith('.panwrite-backup-'));
   check(backupDirs.length > 0, 'backup directory created');
 
   // Test 9: Reinstall after uninstall
   console.log('\n--- Reinstall After Uninstall ---');
   const reinstallOutput = run(['--global', '--force', '--no-color', '--config-dir', claudeDir]);
   check(reinstallOutput.includes('Done!'), 'reinstall completes');
-  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'wtfp', 'commands')), 'commands reinstalled in native plugin source');
-  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'wtfp', 'workflows')), 'workflows reinstalled in native plugin source');
+  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'panwrite', 'commands')), 'commands reinstalled in native plugin source');
+  check(fs.existsSync(path.join(claudeDir, 'marketplaces', 'panwrite', 'workflows')), 'workflows reinstalled in native plugin source');
 
   // Test 10: Help and Version
   console.log('\n--- Help and Version ---');
@@ -214,14 +214,14 @@ try {
   const spacedDir = path.join(testDir, 'path with spaces', '.claude');
   const spacedOutput = run(['--global', '--force', '--no-color', '--config-dir', spacedDir]);
   check(spacedOutput.includes('Done!'), 'install to spaced path completes');
-  check(fs.existsSync(path.join(spacedDir, 'marketplaces', 'wtfp', 'commands')), 'commands installed in spaced native source path');
+  check(fs.existsSync(path.join(spacedDir, 'marketplaces', 'panwrite', 'commands')), 'commands installed in spaced native source path');
 
   // Test 12: Quiet mode
   console.log('\n--- Quiet Mode ---');
   const quietDir = path.join(testDir, '.claude-quiet');
   const quietOutput = run(['--global', '--force', '--quiet', '--config-dir', quietDir]);
   check(!quietOutput.includes('WTF'), 'quiet mode suppresses banner');
-  check(fs.existsSync(path.join(quietDir, 'marketplaces', 'wtfp', 'commands')), 'install still works in quiet mode');
+  check(fs.existsSync(path.join(quietDir, 'marketplaces', 'panwrite', 'commands')), 'install still works in quiet mode');
 
   cleanup();
 

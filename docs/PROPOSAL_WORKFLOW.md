@@ -1,8 +1,8 @@
 # Scientist-led proposal workflow
 
-This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic WTF-P 0.7 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state. The proposal scaffold the agent works from is `protocol/templates/grant-proposal-outline.md`, which requires a captured solicitation before any section is proposed and lists the decisions it may not make for you.
+This guide uses NSF 25-531, *Cybersecurity Innovation for Cyberinfrastructure (CICI)*, as a realistic PanWrite 0.7 example. The workflow keeps the principal investigator in control of program fit, scientific claims, team commitments, budget, and final submission while the agent maintains traceable plans, evidence, reviews, and resumption state. The proposal scaffold the agent works from is `protocol/templates/grant-proposal-outline.md`, which requires a captured solicitation before any section is proposed and lists the decisions it may not make for you.
 
-The walkthrough is a process-discipline test, not a claim that WTF-P produces better prose than an unassisted model. This candidate has no matched no-WTF-P control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
+The walkthrough is a process-discipline test, not a claim that PanWrite produces better prose than an unassisted model. This candidate has no matched no-PanWrite control arm. It can establish properties such as decision fidelity, evidence provenance, schema-valid state, approval boundaries, reviewer separation, and durable resume; it cannot by design establish comparative writing quality from this run alone.
 
 ## 1. Supply the authoritative materials
 
@@ -43,21 +43,21 @@ Add only real prior work, measurements, citations, collaborator statements, and 
 For PanCode 0.9.0 or newer:
 
 ```bash
-npx --yes --package=wtf-p@0.9.0 -- wtf-p install pancode
+npx --yes --package=@panstudio/panwrite@1.0.0 -- panwrite install pancode
 cd /path/to/nsf25-531-clio-trust
 pancode --autonomy default
 ```
 
-Run `/prompts` and verify that `/wtfp:new-paper` reports the WTF-P plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
+Run `/prompts` and verify that `/panwrite:new-paper` reports the PanWrite plugin as its source. If a user-level prompt shadows it, stop and resolve that copy deliberately before treating the run as evidence for this candidate.
 
-The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$wtfp-<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated PanCode profile recipe.
+The slash commands below also apply to Claude Code, Copilot CLI, OpenCode, Antigravity, and Gemini. In Codex, select the owning `$panwrite-<skill>` and request the named action with the same exact argument payload. See [Getting started](GETTING_STARTED.md) for the client table and an isolated PanCode profile recipe.
 
 ## 3. Initialize through an interview
 
 Paste a concrete brief rather than asking the model to invent the project. Clio preserves quotes, tabs, repeated spaces, and multiline `$ARGUMENTS`; the following is one invocation payload:
 
 ```text
-/wtfp:new-paper NSF 25-531 CICI proposal.
+/panwrite:new-paper NSF 25-531 CICI proposal.
 Working title: "ClioTrust: Reproducible Provenance for Agentic Scientific Workflows."
 Primary track: TCR. Treat IPAAI only as a fallback that I must approve after checking the supplied solicitation.
 Core idea: build on Clio Coder intellectual property to make scientific agent workflows inspectable and reproducible, preserving operator intent, delegated reasoning, evidence provenance, tool effects, and artifact lineage.
@@ -88,7 +88,7 @@ If this directory already contains a draft but has no valid `.planning/project.j
 After initialization, inventory the supplied project:
 
 ```text
-/wtfp:map-project Inventory materials/, notes/, references/, source-receipt.md, and any existing paper/ artifacts. Record the captured official pages with their exact URLs, retrieval times, paths, and SHA-256 digests. Treat the supplied NSF 25-531 solicitation as authoritative for program requirements. Keep solicitation evidence, author-supplied project evidence, and author decisions as distinct authority classes; preserve unresolved choices and do not scan outside the project root.
+/panwrite:map-project Inventory materials/, notes/, references/, source-receipt.md, and any existing paper/ artifacts. Record the captured official pages with their exact URLs, retrieval times, paths, and SHA-256 digests. Treat the supplied NSF 25-531 solicitation as authoritative for program requirements. Keep solicitation evidence, author-supplied project evidence, and author decisions as distinct authority classes; preserve unresolved choices and do not scan outside the project root.
 ```
 
 Review the resulting state rather than counting files as progress:
@@ -96,12 +96,12 @@ Review the resulting state rather than counting files as progress:
 - A source record identifies the solicitation, paper, data set, prior system, or other supplied artifact.
 - An evidence record says exactly what that source supports, contradicts, or contextualizes.
 - An unsupported aspiration is a decision or planned claim, not evidence.
-- A missing citation remains missing. On Clio Coder and Claude Code, `research-gap`, `analyze-bib`, and `check-refs` run only the bundled `tools/wtfp-tool.js` dispatcher, and the agent should start it with `--offline` until you approve network use for the session. On the other hosts those routes return `WTFP_ACTION_UNAVAILABLE`; see [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md).
+- A missing citation remains missing. On Clio Coder and Claude Code, `research-gap`, `analyze-bib`, and `check-refs` run only the bundled `tools/panwrite-tool.js` dispatcher, and the agent should start it with `--offline` until you approve network use for the session. On the other hosts those routes return `PANWRITE_ACTION_UNAVAILABLE`; see [HOST_CAPABILITIES.md](HOST_CAPABILITIES.md).
 
 Use `progress` for a read-oriented reconciliation before outlining:
 
 ```text
-/wtfp:progress Summarize mapped materials, unresolved author decisions, blockers, and the next safe action.
+/panwrite:progress Summarize mapped materials, unresolved author decisions, blockers, and the next safe action.
 ```
 
 ## 5. Build and approve the whole argument
@@ -109,7 +109,7 @@ Use `progress` for a read-oriented reconciliation before outlining:
 Ask for solicitation-grounded structure and an exact word budget:
 
 ```text
-/wtfp:create-outline Derive requirements only from the supplied NSF 25-531 solicitation. Build the complete proposal argument, section dependencies, and an exact section-by-section word budget. Preserve unresolved team, scope, evaluation, budget, and timeline choices as deferred. Do not switch from TCR to IPAAI. Show the full outline and validation result for my approval before writing it.
+/panwrite:create-outline Derive requirements only from the supplied NSF 25-531 solicitation. Build the complete proposal argument, section dependencies, and an exact section-by-section word budget. Preserve unresolved team, scope, evaluation, budget, and timeline choices as deferred. Do not switch from TCR to IPAAI. Show the full outline and validation result for my approval before writing it.
 ```
 
 The action must use the outliner specialist and independently validate the result. Before approval, check:
@@ -128,14 +128,14 @@ If validation fails, revise and revalidate; do not approve an exception simply b
 Reconcile state, then select a stable section ID from the approved outline:
 
 ```text
-/wtfp:progress
-/wtfp:discuss-section tcr-fit-significance Interview me about this section's purpose, must-cover requirements, evidence, voice, exclusions, and unresolved choices before planning.
+/panwrite:progress
+/panwrite:discuss-section tcr-fit-significance Interview me about this section's purpose, must-cover requirements, evidence, voice, exclusions, and unresolved choices before planning.
 ```
 
 The discussion records the scientist's intent and boundaries. It is not a writing plan. Once its checkpoint and context are correct:
 
 ```text
-/wtfp:plan-section tcr-fit-significance Create one executable plan from the approved outline, section context, supplied evidence, and recorded decisions. Require the independent plan checker. Preview the plan, validation, checkpoint, section update, and state update for my approval.
+/panwrite:plan-section tcr-fit-significance Create one executable plan from the approved outline, section context, supplied evidence, and recorded decisions. Require the independent plan checker. Preview the plan, validation, checkpoint, section update, and state update for my approval.
 ```
 
 `plan-section` is not complete merely because a planner returned prose. The plan checker must report traceability, support, decision fidelity, and feasibility, and a current passed outline validation must exist. Resolve a failed or disputed check with the scientist.
@@ -143,7 +143,7 @@ The discussion records the scientist's intent and boundaries. It is not a writin
 After approving the plan:
 
 ```text
-/wtfp:write-section tcr-fit-significance Draft only from the current approved plan and supplied evidence. Mark unsupported or author-reserved claims explicitly. Do not invent citations, preliminary results, partner commitments, or solicitation requirements. Show the declared mutation and respect the write gate.
+/panwrite:write-section tcr-fit-significance Draft only from the current approved plan and supplied evidence. Mark unsupported or author-reserved claims explicitly. Do not invent citations, preliminary results, partner commitments, or solicitation requirements. Show the declared mutation and respect the write gate.
 ```
 
 The manuscript artifact belongs under `paper/`; its plan, summary, checkpoint, validation, and section state stay linked under `.planning/`. A draft must not skip the approved plan or outrun its evidence.
@@ -152,18 +152,18 @@ Optional on Clio Coder 0.7.0: compare drafts blind with `clio-coder arena`, with
 
 ```text
 git add .planning && git commit -m "approve the tcr-fit-significance plan"
-clio-coder arena run --contender <target>/<model> --contender <target>/<model> --suite wtfp-proposal -- "/wtfp:write-section tcr-fit-significance"
+clio-coder arena run --contender <target>/<model> --contender <target>/<model> --suite panwrite-proposal -- "/panwrite:write-section tcr-fit-significance"
 clio-coder arena show <match-id>
 clio-coder arena vote <match-id> A|B|tie|both-bad --note "<why>"
 ```
 
-Each contender runs the real action headlessly: the desk arms it, verifies the author's sealed approvals in its worktree, and stops at any author gate it cannot ask, so a contender may return a gate rather than a draft. Clio records the vote and never grades a draft. The worktrees are removed after the match; each contender's diff stays under `.clio-coder/arena/<match-id>/`. Do not apply a diff by hand, because its record changes would bypass the desk. Run `/wtfp:write-section` in the project and give it the preferred draft as guidance. A vote is not an author decision on the section. This needs a Clio 0.7.0 build that hands the desk the typed `/wtfp:` line in headless runs (see `HOST_CAPABILITIES.md`).
+Each contender runs the real action headlessly: the desk arms it, verifies the author's sealed approvals in its worktree, and stops at any author gate it cannot ask, so a contender may return a gate rather than a draft. Clio records the vote and never grades a draft. The worktrees are removed after the match; each contender's diff stays under `.clio-coder/arena/<match-id>/`. Do not apply a diff by hand, because its record changes would bypass the desk. Run `/panwrite:write-section` in the project and give it the preferred draft as guidance. A vote is not an author decision on the section. This needs a Clio 0.7.0 build that hands the desk the typed `/panwrite:` line in headless runs (see `HOST_CAPABILITIES.md`).
 
 Run the independent review as a separate action:
 
 ```text
-/wtfp:review-section tcr-fit-significance Review the draft against its approved plan, source evidence, author decisions, NSF requirements, argument coverage, and reader expectations. Record findings without silently applying revisions; ask me about any disputed finding.
-/wtfp:verify-work tcr-fit-significance Check each approved plan requirement against the persisted draft and evidence, recording failed or disputed checks honestly.
+/panwrite:review-section tcr-fit-significance Review the draft against its approved plan, source evidence, author decisions, NSF requirements, argument coverage, and reader expectations. Record findings without silently applying revisions; ask me about any disputed finding.
+/panwrite:verify-work tcr-fit-significance Check each approved plan requirement against the persisted draft and evidence, recording failed or disputed checks honestly.
 ```
 
 A review finding is not an author decision. Accept, reject, or defer each consequential recommendation explicitly, then use the appropriate revision action rather than allowing the reviewer to rewrite shared state on its own.
@@ -173,7 +173,7 @@ A review finding is not an author decision. Accept, reject, or defer each conseq
 Create durable resumption state:
 
 ```text
-/wtfp:pause-writing tcr-fit-significance Record the exact current section, approved plan, manuscript artifact, review findings, unresolved decisions, validation status, and next safe options in a durable handoff and checkpoint.
+/panwrite:pause-writing tcr-fit-significance Record the exact current section, approved plan, manuscript artifact, review findings, unresolved decisions, validation status, and next safe options in a durable handoff and checkpoint.
 ```
 
 Confirm that the handoff, checkpoint, section record, and project state were actually written and validate. Then exit the client completely. Do not preserve the old conversation as the mechanism of continuity.
@@ -188,8 +188,8 @@ pancode --autonomy default
 Resume from disk:
 
 ```text
-/wtfp:resume-writing Read and validate the current portable records and persisted artifacts before presenting the exact checkpoint choices. Use the native interview and wait for my selection before updating the checkpoint or state.
-/wtfp:progress
+/panwrite:resume-writing Read and validate the current portable records and persisted artifacts before presenting the exact checkpoint choices. Use the native interview and wait for my selection before updating the checkpoint or state.
+/panwrite:progress
 ```
 
 The fresh process must not rely on hidden conversational memory. Verify that it preserved the same project and section IDs, record revisions, author decisions, plan and review links, phase, blocked conditions, and manuscript artifact. The agent should report the selected next action and the mutations it really performed, including a truthful “no mutation” result when appropriate.
@@ -203,7 +203,7 @@ The native Clio playbooks can run a bounded plan/check or draft/review worker pa
 When a local milestone is internally ready:
 
 ```text
-/wtfp:submit-milestone nsf25-531-internal-review-1 Preview and archive the selected proposal artifacts, portable project state, validations, and statistics for my confirmation.
+/panwrite:submit-milestone nsf25-531-internal-review-1 Preview and archive the selected proposal artifacts, portable project state, validations, and statistics for my confirmation.
 ```
 
 `submit-milestone` creates a reproducible local archive. It does **not** upload to Research.gov, submit to NSF, contact collaborators, publish a repository, or make an institutional commitment. Final compliance review and external submission remain human and institutional actions. Likewise, `export-latex` produces LaTeX source and hands the compile command back to you; it does not run a LaTeX toolchain.
@@ -222,7 +222,7 @@ Before treating the proposal as ready for an institutional or funder workflow, v
 - Locked decisions remain locked, deferred decisions remain visibly deferred, and choices under `discretion` stay within their recorded bounds.
 - Stable IDs, revisions, timestamps, and cross-record references remain coherent after each state transition.
 - Pause/resume succeeds from a new client process using only persisted project state.
-- No WTF-P action initialized or mutated Git, pushed, published, contacted an external service, or submitted the proposal incidentally.
+- No PanWrite action initialized or mutated Git, pushed, published, contacted an external service, or submitted the proposal incidentally.
 - The final local archive contains the intended artifacts and validates, while actual external submission remains under human control.
 
 If any item is false, record the blocker and route to the next bounded corrective action. Do not convert an incomplete process into a passing claim by softening the rubric.

@@ -1,6 +1,6 @@
 'use strict';
 
-// Structural claim coverage for a portable WTF-P project. It checks that each
+// Structural claim coverage for a portable PanWrite project. It checks that each
 // section claim links to evidence that resolves, belongs to the project,
 // names the claim, rests on a usable source, and was inspected deeply enough
 // to support anything. It never judges whether a passage actually supports a

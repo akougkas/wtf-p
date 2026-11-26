@@ -190,7 +190,7 @@ const guardedImport = String.raw`
 `;
 
 function probeEntrypoint(entrypoint) {
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-import-safety-'));
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-import-safety-'));
   const cwd = path.join(fixture, 'cwd');
   const temp = path.join(fixture, 'tmp');
   fs.mkdirSync(cwd, { recursive: true });

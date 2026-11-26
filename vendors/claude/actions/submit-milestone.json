@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "submit-milestone",
   "title": "Archive a milestone",
   "description": "Archive a completed draft or submission round with its reproducible project state and statistics.",
-  "alias": "wtfp:submit-milestone",
+  "alias": "panwrite:submit-milestone",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-deliver-research"
+    "skill": "panwrite-deliver-research"
   },
-  "workflow": "wtfp://workflows/submit-milestone",
+  "workflow": "panwrite://workflows/submit-milestone",
   "requirements": {
     "capabilities": [
       "filesystem.read",

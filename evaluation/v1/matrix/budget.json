@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.budget-matrix/v1",
+  "schema": "panwrite.evaluation.budget-matrix/v1",
   "id": "primary-client-routing",
   "version": 1,
   "currency": "USD",

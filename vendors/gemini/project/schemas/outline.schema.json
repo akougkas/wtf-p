@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/project/outline/v1",
+  "$id": "https://schemas.panwrite.dev/project/outline/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "project_id", "revision", "thesis", "target_words", "sections", "updated_at"],
   "properties": {
-    "schema": { "const": "wtfp.project.outline/v1" },
-    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "schema": { "const": "panwrite.project.outline/v1" },
+    "project_id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
     "revision": { "type": "integer", "minimum": 0 },
-    "thesis": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "thesis": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
     "target_words": { "type": "integer", "minimum": 1 },
     "sections": {
       "type": "array",
@@ -28,9 +28,9 @@
           "research"
         ],
         "properties": {
-          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-          "title": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
-          "goal": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+          "id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+          "title": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
+          "goal": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
           "argument_role": {
             "enum": ["setup", "background", "method", "evidence", "synthesis", "implications", "conclusion", "other"]
           },
@@ -38,12 +38,12 @@
           "wave": { "type": "integer", "minimum": 1 },
           "depends_on": {
             "type": "array",
-            "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+            "items": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
             "uniqueItems": true
           },
           "claim_ids": {
             "type": "array",
-            "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+            "items": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
             "uniqueItems": true
           },
           "research": {
@@ -54,7 +54,7 @@
               "required": { "type": "boolean" },
               "topics": {
                 "type": "array",
-                "items": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+                "items": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
                 "uniqueItems": true
               }
             }
@@ -62,6 +62,6 @@
         }
       }
     },
-    "updated_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+    "updated_at": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/timestamp" }
   }
 }

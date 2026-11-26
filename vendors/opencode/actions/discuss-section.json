@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "discuss-section",
   "title": "Discuss a section",
   "description": "Capture the researcher's intended purpose, essential content, voice, and boundaries before planning.",
-  "alias": "wtfp:discuss-section",
+  "alias": "panwrite:discuss-section",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/discuss-section",
+  "workflow": "panwrite://workflows/discuss-section",
   "requirements": {
     "capabilities": [
       "filesystem.read",

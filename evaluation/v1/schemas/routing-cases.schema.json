@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.routing-cases/v1",
+  "$id": "panwrite.evaluation.routing-cases/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "version", "cases"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.routing-cases/v1" },
+    "schema": { "const": "panwrite.evaluation.routing-cases/v1" },
     "version": { "const": 1 },
     "cases": {
       "type": "array",
@@ -59,7 +59,7 @@
               "required": ["kind", "skill", "action"],
               "properties": {
                 "kind": { "const": "skill" },
-                "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+                "skill": { "type": "string", "pattern": "^panwrite-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
                 "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
               }
             },
@@ -81,7 +81,7 @@
           "properties": {
             "skill_selector": {
               "type": ["string", "null"],
-              "pattern": "^protocol/skills/wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*/SKILL\\.md$"
+              "pattern": "^protocol/skills/panwrite-[a-z][a-z0-9]*(?:-[a-z0-9]+)*/SKILL\\.md$"
             },
             "action_contract_selectors": {
               "type": "array",

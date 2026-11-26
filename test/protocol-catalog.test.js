@@ -43,7 +43,7 @@ const workflowIds = sorted(
 );
 const catalogIds = catalog.actions.map((action) => action.id);
 
-assert.strictEqual(catalog.schema, 'wtfp.catalog/v1');
+assert.strictEqual(catalog.schema, 'panwrite.catalog/v1');
 // The one literal inventory lock. Every other test derives its expected counts
 // from protocol content; change this block deliberately when the public
 // action surface changes.
@@ -59,13 +59,13 @@ assertSorted(catalogIds, 'catalog actions');
 assertUnique(catalogIds, 'catalog actions');
 
 const expectedSkills = [
-  'wtfp-deliver-research',
-  'wtfp-manage-project',
-  'wtfp-plan-section',
-  'wtfp-research-literature',
-  'wtfp-review-manuscript',
-  'wtfp-start-project',
-  'wtfp-write-section',
+  'panwrite-deliver-research',
+  'panwrite-manage-project',
+  'panwrite-plan-section',
+  'panwrite-research-literature',
+  'panwrite-review-manuscript',
+  'panwrite-start-project',
+  'panwrite-write-section',
 ];
 const skillIds = catalog.skills.map((skill) => skill.id);
 assert.deepStrictEqual(skillIds, expectedSkills);
@@ -101,14 +101,14 @@ assert.strictEqual(owners.size, catalog.counts.actions, 'every action must have 
 assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'skill').length, catalog.counts.domainActions);
 assert.strictEqual([...owners.values()].filter((owner) => owner.kind === 'operations').length, catalog.counts.operations);
 
-assert.strictEqual(aliases.schema, 'wtfp.aliases/v1');
+assert.strictEqual(aliases.schema, 'panwrite.aliases/v1');
 assert.strictEqual(aliases.aliases.length, catalog.counts.actions);
 const aliasIds = aliases.aliases.map((entry) => entry.action);
 assert.deepStrictEqual(aliasIds, catalogIds);
 assertSorted(aliasIds, 'alias actions');
 assertUnique(aliasIds, 'alias actions');
 for (const entry of aliases.aliases) {
-  assert.strictEqual(entry.alias, `wtfp:${entry.action}`, `alias drift for ${entry.action}`);
+  assert.strictEqual(entry.alias, `panwrite:${entry.action}`, `alias drift for ${entry.action}`);
 }
 
 const effectIds = effectsRegistry.effects.map((effect) => effect.id);
@@ -158,7 +158,7 @@ const expectedTools = [
 ];
 assert.deepStrictEqual(toolIds, expectedTools);
 for (const tool of toolsRegistry.tools) {
-  assert.match(tool.implementation, /^wtfp:\/\/tools\//, `${tool.id} must use a logical implementation URI`);
+  assert.match(tool.implementation, /^panwrite:\/\/tools\//, `${tool.id} must use a logical implementation URI`);
   assert.ok(!tool.implementation.includes('/vendors/'), `${tool.id} leaks a vendor path`);
   for (const effect of tool.effects) {
     assert.ok(effectIds.includes(effect), `${tool.id} references unknown effect ${effect}`);
@@ -561,7 +561,7 @@ assert.ok(
 );
 const researchWorkflow = fs.readFileSync(path.join(__dirname, '..', 'protocol/workflows/research-gap.md'), 'utf8');
 assert.match(researchWorkflow, /without a second per-query author gate/u);
-assert.match(researchWorkflow, /bundled CiteNexus dispatcher may also search the free no-key public indexes/u);
+assert.match(researchWorkflow, /bundled PanCite dispatcher may also search the free no-key public indexes/u);
 assert.match(researchWorkflow, /For any other route, first obtain explicit author approval/u);
 assert.match(researchWorkflow, /never override an operator-set offline flag or a host refusal/u);
 const checkRefsMutableInputs = new Set([
@@ -652,9 +652,9 @@ for (const catalogEntry of catalog.actions) {
 
   const action = JSON.parse(fs.readFileSync(contractPath, 'utf8'));
   const owner = owners.get(action.id);
-  assert.strictEqual(action.schema, 'wtfp.action/v1', `${action.id} has the wrong schema`);
+  assert.strictEqual(action.schema, 'panwrite.action/v1', `${action.id} has the wrong schema`);
   assert.strictEqual(action.id, catalogEntry.id, `${catalogEntry.contract} has the wrong ID`);
-  assert.strictEqual(action.alias, `wtfp:${action.id}`, `${action.id} has an unstable alias`);
+  assert.strictEqual(action.alias, `panwrite:${action.id}`, `${action.id} has an unstable alias`);
   assert.ok(action.title && action.description, `${action.id} needs human-readable metadata`);
   assert.ok(action.requirements && Array.isArray(action.requirements.capabilities), `${action.id} needs requirements`);
   assert.ok(Array.isArray(action.requirements.conditions), `${action.id} needs requirement conditions`);
@@ -666,7 +666,7 @@ for (const catalogEntry of catalog.actions) {
 
   if (owner.kind === 'skill') {
     assert.deepStrictEqual(action.surface, { kind: 'skill', skill: owner.id }, `${action.id} surface drift`);
-    assert.strictEqual(action.workflow, `wtfp://workflows/${action.id}`, `${action.id} workflow URI drift`);
+    assert.strictEqual(action.workflow, `panwrite://workflows/${action.id}`, `${action.id} workflow URI drift`);
   } else {
     assert.deepStrictEqual(
       action.surface,
@@ -699,7 +699,7 @@ for (const schemaFile of schemaFiles) {
   ownedJsonFiles.push(schemaPath);
   const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
   assert.strictEqual(schema.$schema, 'https://json-schema.org/draft/2020-12/schema', `${schemaFile} draft drift`);
-  assert.match(schema.$id, /^wtfp\.[a-z-]+\/v1$/, `${schemaFile} needs a stable v1 schema identifier`);
+  assert.match(schema.$id, /^panwrite\.[a-z-]+\/v1$/, `${schemaFile} needs a stable v1 schema identifier`);
   assert.strictEqual(schema.type, 'object', `${schemaFile} root must be an object`);
   assert.ok(Array.isArray(schema.required) && schema.required.length > 0, `${schemaFile} needs required fields`);
   assert.ok(schema.properties && typeof schema.properties === 'object', `${schemaFile} needs properties`);

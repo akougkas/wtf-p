@@ -13,7 +13,7 @@ const createTag = args.has('--tag');
 const push = args.has('--push');
 
 function usage() {
-  process.stdout.write(`WTF-P release finalizer
+  process.stdout.write(`PanWrite release finalizer
 
 Usage:
   npm run release -- --dry-run
@@ -80,14 +80,14 @@ try {
     throw new Error(`package.json contains an invalid release version: ${version}`);
   }
   const tag = `v${version}`;
-  const publication = `The pushed ${tag} tag starts the "Publish to npm" workflow (.github/workflows/publish.yml). Approve its npm environment there to publish wtf-p@${version}${version.includes('-') ? ' under the next dist-tag' : ''}; nothing is published from this checkout.\n`;
+  const publication = `The pushed ${tag} tag starts the "Publish to npm" workflow (.github/workflows/publish.yml). Approve its npm environment there to publish @panstudio/panwrite@${version}${version.includes('-') ? ' under the next dist-tag' : ''}; nothing is published from this checkout.\n`;
   const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
   const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   if (!new RegExp(`^## \\[${escapedVersion}\\](?: - \\d{4}-\\d{2}-\\d{2})?$`, 'm').test(changelog)) {
     throw new Error(`CHANGELOG.md has no release heading for ${version}`);
   }
 
-  process.stdout.write(`Finalizing WTF-P ${version}\n`);
+  process.stdout.write(`Finalizing PanWrite ${version}\n`);
   // Preflight bounds each of its own steps, so this call has no limit of its own.
   run('npm', ['run', 'preflight'], { inherit: true, timeout: 0 });
 

@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.source/v1",
+  "schema": "panwrite.project.source/v1",
   "id": "source-portable-protocols-2026",
   "project_id": "portable-research-demo",
   "kind": "journal-article",

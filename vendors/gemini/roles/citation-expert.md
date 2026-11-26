@@ -1,6 +1,6 @@
 ---
 id: citation-expert
-contract: wtfp.role.citation-expert/v1
+contract: panwrite.role.citation-expert/v1
 name: Citation Expert
 execution_class: mutation-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -50,7 +50,7 @@ Find a precise, defensible set of sources for explicit manuscript claims and ana
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `citation-expert`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

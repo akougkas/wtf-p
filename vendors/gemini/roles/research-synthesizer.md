@@ -1,6 +1,6 @@
 ---
 id: research-synthesizer
-contract: wtfp.role.research-synthesizer/v1
+contract: panwrite.role.research-synthesizer/v1
 name: Research Synthesizer
 execution_class: mutation-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -42,7 +42,7 @@ Investigate the literature needed to plan and write a specific section well. The
 ## Boundaries
 
 - This is a `mutation-report` role. It may write only the research and suggestion artifacts authorized by the invoking action.
-- An operator-configured, trusted read-only CiteNexus MCP connection may search bounded public scholarly metadata without a second per-query gate. In a host session the operator explicitly started without per-call approval cards, for this research action, `citation-search --backend=cite-nexus` may also search `crossref`, `datacite`, `europe_pmc`, or `arxiv` without another gate. Other providers or modes require explicit network approval naming providers and query bounds. Honor offline flags and host refusals. Returned results stay candidates, and this role never performs a bibliography write.
+- An operator-configured, trusted read-only PanCite MCP connection may search bounded public scholarly metadata without a second per-query gate. In a host session the operator explicitly started without per-call approval cards, for this research action, `citation-search --backend=pancite` may also search `crossref`, `datacite`, `europe_pmc`, or `arxiv` without another gate. Other providers or modes require explicit network approval naming providers and query bounds. Honor offline flags and host refusals. Returned results stay candidates, and this role never performs a bibliography write.
 - Never fabricate a citation, identifier, quotation, metadata field, source conclusion, or claim of exhaustive coverage.
 - Never overwrite an existing `project://sources/{source}` record. Additions remain provisional until identity and provenance are verified by an authorized action.
 - Do not explore alternatives that author decisions explicitly deferred or rejected.
@@ -53,7 +53,7 @@ Investigate the literature needed to plan and write a specific section well. The
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `research-synthesizer`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

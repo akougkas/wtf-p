@@ -17,8 +17,8 @@ allowed-tools:
 # Research a section gap
 
 @${CLAUDE_PLUGIN_ROOT}/project/README.md
-@${CLAUDE_PLUGIN_ROOT}/skills/wtfp-research-literature/SKILL.md
-@${CLAUDE_PLUGIN_ROOT}/skills/wtfp-research-literature/references/actions.md
+@${CLAUDE_PLUGIN_ROOT}/skills/panwrite-research-literature/SKILL.md
+@${CLAUDE_PLUGIN_ROOT}/skills/panwrite-research-literature/references/actions.md
 
 ## Record contract
 
@@ -32,7 +32,7 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 ## Procedure
 
 1. Resolve the research question and section scope against locked/deferred decisions; agree on depth and source constraints.
-2. Prefer an operator-configured, trusted read-only CiteNexus MCP connection for bounded public metadata searches when the host has already authorized it. In a host session the operator explicitly started without per-call approval cards, for this research action, the bundled CiteNexus dispatcher may also search the free no-key public indexes `crossref`, `datacite`, `europe_pmc`, and `arxiv` without a second per-query author gate; use only selected relevant indexes with an explicit `--providers` list. Record provider IDs, queries, date, and result limits; never send unpublished manuscript text or private notes as search terms. For any other route, first obtain explicit author approval naming the providers and bounded query set. Results remain candidates and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
+2. Prefer an operator-configured, trusted read-only PanCite MCP connection for bounded public metadata searches when the host has already authorized it. In a host session the operator explicitly started without per-call approval cards, for this research action, the bundled PanCite dispatcher may also search the free no-key public indexes `crossref`, `datacite`, `europe_pmc`, and `arxiv` without a second per-query author gate; use only selected relevant indexes with an explicit `--providers` list. Record provider IDs, queries, date, and result limits; never send unpublished manuscript text or private notes as search terms. For any other route, first obtain explicit author approval naming the providers and bounded query set. Results remain candidates and this action performs no bibliography write. Verify source identity and inspection depth, and separate source records from claim-level evidence.
 3. Synthesize supported, conflicting, and missing evidence into a Markdown research artifact; link new records and disclose limitations. Record every claim the section must support in `project://sections/{section}` with `evidence_required: true` and its `evidence_uris`; a literature-heavy section that records no such claim has no coverage to check and cannot be planned.
 
 ## Bundled tool execution
@@ -40,10 +40,10 @@ Manuscript prose and supporting context, research, plan, review, summary, handof
 The declared `tool.execute` effect authorises exactly one command, run from the package root the host resolves for this bundle:
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/tools/wtfp-tool.js [--offline] <command> [arguments]
+node ${CLAUDE_PLUGIN_ROOT}/tools/panwrite-tool.js [--offline] <command> [arguments]
 ```
 
-Run it with `list` first to read the declared commands, their arguments, their bounds, and the effects each one applies; `${CLAUDE_PLUGIN_ROOT}/tools/README.md` carries the same table. A command whose effects include `network.*` performs outbound requests. Pass `--offline` (or set `WTFP_TOOL_OFFLINE=1`) until the provider/query gate is approved, except for this action's explicit unattended public-index route. On that route omit `--offline` only for `citation-search --backend=cite-nexus` with bounded queries and `--providers` drawn from `crossref,datacite,europe_pmc,arxiv`; never override an operator-set offline flag or a host refusal. Never execute another module in this package, never pass a logical `project://` or `wtfp://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
+Run it with `list` first to read the declared commands, their arguments, their bounds, and the effects each one applies; `${CLAUDE_PLUGIN_ROOT}/tools/README.md` carries the same table. A command whose effects include `network.*` performs outbound requests. Pass `--offline` (or set `PANWRITE_TOOL_OFFLINE=1`) until the provider/query gate is approved, except for this action's explicit unattended public-index route. On that route omit `--offline` only for `citation-search --backend=pancite` with bounded queries and `--providers` drawn from `crossref,datacite,europe_pmc,arxiv`; never override an operator-set offline flag or a host refusal. Never execute another module in this package, never pass a logical `project://` or `panwrite://` URI as a shell argument, and treat every returned record as candidate evidence until it is verified and written to a source or evidence record.
 
 ## Safety and completion
 
@@ -70,4 +70,4 @@ Treat the following text as the user-supplied input for this action. Preserve it
 $ARGUMENTS
 </invocation_arguments>
 
-<!-- Generated by WTF-P adapter compiler v5 from protocol/actions/research-gap; do not edit. -->
+<!-- Generated by PanWrite adapter compiler v5 from protocol/actions/research-gap; do not edit. -->

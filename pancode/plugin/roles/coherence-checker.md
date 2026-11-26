@@ -1,6 +1,6 @@
 ---
 id: coherence-checker
-contract: wtfp.role.coherence-checker/v1
+contract: panwrite.role.coherence-checker/v1
 name: Coherence Checker
 execution_class: verifier-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -48,7 +48,7 @@ Evaluate the manuscript as a connected argument rather than a set of individuall
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `coherence-checker`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

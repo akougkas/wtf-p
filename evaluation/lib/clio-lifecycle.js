@@ -295,7 +295,7 @@ function readPlanningRecords(projectRoot) {
         sha256: sha256(fs.readFileSync(entry.absolute)),
         value,
         type: typeof value.schema === 'string'
-          ? value.schema.match(/^wtfp\.project\.([a-z][a-z0-9-]*)\/v1$/u)?.[1] || null
+          ? value.schema.match(/^panwrite\.project\.([a-z][a-z0-9-]*)\/v1$/u)?.[1] || null
           : null
       };
     });
@@ -819,7 +819,7 @@ function checkLifecycleRecords(projectRoot, expectedDecisions, phase, previousRe
 
   errors.push(...checkRevisionContinuity(previousRecords, records));
   return {
-    schema: 'wtfp.evaluation.lifecycle-invariants/v1',
+    schema: 'panwrite.evaluation.lifecycle-invariants/v1',
     phase,
     valid: errors.length === 0,
     record_count: records.length,
@@ -897,7 +897,7 @@ function actionPayloads({ target = 'openai-codex', model = 'gpt-5.6-terra', effo
       'Use stable section IDs and word targets exactly: introduction 800, background 900, method 1200, evaluation 700, discussion 1400, conclusion 1000.',
       'Keep the bounded synthetic central claim, supplied evidence, limitations, and exact author decisions visible in section obligations and dependencies.',
       'The outline-approval gate is granted for this exact structure and the declared outline, section, state, and validation writes only.',
-      'Use wtfp-outliner as an independent specialist and reconcile its structured result before applying any mutation.',
+      'Use panwrite-outliner as an independent specialist and reconcile its structured result before applying any mutation.',
       workerRoute,
       'Record exactly one create-outline validation for the approved structure with semantic validator_role outliner.',
       common
@@ -906,7 +906,7 @@ function actionPayloads({ target = 'openai-codex', model = 'gpt-5.6-terra', effo
       `Plan only section ${SECTION_ID}. Its approved target is 700 words.`,
       'Read .planning/sections/evaluation/context.md and research.md plus the portable records. Create one immutable executable plan, link it from the section, and update state.',
       'The plan must cover the two recorded means, trial counts, recovery-check observation, synthetic scope, missing uncertainty, forbidden generalizations, and all author decisions.',
-      'Use wtfp-section-planner, then independently use wtfp-plan-checker. Do not skip or merge the checker boundary.',
+      'Use panwrite-section-planner, then independently use panwrite-plan-checker. Do not skip or merge the checker boundary.',
       workerRoute,
       'Persist the independent result as a passed plan-section validation with semantic validator_role plan-checker.',
       'The plan-approval gate is granted only if the checker passes with no exception. No verifier exception is authorized.',
@@ -914,7 +914,7 @@ function actionPayloads({ target = 'openai-codex', model = 'gpt-5.6-terra', effo
     ].join('\n'),
     'write-section': [
       `Draft only section ${SECTION_ID} from its approved current plan into paper/evaluation.md, about 700 words.`,
-      'Use wtfp-section-writer, then independently use wtfp-argument-verifier. Reconcile both structured results before updating project state.',
+      'Use panwrite-section-writer, then independently use panwrite-argument-verifier. Reconcile both structured results before updating project state.',
       workerRoute,
       'Persist the independent result as a passed write-section validation with semantic validator_role argument-verifier.',
       'Every quantitative statement must remain traceable to supplied evidence; distinguish observation from inference; use no citations; make no statistical, production, universal, or reliability claim.',
@@ -923,7 +923,7 @@ function actionPayloads({ target = 'openai-codex', model = 'gpt-5.6-terra', effo
     ].join('\n'),
     'review-section': [
       `Review only the drafted ${SECTION_ID} section against its plan, evidence, decisions, outline obligations, and 700-word target.`,
-      'Use wtfp-section-reviewer as an independent read-only verifier. Create a detailed review and validation record and link them from the section; do not revise the manuscript.',
+      'Use panwrite-section-reviewer as an independent read-only verifier. Create a detailed review and validation record and link them from the section; do not revise the manuscript.',
       workerRoute,
       'Use semantic validator_role section-reviewer and action_id review-section in the validation record.',
       'Use the standard evidence/argument persona. Record every unsupported or over-broad claim rather than silently fixing it.',
@@ -956,7 +956,7 @@ function actionPayloads({ target = 'openai-codex', model = 'gpt-5.6-terra', effo
 function buildActionPlan({ binary, target, model, effort, timeoutMinutes }) {
   const payloads = actionPayloads({ target, model, effort });
   return ACTION_SEQUENCE.map((action, index) => {
-    const invocation = `/wtfp:${action}\n${payloads[action]}`;
+    const invocation = `/panwrite:${action}\n${payloads[action]}`;
     const session = index <= 6 ? (index === 0 ? 'new:S1' : 'resume:S1')
       : (index === 7 ? 'new:S2' : 'resume:S2');
     const args = [

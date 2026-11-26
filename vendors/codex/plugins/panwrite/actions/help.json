@@ -1,0 +1,30 @@
+{
+  "schema": "panwrite.action/v1",
+  "id": "help",
+  "title": "Show PanWrite help",
+  "description": "Render the stable PanWrite action reference from the canonical catalog.",
+  "alias": "panwrite:help",
+  "surface": {
+    "kind": "operations",
+    "operation": "product-operations"
+  },
+  "requirements": {
+    "capabilities": [
+      "filesystem.read"
+    ],
+    "conditions": []
+  },
+  "reads": [
+    "protocol://catalog.json",
+    "protocol://actions/{action}.json"
+  ],
+  "produces": [],
+  "delegation": [],
+  "tools": [],
+  "effects": [
+    {
+      "id": "filesystem.read",
+      "scope": "protocol://catalog.json, protocol://actions/{action}.json"
+    }
+  ]
+}

@@ -41,8 +41,8 @@ jobs:
         id: registry
         run: |
           VERSION=$(node -p 'require("./package.json").version')
-          if npm view "wtf-p@$VERSION" version >/dev/null 2>&1; then
-            echo "::notice::wtf-p@$VERSION is already on npm; nothing to publish"
+          if npm view "@panstudio/panwrite@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::@panstudio/panwrite@$VERSION is already on npm; nothing to publish"
             echo "published=true" >> "$GITHUB_OUTPUT"
           else
             echo "published=false" >> "$GITHUB_OUTPUT"
@@ -58,7 +58,7 @@ jobs:
     timeout-minutes: 15
     environment:
       name: npm
-      url: https://www.npmjs.com/package/wtf-p
+      url: https://www.npmjs.com/package/@panstudio/panwrite
     permissions:
       contents: read
       id-token: write
@@ -86,8 +86,8 @@ jobs:
         run: |
           VERSION=$(node -p 'require("./package.json").version')
           # The approval wait can be long; skip if the version appeared meanwhile.
-          if npm view "wtf-p@$VERSION" version >/dev/null 2>&1; then
-            echo "::notice::wtf-p@$VERSION is already on npm; nothing to publish"
+          if npm view "@panstudio/panwrite@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::@panstudio/panwrite@$VERSION is already on npm; nothing to publish"
             exit 0
           fi
           case "$VERSION" in

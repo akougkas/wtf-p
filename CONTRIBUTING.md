@@ -1,6 +1,6 @@
-# Contributing to WTF-P
+# Contributing to PanWrite
 
-WTF-P is a portable academic-research and writing protocol for AI coding agents. Contributions are welcome across workflows, project schemas, Agent Skills, specialist roles, runtime adapters, installation safety, documentation, and tests.
+PanWrite is a portable academic-research and writing protocol for AI coding agents. Contributions are welcome across workflows, project schemas, Agent Skills, specialist roles, runtime adapters, installation safety, documentation, and tests.
 
 ## Before you start
 
@@ -12,11 +12,11 @@ WTF-P is a portable academic-research and writing protocol for AI coding agents.
 
 ## Development setup
 
-WTF-P requires Node.js 20 or newer and has no runtime package dependencies.
+PanWrite requires Node.js 20 or newer and has no runtime package dependencies.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/wtf-p.git
-cd wtf-p
+git clone https://github.com/YOUR_USERNAME/panwrite.git
+cd panwrite
 npm test
 ```
 
@@ -79,18 +79,18 @@ Canonical changes flow in one direction:
 protocol source → adapter compiler → vendors/* → isolated native validation
 ```
 
-Generated files carry a compiler provenance marker and are authenticated by `.wtfp-generated.json` inventories. A generated output may be inspected or tested, but its fix belongs in the canonical source or compiler. Run the compiler once after the source change and commit its complete output.
+Generated files carry a compiler provenance marker and are authenticated by `.panwrite-generated.json` inventories. A generated output may be inspected or tested, but its fix belongs in the canonical source or compiler. Run the compiler once after the source change and commit its complete output.
 
 ## Adding or changing an action
 
-The stable public namespace contains the `wtfp:<action>` aliases listed in `protocol/catalog.json`. To add or change one:
+The stable public namespace contains the `panwrite:<action>` aliases listed in `protocol/catalog.json`. To add or change one:
 
 1. Add or edit `protocol/actions/<action>.json`.
 2. Add or edit `protocol/workflows/<action>.md`.
 3. Assign an academic action to exactly one skill in `protocol/catalog.json`; product operations remain outside default skill trigger space.
 4. Update the owning skill's `references/actions.md` and, when the trigger boundary changes, its `SKILL.md` description.
 5. Declare every read, output mode, delegation, capability, tool, effect, and user gate exactly. An update or deletion must read the target first.
-6. Use logical `project://`, `protocol://`, `role://`, and `wtfp://tools/` URIs. Do not embed a workstation path, client home, concrete model, or vendor tool name in canonical content.
+6. Use logical `project://`, `protocol://`, `role://`, and `panwrite://tools/` URIs. Do not embed a workstation path, client home, concrete model, or vendor tool name in canonical content.
 7. Run `npm run build:adapters` once.
 8. Run `npm run test:protocol` and `npm run check:adapters`.
 
@@ -119,7 +119,7 @@ Skills follow the Agent Skills standard:
 - Keep each academic action uniquely owned.
 - Store OpenAI UI metadata in `agents/openai.yaml` when present.
 
-Roles are semantic contracts, not vendor-specific agent recipes. Each role must declare purpose, capability classes, inputs, procedure, boundaries, and the `wtfp.role-result/v1` return contract. A role never prompts the user directly; unresolved judgment returns through its structured result.
+Roles are semantic contracts, not vendor-specific agent recipes. Each role must declare purpose, capability classes, inputs, procedure, boundaries, and the `panwrite.role-result/v1` return contract. A role never prompts the user directly; unresolved judgment returns through its structured result.
 
 ## Adapter compiler changes
 
@@ -182,8 +182,8 @@ Common types are `feat`, `fix`, `docs`, `refactor`, `test`, and `chore`. Useful 
 
 ## Questions and responsible reports
 
-- Use [Discussions](https://github.com/akougkas/wtf-p/discussions) for design questions.
-- Search existing [Issues](https://github.com/akougkas/wtf-p/issues) before filing a report.
+- Use [Discussions](https://github.com/PanStudio/panwrite/discussions) for design questions.
+- Search existing [Issues](https://github.com/PanStudio/panwrite/issues) before filing a report.
 - Do not include credentials, unpublished manuscripts, private bibliographies, or isolated live-test traces in an issue.
 
 Thank you for helping make rigorous academic workflows portable across agent platforms.

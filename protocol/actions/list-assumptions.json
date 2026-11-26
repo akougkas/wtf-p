@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "list-assumptions",
   "title": "List section assumptions",
   "description": "Preview the intended approach and assumptions for a section without changing project files.",
-  "alias": "wtfp:list-assumptions",
+  "alias": "panwrite:list-assumptions",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/list-assumptions",
+  "workflow": "panwrite://workflows/list-assumptions",
   "requirements": {
     "capabilities": [
       "filesystem.read"

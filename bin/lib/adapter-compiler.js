@@ -9,12 +9,12 @@ const ROOT = path.resolve(__dirname, '../..');
 const PROTOCOL_ROOT = path.join(ROOT, 'protocol');
 // Human-edited source of the standalone PanCode extension; see hosts/pancode/README.md.
 const PANCODE_RUNTIME_ROOT = path.join(ROOT, 'hosts', 'pancode');
-const INVENTORY_NAME = '.wtfp-generated.json';
+const INVENTORY_NAME = '.panwrite-generated.json';
 
 const TARGET_ROOTS = Object.freeze({
   claude: path.join(ROOT, 'vendors', 'claude'),
-  codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'wtfp'),
-  copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'wtfp'),
+  codex: path.join(ROOT, 'vendors', 'codex', 'plugins', 'panwrite'),
+  copilot: path.join(ROOT, 'vendors', 'copilot', 'plugins', 'panwrite'),
   opencode: path.join(ROOT, 'vendors', 'opencode'),
   antigravity: path.join(ROOT, 'vendors', 'antigravity'),
   gemini: path.join(ROOT, 'vendors', 'gemini')
@@ -71,17 +71,17 @@ const EFFECT_CAPABILITY_BINDINGS = Object.freeze({
 // Binding identifiers are adapter contracts, not claims that every host uses
 // the same native tool spelling.
 //
-// `tool.execute` means one thing only: run a WTF-P-bundled tool declared by
-// `protocol/tools.json` through the single `tools/wtfp-tool.js` dispatcher that
+// `tool.execute` means one thing only: run a PanWrite-bundled tool declared by
+// `protocol/tools.json` through the single `tools/panwrite-tool.js` dispatcher that
 // every envelope carries. It is never a grant for an arbitrary external
 // toolchain, so a host binds it only when its shell tool name is verified.
 // PanCode's `network.search` is bound to the same executor because the only
-// scholarly search WTF-P declares is the bundled Semantic Scholar / Google
+// scholarly search PanWrite declares is the bundled Semantic Scholar / Google
 // Scholar client; PanCode exposes `web_fetch` but no native web-search tool.
 //
 // `workflow.drive` is a host driver that selects each next step from portable
 // project state and confines that step to its own action contract. Only the
-// PanCode desk provides one (`extension_wtfp__next_step`), so `advance` fails
+// PanCode desk provides one (`extension_panwrite__next_step`), so `advance` fails
 // closed everywhere else instead of letting a model choose its own steps.
 const TARGET_POLICIES = Object.freeze({
   pancode: Object.freeze({ capabilities: Object.freeze({
@@ -98,7 +98,7 @@ const TARGET_POLICIES = Object.freeze({
     'user.interaction': 'pancode:ask_user',
     'vcs.branch': null,
     'vcs.commit': null,
-    'workflow.drive': 'pancode:wtfp-desk-driver'
+    'workflow.drive': 'pancode:panwrite-desk-driver'
   }), approvals: Object.freeze({ none: 'pancode:permission-policy', implicit: 'pancode:permission-policy', explicit: 'pancode:ask_user' }) }),
   claude: Object.freeze({ capabilities: Object.freeze({
     'agent.delegate': 'claude:Task',
@@ -232,17 +232,17 @@ const TARGET_HOST_TOOL_ENFORCEMENT = Object.freeze({
 });
 
 const ROLE_SKILLS = Object.freeze({
-  'outliner': 'wtfp-start-project',
-  'section-planner': 'wtfp-plan-section',
-  'plan-checker': 'wtfp-plan-section',
-  'section-writer': 'wtfp-write-section',
-  'argument-verifier': 'wtfp-review-manuscript',
-  'section-reviewer': 'wtfp-review-manuscript',
-  'coherence-checker': 'wtfp-review-manuscript',
-  'prose-polisher': 'wtfp-review-manuscript',
-  'research-synthesizer': 'wtfp-research-literature',
-  'citation-expert': 'wtfp-research-literature',
-  'citation-formatter': 'wtfp-research-literature'
+  'outliner': 'panwrite-start-project',
+  'section-planner': 'panwrite-plan-section',
+  'plan-checker': 'panwrite-plan-section',
+  'section-writer': 'panwrite-write-section',
+  'argument-verifier': 'panwrite-review-manuscript',
+  'section-reviewer': 'panwrite-review-manuscript',
+  'coherence-checker': 'panwrite-review-manuscript',
+  'prose-polisher': 'panwrite-review-manuscript',
+  'research-synthesizer': 'panwrite-research-literature',
+  'citation-expert': 'panwrite-research-literature',
+  'citation-formatter': 'panwrite-research-literature'
 });
 
 function sha256(content) {
@@ -427,7 +427,7 @@ function actionAvailability(action, target, targetPolicies, effectConsents) {
 function blockedActionBody(action, target, availability) {
   const list = (values) => values.length > 0 ? values.map((value) => `\`${value}\``).join(', ') : '(none)';
   return [
-    'WTFP_ACTION_UNAVAILABLE',
+    'PANWRITE_ACTION_UNAVAILABLE',
     '',
     `Action: \`${action.id}\``,
     `Target: \`${target}\``,
@@ -447,7 +447,7 @@ function actionTools(action) {
     ['Write', 'Edit'].forEach((tool) => tools.add(tool));
   }
   // A logical tool.execute capability is not equivalent to an unrestricted
-  // host shell. It grants exactly one command, the bundled `tools/wtfp-tool.js`
+  // host shell. It grants exactly one command, the bundled `tools/panwrite-tool.js`
   // dispatcher, and only on a host whose shell tool name is verified. Hosts
   // without an exact logical-tool binding report the capability unavailable
   // instead of receiving Bash implicitly. The same rule applies to explicit
@@ -465,7 +465,7 @@ function nativeWorkflowBody(workflowBody, target) {
   const argumentToken = target === 'gemini'
     ? '{{args}}'
     : target === 'copilot-cloud'
-      ? '${input:arguments:Describe the requested WTF-P action input}'
+      ? '${input:arguments:Describe the requested PanWrite action input}'
       : '$ARGUMENTS';
   body = body.replaceAll('{{arguments}}', argumentToken);
 
@@ -477,14 +477,14 @@ function nativeWorkflowBody(workflowBody, target) {
     // Repository prompt and agent files both live one directory below
     // `.github/`. Copilot documents Markdown links as its portable file
     // reference syntax, while the local plugin envelope uses @includes.
-    body = body.replace(/^@protocol:\/\/([^\s]+)\s*$/gm, '[$1](../wtfp/$1)');
-    body = body.replaceAll('protocol://', '.github/wtfp/');
+    body = body.replace(/^@protocol:\/\/([^\s]+)\s*$/gm, '[$1](../panwrite/$1)');
+    body = body.replaceAll('protocol://', '.github/panwrite/');
   } else if (target === 'antigravity') {
     body = body.replaceAll('protocol://', '${PLUGIN_ROOT}/');
     // Antigravity exposes plugin actions only as skills, invoked by skill name.
     body = body.replace(
-      "this host's own invocation syntax, `/wtfp:<action>`. Do not invent a second spelling, a bare `wtfp-<action>` form, or a host-specific prefix.",
-      "Antigravity's invocation syntax, `/wtfp-<action>`, because Antigravity loads plugin actions as skills. Do not invent a second spelling."
+      "this host's own invocation syntax, `/panwrite:<action>`. Do not invent a second spelling, a bare `panwrite-<action>` form, or a host-specific prefix.",
+      "Antigravity's invocation syntax, `/panwrite-<action>`, because Antigravity loads plugin actions as skills. Do not invent a second spelling."
     );
   } else if (target === 'gemini' || target === 'opencode' || target === 'codex') {
     // None of these hosts exposes a reliable runtime variable for resolving
@@ -536,7 +536,7 @@ function nativeCommandBody(action, workflowBody, target, deskTools = false) {
   const argumentToken = target === 'gemini'
     ? '{{args}}'
     : target === 'copilot-cloud'
-      ? '${input:arguments:Describe the requested WTF-P action input}'
+      ? '${input:arguments:Describe the requested PanWrite action input}'
       : '$ARGUMENTS';
   const schemas = projectSchemasForAction(action);
   const protocolIncludes = [
@@ -588,8 +588,8 @@ function protocolResource(relativePath) {
 function protocolDetails(relativePath) {
   const resource = protocolResource(relativePath);
   return [
-    `<details data-wtfp-source="protocol://${resource.normalized}" open>`,
-    `<summary>Bundled WTF-P protocol resource: ${resource.normalized}</summary>`,
+    `<details data-panwrite-source="protocol://${resource.normalized}" open>`,
+    `<summary>Bundled PanWrite protocol resource: ${resource.normalized}</summary>`,
     '',
     resource.content,
     '',
@@ -618,7 +618,7 @@ function inlineProtocolResources(workflowBody) {
   }
 
   const trailing = [...embedded]
-    .filter((relativePath) => !body.includes(`data-wtfp-source="protocol://${relativePath}"`))
+    .filter((relativePath) => !body.includes(`data-panwrite-source="protocol://${relativePath}"`))
     .sort((left, right) => left.localeCompare(right))
     .map((relativePath) => protocolDetails(relativePath));
   return trailing.length === 0 ? body : `${body}\n\n${trailing.join('\n\n')}`;
@@ -627,13 +627,13 @@ function inlineProtocolResources(workflowBody) {
 // Action commands place this banner after the body. Hosts that title a session
 // from the first text of an expanded command template would otherwise show it.
 function generatedBanner(kind, id) {
-  return `<!-- Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit. -->`;
+  return `<!-- Generated by PanWrite adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit. -->`;
 }
 
 // JavaScript outputs must not carry the HTML form: it only parses under the
 // Annex B script-mode grammar and breaks as soon as the file is loaded as ESM.
 function generatedScriptBanner(kind, id) {
-  return `// Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit.`;
+  return `// Generated by PanWrite adapter compiler v${GENERATOR_VERSION} from ${kind}/${id}; do not edit.`;
 }
 
 const PANCODE_AUTHOR_QUESTIONS = 'Every question `ask_user` puts to the author here is the author\'s to answer: ask exactly one question per `ask_user` call, with its options and `operator_only: true`; PanCode refuses an `operator_only` question sent with others. PanCode never answers such a question for an absent author; an unanswered one ends the turn instead of taking a recommended option, so a timeout never becomes an author decision.';
@@ -643,12 +643,12 @@ function pancodeUserGateBody(action, deskTools = false) {
   // A local model tried every branch of a two-way rule in turn; state only the one this action can take.
   const createsCheckpoint = action.produces.some((output) => output.uri === 'project://checkpoints/{checkpoint}' && output.mode === 'create');
   const route = createsCheckpoint
-    ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_wtfp__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_wtfp__record`, then call `extension_wtfp__gate` with its ID. The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`, or the author answers twice.'
-    : 'This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_wtfp__gate` only for a pending checkpoint `extension_wtfp__status` lists in the gate\'s exact scope, and never create one.';
+    ? 'For a pending checkpoint in the declared gate\'s exact scope, call `extension_panwrite__gate` with its ID; the desk shows it to the author and seals the answer. When none exists yet, create it pending through `extension_panwrite__record`, then call `extension_panwrite__gate` with its ID. The gate is the only place its question is asked: never ask it, or a preview of it, with `ask_user`, or the author answers twice.'
+    : 'This action creates no checkpoint, so ask its gate question with `ask_user` and act on the structured answer; call `extension_panwrite__gate` only for a pending checkpoint `extension_panwrite__status` lists in the gate\'s exact scope, and never create one.';
   if (deskTools) return [
     '## PanCode user-gate binding',
     '',
-    route + ' Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_wtfp__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
+    route + ' Only the structured author answer satisfies the gate; cancelled, kept or expired checkpoints authorize nothing. Never write `resolution.resolved_by: author`, never resolve, unblock or expire a blocking checkpoint, and never infer approval from invocation text, prose or silence. A plan is approved only by an `approve` answer on a checkpoint scoped to that plan\'s URI, for its current bytes. Read back a persisted resolution with `extension_panwrite__read_record`, which reports whether the desk attests it, before applying its gated mutation. A record change that turns a gate off waits for the author\'s confirmation, which the record tool asks for itself.',
     '',
     PANCODE_AUTHOR_QUESTIONS
   ].join('\n');
@@ -685,10 +685,10 @@ function pancodeInlineRoles(action, reviewers, deskTools) {
 const archives = (action) => action.produces.some((output) => output.mode === 'archive' && output.uri.startsWith('project://archives/'));
 
 function pancodeDeskTools(action) {
-  if (pancodeRecordWriter(action)) return [...PANCODE_DESK_TOOLS, ...(archives(action) ? ['extension_wtfp__archive'] : [])];
+  if (pancodeRecordWriter(action)) return [...PANCODE_DESK_TOOLS, ...(archives(action) ? ['extension_panwrite__archive'] : [])];
   const tools = ['status', 'read_record', 'readiness'];
   if (action.effects.some((effect) => effect.id === 'user.gate')) tools.push('gate');
-  return tools.map((tool) => `extension_wtfp__${tool}`);
+  return tools.map((tool) => `extension_panwrite__${tool}`);
 }
 
 // Only the canonical PanCode namespace prefers the optional desk. The unrooted
@@ -703,16 +703,16 @@ function pancodeDeskWorkflowBody(action, workflowBody) {
     .replace(/^@protocol:\/\/skills\/[^\n]+\/references\/actions\.md\n/gm, '')
     .replace(/^@protocol:\/\/skills\/([a-z0-9-]+)\/SKILL\.md$/gm,
       'Before acting, load the `$1` skill with `context(scope="skills", name="$1")`; it carries this action\'s method and stays loaded across compaction.')
-    .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m, writer ? 'Use `extension_wtfp__record` for each declared JSON record write. Read an existing record first with `extension_wtfp__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.'
-      : 'Read each JSON record with `extension_wtfp__read_record` at its logical URI; it returns the record, its revision and SHA-256, and for a checkpoint whether the author\'s answer is attested. This action writes no JSON record.')
+    .replace(/^Resolve every logical URI through the host adapter\.[^\n]+$/m, writer ? 'Use `extension_panwrite__record` for each declared JSON record write. Read an existing record first with `extension_panwrite__read_record` and pass back the version it returns: `expect_revision` for state, outline and decisions, `expect_sha256` for every other record; a create passes neither. When one transition changes several records, such as a checkpoint and the state that lists it, pass them together as `writes` so they commit together. The tool validates, bumps revisions and timestamps, commits under the project lock and reads back. It refuses author resolutions and any record this action does not declare; preserve stable IDs and author decisions.'
+      : 'Read each JSON record with `extension_panwrite__read_record` at its logical URI; it returns the record, its revision and SHA-256, and for a checkpoint whether the author\'s answer is attested. This action writes no JSON record.')
     .replace(/^Manuscript prose and supporting context,[^\n]+$/m,
       'Write prose and linked artifacts with native file tools; keep their authored formats. The record tool handles JSON records only, never manuscript text, deletion or archives.');
   if (action.id === 'write-section') body = body.replace(/^3\. Read the persisted manuscript text back[^\n]+$/m,
-    '3. Read back the persisted manuscript, call `extension_wtfp__measure_section` with its section ID, and use the returned body count and target tolerance for validation and the summary; never use a worker self-report or hand-count words.')
+    '3. Read back the persisted manuscript, call `extension_panwrite__measure_section` with its section ID, and use the returned body count and target tolerance for validation and the summary; never use a worker self-report or hand-count words.')
     .replace(/^4\. Create or update the required Markdown summary with that measured count,[^\n]+$/m,
       '4. A dispatched writer has no word counter, so tell it to write the summary without a count; then add the measured count to the summary yourself and read back both manuscript and summary. Missing, empty, or inconsistent output is a failed completion condition, not permission to link a path that does not exist.');
   if (action.id === 'check-todos') body = body
-    .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_wtfp__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
+    .replace(/^2\. Ask the user[^\n]+$/m, '2. Call `extension_panwrite__gate` for each selected pending checkpoint; the parked interview records the author\'s answer.')
     .replace(/^3\. Apply only[^\n]+$/m, '3. Read back the resulting checkpoint and state; retained or cancelled gates remain pending.');
   if (action.requirements.capabilities.includes('workflow.drive')) {
     const contract = /^## Record contract\n[\s\S]*?(?=^## Procedure$)/m;
@@ -723,13 +723,13 @@ function pancodeDeskWorkflowBody(action, workflowBody) {
     pancodeDeskCalls(pancodeDeskTools(action)),
     'Read a large source or manuscript by section with `grep` and a bounded `read` range, never whole: PanCode ends the turn when one turn\'s reads exceed its observation budget.',
     'An author\'s request is never permission to write outside this action\'s declared outputs: do the part it declares, then end by naming the action that owns the rest as the next step, and do not ask again or weigh the request against the contract; the desk refuses the rest regardless.',
-    'Start from the desk\'s status, not from individual records: the reminder the desk injects when a WTF-P turn starts, or `extension_wtfp__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
+    'Start from the desk\'s status, not from individual records: the reminder the desk injects when a PanWrite turn starts, or `extension_panwrite__status` inside an advance run or after this action writes. Then read only the records and artifacts this action will change, quote or check in detail.',
     ...(action.produces.some((output) => output.uri.startsWith('project://paper'))
-      ? ['Before drafting or dispatching a writer for a section, call `extension_wtfp__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
+      ? ['Before drafting or dispatching a writer for a section, call `extension_panwrite__readiness` with its ID. If it reports the section not ready, stop and report its reasons; never draft around them. Give each dispatched writer `intent.write_roots` naming only its section\'s manuscript and summary; the desk narrows or refuses anything wider.'] : []),
     ...(archives(action)
-      ? ['Make the milestone archive with `extension_wtfp__archive` and its archive id: it copies every `.planning` record and artifact and every `paper/` file into `.planning/archives/<archive>/` with a sha256 manifest, so never copy files by hand. Then record the archive in the manifest and state and write the validation, as the procedure says.'] : []),
+      ? ['Make the milestone archive with `extension_panwrite__archive` and its archive id: it copies every `.planning` record and artifact and every `paper/` file into `.planning/archives/<archive>/` with a sha256 manifest, so never copy files by hand. Then record the archive in the manifest and state and write the validation, as the procedure says.'] : []),
     ...(action.produces.some((output) => output.uri.startsWith('project://paper')) && action.id !== 'write-section'
-      ? ['After changing a linked section manuscript, call `extension_wtfp__measure_section` with that section ID; it persists the desk\'s body-word count in the section and state.'] : []),
+      ? ['After changing a linked section manuscript, call `extension_panwrite__measure_section` with that section ID; it persists the desk\'s body-word count in the section and state.'] : []),
     `If desk tools are absent, follow \`\${pluginRoot}/workflows/${action.id}.md\` and \`\${pluginRoot}/project/README.md\` with native tools and \`ask_user\` gates.`
   ];
   return `${body}\n\n${bindings.join('\n')}`;
@@ -750,11 +750,11 @@ const PANCODE_DESK_ARGS = Object.freeze({
 
 function pancodeDeskCalls(tools) {
   const args = tools.map((tool) => {
-    const name = tool.replace(/^extension_wtfp__/, '');
+    const name = tool.replace(/^extension_panwrite__/, '');
     if (!(name in PANCODE_DESK_ARGS)) throw new Error(`no PanCode argument shape for desk tool ${tool}`);
     return `${name} ${PANCODE_DESK_ARGS[name]}`;
   });
-  return `Call desk tools with \`gateway(op="call", capability="extension_wtfp__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. A record write that would not validate, or reports a stale read or a missing version, asks you to fix the record or read it again and resend; that is not a refusal. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns that family's records in one call, and names a \`?after=\` page for any it holds back; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: ${PANCODE_ARTIFACT_PATHS}.`;
+  return `Call desk tools with \`gateway(op="call", capability="extension_panwrite__<tool>", args={...})\`, without a describe first; args: ${args.join(', ')}. Describe one only after it rejects its arguments. A record write that would not validate, or reports a stale read or a missing version, asks you to fix the record or read it again and resend; that is not a refusal. Any other error or refusal stops the action; never bypass it with a manual write or shell script. \`read_record\` on a family URI, such as \`project://sources\` or \`project://evidence\`, returns that family's records in one call, and names a \`?after=\` page for any it holds back; list a family that way, never with a shell. It serves JSON records only; read authored artifacts directly: ${PANCODE_ARTIFACT_PATHS}.`;
 }
 
 // Where PanCode keeps the portable project's resources (protocol/project/README.md).
@@ -782,37 +782,37 @@ function pancodeDriverBinding() {
   return [
     '## PanCode driver binding',
     '',
-    `${pancodeDeskCalls([...PANCODE_DESK_TOOLS, PANCODE_DRIVER_TOOL])} If \`extension_wtfp__next_step\` is absent, the WTF-P desk extension is not running: report that \`advance\` needs it and stop without running any action.`,
+    `${pancodeDeskCalls([...PANCODE_DESK_TOOLS, PANCODE_DRIVER_TOOL])} If \`extension_panwrite__next_step\` is absent, the PanWrite desk extension is not running: report that \`advance\` needs it and stop without running any action.`,
     '',
-    'Call `extension_wtfp__next_step` with `after` set to `"start"`, and on every later call to the step you just finished, such as `"write-section introduction"` or `"gate confirm-plan-introduction"`; PanCode\'s loop guard reads repeated identical calls as a loop. Its result names exactly one of:',
+    'Call `extension_panwrite__next_step` with `after` set to `"start"`, and on every later call to the step you just finished, such as `"write-section introduction"` or `"gate confirm-plan-introduction"`; PanCode\'s loop guard reads repeated identical calls as a loop. Its result names exactly one of:',
     '',
-    '- `step`: an action, a section when the action takes one, and the step\'s prompt path relative to the plugin root. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/` followed by that whole path, such as `${pluginRoot}/dev.pancode/prompts/wtfp/write-section.md`, and follow it as if the author had typed `/wtfp:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_wtfp__next_step` again.',
-    '- `gate`: a checkpoint ID. Call `extension_wtfp__gate` with it; the desk interviews the author and seals the answer. Then call `extension_wtfp__next_step` again.',
+    '- `step`: an action, a section when the action takes one, and the step\'s prompt path relative to the plugin root. The desk has armed its write guard for that action and section only. Read `${pluginRoot}/` followed by that whole path, such as `${pluginRoot}/dev.pancode/prompts/panwrite/write-section.md`, and follow it as if the author had typed `/panwrite:<action> <section>`: the section is its invocation input, and paths it writes under the plugin-root placeholder are under `${pluginRoot}`. Load the skill it names before acting. When the action completes, call `extension_panwrite__next_step` again.',
+    '- `gate`: a checkpoint ID. Call `extension_panwrite__gate` with it; the desk interviews the author and seals the answer. Then call `extension_panwrite__next_step` again.',
     '- `stop`: the reason the run ends. Report it with the steps taken and end the turn.',
     '',
-    'Never choose, skip, repeat or reorder an action, invoke another `/wtfp:` prompt, or dispatch a WTF-P role outside a step the desk armed. If a step fails, is blocked, or its tools refuse a call, stop and report it; do not call `extension_wtfp__next_step` to get past a failure. The desk stops a step that would repeat with no change, a gate the author kept pending or declined, and a run past its step limit. Every `extension_wtfp__next_step` result restates this rule and where its step\'s prompt lives, so if the conversation was compacted, continue from the last result.'
+    'Never choose, skip, repeat or reorder an action, invoke another `/panwrite:` prompt, or dispatch a PanWrite role outside a step the desk armed. If a step fails, is blocked, or its tools refuse a call, stop and report it; do not call `extension_panwrite__next_step` to get past a failure. The desk stops a step that would repeat with no change, a gate the author kept pending or declined, and a run past its step limit. Every `extension_panwrite__next_step` result restates this rule and where its step\'s prompt lives, so if the conversation was compacted, continue from the last result.'
   ].join('\n');
 }
 
 function pancodeResearchConnectionBody(action) {
   if (action.id !== 'research-gap') return '';
   return [
-    '## PanCode CiteNexus binding',
+    '## PanCode PanCite binding',
     '',
-    'At yolo autonomy, search through the operator\'s CiteNexus MCP server, declared as `cite-nexus` with read-class tools in their user configuration. This prompt admits its four lookup capabilities, so call them directly without a gateway `find` or `describe`, each of which resends the whole context: `gateway(op="call", capability="mcp_cite-nexus__search-papers", args={query, providers, limit})` with a bounded public metadata query, `providers` drawn from `crossref`, `datacite`, `europe_pmc` and `arxiv`, and `limit` at most 10 per provider; results are compact, without abstracts. Check a candidate with `mcp_cite-nexus__resolve-paper` `{identifier}` or `mcp_cite-nexus__verify-citation` `{citation, expected_title, expected_year}`, and fetch a reference with `mcp_cite-nexus__get-citation` `{identifier, format}`. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `wtfp-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. Only if the gateway reports no MCP server named `cite-nexus` may yolo instead run the bundled `citation-search --backend=cite-nexus` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
+    'At yolo autonomy, search through the operator\'s PanCite MCP server, declared as `pancite` with read-class tools in their user configuration. This prompt admits its four lookup capabilities, so call them directly without a gateway `find` or `describe`, each of which resends the whole context: `gateway(op="call", capability="mcp_pancite__search-papers", args={query, providers, limit})` with a bounded public metadata query, `providers` drawn from `crossref`, `datacite`, `europe_pmc` and `arxiv`, and `limit` at most 10 per provider; results are compact, without abstracts. Check a candidate with `mcp_pancite__resolve-paper` `{identifier}` or `mcp_pancite__verify-citation` `{citation, expected_title, expected_year}`, and fetch a reference with `mcp_pancite__get-citation` `{identifier, format}`. MCP connections are session-owned and unavailable in delegated workers, so pass the returned candidates and provenance to `panwrite-research-synthesizer` instead of asking that worker to discover the MCP server. This user-configured read connection is prior authorization for those searches; do not call `ask_user` again for each query. Only if the gateway reports no MCP server named `pancite` may yolo instead run the bundled `citation-search --backend=pancite` through its declared dispatcher with bounded public queries and an explicit `--providers` list containing only `crossref`, `datacite`, `europe_pmc`, or `arxiv`; pass those candidates to the same specialist. An operator-set offline flag, unavailable companion, or host refusal stops this route. Other providers and modes follow the declared user gate. Never bypass a gateway refusal by rerunning the same denied request through `bash`. Record the exact provider IDs, queries, limits, date, and provenance; verify each retained candidate before citing it.'
   ].join('\n');
 }
 
 // Workflow order for the operator-facing reference. Group membership comes from
 // the catalog; only the reading order of the groups is fixed here.
 const HELP_GROUP_ORDER = Object.freeze([
-  ['wtfp-start-project', 'Start a project'],
-  ['wtfp-research-literature', 'Research the literature'],
-  ['wtfp-plan-section', 'Plan a section'],
-  ['wtfp-write-section', 'Write a section'],
-  ['wtfp-review-manuscript', 'Review the manuscript'],
-  ['wtfp-manage-project', 'Manage the project'],
-  ['wtfp-deliver-research', 'Deliver the research']
+  ['panwrite-start-project', 'Start a project'],
+  ['panwrite-research-literature', 'Research the literature'],
+  ['panwrite-plan-section', 'Plan a section'],
+  ['panwrite-write-section', 'Write a section'],
+  ['panwrite-review-manuscript', 'Review the manuscript'],
+  ['panwrite-manage-project', 'Manage the project'],
+  ['panwrite-deliver-research', 'Deliver the research']
 ]);
 
 const HELP_START_SEQUENCE = Object.freeze([
@@ -838,7 +838,7 @@ function helpGroups(model) {
 }
 
 function pancodeHelpData(model) {
-  return stableJson({ schema: 'wtfp.pancode-help/v1', groups: helpGroups(model).map(({ title, actions }) => ({ title, actions })) });
+  return stableJson({ schema: 'panwrite.pancode-help/v1', groups: helpGroups(model).map(({ title, actions }) => ({ title, actions })) });
 }
 
 // The argument a human types after the action, derived from the contract's
@@ -865,7 +865,7 @@ function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
     const blocked = availability.available
       ? ''
       : `  [unavailable on pancode: ${[...new Set([...availability.unavailableCapabilities, ...availability.unavailableEffects])].join(', ')}]`;
-    return `  /wtfp:${id} ${helpArgumentHint(action)}\n      ${action.description}${blocked}`;
+    return `  /panwrite:${id} ${helpArgumentHint(action)}\n      ${action.description}${blocked}`;
   };
   const groups = helpGroups(model);
   for (const id of HELP_START_SEQUENCE) if (!byId.has(id)) throw new Error(`help card start sequence names an unknown action: ${id}`);
@@ -873,14 +873,14 @@ function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
     .filter((file) => file.endsWith('.json')).sort()
     .map((file) => readJson(path.join(PROTOCOL_ROOT, 'fleets', file)));
   const card = [
-    `WTF-P ${model.version} on PanCode: evidence-grounded academic writing`,
+    `PanWrite ${model.version} on PanCode: evidence-grounded academic writing`,
     '',
     'Start here',
     ...HELP_START_SEQUENCE.flatMap((id) => [
-      `  /wtfp:${id} ${helpArgumentHint(byId.get(id))}`,
+      `  /panwrite:${id} ${helpArgumentHint(byId.get(id))}`,
       // Once there is an outline, the desk can run the steps that follow until a decision is the author's.
       ...(id === 'create-outline' && availabilityById.get('advance')?.available
-        ? [`  /wtfp:advance ${helpArgumentHint(byId.get('advance'))}   or let the desk run the steps below until a decision is yours`]
+        ? [`  /panwrite:advance ${helpArgumentHint(byId.get('advance'))}   or let the desk run the steps below until a decision is yours`]
         : [])
     ]),
     '',
@@ -891,7 +891,7 @@ function pancodeHelpCard(model, availabilityById, legacyFleetNames = false) {
     ...playbooks.map((playbook) => `  ${playbook.id}\n      ${playbook.description}`),
     '',
     'Each action reads .planning/ records and paper/ artifacts, asks before any gated write, and never runs Git or publishes.',
-    'An unavailable action fails closed with WTFP_ACTION_UNAVAILABLE and returns a manual handoff instead.'
+    'An unavailable action fails closed with PANWRITE_ACTION_UNAVAILABLE and returns a manual handoff instead.'
   ].join('\n');
   if (card.includes('```')) throw new Error('help card contains a fence delimiter');
   return [
@@ -913,8 +913,8 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
   const lines = ['---'];
   // Claude derives the stable command name from the plugin id and flat file
   // name. Repeating either in frontmatter creates names such as
-  // /wtfp:wtfp:new-paper in current Claude Code releases.
-  if (target !== 'pancode' && target !== 'claude') lines.push(`name: wtfp:${action.id}`);
+  // /panwrite:panwrite:new-paper in current Claude Code releases.
+  if (target !== 'pancode' && target !== 'claude') lines.push(`name: panwrite:${action.id}`);
   lines.push(`description: ${yamlScalar(action.description)}`);
   // Without the desk there is no driver to select steps; never let a model drive itself.
   if (availability.available && target === 'pancode' && !deskTools && action.requirements.capabilities.includes('workflow.drive')) {
@@ -950,13 +950,13 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
     }
   }
   const nativeBody = nativeCommandBody(action, workflowBody, target, deskTools);
-  const pancodeRoles = action.delegation.map((entry) => `\`wtfp-${entry.role}\``).join(', ');
+  const pancodeRoles = action.delegation.map((entry) => `\`panwrite-${entry.role}\``).join(', ');
   // PanCode refuses a read-only recipe a task it reads as a change; a task that reads as a review never is.
-  const pancodeReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`wtfp-${entry.role}\``);
+  const pancodeReviewers = action.delegation.filter((entry) => reviewers.has(entry.role)).map((entry) => `\`panwrite-${entry.role}\``);
   const reviewerPhrasing = pancodeReviewers.length ? ` ${pancodeReviewers.join(', ')} ${pancodeReviewers.length === 1 ? 'is' : 'are'} read-only: begin each task for ${pancodeReviewers.length === 1 ? 'it' : 'them'} with "Review", because PanCode refuses a read-only agent a task it reads as a change.` : '';
   const inlineRoles = target === 'pancode' ? pancodeInlineRoles(action, reviewers, deskTools) : [];
-  const inlineBody = inlineRoles.length ? `## PanCode role binding\n\nThis action writes only JSON records, which on PanCode only \`extension_wtfp__record\` writes, so a dispatched ${inlineRoles.map((role) => `\`wtfp-${role}\``).join(', ')} would have nothing it may write and the desk refuses it. Do ${inlineRoles.length === 1 ? 'that role\'s' : 'those roles\''} work in this turn yourself, following the skill loaded above, and write each record through \`extension_wtfp__record\`. Do not dispatch ${inlineRoles.length === 1 ? 'it' : 'them'}.` : '';
-  const userGateBody = target === 'pancode' ? [pancodeUserGateBody(action, deskTools), pancodeResearchConnectionBody(action), inlineBody, action.delegation.length > inlineRoles.length ? `## PanCode role-result binding\n\nDispatch the declared specialist roles using these exact PanCode agent IDs: ${pancodeRoles}. Do not substitute generic coder or verifier agents. Give every dispatched task an \`agent\` and an \`intent\` with workspace-relative \`read_roots\`, and keep absolute paths and \`project://\` URIs out of the task text, so PanCode admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single wtfp.role-result entry in native validations and parse its evidence string as portable role-result JSON.${pancodeReviewers.length ? ` A read-only reviewer returns only a verdict and checks, no wtfp.role-result entry: treat its report as completed, each failed check as an issue, and a fail verdict as a revise recommendation. PanCode's dispatch result calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run, so record it as the action's procedure says.` : ''} Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
+  const inlineBody = inlineRoles.length ? `## PanCode role binding\n\nThis action writes only JSON records, which on PanCode only \`extension_panwrite__record\` writes, so a dispatched ${inlineRoles.map((role) => `\`panwrite-${role}\``).join(', ')} would have nothing it may write and the desk refuses it. Do ${inlineRoles.length === 1 ? 'that role\'s' : 'those roles\''} work in this turn yourself, following the skill loaded above, and write each record through \`extension_panwrite__record\`. Do not dispatch ${inlineRoles.length === 1 ? 'it' : 'them'}.` : '';
+  const userGateBody = target === 'pancode' ? [pancodeUserGateBody(action, deskTools), pancodeResearchConnectionBody(action), inlineBody, action.delegation.length > inlineRoles.length ? `## PanCode role-result binding\n\nDispatch the declared specialist roles using these exact PanCode agent IDs: ${pancodeRoles}. Do not substitute generic coder or verifier agents. Give every dispatched task an \`agent\` and an \`intent\` with workspace-relative \`read_roots\`, and keep absolute paths and \`project://\` URIs out of the task text, so PanCode admits the scope you declare instead of inferring one from the prose. If a named agent is unavailable, report that blocker and stop instead of silently changing roles.${reviewerPhrasing}\n\nRead the single panwrite.role-result entry in native validations and parse its evidence string as portable role-result JSON.${pancodeReviewers.length ? ` A read-only reviewer returns only a verdict and checks, no panwrite.role-result entry: treat its report as completed, each failed check as an issue, and a fail verdict as a revise recommendation. PanCode's dispatch result calls such a run's validation failed when a check did not pass; that is the review's finding, not a failed run, so record it as the action's procedure says.` : ''} Validate its schema, role and action against the dispatched task. Missing, duplicate or malformed outcomes fail closed. On needs_input ask the author through ask_user and redispatch with the response; on blocked or failed stop and report the issue. Only completed permits downstream work, and it never substitutes for an author gate or artifact readback.` : ''].filter(Boolean).join('\n\n') : '';
   lines.push(
     '---',
     '',
@@ -970,9 +970,9 @@ function renderMarkdownCommand(action, workflowBody, target, availability, deskT
 
 function renderAntigravityActionSkill(action, workflowBody, availability) {
   const command = renderMarkdownCommand(action, workflowBody, 'antigravity', availability);
-  const prefix = `---\nname: wtfp:${action.id}\n`;
+  const prefix = `---\nname: panwrite:${action.id}\n`;
   if (!command.startsWith(prefix)) throw new Error(`Antigravity action ${action.id} has an unexpected command header`);
-  return `---\nname: wtfp-${action.id}\ndisable-model-invocation: true\n${command.slice(prefix.length)}`;
+  return `---\nname: panwrite-${action.id}\ndisable-model-invocation: true\n${command.slice(prefix.length)}`;
 }
 
 function renderGeminiCommand(action, workflowBody, availability) {
@@ -1009,7 +1009,7 @@ function copilotCloudTools(action) {
 function renderCopilotCloudPrompt(action, workflowBody, availability) {
   const lines = [
     '---',
-    `name: wtfp-${action.id}`,
+    `name: panwrite-${action.id}`,
     `description: ${yamlScalar(action.description)}`,
     'agent: agent'
   ];
@@ -1041,7 +1041,7 @@ function renderCopilotCloudPrompt(action, workflowBody, availability) {
 
 function roleDescription(role) {
   const purpose = role.body.match(/^## Purpose\n\n([^\n]+)/m)?.[1];
-  return purpose || `${role.fields.name} specialist for portable WTF-P research workflows.`;
+  return purpose || `${role.fields.name} specialist for portable PanWrite research workflows.`;
 }
 
 function roleBodyWithoutPortableResult(role) {
@@ -1058,7 +1058,7 @@ function renderPortableRole(role, slug, target) {
     : ['Read', 'Write', 'Edit', 'Glob', 'Grep'];
   const lines = [
     '---',
-    `name: wtfp-${slug}`,
+    `name: panwrite-${slug}`,
     `description: ${yamlScalar(roleDescription(role))}`
   ];
   if (target === 'claude' || target === 'copilot' || target === 'antigravity') {
@@ -1068,7 +1068,7 @@ function renderPortableRole(role, slug, target) {
   if (target === 'claude') {
     // Plugin skills are addressed as <plugin>:<skill>. Preloading the bound
     // skill gives the worker its action guides without a Skill-tool round trip.
-    lines.push('skills:', `  - wtfp:${ROLE_SKILLS[slug]}`);
+    lines.push('skills:', `  - panwrite:${ROLE_SKILLS[slug]}`);
   }
   if (target === 'opencode') {
     // OpenCode agent Markdown: `mode: subagent` keeps the role out of the
@@ -1101,7 +1101,7 @@ function renderCodexAgent(role, slug) {
   if (body.includes("'''")) throw new Error(`Codex agent ${slug} contains an unsupported TOML literal delimiter`);
   return [
     `# ${generatedScriptBanner('protocol/roles', slug).slice(3)}`,
-    `name = ${tomlString(`wtfp-${slug}`)}`,
+    `name = ${tomlString(`panwrite-${slug}`)}`,
     `description = ${tomlString(roleDescription(role))}`,
     ...(verifier ? ['sandbox_mode = "read-only"'] : []),
     "developer_instructions = '''",
@@ -1116,7 +1116,7 @@ function renderCopilotCloudRole(role, slug) {
   const tools = verifier ? ['read', 'search'] : ['read', 'edit', 'search'];
   return [
     '---',
-    `name: wtfp-${slug}`,
+    `name: panwrite-${slug}`,
     `description: ${yamlScalar(roleDescription(role))}`,
     `tools: ${JSON.stringify(tools)}`,
     '---',
@@ -1143,11 +1143,11 @@ function pancodeToolList(entries) {
   return `[${entries.map((entry) => (typeof entry === 'string' ? entry : `{anyOf: [${entry.anyOf.join(', ')}]}`)).join(', ')}]`;
 }
 
-const PANCODE_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_wtfp__${tool}`));
+const PANCODE_DESK_TOOLS = Object.freeze(['status', 'record', 'read_record', 'readiness', 'measure_section', 'gate'].map((tool) => `extension_panwrite__${tool}`));
 // Held only by actions that require workflow.drive: the desk arms each step itself.
-const PANCODE_DRIVER_TOOL = 'extension_wtfp__next_step';
-// The CiteNexus lookups the research binding calls, under the server id CiteNexus documents.
-const PANCODE_CITE_NEXUS_TOOLS = Object.freeze(['search-papers', 'resolve-paper', 'verify-citation', 'get-citation'].map((tool) => `mcp_cite-nexus__${tool}`));
+const PANCODE_DRIVER_TOOL = 'extension_panwrite__next_step';
+// The PanCite lookups the research binding calls, under the server id PanCite documents.
+const PANCODE_PANCITE_TOOLS = Object.freeze(['search-papers', 'resolve-paper', 'verify-citation', 'get-citation'].map((tool) => `mcp_pancite__${tool}`));
 
 // The tools one PanCode prompt's turn may hold (allowed-tools), from the PanCode
 // bindings of the action's declared capabilities. PanCode narrows a
@@ -1165,8 +1165,8 @@ function pancodeActionTools(action, deskTools) {
   if (deskTools) tools.push(...pancodeDeskTools(action));
   if (deskTools && capabilities.has('workflow.drive')) tools.push(PANCODE_DRIVER_TOOL);
   // PanCode admits an MCP server's tools only when the turn names each capability;
-  // the CiteNexus binding would otherwise be refused by the prompt's own scope.
-  if (action.id === 'research-gap' || capabilities.has('workflow.drive')) tools.push(...PANCODE_CITE_NEXUS_TOOLS);
+  // the PanCite binding would otherwise be refused by the prompt's own scope.
+  if (action.id === 'research-gap' || capabilities.has('workflow.drive')) tools.push(...PANCODE_PANCITE_TOOLS);
   return tools;
 }
 
@@ -1261,7 +1261,7 @@ function renderPanCodeRole(role, slug) {
     `projectContextTier: ${verifier ? 'none' : 'bounded'}`,
     `budget: {toolCalls: ${tuning.toolCalls}, synthesis: true}`,
     `resultContract: {kind: ${verifier ? 'verifier-report' : 'mutation-report'}}`,
-    'tags: [wtfp, research, portable-protocol]',
+    'tags: [panwrite, research, portable-protocol]',
     '---',
     '',
     generatedBanner('protocol/roles', slug),
@@ -1287,25 +1287,25 @@ function renderPanCodeRole(role, slug) {
     // A verifier's verdict and checks already determine its role result; nesting a
     // serialized result inside one check failed every local-model review live.
     ...(verifier ? [] : [pancodeRoleResultShape(readJson(path.join(PROTOCOL_ROOT, 'schemas/role-result.schema.json')), slug), '']),
-    ...(verifier ? [] : ['Preserve the portable role outcome inside the native report. Include exactly one entry named wtfp.role-result in checks (verifier) or validations (mutation report). Its evidence string is that object serialized as JSON. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.']),
+    ...(verifier ? [] : ['Preserve the portable role outcome inside the native report. Include exactly one entry named panwrite.role-result in checks (verifier) or validations (mutation report). Its evidence string is that object serialized as JSON. Use status needs_input for author decisions and blocked for missing capabilities; passed is true only for completed. Do not contact the author directly. The orchestrator must parse this evidence, stop on needs_input/blocked/failed, ask the author when needed, and redispatch with the answer. Never infer completion from an empty mutatedPaths list. Keep the embedded result compact enough for the native response budget.']),
     ''
   ].join('\n');
 }
 
-function standardPluginManifest(version, name = 'wtfp', pancodeExtension) {
+function standardPluginManifest(version, name = 'panwrite', pancodeExtension) {
   return stableJson({
     $schema: 'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json',
     name, version,
     description: 'Portable, evidence-grounded academic research and writing workflows.',
-    author: { name: 'akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT',
+    author: { name: 'Anthony Kougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0',
     ...(pancodeExtension ? { extensions: { 'dev.pancode': pancodeExtension } } : {})
   });
 }
 
-const PANCODE_PLAYBOOKS = ['wtfp-plan-section', 'wtfp-draft-review'];
+const PANCODE_PLAYBOOKS = ['panwrite-plan-section', 'panwrite-draft-review'];
 
 // The root manifest with the PanCode namespace. PanCode runs fleet contracts as
 // playbooks. `legacyFleetNames` keeps the pre-playbook `fleets` key, kind and
@@ -1315,11 +1315,11 @@ function pancodePluginManifest(model, legacyFleetNames = false) {
   const components = [];
   for (const action of model.actions) components.push({
     kind: 'prompt', id: action.id,
-    path: `dev.pancode/prompts/wtfp/${action.id}.md`,
+    path: `dev.pancode/prompts/panwrite/${action.id}.md`,
     requires: action.delegation.map(item => `agent:${item.role}`)
   });
   for (const role of model.roles) components.push({
-    kind: 'agent', id: role.slug, path: `dev.pancode/agents/wtfp-${role.slug}.md`,
+    kind: 'agent', id: role.slug, path: `dev.pancode/agents/panwrite-${role.slug}.md`,
     requires: [`skill:${ROLE_SKILLS[role.slug]}`]
   });
   for (const skill of model.catalog.skills) components.push({
@@ -1328,7 +1328,7 @@ function pancodePluginManifest(model, legacyFleetNames = false) {
   for (const id of PANCODE_PLAYBOOKS) components.push({
     kind: legacyFleetNames ? 'fleet' : 'playbook', id, path: `${playbookRoot}/${id}.md`, requires: []
   });
-  return standardPluginManifest(model.version, 'wtfp', {
+  return standardPluginManifest(model.version, 'panwrite', {
     manifestVersion: 1,
     // The plugin installs with the desk, which judges only what PanCode sends
     // a hook. The Claude copy declares the same floor; its fleets layout alone
@@ -1364,7 +1364,7 @@ function pancodeFleet(fleetId) {
   if (unknownFleetFields.length > 0) {
     throw new Error(`fleet ${fleetId} has unknown canonical fields: ${unknownFleetFields.join(', ')}`);
   }
-  if (fleet.schema !== 'wtfp.fleet/v1' || fleet.id !== fleetId) {
+  if (fleet.schema !== 'panwrite.fleet/v1' || fleet.id !== fleetId) {
     throw new Error(`fleet identity drift: ${fleetId}`);
   }
   if (!Array.isArray(fleet.steps) || fleet.steps.length === 0) {
@@ -1414,7 +1414,7 @@ function pancodeFleet(fleetId) {
     ))];
     renderedSteps.push('  - kind: agent');
     renderedSteps.push(`    id: ${step.id}`);
-    renderedSteps.push(`    agent: wtfp-${role}`);
+    renderedSteps.push(`    agent: panwrite-${role}`);
     renderedSteps.push(`    scope: ${step.operation === 'mutate' ? 'workspace' : 'readonly'}`);
     if (boundaries.length > 0) renderedSteps.push(`    writes: [${boundaries.join(', ')}]`);
     renderedSteps.push(`    dependencies: [${step.dependsOn.join(', ')}]`);
@@ -1470,41 +1470,41 @@ function pancodeFleet(fleetId) {
 // one or the other, never a merge, so both must carry the same interface.
 function codexInterface() {
   return {
-    displayName: 'WTF-P',
+    displayName: 'PanWrite',
     shortDescription: 'Plan and write evidence-grounded research',
     longDescription: 'Portable academic workflows for project setup, literature research, section planning, drafting, review, and delivery.',
-    developerName: 'akougkas',
+    developerName: 'PanStudio',
     category: 'Productivity',
     capabilities: ['Research', 'Write'],
-    websiteURL: 'https://github.com/akougkas/wtf-p',
+    websiteURL: 'https://github.com/PanStudio/panwrite',
     defaultPrompt: 'Help me plan and execute an evidence-grounded research paper.'
   };
 }
 
 function codexPluginManifest(version) {
   return stableJson({
-    name: 'wtfp',
+    name: 'panwrite',
     version,
     description: 'Evidence-grounded academic research, planning, writing, review, and delivery workflows.',
-    author: { name: 'akougkas', url: 'https://github.com/akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT',
+    author: { name: 'Anthony Kougkas', url: 'https://github.com/akougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0',
     keywords: ['academic-writing', 'research', 'citations', 'papers'],
     skills: './skills/',
     interface: codexInterface()
   });
 }
 
-function claudeCompatibleManifest(version, name = 'wtfp') {
+function claudeCompatibleManifest(version, name = 'panwrite') {
   return stableJson({
     name,
     version,
-    description: 'Portable academic research and writing workflows with stable wtfp actions.',
-    author: { name: 'akougkas', url: 'https://github.com/akougkas' },
-    homepage: 'https://github.com/akougkas/wtf-p',
-    repository: 'https://github.com/akougkas/wtf-p',
-    license: 'MIT'
+    description: 'Portable academic research and writing workflows with stable panwrite actions.',
+    author: { name: 'Anthony Kougkas', url: 'https://github.com/akougkas' },
+    homepage: 'https://github.com/PanStudio/panwrite',
+    repository: 'https://github.com/PanStudio/panwrite',
+    license: 'Apache-2.0'
   });
 }
 
@@ -1516,9 +1516,9 @@ function claudeCompatibleManifest(version, name = 'wtfp') {
 function antigravityManifest(version) {
   return stableJson({
     $schema: 'https://antigravity.google/schemas/v1/plugin.json',
-    name: 'wtfp',
+    name: 'panwrite',
     version,
-    description: `Portable academic research and writing workflows (WTF-P ${version}).`
+    description: `Portable academic research and writing workflows (PanWrite ${version}).`
   });
 }
 
@@ -1534,9 +1534,9 @@ function antigravityRule() {
     '---',
     generatedBanner('protocol/project', 'README.md'),
     '',
-    '# WTF-P project state rules',
+    '# PanWrite project state rules',
     '',
-    'When a workspace contains `.planning/` or `paper/`, treat it as a WTF-P research project. Route academic requests through the `wtfp-*` skills, invoke actions as `/wtfp-<action>`, never fabricate citations, results, or evidence, and never run Git or publish operations as a side effect.',
+    'When a workspace contains `.planning/` or `paper/`, treat it as a PanWrite research project. Route academic requests through the `panwrite-*` skills, invoke actions as `/panwrite-<action>`, never fabricate citations, results, or evidence, and never run Git or publish operations as a side effect.',
     '',
     readme,
     ''
@@ -1552,28 +1552,28 @@ function claudeOutputStyle(model) {
   const skillLines = model.catalog.skills.map((skill) => {
     const skillPath = path.join(PROTOCOL_ROOT, 'skills', skill.id, 'SKILL.md');
     const description = splitFrontmatter(fs.readFileSync(skillPath, 'utf8'), skillPath).fields.description;
-    return `- \`${skill.id}\` (${skill.actions.map((id) => `/wtfp:${id}`).join(', ')}): ${description}`;
+    return `- \`${skill.id}\` (${skill.actions.map((id) => `/panwrite:${id}`).join(', ')}): ${description}`;
   });
   return [
     '---',
-    'name: WTF-P Academic Writing',
-    'description: Evidence-grounded academic research and writing sessions driven by the WTF-P protocol',
+    'name: PanWrite Academic Writing',
+    'description: Evidence-grounded academic research and writing sessions driven by the PanWrite protocol',
     'keep-coding-instructions: false',
     '---',
     '',
     generatedBanner('protocol', 'catalog.json'),
     '',
-    '# WTF-P academic writing',
+    '# PanWrite academic writing',
     '',
-    'You are working with a researcher on an academic manuscript, proposal, poster, or talk. The researcher holds epistemic authority over claims, scope, and voice; you hold the process. Do research-writing work through the WTF-P actions and skills instead of improvising.',
+    'You are working with a researcher on an academic manuscript, proposal, poster, or talk. The researcher holds epistemic authority over claims, scope, and voice; you hold the process. Do research-writing work through the PanWrite actions and skills instead of improvising.',
     '',
     '## How to work',
     '',
-    '- Route every research or writing request through one `/wtfp:<action>` command or its skill. Run one action at a time and stop at each declared gate for the author\'s decision.',
+    '- Route every research or writing request through one `/panwrite:<action>` command or its skill. Run one action at a time and stop at each declared gate for the author\'s decision.',
     '- Treat `.planning/` JSON records as the project\'s source of truth and `paper/` as the manuscript. Validate a record before mutating it, preserve stable identifiers, and replace files atomically.',
     '- Support every claim with evidence recorded in the project. Never fabricate a citation, quotation, result, measurement, method, or limitation; mark an unknown as unknown.',
     '- Preserve citation keys, notation, figure and table references, declared terminology, and the author\'s decisions. Record deviations instead of silently routing around them.',
-    '- Delegate specialist work to the `wtfp:wtfp-*` agents when an action declares delegation, and verify their output against the plan rather than trusting a summary.',
+    '- Delegate specialist work to the `panwrite:panwrite-*` agents when an action declares delegation, and verify their output against the plan rather than trusting a summary.',
     '- Never initialize a repository, stage, commit, branch, merge, push, publish, or submit. Return those as clearly labeled handoffs.',
     '',
     '## Voice',
@@ -1583,7 +1583,7 @@ function claudeOutputStyle(model) {
     '## Skills and actions',
     '',
     ...skillLines,
-    `- Product operations outside any skill: ${model.catalog.operations.actions.map((id) => `/wtfp:${id}`).join(', ')}.`,
+    `- Product operations outside any skill: ${model.catalog.operations.actions.map((id) => `/panwrite:${id}`).join(', ')}.`,
     '',
     `Availability differs by host: read \`\${CLAUDE_PLUGIN_ROOT}/compatibility/action-availability.json\` before promising an action. On this host ${model.actions.length} actions are catalogued; the file names the ones that fail closed.`,
     ''
@@ -1645,12 +1645,12 @@ function pancodeWriteGuard(model, availabilityById) {
   for (const action of available) {
     if (drives(action)) continue;
     if (!action.produces.some((output) => output.uri.startsWith('project://paper'))) continue;
-    for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`wtfp-${entry.role}`);
+    for (const entry of action.delegation) if (!verifiers.has(entry.role)) paperWriters.add(`panwrite-${entry.role}`);
   }
   return stableJson({
-    schema: 'wtfp.pancode-write-guard/v4',
+    schema: 'panwrite.pancode-write-guard/v4',
     actions: Object.fromEntries(available.map((action) => [action.id, {
-      agents: drives(action) ? [] : [...new Set(action.delegation.map((entry) => `wtfp-${entry.role}`))].sort(),
+      agents: drives(action) ? [] : [...new Set(action.delegation.map((entry) => `panwrite-${entry.role}`))].sort(),
       produces: drives(action) ? [] : action.produces.map((output) => ({ uri: output.uri, mode: output.mode }))
     }])),
     paperWriters: [...paperWriters].sort()
@@ -1663,15 +1663,15 @@ function pancodeWriteGuard(model, availabilityById) {
 function claudeWriteGuard(model, availabilityById) {
   const guarded = manuscriptGuardActions(model, availabilityById, 'Claude');
   const manifest = stableJson({
-    schema: 'wtfp.claude-write-guard/v1',
+    schema: 'panwrite.claude-write-guard/v1',
     actions: Object.fromEntries(guarded)
   });
-  const command = (mode) => `node "\${CLAUDE_PLUGIN_ROOT}/scripts/wtfp-write-guard.js" ${mode}`;
+  const command = (mode) => `node "\${CLAUDE_PLUGIN_ROOT}/scripts/panwrite-write-guard.js" ${mode}`;
   const hooks = stableJson({
-    description: 'Confines file writes made during a WTF-P manuscript-writing action to the project roots that action declares.',
+    description: 'Confines file writes made during a PanWrite manuscript-writing action to the project roots that action declares.',
     hooks: {
       UserPromptExpansion: [{
-        matcher: `^wtfp:(${guarded.map(([id]) => id).join('|')})$`,
+        matcher: `^panwrite:(${guarded.map(([id]) => id).join('|')})$`,
         hooks: [{ type: 'command', command: command('arm'), timeout: 10 }]
       }],
       PreToolUse: [{
@@ -1689,7 +1689,7 @@ function claudeWriteGuard(model, availabilityById) {
     "'use strict';",
     '',
     '// Claude Code hook handler. `arm` runs on UserPromptExpansion for a guarded',
-    '// /wtfp:<action> command and records the allowed roots for this prompt;',
+    '// /panwrite:<action> command and records the allowed roots for this prompt;',
     '// `check` runs on PreToolUse for file-editing tools and denies a path outside',
     '// those roots; `disarm` runs on Stop. Every failure mode fails open: a hook',
     '// that cannot read its input or marker must not block ordinary work.',
@@ -1713,8 +1713,8 @@ function claudeWriteGuard(model, availabilityById) {
     '  if (!id) return null;',
     "  const base = typeof input.scratchpad_dir === 'string' && path.isAbsolute(input.scratchpad_dir)",
     '    ? input.scratchpad_dir',
-    "    : path.join(os.tmpdir(), 'wtfp-write-guard');",
-    '  return path.join(base, `wtfp-write-guard-${id}.json`);',
+    "    : path.join(os.tmpdir(), 'panwrite-write-guard');",
+    '  return path.join(base, `panwrite-write-guard-${id}.json`);',
     '}',
     '',
     'function readMarker(file) {',
@@ -1731,7 +1731,7 @@ function claudeWriteGuard(model, availabilityById) {
     '}',
     '',
     'function arm(input, file) {',
-    "  const name = String(input.command_name || '').replace(/^wtfp:/, '');",
+    "  const name = String(input.command_name || '').replace(/^panwrite:/, '');",
     '  const roots = GUARD.actions[name];',
     '  if (!Array.isArray(roots) || !file) return;',
     '  const cwd = path.resolve(String(input.cwd || process.cwd()));',
@@ -1740,7 +1740,7 @@ function claudeWriteGuard(model, availabilityById) {
     '  process.stdout.write(JSON.stringify({',
     '    hookSpecificOutput: {',
     "      hookEventName: 'UserPromptExpansion',",
-    '      additionalContext: `WTF-P write guard: during /wtfp:${name} file writes are confined to ${roots.map((root) => path.join(cwd, root)).join(", ")}; the Write and Edit tools deny anything else.`',
+    '      additionalContext: `PanWrite write guard: during /panwrite:${name} file writes are confined to ${roots.map((root) => path.join(cwd, root)).join(", ")}; the Write and Edit tools deny anything else.`',
     '    }',
     "  }) + '\\n');",
     '}',
@@ -1762,7 +1762,7 @@ function claudeWriteGuard(model, availabilityById) {
     '    hookSpecificOutput: {',
     "      hookEventName: 'PreToolUse',",
     "      permissionDecision: 'deny',",
-    '      permissionDecisionReason: `WTF-P write guard: /wtfp:${marker.action} may write only under ${allowedRoots.join(", ")}; refused ${resolved}. Record other changes as a handoff instead.`',
+    '      permissionDecisionReason: `PanWrite write guard: /panwrite:${marker.action} may write only under ${allowedRoots.join(", ")}; refused ${resolved}. Record other changes as a handoff instead.`',
     '    }',
     "  }) + '\\n');",
     '}',
@@ -1777,7 +1777,7 @@ function claudeWriteGuard(model, availabilityById) {
     '}',
     '',
     'try { main(); } catch (error) {',
-    '  process.stderr.write(`wtfp-write-guard: ${error.message}\\n`);',
+    '  process.stderr.write(`panwrite-write-guard: ${error.message}\\n`);',
     '}',
     ''
   ].join('\n');
@@ -1786,7 +1786,7 @@ function claudeWriteGuard(model, availabilityById) {
 
 function geminiManifest(version) {
   return stableJson({
-    name: 'wtfp',
+    name: 'panwrite',
     version,
     description: 'Portable academic research and writing workflows for Gemini CLI.',
     contextFileName: 'GEMINI.md'
@@ -1801,7 +1801,7 @@ function addPanCodeRuntime(plan, model, availabilityById) {
   const manifest = source('pancode-extension.yaml').replace(/^(?:#.*\n)+/, '');
   if (!/^version: .*$/m.test(manifest)) throw new Error('hosts/pancode/pancode-extension.yaml must declare a version line');
   addFile(plan, 'pancode-extension.yaml', [
-    `# Generated by WTF-P adapter compiler v${GENERATOR_VERSION} from hosts/pancode/pancode-extension.yaml; do not edit.`,
+    `# Generated by PanWrite adapter compiler v${GENERATOR_VERSION} from hosts/pancode/pancode-extension.yaml; do not edit.`,
     manifest.replace(/^version: .*$/m, `version: ${model.version}`)
   ].join('\n'));
   addFile(plan, 'runtime/extension.ts', `${generatedScriptBanner('hosts/pancode', 'runtime/extension.ts')}\n${source('runtime/extension.ts')}`);
@@ -1813,7 +1813,7 @@ function addPanCodeRuntime(plan, model, availabilityById) {
   addFile(plan, 'runtime/desk-trust.cjs', `${generatedScriptBanner('evaluation', 'lib/desk-trust.js')}\n${fs.readFileSync(path.join(ROOT, 'evaluation', 'lib', 'desk-trust.js'), 'utf8')}`);
   addFile(plan, 'runtime/write-guard.json', pancodeWriteGuard(model, availabilityById));
   addFile(plan, 'runtime/help.json', pancodeHelpData(model));
-  addFile(plan, 'skins/wtfp.json', source('skins/wtfp.json'));
+  addFile(plan, 'skins/panwrite.json', source('skins/panwrite.json'));
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'schemas'), 'project/schemas');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'project', 'templates'), 'project/templates');
   copyTree(plan, path.join(PROTOCOL_ROOT, 'actions'), 'actions');
@@ -1838,9 +1838,9 @@ function addActionAvailability(plan, model, target, targetPolicies, options = {}
     actionAvailability(action, target, targetPolicies, effectConsents)
   ]));
   addFile(plan, metadataPath, stableJson({
-    schema: 'wtfp.action-availability/v1',
+    schema: 'panwrite.action-availability/v1',
     target,
-    marker: 'WTFP_ACTION_UNAVAILABLE',
+    marker: 'PANWRITE_ACTION_UNAVAILABLE',
     ...(TARGET_HOST_TOOL_ENFORCEMENT[target]
       ? { hostToolEnforcement: TARGET_HOST_TOOL_ENFORCEMENT[target] }
       : {}),
@@ -1890,7 +1890,7 @@ function addActionAvailability(plan, model, target, targetPolicies, options = {}
 }
 
 function toolOutputPath(tool) {
-  const prefix = 'wtfp://tools/';
+  const prefix = 'panwrite://tools/';
   if (!tool.implementation.startsWith(prefix)) {
     throw new Error(`unsupported tool implementation URI for ${tool.id}: ${tool.implementation}`);
   }
@@ -1903,13 +1903,13 @@ function toolOutputPath(tool) {
 
 // The one command a host is ever asked to run. It resolves a logical tool id
 // through the packaged module map, bounds every argument, and prints JSON on
-// stdout. The explicit CiteNexus backend launches only its installed companion
+// stdout. The explicit PanCite backend launches only its installed companion
 // without a shell. No tool writes a file or reads a path the caller did not name.
 const TOOL_COMMANDS = Object.freeze([
   { command: 'bib-index', tool: 'bibliography.index', usage: 'bib-index <bib-file> [--key=<citation-key>] [--query=<text>]' },
   { command: 'bib-format', tool: 'bibliography.format', usage: 'bib-format <bib-file> --key=<citation-key> [--style=<bibtex|al-folio>]' },
   { command: 'bib-impact', tool: 'bibliography.analyze-impact', usage: 'bib-impact <bib-file> [--timeout=<seconds>]' },
-  { command: 'citation-search', tool: 'citation.fetch', usage: 'citation-search --query=<text> [--backend=<legacy|cite-nexus>] [--providers=<comma-separated-IDs>] [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]' },
+  { command: 'citation-search', tool: 'citation.fetch', usage: 'citation-search --query=<text> [--backend=<legacy|pancite>] [--providers=<comma-separated-IDs>] [--limit=<1-25>] [--intent=<seminal|recent|balanced>] [--year=<yyyy>] [--timeout=<seconds>]' },
   { command: 'scholar-search', tool: 'citation.scholar-lookup', usage: 'scholar-search --query=<text> [--limit=<1-25>] [--timeout=<seconds>]' },
   { command: 's2-search', tool: 'citation.semantic-scholar', usage: 's2-search --query=<text> [--limit=<1-25>] [--year=<yyyy>] [--timeout=<seconds>]' },
   { command: 'rank', tool: 'citation.rank', usage: 'rank <papers.json> [--intent=<seminal|recent|balanced>]' }
@@ -1926,13 +1926,13 @@ function toolDispatcher(modulePaths, toolEffects) {
 
 ${generatedScriptBanner('protocol', 'tools.json')}
 
-// Single bounded entry point for every WTF-P bundled tool. Usage:
-//   node <package-root>/tools/wtfp-tool.js [--offline] <command> [arguments]
-//   node <package-root>/tools/wtfp-tool.js <command> --help
+// Single bounded entry point for every PanWrite bundled tool. Usage:
+//   node <package-root>/tools/panwrite-tool.js [--offline] <command> [arguments]
+//   node <package-root>/tools/panwrite-tool.js <command> --help
 // Every command prints one JSON document on stdout. Failures print
 // {"error": "..."} on stderr and exit 1; a network command that exceeds its
 // --timeout (default 20 s) exits 124. Each declared command carries its
-// effects; --offline or WTFP_TOOL_OFFLINE=1 refuses any command whose effects
+// effects; --offline or PANWRITE_TOOL_OFFLINE=1 refuses any command whose effects
 // include network.*. No other module in this package is intended to be
 // executed directly.
 
@@ -1952,7 +1952,7 @@ const MAX_TIMEOUT_SECONDS = 600;
 const EXIT_TIMEOUT = 124;
 
 function offlineRequested(argv) {
-  const flag = process.env.WTFP_TOOL_OFFLINE;
+  const flag = process.env.PANWRITE_TOOL_OFFLINE;
   return argv.includes('--offline') || flag === '1' || flag === 'true';
 }
 
@@ -2067,7 +2067,7 @@ async function main(rawArgv) {
   const argv = rawArgv.filter((argument) => argument !== '--offline');
   const command = argv[0];
   if (!command || command === 'list' || command === '--help' || command === '-h') {
-    emit({ tool: 'wtfp-tool', offline, commands: COMMANDS });
+    emit({ tool: 'panwrite-tool', offline, commands: COMMANDS });
     return;
   }
   const declared = COMMANDS.find((entry) => entry.command === command);
@@ -2123,9 +2123,9 @@ async function main(rawArgv) {
     const year = yearOf(flags);
     const seconds = timeoutOf(flags);
     const backend = flags.get('backend') || 'legacy';
-    if (!['legacy', 'cite-nexus'].includes(backend)) fail('--backend must be legacy or cite-nexus');
+    if (!['legacy', 'pancite'].includes(backend)) fail('--backend must be legacy or pancite');
     const providers = flags.has('providers') ? flags.get('providers').split(',').map((p) => p.trim()) : undefined;
-    if (providers && backend !== 'cite-nexus') fail('--providers requires --backend=cite-nexus');
+    if (providers && backend !== 'pancite') fail('--providers requires --backend=pancite');
     return emit(await withTimeout(load().search(query, { backend, providers, timeoutSeconds: seconds, limit: limitOf(flags), intent: intentOf(flags), ...(year ? { year } : {}) }), seconds, command));
   }
   if (command === 'scholar-search') {
@@ -2153,7 +2153,7 @@ async function main(rawArgv) {
 // config root as a custom-tool module; an unconditional main() printed a
 // dispatcher error and exited the host process at session start.
 if (require.main === module) {
-  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error), error && error.code === 'WTFP_TIMEOUT' ? EXIT_TIMEOUT : 1));
+  main(process.argv.slice(2)).catch((error) => fail(error && error.message ? error.message : String(error), error && error.code === 'PANWRITE_TIMEOUT' ? EXIT_TIMEOUT : 1));
 }
 `;
 }
@@ -2163,8 +2163,8 @@ function addToolBundle(plan) {
   const byLegacyName = new Map(registry.tools.map((tool) => [tool.legacyName, toolOutputPath(tool)]));
   // One private companion dependency, owned and hashed with every envelope.
   // It is not a logical tool and receives no independent execution grant.
-  byLegacyName.set('cite-nexus-client', 'tools/support/cite-nexus-client.js');
-  addFile(plan, 'tools/support/cite-nexus-client.js', fs.readFileSync(path.join(ROOT, 'bin', 'lib', 'cite-nexus-client.js'), 'utf8'));
+  byLegacyName.set('pancite-client', 'tools/support/pancite-client.js');
+  addFile(plan, 'tools/support/pancite-client.js', fs.readFileSync(path.join(ROOT, 'bin', 'lib', 'pancite-client.js'), 'utf8'));
   const byToolId = new Map(registry.tools.map((tool) => [tool.id, toolOutputPath(tool)]));
   const effectsByToolId = new Map(registry.tools.map((tool) => [tool.id, [...tool.effects]]));
   for (const entry of TOOL_COMMANDS) {
@@ -2191,33 +2191,33 @@ function addToolBundle(plan) {
     addFile(plan, outputPath, source);
     rows.push(`- \`${tool.implementation}\` → \`${outputPath}\` (legacy module \`${tool.legacyName}.js\`)`);
   }
-  addFile(plan, 'tools/wtfp-tool.js', toolDispatcher(byToolId, effectsByToolId));
+  addFile(plan, 'tools/panwrite-tool.js', toolDispatcher(byToolId, effectsByToolId));
   addFile(plan, 'tools/package.json', '{"type":"commonjs"}\n');
   addFile(plan, 'tools/README.md', [
-    '# WTF-P bundled tools',
+    '# PanWrite bundled tools',
     '',
     generatedBanner('protocol', 'tools.json'),
     '',
-    'Only implementations declared by `tools.json`, the dispatcher, and its private CiteNexus companion dependency are packaged here. Resolve each logical implementation URI through this exact mapping; do not search for or execute undeclared installer/compiler modules.',
+    'Only implementations declared by `tools.json`, the dispatcher, and its private PanCite companion dependency are packaged here. Resolve each logical implementation URI through this exact mapping; do not search for or execute undeclared installer/compiler modules.',
     '',
     ...rows,
-    '- Private dependency: `tools/support/cite-nexus-client.js`; reached only through `citation.fetch`, never executed directly.',
+    '- Private dependency: `tools/support/pancite-client.js`; reached only through `citation.fetch`, never executed directly.',
     '',
     '## Executing a bundled tool',
     '',
     'A `tool.execute` effect authorises exactly one command, run from the package root that the host resolves for this bundle:',
     '',
     '```bash',
-    'node <package-root>/tools/wtfp-tool.js [--offline] <command> [arguments]',
+    'node <package-root>/tools/panwrite-tool.js [--offline] <command> [arguments]',
     '```',
     '',
     'Run it with no argument, or with `list`, to print the declared command set as JSON; each entry carries the `effects` the command may apply. `<command> --help` prints that one entry and exits 0. Declared commands:',
     '',
     ...TOOL_COMMANDS.map((entry) => `- \`${entry.usage}\` → \`${entry.tool}\` (${effectsByToolId.get(entry.tool).length > 0 ? effectsByToolId.get(entry.tool).join(', ') : 'no declared effects'})`),
     '',
-    'For declared scholarly discovery, `citation-search --backend=cite-nexus --query="<topic>"` uses the separately installed `cite-nexus-wtfp` companion and its real MCP stdio server. Defaults are Crossref, DataCite and Europe PMC. Select providers explicitly with `--providers`. The `research-gap` yolo route may use only free no-key public indexes (`crossref`, `datacite`, `europe_pmc`, `arxiv`) without another per-query gate; other routes require action approval naming providers and query scope. CiteNexus supports only balanced provider ordering, so omit `--intent` or use `--intent=balanced`. Results remain candidates: retain `citeNexus.sources`, field attribution, metrics, warnings and `metadata.errors`; do not infer verification or combine citation counts. The result limit is a displayed total; `metadata.total` counts the fetched deduplicated page, not the full corpus. Unavailable enrichment fails explicitly without falling back to another vendor. `WTFP_CITE_NEXUS_COMMAND` may name an absolute installed companion executable; it is operator configuration, never source content. No package is installed, server registered, or user profile changed by a tool call. Offline mode refuses this backend before process launch. Host capability blockers still apply.',
+    'For declared scholarly discovery, `citation-search --backend=pancite --query="<topic>"` uses the separately installed `pancite-panwrite` companion and its real MCP stdio server. Defaults are Crossref, DataCite and Europe PMC. Select providers explicitly with `--providers`. The `research-gap` yolo route may use only free no-key public indexes (`crossref`, `datacite`, `europe_pmc`, `arxiv`) without another per-query gate; other routes require action approval naming providers and query scope. PanCite supports only balanced provider ordering, so omit `--intent` or use `--intent=balanced`. Results remain candidates: retain `pancite.sources`, field attribution, metrics, warnings and `metadata.errors`; do not infer verification or combine citation counts. The result limit is a displayed total; `metadata.total` counts the fetched deduplicated page, not the full corpus. Unavailable enrichment fails explicitly without falling back to another vendor. `PANWRITE_PANCITE_COMMAND` may name an absolute installed companion executable; it is operator configuration, never source content. No package is installed, server registered, or user profile changed by a tool call. Offline mode refuses this backend before process launch. Host capability blockers still apply.',
     '',
-    'Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `WTFP_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Each network command has a hard wall clock, `--timeout=<seconds>` (default 20, maximum 600); on expiry it reports `{"error": "<command> timed out after N s"}` on stderr and exits 124. `bib-impact` reports batch progress on stderr. `bib-index` flags repeated keys with `duplicate: true` and lists them under `duplicates`; `--key` refuses an ambiguous key. `bib-format` emits a standard BibTeX entry (`@article`, `@inproceedings`, ...) by default; `--style=al-folio` selects the Jekyll al-folio projection, which is not valid BibTeX. Do not execute any other module in this package directly, and do not pass a logical `project://` or `wtfp://` URI as a shell argument.',
+    'Every command prints one JSON document on stdout and reports failures as `{"error": "..."}` on stderr with exit status 1. Queries are capped at 512 characters, file paths at 4096, and result limits at 25. A symlinked file is accepted and read through its resolved target, which must be a regular file. Commands whose effects include `network.*` perform outbound requests to the declared scholarly indexes; pass `--offline` or set `PANWRITE_TOOL_OFFLINE=1` to refuse them, which is the mechanical form of "do not invoke a network-capable bibliography tool through a filesystem-only permission path". Each network command has a hard wall clock, `--timeout=<seconds>` (default 20, maximum 600); on expiry it reports `{"error": "<command> timed out after N s"}` on stderr and exits 124. `bib-impact` reports batch progress on stderr. `bib-index` flags repeated keys with `duplicate: true` and lists them under `duplicates`; `--key` refuses an ambiguous key. `bib-format` emits a standard BibTeX entry (`@article`, `@inproceedings`, ...) by default; `--style=al-folio` selects the Jekyll al-folio projection, which is not valid BibTeX. Do not execute any other module in this package directly, and do not pass a logical `project://` or `panwrite://` URI as a shell argument.',
     ''
   ].join('\n'));
 }
@@ -2260,7 +2260,7 @@ function loadModel() {
     return { slug, ...role };
   });
   const effects = readJson(path.join(PROTOCOL_ROOT, 'effects.json'));
-  if (effects.schema !== 'wtfp.effects/v1' || !Array.isArray(effects.effects)) {
+  if (effects.schema !== 'panwrite.effects/v1' || !Array.isArray(effects.effects)) {
     throw new Error('malformed canonical effect registry');
   }
   return { catalog, actions, roles, effects, version: readJson(path.join(ROOT, 'package.json')).version };
@@ -2289,38 +2289,38 @@ function compilePlans(options = {}) {
   }
 
   const claude = byId.get('claude');
-  addFile(claude, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version, 'wtfp'));
+  addFile(claude, '.claude-plugin/plugin.json', claudeCompatibleManifest(model.version, 'panwrite'));
   addFile(claude, '.claude-plugin/marketplace.json', stableJson({
-    name: 'wtfp',
-    owner: { name: 'akougkas' },
+    name: 'panwrite',
+    owner: { name: 'PanStudio' },
     metadata: {
-      description: 'WTF-P evidence-grounded academic workflow plugin.',
+      description: 'PanWrite evidence-grounded academic workflow plugin.',
       version: model.version
     },
     plugins: [{
-      name: 'wtfp',
+      name: 'panwrite',
       source: './',
       description: 'Portable academic research and writing workflows.',
       version: model.version,
-      author: { name: 'akougkas' },
-      homepage: 'https://github.com/akougkas/wtf-p',
-      repository: 'https://github.com/akougkas/wtf-p',
-      license: 'MIT'
+      author: { name: 'Anthony Kougkas' },
+      homepage: 'https://github.com/PanStudio/panwrite',
+      repository: 'https://github.com/PanStudio/panwrite',
+      license: 'Apache-2.0'
     }]
   }));
 
-  addFile(claude, 'output-styles/wtfp-academic-writing.md', claudeOutputStyle(model));
+  addFile(claude, 'output-styles/panwrite-academic-writing.md', claudeOutputStyle(model));
   const writeGuard = claudeWriteGuard(model, availabilityByTarget.get('claude'));
   addFile(claude, 'hooks/hooks.json', writeGuard.hooks);
   addFile(claude, 'scripts/write-guard.json', writeGuard.manifest);
-  addFile(claude, 'scripts/wtfp-write-guard.js', writeGuard.script);
+  addFile(claude, 'scripts/panwrite-write-guard.js', writeGuard.script);
 
   const codex = byId.get('codex');
   addFile(codex, '.codex-plugin/plugin.json', codexPluginManifest(model.version));
   // The portable root manifest carries the OpenAI overlay inline; the
   // `.codex-plugin` copy above is the documented compatibility fallback.
   addFile(codex, 'plugin.json', JSON.stringify({
-    ...JSON.parse(standardPluginManifest(model.version, 'wtfp')),
+    ...JSON.parse(standardPluginManifest(model.version, 'panwrite')),
     keywords: ['academic-writing', 'research', 'citations', 'papers'],
     extensions: { 'com.openai': { interface: codexInterface() } }
   }, null, 2) + '\n');
@@ -2330,51 +2330,51 @@ function compilePlans(options = {}) {
 
   const antigravity = byId.get('antigravity');
   addFile(antigravity, 'plugin.json', antigravityManifest(model.version));
-  addFile(antigravity, 'rules/wtfp-project-state.md', antigravityRule());
+  addFile(antigravity, 'rules/panwrite-project-state.md', antigravityRule());
 
   const gemini = byId.get('gemini');
   addFile(gemini, 'gemini-extension.json', geminiManifest(model.version));
-  addFile(gemini, 'GEMINI.md', '# WTF-P\n\nUse the bundled Agent Skills and portable protocol for evidence-grounded academic work.\n');
+  addFile(gemini, 'GEMINI.md', '# PanWrite\n\nUse the bundled Agent Skills and portable protocol for evidence-grounded academic work.\n');
 
   const reviewers = new Set(model.roles.filter((role) => role.fields.execution_class === 'verifier-report').map((role) => role.slug));
   for (const action of model.actions) {
-    addFile(pancode, `prompts/wtfp/${action.id}.md`, action.id === 'help'
+    addFile(pancode, `prompts/panwrite/${action.id}.md`, action.id === 'help'
       ? pancodeHelpCard(model, availabilityByTarget.get('pancode'))
       : renderMarkdownCommand(action, action.workflowBody, 'pancode', availabilityByTarget.get('pancode').get(action.id), false, reviewers));
     addFile(claude, `commands/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'claude', availabilityByTarget.get('claude').get(action.id)));
-    addFile(copilot, `commands/wtfp-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
-    addFile(byId.get('opencode'), `commands/wtfp/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
+    addFile(copilot, `commands/panwrite-${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'copilot', availabilityByTarget.get('copilot').get(action.id)));
+    addFile(byId.get('opencode'), `commands/panwrite/${action.id}.md`, renderMarkdownCommand(action, action.workflowBody, 'opencode', availabilityByTarget.get('opencode').get(action.id)));
     // Antigravity 1.5 plugins load no commands/ directory, so each action is
     // an explicitly invoked skill. A router skill that already has the name
-    // (wtfp-write-section, wtfp-plan-section) serves that action instead.
-    if (!model.catalog.skills.some((skill) => skill.id === `wtfp-${action.id}`)) {
-      addFile(antigravity, `skills/wtfp-${action.id}/SKILL.md`, renderAntigravityActionSkill(action, action.workflowBody, availabilityByTarget.get('antigravity').get(action.id)));
+    // (panwrite-write-section, panwrite-plan-section) serves that action instead.
+    if (!model.catalog.skills.some((skill) => skill.id === `panwrite-${action.id}`)) {
+      addFile(antigravity, `skills/panwrite-${action.id}/SKILL.md`, renderAntigravityActionSkill(action, action.workflowBody, availabilityByTarget.get('antigravity').get(action.id)));
     }
-    addFile(gemini, `commands/wtfp/${action.id}.toml`, renderGeminiCommand(action, action.workflowBody, availabilityByTarget.get('gemini').get(action.id)));
+    addFile(gemini, `commands/panwrite/${action.id}.toml`, renderGeminiCommand(action, action.workflowBody, availabilityByTarget.get('gemini').get(action.id)));
   }
 
   for (const role of model.roles) {
-    addFile(pancode, `agents/wtfp-${role.slug}.md`, renderPanCodeRole(role, role.slug));
+    addFile(pancode, `agents/panwrite-${role.slug}.md`, renderPanCodeRole(role, role.slug));
     // OpenCode scans `agents/**/*.md` and takes the registered name from the
     // frontmatter, so the nested namespace directory is safe there. Claude Code
     // and Gemini CLI (loadAgentsFromDirectory) read only the top level of
     // `agents/`, and Claude derives the name from the file name: a nested
-    // `agents/wtfp/<role>.md` loads zero agents on both, and a flat `<role>.md`
+    // `agents/panwrite/<role>.md` loads zero agents on both, and a flat `<role>.md`
     // would claim unprefixed names such as `section-writer`.
-    addFile(byId.get('opencode'), `agents/wtfp/${role.slug}.md`, renderPortableRole(role, role.slug, 'opencode'));
+    addFile(byId.get('opencode'), `agents/panwrite/${role.slug}.md`, renderPortableRole(role, role.slug, 'opencode'));
     for (const target of ['claude', 'copilot', 'antigravity', 'gemini']) {
-      addFile(byId.get(target), `agents/wtfp-${role.slug}.md`, renderPortableRole(role, role.slug, target));
+      addFile(byId.get(target), `agents/panwrite-${role.slug}.md`, renderPortableRole(role, role.slug, target));
     }
     // Codex custom agents are TOML session layers; the installer copies this
     // directory to $CODEX_HOME/agents/ because Codex plugins do not carry agents.
-    addFile(codex, `agents/wtfp-${role.slug}.toml`, renderCodexAgent(role, role.slug));
+    addFile(codex, `agents/panwrite-${role.slug}.toml`, renderCodexAgent(role, role.slug));
   }
 
   // The canonical content-only plugin. Its prompts also work without the desk.
   const portable = makePlan('pancode-plugin', path.join(ROOT, 'pancode', 'plugin'));
   for (const [file, content] of pancode.files) {
     const native = /^(prompts|agents|playbooks)\//.test(file);
-    const actionId = /^prompts\/wtfp\/([a-z-]+)\.md$/.exec(file)?.[1];
+    const actionId = /^prompts\/panwrite\/([a-z-]+)\.md$/.exec(file)?.[1];
     const action = actionId && model.actions.find((entry) => entry.id === actionId);
     // Every action PanCode can run reads records through the desk, so none needs the schema dump a desk-less host gets.
     const projected = action && action.id !== 'help' && availabilityByTarget.get('pancode').get(actionId).available
@@ -2387,10 +2387,10 @@ function compilePlans(options = {}) {
   // Base bindings remain usable with the content plugin alone. The separately
   // installed desk supplies these preferred bindings when its tools are live.
   availability.runtimeBindings = {
-    plugin: 'wtfp', extension: 'wtfp',
+    plugin: 'panwrite', extension: 'panwrite',
     capabilities: { 'user.interaction': 'pancode:extension-interview' },
     approvals: { explicit: 'pancode:extension-interview' },
-    tools: { record: 'extension_wtfp__record', measure_section: 'extension_wtfp__measure_section', gate: 'extension_wtfp__gate' }
+    tools: { record: 'extension_panwrite__record', measure_section: 'extension_panwrite__measure_section', gate: 'extension_panwrite__gate' }
   };
   replaceFile(portable, 'compatibility/action-availability.json', stableJson(availability));
   plans.push(portable);
@@ -2402,13 +2402,13 @@ function compilePlans(options = {}) {
 
   // The Claude envelope keeps its pre-playbook PanCode namespace: a root `plugin.json`
   // and the phase 1 prompts, agents and fleets it names, beside Claude's own
-  // `.claude-plugin/` surface. PanCode no longer adopts a Claude-installed WTF-P;
-  // it labels the copy built for an older PanCode and names `wtf-p install
+  // `.claude-plugin/` surface. PanCode no longer adopts a Claude-installed PanWrite;
+  // it labels the copy built for an older PanCode and names `panwrite install
   // pancode`, the canonical install of `pancode/plugin`. Claude Code reads
   // neither file; its commands, agents, skills, hooks, and output style stay
   // where its loader looks.
   for (const [file, content] of pancode.files) {
-    if (file === 'prompts/wtfp/help.md') {
+    if (file === 'prompts/panwrite/help.md') {
       addFile(claude, `dev.pancode/${file}`, pancodeHelpCard(model, availabilityByTarget.get('pancode'), true));
     } else if (/^(prompts|agents)\//.test(file)) {
       addFile(claude, `dev.pancode/${file}`, content);
@@ -2420,11 +2420,11 @@ function compilePlans(options = {}) {
 
   const codexMarketplace = makePlan('codex-marketplace', path.join(ROOT, 'vendors', 'codex'));
   addFile(codexMarketplace, '.agents/plugins/marketplace.json', stableJson({
-    name: 'wtfp',
-    interface: { displayName: 'WTF-P' },
+    name: 'panwrite',
+    interface: { displayName: 'PanWrite' },
     plugins: [{
-      name: 'wtfp',
-      source: { source: 'local', path: './plugins/wtfp' },
+      name: 'panwrite',
+      source: { source: 'local', path: './plugins/panwrite' },
       policy: { installation: 'AVAILABLE', authentication: 'ON_INSTALL' },
       category: 'Productivity'
     }]
@@ -2433,54 +2433,54 @@ function compilePlans(options = {}) {
 
   const copilotMarketplace = makePlan('copilot-marketplace', path.join(ROOT, 'vendors', 'copilot'));
   addFile(copilotMarketplace, 'marketplace.json', stableJson({
-    name: 'wtfp',
-    owner: { name: 'akougkas' },
-    metadata: { description: 'WTF-P research workflow plugins', version: model.version },
+    name: 'panwrite',
+    owner: { name: 'PanStudio' },
+    metadata: { description: 'PanWrite research workflow plugins', version: model.version },
     plugins: [{
-      name: 'wtfp',
-      source: './plugins/wtfp',
+      name: 'panwrite',
+      source: './plugins/panwrite',
       description: 'Portable academic research and writing workflows.',
       version: model.version,
-      author: { name: 'akougkas' },
+      author: { name: 'Anthony Kougkas' },
       commands: './commands/',
       agents: './agents/',
       skills: './skills/'
     }]
   }));
-  copyTree(copilotMarketplace, PROTOCOL_ROOT, 'project/.github/wtfp');
+  copyTree(copilotMarketplace, PROTOCOL_ROOT, 'project/.github/panwrite');
   copyTree(copilotMarketplace, path.join(PROTOCOL_ROOT, 'skills'), 'project/.github/skills');
   const copilotCloudAvailability = addActionAvailability(copilotMarketplace, model, 'copilot-cloud', targetPolicies, {
     skillRoot: 'project/.github/skills',
-    metadataPath: 'project/.github/wtfp/compatibility/action-availability.json'
+    metadataPath: 'project/.github/panwrite/compatibility/action-availability.json'
   });
   for (const action of model.actions) {
     addFile(
       copilotMarketplace,
-      `project/.github/prompts/wtfp-${action.id}.prompt.md`,
+      `project/.github/prompts/panwrite-${action.id}.prompt.md`,
       renderCopilotCloudPrompt(action, action.workflowBody, copilotCloudAvailability.get(action.id))
     );
   }
   for (const role of model.roles) {
     addFile(
       copilotMarketplace,
-      `project/.github/agents/wtfp-${role.slug}.agent.md`,
+      `project/.github/agents/panwrite-${role.slug}.agent.md`,
       renderCopilotCloudRole(role, role.slug)
     );
   }
   addFile(copilotMarketplace, 'project/.github/copilot-instructions.md', [
     generatedBanner('protocol', 'copilot-cloud-projection'),
     '',
-    '# WTF-P repository instructions',
+    '# PanWrite repository instructions',
     '',
-    'For academic research and writing requests, use the relevant `wtfp-*` skill under `.github/skills/` and the matching generated prompt under `.github/prompts/`.',
+    'For academic research and writing requests, use the relevant `panwrite-*` skill under `.github/skills/` and the matching generated prompt under `.github/prompts/`.',
     '',
-    'Treat `.planning` v1 JSON records as control state, resolve logical resources through `.github/wtfp/project/README.md`, validate records before mutation, preserve author-owned decisions, and never perform incidental Git or publish operations.',
+    'Treat `.planning` v1 JSON records as control state, resolve logical resources through `.github/panwrite/project/README.md`, validate records before mutation, preserve author-owned decisions, and never perform incidental Git or publish operations.',
     ''
   ].join('\n'));
   addFile(copilotMarketplace, 'project/README.md', [
-    '# WTF-P Copilot repository projection',
+    '# PanWrite Copilot repository projection',
     '',
-    'Copy the contents of this directory into a repository root when GitHub Copilot coding agents must discover WTF-P without a user-level plugin installation.',
+    'Copy the contents of this directory into a repository root when GitHub Copilot coding agents must discover PanWrite without a user-level plugin installation.',
     '',
     `The \`.github/\` tree is generated from the canonical protocol. It contains ${model.actions.length} prompt files, 11 custom agents, seven Agent Skills, and the bound portable protocol resources. Do not edit the projection directly; change \`protocol/\` or the adapter compiler and regenerate.`,
     ''
@@ -2499,7 +2499,7 @@ function inventoryFor(plan) {
     .sort((a, b) => a.path.localeCompare(b.path));
   const sourceHash = sha256(Buffer.from(files.map((file) => `${file.path}\0${file.sha256}\n`).join(''), 'utf8'));
   return {
-    schema: 'wtfp.generated-adapter/v1',
+    schema: 'panwrite.generated-adapter/v1',
     generatorVersion: GENERATOR_VERSION,
     target: plan.id,
     sourceHash,
@@ -2537,7 +2537,7 @@ function previousOwnedPaths(plan) {
   } catch (error) {
     throw new Error(`cannot read prior generated inventory for ${plan.id}: ${error.message}`);
   }
-  if (inventory.schema !== 'wtfp.generated-adapter/v1' || inventory.target !== plan.id || !Array.isArray(inventory.files)) {
+  if (inventory.schema !== 'panwrite.generated-adapter/v1' || inventory.target !== plan.id || !Array.isArray(inventory.files)) {
     throw new Error(`refusing malformed generated inventory for ${plan.id}: ${inventoryPath}`);
   }
   return inventory.files.map((file) => assertRelative(file.path, 'prior generated path'));

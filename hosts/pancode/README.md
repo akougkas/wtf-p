@@ -1,13 +1,13 @@
 # PanCode extension
 
-Human-edited source of the WTF-P desk for PanCode. `npm run build:adapters`
+Human-edited source of the PanWrite desk for PanCode. `npm run build:adapters`
 emits a standalone extension into `pancode/extension/`:
 
 | Source | Emitted path |
 | --- | --- |
 | `pancode-extension.yaml` | `pancode-extension.yaml`, with the protocol version stamped in |
 | `runtime/extension.ts`, `runtime/extension.test.ts`, `runtime/package.json` | `runtime/` |
-| `skins/wtfp.json` | `skins/wtfp.json` |
+| `skins/panwrite.json` | `skins/panwrite.json` |
 | generated from the action contracts | `runtime/write-guard.json` |
 | `evaluation/lib/json-schema.js` | `runtime/json-schema.cjs` |
 | `evaluation/lib/claim-coverage.js` | `runtime/claim-coverage.cjs` |
@@ -15,16 +15,16 @@ emits a standalone extension into `pancode/extension/`:
 | generated PanCode action availability | `compatibility/action-availability.json` |
 
 Install the content plugin from `pancode/plugin/` and the extension separately.
-The extension's `plugin: wtfp` link allows its declared commands to take over
+The extension's `plugin: panwrite` link allows its declared commands to take over
 the plugin's matching prompts while that plugin is installed and enabled.
 The plugin alone runs no PanCode extension code and retains prompt fallbacks.
-Without the plugin, the desk names only its own `/ext:wtfp:*` commands and
-says which steps need the plugin; it never offers a `/wtfp:*` prompt.
+Without the plugin, the desk names only its own `/ext:panwrite:*` commands and
+says which steps need the plugin; it never offers a `/panwrite:*` prompt.
 
 The desk reads `.planning` and `paper/` and draws the workspace. It is the
 project's one JSON record writer on PanCode. Its `record` tool validates each
 record, compares it with the revision or SHA-256 its writer read, commits under
-`.planning/.wtfp-lock`, and journals paired records so an interrupted write is
+`.planning/.panwrite-lock`, and journals paired records so an interrupted write is
 completed by the next one. It records an author's answer only from its own
 interview, as a sealed `project://interactions/` record bound to the checkpoint
 and artifact the author saw; the seal key lives in PanCode's extension store under
@@ -37,17 +37,17 @@ operator's user and can read the key, as can any process the operator lets
 read PanCode's state directory.
 
 The write guard covers `write`, `edit`, `artifact`, `dispatch`, `bash`,
-`run_script` and `job` calls, and `ask_user` calls inside a WTF-P action. It judges only what PanCode sends
+`run_script` and `job` calls, and `ask_user` calls inside a PanWrite action. It judges only what PanCode sends
 each hook: the landing PanCode resolved for a path, which PanCode refuses to change
 before the tool runs, and for `dispatch` the plan its admission parsed, with
 each worker's resolved agent, `cwd`, write boundaries and worktree. The desk
 never reads a call itself, so it cannot drift from PanCode's grammar. Inside a
-WTF-P project or action it refuses a call whose facts are malformed or a
+PanWrite project or action it refuses a call whose facts are malformed or a
 landing PanCode could not resolve, and a dispatch PanCode could not prepare is left
 to PanCode, which refuses it with its own reason. A worker's write in a task
 worktree is judged at the checkout path it merges into. On a host that sends
 no facts, the desk refuses writes and dispatches inside a
-WTF-P project or action. Outside both it checks only that no WTF-P recipe is
+PanWrite project or action. Outside both it checks only that no PanWrite recipe is
 dispatched outside its action.
 
 A running action may write only what its contract declares, for the section
@@ -66,10 +66,10 @@ needs that approval (more than one worker, a review loop) is instead refused
 with each worker's exact roots, and the call sent with them runs unchanged.
 Outside an action a worker must name roots that leave out `.planning` and
 the gated manuscripts. A worker PanCode runs read-only, as it runs every
-read-only recipe including the WTF-P reviewers, needs none.
+read-only recipe including the PanWrite reviewers, needs none.
 Changes that loosen what the desk holds, such as a re-pointed manuscript or
 rewritten plan history, wait for the author at the desk.
-`/wtfp:advance` is the driver. Its prompt arms nothing; the desk's
+`/panwrite:advance` is the driver. Its prompt arms nothing; the desk's
 `next_step` tool, which answers only inside that turn, picks each step by the
 same ladder `progress` follows and arms the write guard for that action and
 section alone, exactly as if the author had typed the step's own command. A
@@ -83,11 +83,11 @@ chained actions' tools, so a step's tool scope is the driver's; its writes are
 confined to the step's contract all the same. PanCode can compact a long run and
 drop the advance prompt, so every `next_step` result ends with the same
 one-sentence driver rule, and a step names its prompt file relative to the
-plugin root, found from the `base_dir` of the loaded `wtfp-manage-project`
+plugin root, found from the `base_dir` of the loaded `panwrite-manage-project`
 skill, which PanCode keeps across compaction.
 
 An action orients from the desk rather than from record reads. The `status`
-tool returns the whole project in one call. When a prompt arms a WTF-P action
+tool returns the whole project in one call. When a prompt arms a PanWrite action
 or advance in a project, a `turn_start` hook injects the same status as a model
 reminder, cut to PanCode's 2,000-character effect limit with a pointer to
 `status`. PanCode fires `turn_start` once per operator prompt, so an advance step
@@ -99,12 +99,12 @@ budget, which PanCode shares with its own nudges. PanCode also hooks a dispatche
 worker's writes, so the note says the call belongs to the dispatching action.
 The desk declares no `turn_end` hook.
 
-Inside a WTF-P action or advance run every `ask_user` question is the
+Inside a PanWrite action or advance run every `ask_user` question is the
 author's. The write guard also hooks `ask_user`: it marks a lone question
 `operator_only`, which PanCode never answers with a recommended option after
 `safety.unattendedAfterSeconds`, and refuses a round of several unmarked
 questions, since an `operator_only` question is asked alone. An unanswered one
-ends the turn. Outside a WTF-P action the desk leaves questions alone.
+ends the turn. Outside a PanWrite action the desk leaves questions alone.
 
 Interpreter commands run through `bash`, `run_script` or `job` are refused only
 when they name the desk's own records; PanCode's default autonomy asks the
@@ -129,7 +129,7 @@ resource key in `dev.pancode/playbooks/`. Their write boundaries are literal
 paths, so section artifacts project to `.planning/sections/`. An explicit
 `fleet run` is a worker pipeline that asks no author. In PanCode the
 extension host `fleet run` starts runs the desk's tool hooks for its workers,
-which the desk judges as calls outside a WTF-P action, since a playbook arms
+which the desk judges as calls outside a PanWrite action, since a playbook arms
 none. The desk reports any manuscript text it finds without an approved plan. The
 Claude envelope keeps its older PanCode copy under `fleets`; PanCode no longer adopts
-it and points to `wtf-p install pancode` instead.
+it and points to `panwrite install pancode` instead.

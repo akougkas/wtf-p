@@ -1,9 +1,9 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "contribute",
-  "title": "Contribute to WTF-P",
-  "description": "Guide a bounded WTF-P contribution from branch creation through a reviewable change request.",
-  "alias": "wtfp:contribute",
+  "title": "Contribute to PanWrite",
+  "description": "Guide a bounded PanWrite contribution from branch creation through a reviewable change request.",
+  "alias": "panwrite:contribute",
   "surface": {
     "kind": "operations",
     "operation": "product-operations"

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.routing-score/v1",
+  "$id": "panwrite.evaluation.routing-score/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,8 +23,8 @@
     "cases"
   ],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.routing-score/v1" },
-    "run": { "$ref": "wtfp.evaluation.run-metadata/v1" },
+    "schema": { "const": "panwrite.evaluation.routing-score/v1" },
+    "run": { "$ref": "panwrite.evaluation.run-metadata/v1" },
     "cost": { "$ref": "#/$defs/cost" },
     "latency_ms": { "type": "integer", "minimum": 0 },
     "scope": {
@@ -166,7 +166,7 @@
         "amount": { "type": ["number", "null"], "minimum": 0 },
         "currency": { "type": ["string", "null"], "pattern": "^[A-Z]{3}$" },
         "source": { "type": "string", "minLength": 1 },
-        "evidence": { "$ref": "wtfp.evaluation.run-metadata/v1#/$defs/evidence" },
+        "evidence": { "$ref": "panwrite.evaluation.run-metadata/v1#/$defs/evidence" },
         "priced_cases": { "type": "integer", "minimum": 0 },
         "unpriced_cases": { "type": "integer", "minimum": 0 }
       }

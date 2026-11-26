@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.checkpoint/v1",
+  "schema": "panwrite.project.checkpoint/v1",
   "id": "checkpoint-contribution-framing",
   "project_id": "portable-research-demo",
   "kind": "decision",

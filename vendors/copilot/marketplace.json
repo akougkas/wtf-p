@@ -1,20 +1,20 @@
 {
-  "name": "wtfp",
+  "name": "panwrite",
   "owner": {
-    "name": "akougkas"
+    "name": "PanStudio"
   },
   "metadata": {
-    "description": "WTF-P research workflow plugins",
-    "version": "0.9.1"
+    "description": "PanWrite research workflow plugins",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "wtfp",
-      "source": "./plugins/wtfp",
+      "name": "panwrite",
+      "source": "./plugins/panwrite",
       "description": "Portable academic research and writing workflows.",
-      "version": "0.9.1",
+      "version": "1.0.0",
       "author": {
-        "name": "akougkas"
+        "name": "Anthony Kougkas"
       },
       "commands": "./commands/",
       "agents": "./agents/",

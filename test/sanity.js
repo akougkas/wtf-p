@@ -36,17 +36,17 @@ check(fs.existsSync(path.join(root, 'LICENSE')), 'LICENSE exists');
 
 // Package.json fields
 const pkg = require(path.join(root, 'package.json'));
-check(pkg.name === 'wtf-p', 'package name is wtf-p');
-check(pkg.bin && pkg.bin.wtfp, 'bin.wtfp defined');
-check(pkg.bin && pkg.bin['wtf-p-uninstall'], 'bin.wtf-p-uninstall defined');
+check(pkg.name === '@panstudio/panwrite', 'package name is @panstudio/panwrite');
+check(pkg.bin && pkg.bin.panwrite, 'bin.panwrite defined');
+check(pkg.bin && pkg.bin['panwrite-uninstall'], 'bin.panwrite-uninstall defined');
 check(pkg.files && pkg.files.includes('bin'), 'files includes bin');
-check(pkg.license === 'MIT', 'license is MIT');
+check(pkg.license === 'Apache-2.0', 'license is Apache-2.0');
 
 // Mutating CLI entrypoints must only be checked in disposable child processes.
 // Requiring either one in this process could modify the developer's profile if
 // an import guard regresses.
 const cliEntrypoints = ['install.js', 'uninstall.js'];
-const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-sanity-'));
+const probeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-sanity-'));
 const probeHome = path.join(probeRoot, 'home');
 const probeCwd = path.join(probeRoot, 'cwd');
 const probeTmp = path.join(probeRoot, 'tmp');

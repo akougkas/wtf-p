@@ -328,7 +328,7 @@ function verifyRoutingSuite(document) {
   for (const [field, expected] of [
     ['project_protocol_version', manifest.project_protocol_version],
     ['adapter_compiler_version', manifest.adapter_compiler_version],
-    ['wtfp_commit', manifest.wtfp_commit],
+    ['panwrite_commit', manifest.panwrite_commit],
     ['source_sha256', envelope.source_sha256]
   ]) {
     if (document.run.protocol[field] !== expected) {
@@ -888,7 +888,7 @@ function scoreObservations(document, options = {}) {
   const passing = !hardFailure && !capabilityInconclusive;
 
   const score = {
-    schema: 'wtfp.evaluation.routing-score/v1',
+    schema: 'panwrite.evaluation.routing-score/v1',
     run: document.run,
     cost: document.cost,
     latency_ms: document.latency_ms,

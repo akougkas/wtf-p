@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "create-slides",
   "title": "Create presentation slides",
   "description": "Transform the paper's argument, evidence, and findings into an audience-appropriate presentation.",
-  "alias": "wtfp:create-slides",
+  "alias": "panwrite:create-slides",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-deliver-research"
+    "skill": "panwrite-deliver-research"
   },
-  "workflow": "wtfp://workflows/create-slides",
+  "workflow": "panwrite://workflows/create-slides",
   "requirements": {
     "capabilities": [
       "filesystem.read",

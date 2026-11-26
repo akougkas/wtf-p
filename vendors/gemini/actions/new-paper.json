@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "new-paper",
   "title": "Start a new paper",
-  "description": "Interview the researcher and initialize a portable WTF-P project.",
-  "alias": "wtfp:new-paper",
+  "description": "Interview the researcher and initialize a portable PanWrite project.",
+  "alias": "panwrite:new-paper",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-start-project"
+    "skill": "panwrite-start-project"
   },
-  "workflow": "wtfp://workflows/new-paper",
+  "workflow": "panwrite://workflows/new-paper",
   "requirements": {
     "capabilities": [
       "filesystem.read",

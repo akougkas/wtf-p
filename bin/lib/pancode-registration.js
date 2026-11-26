@@ -5,7 +5,7 @@ const path = require('path');
 const { createTargetGuard, resolveOwnedPath, sha256Buffer } = require('./ownership');
 
 // PanCode owns integrity, provenance, drift and enable/disable for an installed
-// plugin or extension. WTF-P owns two much smaller things: the exact bytes it
+// plugin or extension. PanWrite owns two much smaller things: the exact bytes it
 // publishes (its v2 receipt) and the guarantee that each tree handed to PanCode
 // is the generated package and nothing else.
 function treeFiles(root) {
@@ -38,14 +38,14 @@ function scopeOptions(targetDir, options) {
 }
 
 function generatedBundle(root, target = 'pancode-plugin') {
-  const inventoryPath = path.join(root, '.wtfp-generated.json');
+  const inventoryPath = path.join(root, '.panwrite-generated.json');
   if (!fs.existsSync(inventoryPath)) return null;
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'));
-  if (inventory.schema !== 'wtfp.generated-adapter/v1' || inventory.target !== target) {
+  if (inventory.schema !== 'panwrite.generated-adapter/v1' || inventory.target !== target) {
     return null;
   }
   const expected = new Map(inventory.files.map(file => [file.path, file.sha256]));
-  expected.set('.wtfp-generated.json', sha256Buffer(fs.readFileSync(inventoryPath)));
+  expected.set('.panwrite-generated.json', sha256Buffer(fs.readFileSync(inventoryPath)));
   return expected;
 }
 
@@ -62,7 +62,7 @@ function sameRoot(reported, expected) {
   return path.resolve(reported) === path.resolve(expected) || canonical(reported) === canonical(expected);
 }
 
-// The one entry WTF-P is allowed to act on: our id, our scope, our path.
+// The one entry PanWrite is allowed to act on: our id, our scope, our path.
 function verifiedEntry(stdout, targetDir, native, scope) {
   const entry = JSON.parse(stdout);
   if (!installedRecord(entry) || entry.id !== native.id || entry.scope !== scope ||
@@ -123,9 +123,9 @@ function installedExtensionEntry(stdout, targetDir, native, scope) {
   return matches[0];
 }
 
-// The two PanCode packages WTF-P installs, plugin first. Each is its own PanCode
+// The two PanCode packages PanWrite installs, plugin first. Each is its own PanCode
 // install with its own lifecycle command, generated inventory and checks.
-// Both carry the id `wtfp`, so `hub` commands name the plugin as `plugin:wtfp`
+// Both carry the id `panwrite`, so `hub` commands name the plugin as `plugin:panwrite`
 // and never leave PanCode to choose between the two packages. The `extensions` commands select extensions by themselves.
 function pancodePackages(native) {
   const plugin = {
@@ -150,7 +150,7 @@ function pancodePackages(native) {
   }];
 }
 
-// Registration is what WTF-P is responsible for. Whether the operator has a
+// Registration is what PanWrite is responsible for. Whether the operator has a
 // package switched on, and whether they trust a project's package state, is
 // PanCode's state and their decision, so it is reported, never asserted and never
 // changed. PanCode binds project trust to the content of that state, so any
@@ -167,7 +167,7 @@ function registered(entry) {
 }
 
 function disabledNotice(pkg, scope) {
-  return `PanCode reports ${pkg.id} as installed but disabled. WTF-P does not change that preference; run pancode ${pkg.command} enable ${pkg.ref} --${scope} to switch it back on.`;
+  return `PanCode reports ${pkg.id} as installed but disabled. PanWrite does not change that preference; run pancode ${pkg.command} enable ${pkg.ref} --${scope} to switch it back on.`;
 }
 
 function preferenceNotice(pkg, scope, entry) {
@@ -175,7 +175,7 @@ function preferenceNotice(pkg, scope, entry) {
   const notices = [
     ...(entry.enabled === false ? [disabledNotice(pkg, scope)] : []),
     ...(entry.diagnostics.some(trustGate)
-      ? [`PanCode holds this project's ${surface} until you trust its package state; WTF-P does not grant that. Review it with pancode config trust ${surface}.`]
+      ? [`PanCode holds this project's ${surface} until you trust its package state; PanWrite does not grant that. Review it with pancode config trust ${surface}.`]
       : [])
   ];
   return notices.length > 0 ? { notice: notices.join(' ') } : {};
@@ -238,7 +238,7 @@ function activatePackage(targetDir, pkg, options) {
   // published tree moves aside first. Holding it (inode identities included)
   // until the receipt is durable lets a failed registration put the previous
   // installation back before the file transaction rolls it back.
-  const staging = fs.mkdtempSync(path.join(path.dirname(root), '.wtfp-staged-'));
+  const staging = fs.mkdtempSync(path.join(path.dirname(root), '.panwrite-staged-'));
   const source = path.join(staging, pkg.id);
   fs.renameSync(root, source);
   let finished = false;
@@ -279,10 +279,10 @@ function activatePackage(targetDir, pkg, options) {
     if (inspected.status === 'unavailable') throw new Error('PanCode became unavailable during verification');
     const entry = pkg.verified(inspected.stdout, targetDir, options.scope);
     if (!registered(entry) || !sameTree(publishedFiles, treeFiles(root))) {
-      throw new Error(`PanCode did not report the exact WTF-P ${pkg.noun} as installed and valid with zero diagnostics`);
+      throw new Error(`PanCode did not report the exact PanWrite ${pkg.noun} as installed and valid with zero diagnostics`);
     }
     if (priorEntry && priorEntry.enabled !== entry.enabled) {
-      throw new Error(`PanCode installation changed the existing WTF-P ${pkg.noun} enabled preference`);
+      throw new Error(`PanCode installation changed the existing PanWrite ${pkg.noun} enabled preference`);
     }
     return {
       status: 'registered', executable: 'pancode', results, rollback,
@@ -341,21 +341,21 @@ function deactivatePackage(targetDir, pkg, options) {
   }
 
   // Native removal is recursive. Run it only when the receipt proves that every
-  // file below the installed root is one WTF-P published and nobody changed.
+  // file below the installed root is one PanWrite published and nobody changed.
   const root = resolveOwnedPath(targetDir, pkg.source, guard);
   const ownedFiles = options.ownedFiles;
   if (!ownedFiles || !sameTree(treeFiles(root), ownedFiles)) {
     const foreign = ownedFiles ? [...treeFiles(root).keys()].filter(file => !ownedFiles.has(file)).slice(0, 5) : [];
     return {
       status: 'deferred', root: pkg.source, results: [listing],
-      reason: `Kept the WTF-P ${pkg.noun} installed and registered: ${pkg.source}/ holds files WTF-P did not publish or that changed${foreign.length ? ` (${foreign.join(', ')})` : ''}. Move them out and run uninstall again.`
+      reason: `Kept the PanWrite ${pkg.noun} installed and registered: ${pkg.source}/ holds files PanWrite did not publish or that changed${foreign.length ? ` (${foreign.join(', ')})` : ''}. Move them out and run uninstall again.`
     };
   }
   const result = execute('pancode', [pkg.command, 'remove', pkg.ref, `--${options.scope}`, '--json'], environment, options);
   if (result.status === 'unavailable') return { status: 'unavailable', executable: 'pancode', results: [listing] };
   const after = execute('pancode', pkg.list(options.scope), environment, options);
   if (after.status === 'unavailable' || fs.existsSync(root) || pkg.listed(after.stdout, targetDir, options.scope)) {
-    throw new Error('PanCode removal did not clear WTF-P content and registration');
+    throw new Error('PanCode removal did not clear PanWrite content and registration');
   }
   return { status: 'unregistered', executable: 'pancode', results: [listing, result, after] };
 }

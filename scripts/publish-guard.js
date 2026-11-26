@@ -40,7 +40,7 @@ else {
 }
 
 if (problems.length > 0) {
-  process.stderr.write(`Refusing to publish wtf-p@${version}:\n- ${problems.join('\n- ')}\nPublish only from a clean checkout of tag ${tag}.\n`);
+  process.stderr.write(`Refusing to publish @panstudio/panwrite@${version}:\n- ${problems.join('\n- ')}\nPublish only from a clean checkout of tag ${tag}.\n`);
   process.exit(1);
 }
-process.stdout.write(`wtf-p@${version} is exactly tag ${tag}; publishing.\n`);
+process.stdout.write(`@panstudio/panwrite@${version} is exactly tag ${tag}; publishing.\n`);

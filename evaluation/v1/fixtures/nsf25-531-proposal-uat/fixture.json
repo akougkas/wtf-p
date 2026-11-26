@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.user-acceptance-fixture/v1",
+  "schema": "panwrite.evaluation.user-acceptance-fixture/v1",
   "id": "nsf25-531-proposal-uat",
   "version": 2,
   "document_type": "grant-proposal",

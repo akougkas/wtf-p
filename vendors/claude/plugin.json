@@ -1,14 +1,14 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "wtfp",
-  "version": "0.9.1",
+  "name": "panwrite",
+  "version": "1.0.0",
   "description": "Portable, evidence-grounded academic research and writing workflows.",
   "author": {
-    "name": "akougkas"
+    "name": "Anthony Kougkas"
   },
-  "homepage": "https://github.com/akougkas/wtf-p",
-  "repository": "https://github.com/akougkas/wtf-p",
-  "license": "MIT",
+  "homepage": "https://github.com/PanStudio/panwrite",
+  "repository": "https://github.com/PanStudio/panwrite",
+  "license": "Apache-2.0",
   "extensions": {
     "dev.pancode": {
       "manifestVersion": 1,
@@ -25,13 +25,13 @@
         {
           "kind": "prompt",
           "id": "add-todo",
-          "path": "dev.pancode/prompts/wtfp/add-todo.md",
+          "path": "dev.pancode/prompts/panwrite/add-todo.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "advance",
-          "path": "dev.pancode/prompts/wtfp/advance.md",
+          "path": "dev.pancode/prompts/panwrite/advance.md",
           "requires": [
             "agent:outliner",
             "agent:research-synthesizer",
@@ -45,7 +45,7 @@
         {
           "kind": "prompt",
           "id": "analyze-bib",
-          "path": "dev.pancode/prompts/wtfp/analyze-bib.md",
+          "path": "dev.pancode/prompts/panwrite/analyze-bib.md",
           "requires": [
             "agent:citation-expert"
           ]
@@ -53,13 +53,13 @@
         {
           "kind": "prompt",
           "id": "audit-milestone",
-          "path": "dev.pancode/prompts/wtfp/audit-milestone.md",
+          "path": "dev.pancode/prompts/panwrite/audit-milestone.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "check-refs",
-          "path": "dev.pancode/prompts/wtfp/check-refs.md",
+          "path": "dev.pancode/prompts/panwrite/check-refs.md",
           "requires": [
             "agent:citation-formatter"
           ]
@@ -67,25 +67,25 @@
         {
           "kind": "prompt",
           "id": "check-todos",
-          "path": "dev.pancode/prompts/wtfp/check-todos.md",
+          "path": "dev.pancode/prompts/panwrite/check-todos.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "checkpoint",
-          "path": "dev.pancode/prompts/wtfp/checkpoint.md",
+          "path": "dev.pancode/prompts/panwrite/checkpoint.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "contribute",
-          "path": "dev.pancode/prompts/wtfp/contribute.md",
+          "path": "dev.pancode/prompts/panwrite/contribute.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "create-outline",
-          "path": "dev.pancode/prompts/wtfp/create-outline.md",
+          "path": "dev.pancode/prompts/panwrite/create-outline.md",
           "requires": [
             "agent:outliner"
           ]
@@ -93,25 +93,25 @@
         {
           "kind": "prompt",
           "id": "create-poster",
-          "path": "dev.pancode/prompts/wtfp/create-poster.md",
+          "path": "dev.pancode/prompts/panwrite/create-poster.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "create-slides",
-          "path": "dev.pancode/prompts/wtfp/create-slides.md",
+          "path": "dev.pancode/prompts/panwrite/create-slides.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "discuss-section",
-          "path": "dev.pancode/prompts/wtfp/discuss-section.md",
+          "path": "dev.pancode/prompts/panwrite/discuss-section.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "execute-outline",
-          "path": "dev.pancode/prompts/wtfp/execute-outline.md",
+          "path": "dev.pancode/prompts/panwrite/execute-outline.md",
           "requires": [
             "agent:section-writer",
             "agent:coherence-checker"
@@ -120,61 +120,61 @@
         {
           "kind": "prompt",
           "id": "export-latex",
-          "path": "dev.pancode/prompts/wtfp/export-latex.md",
+          "path": "dev.pancode/prompts/panwrite/export-latex.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "help",
-          "path": "dev.pancode/prompts/wtfp/help.md",
+          "path": "dev.pancode/prompts/panwrite/help.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "insert-section",
-          "path": "dev.pancode/prompts/wtfp/insert-section.md",
+          "path": "dev.pancode/prompts/panwrite/insert-section.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "list-assumptions",
-          "path": "dev.pancode/prompts/wtfp/list-assumptions.md",
+          "path": "dev.pancode/prompts/panwrite/list-assumptions.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "map-project",
-          "path": "dev.pancode/prompts/wtfp/map-project.md",
+          "path": "dev.pancode/prompts/panwrite/map-project.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "new-paper",
-          "path": "dev.pancode/prompts/wtfp/new-paper.md",
+          "path": "dev.pancode/prompts/panwrite/new-paper.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "pause-writing",
-          "path": "dev.pancode/prompts/wtfp/pause-writing.md",
+          "path": "dev.pancode/prompts/panwrite/pause-writing.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "plan-milestone-gaps",
-          "path": "dev.pancode/prompts/wtfp/plan-milestone-gaps.md",
+          "path": "dev.pancode/prompts/panwrite/plan-milestone-gaps.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "plan-revision",
-          "path": "dev.pancode/prompts/wtfp/plan-revision.md",
+          "path": "dev.pancode/prompts/panwrite/plan-revision.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "plan-section",
-          "path": "dev.pancode/prompts/wtfp/plan-section.md",
+          "path": "dev.pancode/prompts/panwrite/plan-section.md",
           "requires": [
             "agent:section-planner",
             "agent:plan-checker"
@@ -183,7 +183,7 @@
         {
           "kind": "prompt",
           "id": "polish-prose",
-          "path": "dev.pancode/prompts/wtfp/polish-prose.md",
+          "path": "dev.pancode/prompts/panwrite/polish-prose.md",
           "requires": [
             "agent:prose-polisher"
           ]
@@ -191,13 +191,13 @@
         {
           "kind": "prompt",
           "id": "progress",
-          "path": "dev.pancode/prompts/wtfp/progress.md",
+          "path": "dev.pancode/prompts/panwrite/progress.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "quick",
-          "path": "dev.pancode/prompts/wtfp/quick.md",
+          "path": "dev.pancode/prompts/panwrite/quick.md",
           "requires": [
             "agent:section-writer"
           ]
@@ -205,25 +205,25 @@
         {
           "kind": "prompt",
           "id": "remove-section",
-          "path": "dev.pancode/prompts/wtfp/remove-section.md",
+          "path": "dev.pancode/prompts/panwrite/remove-section.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "report-bug",
-          "path": "dev.pancode/prompts/wtfp/report-bug.md",
+          "path": "dev.pancode/prompts/panwrite/report-bug.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "request-feature",
-          "path": "dev.pancode/prompts/wtfp/request-feature.md",
+          "path": "dev.pancode/prompts/panwrite/request-feature.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "research-gap",
-          "path": "dev.pancode/prompts/wtfp/research-gap.md",
+          "path": "dev.pancode/prompts/panwrite/research-gap.md",
           "requires": [
             "agent:research-synthesizer"
           ]
@@ -231,13 +231,13 @@
         {
           "kind": "prompt",
           "id": "resume-writing",
-          "path": "dev.pancode/prompts/wtfp/resume-writing.md",
+          "path": "dev.pancode/prompts/panwrite/resume-writing.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "review-section",
-          "path": "dev.pancode/prompts/wtfp/review-section.md",
+          "path": "dev.pancode/prompts/panwrite/review-section.md",
           "requires": [
             "agent:section-reviewer"
           ]
@@ -245,31 +245,31 @@
         {
           "kind": "prompt",
           "id": "settings",
-          "path": "dev.pancode/prompts/wtfp/settings.md",
+          "path": "dev.pancode/prompts/panwrite/settings.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "submit-milestone",
-          "path": "dev.pancode/prompts/wtfp/submit-milestone.md",
+          "path": "dev.pancode/prompts/panwrite/submit-milestone.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "update",
-          "path": "dev.pancode/prompts/wtfp/update.md",
+          "path": "dev.pancode/prompts/panwrite/update.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "verify-work",
-          "path": "dev.pancode/prompts/wtfp/verify-work.md",
+          "path": "dev.pancode/prompts/panwrite/verify-work.md",
           "requires": []
         },
         {
           "kind": "prompt",
           "id": "write-section",
-          "path": "dev.pancode/prompts/wtfp/write-section.md",
+          "path": "dev.pancode/prompts/panwrite/write-section.md",
           "requires": [
             "agent:section-writer",
             "agent:argument-verifier"
@@ -278,143 +278,143 @@
         {
           "kind": "agent",
           "id": "argument-verifier",
-          "path": "dev.pancode/agents/wtfp-argument-verifier.md",
+          "path": "dev.pancode/agents/panwrite-argument-verifier.md",
           "requires": [
-            "skill:wtfp-review-manuscript"
+            "skill:panwrite-review-manuscript"
           ]
         },
         {
           "kind": "agent",
           "id": "citation-expert",
-          "path": "dev.pancode/agents/wtfp-citation-expert.md",
+          "path": "dev.pancode/agents/panwrite-citation-expert.md",
           "requires": [
-            "skill:wtfp-research-literature"
+            "skill:panwrite-research-literature"
           ]
         },
         {
           "kind": "agent",
           "id": "citation-formatter",
-          "path": "dev.pancode/agents/wtfp-citation-formatter.md",
+          "path": "dev.pancode/agents/panwrite-citation-formatter.md",
           "requires": [
-            "skill:wtfp-research-literature"
+            "skill:panwrite-research-literature"
           ]
         },
         {
           "kind": "agent",
           "id": "coherence-checker",
-          "path": "dev.pancode/agents/wtfp-coherence-checker.md",
+          "path": "dev.pancode/agents/panwrite-coherence-checker.md",
           "requires": [
-            "skill:wtfp-review-manuscript"
+            "skill:panwrite-review-manuscript"
           ]
         },
         {
           "kind": "agent",
           "id": "outliner",
-          "path": "dev.pancode/agents/wtfp-outliner.md",
+          "path": "dev.pancode/agents/panwrite-outliner.md",
           "requires": [
-            "skill:wtfp-start-project"
+            "skill:panwrite-start-project"
           ]
         },
         {
           "kind": "agent",
           "id": "plan-checker",
-          "path": "dev.pancode/agents/wtfp-plan-checker.md",
+          "path": "dev.pancode/agents/panwrite-plan-checker.md",
           "requires": [
-            "skill:wtfp-plan-section"
+            "skill:panwrite-plan-section"
           ]
         },
         {
           "kind": "agent",
           "id": "prose-polisher",
-          "path": "dev.pancode/agents/wtfp-prose-polisher.md",
+          "path": "dev.pancode/agents/panwrite-prose-polisher.md",
           "requires": [
-            "skill:wtfp-review-manuscript"
+            "skill:panwrite-review-manuscript"
           ]
         },
         {
           "kind": "agent",
           "id": "research-synthesizer",
-          "path": "dev.pancode/agents/wtfp-research-synthesizer.md",
+          "path": "dev.pancode/agents/panwrite-research-synthesizer.md",
           "requires": [
-            "skill:wtfp-research-literature"
+            "skill:panwrite-research-literature"
           ]
         },
         {
           "kind": "agent",
           "id": "section-planner",
-          "path": "dev.pancode/agents/wtfp-section-planner.md",
+          "path": "dev.pancode/agents/panwrite-section-planner.md",
           "requires": [
-            "skill:wtfp-plan-section"
+            "skill:panwrite-plan-section"
           ]
         },
         {
           "kind": "agent",
           "id": "section-reviewer",
-          "path": "dev.pancode/agents/wtfp-section-reviewer.md",
+          "path": "dev.pancode/agents/panwrite-section-reviewer.md",
           "requires": [
-            "skill:wtfp-review-manuscript"
+            "skill:panwrite-review-manuscript"
           ]
         },
         {
           "kind": "agent",
           "id": "section-writer",
-          "path": "dev.pancode/agents/wtfp-section-writer.md",
+          "path": "dev.pancode/agents/panwrite-section-writer.md",
           "requires": [
-            "skill:wtfp-write-section"
+            "skill:panwrite-write-section"
           ]
         },
         {
           "kind": "skill",
-          "id": "wtfp-deliver-research",
-          "path": "skills/wtfp-deliver-research/SKILL.md",
+          "id": "panwrite-deliver-research",
+          "path": "skills/panwrite-deliver-research/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-manage-project",
-          "path": "skills/wtfp-manage-project/SKILL.md",
+          "id": "panwrite-manage-project",
+          "path": "skills/panwrite-manage-project/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-plan-section",
-          "path": "skills/wtfp-plan-section/SKILL.md",
+          "id": "panwrite-plan-section",
+          "path": "skills/panwrite-plan-section/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-research-literature",
-          "path": "skills/wtfp-research-literature/SKILL.md",
+          "id": "panwrite-research-literature",
+          "path": "skills/panwrite-research-literature/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-review-manuscript",
-          "path": "skills/wtfp-review-manuscript/SKILL.md",
+          "id": "panwrite-review-manuscript",
+          "path": "skills/panwrite-review-manuscript/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-start-project",
-          "path": "skills/wtfp-start-project/SKILL.md",
+          "id": "panwrite-start-project",
+          "path": "skills/panwrite-start-project/SKILL.md",
           "requires": []
         },
         {
           "kind": "skill",
-          "id": "wtfp-write-section",
-          "path": "skills/wtfp-write-section/SKILL.md",
+          "id": "panwrite-write-section",
+          "path": "skills/panwrite-write-section/SKILL.md",
           "requires": []
         },
         {
           "kind": "fleet",
-          "id": "wtfp-plan-section",
-          "path": "dev.pancode/fleets/wtfp-plan-section.md",
+          "id": "panwrite-plan-section",
+          "path": "dev.pancode/fleets/panwrite-plan-section.md",
           "requires": []
         },
         {
           "kind": "fleet",
-          "id": "wtfp-draft-review",
-          "path": "dev.pancode/fleets/wtfp-draft-review.md",
+          "id": "panwrite-draft-review",
+          "path": "dev.pancode/fleets/panwrite-draft-review.md",
           "requires": []
         }
       ]

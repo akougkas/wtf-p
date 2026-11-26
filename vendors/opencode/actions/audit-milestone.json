@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "audit-milestone",
   "title": "Audit a milestone",
   "description": "Run readiness checks across section completion, arguments, length, citations, and reviews.",
-  "alias": "wtfp:audit-milestone",
+  "alias": "panwrite:audit-milestone",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-review-manuscript"
+    "skill": "panwrite-review-manuscript"
   },
-  "workflow": "wtfp://workflows/audit-milestone",
+  "workflow": "panwrite://workflows/audit-milestone",
   "requirements": {
     "capabilities": [
       "filesystem.read",
@@ -53,7 +53,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "wtfp://tools/bibliography/index through tools/wtfp-tool.js"
+      "scope": "panwrite://tools/bibliography/index through tools/panwrite-tool.js"
     },
     {
       "id": "user.gate",

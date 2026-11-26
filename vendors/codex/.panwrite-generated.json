@@ -1,0 +1,12 @@
+{
+  "schema": "panwrite.generated-adapter/v1",
+  "generatorVersion": 5,
+  "target": "codex-marketplace",
+  "sourceHash": "eab6fb3c368b32bd64659ef5245391c8b2c5074b51d1786a7ca7a6eda47372a8",
+  "files": [
+    {
+      "path": ".agents/plugins/marketplace.json",
+      "sha256": "620c3fd83d89879b0737da86968841f7f8a69f116077bda434eb119b460fb64c"
+    }
+  ]
+}

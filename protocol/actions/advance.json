@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "advance",
   "title": "Advance to the next author gate",
   "description": "Run the next writing actions automatically and stop when only the author can decide.",
-  "alias": "wtfp:advance",
+  "alias": "panwrite:advance",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-manage-project"
+    "skill": "panwrite-manage-project"
   },
-  "workflow": "wtfp://workflows/advance",
+  "workflow": "panwrite://workflows/advance",
   "requirements": {
     "capabilities": [
       "agent.delegate",
@@ -222,7 +222,7 @@
     },
     {
       "id": "tool.execute",
-      "scope": "declared bibliography and citation tools through tools/wtfp-tool.js, only for the selected step's declared tools"
+      "scope": "declared bibliography and citation tools through tools/panwrite-tool.js, only for the selected step's declared tools"
     },
     {
       "id": "user.gate",

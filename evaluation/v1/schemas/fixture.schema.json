@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.fixture/v1",
+  "$id": "panwrite.evaluation.fixture/v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,7 +16,7 @@
     "synthetic"
   ],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.fixture/v1" },
+    "schema": { "const": "panwrite.evaluation.fixture/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 },
     "title": { "type": "string", "minLength": 1 },

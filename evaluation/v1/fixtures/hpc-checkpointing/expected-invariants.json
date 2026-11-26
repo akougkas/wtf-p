@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.evaluation.expected-invariants/v1",
+  "schema": "panwrite.evaluation.expected-invariants/v1",
   "fixture_id": "hpc-checkpointing-paper",
   "fixture_version": 1,
   "action_sequence": [

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/project/interaction/v1",
+  "$id": "https://schemas.panwrite.dev/project/interaction/v1",
   "type": "object",
   "additionalProperties": false,
   "allOf": [
@@ -51,16 +51,16 @@
     "answered_at"
   ],
   "properties": {
-    "schema": { "const": "wtfp.project.interaction/v1" },
-    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "schema": { "const": "panwrite.project.interaction/v1" },
+    "id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
     "kind": { "enum": ["checkpoint-answer", "record-change"] },
-    "subject_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+    "subject_uri": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/logicalUri" },
     "channel": { "enum": ["attested-interview", "host-prompt"] },
     "outcome": {
       "enum": ["selected", "done", "waived", "kept-pending", "approved", "declined", "discarded-stale"]
     },
-    "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "selected_option": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
     "presented": {
       "type": "object",
       "additionalProperties": false,
@@ -78,14 +78,14 @@
           "additionalProperties": false,
           "required": ["uri", "sha256"],
           "properties": {
-            "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+            "uri": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/logicalUri" },
             "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
           }
         }
       }
     },
-    "asked_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
-    "answered_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "asked_at": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/timestamp" },
+    "answered_at": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/timestamp" },
     "seal": {
       "type": "object",
       "additionalProperties": false,

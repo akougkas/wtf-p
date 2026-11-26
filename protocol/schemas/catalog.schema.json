@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.catalog/v1",
-  "title": "WTF-P action catalog",
+  "$id": "panwrite.catalog/v1",
+  "title": "PanWrite action catalog",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "version", "namespace", "counts", "actions", "operations", "skills"],
   "properties": {
-    "schema": { "const": "wtfp.catalog/v1" },
+    "schema": { "const": "panwrite.catalog/v1" },
     "version": { "const": 1 },
-    "namespace": { "const": "wtfp" },
+    "namespace": { "const": "panwrite" },
     "counts": {
       "type": "object",
       "additionalProperties": false,
@@ -52,7 +52,7 @@
         "additionalProperties": false,
         "required": ["id", "actions"],
         "properties": {
-          "id": { "type": "string", "pattern": "^wtfp-" },
+          "id": { "type": "string", "pattern": "^panwrite-" },
           "actions": { "type": "array", "minItems": 1, "items": { "type": "string" } }
         }
       }

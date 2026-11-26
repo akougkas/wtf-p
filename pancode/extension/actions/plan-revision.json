@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "plan-revision",
   "title": "Plan a revision",
   "description": "Turn prioritized review findings into a bounded, testable revision plan.",
-  "alias": "wtfp:plan-revision",
+  "alias": "panwrite:plan-revision",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/plan-revision",
+  "workflow": "panwrite://workflows/plan-revision",
   "requirements": {
     "capabilities": [
       "filesystem.read",

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/evaluation/study/v2",
+  "$id": "https://schemas.panwrite.dev/evaluation/study/v2",
   "title": "A pre-registered comparative study: conditions, tasks, outcomes and analysis fixed before any comparative result is collected.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "version", "status", "question", "hypotheses", "conditions", "ablations", "tasks", "execution", "outcomes", "assessment", "analysis", "comparators", "decisions"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.study/v2" },
+    "schema": { "const": "panwrite.evaluation.study/v2" },
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$" },
     "version": { "type": "integer", "minimum": 1 },
     "status": {
@@ -35,13 +35,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "role", "description", "host", "wtfp", "author_gates"],
+        "required": ["id", "role", "description", "host", "panwrite", "author_gates"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
           "role": { "enum": ["treatment", "baseline"] },
           "description": { "type": "string", "minLength": 1 },
           "host": { "type": "string", "minLength": 1 },
-          "wtfp": { "enum": ["plugin-and-desk", "plugin-only", "none"] },
+          "panwrite": { "enum": ["plugin-and-desk", "plugin-only", "none"] },
           "author_gates": { "enum": ["desk-attested", "host-prompted", "author-instructed"] }
         }
       }

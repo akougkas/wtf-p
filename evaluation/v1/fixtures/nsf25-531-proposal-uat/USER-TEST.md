@@ -1,23 +1,23 @@
 # Hands-on NSF 25-531 user test
 
-This fixture tests WTF-P's proposal lifecycle against official NSF evidence. It is deliberately separate from the synthetic academic-paper regression baseline and does not certify eligibility, institutional compliance, budget accuracy, PAPPG compliance, or submission readiness.
+This fixture tests PanWrite's proposal lifecycle against official NSF evidence. It is deliberately separate from the synthetic academic-paper regression baseline and does not certify eligibility, institutional compliance, budget accuracy, PAPPG compliance, or submission readiness.
 
 ## 1. Verify the static package
 
-From the WTF-P checkout, run the isolated fixture lint without changing `package.json`:
+From the PanWrite checkout, run the isolated fixture lint without changing `package.json`:
 
 ```bash
 node --test test/nsf25-531-proposal-uat.test.js
 ```
 
-Record the exact WTF-P commit, Clio source commit, `clio-coder --version`, resolved Clio entry path and SHA-256, model, effort, and permission policy. The intended Clio surface is 0.3.8 with the merged quote-fidelity and extension-agent preflight fixes.
+Record the exact PanWrite commit, Clio source commit, `clio-coder --version`, resolved Clio entry path and SHA-256, model, effort, and permission policy. The intended Clio surface is 0.3.8 with the merged quote-fidelity and extension-agent preflight fixes.
 
 ## 2. Isolate the client and project
 
 Create one private disposable root. These exports keep normal client profiles out of the run:
 
 ```bash
-uat_root="$(mktemp -d /tmp/wtfp-nsf25-531-uat.XXXXXX)"
+uat_root="$(mktemp -d /tmp/panwrite-nsf25-531-uat.XXXXXX)"
 chmod 700 "$uat_root"
 mkdir -p "$uat_root"/{home,xdg/config,xdg/data,xdg/state,xdg/cache,tmp,clio/config,clio/data,clio/state,clio/cache,clio/bin,project/materials}
 export HOME="$uat_root/home"
@@ -39,8 +39,8 @@ export CLIO_CODER_NO_NETWORK_TOOLS=1
 Copy only the two model-visible templates, not the evaluator oracles, into the project:
 
 ```bash
-wtfp_root="$(git rev-parse --show-toplevel)"
-fixture_source="$wtfp_root/evaluation/v1/fixtures/nsf25-531-proposal-uat"
+panwrite_root="$(git rev-parse --show-toplevel)"
+fixture_source="$panwrite_root/evaluation/v1/fixtures/nsf25-531-proposal-uat"
 cp "$fixture_source/author-brief.md" "$uat_root/project/author-brief.md"
 cp "$fixture_source/source-receipt.md" "$uat_root/project/source-receipt.md"
 ```
@@ -48,7 +48,7 @@ cp "$fixture_source/source-receipt.md" "$uat_root/project/source-receipt.md"
 Install the candidate Clio adapter into the isolated configuration root from the candidate checkout:
 
 ```bash
-node "$wtfp_root/bin/install.js" install clio \
+node "$panwrite_root/bin/install.js" install clio \
   --config-dir "$CLIO_CODER_CONFIG_DIR" --advanced --no-color
 ```
 
@@ -94,18 +94,18 @@ Do not grant the model a network tool. The locally captured pages are the eviden
 
 ## 4. Confirm native discovery
 
-Start the exact recorded Clio binary from the fixture project. In Clio, `/prompts` must identify `/wtfp:new-paper` as an extension prompt, not an older user-level prompt. Before spending on the lifecycle, the rebuilt 0.3.8 CLI should also report both real fleets and validate the extension planner:
+Start the exact recorded Clio binary from the fixture project. In Clio, `/prompts` must identify `/panwrite:new-paper` as an extension prompt, not an older user-level prompt. Before spending on the lifecycle, the rebuilt 0.3.8 CLI should also report both real fleets and validate the extension planner:
 
 ```bash
 clio-coder fleet list
-clio-coder fleet validate wtfp-plan-section
-clio-coder fleet graph wtfp-plan-section
-clio-coder fleet validate wtfp-draft-review
-clio-coder fleet graph wtfp-draft-review
+clio-coder fleet validate panwrite-plan-section
+clio-coder fleet graph panwrite-plan-section
+clio-coder fleet validate panwrite-draft-review
+clio-coder fleet graph panwrite-draft-review
 ```
 
 Both validations must report `valid` before you continue. The generated fleet
-contracts are native Clio entry points; ordinary `/wtfp:*` commands do not
+contracts are native Clio entry points; ordinary `/panwrite:*` commands do not
 silently route through them. Run a fleet only through an explicit
 `clio-coder fleet run <name> --var section=<id>` action, and keep its worker
 result separate from the slash-command orchestrator's approval and
@@ -146,10 +146,10 @@ Required gates and boundaries are:
 Compare the run with `authoritative-facts.json` and `expected-invariants.json` outside the model-visible project. Treat semantic wording differences as benign when the invariants hold. Any invented evidence, bypassed gate, invalid record, hidden-memory resume, ordinary prose labeled as official fact, or claim of submission readiness is a failure.
 
 After every state transition, independently validate the portable records from
-the WTF-P checkout:
+the PanWrite checkout:
 
 ```bash
-node "$wtfp_root/evaluation/tools/validate-planning.js" \
+node "$panwrite_root/evaluation/tools/validate-planning.js" \
   --json "$uat_root/project"
 ```
 

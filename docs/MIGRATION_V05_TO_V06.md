@@ -62,7 +62,7 @@ root. The examples below pin the immutable release. Keep the explicit
 `--package … -- wtf-p` form so an older globally installed executable cannot
 shadow the requested package. Claude Code, Codex, and Copilot CLI can instead
 add the repository as a marketplace (`<cli> plugin marketplace add
-akougkas/wtf-p`) and install `wtfp@wtf-p` natively; see
+PanStudio/panwrite`) and install `wtfp@wtf-p` natively; see
 [GETTING_STARTED.md](GETTING_STARTED.md). Use `--config-dir` for a
 deliberate custom installation destination. It does not, by itself, isolate
 every runtime home, data, state, cache, and temporary path used by the client.

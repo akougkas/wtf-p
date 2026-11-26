@@ -1,9 +1,9 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "help",
-  "title": "Show WTF-P help",
-  "description": "Render the stable WTF-P action reference from the canonical catalog.",
-  "alias": "wtfp:help",
+  "title": "Show PanWrite help",
+  "description": "Render the stable PanWrite action reference from the canonical catalog.",
+  "alias": "panwrite:help",
   "surface": {
     "kind": "operations",
     "operation": "product-operations"

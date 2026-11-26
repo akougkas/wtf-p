@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.wtf-p.dev/project/checkpoint/v1",
+  "$id": "https://schemas.panwrite.dev/project/checkpoint/v1",
   "type": "object",
   "additionalProperties": false,
   "allOf": [
@@ -38,14 +38,14 @@
     "created_at"
   ],
   "properties": {
-    "schema": { "const": "wtfp.project.checkpoint/v1" },
-    "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-    "project_id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
+    "schema": { "const": "panwrite.project.checkpoint/v1" },
+    "id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+    "project_id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
     "kind": { "enum": ["human-verify", "decision", "human-action", "safety-authorization", "state-snapshot"] },
     "status": { "enum": ["pending", "resolved", "waived", "expired", "available", "restored"] },
     "blocking": { "type": "boolean" },
-    "scope_uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
-    "request": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
+    "scope_uri": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/logicalUri" },
+    "request": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
     "context": { "type": "string" },
     "options": {
       "type": "array",
@@ -54,14 +54,14 @@
         "additionalProperties": false,
         "required": ["id", "label", "implication"],
         "properties": {
-          "id": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-          "label": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
-          "implication": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" }
+          "id": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+          "label": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
+          "implication": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" }
         }
       }
     },
-    "resume_action": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-    "created_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" },
+    "resume_action": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+    "created_at": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/timestamp" },
     "snapshot": {
       "type": "object",
       "additionalProperties": false,
@@ -79,7 +79,7 @@
             "additionalProperties": false,
             "required": ["uri", "sha256"],
             "properties": {
-              "uri": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/logicalUri" },
+              "uri": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/logicalUri" },
               "revision": { "type": "integer", "minimum": 0 },
               "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
             }
@@ -93,9 +93,9 @@
       "required": ["resolved_by", "summary", "resolved_at"],
       "properties": {
         "resolved_by": { "enum": ["author", "policy"] },
-        "selected_option": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/identifier" },
-        "summary": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/nonEmptyString" },
-        "resolved_at": { "$ref": "https://schemas.wtf-p.dev/project/common/v1#/$defs/timestamp" }
+        "selected_option": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/identifier" },
+        "summary": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/nonEmptyString" },
+        "resolved_at": { "$ref": "https://schemas.panwrite.dev/project/common/v1#/$defs/timestamp" }
       }
     }
   }

@@ -76,7 +76,7 @@ async function test(name, callback) {
 }
 
 function temporaryRoot() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wtfp-routing-test.'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'panwrite-routing-test.'));
   fs.chmodSync(root, 0o700);
   return root;
 }
@@ -96,15 +96,15 @@ function rowByClient(suite, client) {
 }
 
 const fixtureInventoryBindings = [
-  ['antigravity', 'vendors/antigravity/.wtfp-generated.json'],
-  ['claude', 'vendors/claude/.wtfp-generated.json'],
-  ['clio', 'pancode/plugin/.wtfp-generated.json'],
-  ['codex-marketplace', 'vendors/codex/.wtfp-generated.json'],
-  ['codex', 'vendors/codex/plugins/wtfp/.wtfp-generated.json'],
-  ['copilot-marketplace', 'vendors/copilot/.wtfp-generated.json'],
-  ['copilot', 'vendors/copilot/plugins/wtfp/.wtfp-generated.json'],
-  ['gemini', 'vendors/gemini/.wtfp-generated.json'],
-  ['opencode', 'vendors/opencode/.wtfp-generated.json']
+  ['antigravity', 'vendors/antigravity/.panwrite-generated.json'],
+  ['claude', 'vendors/claude/.panwrite-generated.json'],
+  ['clio', 'pancode/plugin/.panwrite-generated.json'],
+  ['codex-marketplace', 'vendors/codex/.panwrite-generated.json'],
+  ['codex', 'vendors/codex/plugins/panwrite/.panwrite-generated.json'],
+  ['copilot-marketplace', 'vendors/copilot/.panwrite-generated.json'],
+  ['copilot', 'vendors/copilot/plugins/panwrite/.panwrite-generated.json'],
+  ['gemini', 'vendors/gemini/.panwrite-generated.json'],
+  ['opencode', 'vendors/opencode/.panwrite-generated.json']
 ];
 
 function fixtureGit(root, argv) {
@@ -132,8 +132,8 @@ function canonicalProjectionFixture() {
   writeFixtureFile(root, 'bin/lib/adapter-metadata.js', 'module.exports = { GENERATOR_VERSION: 4 };\n');
   writeFixtureFile(root, 'bin/lib/fixture-tool.js', 'module.exports = { tool: true };\n');
   writeFixtureFile(root, 'protocol/tools.json', JSON.stringify({
-    schema: 'wtfp.tools/v1',
-    tools: [{ id: 'fixture.tool', legacyName: 'fixture-tool', implementation: 'wtfp://tools/fixture/tool' }]
+    schema: 'panwrite.tools/v1',
+    tools: [{ id: 'fixture.tool', legacyName: 'fixture-tool', implementation: 'panwrite://tools/fixture/tool' }]
   }, null, 2) + '\n');
   writeFixtureFile(root, 'protocol/catalog.json', '{"actions":[]}\n');
   const generatedEnvelopes = [];
@@ -159,7 +159,7 @@ function canonicalProjectionFixture() {
   fixtureGit(root, ['commit', '--quiet', '-m', 'canonical source']);
   const canonical = fixtureGit(root, ['rev-parse', 'HEAD']);
   const manifest = {
-    wtfp_commit: canonical,
+    panwrite_commit: canonical,
     adapter_compiler_version: 4,
     generated_envelopes: generatedEnvelopes
   };
@@ -193,17 +193,17 @@ async function main() {
   });
 
   await test('routing suite binds capability surfaces, compiler-v5 envelopes, rows, and immutable case order', () => {
-    assert.strictEqual(suite.manifest_sha256, '2b56172bb39da544ef870bc96843f2e7354bb02bccf7df7fd0850244f063922a');
+    assert.strictEqual(suite.manifest_sha256, '59b6386cd17d415477165625a5c4553c270f83640f5eb537874b103df241c6f2');
     assert.strictEqual(suite.client_surfaces_sha256,
-      'cb622928b946a0a90ba2a91605c047501e08ce71a928c856cc7fbadc38844594');
+      '814f2110071131d3f8a915591f4e6bc399c7d9febaa187e705a7f09a77f55890');
     assert.strictEqual(suite.rows.length, 3);
     assert.strictEqual(suite.rows.reduce((sum, row) => sum + row.case_ids.length, 0), 54);
     assert.ok(suite.rows.every(row => row.case_ids.length === 18 && row.maximum_paid_cases === 18));
     assert.deepStrictEqual(suite.rows.map(row => row.id), PRIMARY_ROWS);
     assert.strictEqual(suite.envelopes['clio-terra-primary'].manifest_sha256,
-      '5d13b4c81d4a481656a73bc47087f04b8632740b627a5a13d0bb19c7abaadd68');
+      'cf784c4974f441102d3c3945f64ac30791478fe2571529538d1e120884d01268');
     assert.strictEqual(suite.envelopes['clio-terra-primary'].source_sha256,
-      '46caa2d1e0299e9f5b8fcf18fdb7e3f4ae5a8dc8a22946e1e83288a278babf69');
+      '795942d950fc8069880598e54dfbe9e835115846a0f0f45f401c327c2eb322e9');
   });
 
   await test('target-native explicit selectors preserve the semantic payload byte-for-byte', () => {
@@ -213,13 +213,13 @@ async function main() {
     const clio = suite.target_catalogs.clio.get('explicit-new-paper');
     assert.strictEqual(claude.input, clio.input);
     assert.strictEqual(claude.input, semantic.input);
-    assert.strictEqual(Buffer.byteLength(claude.input, 'utf8'), 152);
+    assert.strictEqual(Buffer.byteLength(claude.input, 'utf8'), 156);
     assert.strictEqual(sha256(Buffer.from(claude.input)),
-      'a2b4a25d42cfb8752e10007adc8da26e4d2eeeedade246f2f0192b279fe2cb01');
-    assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 172);
+      '6085f4b22097e374ea03a46c37d7ed076511f7212981bbcf15491af901134ce4');
+    assert.strictEqual(Buffer.byteLength(codex.input, 'utf8'), 179);
     assert.strictEqual(sha256(Buffer.from(codex.input)),
-      '1ab063ce39749f1b07ef1a4bb507c33f9294cda86a4566743b40fab866055599');
-    assert.ok(codex.input.startsWith('$wtf-p:wtfp-start-project new-paper  '));
+      'd500a48f4b4fb429a36c6567e5e78104c0dad16979ee45a6e2319cb7c04ca1b2');
+    assert.ok(codex.input.startsWith('$panwrite:panwrite-start-project new-paper  '));
     for (const projected of [claude, codex, clio]) {
       assert.ok(projected.input.endsWith(semantic.arguments));
       assert.strictEqual((projected.input.match(/"/gu) || []).length, 2);
@@ -232,7 +232,7 @@ async function main() {
     const catalog = definitionCatalog(null, null, 'codex');
     assert.strictEqual(catalog.get('explicit-help').input, null);
     assert.strictEqual(catalog.get('explicit-help').input_supported, false);
-    assert.match(catalog.get('explicit-plan-section').input, /^\$wtf-p:wtfp-plan-section plan-section /u);
+    assert.match(catalog.get('explicit-plan-section').input, /^\$panwrite:panwrite-plan-section plan-section /u);
     assert.strictEqual(CAPABILITY_SURFACES.codex.explicit.operations.selector_kind, 'unsupported');
   });
 
@@ -365,7 +365,7 @@ async function main() {
     const root = temporaryRoot();
     const credential = path.join(root, 'credentials.json');
     fs.writeFileSync(credential, '{"token":"alpha-secret-value"}\n', { mode: 0o600 });
-    const environment = { WTFP_ROUTING_CLAUDE_CREDENTIALS_SOURCE: credential };
+    const environment = { PANWRITE_ROUTING_CLAUDE_CREDENTIALS_SOURCE: credential };
     assert.ok(!profileSpecs(environment, root).some(([label]) => label === 'claude-forward-source'));
     const included = profileSpecs(environment, root, true);
     assert.ok(included.some(([label]) => label === 'claude-forward-source'));
@@ -784,12 +784,12 @@ async function main() {
     const observation = observeNativeTrace('claude', [
       { type: 'system', session_id: 'claude-session', model: 'claude-sonnet-5-20260801' },
       { type: 'assistant', message: { role: 'assistant', content: [
-        { type: 'tool_use', name: 'Skill', input: { skill: 'wtfp-start-project' } }
+        { type: 'tool_use', name: 'Skill', input: { skill: 'panwrite-start-project' } }
       ] } },
       { type: 'result', session_id: 'claude-session', total_cost_usd: 0.04 }
     ], null, implicit);
     assert.deepStrictEqual(observation.route.value,
-      { kind: 'skill', skill: 'wtfp-start-project', action: null });
+      { kind: 'skill', skill: 'panwrite-start-project', action: null });
     assert.strictEqual(observation.route.signal, 'selected');
     assert.strictEqual(observation.activation.status, 'loaded');
     assert.strictEqual(observation.cost.status, 'metered');
@@ -841,11 +841,11 @@ async function main() {
     };
     const observation = observeNativeTrace('clio', [{
       type: 'message_end', message: { role: 'assistant', content: [
-        { type: 'text', text: 'Suggested skill: /skill wtfp-start-project\nI activated a skill.' }
+        { type: 'text', text: 'Suggested skill: /skill panwrite-start-project\nI activated a skill.' }
       ] }
     }], receipt, definition);
     assert.strictEqual(observation.route.signal, 'suggested');
-    assert.strictEqual(observation.route.value.skill, 'wtfp-start-project');
+    assert.strictEqual(observation.route.value.skill, 'panwrite-start-project');
     assert.strictEqual(observation.activation.status, 'not-loaded');
     assert.strictEqual(observation.model_self_reports_ignored, 1);
   });
@@ -860,7 +860,7 @@ async function main() {
     const expanded = [
       `<invocation_arguments>\n${definition.arguments}\n</invocation_arguments>`,
       ...tags,
-      `Generated by WTF-P adapter compiler v4 from protocol/actions/${route.action}`
+      `Generated by PanWrite adapter compiler v4 from protocol/actions/${route.action}`
     ].join('\n');
     const receipt = {
       raw: {
@@ -890,7 +890,7 @@ async function main() {
       arguments: [
         'ordinary operator prose',
         '<file name="actions/new-paper.json">not actually bound</file>',
-        'Generated by WTF-P adapter compiler v4 from protocol/actions/new-paper'
+        'Generated by PanWrite adapter compiler v4 from protocol/actions/new-paper'
       ].join('\n')
     };
     const expanded = `<invocation_arguments>\n${definition.arguments}\n</invocation_arguments>`;
@@ -1101,7 +1101,7 @@ async function main() {
       ['protocol', 'protocol/catalog.json'],
       ['compiler', 'bin/lib/adapter-compiler.js'],
       ['tool', 'bin/lib/fixture-tool.js'],
-      ['generated inventory', 'vendors/claude/.wtfp-generated.json'],
+      ['generated inventory', 'vendors/claude/.panwrite-generated.json'],
       ['generated entry', 'pancode/plugin/payload.txt']
     ];
     for (const [label, relative] of mutations) {
@@ -1230,10 +1230,10 @@ async function main() {
     assert.match(plan.repository.tree, /^[a-f0-9]{40}$/u);
     assert.match(plan.repository.worktree_state_sha256, /^[a-f0-9]{64}$/u);
     assert.strictEqual(plan.repository.canonical_source.canonical_commit,
-      '41864fc1dca294b867b52bf5660f765d08a57de5');
+      '6fbddb194badadc713131a5237b9650a535b5d2e');
     assert.strictEqual(plan.repository.canonical_source.ancestor_verified, true);
     assert.strictEqual(plan.repository.canonical_source.sha256,
-      '3963aa5fdbd28ea30286a6e99de509655cfeecd6486bc259ca819358cc4b29ba');
+      '9cf78895e89fcb4a358acd6aaf4a2fcce0f371859ee04d9bb28e32f55078a1b2');
     assert.strictEqual(plan.repository.canonical_source.generated_inventories, 9);
     assert.strictEqual(plan.repository.canonical_source.authenticated_generated_entries, 1703);
   });

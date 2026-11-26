@@ -1,14 +1,14 @@
 ---
-schema: wtfp.workflow/v1
+schema: panwrite.workflow/v1
 action: plan-revision
-source: wtfp.protocol
+source: panwrite.protocol
 ---
 
 # Plan a revision
 
 @protocol://project/README.md
-@protocol://skills/wtfp-plan-section/SKILL.md
-@protocol://skills/wtfp-plan-section/references/actions.md
+@protocol://skills/panwrite-plan-section/SKILL.md
+@protocol://skills/panwrite-plan-section/references/actions.md
 
 ## Record contract
 

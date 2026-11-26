@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.budget-matrix/v1",
+  "$id": "panwrite.evaluation.budget-matrix/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "id", "version", "currency", "rows"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.budget-matrix/v1" },
+    "schema": { "const": "panwrite.evaluation.budget-matrix/v1" },
     "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
     "version": { "const": 1 },
     "currency": { "const": "USD" },
@@ -113,7 +113,7 @@
             "properties": {
               "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+\\.json$" },
               "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-              "schema": { "const": "wtfp.evaluation.routing-score/v1" },
+              "schema": { "const": "panwrite.evaluation.routing-score/v1" },
               "row_id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
               "run_id": { "type": "string", "minLength": 1 }
             }

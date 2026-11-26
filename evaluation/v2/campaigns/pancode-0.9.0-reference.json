@@ -1,9 +1,9 @@
 {
-  "schema": "wtfp.evaluation.campaign/v3",
+  "schema": "panwrite.evaluation.campaign/v3",
   "id": "pancode-0.9.0-reference",
   "version": 1,
   "status": "awaiting-resources",
-  "purpose": "Exercise the WTF-P plugin and desk extension on one pinned PanCode 0.9.0 development build through a full section lifecycle with separate author gates, a revision, and a fresh-process resume. Headless runs report every author gate as unavailable; author decisions are observed only from an interactive session in the prepared profile.",
+  "purpose": "Exercise the PanWrite plugin and desk extension on one pinned PanCode 0.9.0 development build through a full section lifecycle with separate author gates, a revision, and a fresh-process resume. Headless runs report every author gate as unavailable; author decisions are observed only from an interactive session in the prepared profile.",
   "historical_suites": [
     {
       "path": "evaluation/v1",
@@ -11,7 +11,7 @@
       "meaning": "unchanged"
     }
   ],
-  "wtfp": {
+  "panwrite": {
     "candidate": "bound-at-prepare",
     "packages": [
       { "path": "pancode/plugin", "inventory_target": "pancode-plugin" },
@@ -43,8 +43,8 @@
   },
   "fixture": {
     "path": "evaluation/v1/fixtures/hpc-checkpointing",
-    "model_inputs_sha256": "7b0edf03180806732fa4a77d59861c66beb75ee7dac3789e62297c4f442c7e16",
-    "evaluator_oracles_sha256": "28f4bf173f69aa0f53a6972489a760533d68d48b78bc498795468c9ff19a54df",
+    "model_inputs_sha256": "cdcf779e12c7d48ca916ef54307f918441401fddd6ab627ad951d0ff80eff83e",
+    "evaluator_oracles_sha256": "543c5e82dc4eadad42dfd3b1fbdb472590f0e68fd07029266aaeb242b38815a3",
     "section": "evaluation"
   },
   "permissions": {

@@ -1,14 +1,14 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "remove-section",
   "title": "Remove a section",
   "description": "Remove an unwritten future section and repair numbering and dependencies.",
-  "alias": "wtfp:remove-section",
+  "alias": "panwrite:remove-section",
   "surface": {
     "kind": "skill",
-    "skill": "wtfp-plan-section"
+    "skill": "panwrite-plan-section"
   },
-  "workflow": "wtfp://workflows/remove-section",
+  "workflow": "panwrite://workflows/remove-section",
   "requirements": {
     "capabilities": [
       "filesystem.delete",

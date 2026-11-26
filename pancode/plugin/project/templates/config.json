@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.config/v1",
+  "schema": "panwrite.project.config/v1",
   "project_id": "portable-research-demo",
   "interaction_mode": "standard",
   "depth": "standard",

@@ -25,7 +25,7 @@ const args = process.argv.slice(2);
 
 // Detect the first real positional token without mistaking a --config-dir
 // value for a command. Compatibility still permits output flags before the
-// subcommand (for example, `wtfp --quiet status`).
+// subcommand (for example, `panwrite --quiet status`).
 const subcommands = ['install', 'status', 'doctor', 'update', 'uninstall'];
 function findSubcommandIndex(argv) {
   for (let index = 0; index < argv.length; index++) {
@@ -196,7 +196,7 @@ ${out.colors.magenta('██║███╗██║   ██║   ██╔═�
 ${out.colors.magenta('╚███╔███╔╝   ██║   ██║           ██║')}
 ${out.colors.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝           ╚═╝')}
 
-  ${out.colors.cyan('Write The F***ing Paper')} ${out.colors.dim(`v${pkg.version}`)}
+  ${out.colors.cyan('Write the paper')} ${out.colors.dim(`v${pkg.version}`)}
   Academic writing commands for your AI coding assistant.
 `;
 
@@ -205,15 +205,15 @@ ${out.colors.magenta(' ╚══╝╚══╝    ╚═╝   ╚═╝        
 function showHelp() {
   const c = out.colors;
   console.log(banner);
-  console.log(`  ${c.yellow('Usage:')} npx wtf-p install <target> [options]
-         npx wtf-p [command] [options]
+  console.log(`  ${c.yellow('Usage:')} npx @panstudio/panwrite install <target> [options]
+         npx @panstudio/panwrite [command] [options]
 
   ${c.yellow('Commands:')}
     ${c.cyan('install <target>')}           Install a generated runtime adapter
     ${c.cyan('status')}                    Show installation status
     ${c.cyan('doctor')}                    Check for installation problems
     ${c.cyan('update')}                    Update to latest version
-    ${c.cyan('uninstall [<target>]')}      Remove WTF-P (see Uninstall Options)
+    ${c.cyan('uninstall [<target>]')}      Remove PanWrite (see Uninstall Options)
 
   ${c.yellow('Targets:')}
     ${c.cyan('pancode')}                   PanCode plugin                 
@@ -234,7 +234,7 @@ function showHelp() {
     ${c.cyan('-b, --backup-all')}          Backup existing files before overwriting
     ${c.cyan('--only=<type>')}             Install one generated component type
 
-  ${c.yellow('Uninstall Options:')} ${c.dim('(npx wtf-p uninstall --help for the full list)')}
+  ${c.yellow('Uninstall Options:')} ${c.dim('(npx @panstudio/panwrite uninstall --help for the full list)')}
     ${c.cyan('<target>')} or ${c.cyan('--<target>')}    Client to remove from (pancode, claude, ...)
     ${c.cyan('--all')}                     Every detected user installation
     ${c.cyan('-c, --config-dir <path>')}   Custom root; requires an explicit target
@@ -256,20 +256,20 @@ function showHelp() {
 
   ${c.yellow('Examples:')}
     ${c.dim('# Install with interactive prompts')}
-    npx wtf-p
+    npx @panstudio/panwrite
 
     ${c.dim('# Install the PanCode plugin without prompts')}
-    npx wtf-p install pancode --advanced
+    npx @panstudio/panwrite install pancode --advanced
 
     ${c.dim('# Preview, then remove, the PanCode plugin')}
-    npx wtf-p uninstall pancode --dry-run
-    npx wtf-p uninstall pancode --yes
+    npx @panstudio/panwrite uninstall pancode --dry-run
+    npx @panstudio/panwrite uninstall pancode --yes
 
     ${c.dim('# Install a Codex plugin into an isolated home')}
-    CODEX_HOME=/tmp/codex-test npx wtf-p install codex --advanced
+    CODEX_HOME=/tmp/codex-test npx @panstudio/panwrite install codex --advanced
 
   ${c.yellow('After installing:')}
-    Open your AI assistant and run ${c.cyan('/wtfp:help')} to see all commands.
+    Open your AI assistant and run ${c.cyan('/panwrite:help')} to see all commands.
 `);
 }
 
@@ -339,7 +339,7 @@ async function main() {
   }
 
   if (hasVersion) {
-    console.log(`wtf-p v${pkg.version}`);
+    console.log(`panwrite v${pkg.version}`);
     return;
   }
 
@@ -434,7 +434,7 @@ async function main() {
       await install(selected[0], false, options, pkg);
     }
   } else {
-    throw new Error('Noninteractive installation requires an explicit target or scope. Use `wtfp install <target>`, a --<target> compatibility flag, --local, --global, or --all.');
+    throw new Error('Noninteractive installation requires an explicit target or scope. Use `panwrite install <target>`, a --<target> compatibility flag, --local, --global, or --all.');
   }
 }
 

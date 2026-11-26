@@ -1,6 +1,6 @@
 ---
 id: plan-checker
-contract: wtfp.role.plan-checker/v1
+contract: panwrite.role.plan-checker/v1
 name: Plan Checker
 execution_class: verifier-report
 result_schema: protocol://schemas/role-result.schema.json
@@ -49,7 +49,7 @@ Determine whether proposed section plans are likely to produce the intended acad
 
 Return one object conforming to `protocol://schemas/role-result.schema.json` with:
 
-- `schema`: exactly `wtfp.role-result/v1`.
+- `schema`: exactly `panwrite.role-result/v1`.
 - `role`: exactly `plan-checker`.
 - `action`: the canonical identifier of the invoking action.
 - `status`: `completed`, `needs_input`, `blocked`, or `failed`.

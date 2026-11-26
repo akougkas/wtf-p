@@ -1,5 +1,5 @@
 {
-  "schema": "wtfp.project.decisions/v1",
+  "schema": "panwrite.project.decisions/v1",
   "project_id": "portable-research-demo",
   "revision": 1,
   "items": [

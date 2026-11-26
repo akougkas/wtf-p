@@ -1,9 +1,9 @@
 {
-  "schema": "wtfp.action/v1",
+  "schema": "panwrite.action/v1",
   "id": "update",
-  "title": "Update WTF-P",
+  "title": "Update PanWrite",
   "description": "Check for a newer compatible package or plugin release and install it only after approval.",
-  "alias": "wtfp:update",
+  "alias": "panwrite:update",
   "surface": {
     "kind": "operations",
     "operation": "product-operations"
@@ -28,7 +28,7 @@
   "effects": [
     {
       "id": "network.fetch",
-      "scope": "configured WTF-P release registry"
+      "scope": "configured PanWrite release registry"
     },
     {
       "id": "package.update",

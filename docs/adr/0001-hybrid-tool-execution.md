@@ -2,18 +2,18 @@
 
 - Status: Accepted for the `0.6` line; amended 2026-09-09 and 2026-09-16 (see below)
 - Date: 2026-08-29
-- Decision owners: WTF-P protocol and adapter maintainers
+- Decision owners: PanWrite protocol and adapter maintainers
 - Scope: the seven logical tools in `protocol/tools.json`
 
 ## Decision
 
-WTF-P will ship no MCP server in `0.6.0-rc.2`.
+PanWrite will ship no MCP server in `0.6.0-rc.2`.
 
 Bibliography transforms remain local Node.js modules. Network research remains behind the canonical action capability, effect, and approval contracts and uses the existing local implementations for now. A future, optional MCP process boundary is permitted only for the network-dependent portion of the canonical tools, after every activation gate in this ADR passes. The local index, format, and rank transforms—and workflow-level degraded paths that explicitly report unavailable enrichment—remain the offline fallback; the network-tool implementations themselves are not claimed to work offline.
 
 The 0.6 release deliberately does **not** translate logical
 `tool.execute` into an unrestricted Claude `Bash` or Copilot `execute` grant.
-The seven modules are packaged and inventory-authenticated, but WTF-P does not
+The seven modules are packaged and inventory-authenticated, but PanWrite does not
 yet ship a closed logical-tool launcher or native Clio binding. A host must bind
 the exact logical tool itself, or report the capability unavailable; an operator
 may also invoke a module manually under the host's own containment policy. The
@@ -32,7 +32,7 @@ The registry remains the only allowed tool surface. Its current implementations 
 | Logical tool | Current behavior | Deterministic with its current public defaults | Declared effects | Placement |
 | --- | --- | ---: | --- | --- |
 | `bibliography.analyze-impact` | Reads a bibliography, performs a Semantic Scholar title search for every entry, and uses clock-dependent citation velocity | No | `filesystem.read`, `network.search` | Local orchestration now; its external-enrichment phase is an MCP candidate |
-| `bibliography.format` | Parses and formats BibTeX; inserts the current date when `wtfp_fetched` is omitted | No | `filesystem.read` | Local; callers that need reproducibility must supply the date |
+| `bibliography.format` | Parses and formats BibTeX; inserts the current date when `panwrite_fetched` is omitted | No | `filesystem.read` | Local; callers that need reproducibility must supply the date |
 | `bibliography.index` | Parses and indexes supplied BibTeX | Yes | `filesystem.read` | Local |
 | `citation.fetch` | Orchestrates Semantic Scholar and optional SerpAPI searches, CrossRef fallback searches, then ranks and formats candidate results | No | `network.search` | Local now; MCP candidate |
 | `citation.rank` | Applies pure in-memory citation, velocity, recency, and venue heuristics; recency depends on the clock by default | No | None | Local; an explicit reference date is supported for repeatable tests |
@@ -45,9 +45,9 @@ The corrected registry deliberately marks clock dependence as nondeterminism eve
 
 ### Existing server audit
 
-At WTF-P commit `ae3b674629e5b0a13da2ed855d267474351417ee`, `vendors/claude/mcp/research-server` contained a hand-maintained prototype with these defects:
+At PanWrite commit `ae3b674629e5b0a13da2ed855d267474351417ee`, `vendors/claude/mcp/research-server` contained a hand-maintained prototype with these defects:
 
-1. `vendors/claude/.wtfp-generated.json` did not own either prototype file, but the package allowlist included all of `vendors/` and a complete Claude install recursively copied the entire bundle.
+1. `vendors/claude/.panwrite-generated.json` did not own either prototype file, but the package allowlist included all of `vendors/` and a complete Claude install recursively copied the entire bundle.
 2. The Claude manifest offered `mcp` as a selectable root even though the plugin had no `.mcp.json` or inline `mcpServers` declaration.
 3. The prototype exposed only `search_papers` and `get_bibtex`, not the logical IDs or implementations in `protocol/tools.json`.
 4. Its two runtime dependencies were declared only in the nested package and were absent from the shipped dependency-free installation. Direct startup therefore failed at module loading.
@@ -77,17 +77,17 @@ The official SDK catalog currently classifies TypeScript, Python, C#, Go, and Ru
 
 ### Host support matrix
 
-“Native MCP” and “WTF-P can own an MCP server's lifecycle” are different claims.
+“Native MCP” and “PanWrite can own an MCP server's lifecycle” are different claims.
 
-| WTF-P host | Current native evidence | Extension-owned lifecycle usable by the current WTF-P envelope | Consequence |
+| PanWrite host | Current native evidence | Extension-owned lifecycle usable by the current PanWrite envelope | Consequence |
 | --- | --- | ---: | --- |
 | Clio Coder 0.3.8 | No gateway. At merged branch `v0.3.8` commit `9b7b80cc`, `gateway` is design-reserved and ACP rejects non-empty `mcpServers`. | No | Blocks a Clio-targeted implementation |
-| Claude Code | Supports stdio/HTTP MCP; plugins can bundle `.mcp.json` servers that start and stop with the plugin. | Technically yes, but WTF-P declares none | Do not revive the broken prototype |
-| Codex CLI/IDE/desktop | Supports stdio and Streamable HTTP; current plugin configuration can bundle MCP servers and tool approval policy. | Technically yes, but WTF-P declares none | Keep the generated profile unchanged until the canonical server exists |
-| GitHub Copilot CLI 1.0.81 research probe | `copilot mcp --help` reports local stdio, remote HTTP/SSE, workspace, user, and installed-plugin sources. Compatibility certification separately used 1.0.80. | Technically yes, but WTF-P declares none | Native support alone is not a reason to add a server |
-| GitHub Copilot cloud/code review | Repository administrators can configure MCP, but tools run autonomously without a per-call approval prompt; resources/prompts and remote OAuth are not supported. | No portable extension-owned lifecycle in the WTF-P envelope | Approval semantics differ materially; static support only |
-| Gemini CLI | Supports stdio, SSE, and Streamable HTTP; Gemini extensions may declare `mcpServers`. | Technically yes, but WTF-P declares none | Candidate only after the shared gates pass |
-| OpenCode | Supports local and remote servers in OpenCode configuration. | Not established for the generated filesystem bundle | Treat as host-configured, not WTF-P-owned |
+| Claude Code | Supports stdio/HTTP MCP; plugins can bundle `.mcp.json` servers that start and stop with the plugin. | Technically yes, but PanWrite declares none | Do not revive the broken prototype |
+| Codex CLI/IDE/desktop | Supports stdio and Streamable HTTP; current plugin configuration can bundle MCP servers and tool approval policy. | Technically yes, but PanWrite declares none | Keep the generated profile unchanged until the canonical server exists |
+| GitHub Copilot CLI 1.0.81 research probe | `copilot mcp --help` reports local stdio, remote HTTP/SSE, workspace, user, and installed-plugin sources. Compatibility certification separately used 1.0.80. | Technically yes, but PanWrite declares none | Native support alone is not a reason to add a server |
+| GitHub Copilot cloud/code review | Repository administrators can configure MCP, but tools run autonomously without a per-call approval prompt; resources/prompts and remote OAuth are not supported. | No portable extension-owned lifecycle in the PanWrite envelope | Approval semantics differ materially; static support only |
+| Gemini CLI | Supports stdio, SSE, and Streamable HTTP; Gemini extensions may declare `mcpServers`. | Technically yes, but PanWrite declares none | Candidate only after the shared gates pass |
+| OpenCode | Supports local and remote servers in OpenCode configuration. | Not established for the generated filesystem bundle | Treat as host-configured, not PanWrite-owned |
 | Antigravity CLI | No certified MCP lifecycle is present in the generated plugin or its validator evidence. | No certified path | Report unsupported rather than infer compatibility |
 
 This asymmetry would make MCP behavior less portable than the current packaged
@@ -119,7 +119,7 @@ Accepted conditionally. It preserves fast offline behavior and the same seven lo
 | Schema fidelity | Registry identifies tools but does not yet define closed executable input/output schemas; autonomous host binding is withheld | Can enforce JSON Schema once those canonical schemas exist |
 | Cancellation/timeouts | Provider modules have partial timeouts/retries and no common cancellation contract; this blocks autonomous binding | MCP provides protocol hooks, but the server must honor them |
 | Error isolation | Host may use a bounded child process | Stronger crash boundary and structured transport errors |
-| Credential/environment isolation | Manual invocation or an external host binding supplies provider environment; WTF-P does not claim isolation | Server launcher can forward only allowlisted variables |
+| Credential/environment isolation | Manual invocation or an external host binding supplies provider environment; PanWrite does not claim isolation | Server launcher can forward only allowlisted variables |
 | Network permission boundary | Declared by action/tool metadata; generated adapters do not widen it to a general shell | Can be separately enabled and approved per server/tool |
 | Lifecycle/ownership | Exact generated-file receipts already exist | Incomplete across Clio, OpenCode, Antigravity, and Copilot cloud |
 | Provenance/observability | Must be recorded by each workflow | Natural place for request IDs, provider, latency, and status telemetry |
@@ -175,16 +175,16 @@ The decision above stands: no MCP server ships, and the seven logical tools
 remain local Node.js modules. What changed since it was written:
 
 - The "closed logical-tool launcher" that the original text withheld now
-  exists. The compiler generates `tools/wtfp-tool.js` into every envelope. It
+  exists. The compiler generates `tools/panwrite-tool.js` into every envelope. It
   resolves a logical tool id from `protocol/tools.json`, exposes seven
   subcommands, bounds every argument (one positional, capped query and path
   lengths, limits 1 to 25, regular files only), prints JSON, refuses
-  `network.*` commands under `--offline` or `WTFP_TOOL_OFFLINE=1`, enforces
+  `network.*` commands under `--offline` or `PANWRITE_TOOL_OFFLINE=1`, enforces
   `--timeout=<seconds>` on network commands with exit 124, and runs only as an
   entry point so a host that imports `tools/*.js` sees no side effect.
 - `tool.execute` therefore has an exact binding on two hosts: Clio `bash` and
   Claude Code `Bash`, each authorizing that dispatcher and nothing else. It
-  stays `null`, and the five actions that need it stay `WTFP_ACTION_UNAVAILABLE`,
+  stays `null`, and the five actions that need it stay `PANWRITE_ACTION_UNAVAILABLE`,
   on Codex, Copilot, OpenCode, Antigravity, and Gemini until their shell tools
   are verified and bound the same way.
 - Clio has no native web-search tool, so its `network.search` binding is the
@@ -195,11 +195,11 @@ The activation gates for a future network MCP server are unchanged. The
 generated availability files under `compatibility/` are the record of which
 host binds what.
 
-## Amendment 2026-09-16: optional CiteNexus companion
+## Amendment 2026-09-16: optional PanCite companion
 
-`citation.fetch` now has an explicit `cite-nexus` backend, reached only through the
+`citation.fetch` now has an explicit `pancite` backend, reached only through the
 existing bounded dispatcher. The separately installed Python companion launches
-CiteNexus using the official MCP client and a per-call stdio lifecycle. It calls
+PanCite using the official MCP client and a per-call stdio lifecycle. It calls
 only `search-papers`; the `network.search` effect and provider/query approval gate
 remain accurate. Bibliography transforms stay local, seven logical tools remain,
 and no client manifest declares an MCP server. The native lifecycle activation
@@ -220,4 +220,4 @@ companion is loaded, and failures never fall back to a different provider. Unit
 contracts cover malicious/malformed output, credential isolation, unavailable and
 hanging companions. The companion repository supplies the real MCP stdio fixture
 check. The backend first shipped in `0.7.0`; it is not a new native-host compatibility
-certificate. See [setup and limits](../CITE_NEXUS.md).
+certificate. See [setup and limits](../PANCITE.md).

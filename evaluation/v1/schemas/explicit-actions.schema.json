@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "wtfp.evaluation.explicit-actions/v1",
+  "$id": "panwrite.evaluation.explicit-actions/v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "version", "disclosure_policy", "actions"],
   "properties": {
-    "schema": { "const": "wtfp.evaluation.explicit-actions/v1" },
+    "schema": { "const": "panwrite.evaluation.explicit-actions/v1" },
     "version": { "const": 1 },
     "disclosure_policy": {
       "type": "object",
@@ -30,7 +30,7 @@
         "required": ["id", "invocation", "arguments", "expected"],
         "properties": {
           "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
-          "invocation": { "type": "string", "pattern": "^/wtfp:[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?: [\\s\\S]+)?$" },
+          "invocation": { "type": "string", "pattern": "^/panwrite:[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?: [\\s\\S]+)?$" },
           "arguments": { "type": "string" },
           "expected": {
             "oneOf": [
@@ -40,7 +40,7 @@
                 "required": ["kind", "skill", "action"],
                 "properties": {
                   "kind": { "const": "skill" },
-                  "skill": { "type": "string", "pattern": "^wtfp-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+                  "skill": { "type": "string", "pattern": "^panwrite-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
                   "action": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
                 }
               },

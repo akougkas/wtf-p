@@ -11,9 +11,9 @@ const skillsRoot = path.join(repositoryRoot, 'protocol', 'skills');
 const actionsRoot = path.join(repositoryRoot, 'protocol', 'actions');
 
 const expected = {
-  'wtfp-start-project': ['new-paper', 'map-project', 'create-outline'],
-  'wtfp-research-literature': ['research-gap', 'analyze-bib', 'check-refs'],
-  'wtfp-plan-section': [
+  'panwrite-start-project': ['new-paper', 'map-project', 'create-outline'],
+  'panwrite-research-literature': ['research-gap', 'analyze-bib', 'check-refs'],
+  'panwrite-plan-section': [
     'discuss-section',
     'list-assumptions',
     'plan-section',
@@ -21,15 +21,15 @@ const expected = {
     'insert-section',
     'remove-section'
   ],
-  'wtfp-write-section': ['write-section', 'execute-outline', 'quick'],
-  'wtfp-review-manuscript': [
+  'panwrite-write-section': ['write-section', 'execute-outline', 'quick'],
+  'panwrite-review-manuscript': [
     'review-section',
     'verify-work',
     'polish-prose',
     'audit-milestone',
     'plan-milestone-gaps'
   ],
-  'wtfp-manage-project': [
+  'panwrite-manage-project': [
     'advance',
     'progress',
     'pause-writing',
@@ -39,7 +39,7 @@ const expected = {
     'add-todo',
     'check-todos'
   ],
-  'wtfp-deliver-research': [
+  'panwrite-deliver-research': [
     'export-latex',
     'submit-milestone',
     'create-slides',
@@ -136,7 +136,7 @@ for (const [skill, actions] of Object.entries(expected)) {
       skill,
       `${action} contract does not route to ${skill}`
     );
-    assert.strictEqual(contract.workflow, `wtfp://workflows/${action}`);
+    assert.strictEqual(contract.workflow, `panwrite://workflows/${action}`);
   }
 }
 

@@ -1,22 +1,22 @@
 {
-  "name": "wtf-p",
+  "name": "panwrite",
   "owner": {
-    "name": "akougkas"
+    "name": "PanStudio"
   },
   "metadata": {
-    "description": "WTF-P: evidence-grounded academic research and writing workflows for coding agents."
+    "description": "PanWrite: evidence-grounded academic research and writing workflows for coding agents."
   },
   "plugins": [
     {
-      "name": "wtfp",
+      "name": "panwrite",
       "source": "./vendors/claude",
       "description": "Portable academic research and writing workflows.",
       "author": {
-        "name": "akougkas"
+        "name": "Anthony Kougkas"
       },
-      "homepage": "https://github.com/akougkas/wtf-p",
-      "repository": "https://github.com/akougkas/wtf-p",
-      "license": "MIT",
+      "homepage": "https://github.com/PanStudio/panwrite",
+      "repository": "https://github.com/PanStudio/panwrite",
+      "license": "Apache-2.0",
       "category": "productivity"
     }
   ]

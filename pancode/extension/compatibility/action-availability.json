@@ -1,7 +1,7 @@
 {
-  "schema": "wtfp.action-availability/v1",
+  "schema": "panwrite.action-availability/v1",
   "target": "pancode",
-  "marker": "WTFP_ACTION_UNAVAILABLE",
+  "marker": "PANWRITE_ACTION_UNAVAILABLE",
   "hostToolEnforcement": {
     "actionScoped": true,
     "surface": "pancode:template-allowed-tools",
@@ -24,7 +24,7 @@
     "user.interaction": "pancode:ask_user",
     "vcs.branch": null,
     "vcs.commit": null,
-    "workflow.drive": "pancode:wtfp-desk-driver"
+    "workflow.drive": "pancode:panwrite-desk-driver"
   },
   "approvalBindings": {
     "none": "pancode:permission-policy",
