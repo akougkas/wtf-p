@@ -209,10 +209,6 @@ than from chat history.
 - [Building and releasing](docs/BUILD_AND_RELEASE.md)
 - [Changelog](CHANGELOG.md) and [Contributing](CONTRIBUTING.md)
 
-PanWrite was built at the [Gnosis Research Center](https://grc.iit.edu/) at
-Illinois Tech for research teams with papers to publish, grants to win, and no
-time for writer's block.
-
 <div align="center">
 
 **No more excuses. Ship the paper.**
